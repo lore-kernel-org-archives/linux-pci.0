@@ -1,416 +1,228 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48358 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751314AbdEEPZt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 May 2017 11:25:49 -0400
-From: John Crispin <john@phrozen.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, John Crispin <john@phrozen.org>
-Subject: [PATCH] PCI: qcom: Add support for IPQ4019 PCIe controller
-Date: Fri,  5 May 2017 17:25:24 +0200
-Message-Id: <20170505152524.29337-1-john@phrozen.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Cheng, Collins" <Collins.Cheng@amd.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Subject: RE: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
+ incapable platform
+Date: Fri, 12 May 2017 04:51:43 +0000
+Message-ID: <BN6PR12MB12496DDEE84348A22AEA8AACECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170511212051.3b802325@t450s.home>
+        <BN6PR12MB12492048A370FDEB7C14C8E8ECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+ <20170511220113.2dfb6d3d@t450s.home>
+In-Reply-To: <20170511220113.2dfb6d3d@t450s.home>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the IPQ4019 PCIe controller. IPQ4019 supports Gen
-1/2, one lane, one PCIe root complex with support for MSI and legacy
-interrupts, and it conforms to PCI Express Base 2.1 specification.
+Hi Williamson,
 
-The core init is the sames as for the MSM8996, however the clocks and
-reset lines differ.
+I verified the patch is working for both AMD SR-IOV GPU and Intel SR-IOV NI=
+C. I don't think it is redundant to check the VF BAR valid before call srio=
+v_init(), it is safe and saving boot time, also there is no a better method=
+ to know if system BIOS has correctly initialized the SR-IOV capability or =
+not.
 
-Signed-off-by: John Crispin <john@phrozen.org>
----
- .../devicetree/bindings/pci/qcom,pcie.txt          |  20 +-
- drivers/pci/host/pcie-qcom.c                       | 304 +++++++++++++++++++++
- 2 files changed, 323 insertions(+), 1 deletion(-)
+I did not try to fix the issue from the kernel resource allocation perspect=
+ive, it is because:
+	1. I am not very familiar with the PCI resource allocation scheme in kerne=
+l. For example, in sriov_init(), kernel will re-assign the PCI resource for=
+ both VF and PF. I don't understand why kernel allocates resource for VF fi=
+rstly, then PF. If it is PF firstly, then this issue could be avoided.
+	2. I am not sure if kernel has error handler if PCI resource allocation fa=
+iled. In this case, kernel cannot allocate enough resource to PF. It should=
+ trigger some error handler to either just keep original BAR values set by =
+system BIOS, or disable this device and log errors.
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index e15f9b19901f..9d418b71774f 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -8,6 +8,7 @@
- 			- "qcom,pcie-apq8064" for apq8064
- 			- "qcom,pcie-apq8084" for apq8084
- 			- "qcom,pcie-msm8996" for msm8996 or apq8096
-+			- "qcom,pcie-ipq4019" for ipq4019
- 
- - reg:
- 	Usage: required
-@@ -87,7 +88,7 @@
- 			- "core"	Clocks the pcie hw block
- 			- "phy"		Clocks the pcie PHY block
- - clock-names:
--	Usage: required for apq8084
-+	Usage: required for apq8084/ipq4019
- 	Value type: <stringlist>
- 	Definition: Should contain the following entries
- 			- "aux"		Auxiliary (AUX) clock
-@@ -126,6 +127,23 @@
- 	Definition: Should contain the following entries
- 			- "core" Core reset
- 
-+- reset-names:
-+	Usage: required for ipq/apq8064
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "axi_m"		AXI master reset
-+			- "axi_s"		AXI slave reset
-+			- "pipe"		PIPE reset
-+			- "axi_m_vmid"		VMID reset
-+			- "axi_s_xpu"		XPU reset
-+			- "parf"		PARF reset
-+			- "phy"			PHY reset
-+			- "axi_m_sticky"	AXI sticky reset
-+			- "pipe_sticky"		PIPE sticky reset
-+			- "pwr"			PWR reset
-+			- "ahb"			AHB reset
-+			- "phy_ahb"		PHY AHB reset
-+
- - power-domains:
- 	Usage: required for apq8084 and msm8996/apq8096
- 	Value type: <prop-encoded-array>
-diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
-index 734ba0d4a5c8..af2bd552aadf 100644
---- a/drivers/pci/host/pcie-qcom.c
-+++ b/drivers/pci/host/pcie-qcom.c
-@@ -86,10 +86,29 @@ struct qcom_pcie_resources_v2 {
- 	struct clk *pipe_clk;
- };
- 
-+struct qcom_pcie_resources_v3 {
-+	struct clk *aux_clk;
-+	struct clk *master_clk;
-+	struct clk *slave_clk;
-+	struct reset_control *axi_m_reset;
-+	struct reset_control *axi_s_reset;
-+	struct reset_control *pipe_reset;
-+	struct reset_control *axi_m_vmid_reset;
-+	struct reset_control *axi_s_xpu_reset;
-+	struct reset_control *parf_reset;
-+	struct reset_control *phy_reset;
-+	struct reset_control *axi_m_sticky_reset;
-+	struct reset_control *pipe_sticky_reset;
-+	struct reset_control *pwr_reset;
-+	struct reset_control *ahb_reset;
-+	struct reset_control *phy_ahb_reset;
-+};
-+
- union qcom_pcie_resources {
- 	struct qcom_pcie_resources_v0 v0;
- 	struct qcom_pcie_resources_v1 v1;
- 	struct qcom_pcie_resources_v2 v2;
-+	struct qcom_pcie_resources_v3 v3;
- };
- 
- struct qcom_pcie;
-@@ -563,6 +582,283 @@ static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
- 	return 0;
- }
- 
-+static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
-+	struct device *dev = pcie->pp.dev;
-+
-+	res->aux_clk = devm_clk_get(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	res->master_clk = devm_clk_get(dev, "master_bus");
-+	if (IS_ERR(res->master_clk))
-+		return PTR_ERR(res->master_clk);
-+
-+	res->slave_clk = devm_clk_get(dev, "slave_bus");
-+	if (IS_ERR(res->slave_clk))
-+		return PTR_ERR(res->slave_clk);
-+
-+	res->axi_m_reset = devm_reset_control_get(dev, "axi_m");
-+	if (IS_ERR(res->axi_m_reset))
-+		return PTR_ERR(res->axi_m_reset);
-+
-+	res->axi_s_reset = devm_reset_control_get(dev, "axi_s");
-+	if (IS_ERR(res->axi_s_reset))
-+		return PTR_ERR(res->axi_s_reset);
-+
-+	res->pipe_reset = devm_reset_control_get(dev, "pipe");
-+	if (IS_ERR(res->pipe_reset))
-+		return PTR_ERR(res->pipe_reset);
-+
-+	res->axi_m_vmid_reset = devm_reset_control_get(dev, "axi_m_vmid");
-+	if (IS_ERR(res->axi_m_vmid_reset))
-+		return PTR_ERR(res->axi_m_vmid_reset);
-+
-+	res->axi_s_xpu_reset = devm_reset_control_get(dev, "axi_s_xpu");
-+	if (IS_ERR(res->axi_s_xpu_reset))
-+		return PTR_ERR(res->axi_s_xpu_reset);
-+
-+	res->parf_reset = devm_reset_control_get(dev, "parf");
-+	if (IS_ERR(res->parf_reset))
-+		return PTR_ERR(res->parf_reset);
-+
-+	res->phy_reset = devm_reset_control_get(dev, "phy");
-+	if (IS_ERR(res->phy_reset))
-+		return PTR_ERR(res->phy_reset);
-+
-+	res->axi_m_sticky_reset = devm_reset_control_get(dev, "axi_m_sticky");
-+	if (IS_ERR(res->axi_m_sticky_reset))
-+		return PTR_ERR(res->axi_m_sticky_reset);
-+
-+	res->pipe_sticky_reset = devm_reset_control_get(dev, "pipe_sticky");
-+	if (IS_ERR(res->pipe_sticky_reset))
-+		return PTR_ERR(res->pipe_sticky_reset);
-+
-+	res->pwr_reset = devm_reset_control_get(dev, "pwr");
-+	if (IS_ERR(res->pwr_reset))
-+		return PTR_ERR(res->pwr_reset);
-+
-+	res->ahb_reset = devm_reset_control_get(dev, "ahb");
-+	if (IS_ERR(res->ahb_reset))
-+		return PTR_ERR(res->ahb_reset);
-+
-+	res->phy_ahb_reset = devm_reset_control_get(dev, "phy_ahb");
-+	if (IS_ERR(res->phy_ahb_reset))
-+		return PTR_ERR(res->phy_ahb_reset);
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
-+
-+	reset_control_assert(res->axi_m_reset);
-+	reset_control_assert(res->axi_s_reset);
-+	reset_control_assert(res->pipe_reset);
-+	reset_control_assert(res->pipe_sticky_reset);
-+	reset_control_assert(res->phy_reset);
-+	reset_control_assert(res->phy_ahb_reset);
-+	reset_control_assert(res->axi_m_sticky_reset);
-+	reset_control_assert(res->pwr_reset);
-+	reset_control_assert(res->ahb_reset);
-+	clk_disable_unprepare(res->aux_clk);
-+	clk_disable_unprepare(res->master_clk);
-+	clk_disable_unprepare(res->slave_clk);
-+}
-+
-+static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
-+	struct device *dev = pcie->pp.dev;
-+	u32 val;
-+	int ret;
-+
-+	ret = reset_control_assert(res->axi_m_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert axi master reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_assert(res->axi_s_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot asser axi slave reset\n");
-+		return ret;
-+	}
-+
-+	usleep_range(10000, 12000);
-+
-+	ret = reset_control_assert(res->pipe_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert pipe reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_assert(res->pipe_sticky_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert pipe sticky reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_assert(res->phy_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert phy reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_assert(res->phy_ahb_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert phy ahb reset\n");
-+		return ret;
-+	}
-+
-+	usleep_range(10000, 12000);
-+
-+	ret = reset_control_assert(res->axi_m_sticky_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert axi master sticky reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_assert(res->pwr_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert power reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_assert(res->ahb_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot assert ahb reset\n");
-+		return ret;
-+	}
-+
-+	usleep_range(10000, 12000);
-+
-+	ret = reset_control_deassert(res->phy_ahb_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert phy ahb reset\n");
-+		return ret;
-+	}
-+
-+	ret = reset_control_deassert(res->phy_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert phy reset\n");
-+		goto err_rst_phy;
-+	}
-+
-+	ret = reset_control_deassert(res->pipe_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert pipe reset\n");
-+		goto err_rst_pipe;
-+	}
-+
-+	ret = reset_control_deassert(res->pipe_sticky_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert pipe sticky reset\n");
-+		goto err_rst_pipe_sticky;
-+	}
-+
-+	usleep_range(10000, 12000);
-+
-+	ret = reset_control_deassert(res->axi_m_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert axi master reset\n");
-+		goto err_rst_axi_m;
-+	}
-+
-+	ret = reset_control_deassert(res->axi_m_sticky_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert axi master sticky reset\n");
-+		goto err_rst_axi_m_sticky;
-+	}
-+
-+	ret = reset_control_deassert(res->axi_s_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert axi slave reset\n");
-+		goto err_rst_axi_s;
-+	}
-+
-+	ret = reset_control_deassert(res->pwr_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert power reset\n");
-+		goto err_rst_pwr;
-+	}
-+
-+	ret = reset_control_deassert(res->ahb_reset);
-+	if (ret) {
-+		dev_err(dev, "cannot deassert ahb reset\n");
-+		goto err_rst_ahb;
-+	}
-+
-+	usleep_range(10000, 12000);
-+
-+	ret = clk_prepare_enable(res->aux_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable iface clock\n");
-+		goto err_clk_aux;
-+	}
-+
-+	ret = clk_prepare_enable(res->master_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_axi_m;
-+	}
-+
-+	ret = clk_prepare_enable(res->slave_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable phy clock\n");
-+		goto err_clk_axi_s;
-+	}
-+
-+	/* enable PCIe clocks and resets */
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= !BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	/* change DBI base address */
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+
-+	/* MAC PHY_POWERDOWN MUX DISABLE  */
-+	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	val &= ~BIT(29);
-+	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-+
-+	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+	val |= BIT(4);
-+	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-+
-+	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-+	val |= BIT(31);
-+	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-+
-+	return 0;
-+
-+err_clk_axi_s:
-+	clk_disable_unprepare(res->master_clk);
-+err_clk_axi_m:
-+	clk_disable_unprepare(res->aux_clk);
-+err_clk_aux:
-+	reset_control_assert(res->ahb_reset);
-+err_rst_ahb:
-+	reset_control_assert(res->pwr_reset);
-+err_rst_pwr:
-+	reset_control_assert(res->axi_s_reset);
-+err_rst_axi_s:
-+	reset_control_assert(res->axi_m_sticky_reset);
-+err_rst_axi_m_sticky:
-+	reset_control_assert(res->axi_m_reset);
-+err_rst_axi_m:
-+	reset_control_assert(res->pipe_sticky_reset);
-+err_rst_pipe_sticky:
-+	reset_control_assert(res->pipe_reset);
-+err_rst_pipe:
-+	reset_control_assert(res->phy_reset);
-+err_rst_phy:
-+	reset_control_assert(res->phy_ahb_reset);
-+	return ret;
-+}
-+
- static int qcom_pcie_link_up(struct pcie_port *pp)
- {
- 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
-@@ -661,6 +957,13 @@ static const struct qcom_pcie_ops ops_v2 = {
- 	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
- };
- 
-+static const struct qcom_pcie_ops ops_v3 = {
-+	.get_resources = qcom_pcie_get_resources_v3,
-+	.init = qcom_pcie_init_v3,
-+	.deinit = qcom_pcie_deinit_v3,
-+	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
-+};
-+
- static int qcom_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -739,6 +1042,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
- 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
- 	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
-+	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_v3 },
- 	{ }
- };
- 
--- 
-2.11.0
+-Collins Cheng
+
+
+-----Original Message-----
+From: Alex Williamson [mailto:alex.williamson@redhat.com]=20
+Sent: Friday, May 12, 2017 12:01 PM
+To: Cheng, Collins <Collins.Cheng@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; linux-k=
+ernel@vger.kernel.org; Deucher, Alexander <Alexander.Deucher@amd.com>; Zyta=
+ruk, Kelly <Kelly.Zytaruk@amd.com>
+Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV inc=
+apable platform
+
+On Fri, 12 May 2017 03:42:46 +0000
+"Cheng, Collins" <Collins.Cheng@amd.com> wrote:
+
+> Hi Williamson,
+>=20
+> GPU card needs more BAR aperture resource than other PCI devices. For exa=
+mple, Intel SR-IOV network card only require 512KB memory resource for all =
+VFs. AMD SR-IOV GPU card needs 256MB x16 VF =3D 4GB memory resource for fra=
+me buffer BAR aperture.
+>=20
+> If the system BIOS supports SR-IOV, it will reserve enough resource for a=
+ll VF BARs. If the system BIOS doesn't support SR-IOV or cannot allocate th=
+e enough resource for VF BARs, only PF BAR will be assigned and VF BARs are=
+ empty. Then system boots to Linux kernel and kernel doesn't check if the V=
+F BARs are empty or valid. Kernel will re-assign the BAR resources for PF a=
+nd all VFs. The problem I saw is that kernel will fail to allocate PF BAR r=
+esource because some resources are assigned to VF, this is not expected. So=
+ kernel might need to do some check before re-assign the PF/VF resource, so=
+ that PF device will be correctly assigned BAR resource and user can use PF=
+ device.
+
+So the problem is that something bad happens when the kernel is trying to r=
+eallocate resources in order to fulfill the requirements of the VFs, leavin=
+g the PF resources incorrectly programmed?  Why not just fix that bug rathe=
+r than creating special handling for this vendor/class of device which disa=
+bles any attempt to fixup resources for SR-IOV?  IOW, this patch just avoid=
+s the problem for your devices rather than fixing the bug.  I'd suggest fix=
+ing the bug such that the PF is left in a functional state if the kernel is=
+ unable to allocate sufficient resources for the VFs.  Thanks,
+
+Alex
+
+> -----Original Message-----
+> From: Alex Williamson [mailto:alex.williamson@redhat.com]
+> Sent: Friday, May 12, 2017 11:21 AM
+> To: Cheng, Collins <Collins.Cheng@amd.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;=20
+> linux-kernel@vger.kernel.org; Deucher, Alexander=20
+> <Alexander.Deucher@amd.com>; Zytaruk, Kelly <Kelly.Zytaruk@amd.com>
+> Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the=20
+> SR-IOV incapable platform
+>=20
+> On Fri, 12 May 2017 02:50:32 +0000
+> "Cheng, Collins" <Collins.Cheng@amd.com> wrote:
+>=20
+> > Hi Helgaas,
+> >=20
+> > Some AMD GPUs have hardware support for graphics SR-IOV.
+> > If the SR-IOV capable GPU is plugged into the SR-IOV incapable=20
+> > platform. It would cause a problem on PCI resource allocation in=20
+> > current Linux kernel.
+> >=20
+> > Therefore in order to allow the PF (Physical Function) device of=20
+> > SR-IOV capable GPU to work on the SR-IOV incapable platform, it is=20
+> > required to verify conditions for initializing BAR resources on AMD=20
+> > SR-IOV capable GPUs.
+> >=20
+> > If the device is an AMD graphics device and it supports SR-IOV it=20
+> > will require a large amount of resources.
+> > Before calling sriov_init() must ensure that the system BIOS also=20
+> > supports SR-IOV and that system BIOS has been able to allocate=20
+> > enough resources.
+> > If the VF BARs are zero then the system BIOS does not support SR-IOV=20
+> > or it could not allocate the resources and this platform will not=20
+> > support AMD graphics SR-IOV.
+> > Therefore do not call sriov_init().
+> > If the system BIOS does support SR-IOV then the VF BARs will be=20
+> > properly initialized to non-zero values.
+> >=20
+> > Below is the patch against to Kernel 4.8 & 4.9. Please review.
+> >=20
+> > I checked the drivers/pci/quirks.c, it looks the workarounds/fixes=20
+> > in quirks.c are for specific devices and one or more device ID are=20
+> > defined for the specific devices. However my patch is for all AMD=20
+> > SR-IOV capable GPUs, that includes all existing and future AMD server G=
+PUs.
+> > So it doesn't seem like a good fit to put the fix in quirks.c. =20
+>=20
+>=20
+> Why is an AMD graphics card unique here?  Doesn't sriov_init() always=20
+> need to be able to deal with devices of any type where the BIOS hasn't=20
+> initialized the SR-IOV capability?  Some SR-IOV devices can fit their=20
+> VFs within a minimum bridge aperture, most cannot.  I don't understand=20
+> why the VF resource requirements being exceptionally large dictates=20
+> that they receive special handling.  Thanks,
+>=20
+> Alex
+>=20
+> > Signed-off-by: Collins Cheng <collins.cheng@amd.com>
+> > ---
+> >  drivers/pci/iov.c | 63
+> > ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+> >  1 file changed, 60 insertions(+), 3 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c index
+> > e30f05c..e4f1405 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -523,6 +523,45 @@ static void sriov_restore_state(struct pci_dev *de=
+v)
+> >  		msleep(100);
+> >  }
+> > =20
+> > +/*
+> > + * pci_vf_bar_valid - check if VF BARs have resource allocated
+> > + * @dev: the PCI device
+> > + * @pos: register offset of SR-IOV capability in PCI config space
+> > + * Returns true any VF BAR has resource allocated, false
+> > + * if all VF BARs are empty.
+> > + */
+> > +static bool pci_vf_bar_valid(struct pci_dev *dev, int pos) {
+> > +	int i;
+> > +	u32 bar_value;
+> > +	u32 bar_size_mask =3D ~(PCI_BASE_ADDRESS_SPACE |
+> > +			PCI_BASE_ADDRESS_MEM_TYPE_64 |
+> > +			PCI_BASE_ADDRESS_MEM_PREFETCH);
+> > +
+> > +	for (i =3D 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> > +		pci_read_config_dword(dev, pos + PCI_SRIOV_BAR + i * 4, &bar_value);
+> > +		if (bar_value & bar_size_mask)
+> > +			return true;
+> > +	}
+> > +
+> > +	return false;
+> > +}
+> > +
+> > +/*
+> > + * is_amd_display_adapter - check if it is an AMD/ATI GPU device
+> > + * @dev: the PCI device
+> > + *
+> > + * Returns true if device is an AMD/ATI display adapter,
+> > + * otherwise return false.
+> > + */
+> > +
+> > +static bool is_amd_display_adapter(struct pci_dev *dev) {
+> > +	return (((dev->class >> 16) =3D=3D PCI_BASE_CLASS_DISPLAY) &&
+> > +		(dev->vendor =3D=3D PCI_VENDOR_ID_ATI ||
+> > +		dev->vendor =3D=3D PCI_VENDOR_ID_AMD)); }
+> > +
+> >  /**
+> >   * pci_iov_init - initialize the IOV capability
+> >   * @dev: the PCI device
+> > @@ -537,9 +576,27 @@ int pci_iov_init(struct pci_dev *dev)
+> >  		return -ENODEV;
+> > =20
+> >  	pos =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
+> > -	if (pos)
+> > -		return sriov_init(dev, pos);
+> > -
+> > +	if (pos) {
+> > +	/*
+> > +	 * If the device is an AMD graphics device and it supports
+> > +	 * SR-IOV it will require a large amount of resources.
+> > +	 * Before calling sriov_init() must ensure that the system
+> > +	 * BIOS also supports SR-IOV and that system BIOS has been
+> > +	 * able to allocate enough resources.
+> > +	 * If the VF BARs are zero then the system BIOS does not
+> > +	 * support SR-IOV or it could not allocate the resources
+> > +	 * and this platform will not support AMD graphics SR-IOV.
+> > +	 * Therefore do not call sriov_init().
+> > +	 * If the system BIOS does support SR-IOV then the VF BARs
+> > +	 * will be properly initialized to non-zero values.
+> > +	 */
+> > +		if (is_amd_display_adapter(dev)) {
+> > +			if (pci_vf_bar_valid(dev, pos))
+> > +				return sriov_init(dev, pos);
+> > +		} else {
+> > +			return sriov_init(dev, pos);
+> > +		}
+> > +	}
+> >  	return -ENODEV;
+> >  }
+> >   =20
+>=20
