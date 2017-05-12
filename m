@@ -1,110 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38748 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:33100 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751441AbdEDXE3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 May 2017 19:04:29 -0400
-Date: Thu, 4 May 2017 18:04:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
-Subject: Re: [PATCH 11/13] PCI: Add has_mem64 for struct host_bridge
-Message-ID: <20170504230425.GC9648@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421050500.13957-1-yinghai@kernel.org>
- <20170421050500.13957-12-yinghai@kernel.org>
+        id S1755960AbdELQLN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 12 May 2017 12:11:13 -0400
+Subject: Re: [RFC] pci: adding new interrupt api to pcie-designware
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, kishon@ti.com,
+        bhelgaas@google.com, jingoohan1@gmail.com
+References: <5593732728f7c7f5e8c58ac49f394e688bcc192d.1494332566.git.jpinto@synopsys.com>
+ <1deaad7c-ba6a-202b-4b2b-11d4fc79a0a0@arm.com>
+ <c517ec9f-94ef-0f4a-6ed6-4f689f8e5de4@synopsys.com>
+ <764590ed-d7ca-5142-df2e-5bf2ac714c2b@arm.com> <5915DD35.3080405@ti.com>
+Cc: linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <4045cab0-d6fc-f739-5a7d-ab2a6ff35676@arm.com>
+Date: Fri, 12 May 2017 17:11:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170421050500.13957-12-yinghai@kernel.org>
+In-Reply-To: <5915DD35.3080405@ti.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Christian]
+Hi Murali,
 
-On Thu, Apr 20, 2017 at 10:04:58PM -0700, Yinghai Lu wrote:
-> Add has_mem64 for struct host_bridge, on root bus that does not support
-> mmio64 above 4g, will not set that.
+On 12/05/17 17:05, Murali Karicheri wrote:
+> On 05/11/2017 06:05 AM, Marc Zyngier wrote:
+>> On 11/05/17 10:17, Joao Pinto wrote:
+>>>
+>>> Hello,
+>>>
+>>> Às 6:00 PM de 5/10/2017, Marc Zyngier escreveu:
+>>>> On 09/05/17 13:33, Joao Pinto wrote:
+>>>>> This is a proposal for the update of the interrupt API in pcie-designware.
+>>>>>
+>>>>> *SoC specific drivers*
+>>>>> All SoC specific drivers that use the common infrastructure (pci-qcom,
+>>>>> pci-artpec6, pci-exynos, pci-imx6) were updated to be compatible.
+>>>>> Other SoC specific drivers like pci-dra7, pci-armada8k, pci-hisi, pci-spear13xx
+>>>>> and pci-layerscape will also work fine.
+>>>>>
+>>>>> *Work still to be done - need some inputs*
+>>>>> The pci-keystone driver is the one that I would appreciate some opinions, since
+>>>>> it uses the "old" dw_pcie_msi_chip. I think we have 3 options:
+>>>>>
+>>>>> a) Keep the old API + new API in pcie-designware just for pci-keystone to use
+>>>>> the dw_pcie_msi_chip structure
+>>>>> b) Move the old API from pcie-designware to pci-keystone for it to use the
+>>>>> dw_pcie_msi_chip structure
+>>>>> c) Adapt pci-keystone to use the new API also
+>>>>
+>>>> What is the issue with moving Keystone over to this infrastructure?
+>>>
+>>> I don't hardware to test if the Keystone infrastructure porting is right or not
+>>> and thats my main concern. Also the Keystone SoC driver maintainer can also have
+>>> the option of keeping the current structure and that's why I sent the e-mail
+>>> asking for opinions about the subject.
+>>
+>> I think the old infrastructure should disappear, full stop (maintaining
+>> two APIs is hell). It'd be great if you could convert it as well,
+>> leaving the testing responsibility to the TI guys who I'm sure will
+>> gladly help (they've done so in the past for different things).
+> Marc,
 > 
-> We will use that info next two following patches:
-> 1. Don't treat non-pref mmio64 as pref mmio, so will not put
->    it under bridge's pref range when rescan the devices
-> 2. will keep pref mmio64 and pref mmio32 under bridge pref bar.
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-> ---
->  drivers/pci/probe.c | 7 +++++++
->  include/linux/pci.h | 1 +
->  2 files changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 676b55f..8f439e0 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -818,6 +818,13 @@ int pci_register_host_bridge(struct pci_host_bridge *bridge)
->  			addr[0] = '\0';
->  
->  		dev_info(&bus->dev, "root bus resource %pR%s\n", res, addr);
-> +
-> +		if (resource_type(res) == IORESOURCE_MEM) {
-> +			if ((res->end - offset) > 0xffffffff)
-> +				bridge->has_mem64 = 1;
+> Sure! I can help you on the testing part. I haven't had a chance to read this
+> patch due to my current tasks, but will spend some time on this next week.
 
-This part makes sense -- if any part of the window extends above 4G,
-only a 64-bit BAR can use the part above 4G.
+Awesome! Please liaise with Joao in order to get this up and running!
 
-> +			if ((res->start - offset) > 0xffffffff)
-> +				res->flags |= IORESOURCE_MEM_64;
+Thanks both,
 
-But I don't understand this part.  You only set IORESOURCE_MEM_64 if
-the *start* is above 4G?  If the window started at 2GB and ended at
-6GB, you wouldn't set IORESOURCE_MEM_64?
-
-And I don't understand where this IORESOURCE_MEM_64 in res->flags is
-used.  It seems like the only possible place is this test added by the
-last patch:
-
-  int pci_bus_alloc_resource(bus, res, ...)
-  {
-    if (res->flags & mmio64) {
-
-but this patch is setting IORESOURCE_MEM_64 in the host bridge window,
-i.e., the bus resource, and pci_bus_alloc_resource() is testing the
-flags of the resource we're allocating *from* the bus resource.
-
-> +		}
-
-I *think* this will be broken by the current implementation of
-Christian's patch to enable a 64-bit host bridge window:
-
-  https://lkml.kernel.org/r/1493890270-1188-5-git-send-email-deathsimple@vodafone.de
-
-because pci_register_host_bridge() runs before we scan the bus, and
-Christian's patch adds a quirk that runs when we enumerate the AMD
-host bridge device.
-
-If we apply this and Christian's patch, I think we could end up with
-a host bridge window above 4G, but with bridge->has_mem64 not set.
-
->  	}
->  
->  	down_write(&pci_bus_sem);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index b14dd94..a3693ef 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -436,6 +436,7 @@ struct pci_host_bridge {
->  	void *release_data;
->  	struct msi_controller *msi;
->  	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
-> +	unsigned int has_mem64:1;
->  	/* Resource alignment requirements */
->  	resource_size_t (*align_resource)(struct pci_dev *dev,
->  			const struct resource *res,
-> -- 
-> 2.9.3
-> 
+	M.
+-- 
+Jazz is not dead. It just smells funny...
