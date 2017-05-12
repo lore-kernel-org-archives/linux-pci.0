@@ -1,55 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 25 May 2017 16:53:26 +0100
-From: Catalin Marinas <catalin.marinas@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH] ARM64: PCI: Fix struct acpi_pci_root_ops allocation
- failure path
-Message-ID: <20170525155326.GB1610@e104818-lin.cambridge.arm.com>
-References: <20170522154828.10872-1-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <20170522154828.10872-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- Timmy Li <lixiaoping3@huawei.com>, Tomasz Nowicki <tn@semihalf.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:59981 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755463AbdELQ4y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 12:56:54 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC 5/8] pci: generic PCIe DW driver adapted to new irq API
+Date: Fri, 12 May 2017 17:56:14 +0100
+Message-Id: <9e3a4a8bf18460d255a0988f7f690b8aa82320cd.1494606911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
+References: <cover.1494606911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
+References: <cover.1494606911.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 22, 2017 at 04:48:28PM +0100, Lorenzo Pieralisi wrote:
-> From: Timmy Li <lixiaoping3@huawei.com>
-> 
-> Commit 093d24a20442 ("arm64: PCI: Manage controller-specific data on
-> per-controller basis") added code to allocate ACPI PCI root_ops
-> dynamically on a per host bridge basis but failed to update the
-> corresponding memory allocation failure path in pci_acpi_scan_root()
-> leading to a potential memory leakage.
-> 
-> Fix it by adding the required kfree call.
-> 
-> Fixes: 093d24a20442 ("arm64: PCI: Manage controller-specific data on per-controller basis")
-> Signed-off-by: Timmy Li <lixiaoping3@huawei.com>
-> [lorenzo.pieralisi@arm.com: refactored code, rewrote commit log]
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> CC: Will Deacon <will.deacon@arm.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> Cc: Tomasz Nowicki <tn@semihalf.com>
+This patch adapts the generic PCIe DW driver to use the new interrupt api
+available in pcie-designware.
 
-I queued the patch for 4.12. Thanks.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-plat.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 32091b3..3b9717b 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -28,13 +28,6 @@ struct dw_plat_pcie {
+ 	struct dw_pcie		*pci;
+ };
+ 
+-static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void dw_plat_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -64,14 +57,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 		pp->msi_irq = platform_get_irq(pdev, 0);
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					dw_plat_pcie_msi_irq_handler,
+-					IRQF_SHARED, "dw-plat-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI IRQ\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
 -- 
-Catalin
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.3
