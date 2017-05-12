@@ -1,90 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0079.outbound.protection.outlook.com ([104.47.41.79]:10252
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752789AbdEJQwg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 May 2017 12:52:36 -0400
-From: Wesley Yung <wesley.yung@microsemi.com>
-To: Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Sammy Hui <sammy.hui@intel.com>,
-        Joseph Gruher <joseph.r.gruher@intel.com>,
-        Krishna Dhulipala <krishnad@fb.com>
-Subject: RE: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
-Date: Wed, 10 May 2017 16:52:16 +0000
-Message-ID: <90C73AA5E5BE2A428BAACEC9EA6376C982286ABC@avsrvexchmbx2.microsemi.net>
-References: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
- <1493395369-20225-2-git-send-email-keith.busch@intel.com>
- <862590BB-8E84-4F2D-B5F9-A665000AA9CB@fb.com>
- <20170510131729.GD2572@localhost.localdomain>
- <9D9314D9-2EA5-45C1-AC60-54F7658FD4BC@fb.com>
- <20170510164452.GE2572@localhost.localdomain>
- <90C73AA5E5BE2A428BAACEC9EA6376C982286A7D@avsrvexchmbx2.microsemi.net>
-In-Reply-To: <90C73AA5E5BE2A428BAACEC9EA6376C982286A7D@avsrvexchmbx2.microsemi.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:44392 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757284AbdELQ41 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 12:56:27 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC 0/8] add new irq api to pcie-designware
+Date: Fri, 12 May 2017 17:56:09 +0100
+Message-Id: <cover.1494606911.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just to add more colour:
+This patch series adds the new interrupt api to pcie-designware
+make it possible to use features like MSIX.
 
-If a switch is removed from the RP.  All non posted's will time out.  This =
-includes a config read of any switch P2P.  I believe Keith is saying if a r=
-ead comes down to read the DPC status on a Switch DS P2P that read will tim=
-e out after the host TMO.  Once that occurs, the IIO will generate all 1s b=
-ack to the DPC driver.=20
+The work consisted of adapting the pcie-designware-host and each SoC
+specific driver.
 
-It means all the back end drivers (DPC, AER, Hot Plug, NVMe) need to have s=
-ome understanding that all 1s means "something happened".  In the case of t=
-he DPC driver, we know the DPC status should never have 1s in the most sign=
-ificant bits so returning all 1s is a special return type that needs to be =
-handled.
+Joao Pinto (8):
+  pci: adding new irq api to pci-designware
+  pci: exynos SoC driver adapted to new irq API
+  pci: imx6 SoC driver adapted to new irq API
+  pci: artpec6 SoC driver adapted to new irq API
+  pci: generic PCIe DW driver adapted to new irq API
+  pci: qcom SoC driver adapted to new irq API
+  pci: keystone SoC driver adapted to new irq API
+  pci: removing old irq api from pcie-designware
 
-Wes
+ drivers/pci/dwc/pci-exynos.c           |  18 --
+ drivers/pci/dwc/pci-imx6.c             |  18 --
+ drivers/pci/dwc/pci-keystone-dw.c      |  97 +--------
+ drivers/pci/dwc/pci-keystone.c         |   1 +
+ drivers/pci/dwc/pci-keystone.h         |   4 +-
+ drivers/pci/dwc/pci-layerscape.c       |   4 +-
+ drivers/pci/dwc/pcie-artpec6.c         |  18 --
+ drivers/pci/dwc/pcie-designware-host.c | 349 ++++++++++++++++++---------------
+ drivers/pci/dwc/pcie-designware-plat.c |  15 --
+ drivers/pci/dwc/pcie-designware.h      |   8 +-
+ drivers/pci/dwc/pcie-qcom.c            |  15 --
+ 11 files changed, 205 insertions(+), 342 deletions(-)
 
------Original Message-----
-From: Wesley Yung=20
-Sent: Wednesday, May 10, 2017 9:43 AM
-To: 'Keith Busch' <keith.busch@intel.com>; Wei Zhang <wzhang@fb.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Sammy H=
-ui <sammy.hui@intel.com>; Joseph Gruher <joseph.r.gruher@intel.com>; Krishn=
-a Dhulipala <krishnad@fb.com>
-Subject: RE: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
-
-Hey Keith,
-
-Does the RC Downstream ports also have DPC capability so the driver actuall=
-y loads for the Root Port DSPs?  Just trying to understand the mechanism.
-
-For Wei's specific use case, removing a switch from the RP is not officiall=
-y supported but technically it should be possible to do so.  On the switch =
-end we just need to know where the ecosystem is at so we can make sure to p=
-lay nice.
-
-Wes
-
------Original Message-----
-From: Keith Busch [mailto:keith.busch@intel.com]=20
-Sent: Wednesday, May 10, 2017 9:45 AM
-To: Wei Zhang <wzhang@fb.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Wesley =
-Yung <wesley.yung@microsemi.com>; Sammy Hui <sammy.hui@intel.com>; Joseph G=
-ruher <joseph.r.gruher@intel.com>; Krishna Dhulipala <krishnad@fb.com>
-Subject: Re: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
-
-EXTERNAL EMAIL
-
-
-On Wed, May 10, 2017 at 04:35:06PM +0000, Wei Zhang wrote:
-> Hi Keith,
->
-> I see.  I thought the current CPU root complex does not support such a us=
-e case, ie removing the DPC switch device itself and might result in kernel=
- panic.  But I agree this will make the code future-proof when CPU does sup=
-port such a case in the future.
-
-What do you mean in the future? I do this today (hotplug enclosures), but I=
- need this fix in place otherwise we get a use-after-free when the DPC work=
- queue runs after the hotplug code freed the topology that includes the DPC=
- parts.
+-- 
+2.9.3
