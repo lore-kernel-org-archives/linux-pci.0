@@ -1,68 +1,123 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 16 May 2017 17:15:29 +0200
-From: Robert Richter <robert.richter@cavium.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Subject: Re: [RFC/RFT PATCH v2 3/3] PCI/ACPI: Add ACPI
- pci_bus_find_numa_node() implementation
-Message-ID: <20170516151529.GC658@rric.localdomain>
-References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
- <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 12 May 2017 14:09:24 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Rajat Jain <rajatja@google.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [RFC PATCH] PCI: disable MSI/MSI-X before resetting
+Message-ID: <20170512210923.GA23103@google.com>
+References: <20170511215405.91410-1-briannorris@chromium.org>
+ <CAKgT0UdqfCjUvz4=FNEnBudJhSBEeYCfD66owO8LFVg6T_io0A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAKgT0UdqfCjUvz4=FNEnBudJhSBEeYCfD66owO8LFVg6T_io0A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15.05.17 14:22:05, Lorenzo Pieralisi wrote:
-> The introduction of pci_bus_find_numa_node(pci_bus) allows at PCI
-> host bridge registration to detect the NUMA node for a given
-> struct pci_bus.dev. Implement an ACPI method that, through
-> the struct pci_bus.bridge ACPI companion, retrieve and return
-> the NUMA node corresponding to a given struct pci_bus.dev.
+On Fri, May 12, 2017 at 10:07:29AM -0700, Alexander Duyck wrote:
+> On Thu, May 11, 2017 at 2:54 PM, Brian Norris <briannorris@chromium.org> wrote:
+> > Despite the claims in the associated comment block, it seems that
+> > clearing the command register is not enough to guarantee that no
+> > MSI interrupts get triggered during Function Level Reset. Through code
+> > instrumentation, I'm able to clearly trace cases like this:
+> >
+> > (0) reset a device:
+> >         echo 1 > /sys/bus/pci/devices/xxx/reset
+> > (1) disable an MSI interrupt for device 'xxx' in a PCI reset handler
+> >     (disable_irq())
+> > (2) pcie_flr() initiates reset:
+> >         pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR));
+> > (3) about 0.5 ms later, kernel handles IRQ:
+> >         -> __pci_msi_desc_mask_irq()
+> >            -> pci_write_config_dword()
 > 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/pci-acpi.c | 20 ++++++++++++++++++++
->  drivers/pci/pci.c      |  2 +-
->  include/linux/pci.h    |  6 ++++++
->  3 files changed, 27 insertions(+), 1 deletion(-)
+> Is this an irq from the device being reset, or could this be an
+> interrupt from something else such as the root port?
+
+Hmm, I'm pretty sure it was from the device, but I'll double check to be
+sure.
+
+> > (4) this is well before the device is actually ready, and the system
+> >     sees a bus abort
+> >
+> > Tested with MSI, but presumably MSI-X could have the same issue.
+> >
+> > Tested on Samsung Chromebook Plus, with RK3399 OP1.
+> >
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > ---
+> > RFC, because I'm not really sure this is the right approach, or if
+> > there's something else that's misconfigured or buggy.
+> >
+> > Note that right now, configuration space aborts trigger SError aborts
+> > (and panics) on RK3399, so this sort of problem is fatal. It's not clear
+> > to me if that's a spec violation (many other PCI controllers manage to
+> > mask such aborts), or an acceptable behavior. But FWIW, that means that
+> > polling behavior like in commit 5adecf817dd6 ("PCI: Wait for up to
+> > 1000ms after FLR reset") cannot work; the first read when the device is
+> > not ready will cause a panic.
 > 
+> I'm adding Alex Williamson since he is the author of the patch you
+> call out here. It is also possible that he may have already submitted
+> a patch somewhere to fix something like this that I might not be aware
+> of.
 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e9803c1..451342d 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5406,7 +5406,7 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
->  
->  int pci_bus_find_numa_node(struct pci_bus *bus)
->  {
-> -	return NUMA_NO_NODE;
-> +	return acpi_disabled ? NUMA_NO_NODE : acpi_pci_bus_find_numa_node(bus);
+I haven't seen anything, but I haven't been looking specifically for
+(non-merged) submissions related to that commit.
 
-I looked into how this works with devicetree.
+> Odds are what probably needs to happen is that the we should probably
+> take the same steps in to disable master abort mode that we do in
+> pci_scan_bridge. That way if we don't get a response from the device
+> in time we don't trigger a master abort which will then feed back up
+> the bus and cause other issues. I'll see if I can put together a quick
+> patch to address the issue if you are up for testing it.
 
-With ACPI it is set directly in pci_register_host_bridge() with
-set_dev_node().
+Ah, that could make some sense. I'll give your patch a test. That
+doesn't really address my main reported issue though, AFAICT from a
+quick read (and test).
 
-For the DT case the set_dev_node call sets it to NUMA_NO_NODE first.
-Since in DT the bridge is a platform device which has the node id
-assigned already (if there is one), the bus' node id is set later in
-device_add() when deriving it from the parent device which is the
-bridge. So this should work.
+> > ---
+> >  drivers/pci/pci.c | 11 +++++++++++
+> >  1 file changed, 11 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index b01bd5bba8e6..861a3b2d7026 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -4156,6 +4156,17 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
+> >         pci_set_power_state(dev, PCI_D0);
+> >
+> >         pci_save_state(dev);
+> > +
+> > +       /*
+> > +        * Disable MSI/MSI-X before resetting. Some devices have been found to
+> > +        * trigger interrupts while in the middle of Function Level Reset. The
+> > +        * MSI/MSI-X state will get restored after we reset.
+> > +        */
+> > +       if (dev->msi_enabled)
+> > +               pci_msi_set_enable(dev, 0);
+> > +       if (dev->msix_enabled)
+> > +               pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+> > +
+> 
+> So if your device is still issuing MSI or MSI-X interrupts after
+> completing the line below which overwrites the command register then
+> there is definitely an issue in the hardware. All bus master
+> transactions should have been flushed out and blocked after clearing
+> the bus master enable bit and verifying hat the transactions pending
+> bit is cleared in the status register.
 
-I have tested it both DT and ACPI.
+Yeah, I got this impression :) I'll see if I can double check what
+exactly is triggering this interrupt before passing judgment.
 
-Thanks,
+> >         /*
+> >          * Disable the device by clearing the Command register, except for
+> >          * INTx-disable which is set.  This not only disables MMIO and I/O port
 
--Robert
-
->  }
->  
->  /**
+Brian
