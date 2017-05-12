@@ -1,97 +1,42 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/3] iommu: of: Fix check for returning EPROBE_DEFER
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1495020609-13397-1-git-send-email-sricharan@codeaurora.org>
- <20170517170430.GD31462@bhelgaas-glaptop.roam.corp.google.com>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <1c306cf1-f7fb-87b1-1fef-3b08aea04560@codeaurora.org>
-Date: Thu, 18 May 2017 14:33:57 +0530
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 12 May 2017 10:18:46 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Vadim.Lomovtsev@caviumnetworks.com
+Subject: Re: [RFC/RFT PATCH 1/3] PCI: Introduce pci_bus_find_numa_node()
+Message-ID: <20170512171846.GA21391@localhost.localdomain>
+References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
+ <1494593045-19911-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170512155040.GA11377@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <20170517170430.GD31462@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
- lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
- magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
- linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
- arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
- robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
- rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
- robin.murphy@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170512155040.GA11377@red-moon>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Lorenzo
 
-On 5/17/2017 10:34 PM, Bjorn Helgaas wrote:
-> On Wed, May 17, 2017 at 05:00:07PM +0530, Sricharan R wrote:
->> Now with iommu probe deferral, we return -EPROBE_DEFER
->> for master's that are connected to an iommu which is not
+On Fri, May 12, 2017 at 04:50:40PM +0100, Lorenzo Pieralisi wrote:
+> Hi Vadim,
 > 
-> s/master's/masters/
+> On Fri, May 12, 2017 at 05:44:05AM -0700, Vadim Lomovtsev wrote:
+> > Hi Lorenzo,
+> > 
+> > Are there any news related to these patches ?
 > 
-> s/iommu/IOMMU/ in your English text (changelogs and comments).  That seems
-> to be the convention, based on "git log drivers/iommu/of_iommu.c"
+> Not really, I have not received any feedback but I was expecting some
+> to make progress here. Have you tested it ?
+>
+> Please let me know, thanks !
+
+Not yet. Plan to test them after weekend and will get back to you.
+
 > 
+> Lorenzo
 
-ok, will correct those.
-
-Regards,
- Sricharan
-
-
->> probed yet, but going to get probed, so that we can attach
->> the correct dma_ops. So while trying to defer the probe of
->> the master, check if the of_iommu node that it is connected
->> to is marked in DT as 'status=disabled', then the iommu is never
->> is going to get probed. So simply return NULL and let the master
->> work without an iommu.
->>
->> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
->> Tested-by: Will Deacon <will.deacon@arm.com>
->> Tested-by: Magnus Damn <magnus.damn@gmail.com>
->> Acked-by: Will Deacon <will.deacon@arm.com>
->> ---
->>  drivers/iommu/of_iommu.c | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> index 9f44ee8..e6e9bec 100644
->> --- a/drivers/iommu/of_iommu.c
->> +++ b/drivers/iommu/of_iommu.c
->> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
->>  
->>  	ops = iommu_ops_from_fwnode(fwnode);
->>  	if ((ops && !ops->of_xlate) ||
->> +	    !of_device_is_available(iommu_spec->np) ||
->>  	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
->>  		return NULL;
->>  
->> -- 
->> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
->>
->>
->> _______________________________________________
->> linux-arm-kernel mailing list
->> linux-arm-kernel@lists.infradead.org
->> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+WBR,
+Vadim
