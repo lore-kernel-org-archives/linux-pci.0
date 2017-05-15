@@ -1,32 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:39674 "EHLO
-        avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751118AbdEDUm3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 May 2017 16:42:29 -0400
-Subject: Re: [PATCH 1/2] PCI: tegra: Support MSI 64-bit addressing
-To: Thierry Reding <thierry.reding@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <20170504201032.32633-1-thierry.reding@gmail.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org
-From: Stephen Warren <swarren@wwwdotorg.org>
-Message-ID: <031f173d-20af-efbf-17f1-ad6d9a2d0158@wwwdotorg.org>
-Date: Thu, 4 May 2017 14:42:27 -0600
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 15 May 2017 06:51:57 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Vadim.Lomovtsev@caviumnetworks.com
+Subject: Re: [RFC/RFT PATCH v2 0/3] PCI: generic device NUMA node detection
+Message-ID: <20170515135157.GB9700@localhost.localdomain>
+References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170504201032.32633-1-thierry.reding@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/04/2017 02:10 PM, Thierry Reding wrote:
-> From: Thierry Reding <treding@nvidia.com>
+On Mon, May 15, 2017 at 02:22:02PM +0100, Lorenzo Pieralisi wrote:
+> This patch series is v2 of a previous posting:
+> 
+> v1 -> v2:
+> 
+> - Added missing call to acpi_pci_bus_find_numa_node()
+> - Rebased against v4.12-rc1
+> 
+> v1: https://lkml.org/lkml/2017/4/26/211
+> 
+> On the ARM64 architecture, the arch specific PCI pcibus_to_node() callback
+> can be triggered on struct pci_bus.sysdata structures that carry host
+> bridge specific data through different structures layout (ie sysdata
+> pointer points at different structs for different host bridges), therefore
+> it is not possible to have a unified pcibus_to_node() implementation.
+> 
+> Given that the device NUMA node is a property of the struct pci_bus (and
+> its associated struct device), move the struct pci_bus node assignment to
+> generic PCI code, where according to the platform firmware the NUMA node
+> for the device backing the struct pci_bus is retrieved and propagated
+> through the PCI bus hierarchy.
+> 
+> Lorenzo Pieralisi (3):
+>   PCI: Introduce pci_bus_find_numa_node()
+>   PCI: Add call to set-up NUMA node for struct pci_bus devices
+>   PCI/ACPI: Add ACPI pci_bus_find_numa_node() implementation
+> 
+>  drivers/pci/pci-acpi.c | 20 ++++++++++++++++++++
+>  drivers/pci/pci.c      |  6 ++++++
+>  drivers/pci/probe.c    |  3 ++-
+>  include/linux/pci.h    |  7 +++++++
+>  4 files changed, 35 insertions(+), 1 deletion(-)
 >
-> The MSI target address can reside beyond the 32-bit boundary on devices
-> with more than 2 GiB of system memory. The PCI host bridge on Tegra can
-> easily support 64-bit addresses, so make sure to pass the upper 32 bits
-> of the target address to endpoints when allocating MSI entries.
 
-The series,
-Acked-by: Stephen Warren <swarren@nvidia.com>
+Tested at dual-socketed system with Cavium ThunderX SoC.
+Tested with 4.11 kernel.
+No issues observed, numa_node value set appropriately for pci devices.
 
-Should the first patch in the series be CC: stable since it fixes a bug?
+Tested-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+
+> -- 
+> 2.10.0
+> 
+
+
+WBR,
+Vadim
