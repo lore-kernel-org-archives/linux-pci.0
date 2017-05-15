@@ -1,142 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58352 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751158AbdEDVTR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 May 2017 17:19:17 -0400
-Date: Thu, 4 May 2017 16:19:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sparclinux@vger.kernel.org
-Subject: Re: [PATCH 09/13] PCI: Check pref compatible bit for mem64 resource
- of PCIe device
-Message-ID: <20170504211910.GA9648@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421050500.13957-1-yinghai@kernel.org>
- <20170421050500.13957-10-yinghai@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v4 0/2] Add PCIe host driver support for Mediatek SoCs
+Date: Mon, 15 May 2017 11:09:53 +0800
+Message-ID: <1494817795-15366-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170421050500.13957-10-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 10:04:56PM -0700, Yinghai Lu wrote:
-> We still get "no compatible bridge window" warning on sparc T5-8
-> after we add support for 64bit resource parsing for root bus.
-> 
->  PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
->  PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
->  PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
->  PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
->  PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
->  PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
->  PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
->  pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
-> 
-> All the bridges 64-bit resource have pref bit, but the device resource does not
-> have pref set, then we can not find parent for the device resource,
-> as we can not put non-pref mmio under pref mmio.
-> 
-> According to pcie spec errta
-> https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-> page 13, in some case it is ok to mark some as pref.
+Hi,
 
-This link is broken.  The text is included as an implementation note
-in the PCIe r3.1 spec, sec 7.5.2.1.  If you cite that, I don't think
-we need the link.  Please also fix the broken link in the patch below.
+This patch series add Mediatek Gen2 PCIe host controller driver and
+dt-binding document. It can be found on MT7623 series SoCs.
 
-This changelog needs to recap the conditions in that implementation
-note, i.e., entire path is PCIe, no conventional PCI or PCI-X devices
-perform peer-to-peer, no byte merging, etc.  And we need something
-about why we believe these conditions all hold.
+This driver was validated using Broadcom Tigon3 and Intel(R) 82575/82576
+gigabit ethernet card.
 
-In particular, I'm a little concerned about the peer-to-peer question
-and the TH bit.  There are peer-to-peer patches being discussed,
-though I don't know whether they include conventional PCI and PCI-X.
 
-I don't think Linux currently does anything with the TH bit, but if we
-do in the future, or if BIOS enabled TH via the TPH Requester
-Capability (PCIe r3.1, sec 7.26) it seems like we could break
-something.  Maybe we need to check for TPH being enabled?  I'm
-interested in your opinion here.  The changelog should show that
-you've considered the issue.
+P.S.
 
-If we support peer-to-peer, I guess that if we do put a
-non-prefetchable BAR in a prefetchable window, we would have to
-prevent any device in the hierarchy from enabling TPH?
+Hi Arnd,
 
-I have no idea how we know whether the BAR could be a target of a
-speculative Memory Read.  I guess maybe the CPU ioremap properties are
-such that speculative reads are prohibited for MMIO apertures?  Maybe
-you could investigate that and include the results?
+I still keep interrupt-map properties of the child nodes in this version.
+Because I consider if some ports link down that will break the order
+of child buses we made in the binding. In such case, I'm not sure how to
+cover it just using the 'bus' portion of the device address in the
+interrupt-map properties from parent node.
 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 5548044..676b55f 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1920,6 +1920,36 @@ static void pci_dma_configure(struct pci_dev *dev)
->  	pci_put_host_bridge_device(bridge);
->  }
->  
-> +static bool pci_up_path_over_pcie(struct pci_bus *bus)
-> +{
-> +	if (pci_is_root_bus(bus))
-> +		return true;
-> +
-> +	if (bus->self && !pci_is_pcie(bus->self))
-> +		return false;
-> +
-> +	return pci_up_path_over_pcie(bus->parent);
-> +}
-> +
-> +/*
-> + * According to
-> + * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-> + * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-> + * on some cases.
-> + * Let's mark if entire path from the host to the adapter is over PCI
-> + * Express. later will use that compute pref compaitable bit.
-> + */
-> +static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-> +{
-> +	if (!pci_is_pcie(dev))
-> +		return;
-> +
-> +	if (!pci_up_path_over_pcie(dev->bus))
-> +		return;
-> +
-> +	dev->on_all_pcie_path = 1;
+But if you feel this is inappropriate, I will remove those in next version.
 
-I think this can be set more simply as:
+Changes since v4:
+- move the per-port registers to the parent node.
+- use a valid compatible for hifsys controller.
+- use the 'sysirq' instead of 'gic' as a correct 'interrupt-parent' of the
+  interrupt-map properties.
+ 
+  'sysirq' is an interrupt-controller that could help us to inverse GIC SPIs polarity
+  so that we could properly set irq type to level low without any extra properties.
+  I made a **big mistake** to select wrong interrupt-parent in previous version.
+  Now, we could remove interrupt properties entirely from binding.
 
-  if (pci_is_pcie(dev)) {
-    if (pci_is_root_bus(dev->bus))
-      dev->pcie_path = 1;
-    else if (dev->bus->self && dev->bus->self->pcie_path)
-      dev->pcie_path = 1;
-  }
+Changes since v3:
+- correct sub-nodes unit addresses.
 
-How about if you just put this code in set_pcie_port_type() so you
-don't have to add another function and worry about whether it's called
-after pcie_cap is assigned?  Then you wouldn't need the pci_is_pcie()
-test either.
+Changes since v2:
+- modify Kconfig to avoid kbuild test error on some architecture.
+- change compatible string.
+- revise binding document:
+  add missing interrupt-names.
+  remove the board dts example and drop 'status' properties.
+  remove unnecessary descriptions bout standard PCI bus binding.
 
-> +}
-> +
->  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  {
->  	int ret;
-> @@ -1950,6 +1980,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->  	/* Initialize various capabilities */
->  	pci_init_capabilities(dev);
->  
-> +	/* After pcie_cap is assigned */
-> +	pci_set_on_all_pcie_path(dev);
-> +
->  	/*
->  	 * Add the device to our list of discovered devices
->  	 * and the bus list for fixup functions, etc.
+Changes since v1:
+- add .suppress_bind_attrs.
+- remove unnecessary *_valid_device() pattern.
+- remove PCI_PROBE_ONLY.
+- use the regular readl() instead of readl_relaxed().
+- add .map_bus() and change to use pci_generic_config_read/pci_generic_config_write.
+- revise dt-binding document and move nonstandard properties to root node.
+- change compatible string.
+- use interrupt-map property and replace mtk_pcie_map_irq() with of_irq_parse_and_map_pci().
+- use the new pci_register_host_bridge() method instead of pci_scan_root_bus()
+
+Ryder Lee (2):
+  PCI: mediatek: Add Mediatek PCIe host controller support
+  dt-bindings: pcie: Add documentation for Mediatek PCIe
+
+ .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 +++++
+ drivers/pci/host/Kconfig                           |  11 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-mediatek.c                   | 559 +++++++++++++++++++++
+ 4 files changed, 701 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-mediatek.c
+
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
