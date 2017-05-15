@@ -1,109 +1,145 @@
-Return-Path: <SRS0=sSuZ=5A=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=sSuZ=5A=rock-chips.com=shawn.lin@kernel.org>
-Subject: Re: [PATCH v4] PCI: use IDA to manage domain number if not getting it
- from DT
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1495611455-41952-1-git-send-email-shawn.lin@rock-chips.com>
- <20170525194353.GA3390@bhelgaas-glaptop.roam.corp.google.com>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
- Brian Norris <briannorris@chromium.org>,
- Jeffy Chen <jeffy.chen@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <3950969a-53b8-96ce-7504-e0b578ea9443@rock-chips.com>
-Date: Fri, 26 May 2017 15:08:21 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 1/3] arm64: dts: hi3660: add pcie node
+To: Song Xiaowei <songxiaowei@hisilicon.com>, <bhelgaas@google.com>,
+        <kishon@ti.com>, <jingoohan1@gmail.com>, <arnd@arndb.de>,
+        <tn@semihalf.com>, <keith.busch@intel.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>
+CC: <puck.chen@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
+References: <20170515062745.70082-1-songxiaowei@hisilicon.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <9e2ed522-d808-8984-cc5a-316c392363d5@axis.com>
+Date: Mon, 15 May 2017 10:19:18 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170525194353.GA3390@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20170515062745.70082-1-songxiaowei@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 2017/5/26 3:43, Bjorn Helgaas wrote:
-> On Wed, May 24, 2017 at 03:37:35PM +0800, Shawn Lin wrote:
->> If not getting domain number from DT, the domain number will
->> keep increasing once doing unbind/bind RC drivers. This could
->> introduce pointless tree view of lspci as shows below:
->>
->> -+-[0001:00]---00.0-[01]----00.0
->>   \-[0000:00]-
->>
->> The more test we do, the lengthier it would be. The more serious
->> issue is that if attaching two hierarchies for two different domains
->> belonging to two root bridges, so when doing unbind/bind test for one
->> of them and keep the other, then the domain number would finally
->> overflow and make the two hierarchies of devices share the some domain
->> number but actually they shouldn't. So it looks like we need to invent
->> a new indexing ID mechanism to manage domain number. This patch
->> introduces idr to achieve our purpose.
->>
->> Cc: Brian Norris <briannorris@chromium.org>
->> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> ---
->>
->> Changes in v4:
->> - make domain_nr depends on CONFIG_PCI_DOMAINS instead of
->> CONFIG_PCI_DOMAINS_GENERIC.(reported by Kbuild Robot)
->
-> I'm confused about why you posted this v4.  It addresses a kbuild
-> issue, but not any of the questions from my review of v3, so reviewing
-> v4 would be a waste of my time.
->
-
-I feel very sorry about that if you were confused by my v4 which didn't
-address your comment in v3. But the fact is that it's unfortunate
-your comment for v3 arrived just right after I posted my v4, if you
-checked the mail's timestamp. :(
-
-> But since we're here, my naive suggestion:
->
->>> 1) If we're using ACPI, every host bridge must have a _SEG method,
->>> and it supplies the domain.  We ignore any bridge without _SEG.
->>>
->>> 2) If we're using DT, every host bridge must supply
->>> "linux,pci-domain", and it supplies the domain.  We ignore any
->>> bridge without "linux,pci-domain".
->>>
->>> 3) Otherwise, we always use IDA.
->
-> was *too* simplistic.  _SEG is optional.  If it's missing we default
-> to domain 0.
->
-> The point is that we can't mix the IDA with either the ACPI or DT
-> info.  I think for ACPI it should be easy: if _SEG exists, we use
-> that.  If _SEG doesn't exist, the spec says we that bridge is in
-> domain 0.  So I think we should never use IDA if we're using ACPI.
-
-got it.
-
->
-> For DT, I think we can't use IDA if *any* bridge uses
-> "linux,pci-domain", because there's no way to allocate a specified
-> domain from the IDA.
->
-> Of course, we see the bridges one at a time, so we don't know ahead of
-> time whether any uses "linux,pci-domain".  I think that means we have
-> to decide when we see the very first host bridge which strategy to
-> use.  If the first host bridge has "linux,pci-domain", we use that,
-> and if future host bridges don't supply "linux,pci-domain", we
-> probably have to ignore the whole bridge.
->
-> If the first host bridge doesn't have "linux,pci-domain", we use IDA,
-> and we probably have to ignore any future bridges that *do* have
-> "linux,pci-domain".
->
-> So it seems like "linux,pci-domain" is basically an all-or-none
-> proposition.
-
-That makes sense to me.
-
->
+Hello Song
 
 
+You forgot to add the device tree maintainers
+and the device tree mailing list to this patch.
 
-> Bjorn
->
->
->
+If you use ./scripts/get_maintainer.pl <patch>
+it will show you this information.
+
+
+Regards,
+Niklas
+
+
+On 05/15/2017 08:27 AM, Song Xiaowei wrote:
+> Add PCIe node for hi3660, and add binding documentation.
+> 
+> Cc: Guodong Xu <guodong.xu@linaro.org>
+> Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
+> ---
+>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 52 ++++++++++++++++++++++
+>  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 31 +++++++++++++
+>  2 files changed, 83 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> index a339dbb15493..71491178c86c 100644
+> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -85,3 +85,55 @@ Example:
+>  				 0x0 0 0 4 &mbigen_pcie0 650 4>;
+>  		status = "ok";
+>  	};
+> +
+> +
+> +
+> +HiSilicon Kirin SoC PCIe host DT description
+> +
+> +Kirin PCIe host controller is also based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver and inherits
+> +common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties
+> +- compatible: Should contain "hisilicon,kirin-pcie".
+> +- reg: Should contain rc_dbi, apb, phy, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "dbi": controller configuration registers;
+> +  "apb": apb Ctrl register;
+> +  "phy": apb PHY register;
+> +  "config": PCIe configuration space registers.
+> +- reset-gpio: perst assert/deassert gpio
+> +
+> +Optional properties:
+> +- status: Either "ok" or "disabled".
+> +
+> +Kirin960 Example:
+> +        kirin_pcie@f4000000 {
+> +                        compatible = "hisilicon,kirin-pcie";
+> +                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+> +                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF5000000 0 0x2000>;
+> +                        reg-names = "dbi","apb","phy", "config";
+> +                        bus-range = <0x0  0x1>;
+> +                        #address-cells = <3>;
+> +                        #size-cells = <2>;
+> +                        device_type = "pci";
+> +                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf6000000 0x0 0x2000000>;
+> +                        num-lanes = <1>;
+> +                        #interrupt-cells = <1>;
+> +                        interrupt-map-mask = <0xf800 0 0 7>;
+> +			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
+> +                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
+> +                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
+> +                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+> +                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+> +                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+> +                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+> +                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+> +                        clock-names = "pcie_phy_ref", "pcie_aux",
+> +                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+> +                        reset-gpio = <&gpio11 1 0 >;
+> +                        status = "ok";
+> +        };
+> diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> index 3983086bd67b..2406a54947df 100644
+> --- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> +++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> @@ -156,5 +156,36 @@
+>  			clock-names = "uartclk", "apb_pclk";
+>  			status = "disabled";
+>  		};
+> +
+> +		kirin_pcie@f4000000 {
+> +			compatible = "hisilicon,kirin-pcie";
+> +			reg =  <0x0 0xf4000000 0x0 0x1000>,
+> +				<0x0 0xff3fe000 0x0 0x1000>,
+> +				<0x0 0xf3f20000 0x0 0x40000>,
+> +				<0x0 0xF5000000 0x0 0x2000>;
+> +			reg-names = "dbi", "apb", "phy", "config";
+> +			bus-range = <0x0  0x1>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			device_type = "pci";
+> +			ranges = <0x02000000 0x0 0x00000000 0x0
+> +				0xf6000000 0x0 0x2000000>;
+> +			num-lanes = <1>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0xf800 0 0 7>;
+> +			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
+> +				<0x0 0 0 2 &gic 0 0 0  283 4>,
+> +				<0x0 0 0 3 &gic 0 0 0  284 4>,
+> +				<0x0 0 0 4 &gic 0 0 0  285 4>;
+> +			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+> +				<&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+> +				<&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+> +				<&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+> +				<&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+> +			clock-names = "pcie_phy_ref", "pcie_aux",
+> +				"pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+> +			reset-gpio = <&gpio11 1 0 >;
+> +			status = "ok";
+> +		};
+>  	};
+>  };
+> 
