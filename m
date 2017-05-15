@@ -1,54 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:40683 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750773AbdEDIlI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 May 2017 04:41:08 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: Configure RC's MPS setting
-Date: Thu,  4 May 2017 16:40:04 +0800
-Message-Id: <1493887204-5501-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Sricharan R <sricharan@codeaurora.org>
+Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
+ deferred probing or error
+Date: Mon, 15 May 2017 23:37:16 +0300
+Message-ID: <1900421.tkAiezvoW8@avalon>
+In-Reply-To: <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
+ <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Magnus Damm <magnus.damm@gmail.com>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
+ Robin Murphy <robin.murphy@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The default value of MPS for RC is 128 bytes, but actually
-it could support 256 bytes. So this patch fix this issue.
+Hi Sricharan,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+On Wednesday 03 May 2017 15:54:59 Sricharan R wrote:
+> On 5/3/2017 3:24 PM, Robin Murphy wrote:
+> > On 02/05/17 19:35, Geert Uytterhoeven wrote:
+> >> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R wrote:
+> >>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+> >>> 
+> >>> Failures to look up an IOMMU when parsing the DT iommus property need to
+> >>> be handled separately from the .of_xlate() failures to support deferred
+> >>> probing.
+> >>> 
+> >>> The lack of a registered IOMMU can be caused by the lack of a driver for
+> >>> the IOMMU, the IOMMU device probe not having been performed yet, having
+> >>> been deferred, or having failed.
+> >>> 
+> >>> The first case occurs when the device tree describes the bus master and
+> >>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+> >>> or the device driver has not been compiled in. Return NULL, the caller
+> >>> will configure the device without an IOMMU.
+> >>> 
+> >>> The second and third cases are handled by deferring the probe of the bus
+> >>> master device which will eventually get reprobed after the IOMMU.
+> >>> 
+> >>> The last case is currently handled by deferring the probe of the bus
+> >>> master device as well. A mechanism to either configure the bus master
+> >>> device without an IOMMU or to fail the bus master device probe depending
+> >>> on whether the IOMMU is optional or mandatory would be a good
+> >>> enhancement.
+> >>> 
+> >>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> >>> Signed-off-by: Laurent Pichart
+> >>> <laurent.pinchart+renesas@ideasonboard.com>
+> >>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> >> 
+> >> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
+> >> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
+> >> properties in DT now fail to probe.
+> > 
+> > How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
+> > registered then they should merely defer until we reach the point of
+> > giving up and ignoring the IOMMU. Is it just that you have no other
+> > late-probing drivers or post-init module loads to kick the deferred
+> > queue after that point? I did try to find a way to explicitly kick it
+> > from a suitably late initcall, but there didn't seem to be any obvious
+> > public interface - anyone have any suggestions?
+> > 
+> > I think that's more of a general problem with the probe deferral
+> > mechanism itself (I've seen the same thing happen with some of the
+> > CoreSight stuff on Juno due to the number of inter-component
+> > dependencies) rather than any specific fault of this series.
+> 
+> I was thinking of an additional check like below to avoid the
+> situation ?
+> 
+> From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
+> From: Sricharan R <sricharan@codeaurora.org>
+> Date: Wed, 3 May 2017 13:16:59 +0530
+> Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
+> 
+> While returning EPROBE_DEFER for iommu masters
+> take in to account of iommu nodes that could be
+> marked in DT as 'status=disabled', in which case
+> simply return NULL and let the master's probe
+> continue rather than deferring.
+> 
+> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> ---
+>  drivers/iommu/of_iommu.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 9f44ee8..e6e9bec 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node
+> *np)
+> 
+>         ops = iommu_ops_from_fwnode(fwnode);
+>         if ((ops && !ops->of_xlate) ||
+> +           !of_device_is_available(iommu_spec->np) ||
+>             (!ops && !of_iommu_driver_present(iommu_spec->np)))
+>                 return NULL;
 
- drivers/pci/host/pcie-rockchip.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+This looks good to me, but won't be enough. The ipmmu-vmsa driver in v4.12-rc1 
+doesn't call iommu_device_register() and thus won't be found by 
+iommu_ops_from_fwnode(). Furthermore, it doesn't IOMMU_OF_DECLARE(), and thus 
+will always be considered as absent.
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 0e020b6..a05fec5 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -146,6 +146,9 @@
- #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
- #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
- #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-+#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
-+#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
-+#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
- #define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
- #define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
- #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
-@@ -664,6 +667,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
- 	}
- 
-+	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCSR);
-+	status &= ~PCIE_RC_CONFIG_DCSR_MPS_MASK;
-+	status |= PCIE_RC_CONFIG_DCSR_MPS_256;
-+	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
-+
- 	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
- 
- 	rockchip_pcie_write(rockchip,
+I agree that the ipmmu-vmsa driver needs to be fixed, but it would have been 
+nice to check existing IOMMU drivers before merging this patch series...
+
+> >> This can be fixed by either:
+> >>   - Disabling CONFIG_IPMMU_VMSA, or
+> >>   - Reverting commit 7b07cbefb68d486f (but keeping "int ret = 0;").
+> >> 
+> >> Note that this was a bit hard to investigate, as R-Car Gen3 support
+> >> wasn't upstreamed yet, so bisection pointed to a merge commit.
+
 -- 
-1.9.1
+Regards,
+
+Laurent Pinchart
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
