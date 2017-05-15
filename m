@@ -1,90 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:6911 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936220AbdEZB5K (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 21:57:10 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 1/4] PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-Date: Fri, 26 May 2017 09:53:30 +0800
-Message-ID: <20170526015333.92482-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20170526015333.92482-1-songxiaowei@hisilicon.com>
-References: <20170526015333.92482-1-songxiaowei@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:41326 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751952AbdEOREJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:04:09 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC v2 3/8] pci: imx6 SoC driver adapted to new irq API
+Date: Mon, 15 May 2017 18:03:43 +0100
+Message-Id: <b78e4fee89d9167e45c367de8c0261c894cceef8.1494867112.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- .../devicetree/bindings/pci/kirin-pcie.txt         | 49 ++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+This patch adapts imx6 SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-new file mode 100644
-index 000000000000..2dd0e7a368ad
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -0,0 +1,49 @@
-+HiSilicon Kirin SoCs PCIe host DT description
-+
-+Kirin PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver
-+and inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties
-+- compatible:
-+	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
-+- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "dbi": controller configuration registers;
-+  "apb": apb Ctrl register defined by Kirin;
-+  "phy": apb PHY register defined by Kirin;
-+  "config": PCIe configuration space registers.
-+- reset-gpios: The gpio to generate PCIe perst assert and deassert signal.
-+
-+Optional properties:
-+
-+Example based on kirin960:
-+
-+        pcie@f4000000 {
-+                        compatible = "hisilicon,kirin-pcie";
-+                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
-+                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
-+                        reg-names = "dbi","apb","phy", "config";
-+                        bus-range = <0x0  0x1>;
-+                        #address-cells = <3>;
-+                        #size-cells = <2>;
-+                        device_type = "pci";
-+                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf5000000 0x0 0x2000000>;
-+                        num-lanes = <1>;
-+                        #interrupt-cells = <1>;
-+                        interrupt-map-mask = <0xf800 0 0 7>;
-+			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
-+                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
-+                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
-+                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+                        clock-names = "pcie_phy_ref", "pcie_aux",
-+                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-+                        reset-gpios = <&gpio11 1 0 >;
-+        };
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+changes v1->v2:
+- just to keep up patch set version
+
+ drivers/pci/dwc/pci-imx6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index a98cba5..f22ce1f 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -490,15 +490,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
+ 	return -EINVAL;
+ }
+ 
+-static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct imx6_pcie *imx6_pcie = arg;
+-	struct dw_pcie *pci = imx6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct dw_pcie *pci = imx6_pcie->pci;
+@@ -620,15 +611,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       imx6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "mx6-pcie-msi", imx6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
 -- 
-2.11.GIT
+2.9.3
