@@ -1,69 +1,124 @@
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <hch@infradead.org>, <liudongdong3@huawei.com>
-Subject: [PATCH v5 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
-Date: Tue, 23 May 2017 15:23:59 +0100
-Message-ID: <1495549439-10372-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 07/30] iommu/arm-smmu-v3: Add second level of context
+ descriptor table
+To: Tomasz Nowicki <tn@semihalf.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-8-jean-philippe.brucker@arm.com>
+ <ef690c27-95cc-c15d-7e70-7e89de7bc08a@semihalf.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <7ba38e5b-cbce-f468-42fc-2949e1a06176@arm.com>
+Date: Mon, 15 May 2017 14:57:15 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <ef690c27-95cc-c15d-7e70-7e89de7bc08a@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On 15/05/17 13:47, Tomasz Nowicki wrote:
+> Hi Jean,
+> 
+> On 27.02.2017 20:54, Jean-Philippe Brucker wrote:
+>> @@ -1213,17 +1356,59 @@ static void arm_smmu_free_cd_tables(struct
+>> arm_smmu_master_data *master)
+>>  __maybe_unused
+>>  static int arm_smmu_alloc_cd(struct arm_smmu_master_data *master)
+>>  {
+>> +    int ssid;
+>> +    int i, ret;
+>>      struct arm_smmu_cd_cfg *cfg = &master->ste.cd_cfg;
+>>
+>> -    return arm_smmu_bitmap_alloc(cfg->context_map,
+>> ilog2(cfg->num_entries));
+>> +    if (cfg->linear)
+>> +        return arm_smmu_bitmap_alloc(cfg->table.context_map,
+>> +                         ilog2(cfg->num_entries));
+>> +
+>> +    /* Find first leaf table with an empty slot, or allocate a new leaf */
+>> +    for (i = cfg->l1.cur_table; i < cfg->num_entries; i++) {
+>> +        struct arm_smmu_cd_table *table = &cfg->l1.tables[i];
+>> +
+>> +        if (!table->cdptr) {
+>> +            __le64 *l1ptr = cfg->l1.ptr + i * CTXDESC_L1_DESC_DWORD;
+>> +
+>> +            ret = arm_smmu_alloc_cd_leaf_table(master->smmu, table,
+>> +                               CTXDESC_NUM_L2_ENTRIES);
+>> +            if (ret)
+>> +                return ret;
+>> +
+>> +            arm_smmu_write_cd_l1_desc(l1ptr, table);
+>> +            arm_smmu_sync_cd(master, i << CTXDESC_SPLIT, false);
+>> +        }
+>> +
+>> +        ssid = arm_smmu_bitmap_alloc(table->context_map, CTXDESC_SPLIT);
+>> +        if (ssid < 0)
+>> +            continue;
+>> +
+>> +        cfg->l1.cur_table = i;
+>> +        return i << CTXDESC_SPLIT | ssid;
+>> +    }
+>> +
+>> +    return -ENOSPC;
+>>  }
+>>
+>>  __maybe_unused
+>>  static void arm_smmu_free_cd(struct arm_smmu_master_data *master, u32
+>> ssid)
+>>  {
+>> +    unsigned long l1_idx, idx;
+>>      struct arm_smmu_cd_cfg *cfg = &master->ste.cd_cfg;
+>>
+>> -    arm_smmu_bitmap_free(cfg->context_map, ssid);
+>> +    if (cfg->linear) {
+>> +        arm_smmu_bitmap_free(cfg->table.context_map, ssid);
+>> +        return;
+>> +    }
+>> +
+>> +    l1_idx = ssid >> CTXDESC_SPLIT;
+>> +    idx = ssid & ((1 << CTXDESC_SPLIT) - 1);
+>> +    arm_smmu_bitmap_free(cfg->l1.tables[l1_idx].context_map, idx);
+>> +
+>> +    /* Prepare next allocation */
+>> +    if (cfg->l1.cur_table > idx)
+>> +        cfg->l1.cur_table = idx;
+>>  }
+> 
+> I am not sure what is the logic here. idx becomes index of l1.tables in
+> arm_smmu_alloc_cd() which in turn may be out of allocated memory. I may
+> miss something. Can you please elaborate on this?
 
-Currently the MSI/MSIx vectors for the root port services are
-allocated calling pcie_init_service_irqs(). At the moment these
-vectors are only allocated for AER, PME, HP.
-This patch allocate an MSI/MSIx vector also for DPC.
+The code is wrong, this should be:
 
-Signed-off-by: Liudongdong <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pcie/portdrv_core.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
++    if (cfg->l1.cur_table > l1_idx)
++        cfg->l1.cur_table = l1_idx;
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 07d8e01..8e6320e 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -118,6 +118,31 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 		nvec = max(nvec, entry + 1);
- 	}
- 
-+	if (mask & PCIE_PORT_SERVICE_DPC) {
-+		u16 reg16, pos;
-+
-+		/*
-+		 * The code below follows Section 6.2.10.1 of the PCI Express
-+		 * Base Specification 4.0 stating that bits 4-0 of DPC
-+		 * Capability Register contain a value indicating which of the
-+		 * MSI/MSI-X vectors assigned to the port is going to be used
-+		 * for DPC, where "For MSI-X, the value in this register
-+		 * indicates which MSI-X Table entry is used to generate the
-+		 * interrupt message." and "For MSI, the value in this field
-+		 * indicates the offset between the base Message Data and the
-+		 * interrupt message that is generated."
-+		 */
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
-+		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
-+		entry = reg16 & 0x1f;
-+		if (entry >= nr_entries)
-+			goto out_free_irqs;
-+
-+		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
-+
-+		nvec = max(nvec, entry + 1);
-+	}
-+
- 	/*
- 	 * If nvec is equal to the allocated number of entries, we can just use
- 	 * what we have.  Otherwise, the port has some extra entries not for the
--- 
-2.7.4
+Which tells alloc_cd() that there is a free slot in table l1_idx. It would
+also look better with a min(). However this allocator will be replaced by
+a global (IDR) allocator in next version, as requested by other users of
+the IOMMU API.
+
+Thanks,
+Jean
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
