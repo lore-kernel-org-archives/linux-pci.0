@@ -1,81 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:34097 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751028AbdEaMqb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 08:46:31 -0400
-Subject: Re: [PATCH 1/8] pci: adding new irq api to pci-designware
-To: Lucas Stach <l.stach@pengutronix.de>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
- <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
- <1496234001.30073.19.camel@pengutronix.de>
-CC: <bhelgaas@google.com>, <marc.zyngier@arm.com>,
-        <m-karicheri2@ti.com>, <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <62787214-b4d2-5a6b-99a5-df406140cf86@synopsys.com>
-Date: Wed, 31 May 2017 13:46:23 +0100
-MIME-Version: 1.0
-In-Reply-To: <1496234001.30073.19.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from ale.deltatee.com ([207.54.116.67]:60291 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752885AbdEOQpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 May 2017 12:45:04 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Mon, 15 May 2017 10:44:53 -0600
+Message-Id: <1494866693-2850-3-git-send-email-logang@deltatee.com>
+In-Reply-To: <1494866693-2850-1-git-send-email-logang@deltatee.com>
+References: <1494866693-2850-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH 2/2] switchtec: fix minor bug with partition id register
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+When a switch endpoind is configured without NTB the mmio_ntb registers
+will read all zeros. However, in corner case configurations where the
+partition ID is not zero and NTB is not enabled then the code will have
+the wrong partition ID and this causes the driver to use the wrong
+set of drivers. To fix this we simply take the partition ID from the
+system info region.
 
-Hi Lucas,
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reported-by: Dingbao Chen <dingbao.chen@microsemi.com>
+---
+ drivers/pci/switch/switchtec.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Às 1:33 PM de 5/31/2017, Lucas Stach escreveu:
-> Am Dienstag, den 30.05.2017, 12:32 +0100 schrieb Joao Pinto:
->> This patch adds the new interrupt api to pcie-designware, keeping the old
->> one. Although the old API is still available, pcie-designware initiates
->> with the new one.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
-> [...]
->> @@ -378,17 +593,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>  
->>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->>  		if (!pp->ops->msi_host_init) {
->> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
->> -						MAX_MSI_IRQS, &msi_domain_ops,
->> -						&dw_pcie_msi_chip);
->> -			if (!pp->irq_domain) {
->> -				dev_err(dev, "irq domain init failed\n");
->> -				ret = -ENXIO;
->> +			ret = of_property_read_u32(np, "num-vectors",
->> +						   &pp->num_vectors);
->> +			if (ret)
->> +				pp->num_vectors = 1;
-> 
-> This adds a DT property without documentation. That's a strong no-go.
-> 
-
-yep, indeed I forgot to merge this into the patch tree. Going to check this in
-the next patch version.
-
-> Why do you even need this property? The number of vectors available can
-> be inferred from the compatible, so there is no need to push this into
-> the DT. A fallback of only 1 vector if the property doesn't exist is
-> also pretty limiting. The old implementation allowed for at least 32
-> vectors, with most of the core implementations probably allowing much
-> more in hardware.
-
-The hardware supports up to 256, but the current driver is set for a maximum of
-32. I suggest we remove MAX_MSI_IRQS and MAX_MSI_CTRLS, and calculate the
-maximum number of controllers according to the num_vectors value: Ctrls =
-num_vectors / 32, removing the hardcoded limitation from the driver.
-What do you think?
-
-> 
-> Regards,
-> Lucas
-> 
-
-Thanks and regards,
-
-Joao
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index abaa227a..f6a6340 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1441,12 +1441,15 @@ static int switchtec_init_pci(struct switchtec_dev *stdev,
+ 	stdev->mmio_sys_info = stdev->mmio + SWITCHTEC_GAS_SYS_INFO_OFFSET;
+ 	stdev->mmio_flash_info = stdev->mmio + SWITCHTEC_GAS_FLASH_INFO_OFFSET;
+ 	stdev->mmio_ntb = stdev->mmio + SWITCHTEC_GAS_NTB_OFFSET;
+-	stdev->partition = ioread8(&stdev->mmio_ntb->partition_id);
++	stdev->partition = ioread8(&stdev->mmio_sys_info->partition_id);
+ 	stdev->partition_count = ioread8(&stdev->mmio_ntb->partition_count);
+ 	stdev->mmio_part_cfg_all = stdev->mmio + SWITCHTEC_GAS_PART_CFG_OFFSET;
+ 	stdev->mmio_part_cfg = &stdev->mmio_part_cfg_all[stdev->partition];
+ 	stdev->mmio_pff_csr = stdev->mmio + SWITCHTEC_GAS_PFF_CSR_OFFSET;
+ 
++	if (stdev->partition_count < 1)
++		stdev->partition_count = 1;
++
+ 	init_pff(stdev);
+ 
+ 	pci_set_drvdata(pdev, stdev);
+-- 
+2.1.4
