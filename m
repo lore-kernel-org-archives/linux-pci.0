@@ -1,59 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Geetha sowjanya <gakula@caviumnetworks.com>
-To: bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/PM: Set D3 power state only if the end device supports it.
-Date: Wed, 31 May 2017 17:03:32 +0530
-Message-Id: <1496230412-19028-1-git-send-email-gakula@caviumnetworks.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 15 May 2017 05:57:11 -0700
+From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Vadim.Lomovtsev@caviumnetworks.com
+Subject: Re: [RFC/RFT PATCH 1/3] PCI: Introduce pci_bus_find_numa_node()
+Message-ID: <20170515125711.GA9700@localhost.localdomain>
+References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
+ <1494593045-19911-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170512155040.GA11377@red-moon>
+ <20170512171846.GA21391@localhost.localdomain>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: jcm@redhat.com, Geetha sowjanya <gakula@caviumnetworks.com>,
- linux-kernel@vger.kernel.org, geethasowjanya.akula@gmail.com,
- robert.richter@cavium.com, sgoutham@cavium.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170512171846.GA21391@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pci driver doesn't check if the device supports D3hot/D3cold power states 
-while setting these power states. The device that doesn't support these 
-states will fail when a driver like vfio try to do D0->D3 power transition.
+On Fri, May 12, 2017 at 10:18:46AM -0700, Vadim Lomovtsev wrote:
+Hi Lorenzo,
 
-This patch adds a check that allows to set D3 power state only
-for the supported devices.
+> Hi Lorenzo
+> 
+> On Fri, May 12, 2017 at 04:50:40PM +0100, Lorenzo Pieralisi wrote:
+> > Hi Vadim,
+> > 
+> > On Fri, May 12, 2017 at 05:44:05AM -0700, Vadim Lomovtsev wrote:
+> > > Hi Lorenzo,
+> > > 
+> > > Are there any news related to these patches ?
+> > 
+> > Not really, I have not received any feedback but I was expecting some
+> > to make progress here. Have you tested it ?
+> >
+> > Please let me know, thanks !
+> 
+> Not yet. Plan to test them after weekend and will get back to you.
+>
 
-Signed-off-by: Geetha sowjanya <gakula@caviumnetworks.com>
----
- drivers/pci/pci.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Here is the results of testing you patches at dual-socketed board
+with Cavium ThunderX SoC.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 563901c..cadd046 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -661,7 +661,8 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
- 
- 	/* check if this device supports the desired state */
- 	if ((state == PCI_D1 && !dev->d1_support)
--	   || (state == PCI_D2 && !dev->d2_support))
-+	   || (state == PCI_D2 && !dev->d2_support)
-+	   || (state == PCI_D3hot && !pci_pme_capable(dev, state)))
- 		return -EIO;
- 
- 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
--- 
-1.7.1
+Each boot kernel boot with acpi=force argument.
 
+1. The 4.12-rc1 couldn't find rootfs partition so can't be tested.
+2.1  The 4.11 without your patch set 0 to numa node for pci device
+  cat /sys/bus/pci/devices/*/numa_node
+  got zeroes here for all devices
+2.2 The 4.11 with your patches applied set -1 to numa_node for all pci devices
+  same command provides "-1"
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+So looking at your patches..
+
+At the patch 1/3 you implemented pci_bus_find_numa_node function:
+
++int pci_bus_find_numa_node(struct pci_bus *bus)
++{
++	return NUMA_NO_NODE;
++}
+
+Then at the 2/3 patch it is called from pci_register_host_bridge:
+@@ -770,6 +770,7 @@ int pci_register_host_bridge(struct pci_host_bridge *bridge)
+[..]
++	set_dev_node(&bus->dev, pci_bus_find_numa_node(bus));
+
+I suppose that is why I'm seeing those -1 in the numa_node field.
+
+And at the patch 3/3 you implemented acpi_pci_bus_find_numa_node function
+ +int acpi_pci_bus_find_numa_node(struct pci_bus *bus)
+which implements actual work of getting numa node value,
+but it seems that nodoby calls it, isn't it ?
+
+Don't we need to update pci_bus_find_numa_node with proper calling
+of acpi_pci_bus_find_numa_node() ?
+
+> > 
+> > Lorenzo
+> 
+> WBR,
+> Vadim
+
+WBR,
+Vadim
