@@ -1,79 +1,83 @@
-Return-Path: <SRS0=/A9m=4Z=oracle.com=dan.carpenter@kernel.org>
-Return-Path: <SRS0=/A9m=4Z=oracle.com=dan.carpenter@kernel.org>
-Date: Fri, 19 May 2017 14:20:00 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Jork Loeser <jloeser@microsoft.com>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devel@linuxdriverproject.org,
-        olaf@aepfle.de, apw@canonical.com, vkuznets@redhat.com,
-        jasowang@redhat.com, leann.ogasawara@canonical.com,
-        marcelo.cerri@canonical.com, sthemmin@microsoft.com
-Subject: Re: [PATCH 3/4] Hyper-V vPCI: Add vPCI version protocol negotiation
-Message-ID: <20170519112000.4vsmlc545mgbndqf@mwanda>
-References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
- <1495134870-18225-4-git-send-email-jloeser@linuxonhyperv.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 0/2] Tango PCIe controller support
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+ Thomas Gleixner <tglx@linutronix.de>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+Message-ID: <f65112f3-f958-3f87-5527-fcba34975576@sigmadesigns.com>
+Date: Mon, 15 May 2017 10:16:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495134870-18225-4-git-send-email-jloeser@linuxonhyperv.com>
+In-Reply-To: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Mason <slash.tmp@free.fr>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
+ David Laight <david.laight@aculab.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 18, 2017 at 12:14:29PM -0700, Jork Loeser wrote:
->  static int hv_pci_protocol_negotiation(struct hv_device *hdev)
->  {
-> +	size_t i;
+On 20/04/2017 16:24, Marc Gonzalez wrote:
 
-Could you just use "int i".  I know some static checkers complain but
-those tools are dumb.  I just fixed a couple bugs two days ago where
-people were like, "If i is declared as a u32 that means it's safe" and
-it turns out, nope.  No need to get fancy.
+> This patch was split in two, to ease review of two orthogonal
+> parts (MSI controller and host bridge). NB: the patch is
+> just split in two where host bridge support starts.
+> 
+> Changes from v3 to v4
+> 
+> In the MSI part:
+> - Support 256 MSIs instead of only 32
+> - Define tango_{ack,mask,unmask} callbacks for the HW irq_chip
+> - Use a spinlock instead of a mutex
+> - Rename msi_mask register to msi_enable
+> 
+> In the host bridge part:
+> - Move several quirk-handling snippets out of the config space read function
+> - Check whether the PCIe link is up at probe-time
+> 
+> Other files
+> - Let the framework compute the bus-range from the config space width
+> - Be slightly more verbose in the Kconfig help
+> 
+> 
+> What has *not* changed, waiting from feedback from Bjorn:
+> 
+> - Pray that config and mem space accesses NEVER occur concurrently.
+> - Using of_device_is_compatible() vs of_device_get_match_data()
+> 
+> 
+> Marc Gonzalez (2):
+>   PCI: Add tango MSI controller support
+>   PCI: Add tango PCIe host bridge support
+> 
+>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++
+>  drivers/pci/host/Kconfig                             |   8 +
+>  drivers/pci/host/Makefile                            |   1 +
+>  drivers/pci/host/pcie-tango.c                        | 393 +++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci_ids.h                              |   2 +
+>  5 files changed, 436 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-tango.c
 
-And could you put the i at the end of the declaration block in reverse
-Christmas tree order?  It matches the others in this function.
+Now that Linus has closed the merge window for v4.12, I hope that this
+driver can be accepted in v4.13 ?
 
-	loooooooooooooooooooooooooooong var;
-	meeeeeeedium var;
-	int ret;
-	int i;
+Regards.
 
->  	struct pci_version_request *version_req;
->  	struct hv_pci_compl comp_pkt;
->  	struct pci_packet *pkt;
-> @@ -1816,28 +1832,44 @@ static int hv_pci_protocol_negotiation(struct hv_device *hdev)
->  	pkt->compl_ctxt = &comp_pkt;
->  	version_req = (struct pci_version_request *)&pkt->message;
->  	version_req->message_type.type = PCI_QUERY_PROTOCOL_VERSION;
-> -	version_req->protocol_version = PCI_PROTOCOL_VERSION_CURRENT;
->  
-> -	ret = vmbus_sendpacket(hdev->channel, version_req,
-> -			       sizeof(struct pci_version_request),
-> -			       (unsigned long)pkt, VM_PKT_DATA_INBAND,
-> -			       VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-> -	if (ret)
-> -		goto exit;
-> +	for (i = 0; i < ARRAY_SIZE(pci_protocol_versions); i++) {
-> +		version_req->protocol_version = pci_protocol_versions[i];
-> +		ret = vmbus_sendpacket(
-> +			hdev->channel, version_req,
-> +			sizeof(struct pci_version_request),
-> +			(unsigned long)pkt, VM_PKT_DATA_INBAND,
-> +			VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
 
-The indenting is messed up because VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED
-is really long.  http://new_words.enacademic.com/2023/noun-banging
-NOUN_NOUN_NOUN_NOUN_NOUN_ADJECTIVE.  I guess do this:
-
-		ret = vmbus_sendpacket(hdev->channel, version_req,
-				sizeof(*version_req), (unsigned long)pkt,
-				VM_PKT_DATA_INBAND,
-				VMBUS_DATA_PACKET_FLAG_COMPLETION_REQUESTED);
-
-> +		if (ret)
-> +			goto exit;
-
-This "goto exit;" prints a successful message, but it's a failure path.
-We also print a message on every iteration through this function.  Since
-we only go through the function once in the current code it's works but
-let's fix it.
-
-regards,
-dan carpenter
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
