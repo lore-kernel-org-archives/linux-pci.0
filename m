@@ -1,90 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6813 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938010AbdEXIV6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:21:58 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 1/4] PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-Date: Wed, 24 May 2017 16:12:45 +0800
-Message-ID: <20170524081248.67198-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20170524081248.67198-1-songxiaowei@hisilicon.com>
-References: <20170524081248.67198-1-songxiaowei@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33449 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751276AbdEOM01 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 08:26:27 -0400
+From: Peter Robinson <pbrobinson@gmail.com>
+To: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Cc: Peter Robinson <pbrobinson@gmail.com>
+Subject: [PATCH] pci: dwc: dra7xx: Depend on appropriate SoC or compile test
+Date: Mon, 15 May 2017 13:26:17 +0100
+Message-Id: <20170515122617.20706-1-pbrobinson@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- .../devicetree/bindings/pci/kirin-pcie.txt         | 49 ++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+The PCI controller attached to a SoC isn't much use if the core SoC isn't
+enabled, unless of course it's compile testing, so add appropriate dependency.
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-new file mode 100644
-index 000000000000..ffbdcba287f0
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -0,0 +1,49 @@
-+HiSilicon Kirin SoCs PCIe host DT description
-+
-+Kirin PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver
-+and inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties
-+- compatible:
-+	"hisilicon,hi3660-pcie" for PCIe of Kirin960 SoC
-+- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "dbi": controller configuration registers;
-+  "apb": apb Ctrl register defined by Kirin;
-+  "phy": apb PHY register defined by Kirin;
-+  "config": PCIe configuration space registers.
-+- reset-gpio: The gpio to generate PCIe perst assert and deassert signal.
-+
-+Optional properties:
-+
-+Example based on kirin960:
-+
-+        pcie@f4000000 {
-+                        compatible = "hisilicon,kirin-pcie";
-+                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
-+                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
-+                        reg-names = "dbi","apb","phy", "config";
-+                        bus-range = <0x0  0x1>;
-+                        #address-cells = <3>;
-+                        #size-cells = <2>;
-+                        device_type = "pci";
-+                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf5000000 0x0 0x2000000>;
-+                        num-lanes = <1>;
-+                        #interrupt-cells = <1>;
-+                        interrupt-map-mask = <0xf800 0 0 7>;
-+			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
-+                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
-+                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
-+                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+                        clock-names = "pcie_phy_ref", "pcie_aux",
-+                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-+                        reset-gpio = <&gpio11 1 0 >;
-+        };
+Signed-off-by: Peter Robinson <pbrobinson@gmail.com>
+---
+ drivers/pci/dwc/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index b7e15526d676..d34b6dfbb351 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -16,6 +16,7 @@ config PCIE_DW_EP
+ 
+ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
++	depends on SOC_DRA7XX || COMPILE_TEST
+ 	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	help
 -- 
-2.11.GIT
+2.13.0
