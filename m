@@ -1,102 +1,80 @@
-Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	helgaas@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/5] PCI: add a define for the PCI resource type mask
-Date: Thu,  4 May 2017 11:31:06 +0200
-Message-Id: <1493890270-1188-2-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
-References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAFGCpxwmuEKdc6FF=OmQz8tEipbcO+PjkwmywXLtY5=UxSeKvg@mail.gmail.com>
+References: <20170515062745.70082-1-songxiaowei@hisilicon.com>
+ <201705151738.ls8RIrFp%fengguang.wu@intel.com>
+ <CAFGCpxwmuEKdc6FF=OmQz8tEipbcO+PjkwmywXLtY5=UxSeKvg@mail.gmail.com>
+From: Guodong Xu <guodong.xu@linaro.org>
+Date: Mon, 15 May 2017 17:37:43 +0800
+Message-ID: <CAFGCpxwiBky85WPiusic_UOtMq2VtaG2XC0VG2Hrgz7jtBScUQ@mail.gmail.com>
+Subject: Re: [PATCH 1/3] arm64: dts: hi3660: add pcie node
+To: kbuild test robot <lkp@intel.com>, "xuwei (O)" <xuwei5@hisilicon.com>,
+ Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+ devicetree@vger.kernel.org, Duc Dang <dhdang@apm.com>,
+ Arnd Bergmann <arnd@arndb.de>, Wangbinghui <wangbinghui@hisilicon.com>,
+ jingoohan1@gmail.com, Suzhuangluan <suzhuangluan@hisilicon.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Kishon <kishon@ti.com>, keith.busch@intel.com, kbuild-all@01.org,
+ "liudongdong \(C\)" <liudongdong3@huawei.com>,
+ Song Xiaowei <songxiaowei@hisilicon.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ tn@semihalf.com, "Chenfeng \(puck\)" <puck.chen@hisilicon.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+This PCIe node has dependencies on &crg_ctrl and &gpio11. However,
+both of them are not appearing in mainline kernel tree yet. Sorry
+about that. But I do have a plan to send all dts related changes to
+maillist within this week, no later than this Wed (17/May). Would it
+be possible you maintainers review this patch in parallel?
 
-We use this mask multiple times in the bus setup.
++Device tree maintainers.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- drivers/pci/pci.h       |  3 +++
- drivers/pci/setup-bus.c | 14 +++++---------
- 2 files changed, 8 insertions(+), 9 deletions(-)
+-Guodong
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4518562..3868828 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -6,6 +6,9 @@
- 
- #define PCI_FIND_CAP_TTL	48
- 
-+#define PCI_RES_TYPE_MASK (IORESOURCE_IO | IORESOURCE_MEM | \
-+			   IORESOURCE_PREFETCH | IORESOURCE_MEM_64)
-+
- extern const unsigned char pcie_link_speed[];
- 
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f30ca75..bb1001e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1532,8 +1532,6 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- {
- 	struct pci_dev *dev = bus->self;
- 	struct resource *r;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 	unsigned old_flags = 0;
- 	struct resource *b_res;
- 	int idx = 1;
-@@ -1576,7 +1574,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 */
- 	release_child_resources(r);
- 	if (!release_resource(r)) {
--		type = old_flags = r->flags & type_mask;
-+		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
- 					PCI_BRIDGE_RESOURCES + idx, r);
- 		/* keep the old size */
-@@ -1767,8 +1765,6 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	enum release_type rel_type = leaf_only;
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 	int pci_try_num = 1;
- 	enum enable_type enable_local;
- 
-@@ -1827,7 +1823,8 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	 */
- 	list_for_each_entry(fail_res, &fail_head, list)
- 		pci_bus_release_bridge_resources(fail_res->dev->bus,
--						 fail_res->flags & type_mask,
-+						 fail_res->flags &
-+						 PCI_RES_TYPE_MASK,
- 						 rel_type);
- 
- 	/* restore size and flags */
-@@ -1871,8 +1868,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	int retval;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
-@@ -1898,7 +1893,8 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 	 */
- 	list_for_each_entry(fail_res, &fail_head, list)
- 		pci_bus_release_bridge_resources(fail_res->dev->bus,
--						 fail_res->flags & type_mask,
-+						 fail_res->flags &
-+						 PCI_RES_TYPE_MASK,
- 						 whole_subtree);
- 
- 	/* restore size and flags */
--- 
-2.7.4
+>
+> On Mon, May 15, 2017 at 5:18 PM, kbuild test robot <lkp@intel.com> wrote:
+>>
+>> Hi Song,
+>>
+>> [auto build test ERROR on pci/next]
+>> [also build test ERROR on v4.12-rc1 next-20170515]
+>> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>>
+>> url:    https://github.com/0day-ci/linux/commits/Song-Xiaowei/arm64-dts-hi3660-add-pcie-node/20170515-144035
+>> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+>> config: arm64-defconfig (attached as .config)
+>> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+>> reproduce:
+>>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>>         chmod +x ~/bin/make.cross
+>>         # save the attached .config to linux build tree
+>>         make.cross ARCH=arm64
+>>
+>> All errors (new ones prefixed by >>):
+>>
+>> >> Error: arch/arm64/boot/dts/hisilicon/hi3660.dtsi:180.24-25 syntax error
+>>    FATAL ERROR: Unable to parse input tree
+>>
+>> ---
+>> 0-DAY kernel test infrastructure                Open Source Technology Center
+>> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+>
+>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
