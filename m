@@ -1,137 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36156 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757046AbdEORXi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:23:38 -0400
-Received: by mail-wm0-f54.google.com with SMTP id u65so88659322wmu.1
-        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 10:23:37 -0700 (PDT)
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 2/2] pci: ftpci100: Add clock handling
-Date: Mon, 15 May 2017 19:23:24 +0200
-Message-Id: <20170515172324.1833-1-linus.walleij@linaro.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:41320 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751952AbdEOREF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:04:05 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC v2 2/8] pci: exynos SoC driver adapted to new irq API
+Date: Mon, 15 May 2017 18:03:42 +0100
+Message-Id: <f395077bae8e34b2929bccb886952322ad5526fc.1494867112.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds some optional clock handling to the Faraday FTPCI100.
-We just get and prepare+enable the clocks right now, if they exist.
-We can add more elaborate clock handling later.
+This patch adapts Exynos SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 ---
- drivers/pci/host/pci-ftpci100.c | 56 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+changes v1->v2:
+- just to keep up patch set version
 
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index d26501c4145a..ebab33e99a0d 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -25,6 +25,7 @@
- #include <linux/irqchip/chained_irq.h>
- #include <linux/bitops.h>
- #include <linux/irq.h>
-+#include <linux/clk.h>
+ drivers/pci/dwc/pci-exynos.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 546082a..e49c39a 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -490,15 +490,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
  
- /*
-  * Special configuration registers directly in the first few words
-@@ -37,6 +38,7 @@
- #define PCI_CONFIG	0x28 /* PCI configuration command register */
- #define PCI_DATA	0x2C
- 
-+#define FARADAY_PCI_STATUS_CMD		0x04 /* Status and command */
- #define FARADAY_PCI_PMC			0x40 /* Power management control */
- #define FARADAY_PCI_PMCSR		0x44 /* Power management status */
- #define FARADAY_PCI_CTRL1		0x48 /* Control register 1 */
-@@ -45,6 +47,8 @@
- #define FARADAY_PCI_MEM2_BASE_SIZE	0x54 /* Memory base and size #2 */
- #define FARADAY_PCI_MEM3_BASE_SIZE	0x58 /* Memory base and size #3 */
- 
-+#define PCI_STATUS_66MHZ_CAPABLE	BIT(21)
-+
- /* Bits 31..28 gives INTD..INTA status */
- #define PCI_CTRL2_INTSTS_SHIFT		28
- #define PCI_CTRL2_INTMASK_CMDERR	BIT(27)
-@@ -117,6 +121,7 @@ struct faraday_pci {
- 	void __iomem *base;
- 	struct irq_domain *irqdomain;
- 	struct pci_bus *bus;
-+	struct clk *bus_clk;
- };
- 
- static int faraday_res_to_memcfg(resource_size_t mem_base,
-@@ -428,6 +433,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 	struct resource *mem;
- 	struct resource *io;
- 	struct pci_host_bridge *host;
-+	struct clk *clk;
- 	int ret;
- 	u32 val;
- 	LIST_HEAD(res);
-@@ -444,6 +450,28 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 	host->sysdata = p;
- 	p->dev = dev;
- 
-+	/* Retrieve and enable optional clocks */
-+	clk = devm_clk_get(dev, "PCLK");
-+	if (IS_ERR(clk)) {
-+		dev_err(dev, "no PCLK available\n");
-+	} else {
-+		ret = clk_prepare_enable(clk);
-+		if (ret) {
-+			dev_err(dev, "could not prepare PCLK\n");
-+			return ret;
-+		}
-+	}
-+	p->bus_clk = devm_clk_get(dev, "PCICLK");
-+	if (IS_ERR(p->bus_clk)) {
-+		dev_err(dev, "no PCICLK available\n");
-+	} else {
-+		ret = clk_prepare_enable(p->bus_clk);
-+		if (ret) {
-+			dev_err(dev, "could not prepare PCICLK\n");
-+			return ret;
-+		}
-+	}
-+
- 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	p->base = devm_ioremap_resource(dev, regs);
- 	if (IS_ERR(p->base))
-@@ -515,6 +543,34 @@ static int faraday_pci_probe(struct platform_device *pdev)
+-static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct exynos_pcie *ep = arg;
+-	struct dw_pcie *pci = ep->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ {
+ 	struct dw_pcie *pci = ep->pci;
+@@ -622,15 +613,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 			dev_err(dev, "failed to get msi irq\n");
+ 			return -ENODEV;
  		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"exynos-pcie", ep);
+-		if (ret) {
+-			dev_err(dev, "failed to request msi irq\n");
+-			return ret;
+-		}
  	}
  
-+	/* Check bus clock if we can gear up to 66 MHz */
-+	if (!IS_ERR(p->bus_clk)) {
-+		unsigned long rate;
-+		u32 val;
-+
-+		faraday_pci_read_config(p->bus, 0,
-+					FARADAY_PCI_STATUS_CMD, 4, &val);
-+		rate = clk_get_rate(p->bus_clk);
-+
-+		if ((rate == 33000000) && (val & PCI_STATUS_66MHZ_CAPABLE)) {
-+			dev_info(dev, "33MHz bus is 66MHz capable\n");
-+			p->bus->max_bus_speed = PCI_SPEED_66MHz;
-+			ret = clk_set_rate(p->bus_clk, 66000000);
-+			if (ret)
-+				dev_err(dev, "failed to set bus clock\n");
-+		} else {
-+			dev_info(dev, "33MHz only bus\n");
-+			p->bus->max_bus_speed = PCI_SPEED_33MHz;
-+		}
-+
-+		/* Bumping the clock may fail so read back the rate */
-+		rate = clk_get_rate(p->bus_clk);
-+		if (rate == 33000000)
-+			p->bus->cur_bus_speed = PCI_SPEED_33MHz;
-+		if (rate == 66000000)
-+			p->bus->cur_bus_speed = PCI_SPEED_66MHz;
-+	}
-+
- 	ret = faraday_pci_parse_map_dma_ranges(p, dev->of_node);
- 	if (ret)
- 		return ret;
+ 	pp->root_bus_nr = -1;
 -- 
 2.9.3
