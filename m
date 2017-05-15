@@ -1,57 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 17 May 2017 12:11:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v6 2/3] iommu/pci: reserve IOVA for PCI masters
-Message-ID: <20170517171154.GF31462@bhelgaas-glaptop.roam.corp.google.com>
-References: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
- <1494912127-12890-3-git-send-email-oza.oza@broadcom.com>
-MIME-Version: 1.0
-In-Reply-To: <1494912127-12890-3-git-send-email-oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
- linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- bcm-kernel-feedback-list@broadcom.com, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:33429 "EHLO
+        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757046AbdEORXU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:23:20 -0400
+Received: by mail-wm0-f53.google.com with SMTP id f135so27790342wmd.0
+        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 10:23:20 -0700 (PDT)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>,
+        devicetree@vger.kernel.org
+Subject: [PATCH 1/2] pci: ftpci100: add clock bindings
+Date: Mon, 15 May 2017 19:23:12 +0200
+Message-Id: <20170515172312.1722-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 16, 2017 at 10:52:06AM +0530, Oza Pawandeep wrote:
-> this patch reserves the IOVA for PCI masters.
-> ARM64 based SOCs may have scattered memory banks.
-> such as iproc based SOC has
-> 
-> <0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
-> <0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
-> <0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
-> <0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
-> 
-> but incoming PCI transcation addressing capability is limited
+The Faraday FTPCI100 controller has two clock ports, PCLK and PCICLK.
+We add bindings for these two clocks so we can assign them in the device
+tree.
 
-s/transcation/transaction/
+Cc: devicetree@vger.kernel.org
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ Documentation/devicetree/bindings/pci/faraday,ftpci100.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-> by host bridge, for example if max incoming window capability
-> is 512 GB, then 0x00000090 and 0x000000a0 will fall beyond it.
-> 
-> to address this problem, iommu has to avoid allocating IOVA which
-
-s/iommu/IOMMU/
-
-> are reserved. which inturn does not allocate IOVA if it falls into hole.
-
-s/inturn/in turn/
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
+index 35d4a979bb7b..89a84f8aa621 100644
+--- a/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
++++ b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
+@@ -30,6 +30,13 @@ Mandatory properties:
+   128MB, 256MB, 512MB, 1GB or 2GB in size. The memory should be marked as
+   pre-fetchable.
+ 
++Optional properties:
++- clocks: when present, this should contain the peripheral clock (PCLK) and the
++  PCI clock (PCICLK). If these are not present, they are assumed to be
++  hard-wired enabled and always on. The PCI clock will be 33 or 66 MHz.
++- clock-names: when present, this should contain "PCLK" for the peripheral
++  clock and "PCICLK" for the PCI-side clock.
++
+ Mandatory subnodes:
+ - For "faraday,ftpci100" a node representing the interrupt-controller inside the
+   host bridge is mandatory. It has the following mandatory properties:
+-- 
+2.9.3
