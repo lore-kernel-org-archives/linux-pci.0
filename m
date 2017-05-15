@@ -1,36 +1,74 @@
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	helgaas@kernel.org
-Subject: Resizeable PCI BAR support v6
-Date: Tue,  9 May 2017 18:49:02 +0200
-Message-Id: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:54138 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755188AbdEORET (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:04:19 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC v2 4/8] pci: artpec6 SoC driver adapted to new irq API
+Date: Mon, 15 May 2017 18:03:44 +0100
+Message-Id: <3c0b2264f0e5897aaf82b272cba6c526ff3b833b.1494867112.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi everyone,
+This patch adapts artpec6 SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-is is the sixth incarnation of this set of patches. It enables device
-drivers to resize and most likely also relocate the PCI BAR of devices
-they manage to allow the CPU to access all of the device local memory at once.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+changes v1->v2:
+- just to keep up patch set version
 
-This is very useful for GFX device drivers where the default PCI BAR is only
-about 256MB in size for compatibility reasons, but the device easily have
-multiple gigabyte of local memory.
+ drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-Noteable changed compared to v5:
-1. Added some rb.
-2. Followed Andy's suggestion on patch #3 to use a next
-   pointer to make it more readable.
-
-Mostly every comment addressed now, so next question is how we want to
-merge this upstream?
-
-I would suggest patches #1-#4 through some PCI branch and we send #5 through the drm
-maintainer as soon as the dependencies are accepted?
-
-Thanks for all the help,
-Christian.
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 82a04ac..d81789b 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -188,15 +188,6 @@ static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
+ 	.host_init = artpec6_pcie_host_init,
+ };
+ 
+-static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct artpec6_pcie *artpec6_pcie = arg;
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 				 struct platform_device *pdev)
+ {
+@@ -211,15 +202,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       artpec6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "artpec6-pcie-msi", artpec6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.9.3
