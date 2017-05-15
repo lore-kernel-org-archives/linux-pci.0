@@ -1,143 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:6841 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750938AbdEaHB4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 03:01:56 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v9 0/4]   add PCIe driver for Kirin PCIe
-Date: Wed, 31 May 2017 15:01:05 +0800
-Message-ID: <20170531070109.81569-1-songxiaowei@hisilicon.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54400 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964854AbdEOUAP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 15 May 2017 16:00:15 -0400
+Date: Mon, 15 May 2017 14:00:09 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: Brian Norris <briannorris@chromium.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: Re: [PATCH] pci: Disable master abort while waiting for an FLR to
+ complete
+Message-ID: <20170515140009.7e8cd9fb@w520.home>
+In-Reply-To: <CAKgT0UfNBhHSK9yvt7rZFMb+aZ9OF-Y7O4H8Axsr4NF99w9phQ@mail.gmail.com>
+References: <20170512181107.13853.34680.stgit@localhost.localdomain>
+        <20170515163623.GA15237@google.com>
+        <CAKgT0UfNBhHSK9yvt7rZFMb+aZ9OF-Y7O4H8Axsr4NF99w9phQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before Version Patches
-======================
-patch V8
-http://www.spinics.net/lists/linux-pci/msg61715.html
-patch V7
-https://www.spinics.net/lists/linux-pci/msg61664.html
-patch V6
-https://www.spinics.net/lists/linux-pci/msg61610.html
+On Mon, 15 May 2017 12:48:30 -0700
+Alexander Duyck <alexander.duyck@gmail.com> wrote:
 
-patch V4
-https://www.spinics.net/lists/linux-pci/msg61406.html
+> On Mon, May 15, 2017 at 9:36 AM, Brian Norris <briannorris@chromium.org> wrote:
+> > On Fri, May 12, 2017 at 11:13:57AM -0700, Alexander Duyck wrote:  
+> >> From: Alexander Duyck <alexander.h.duyck@intel.com>
+> >>
+> >> This patch is meant to address issues seen when performing on FLR on some
+> >> systems as the long wait can result in a master abort when reading a
+> >> function that is not yet ready.
+> >>
+> >> To prevent the master abort from being reported up we should disable
+> >> reporting for it while waiting on the reset. Once the reset is completed
+> >> then we can re-enable the master abort for the bus.
+> >>
+> >> Fixes: 5adecf817dd6 ("PCI: Wait for up to 1000ms after FLR reset")
+> >>
+> >> Reported-by: Brian Norris <briannorris@chromium.org>
+> >> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> >> ---
+> >>
+> >> I haven't been able to test this code as I don't have a system that can
+> >> reproduce the issue. The fix itself is based on the issue as reported by
+> >> Brian so I am hoping he can test this on the Samsung Chromebook Plus with
+> >> RK399 OP1 that this was seen on.  
+> >
+> > FYI, it's "RK3399" not "RK399". No harm done :)  
+> 
+> I will try to update my patch in case there is a future re-submission.
+> 
+> >>  drivers/pci/pci.c |   17 +++++++++++++++++
+> >>  1 file changed, 17 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >> index 7904d02ffdb9..acbdbabeaa0e 100644
+> >> --- a/drivers/pci/pci.c
+> >> +++ b/drivers/pci/pci.c
+> >> @@ -3758,14 +3758,31 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+> >>   */
+> >>  static void pci_flr_wait(struct pci_dev *dev)
+> >>  {
+> >> +     struct pci_dev *bridge = dev->bus->self;
+> >>       int i = 0;
+> >> +     u16 bctl;
+> >>       u32 id;
+> >>
+> >> +     /*
+> >> +      * Disable MasterAbortMode while we are waiting to avoid reporting
+> >> +      * bus errors for reading the command register on a device that is
+> >> +      * not ready (in some architectures)  
+> >
+> > I assume it's intentional to only do this *after* you've started the
+> > reset (but before you start polling)?  
+> 
+> Yes. The general idea is that the only thing that should be accessing
+> the device is us. So this way we can catch any other code that might
+> be broken such as a device driver that is leaving a thread active that
+> is accessing the device before a reset.
+> 
+> >> +      */
+> >> +     if (bridge) {
+> >> +             pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &bctl);
+> >> +             pci_write_config_word(bridge, PCI_BRIDGE_CONTROL,
+> >> +                                   bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+> >> +     }
+> >> +
+> >>       do {
+> >>               msleep(100);
+> >>               pci_read_config_dword(dev, PCI_COMMAND, &id);  
+> >
+> > IIUC, the patch works fine, in that I no longer get an abort from the
+> > RC.  
+> 
+> So did you actually test this patch or are you just speculating it
+> should work? I'm just not sure what you mean by "IIUC" in this context
+> here, were you referring to how the patch fixes the issue or how the
+> testing should work for verifying it fixed the issue?
+> 
+> >>       } while (i++ < 10 && id == ~0);  
+> >
+> > BTW, the RK3399 host controller doesn't actually return all 1's on
+> > aborted transactions. So this loop doesn't really work for it at all.
+> >
+> > I take it that this (seemingly widely used) pattern all derives from the
+> > PCI spec, which notes:
+> >
+> >   "The host bus bridge, in PC compatible systems, must return all 1's on
+> >   a read transaction and discard data on a write transaction when
+> >   terminated with Master-Abort."
+> >
+> > RK3399 is far from a "PC compatible system", but I don't know if that's
+> > a real excuse here...  
+> 
+> So if it doesn't return all 1's does it return all 0's? I'm just
+> curious what is returned?
+> 
+> Also do we know why we are reading the PCI_COMMAND register instead of
+> just checking for the device ID? Just wondering because the easiest
+> solution would be to copy out the logic in
+> pci_bus_read_dev_vendor_id() if all we are doing is waiting on the
+> configuration space to begin responding to requests again.
 
-patch V3
-https://www.spinics.net/lists/linux-pci/msg61399.html
+Because SR-IOV VFs don't implement the first dword.  Thanks,
 
-Changes between V8 and V7
-=========================
-1. Fix the indent issues in Documentation, dtsi file and macro defination.
-2. Replace pdev->dev with dev in kirin_pcie_get_resource and 
-   kirin_pcie_get_clk functions.
-3. Put variables "pci" and "kirin_pcie" to be initialized at first
-   in kirin_pcie_wr_own_config, kirin_pcie_read_dbi and other functions.
-4. Add space before blankets in "Low power mode(L1 ".
-5. Short the Makefile sentence to lower than 80 characters
-   and delete reduntant words.
-6. Use word 'located' instead of the wrong one 'lacated'.
-7. Fix the problem of return value type.
-
-Changes between V8 and V7
-=========================
-1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
-
-Changes between V7 and V6
-=========================
-1. add enumeration log Based on Hikey960 Board with these patches.
-2. fix issues as fellows:
-   (1) delete reduntant blankets in macro defination,
-   (2) add blank line in  kirin_pcie_clk_ctrl function.
-   (3) Fix compitable property in DT with the SoC name,
-       for example "hisilicon,kirin960-pcie".
-
-Changes between V6 and V4
-=========================
-1. seperate Document from .dtsi patch.
-2. fix issues according to review comments
-   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
-   patch post method and so on.
-
-Enumeration log
-===============
-These test logs come from patches running on Hikey960 Board
-(1) Connect with Atheros Communications WIFI
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
-	pci 0000:01:00.0: supports D1
-	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
-	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276	
-
-(2) Connect with Sandisk SSD
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [1b4b:1093] type 00 class 0x010802
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
-	pci 0000:01:00.0: reg 0x30: [mem 0xf6000000-0xf600ffff pref]
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:00:00.0: BAR 15: assigned [mem 0xf7100000-0xf71fffff pref]
-	pci 0000:01:00.0: BAR 6: assigned [mem 0xf7100000-0xf710ffff pref]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pci 0000:00:00.0:   bridge window [mem 0xf7100000-0xf71fffff pref]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276
-
-Patches list
-============
-Xiaowei Song (4):
-  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-  arm64: dts: hisi: add kirin pcie node
-  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-  ARM64: defconfig: Enable  Kirin PCIe
-
- .../devicetree/bindings/pci/kirin-pcie.txt         |  50 ++
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
- arch/arm64/configs/defconfig                       |   1 +
- drivers/pci/dwc/Kconfig                            |  10 +
- drivers/pci/dwc/Makefile                           |   1 +
- drivers/pci/dwc/pcie-kirin.c                       | 514 +++++++++++++++++++++
- 6 files changed, 607 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
- create mode 100644 drivers/pci/dwc/pcie-kirin.c
-
--- 
-2.11.GIT
+Alex
