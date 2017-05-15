@@ -1,225 +1,176 @@
-Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:35056 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751629AbdEOKcu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 06:32:50 -0400
+Subject: Re: [RFC 1/8] pci: adding new irq api to pci-designware
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <l.stach@pengutronix.de>
+References: <cover.1494606911.git.jpinto@synopsys.com>
+ <d9664b857b0b9fe9cba6b8de5f0b6d365fe86f36.1494606911.git.jpinto@synopsys.com>
+ <e0881846-21ca-8b5d-4162-caf77c336600@arm.com>
+CC: <jingoohan1@gmail.com>, <m-karicheri2@ti.com>,
+        <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
+        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <c8baa1ed-6211-26f9-cffc-366ca0305ad8@synopsys.com>
+Date: Mon, 15 May 2017 11:32:26 +0100
 MIME-Version: 1.0
-In-Reply-To: <1493890270-1188-3-git-send-email-deathsimple@vodafone.de>
-References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de> <1493890270-1188-3-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sun, 7 May 2017 13:52:20 +0300
-Message-ID: <CAHp75Vds8YrDG7GD3KGx9cd0TuWiRs6-GWm9AVe-_3BhhEBqsg@mail.gmail.com>
-Subject: Re: [PATCH 2/5] PCI: add resizeable BAR infrastructure v5
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <e0881846-21ca-8b5d-4162-caf77c336600@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 4, 2017 at 12:31 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Just the defines and helper functions to read the possible sizes of a BAR=
- and
-> update it's size.
->
-> See https://pcisig.com/sites/default/files/specification_documents/ECN_Re=
-sizable-BAR_24Apr2008.pdf
-> and PCIe r3.1, sec 7.22.
->
-> This is useful for hardware with large local storage (mostly GFX) which o=
-nly
-> expose 256MB BARs initially to be compatible with 32bit systems.
->
 
-Now looks nice!
+Hi Mark and Lucas,
 
-FWIW:
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Às 6:36 PM de 5/12/2017, Marc Zyngier escreveu:
+> Joao,
+> 
+> You seem to have dropped a number of things I had mentioned on my
+> previous review of this patch. See below:
+> 
+> On 12/05/17 17:56, Joao Pinto wrote:
+>> This patch adds the new interrupt api to pecie-designware, keeping the old
+>> one. A define was added to toggle between the two apis (for testing purposes).
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>>  drivers/pci/dwc/pcie-designware-host.c | 241 ++++++++++++++++++++++++++++++++-
+>>  drivers/pci/dwc/pcie-designware.h      |   5 +
+>>  2 files changed, 244 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+>> index 28ed32b..6810ea10b 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> @@ -11,6 +11,7 @@
+>>   * published by the Free Software Foundation.
+>>   */
+>>  
+>> +#include <linux/irqchip/chained_irq.h>
+>>  #include <linux/irqdomain.h>
+>>  #include <linux/of_address.h>
+>>  #include <linux/of_pci.h>
+>> @@ -19,6 +20,9 @@
+>>  
+>>  #include "pcie-designware.h"
+>>  
+>> +/* Temporary: Activate to use new IRQ API */
+>> +/*#define CONFIG_PCIEDW_NEW_IRQ_API*/
+> 
+> You should be able to support both APIs at the same time until the last
+> patch, without relying on a kernel configuration (we still want to be
+> able to boot a single kernel that works both with the old and new methods).
 
-> v2: provide read helper as well
-> v3: improve function names, use unsigned values, add better comments.
-> v4: move definition, improve commit message, s/bar/BAR/
-> v5: split out helper to find ctrl reg pos, style fixes, comment fixes,
->     add pci_rbar_size_to_bytes as well
->
-> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
-> ---
->  drivers/pci/pci.c             | 104 ++++++++++++++++++++++++++++++++++++=
-++++++
->  drivers/pci/pci.h             |   8 ++++
->  include/uapi/linux/pci_regs.h |  11 ++++-
->  3 files changed, 121 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index ba34907..0cbf4a6 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2944,6 +2944,110 @@ bool pci_acs_path_enabled(struct pci_dev *start,
->  }
->
->  /**
-> + * pci_rbar_find_pos - find position of resize ctrl reg for BAR
-> + * @dev: PCI device
-> + * @bar: BAR to find
-> + *
-> + * Helper to find the postion of the ctrl register for a BAR.
-> + * Returns -ENOTSUPP of resizeable BARs are not supported at all.
-> + * Returns -ENOENT if not ctrl register for the BAR could be found.
-> + */
-> +static int pci_rbar_find_pos(struct pci_dev *pdev, int bar)
-> +{
-> +       unsigned int pos, nbars;
-> +       unsigned int i;
-> +       u32 ctrl;
-> +
-> +       pos =3D pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-> +       if (!pos)
-> +               return -ENOTSUPP;
-> +
-> +       pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-> +       nbars =3D (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBA=
-R_SHIFT;
-> +
-> +       for (i =3D 0; i < nbars; ++i, pos +=3D 8) {
-> +               int bar_idx;
-> +
-> +               pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-> +               bar_idx =3D (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-> +                               PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-> +               if (bar_idx =3D=3D bar)
-> +                       return pos;
-> +       }
-> +
-> +       return -ENOENT;
-> +}
-> +
-> +/**
-> + * pci_rbar_get_possible_sizes - get possible sizes for BAR
-> + * @dev: PCI device
-> + * @bar: BAR to query
-> + *
-> + * Get the possible sizes of a resizeable BAR as bitmask defined in the =
-spec
-> + * (bit 0=3D1MB, bit 19=3D512GB). Returns 0 if BAR isn't resizeable.
-> + */
-> +u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
-> +{
-> +       u32 cap;
-> +       int pos;
-> +
-> +       pos =3D pci_rbar_find_pos(pdev, bar);
-> +       if (pos < 0)
-> +               return 0;
-> +
-> +       pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
-> +       return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
-> +               PCI_REBAR_CTRL_SIZES_SHIFT;
-> +}
-> +
-> +/**
-> + * pci_rbar_get_current_size - get the current size of a BAR
-> + * @dev: PCI device
-> + * @bar: BAR to set size to
-> + *
-> + * Read the size of a BAR from the resizeable BAR config.
-> + * Returns size if found or negative error code.
-> + */
-> +int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
-> +{
-> +       u32 ctrl;
-> +       int pos;
-> +
-> +       pos =3D pci_rbar_find_pos(pdev, bar);
-> +       if (pos < 0)
-> +               return pos;
-> +
-> +       pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-> +       return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
-> +               PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-> +}
-> +
-> +/**
-> + * pci_rbar_set_size - set a new size for a BAR
-> + * @dev: PCI device
-> + * @bar: BAR to set size to
-> + * @size: new size as defined in the spec (0=3D1MB, 19=3D512GB)
-> + *
-> + * Set the new size of a BAR as defined in the spec.
-> + * Returns zero if resizing was successful, error code otherwise.
-> + */
-> +int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
-> +{
-> +       u32 ctrl;
-> +       int pos;
-> +
-> +       pos =3D pci_rbar_find_pos(pdev, bar);
-> +       if (pos < 0)
-> +               return pos;
-> +
-> +       pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-> +       ctrl &=3D ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
-> +       ctrl |=3D size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-> +       pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-> +       return 0;
-> +}
-> +
-> +/**
->   * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
->   * @dev: the PCI device
->   * @pin: the INTx pin (1=3DINTA, 2=3DINTB, 3=3DINTC, 4=3DINTD)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 3868828..6290e5c 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -359,4 +359,12 @@ static inline int pci_dev_specific_reset(struct pci_=
-dev *dev, int probe)
->  }
->  #endif
->
-> +u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
-> +int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
-> +int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
-> +static inline u64 pci_rbar_size_to_bytes(int size)
-> +{
-> +       return 1ULL << (size + 20);
-> +}
-> +
->  #endif /* DRIVERS_PCI_H */
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.=
-h
-> index e5a2e68..a75429e 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -932,9 +932,16 @@
->  #define PCI_SATA_SIZEOF_LONG   16
->
->  /* Resizable BARs */
-> +#define PCI_REBAR_CAP          4       /* capability register */
-> +#define  PCI_REBAR_CTRL_SIZES_MASK     (0xFFFFF << 4)  /* mask for sizes=
- */
-> +#define  PCI_REBAR_CTRL_SIZES_SHIFT    4       /* shift for sizes */
->  #define PCI_REBAR_CTRL         8       /* control register */
-> -#define  PCI_REBAR_CTRL_NBAR_MASK      (7 << 5)        /* mask for # bar=
-s */
-> -#define  PCI_REBAR_CTRL_NBAR_SHIFT     5       /* shift for # bars */
-> +#define  PCI_REBAR_CTRL_BAR_IDX_MASK   (7 << 0)        /* mask for BAR i=
-ndex */
-> +#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT  0       /* shift for BAR index */
-> +#define  PCI_REBAR_CTRL_NBAR_MASK      (7 << 5)        /* mask for # BAR=
-s */
-> +#define  PCI_REBAR_CTRL_NBAR_SHIFT     5       /* shift for # BARs */
-> +#define  PCI_REBAR_CTRL_BAR_SIZE_MASK  (0x1F << 8)     /* mask for BAR s=
-ize */
-> +#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT 8       /* shift for BAR size */
->
->  /* Dynamic Power Allocation */
->  #define PCI_DPA_CAP            4       /* capability register */
-> --
-> 2.7.4
->
+I think that the APIs are mutual-exclusive. pcie-designware has to initialize of
+one of them. Your idea is to have the new and the old API functions, but only
+initialize pcie-designware with the old one until the last patch?
 
+[...]
 
+>> +
+>> +	msg->address_lo = (u32)(msi_target & 0xffffffff);
+>> +	msg->address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+> 
+> Use lower_32_bit/upper_32_bit macros.
 
---=20
-With Best Regards,
-Andy Shevchenko
+Right, I am going to update this.
+
+[...]
+
+>> +
+>> +static void dw_pci_bottom_mask(struct irq_data *data)
+>> +{
+>> +	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	unsigned int res, bit, val;
+>> +
+>> +	mutex_lock(&pp->lock);
+> 
+> This is wrong. You can also end-up here from interrupt context, so you
+> need an spin_lock_irqsave().
+
+Right, I am going to update this.
+
+[...]
+
+> 
+>> +
+>> +	if (pp->ops->msi_clear_irq)
+>> +		pp->ops->msi_clear_irq(pp, data->hwirq);
+> 
+> Why do you need this? Can you have alternative implementations of
+> mask/unmask?
+
+msi_clear_irq and msi_set_irq are specific SoC operations to set and clear bits
+in the interrupt register. In my opinion we should keep the current callbacks.
+
+[...]
+
+> 
+>> +	else {
+>> +		res = (data->hwirq / 32) * 12;
+>> +		bit = data->hwirq % 32;
+>> +
+>> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> 
+> No use reading back from the HW. Just maintain a cached version in your
+> private structure and just use that.
+
+Ok, I can do that.
+
+[...]
+
+>> +
+>> +	bit = find_first_zero_bit(pp->msi_irq_in_use, pp->num_vectors);
+>> +	if (bit >= pp->num_vectors) {
+>> +		mutex_unlock(&pp->lock);
+>> +		return -ENOSPC;
+>> +	}
+>> +
+>> +	set_bit(bit, pp->msi_irq_in_use);
+>> +
+>> +	mutex_unlock(&pp->lock);
+> 
+> As mentioned by Lucas, you probably want to support Multi-MSI.
+> 
+
+This could be achieved by declaring data for each virq, correct?
+
+for (i = 0; i < nr_irqs; i++) {
+irq_domain_set_info(domain, virq + i, bit + i,
+&dw_pci_msi_bottom_irq_chip,domain->host_data, handle_simple_irq,
+NULL, NULL);
+}
+
+[...]
+
+>> +
+>> +	pp->irq_domain = irq_domain_add_linear(NULL, pp->num_vectors,
+>> +					       &dw_pcie_msi_domain_ops, pci);
+> 
+> Please use irq_domain_create_linear and pass the fwnode there as well.
+> 
+
+Ok, I will do that.
+
+[...]
+
+>>  static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>  {
+>>
+> 
+> Thanks,
+> 
+> 	M.
+> 
+
+Thank you for you feeback!
+
+Joao
