@@ -1,55 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:60291 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752885AbdEOQpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 May 2017 12:45:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Mon, 15 May 2017 10:44:53 -0600
-Message-Id: <1494866693-2850-3-git-send-email-logang@deltatee.com>
-In-Reply-To: <1494866693-2850-1-git-send-email-logang@deltatee.com>
-References: <1494866693-2850-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH 2/2] switchtec: fix minor bug with partition id register
+Received: from smtprelay.synopsys.com ([198.182.47.9]:48498 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934117AbdEOLNr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 07:13:47 -0400
+Subject: Re: [RFC] pci: adding new interrupt api to pcie-designware
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
+        <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <marc.zyngier@arm.com>
+References: <5593732728f7c7f5e8c58ac49f394e688bcc192d.1494332566.git.jpinto@synopsys.com>
+ <5915E0F2.2070109@ti.com>
+CC: <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <de48ca7f-149c-9c64-85b0-7e9fa66920cb@synopsys.com>
+Date: Mon, 15 May 2017 12:13:35 +0100
+MIME-Version: 1.0
+In-Reply-To: <5915E0F2.2070109@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When a switch endpoind is configured without NTB the mmio_ntb registers
-will read all zeros. However, in corner case configurations where the
-partition ID is not zero and NTB is not enabled then the code will have
-the wrong partition ID and this causes the driver to use the wrong
-set of drivers. To fix this we simply take the partition ID from the
-system info region.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reported-by: Dingbao Chen <dingbao.chen@microsemi.com>
----
- drivers/pci/switch/switchtec.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Hi Murali,
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index abaa227a..f6a6340 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1441,12 +1441,15 @@ static int switchtec_init_pci(struct switchtec_dev *stdev,
- 	stdev->mmio_sys_info = stdev->mmio + SWITCHTEC_GAS_SYS_INFO_OFFSET;
- 	stdev->mmio_flash_info = stdev->mmio + SWITCHTEC_GAS_FLASH_INFO_OFFSET;
- 	stdev->mmio_ntb = stdev->mmio + SWITCHTEC_GAS_NTB_OFFSET;
--	stdev->partition = ioread8(&stdev->mmio_ntb->partition_id);
-+	stdev->partition = ioread8(&stdev->mmio_sys_info->partition_id);
- 	stdev->partition_count = ioread8(&stdev->mmio_ntb->partition_count);
- 	stdev->mmio_part_cfg_all = stdev->mmio + SWITCHTEC_GAS_PART_CFG_OFFSET;
- 	stdev->mmio_part_cfg = &stdev->mmio_part_cfg_all[stdev->partition];
- 	stdev->mmio_pff_csr = stdev->mmio + SWITCHTEC_GAS_PFF_CSR_OFFSET;
- 
-+	if (stdev->partition_count < 1)
-+		stdev->partition_count = 1;
-+
- 	init_pff(stdev);
- 
- 	pci_set_drvdata(pdev, stdev);
--- 
-2.1.4
+Às 5:21 PM de 5/12/2017, Murali Karicheri escreveu:
+> On 05/09/2017 08:33 AM, Joao Pinto wrote:
+>> This is a proposal for the update of the interrupt API in pcie-designware.
+>>
+>> *SoC specific drivers*
+>> All SoC specific drivers that use the common infrastructure (pci-qcom,
+>> pci-artpec6, pci-exynos, pci-imx6) were updated to be compatible.
+>> Other SoC specific drivers like pci-dra7, pci-armada8k, pci-hisi, pci-spear13xx
+>> and pci-layerscape will also work fine.
+>>
+>> *Work still to be done - need some inputs*
+>> The pci-keystone driver is the one that I would appreciate some opinions, since
+>> it uses the "old" dw_pcie_msi_chip. I think we have 3 options:
+>>
+>> a) Keep the old API + new API in pcie-designware just for pci-keystone to use
+>> the dw_pcie_msi_chip structure
+>> b) Move the old API from pcie-designware to pci-keystone for it to use the
+>> dw_pcie_msi_chip structure
+>> c) Adapt pci-keystone to use the new API also
+>>
+>> *Tests*
+>> I made tests with a PCI 4.80 Core IP, using pcie-designware-plat driver.
+>> I used an MSI-only Endpoint and a MSI/MSIX Endpoint and the APi adapted very
+>> well to the situation.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>  drivers/pci/dwc/pcie-designware-host.c | 342 +++++++++++++++++----------------
+>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>  drivers/pci/dwc/pcie-designware.h      |   6 +-
+>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>  7 files changed, 179 insertions(+), 253 deletions(-)
+
+[...]
+
+> 
+> What do you see the challenge in porting the PCI-Keystone driver to the new
+> interrupt API (option c)? I haven't had a chance to review your patches and recent
+> changes in Linux kernel for PCI as we are currently using v4.9 kernel for
+> our platforms. One key difference in the PCI Core used in Keystone SoC is that
+> the MSI is not implemented using standard registers as in newer PCI Designware
+> core. It uses application register space for MSI interrupts. Given that
+> is the case, do you see any issue in porting the driver to the new API?
+> 
+> I should be able to test your patch on Keystone.
+> 
+
+I don't see any issue in porting it, and I have sent a RFC patch-set in Friday
+including the porting of the keystone SoC driver. If you could test it with the
+new API it would be great, just to have a sanity check.
+
+A v2 of the RFC will be sent soon, so I would suggest for you to wait until v2
+is available, that way you could test with the latest.
+
+Thanks for the help,
+Joao
