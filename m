@@ -1,231 +1,104 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f177.google.com ([209.85.128.177]:36170 "EHLO
-        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S944962AbdEZVFU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 May 2017 17:05:20 -0400
-Received: by mail-wr0-f177.google.com with SMTP id l50so7894557wrc.3
-        for <linux-pci@vger.kernel.org>; Fri, 26 May 2017 14:05:19 -0700 (PDT)
-Date: Fri, 26 May 2017 22:02:25 +0100
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Neo Jia <cjia@nvidia.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>,
-        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvm@vger.kernel.org
-Subject: [PATCH] PCI: Move test of INTx masking to pci_setup_device
-Message-ID: <20170526210222.GA22204@westernst>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36734 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751401AbdEPFWp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2017 01:22:45 -0400
+Received: by mail-wm0-f47.google.com with SMTP id u65so107985600wmu.1
+        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 22:22:40 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.pawandeep@gmail.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>
+Subject: [PATCH v6 2/3] iommu/pci: reserve IOVA for PCI masters
+Date: Tue, 16 May 2017 10:52:06 +0530
+Message-Id: <1494912127-12890-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
+References: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The test for INTx masking via config space command performed
-in pci_intx_mask_supported() should be performed before PCI device
-can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
-register which may collide with MSI/MSI-X interrupts.
+this patch reserves the IOVA for PCI masters.
+ARM64 based SOCs may have scattered memory banks.
+such as iproc based SOC has
 
-This patch moves test performed in pci_intx_mask_supported() to
+<0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
+<0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
+<0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
+<0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
 
-static void pci_test_intx_masking(struct pci_dev *dev)
+but incoming PCI transcation addressing capability is limited
+by host bridge, for example if max incoming window capability
+is 512 GB, then 0x00000090 and 0x000000a0 will fall beyond it.
 
-defined in drivers/pci/probe.c.
+to address this problem, iommu has to avoid allocating IOVA which
+are reserved. which inturn does not allocate IOVA if it falls into hole.
 
-This function is called from pci_setup_device(). It skips the test
-if the device has been already marked to have broken INTx masking
-feature. Otherwise the test is executed and broken_intx_masking
-field of struct pci_dev is set accordingly. broken_intx_masking
-meaning is: if it is true then the test has been either skipped
-because the device has been already known to have broken INTx
-masking support, or the test's been done and it has detected INTx
-masking support to be broken.
-The test result can be queried at any time later from the pci_dev
-using same interface as before (though whith changed implementation)
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
 
-static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
-{
-        /*
-         * INTx masking is supported if device has not been marked
-         * to have this feature broken and it has passed
-         * pci_test_intx_masking() test.
-         */
-        return !pdev->broken_intx_masking;
-}
-
-so current users of pci_intx_mask_supported: uio and vfio, keep
-their code unchanged.
-
-Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
----
- drivers/pci/pci.c   | 42 +-----------------------------------------
- drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h | 13 +++++++++++--
- 3 files changed, 56 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5b..7c4e1aa 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
- }
- EXPORT_SYMBOL_GPL(pci_intx);
- 
--/**
-- * pci_intx_mask_supported - probe for INTx masking support
-- * @dev: the PCI device to operate on
-- *
-- * Check if the device dev support INTx masking via the config space
-- * command word.
-- */
--bool pci_intx_mask_supported(struct pci_dev *dev)
--{
--	bool mask_supported = false;
--	u16 orig, new;
--
--	if (dev->broken_intx_masking)
--		return false;
--
--	pci_cfg_access_lock(dev);
--
--	pci_read_config_word(dev, PCI_COMMAND, &orig);
--	pci_write_config_word(dev, PCI_COMMAND,
--			      orig ^ PCI_COMMAND_INTX_DISABLE);
--	pci_read_config_word(dev, PCI_COMMAND, &new);
--
--	/*
--	 * There's no way to protect against hardware bugs or detect them
--	 * reliably, but as long as we know what the value should be, let's
--	 * go ahead and check it.
--	 */
--	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
--		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
--			orig, new);
--	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
--		mask_supported = true;
--		pci_write_config_word(dev, PCI_COMMAND, orig);
--	}
--
--	pci_cfg_access_unlock(dev);
--	return mask_supported;
--}
--EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
--
- static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+index 48d36ce..08764b0 100644
+--- a/drivers/iommu/dma-iommu.c
++++ b/drivers/iommu/dma-iommu.c
+@@ -27,6 +27,7 @@
+ #include <linux/iova.h>
+ #include <linux/irq.h>
+ #include <linux/mm.h>
++#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/scatterlist.h>
+ #include <linux/vmalloc.h>
+@@ -171,8 +172,12 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
+ 		struct iova_domain *iovad)
  {
- 	struct pci_bus *bus = dev->bus;
-@@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
-  * @dev: the PCI device to operate on
-  *
-  * Check if the device dev has its INTx line asserted, mask it and
-- * return true in that case. False is returned if not interrupt was
-+ * return true in that case. False is returned if no interrupt was
-  * pending.
-  */
- bool pci_check_and_mask_intx(struct pci_dev *dev)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 19c8950..ee6b55c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1330,6 +1330,48 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+ 	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
++	struct device_node *np = bridge->dev.parent->of_node;
+ 	struct resource_entry *window;
+ 	unsigned long lo, hi;
++	int ret;
++	dma_addr_t tmp_dma_addr = 0, dma_addr;
++	LIST_HEAD(res);
+ 
+ 	resource_list_for_each_entry(window, &bridge->windows) {
+ 		if (resource_type(window->res) != IORESOURCE_MEM &&
+@@ -183,6 +188,36 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
+ 		hi = iova_pfn(iovad, window->res->end - window->offset);
+ 		reserve_iova(iovad, lo, hi);
+ 	}
++
++	/* PCI inbound memory reservation. */
++	ret = of_pci_get_dma_ranges(np, &res);
++	if (!ret) {
++		resource_list_for_each_entry(window, &res) {
++			struct resource *res_dma = window->res;
++
++			dma_addr = res_dma->start - window->offset;
++			if (tmp_dma_addr > dma_addr) {
++				pr_warn("PCI: failed to reserve iovas; ranges should be sorted\n");
++				return;
++			}
++			if (tmp_dma_addr != dma_addr) {
++				lo = iova_pfn(iovad, tmp_dma_addr);
++				hi = iova_pfn(iovad, dma_addr - 1);
++				reserve_iova(iovad, lo, hi);
++			}
++			tmp_dma_addr = window->res->end - window->offset;
++		}
++		/*
++		 * the last dma-range should honour based on the
++		 * 32/64-bit dma addresses.
++		 */
++		if (tmp_dma_addr < DMA_BIT_MASK(sizeof(dma_addr_t) * 8)) {
++			lo = iova_pfn(iovad, tmp_dma_addr);
++			hi = iova_pfn(iovad,
++				      DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1);
++			reserve_iova(iovad, lo, hi);
++		}
++	}
  }
  
  /**
-+ * pci_test_intx_masking - probe for INTx masking support
-+ * @dev: the PCI device to operate on
-+ *
-+ * Check if the @dev supports INTx masking via the config space
-+ * command word. Executed when PCI device is setup. Result is saved
-+ * in broken_intx_masking field of struct pci_dev and can be checked
-+ * with pci_intx_mask_supported at any time later, after the PCI device
-+ * has been setup (this avoids testing of PCI_COMMAND_INTX_DISABLE
-+ * register at runtime).
-+ */
-+static void pci_test_intx_masking(struct pci_dev *dev)
-+{
-+	u16 orig, toggle, new;
-+
-+	/*
-+	 * If device doesn't support this feature though it could pass the test.
-+	 */
-+	if (dev->broken_intx_masking)
-+		return;
-+
-+	pci_cfg_access_lock(dev);
-+
-+	/*
-+	 * Perform the test.
-+	 */
-+	pci_read_config_word(dev, PCI_COMMAND, &orig);
-+	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
-+	pci_write_config_word(dev, PCI_COMMAND, toggle);
-+	pci_read_config_word(dev, PCI_COMMAND, &new);
-+
-+	/*
-+	 * Restore initial state.
-+	 */
-+	pci_write_config_word(dev, PCI_COMMAND, orig);
-+
-+	pci_cfg_access_unlock(dev);
-+
-+	if (new != toggle)
-+		dev->broken_intx_masking = 1;
-+}
-+
-+/**
-  * pci_setup_device - fill in class and map information of a device
-  * @dev: the device structure to fill
-  *
-@@ -1399,6 +1441,8 @@ int pci_setup_device(struct pci_dev *dev)
- 		}
- 	}
- 
-+	pci_test_intx_masking(dev);
-+
- 	switch (dev->hdr_type) {		    /* header type */
- 	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
- 		if (class == PCI_CLASS_BRIDGE_PCI)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..8a307fc 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -366,7 +366,7 @@ struct pci_dev {
- 	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
--	unsigned int	broken_intx_masking:1;
-+	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
- 	unsigned int	irq_managed:1;
- 	unsigned int	has_secondary_link:1;
-@@ -1003,6 +1003,16 @@ int __must_check pci_reenable_device(struct pci_dev *);
- int __must_check pcim_enable_device(struct pci_dev *pdev);
- void pcim_pin_device(struct pci_dev *pdev);
- 
-+static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
-+{
-+	/*
-+	 * INTx masking is supported if device has not been marked
-+	 * to have this feature broken and it has passed
-+	 * pci_test_intx_masking() test.
-+	 */
-+	return !pdev->broken_intx_masking;
-+}
-+
- static inline int pci_is_enabled(struct pci_dev *pdev)
- {
- 	return (atomic_read(&pdev->enable_cnt) > 0);
-@@ -1026,7 +1036,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
- int pci_try_set_mwi(struct pci_dev *dev);
- void pci_clear_mwi(struct pci_dev *dev);
- void pci_intx(struct pci_dev *dev, int enable);
--bool pci_intx_mask_supported(struct pci_dev *dev);
- bool pci_check_and_mask_intx(struct pci_dev *dev);
- bool pci_check_and_unmask_intx(struct pci_dev *dev);
- int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
 -- 
-2.1.4
+1.9.1
