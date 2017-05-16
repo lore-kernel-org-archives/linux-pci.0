@@ -1,37 +1,70 @@
-Return-Path: <SRS0=jRHk=46=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=jRHk=46=chromium.org=briannorris@kernel.org>
-Date: Tue, 23 May 2017 18:15:07 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-	Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
-Message-ID: <20170524011507.GA112603@google.com>
-References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
- <20170523194443.GD7241@bhelgaas-glaptop.roam.corp.google.com>
- <c2331eef-b76d-720d-3750-6d754d53710a@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 2/2] PCI: Avoid bus reset for Cavium cn8xxx root ports.
+To: David Daney <david.daney@cavium.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20170516001736.4001-1-david.daney@cavium.com>
+ <20170516001736.4001-3-david.daney@cavium.com>
+From: Auger Eric <eric.auger@redhat.com>
+Message-ID: <235a9a51-df06-84af-4e5d-b6408ceb0b7d@redhat.com>
+Date: Tue, 16 May 2017 22:14:40 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <c2331eef-b76d-720d-3750-6d754d53710a@rock-chips.com>
+In-Reply-To: <20170516001736.4001-3-david.daney@cavium.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jon Masters <jcm@redhat.com>, Robert Richter <robert.richter@cavium.com>,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(Since Shawn didn't quite answer this piece)
+Hi,
 
-On Wed, May 24, 2017 at 09:04:33AM +0800, Shawn Lin wrote:
-> 在 2017/5/24 3:44, Bjorn Helgaas 写道:
-> >On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
-> >>This patch checks the link status before reading and
-> >>writing configure space of devices attached to the RC.
-> >>If the link status is down, we shouldn't try to access
-> >>the devices.
-> >
-> >What bad things happen without this patch?
+On 16/05/2017 02:17, David Daney wrote:
+> Root ports of cn8xxx do not function after bus reset when used with
+> some e1000e and LSI HBA devices.  Add a quirk to prevent bus reset on
+> these root ports.
+I understand the bus reset would work along with a variety of other
+child devices. I guess there is no way to be more accurate and forbid
+the bus reset only when incompatible child devices are found?
+> 
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> ---
+>  drivers/pci/quirks.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 085fb78..02cd847 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3347,6 +3347,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
+>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
+>  
+> +/*
+> + * Root port on some Cavium CN8xxx chips do not successfully complete
+> + * a bus reset when used with certain types child devices.  Config
+s/types /types of
+Thanks
 
-On this SoC, I've seen this sort of behavior (reading the config space
-when the device isn't responding) yield aborts, which panic the system. 
+Eric
+> + * space access to the child may quit responding.  Flag the root port
+> + * as not supporting bus reset.
+> + */
+> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
+> +
+>  static void quirk_no_pm_reset(struct pci_dev *dev)
+>  {
+>  	/*
+> 
 
-I can't speak exactly for which scenarios Shawn is addressing though. As
-I mentioned, this patch doesn't do anything for me so far.
-
-Brian
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
