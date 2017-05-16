@@ -1,96 +1,181 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:38550 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932294AbdEKOIn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 10:08:43 -0400
-Received: by mail-wm0-f43.google.com with SMTP id 142so37911846wma.1
-        for <linux-pci@vger.kernel.org>; Thu, 11 May 2017 07:08:42 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1494490587.15454.9.camel@pengutronix.de>
-References: <20170426181502.770-1-l.stach@pengutronix.de> <CAJ+vNU0AEZtc+DaYSV7S1LtXCncVh9nV4hG7BtYxJE=m6-80EA@mail.gmail.com>
- <1493282584.13947.6.camel@pengutronix.de> <CAJ+vNU3tHG2c0XJhs3qD0xS4BP==fWEwP6Y78+4WpUmn-KksBg@mail.gmail.com>
- <CAJ+vNU0pcivE53grF6n939gXC0E6-HN4fFJ7Pm9hq3nV1YYSUQ@mail.gmail.com> <1494490587.15454.9.camel@pengutronix.de>
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Thu, 11 May 2017 07:08:41 -0700
-Message-ID: <CAJ+vNU2iPDRELO7Ce8=ZRNqVtYMO1d3YF-HE7PoBho0Am1mZhg@mail.gmail.com>
-Subject: Re: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple devices
- are attached
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        patchwork-lst@pengutronix.de
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Date: Tue, 16 May 2017 07:53:57 +0530
+From: sricharan@codeaurora.org
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
+ deferred probing or error
+In-Reply-To: <1804176.uxVOFWagsb@avalon>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
+ <1900421.tkAiezvoW8@avalon> <1804176.uxVOFWagsb@avalon>
+Message-ID: <9952978e7ac69193daf67ccb77eebe29@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Magnus Damm <magnus.damm@gmail.com>, linux-arm-msm@vger.kernel.org,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
+ okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-msm-owner@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 11, 2017 at 1:16 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Hi Tim,
->
-> Am Mittwoch, den 10.05.2017, 14:44 -0700 schrieb Tim Harvey:
->> On Thu, Apr 27, 2017 at 8:32 AM, Tim Harvey <tharvey@gateworks.com> wrote:
->> > On Thu, Apr 27, 2017 at 1:43 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->> >> Am Mittwoch, den 26.04.2017, 14:11 -0700 schrieb Tim Harvey:
->> >>> On Wed, Apr 26, 2017 at 11:15 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->> >>> > The DWC host does not support legacy PCI IRQs and MSIs at the same time,
->> >>> > so we need to fall back to using only legacy IRQs if there is a chance
->> >>> > that multiple devices with differing MSI capabilities are connected to
->> >>> > the host. The only configuration where MSIs can be safely used is when
->> >>> > the device below the host bridge is not a bridge, i.e. the only device
->> >>> > connected to this host.
->> >>> >
->> >>> > By disallowing MSI allocation when multiple devices might be attached
->> >>> > we get those configurations in a working state. The only configurations
->> >>> > that depend on MSIs being available, that I am aware of, are some
->> >>> > embedded devices with a PCIe attached FPGA, that is incapable of
->> >>> > generating PCI legacy IRQs. Those are kept working by allowing MSIs
->> >>> > when only a single device is attached to the host.
->> >>> >
->> >>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
->> >>> > ---
-> [...]
->> Lucas,
->>
->> Are you not able to repeat my findings?
->
-> Yes, I see what's going on.
->
->> Since Linux 4.8 IMX PCIe is completely broken for PCIe devices that do
->> not support MSI interrupts (and there are a whole lot of 802.11n
->> radios that fall into this category) as you can no longer disable MSI
->> because the IMX PCIe driver depends on it.
->>
->> It seems like your patch is the right approach but something must
->> still be getting set that causes the legacy interrupts to not fire.
->
-> The issue here are the port-services, which are using MSI when
-> available, which might conflict with the device requirements, even if
-> only a single device is attached.
->
-> Probably we need to disable MSI on all systems, unless we know that we
-> absolutely need them (EP devices, which don't support legacy IRQs). I'll
-> send a patch to do this, but other issues have been higher priority
-> again.
->
-> Regards,
-> Lucas
->
+Hi Laurent,
 
-Lucas,
+On 2017-05-16 03:04, Laurent Pinchart wrote:
+> Hi Sricharan,
+> 
+> On Monday 15 May 2017 23:37:16 Laurent Pinchart wrote:
+>> On Wednesday 03 May 2017 15:54:59 Sricharan R wrote:
+>> > On 5/3/2017 3:24 PM, Robin Murphy wrote:
+>> >> On 02/05/17 19:35, Geert Uytterhoeven wrote:
+>> >>> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R wrote:
+>> >>>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+>> >>>>
+>> >>>> Failures to look up an IOMMU when parsing the DT iommus property need
+>> >>>> to be handled separately from the .of_xlate() failures to support
+>> >>>> deferred probing.
+>> >>>>
+>> >>>> The lack of a registered IOMMU can be caused by the lack of a driver
+>> >>>> for the IOMMU, the IOMMU device probe not having been performed yet,
+>> >>>> having been deferred, or having failed.
+>> >>>>
+>> >>>> The first case occurs when the device tree describes the bus master
+>> >>>> and IOMMU topology correctly but no device driver exists for the IOMMU
+>> >>>> yet or the device driver has not been compiled in. Return NULL, the
+>> >>>> caller will configure the device without an IOMMU.
+>> >>>>
+>> >>>> The second and third cases are handled by deferring the probe of the
+>> >>>> bus master device which will eventually get reprobed after the IOMMU.
+>> >>>>
+>> >>>> The last case is currently handled by deferring the probe of the bus
+>> >>>> master device as well. A mechanism to either configure the bus master
+>> >>>> device without an IOMMU or to fail the bus master device probe
+>> >>>> depending on whether the IOMMU is optional or mandatory would be a good
+>> >>>> enhancement.
+>> >>>>
+>> >>>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+>> >>>> Signed-off-by: Laurent Pichart
+>> >>>> <laurent.pinchart+renesas@ideasonboard.com>
+>> >>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> >>>
+>> >>> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
+>> >>> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
+>> >>> properties in DT now fail to probe.
+>> >>
+>> >> How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
+>> >> registered then they should merely defer until we reach the point of
+>> >> giving up and ignoring the IOMMU. Is it just that you have no other
+>> >> late-probing drivers or post-init module loads to kick the deferred
+>> >> queue after that point? I did try to find a way to explicitly kick it
+>> >> from a suitably late initcall, but there didn't seem to be any obvious
+>> >> public interface - anyone have any suggestions?
+>> >>
+>> >> I think that's more of a general problem with the probe deferral
+>> >> mechanism itself (I've seen the same thing happen with some of the
+>> >> CoreSight stuff on Juno due to the number of inter-component
+>> >> dependencies) rather than any specific fault of this series.
+>> >
+>> > I was thinking of an additional check like below to avoid the
+>> > situation ?
+>> >
+>> > From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
+>> > From: Sricharan R <sricharan@codeaurora.org>
+>> > Date: Wed, 3 May 2017 13:16:59 +0530
+>> > Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
+>> >
+>> > While returning EPROBE_DEFER for iommu masters
+>> > take in to account of iommu nodes that could be
+>> > marked in DT as 'status=disabled', in which case
+>> > simply return NULL and let the master's probe
+>> > continue rather than deferring.
+>> >
+>> > Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> > ---
+>> >
+>> >  drivers/iommu/of_iommu.c | 1 +
+>> >  1 file changed, 1 insertion(+)
+>> >
+>> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>> > index 9f44ee8..e6e9bec 100644
+>> > --- a/drivers/iommu/of_iommu.c
+>> > +++ b/drivers/iommu/of_iommu.c
+>> > @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node
+>> > *np)
+>> >
+>> >         ops = iommu_ops_from_fwnode(fwnode);
+>> >         if ((ops && !ops->of_xlate) ||
+>> > +           !of_device_is_available(iommu_spec->np) ||
+>> >             (!ops && !of_iommu_driver_present(iommu_spec->np)))
+>> >                 return NULL;
+>> 
+>> This looks good to me, but won't be enough. The ipmmu-vmsa driver in
+>> v4.12-rc1 doesn't call iommu_device_register() and thus won't be found 
+>> by
+>> iommu_ops_from_fwnode(). Furthermore, it doesn't IOMMU_OF_DECLARE(), 
+>> and
+>> thus will always be considered as absent.
+>> 
+>> I agree that the ipmmu-vmsa driver needs to be fixed, but it would 
+>> have been
+>> nice to check existing IOMMU drivers before merging this patch 
+>> series...
+> 
+> Please pardon the question, but has this patch series been tested on 
+> ARM32 ?
+> 
+> When the device is probed the arch_setup_dma_ops() function is called. 
+> It sets
+> the device's dma_ops and the mapping (in __arm_iommu_attach_device()). 
+> If
+> probe is deferred, arch_teardown_dma_ops() is called which in turn 
+> calls
+> arch_teardown_dma_ops(). This removes the mapping but doesn't touch the
+> dma_ops. The next time the device is probed, arch_setup_dma_ops() bails 
+> out
+> immediately as the dma_ops are already set, leaving us with a device 
+> bound to
+> IOMMU operations but with no mapping. This oopses later as soon as the 
+> kernel
+> tries to map memory for the device through the IOMMU.
 
-Thanks, this fix is something that's beyond my experience or I would
-be glad to do it. The PCIe driver has been changing very rapidly in
-recent kernel versions and there is no single patch that can be
-reverted to 'fix' this long-standing issue. I'm really surprised
-others haven't chimed in with reports of it being broken as its been
-an issue since 4.8.
+Resetting the dma_ops for arm32 was added in this patch [1], which I 
+missed
+to send in the original series, but now have added to Russell's patch 
+tracking
+system.
 
-Is it worth removing the 'depends on PCI_MSI_IRQ_DOMAIN' from
-PCIE_DW_HOST and PCI_IMX6 and defaulting MSI off until your proposed
-fix is ready and working? That is precisely what I have to do on 4.8+
-kernels to get them working for our IMX6 users using ath9k radios
-(making distro's like Ubuntu a problem as they run a fairly standard
-4.8 kernel).
+[1] https://patchwork.kernel.org/patch/9434105/
 
-Tim
+Regards,
+  Sricharan
+
+> 
+> I might be missing something obvious, but I don't see how this can 
+> work.
+> 
+>> >>> This can be fixed by either:
+>> >>>   - Disabling CONFIG_IPMMU_VMSA, or
+>> >>>   - Reverting commit 7b07cbefb68d486f (but keeping "int ret = 0;").
+>> >>>
+>> >>> Note that this was a bit hard to investigate, as R-Car Gen3 support
+>> >>> wasn't upstreamed yet, so bisection pointed to a merge commit.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
