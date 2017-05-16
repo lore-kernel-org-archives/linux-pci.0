@@ -1,221 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52430 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1164439AbdEXWab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 24 May 2017 18:30:31 -0400
-Date: Wed, 24 May 2017 17:30:27 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v3] PCI: use IDA to manage domain number if not getting
- it from DT
-Message-ID: <20170524223027.GA7958@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495525511-202465-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495525511-202465-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38468 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751017AbdEPFWa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2017 01:22:30 -0400
+Received: by mail-wm0-f42.google.com with SMTP id v15so75931205wmv.1
+        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 22:22:29 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.pawandeep@gmail.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>
+Subject: [PATCH v6 1/3] of/pci/dma: fix DMA configuration for PCI masters
+Date: Tue, 16 May 2017 10:52:05 +0530
+Message-Id: <1494912127-12890-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
+References: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+current device framework and OF framework integration assumes
+dma-ranges in a way where memory-mapped devices define their
+dma-ranges. (child-bus-address, parent-bus-address, length).
 
-On Tue, May 23, 2017 at 03:45:11PM +0800, Shawn Lin wrote:
-> If not getting domain number from DT, the domain number will
-> keep increasing once doing unbind/bind RC drivers. This could
-> introduce pointless tree view of lspci as shows below:
-> 
-> -+-[0001:00]---00.0-[01]----00.0
->   \-[0000:00]-
-> 
-> The more test we do, the lengthier it would be. The more serious
-> issue is that if attaching two hierarchies for two different domains
-> belonging to two root bridges, so when doing unbind/bind test for one
-> of them and keep the other, then the domain number would finally
-> overflow and make the two hierarchies of devices share the some domain
-> number but actually they shouldn't. So it looks like we need to invent
-> a new indexing ID mechanism to manage domain number. This patch
-> introduces idr to achieve our purpose.
-> 
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v3:
-> - make ida_domain a system-wide property and check it in the code to
-> combine with use_dt_domains. Also update the comment there.
-> 
-> Changes in v2:
-> - add a remove wrapper
-> - rename use_dt_domains to ida_domain and set this bit
-> in pci_get_new_domain_nr and test it in the remove wrapper.
-> 
->  drivers/pci/pci.c    | 42 ++++++++++++++++++++++++++++--------------
->  drivers/pci/remove.c |  2 ++
->  include/linux/pci.h  |  8 ++++++--
->  3 files changed, 36 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b01bd5b..e5f5db0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/delay.h>
->  #include <linux/dmi.h>
-> +#include <linux/idr.h>
->  #include <linux/init.h>
->  #include <linux/of.h>
->  #include <linux/of_pci.h>
-> @@ -5340,15 +5341,25 @@ static void pci_no_domains(void)
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS
-> -static atomic_t __domain_nr = ATOMIC_INIT(-1);
-> +DEFINE_IDA(__domain_nr);
+of_dma_configure is specifically written to take care of memory
+mapped devices. but no implementation exists for pci to take
+care of pcie based memory ranges.
 
-Should be static.
+for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
+world dma-ranges.
+dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
 
-> -int pci_get_new_domain_nr(void)
-> +/* get domain number from IDA */
-> +static bool ida_domain = true;
+this patch serves following:
 
-Reorder so "ida_domain" precedes the data structure it controls.
+1) exposes interface to the pci host driver for their
+inbound memory ranges
 
-> +int pci_get_new_domain_nr(struct pci_bus *bus)
-> +{
-> +	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
-> +}
-> +
-> +void pci_put_old_domain_nr(struct pci_bus *bus)
+2) provide an interface to callers such as of_dma_get_ranges.
+so then the returned size get best possible (largest) dma_mask.
+because PCI RC drivers do not call APIs such as
+dma_set_coherent_mask() and hence rather it shows its addressing
+capabilities based on dma-ranges.
+for e.g.
+dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+we should get dev->coherent_dma_mask=0x7fffffffff.
 
-s/pci_put_old_domain_nr/pci_put_domain_nr/
+3) this patch handles multiple inbound windows and dma-ranges.
+it is left to the caller, how it wants to use them.
+the new function returns the resources in a standard and unform way
 
->  {
-> -	return atomic_inc_return(&__domain_nr);
-> +	if (ida_domain)
-> +		ida_simple_remove(&__domain_nr, bus->domain_nr);
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -static int of_pci_bus_find_domain_nr(struct device *parent)
-> +static int of_pci_bus_find_domain_nr(struct pci_bus *bus,
-> +				     struct device *parent)
->  {
->  	static int use_dt_domains = -1;
->  	int domain = -1;
-> @@ -5361,19 +5372,21 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
->  	 * If DT domain property is valid (domain >= 0) and
->  	 * use_dt_domains != 0, the DT assignment is valid since this means
->  	 * we have not previously allocated a domain number by using
-> -	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
-> -	 * 1, to indicate that we have just assigned a domain number from
-> -	 * DT.
-> +	 * pci_get_new_domain_nr(), so we should set ida_domain to false to
-> +	 * indicate that we don't allocate domain from idr; we should also
-> +	 * update use_dt_domains to 1, to indicate that we have just assigned
-> +	 * a domain number from DT.
->  	 *
->  	 * If DT domain property value is not valid (ie domain < 0), and we
->  	 * have not previously assigned a domain number from DT
-> -	 * (use_dt_domains != 1) we should assign a domain number by
-> -	 * using the:
-> +	 * (use_dt_domains != 1 && ida_domain != false) we should assign a
-> +	 * domain number by using the:
->  	 *
->  	 * pci_get_new_domain_nr()
->  	 *
-> -	 * API and update the use_dt_domains value to keep track of method we
-> -	 * are using to assign domain numbers (use_dt_domains = 0).
-> +	 * API and update the use_dt_domains and ida_domain value to keep track
-> +	 * of method we are using to assign domain numbers (use_dt_domains = 0
-> +	 * and ida_domain = true).
->  	 *
->  	 * All other combinations imply we have a platform that is trying
->  	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-> @@ -5383,9 +5396,10 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
->  	 */
->  	if (domain >= 0 && use_dt_domains) {
->  		use_dt_domains = 1;
-> -	} else if (domain < 0 && use_dt_domains != 1) {
-> +		ida_domain = false;
-> +	} else if (domain < 0 && use_dt_domains != 1 && ida_domain != false) {
->  		use_dt_domains = 0;
-> -		domain = pci_get_new_domain_nr();
-> +		domain = pci_get_new_domain_nr(bus);
+4) this way the callers of for e.g. of_dma_get_ranges
+does not need to change.
 
-These comments and logic are too complicated for my puny brain.  Much of
-this was pre-existing, of course.  Surely there's a simpler way?
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
 
-1) If we're using ACPI, every host bridge must have a _SEG method, and it
-supplies the domain.  We ignore any bridge without _SEG.
-
-2) If we're using DT, every host bridge must supply "linux,pci-domain", and
-it supplies the domain.  We ignore any bridge without "linux,pci-domain".
-
-3) Otherwise, we always use IDA.
-
->  	} else {
->  		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
->  			parent->of_node->full_name);
-> @@ -5397,7 +5411,7 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
->  
->  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
->  {
-> -	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
-> +	return acpi_disabled ? of_pci_bus_find_domain_nr(bus, parent) :
->  			       acpi_pci_bus_find_domain_nr(bus);
->  }
->  #endif
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 73a03d3..1bbbb37 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	list_for_each_entry_safe(child, tmp,
->  				 &bus->devices, bus_list)
->  		pci_remove_bus_device(child);
-> +
-> +	pci_put_old_domain_nr(bus);
-
-In your current patch, ida_domain defaults to true, and it is only set
-to false in of_pci_bus_find_domain_nr(), which is only called when
-ACPI is disabled.  Therefore, ida_domain will be true when we're using
-ACPI, and I think pci_put_old_domain_nr() will erroneously remove
-domains from tha IDA.
-
->  	pci_remove_bus(bus);
->  	host_bridge->bus = NULL;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 33c2b0b..9296e31 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1445,13 +1445,17 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
->   * configuration space.
->   */
->  #ifdef CONFIG_PCI_DOMAINS
-> +extern struct ida __domain_nr;
->  extern int pci_domains_supported;
-> -int pci_get_new_domain_nr(void);
-> +int pci_get_new_domain_nr(struct pci_bus *bus);
-> +void pci_put_old_domain_nr(struct pci_bus *bus);
->  #else
->  enum { pci_domains_supported = 0 };
->  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
->  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
-> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-> +static inline int pci_get_new_domain_nr(struct pci_bus *bus)
-> +{ return -ENOSYS; }
-> +static inline void pci_put_old_domain_nr(struct pci_bus *bus) { }
->  #endif /* CONFIG_PCI_DOMAINS */
->  
->  /*
-> -- 
-> 1.9.1
-> 
-> 
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 0ee42c3..4005ed3 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -283,6 +283,101 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++
++/**
++ * of_pci_get_dma_ranges - Parse PCI host bridge inbound resources from DT
++ * @np: device node of the host bridge having the dma-ranges property
++ * @resources: list where the range of resources will be added after DT parsing
++ *
++ * It is the caller's job to free the @resources list.
++ *
++ * This function will parse the "dma-ranges" property of a
++ * PCI host bridge device node and setup the resource mapping based
++ * on its content.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ */
++
++int of_pci_get_dma_ranges(struct device_node *dn, struct list_head *resources)
++{
++	struct device_node *node = of_node_get(dn);
++	int rlen;
++	int pna = of_n_addr_cells(node);
++	const int na = 3, ns = 2;
++	int np = pna + na + ns;
++	int ret = 0;
++	struct resource *res;
++	const u32 *dma_ranges;
++	struct of_pci_range range;
++
++	if (!node)
++		return -EINVAL;
++
++	while (1) {
++		dma_ranges = of_get_property(node, "dma-ranges", &rlen);
++
++		/* Ignore empty ranges, they imply no translation required. */
++		if (dma_ranges && rlen > 0)
++			break;
++
++		/* no dma-ranges, they imply no translation required. */
++		if (!dma_ranges)
++			break;
++
++		node = of_get_next_parent(node);
++
++		if (!node)
++			break;
++	}
++
++	if (!dma_ranges) {
++		pr_debug("pcie device has no dma-ranges defined for node(%s)\n",
++			  dn->full_name);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	while ((rlen -= np * 4) >= 0) {
++		range.pci_space = dma_ranges[0];
++		range.pci_addr = of_read_number(dma_ranges + 1, ns);
++		range.cpu_addr = of_translate_dma_address(node,
++							dma_ranges + na);
++		range.size = of_read_number(dma_ranges + pna + na, ns);
++
++		dma_ranges += np;
++
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range.
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res) {
++			ret = -ENOMEM;
++			goto parse_failed;
++		}
++
++		ret = of_pci_range_to_resource(&range, dn, res);
++		if (ret) {
++			kfree(res);
++			continue;
++		}
++
++		pci_add_resource_offset(resources, res,
++					res->start - range.pci_addr);
++	}
++	return ret;
++
++parse_failed:
++	pci_free_resource_list(resources);
++out:
++	of_node_put(node);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_dma_ranges);
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ #ifdef CONFIG_PCI_MSI
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 0e0974e..617b90d 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -76,6 +76,7 @@ static inline void of_pci_check_probe_only(void) { }
+ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
++int of_pci_get_dma_ranges(struct device_node *np, struct list_head *resources);
+ #else
+ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			unsigned char busno, unsigned char bus_max,
+@@ -83,6 +84,12 @@ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+ {
+ 	return -EINVAL;
+ }
++
++static inline int of_pci_get_dma_ranges(struct device_node *np,
++					struct list_head *resources)
++{
++	return -EINVAL;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+-- 
+1.9.1
