@@ -1,687 +1,424 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39888 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750815AbdE3U31 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 16:29:27 -0400
-Date: Tue, 30 May 2017 15:29:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: bhelgaas@google.com, kishon@ti.com, jingoohan1@gmail.com,
-        arnd@arndb.de, tn@semihalf.com, keith.busch@intel.com,
-        niklas.cassel@axis.com, dhdang@apm.com, liudongdong3@huawei.com,
-        gabriele.paoloni@huawei.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com,
-        chenyao11@huawei.com, puck.chen@hisilicon.com,
-        guodong.xu@linaro.org, wangbinghui@hisilicon.com,
-        suzhuangluan@hisilicon.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 3/4] PCI: dwc: kirin: add PCIe Driver for HiSilicon
- Kirin SoC
-Message-ID: <20170530202925.GE4664@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170525030204.126233-1-songxiaowei@hisilicon.com>
- <20170525030204.126233-4-songxiaowei@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+To: Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Richard Weinberger <richard@nod.at>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>,
+        linux-mtd@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel.vetter@intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Sean Paul <seanpaul@chromium.org>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Nicolas Ferre <nicolas.ferre@microchip.com>,
+        Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>,
+        =?UTF-8?q?=C3=98yvind=20A=2E=20Holm?= <sunny@sunbase.org>,
+        Michael Heimpold <michael.heimpold@i2se.com>,
+        Sanjeev <ghane0@gmail.com>, SeongJae Park <sj38.park@gmail.com>,
+        Markus Heiser <markus.heiser@darmarit.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Richard Sailer <richard@weltraumpflege.org>,
+        Tsugikazu Shibata <tshibata@ab.jp.nec.com>,
+        Tyler Hicks <tyhicks@canonical.com>, linux-pci@vger.kernel.org,
+        linux-fbdev@vger.kernel.org, dri-devel@lists.freedesktop.org
+Subject: [PATCH v2 43/53] docs: update old references for DocBook from the documentation
+Date: Tue, 16 May 2017 09:16:35 -0300
+Message-Id: <ff41c41943de489ccb12d064faae1e32265f7d56.1494935649.git.mchehab@s-opensource.com>
+In-Reply-To: <cover.1494935649.git.mchehab@s-opensource.com>
+References: <cover.1494935649.git.mchehab@s-opensource.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525030204.126233-4-songxiaowei@hisilicon.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <cover.1494935649.git.mchehab@s-opensource.com>
+References: <cover.1494935649.git.mchehab@s-opensource.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Xiaowei,
+DocBook is mentioned several times at the documentation. Update
+the obsolete references from it at the DocBook.
 
-Several trivial cosmetic comments below.
+Acked-by: SeongJae Park <sj38.park@gmail.com>
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt            |  2 +-
+ Documentation/admin-guide/README.rst       |  6 ---
+ Documentation/doc-guide/index.rst          |  1 -
+ Documentation/doc-guide/sphinx.rst         |  5 ---
+ Documentation/fb/api.txt                   |  4 +-
+ Documentation/gpu/todo.rst                 |  2 +-
+ Documentation/kernel-doc-nano-HOWTO.txt    | 65 +++++-------------------------
+ Documentation/process/changes.rst          | 26 +++---------
+ Documentation/process/howto.rst            |  8 ----
+ Documentation/process/kernel-docs.rst      | 34 +---------------
+ Documentation/translations/ja_JP/howto.rst |  7 ----
+ Documentation/translations/ko_KR/howto.rst |  7 ----
+ 12 files changed, 21 insertions(+), 146 deletions(-)
 
-On Thu, May 25, 2017 at 11:02:03AM +0800, Xiaowei Song wrote:
-> Hisilicon PCIe Driver shares the common functions for PCIe dw-host
-> 
-> The poweron functions is developed on hi3660 SoC,
-> while Others Functions are common for Kirin series SoCs.
-> 
-> Low power mode(L1 sub-state and Suspend/Resume), hotplug
-
-Add space after "mode".
-
-> and MSI feature are not supported currently.
-> 
-> Cc: Guodong Xu <guodong.xu@linaro.org>
-> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-> ---
->  drivers/pci/dwc/Kconfig      |  10 +
->  drivers/pci/dwc/Makefile     |   1 +
->  drivers/pci/dwc/pcie-kirin.c | 513 +++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 524 insertions(+)
->  create mode 100644 drivers/pci/dwc/pcie-kirin.c
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index d2d2ba5b8a68..13e617b78430 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -130,4 +130,14 @@ config PCIE_ARTPEC6
->  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
->  	  SoCs.  This PCIe controller uses the DesignWare core.
->  
-> +config PCIE_KIRIN
-> +	depends on OF && ARM64
-> +	bool "HiSilicon Kirin series SoCs PCIe controllers"
-> +	depends on PCI
-> +	select PCIEPORTBUS
-> +	select PCIE_DW_HOST
-> +	help
-> +	  Say Y here if you want PCIe controller support on HiSilicon Kirin series SoCs
-> +	  kirin960 SoC
-
-Wrap the above so it fits in 80 columns.  Not sure what the last
-"kirin960 SoC" line means -- it doesn't seem to be part of the
-sentence.
-
-> +
->  endmenu
-> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-> index a2df13c28798..4bd69bacd4ab 100644
-> --- a/drivers/pci/dwc/Makefile
-> +++ b/drivers/pci/dwc/Makefile
-> @@ -10,6 +10,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
->  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
->  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
->  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-> +obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
->  
->  # The following drivers are for devices that use the generic ACPI
->  # pci_root.c driver but don't support standard ECAM config access.
-> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-> new file mode 100644
-> index 000000000000..2fe3b226957b
-> --- /dev/null
-> +++ b/drivers/pci/dwc/pcie-kirin.c
-> @@ -0,0 +1,513 @@
-> +/*
-> + * PCIe host controller driver for Kirin Phone SoCs
-> + *
-> + * Copyright (C) 2017 Hilisicon Electronics Co., Ltd.
-> + *		http://www.huawei.com
-> + *
-> + * Author: Xiaowei Song <songxiaowei@huawei.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <asm/compiler.h>
-> +#include <linux/compiler.h>
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/err.h>
-> +#include <linux/gpio.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_gpio.h>
-> +#include <linux/of_pci.h>
-> +#include <linux/pci.h>
-> +#include <linux/pci_regs.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/regmap.h>
-> +#include <linux/resource.h>
-> +#include <linux/types.h>
-> +#include "pcie-designware.h"
-> +
-> +#define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
-> +
-> +#define REF_CLK_FREQ 100000000
-> +
-> +/* PCIe ELBI registers */
-> +#define SOC_PCIECTRL_CTRL0_ADDR 0x000
-> +#define SOC_PCIECTRL_CTRL1_ADDR 0x004
-> +#define SOC_PCIEPHY_CTRL2_ADDR 0x008
-> +#define SOC_PCIEPHY_CTRL3_ADDR 0x00c
-
-Indent these all consistently.
-
-> +#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-> +
-> +#define PCIE_APP_LTSSM_ENABLE		0x01c
-> +#define PCIE_APB_PHY_CTRL0		0x0
-> +#define PCIE_APB_PHY_CTRL1		0x4
-> +#define PCIE_APB_PHY_STATUS0		0x400
-> +#define PCIE_LINKUP_ENABLE		(0x8020)
-> +#define PCIE_LTSSM_ENABLE_BIT	  (0x1 << 11)
-> +#define PIPE_CLK_STABLE		(0x1 << 19)
-> +#define PIPE_CLK_MAX_TRY_TIMES	10
-> +#define PHY_REF_PAD_BIT	(0x1 << 8)
-> +#define PHY_PWR_DOWN_BIT	(0x1 << 22)
-> +#define PHY_RST_ACK_BIT	(0x1 << 16)
-
-Indent these all consistently.
-
-> +
-> +/* info lacated in sysctrl */
-
-s/lacated/located/
-
-I mentioned this before.
-
-> +#define SCTRL_PCIE_CMOS_OFFSET		0x60
-> +#define SCTRL_PCIE_CMOS_BIT		0x10
-> +#define SCTRL_PCIE_ISO_OFFSET		0x44
-> +#define SCTRL_PCIE_ISO_BIT		0x30
-> +#define SCTRL_PCIE_HPCLK_OFFSET		0x190
-> +#define SCTRL_PCIE_HPCLK_BIT		0x184000
-> +#define SCTRL_PCIE_OE_OFFSET		0x14a
-> +#define PCIE_DEBOUNCE_PARAM		0xF0F400
-> +#define PCIE_OE_BYPASS		(0x3 << 28)
-
-Indent these all consistently.
-
-> +
-> +/* peri_crg ctrl */
-> +#define CRGCTRL_PCIE_ASSERT_OFFSET		0x88
-> +#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
-
-Indent these all consistently.
-
-> +
-> +/* Time for delay */
-> +#define REF_2_PERST_MIN		20000
-> +#define REF_2_PERST_MAX		25000
-> +#define PERST_2_ACCESS_MIN	10000
-> +#define PERST_2_ACCESS_MAX	12000
-> +#define LINK_WAIT_MIN		900
-> +#define LINK_WAIT_MAX		1000
-> +#define PIPE_CLK_WAIT_MIN	550
-> +#define PIPE_CLK_WAIT_MAX	600
-> +
-> +struct kirin_pcie {
-> +	struct dw_pcie		*pci;
-> +	void __iomem		*apb_base;
-> +	void __iomem		*phy_base;
-> +	struct regmap *crgctrl;
-> +	struct regmap *sysctrl;
-> +	struct clk			*apb_sys_clk;
-> +	struct clk			*apb_phy_clk;
-> +	struct clk			*phy_ref_clk;
-> +	struct clk			*pcie_aclk;
-> +	struct clk			*pcie_aux_clk;
-> +	int                 gpio_id_reset;
-
-Please indent the above so everything lines up.  It's pretty random
-now: two tabs before *pci, none before *crgctrl, three before the
-clocks, and spaces before gpio_id_reset.
-
-> +};
-> +
-> +static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
-> +		u32 val, u32 reg)
-> +{
-> +	writel(val, kirin_pcie->apb_base + reg);
-> +}
-> +
-> +static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie,
-> +		u32 reg)
-
-This all fits in 80 columns, no need to wrap.
-
-> +{
-> +	return readl(kirin_pcie->apb_base + reg);
-> +}
-> +
-> +/*Registers in PCIePHY*/
-
-Add spaces after "/*" and before "*/".
-
-I mentioned this before, too.
-
-Probably a space between "PCIe" and "PHY" as well.
-
-> +static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
-> +		u32 val, u32 reg)
-> +{
-> +	writel(val, kirin_pcie->phy_base + reg);
-> +}
-> +
-> +static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie,
-> +		u32 reg)
-
-This all fits in 80 columns, no need to wrap.
-
-> +{
-> +	return readl(kirin_pcie->phy_base + reg);
-> +}
-> +
-> +static int32_t kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
-
-Why are you using int32_t?  PTR_ERR() returns a long, so that seems
-like the obvious choice.
-
-> +		struct platform_device *pdev)
-> +{
-
-  struct device *dev = &pdev->dev;
-
-> +	kirin_pcie->phy_ref_clk = devm_clk_get(&pdev->dev, "pcie_phy_ref");
-
-Use "dev" instead of "&pdev->dev" here and below.
-
-> +	if (IS_ERR(kirin_pcie->phy_ref_clk))
-> +		return PTR_ERR(kirin_pcie->phy_ref_clk);
-> +
-> +	kirin_pcie->pcie_aux_clk = devm_clk_get(&pdev->dev, "pcie_aux");
-> +	if (IS_ERR(kirin_pcie->pcie_aux_clk))
-> +		return PTR_ERR(kirin_pcie->pcie_aux_clk);
-> +
-> +	kirin_pcie->apb_phy_clk = devm_clk_get(&pdev->dev, "pcie_apb_phy");
-> +	if (IS_ERR(kirin_pcie->apb_phy_clk))
-> +		return PTR_ERR(kirin_pcie->apb_phy_clk);
-> +
-> +	kirin_pcie->apb_sys_clk = devm_clk_get(&pdev->dev, "pcie_apb_sys");
-> +	if (IS_ERR(kirin_pcie->apb_sys_clk))
-> +		return PTR_ERR(kirin_pcie->apb_sys_clk);
-> +
-> +	kirin_pcie->pcie_aclk = devm_clk_get(&pdev->dev, "pcie_aclk");
-> +	if (IS_ERR(kirin_pcie->pcie_aclk))
-> +		return PTR_ERR(kirin_pcie->pcie_aclk);
-> +
-> +	return 0;
-> +}
-> +
-> +static int32_t kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
-
-Why int32_t?
-
-> +		struct platform_device *pdev)
-> +{
-
-  struct device *dev = &pdev->dev;
-
-> +	struct resource *apb;
-> +	struct resource *phy;
-> +	struct resource *dbi;
-> +
-> +	apb = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb");
-> +	kirin_pcie->apb_base = devm_ioremap_resource(&pdev->dev, apb);
-
-Use "dev" instead of "&pdev->dev" here and below.
-
-> +	if (IS_ERR(kirin_pcie->apb_base))
-> +		return PTR_ERR(kirin_pcie->apb_base);
-> +
-> +	phy = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-> +	kirin_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy);
-> +	if (IS_ERR(kirin_pcie->phy_base))
-> +		return PTR_ERR(kirin_pcie->phy_base);
-> +
-> +	dbi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-> +	kirin_pcie->pci->dbi_base = devm_ioremap_resource(&pdev->dev, dbi);
-> +	if (IS_ERR(kirin_pcie->pci->dbi_base))
-> +		return PTR_ERR(kirin_pcie->pci->dbi_base);
-> +
-> +	kirin_pcie->crgctrl =
-> +		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
-> +	if (IS_ERR(kirin_pcie->crgctrl))
-> +		return PTR_ERR(kirin_pcie->crgctrl);
-> +
-> +	kirin_pcie->sysctrl =
-> +		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
-> +	if (IS_ERR(kirin_pcie->sysctrl))
-> +		return PTR_ERR(kirin_pcie->sysctrl);
-> +
-> +	return 0;
-> +}
-> +
-> +static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
-> +{
-> +	u32 reg_val;
-> +	u32 time = PIPE_CLK_MAX_TRY_TIMES;
-> +
-> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
-> +	reg_val &= ~PHY_REF_PAD_BIT;
-> +	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
-> +
-> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL0);
-> +	reg_val &= ~PHY_PWR_DOWN_BIT;
-> +	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL0);
-> +	udelay(10);
-> +
-> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
-> +	reg_val &= ~PHY_RST_ACK_BIT;
-> +	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
-> +
-> +	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
-> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
-> +	if (reg_val & PIPE_CLK_STABLE) {
-> +		dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
-> +{
-> +	u32 val;
-> +
-> +	regmap_read(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, &val);
-> +	val |= PCIE_DEBOUNCE_PARAM;
-> +	val &= ~PCIE_OE_BYPASS;
-> +	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
-> +}
-> +
-> +static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
-> +{
-> +	int ret = 0;
-> +
-> +	if (!enable)
-> +		goto close_clk;
-> +
-> +	ret = clk_set_rate(kirin_pcie->phy_ref_clk, REF_CLK_FREQ);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = clk_prepare_enable(kirin_pcie->phy_ref_clk);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = clk_prepare_enable(kirin_pcie->apb_sys_clk);
-> +	if (ret)
-> +		goto apb_sys_fail;
-> +
-> +	ret = clk_prepare_enable(kirin_pcie->apb_phy_clk);
-> +	if (ret)
-> +		goto apb_phy_fail;
-> +
-> +	ret = clk_prepare_enable(kirin_pcie->pcie_aclk);
-> +	if (ret)
-> +		goto aclk_fail;
-> +
-> +	ret = clk_prepare_enable(kirin_pcie->pcie_aux_clk);
-> +	if (ret)
-> +		goto aux_clk_fail;
-> +
-> +	return 0;
-> +
-> +close_clk:
-> +	clk_disable_unprepare(kirin_pcie->pcie_aux_clk);
-> +aux_clk_fail:
-> +	clk_disable_unprepare(kirin_pcie->pcie_aclk);
-> +aclk_fail:
-> +	clk_disable_unprepare(kirin_pcie->apb_phy_clk);
-> +apb_phy_fail:
-> +	clk_disable_unprepare(kirin_pcie->apb_sys_clk);
-> +apb_sys_fail:
-> +	clk_disable_unprepare(kirin_pcie->phy_ref_clk);
-> +
-> +	return ret;
-> +}
-> +
-> +static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
-> +{
-> +	int ret;
-> +
-> +	/* Power supply for Host */
-> +	regmap_write(kirin_pcie->sysctrl,
-> +		SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
-> +	udelay(100);
-> +	kirin_pcie_oe_enable(kirin_pcie);
-> +
-> +	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
-> +	if (ret)
-> +		return ret;
-> +
-> +	/* ISO disable, PCIeCtrl,PHY assert and clk gate clear */
-
-Add space after ","
-
-> +	regmap_write(kirin_pcie->sysctrl,
-> +		SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
-> +	regmap_write(kirin_pcie->crgctrl,
-> +		CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
-> +	regmap_write(kirin_pcie->sysctrl,
-> +		SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
-> +
-> +	ret = kirin_pcie_phy_init(kirin_pcie);
-> +	if (ret)
-> +		goto close_clk;
-> +
-> +	/* perst assert Endpoint */
-> +	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
-> +		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
-> +		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
-> +		if (ret)
-> +			goto close_clk;
-> +		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
-> +
-> +		return 0;
-> +	}
-> +
-> +close_clk:
-> +	kirin_pcie_clk_ctrl(kirin_pcie, false);
-> +	return ret;
-> +}
-> +
-> +static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
-> +		bool on)
-> +{
-> +	u32 val;
-> +
-> +	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
-> +	if (on)
-> +		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
-> +	else
-> +		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
-> +
-> +	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
-> +}
-> +
-> +static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
-> +		bool on)
-> +{
-> +	u32 val;
-> +
-> +	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
-> +	if (on)
-> +		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
-> +	else
-> +		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
-> +
-> +	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
-> +}
-> +
-> +static int kirin_pcie_rd_own_conf(struct pcie_port *pp,
-> +		int where, int size, u32 *val)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-> +	int ret;
-> +
-> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
-> +	ret = dw_pcie_read(pci->dbi_base + where, size, val);
-> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
-> +
-> +	return ret;
-> +}
-> +
-> +static int kirin_pcie_wr_own_conf(struct pcie_port *pp,
-> +		int where, int size, u32 val)
-> +{
-> +	int ret;
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-
-Reorder local variable declarations as above in
-kirin_pcie_rd_own_conf().  Also fix similar declarations in functions
-below, so "pci" and "kirin_pcie" are initialized first.
-
-> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
-> +	ret = dw_pcie_write(pci->dbi_base + where, size, val);
-> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
-> +
-> +	return ret;
-> +}
-> +
-> +static u32 kirin_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
-> +		u32 reg, size_t size)
-> +{
-> +	u32 ret;
-> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-> +
-> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
-> +	dw_pcie_read(base + reg, size, &ret);
-> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
-> +
-> +	return ret;
-> +}
-> +
-> +static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
-> +		u32 reg, size_t size, u32 val)
-> +{
-> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-> +
-> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
-> +	dw_pcie_write(base + reg, size, val);
-> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
-> +}
-> +
-> +static int kirin_pcie_link_up(struct dw_pcie *pci)
-> +{
-> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-> +	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
-> +
-> +	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
-> +		return 1;
-> +
-> +	return 0;
-> +}
-> +
-> +static int kirin_pcie_establish_link(struct pcie_port *pp)
-> +{
-> +	int count = 0;
-> +
-
-Remove blank line above.
-
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-> +
-> +	if (kirin_pcie_link_up(pci))
-> +		return 0;
-> +
-> +	dw_pcie_setup_rc(pp);
-> +
-> +	/* assert LTSSM enable */
-> +	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
-> +		PCIE_APP_LTSSM_ENABLE);
-> +
-> +	/* check if the link is up or not */
-> +	while (!kirin_pcie_link_up(pci)) {
-> +		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
-> +		count++;
-> +		if (count == 1000) {
-> +			dev_err(pci->dev, "Link Fail\n");
-> +			return -EINVAL;
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static void kirin_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	kirin_pcie_establish_link(pp);
-> +}
-> +
-> +static struct dw_pcie_ops kirin_dw_pcie_ops = {
-> +	.read_dbi = kirin_pcie_read_dbi,
-> +	.write_dbi = kirin_pcie_write_dbi,
-> +	.link_up = kirin_pcie_link_up,
-> +};
-> +
-> +static struct dw_pcie_host_ops kirin_pcie_host_ops = {
-> +	.rd_own_conf = kirin_pcie_rd_own_conf,
-> +	.wr_own_conf = kirin_pcie_wr_own_conf,
-> +	.host_init = kirin_pcie_host_init,
-> +};
-> +
-> +static int __init kirin_add_pcie_port(struct dw_pcie *pci,
-> +			struct platform_device *pdev)
-> +{
-> +	pci->pp.ops = &kirin_pcie_host_ops;
-> +
-> +	return dw_pcie_host_init(&pci->pp);
-> +}
-> +
-> +static int kirin_pcie_probe(struct platform_device *pdev)
-> +{
-> +	struct kirin_pcie *kirin_pcie;
-> +	struct dw_pcie *pci;
-> +	struct device *dev = &pdev->dev;
-> +	int ret;
-> +
-> +	if (!pdev->dev.of_node) {
-
-Use "dev" instead of "&pdev->dev" here.
-
-> +		dev_err(&pdev->dev, "NULL node\n");
-
-And here.
-
-> +		return -EINVAL;
-> +	}
-> +
-> +	kirin_pcie = devm_kzalloc(&pdev->dev,
-
-And here.
-
-> +			sizeof(struct kirin_pcie), GFP_KERNEL);
-> +	if (!kirin_pcie)
-> +		return -ENOMEM;
-> +
-> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-> +	if (!pci)
-> +		return -ENOMEM;
-> +
-> +	pci->dev = dev;
-> +	pci->ops = &kirin_dw_pcie_ops;
-> +	kirin_pcie->pci = pci;
-> +
-> +	ret = kirin_pcie_get_clk(kirin_pcie, pdev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
-> +	if (ret)
-> +		return ret;
-> +
-> +	kirin_pcie->gpio_id_reset = of_get_named_gpio(pdev->dev.of_node,
-
-And here.
-
-> +			"reset-gpio", 0);
-> +	if (kirin_pcie->gpio_id_reset < 0)
-> +		return -ENODEV;
-> +
-> +	ret = kirin_pcie_power_on(kirin_pcie);
-> +	if (ret)
-> +		return ret;
-> +
-> +	platform_set_drvdata(pdev, kirin_pcie);
-> +
-> +	return kirin_add_pcie_port(pci, pdev);
-> +}
-> +
-> +static const struct of_device_id kirin_pcie_match[] = {
-> +	{ .compatible = "hisilicon,kirin960-pcie" },
-> +	{},
-> +};
-> +
-> +struct platform_driver kirin_pcie_driver = {
-> +	.probe			= kirin_pcie_probe,
-> +	.driver			= {
-> +		.name			= "kirin-pcie",
-> +		.of_match_table = kirin_pcie_match,
-> +		.suppress_bind_attrs = true,
-> +	},
-> +};
-> +
-> +builtin_platform_driver(kirin_pcie_driver);
-> -- 
-> 2.11.GIT
-> 
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 1e37138027a3..618e13d5e276 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -186,7 +186,7 @@ must disable interrupts while the lock is held.  If the device sends
+ a different interrupt, the driver will deadlock trying to recursively
+ acquire the spinlock.  Such deadlocks can be avoided by using
+ spin_lock_irqsave() or spin_lock_irq() which disable local interrupts
+-and acquire the lock (see Documentation/DocBook/kernel-locking).
++and acquire the lock (see Documentation/kernel-hacking/locking.rst).
+ 
+ 4.5 How to tell whether MSI/MSI-X is enabled on a device
+ 
+diff --git a/Documentation/admin-guide/README.rst b/Documentation/admin-guide/README.rst
+index b96e80f79e85..b5343c5aa224 100644
+--- a/Documentation/admin-guide/README.rst
++++ b/Documentation/admin-guide/README.rst
+@@ -55,12 +55,6 @@ Documentation
+    contains information about the problems, which may result by upgrading
+    your kernel.
+ 
+- - The Documentation/DocBook/ subdirectory contains several guides for
+-   kernel developers and users.  These guides can be rendered in a
+-   number of formats:  PostScript (.ps), PDF, HTML, & man-pages, among others.
+-   After installation, ``make psdocs``, ``make pdfdocs``, ``make htmldocs``,
+-   or ``make mandocs`` will render the documentation in the requested format.
+-
+ Installing the kernel source
+ ----------------------------
+ 
+diff --git a/Documentation/doc-guide/index.rst b/Documentation/doc-guide/index.rst
+index 6fff4024606e..a7f95d7d3a63 100644
+--- a/Documentation/doc-guide/index.rst
++++ b/Documentation/doc-guide/index.rst
+@@ -10,7 +10,6 @@ How to write kernel documentation
+    sphinx.rst
+    kernel-doc.rst
+    parse-headers.rst
+-   docbook.rst
+ 
+ .. only::  subproject and html
+ 
+diff --git a/Documentation/doc-guide/sphinx.rst b/Documentation/doc-guide/sphinx.rst
+index 731334de3efd..84e8e8a9cbdb 100644
+--- a/Documentation/doc-guide/sphinx.rst
++++ b/Documentation/doc-guide/sphinx.rst
+@@ -15,11 +15,6 @@ are used to describe the functions and types and design of the code. The
+ kernel-doc comments have some special structure and formatting, but beyond that
+ they are also treated as reStructuredText.
+ 
+-There is also the deprecated DocBook toolchain to generate documentation from
+-DocBook XML template files under ``Documentation/DocBook``. The DocBook files
+-are to be converted to reStructuredText, and the toolchain is slated to be
+-removed.
+-
+ Finally, there are thousands of plain text documentation files scattered around
+ ``Documentation``. Some of these will likely be converted to reStructuredText
+ over time, but the bulk of them will remain in plain text.
+diff --git a/Documentation/fb/api.txt b/Documentation/fb/api.txt
+index d4ff7de85700..d52cf1e3b975 100644
+--- a/Documentation/fb/api.txt
++++ b/Documentation/fb/api.txt
+@@ -289,12 +289,12 @@ the FB_CAP_FOURCC bit in the fb_fix_screeninfo capabilities field.
+ FOURCC definitions are located in the linux/videodev2.h header. However, and
+ despite starting with the V4L2_PIX_FMT_prefix, they are not restricted to V4L2
+ and don't require usage of the V4L2 subsystem. FOURCC documentation is
+-available in Documentation/DocBook/v4l/pixfmt.xml.
++available in Documentation/media/uapi/v4l/pixfmt.rst.
+ 
+ To select a format, applications set the grayscale field to the desired FOURCC.
+ For YUV formats, they should also select the appropriate colorspace by setting
+ the colorspace field to one of the colorspaces listed in linux/videodev2.h and
+-documented in Documentation/DocBook/v4l/colorspaces.xml.
++documented in Documentation/media/uapi/v4l/colorspaces.rst.
+ 
+ The red, green, blue and transp fields are not used with the FOURCC-based API.
+ For forward compatibility reasons applications must zero those fields, and
+diff --git a/Documentation/gpu/todo.rst b/Documentation/gpu/todo.rst
+index 1bdb7356a310..6162d0e9dc28 100644
+--- a/Documentation/gpu/todo.rst
++++ b/Documentation/gpu/todo.rst
+@@ -228,7 +228,7 @@ The DRM reference documentation is still lacking kerneldoc in a few areas. The
+ task would be to clean up interfaces like moving functions around between
+ files to better group them and improving the interfaces like dropping return
+ values for functions that never fail. Then write kerneldoc for all exported
+-functions and an overview section and integrate it all into the drm DocBook.
++functions and an overview section and integrate it all into the drm book.
+ 
+ See https://dri.freedesktop.org/docs/drm/ for what's there already.
+ 
+diff --git a/Documentation/kernel-doc-nano-HOWTO.txt b/Documentation/kernel-doc-nano-HOWTO.txt
+index 104740ea0041..c23e2c5ab80d 100644
+--- a/Documentation/kernel-doc-nano-HOWTO.txt
++++ b/Documentation/kernel-doc-nano-HOWTO.txt
+@@ -17,8 +17,8 @@ The format for this documentation is called the kernel-doc format.
+ It is documented in this Documentation/kernel-doc-nano-HOWTO.txt file.
+ 
+ This style embeds the documentation within the source files, using
+-a few simple conventions.  The scripts/kernel-doc perl script, some
+-SGML templates in Documentation/DocBook, and other tools understand
++a few simple conventions.  The scripts/kernel-doc perl script, the
++Documentation/sphinx/kerneldoc.py Sphinx extension and other tools understand
+ these conventions, and are used to extract this embedded documentation
+ into various documents.
+ 
+@@ -122,15 +122,9 @@ are:
+ - scripts/kernel-doc
+ 
+   This is a perl script that hunts for the block comments and can mark
+-  them up directly into DocBook, man, text, and HTML. (No, not
++  them up directly into DocBook, ReST, man, text, and HTML. (No, not
+   texinfo.)
+ 
+-- Documentation/DocBook/*.tmpl
+-
+-  These are SGML template files, which are normal SGML files with
+-  special place-holders for where the extracted documentation should
+-  go.
+-
+ - scripts/docproc.c
+ 
+   This is a program for converting SGML template files into SGML
+@@ -145,25 +139,18 @@ are:
+ 
+ - Makefile
+ 
+-  The targets 'xmldocs', 'psdocs', 'pdfdocs', and 'htmldocs' are used
+-  to build XML DocBook files, PostScript files, PDF files, and html files
+-  in Documentation/DocBook. The older target 'sgmldocs' is equivalent
+-  to 'xmldocs'.
+-
+-- Documentation/DocBook/Makefile
+-
+-  This is where C files are associated with SGML templates.
+-
++  The targets 'xmldocs', 'latexdocs', 'pdfdocs', 'epubdocs'and 'htmldocs'
++  are used to build XML DocBook files, LaTeX files, PDF files,
++  ePub files and html files in Documentation/.
+ 
+ How to extract the documentation
+ --------------------------------
+ 
+ If you just want to read the ready-made books on the various
+-subsystems (see Documentation/DocBook/*.tmpl), just type 'make
+-psdocs', or 'make pdfdocs', or 'make htmldocs', depending on your
+-preference.  If you would rather read a different format, you can type
+-'make xmldocs' and then use DocBook tools to convert
+-Documentation/DocBook/*.xml to a format of your choice (for example,
++subsystems, just type 'make epubdocs', or 'make pdfdocs', or 'make htmldocs',
++depending on your preference.  If you would rather read a different format,
++you can type 'make xmldocs' and then use DocBook tools to convert
++Documentation/output/*.xml to a format of your choice (for example,
+ 'db2html ...' if 'make htmldocs' was not defined).
+ 
+ If you want to see man pages instead, you can do this:
+@@ -329,37 +316,7 @@ This is done by using a DOC: section keyword with a section title.  E.g.:
+  * hardware, software, or its subject(s).
+  */
+ 
+-DOC: sections are used in SGML templates files as indicated below.
+-
+-
+-How to make new SGML template files
+------------------------------------
+-
+-SGML template files (*.tmpl) are like normal SGML files, except that
+-they can contain escape sequences where extracted documentation should
+-be inserted.
+-
+-!E<filename> is replaced by the documentation, in <filename>, for
+-functions that are exported using EXPORT_SYMBOL: the function list is
+-collected from files listed in Documentation/DocBook/Makefile.
+-
+-!I<filename> is replaced by the documentation for functions that are
+-_not_ exported using EXPORT_SYMBOL.
+-
+-!D<filename> is used to name additional files to search for functions
+-exported using EXPORT_SYMBOL.
+-
+-!F<filename> <function [functions...]> is replaced by the
+-documentation, in <filename>, for the functions listed.
+-
+-!P<filename> <section title> is replaced by the contents of the DOC:
+-section titled <section title> from <filename>.
+-Spaces are allowed in <section title>; do not quote the <section title>.
+-
+-!C<filename> is replaced by nothing, but makes the tools check that
+-all DOC: sections and documented functions, symbols, etc. are used.
+-This makes sense to use when you use !F/!P only and want to verify
+-that all documentation is included.
++DOC: sections are used in ReST files.
+ 
+ Tim.
+ */ <twaugh@redhat.com>
+diff --git a/Documentation/process/changes.rst b/Documentation/process/changes.rst
+index e25d63f8c0da..3aed751e0cb5 100644
+--- a/Documentation/process/changes.rst
++++ b/Documentation/process/changes.rst
+@@ -116,12 +116,11 @@ DevFS has been obsoleted in favour of udev
+ 
+ Linux documentation for functions is transitioning to inline
+ documentation via specially-formatted comments near their
+-definitions in the source.  These comments can be combined with the
+-SGML templates in the Documentation/DocBook directory to make DocBook
+-files, which can then be converted by DocBook stylesheets to PostScript,
+-HTML, PDF files, and several other formats.  In order to convert from
+-DocBook format to a format of your choice, you'll need to install Jade as
+-well as the desired DocBook stylesheets.
++definitions in the source.  These comments can be combined with ReST
++files the Documentation/ directory to make enriched documentation, which can
++then be converted to PostScript, HTML, LaTex, ePUB and PDF files.
++In order to convert from ReST format to a format of your choice, you'll need
++Sphinx.
+ 
+ Util-linux
+ ----------
+@@ -323,12 +322,6 @@ PDF outputs, it is recommended to use version 1.4.6.
+   functionalities required for ``XeLaTex`` to work. For PDF output you'll also
+   need ``convert(1)`` from ImageMagick (https://www.imagemagick.org).
+ 
+-Other tools
+------------
+-
+-In order to produce documentation from DocBook, you'll also need ``xmlto``.
+-Please notice, however, that we're currently migrating all documents to use
+-``Sphinx``.
+ 
+ Getting updated software
+ ========================
+@@ -409,15 +402,6 @@ Quota-tools
+ 
+ - <http://sourceforge.net/projects/linuxquota/>
+ 
+-DocBook Stylesheets
+--------------------
+-
+-- <http://sourceforge.net/projects/docbook/files/docbook-dsssl/>
+-
+-XMLTO XSLT Frontend
+--------------------
+-
+-- <http://cyberelk.net/tim/xmlto/>
+ 
+ Intel P6 microcode
+ ------------------
+diff --git a/Documentation/process/howto.rst b/Documentation/process/howto.rst
+index 1260f60d4cb9..c6875b1db56f 100644
+--- a/Documentation/process/howto.rst
++++ b/Documentation/process/howto.rst
+@@ -180,14 +180,6 @@ They can also be generated on LaTeX and ePub formats with::
+ 	make latexdocs
+ 	make epubdocs
+ 
+-Currently, there are some documents written on DocBook that are in
+-the process of conversion to ReST. Such documents will be created in the
+-Documentation/DocBook/ directory and can be generated also as
+-Postscript or man pages by running::
+-
+-	make psdocs
+-	make mandocs
+-
+ Becoming A Kernel Developer
+ ---------------------------
+ 
+diff --git a/Documentation/process/kernel-docs.rst b/Documentation/process/kernel-docs.rst
+index 05a7857a4a83..b8cac85a4001 100644
+--- a/Documentation/process/kernel-docs.rst
++++ b/Documentation/process/kernel-docs.rst
+@@ -40,50 +40,18 @@ Enjoy!
+ Docs at the Linux Kernel tree
+ -----------------------------
+ 
+-The DocBook books should be built with ``make {htmldocs | psdocs | pdfdocs}``.
+ The Sphinx books should be built with ``make {htmldocs | pdfdocs | epubdocs}``.
+ 
+     * Name: **linux/Documentation**
+ 
+       :Author: Many.
+       :Location: Documentation/
+-      :Keywords: text files, Sphinx, DocBook.
++      :Keywords: text files, Sphinx.
+       :Description: Documentation that comes with the kernel sources,
+         inside the Documentation directory. Some pages from this document
+         (including this document itself) have been moved there, and might
+         be more up to date than the web version.
+ 
+-    * Title: **The Kernel Hacking HOWTO**
+-
+-      :Author: Various Talented People, and Rusty.
+-      :Location: Documentation/DocBook/kernel-hacking.tmpl
+-      :Keywords: HOWTO, kernel contexts, deadlock, locking, modules,
+-        symbols, return conventions.
+-      :Description: From the Introduction: "Please understand that I
+-        never wanted to write this document, being grossly underqualified,
+-        but I always wanted to read it, and this was the only way. I
+-        simply explain some best practices, and give reading entry-points
+-        into the kernel sources. I avoid implementation details: that's
+-        what the code is for, and I ignore whole tracts of useful
+-        routines. This document assumes familiarity with C, and an
+-        understanding of what the kernel is, and how it is used. It was
+-        originally written for the 2.3 kernels, but nearly all of it
+-        applies to 2.2 too; 2.0 is slightly different".
+-
+-    * Title: **Linux Kernel Locking HOWTO**
+-
+-      :Author: Various Talented People, and Rusty.
+-      :Location: Documentation/DocBook/kernel-locking.tmpl
+-      :Keywords: locks, locking, spinlock, semaphore, atomic, race
+-        condition, bottom halves, tasklets, softirqs.
+-      :Description: The title says it all: document describing the
+-        locking system in the Linux Kernel either in uniprocessor or SMP
+-        systems.
+-      :Notes: "It was originally written for the later (>2.3.47) 2.3
+-        kernels, but most of it applies to 2.2 too; 2.0 is slightly
+-        different". Freely redistributable under the conditions of the GNU
+-        General Public License.
+-
+ On-line docs
+ ------------
+ 
+diff --git a/Documentation/translations/ja_JP/howto.rst b/Documentation/translations/ja_JP/howto.rst
+index 4511eed0fabb..8d7ed0cbbf5f 100644
+--- a/Documentation/translations/ja_JP/howto.rst
++++ b/Documentation/translations/ja_JP/howto.rst
+@@ -197,13 +197,6 @@ ReSTマークアップを使ったドキュメントは Documentation/outputに
+         make latexdocs
+         make epubdocs
+ 
+-現在、幾つかの DocBook形式で書かれたドキュメントは ReST形式に転換中で
+-す。それらのドキュメントはDocumentation/DocBook ディレクトリに生成され、
+-Postscript または man ページの形式を生成するには以下のようにします - ::
+-
+-        make psdocs
+-        make mandocs
+-
+ カーネル開発者になるには
+ ------------------------
+ 
+diff --git a/Documentation/translations/ko_KR/howto.rst b/Documentation/translations/ko_KR/howto.rst
+index 2333697251dd..f06de9ca41a4 100644
+--- a/Documentation/translations/ko_KR/howto.rst
++++ b/Documentation/translations/ko_KR/howto.rst
+@@ -191,13 +191,6 @@ ReST 마크업을 사용하는 문서들은 Documentation/output 에 생성된
+          make latexdocs
+          make epubdocs
+ 
+-현재, ReST 로의 변환이 진행중인, DocBook 으로 쓰인 문서들이 존재한다. 그런
+-문서들은 Documentation/DocBook/ 디렉토리 안에 생성될 것이고 다음 커맨드를 통해
+-Postscript 나 man page 로도 만들어질 수 있다::
+-
+-         make psdocs
+-         make mandocs
+-
+ 커널 개발자가 되는 것
+ ---------------------
+ 
+-- 
+2.9.3
