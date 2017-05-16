@@ -1,94 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/2] PCI: Avoid bus reset for Cavium cn8xxx root ports.
-To: Auger Eric <eric.auger@redhat.com>, David Daney <david.daney@cavium.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20170516001736.4001-1-david.daney@cavium.com>
- <20170516001736.4001-3-david.daney@cavium.com>
- <235a9a51-df06-84af-4e5d-b6408ceb0b7d@redhat.com>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <3fbbda8a-a6ea-976e-46ba-d23646500b3a@caviumnetworks.com>
-Date: Tue, 16 May 2017 13:29:58 -0700
+Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>
+Subject: [PATCH 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
+Date: Tue, 16 May 2017 11:25:42 +0100
+Message-ID: <1494930342-7132-3-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <235a9a51-df06-84af-4e5d-b6408ceb0b7d@redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jon Masters <jcm@redhat.com>, Robert Richter <robert.richter@cavium.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/16/2017 01:14 PM, Auger Eric wrote:
-> Hi,
-> 
-> On 16/05/2017 02:17, David Daney wrote:
->> Root ports of cn8xxx do not function after bus reset when used with
->> some e1000e and LSI HBA devices.  Add a quirk to prevent bus reset on
->> these root ports.
-> I understand the bus reset would work along with a variety of other
-> child devices. I guess there is no way to be more accurate and forbid
-> the bus reset only when incompatible child devices are found?
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-That's right.  Conceptually we have a 2 dimensional array of all 
-possible upstream devices vs. all possible downstream devices.  The 
-maintenance burden of correctly populating this and keeping it up to 
-date would be impossible.
+Currently the MSI/MSIx vectors for the root port services are
+allocated calling pcie_init_service_irqs(). At the moment these
+vectors are only allocated for AER, PME, HP.
+This patch allocate an MSI/MSIx vector also for DPC.
 
-The e1000e works well, I am sure, with most Intel root ports.  We 
-haven't investigated exactly which end of the link is responsible for 
-the failures against the cn8890 root port, but the simplest way forward 
-is to just say it cannot support bus reset.
+Signed-off-by: Liudongdong <liudongdong3@huawei.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/pci/pcie/portdrv_core.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>   drivers/pci/quirks.c | 8 ++++++++
->>   1 file changed, 8 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 085fb78..02cd847 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -3347,6 +3347,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
->>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
->>   DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
->>   
->> +/*
->> + * Root port on some Cavium CN8xxx chips do not successfully complete
->> + * a bus reset when used with certain types child devices.  Config
-> s/types /types of
-
-Yeah, I need to be more careful.  We really need to improve the 
-grammatical analysis capabilities of checkpatch.pl, I think I will lay 
-the blame there.
-
-I can resubmit or Bjorn can fix it before committing, I will let him decide.
-
-David.
-
-
-> Thanks
-> 
-> Eric
->> + * space access to the child may quit responding.  Flag the root port
->> + * as not supporting bus reset.
->> + */
->> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
->> +
->>   static void quirk_no_pm_reset(struct pci_dev *dev)
->>   {
->>   	/*
->>
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index e2c7bfd..477bf14 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -131,6 +131,35 @@ int pcie_port_enable_msix_or_msi(struct pci_dev *dev, int *irqs, int mask)
+ 		nvec = max(nvec, entry + 1);
+ 	}
+ 
++	if (mask & PCIE_PORT_SERVICE_DPC) {
++		u16 reg16, pos;
++
++		/*
++		 * The code below follows Section 6.2.10.1 of the PCI Express
++		 * Base Specification 4.0 stating that bits 4-0 of DPC
++		 * Capability Register contain a value indicating which of the
++		 * MSI/MSI-X vectors assigned to the port is going to be used
++		 * for DPC, where "For MSI-X, the value in this register
++		 * indicates which MSI-X Table entry is used to generate the
++		 * interrupt message." and "For MSI, the value in this field
++		 * indicates the offset between the base Message Data and the
++		 * interrupt message that is generated."
++		 *
++		 * pci_irq_vector() below is able to handle entry differently
++		 * depending on MSI vs MSI-x case
++		 *
++		 */
++		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
++		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
++		entry = reg16 & 0x1f;
++		if (entry >= nr_entries)
++			goto out_free_irqs;
++
++		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
++
++		nvec = max(nvec, entry + 1);
++	}
++
+ 	/*
+ 	 * If nvec is equal to the allocated number of entries, we can just use
+ 	 * what we have.  Otherwise, the port has some extra entries not for the
+-- 
+2.7.4
