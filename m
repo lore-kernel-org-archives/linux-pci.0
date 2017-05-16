@@ -1,178 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37468 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752439AbdELEB3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 May 2017 00:01:29 -0400
-Date: Thu, 11 May 2017 22:01:13 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Cheng, Collins" <Collins.Cheng@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
- incapable platform
-Message-ID: <20170511220113.2dfb6d3d@t450s.home>
-In-Reply-To: <BN6PR12MB12492048A370FDEB7C14C8E8ECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
-References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
-        <20170511212051.3b802325@t450s.home>
-        <BN6PR12MB12492048A370FDEB7C14C8E8ECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>
+Subject: [PATCH 1/2] PCI/portdrv: add support for different MSI interrupts for PCIe port services
+Date: Tue, 16 May 2017 11:25:41 +0100
+Message-ID: <1494930342-7132-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 12 May 2017 03:42:46 +0000
-"Cheng, Collins" <Collins.Cheng@amd.com> wrote:
+Currently PCIe port services are assigned with different interrutps
+only if MSI-x are supported by calling pcie_port_enable_msix().
+If a root port supports MSI instead of MSI-x currently we fall back
+to use a single shared interrupt for all the services.
+This patch renames and extends pcie_port_enable_msix() to use MSI in
+case MSI-x allocation fails.
 
-> Hi Williamson,
-> 
-> GPU card needs more BAR aperture resource than other PCI devices. For example, Intel SR-IOV network card only require 512KB memory resource for all VFs. AMD SR-IOV GPU card needs 256MB x16 VF = 4GB memory resource for frame buffer BAR aperture.
-> 
-> If the system BIOS supports SR-IOV, it will reserve enough resource for all VF BARs. If the system BIOS doesn't support SR-IOV or cannot allocate the enough resource for VF BARs, only PF BAR will be assigned and VF BARs are empty. Then system boots to Linux kernel and kernel doesn't check if the VF BARs are empty or valid. Kernel will re-assign the BAR resources for PF and all VFs. The problem I saw is that kernel will fail to allocate PF BAR resource because some resources are assigned to VF, this is not expected. So kernel might need to do some check before re-assign the PF/VF resource, so that PF device will be correctly assigned BAR resource and user can use PF device.
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+---
+ drivers/pci/pcie/portdrv.h      |  5 +++++
+ drivers/pci/pcie/portdrv_core.c | 33 +++++++++++++++++++++++++++------
+ 2 files changed, 32 insertions(+), 6 deletions(-)
 
-So the problem is that something bad happens when the kernel is trying
-to reallocate resources in order to fulfill the requirements of the
-VFs, leaving the PF resources incorrectly programmed?  Why not just fix
-that bug rather than creating special handling for this vendor/class of
-device which disables any attempt to fixup resources for SR-IOV?  IOW,
-this patch just avoids the problem for your devices rather than fixing
-the bug.  I'd suggest fixing the bug such that the PF is left in a
-functional state if the kernel is unable to allocate sufficient
-resources for the VFs.  Thanks,
-
-Alex
-
-> -----Original Message-----
-> From: Alex Williamson [mailto:alex.williamson@redhat.com] 
-> Sent: Friday, May 12, 2017 11:21 AM
-> To: Cheng, Collins <Collins.Cheng@amd.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Deucher, Alexander <Alexander.Deucher@amd.com>; Zytaruk, Kelly <Kelly.Zytaruk@amd.com>
-> Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV incapable platform
-> 
-> On Fri, 12 May 2017 02:50:32 +0000
-> "Cheng, Collins" <Collins.Cheng@amd.com> wrote:
-> 
-> > Hi Helgaas,
-> > 
-> > Some AMD GPUs have hardware support for graphics SR-IOV.
-> > If the SR-IOV capable GPU is plugged into the SR-IOV incapable 
-> > platform. It would cause a problem on PCI resource allocation in 
-> > current Linux kernel.
-> > 
-> > Therefore in order to allow the PF (Physical Function) device of 
-> > SR-IOV capable GPU to work on the SR-IOV incapable platform, it is 
-> > required to verify conditions for initializing BAR resources on AMD 
-> > SR-IOV capable GPUs.
-> > 
-> > If the device is an AMD graphics device and it supports SR-IOV it will 
-> > require a large amount of resources.
-> > Before calling sriov_init() must ensure that the system BIOS also 
-> > supports SR-IOV and that system BIOS has been able to allocate enough 
-> > resources.
-> > If the VF BARs are zero then the system BIOS does not support SR-IOV 
-> > or it could not allocate the resources and this platform will not 
-> > support AMD graphics SR-IOV.
-> > Therefore do not call sriov_init().
-> > If the system BIOS does support SR-IOV then the VF BARs will be 
-> > properly initialized to non-zero values.
-> > 
-> > Below is the patch against to Kernel 4.8 & 4.9. Please review.
-> > 
-> > I checked the drivers/pci/quirks.c, it looks the workarounds/fixes in 
-> > quirks.c are for specific devices and one or more device ID are 
-> > defined for the specific devices. However my patch is for all AMD 
-> > SR-IOV capable GPUs, that includes all existing and future AMD server GPUs.
-> > So it doesn't seem like a good fit to put the fix in quirks.c.  
-> 
-> 
-> Why is an AMD graphics card unique here?  Doesn't sriov_init() always need to be able to deal with devices of any type where the BIOS hasn't initialized the SR-IOV capability?  Some SR-IOV devices can fit their VFs within a minimum bridge aperture, most cannot.  I don't understand why the VF resource requirements being exceptionally large dictates that they receive special handling.  Thanks,
-> 
-> Alex
-> 
-> > Signed-off-by: Collins Cheng <collins.cheng@amd.com>
-> > ---
-> >  drivers/pci/iov.c | 63 
-> > ++++++++++++++++++++++++++++++++++++++++++++++++++++---
-> >  1 file changed, 60 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c index 
-> > e30f05c..e4f1405 100644
-> > --- a/drivers/pci/iov.c
-> > +++ b/drivers/pci/iov.c
-> > @@ -523,6 +523,45 @@ static void sriov_restore_state(struct pci_dev *dev)
-> >  		msleep(100);
-> >  }
-> >  
-> > +/*
-> > + * pci_vf_bar_valid - check if VF BARs have resource allocated
-> > + * @dev: the PCI device
-> > + * @pos: register offset of SR-IOV capability in PCI config space
-> > + * Returns true any VF BAR has resource allocated, false
-> > + * if all VF BARs are empty.
-> > + */
-> > +static bool pci_vf_bar_valid(struct pci_dev *dev, int pos) {
-> > +	int i;
-> > +	u32 bar_value;
-> > +	u32 bar_size_mask = ~(PCI_BASE_ADDRESS_SPACE |
-> > +			PCI_BASE_ADDRESS_MEM_TYPE_64 |
-> > +			PCI_BASE_ADDRESS_MEM_PREFETCH);
-> > +
-> > +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> > +		pci_read_config_dword(dev, pos + PCI_SRIOV_BAR + i * 4, &bar_value);
-> > +		if (bar_value & bar_size_mask)
-> > +			return true;
-> > +	}
-> > +
-> > +	return false;
-> > +}
-> > +
-> > +/*
-> > + * is_amd_display_adapter - check if it is an AMD/ATI GPU device
-> > + * @dev: the PCI device
-> > + *
-> > + * Returns true if device is an AMD/ATI display adapter,
-> > + * otherwise return false.
-> > + */
-> > +
-> > +static bool is_amd_display_adapter(struct pci_dev *dev) {
-> > +	return (((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY) &&
-> > +		(dev->vendor == PCI_VENDOR_ID_ATI ||
-> > +		dev->vendor == PCI_VENDOR_ID_AMD)); }
-> > +
-> >  /**
-> >   * pci_iov_init - initialize the IOV capability
-> >   * @dev: the PCI device
-> > @@ -537,9 +576,27 @@ int pci_iov_init(struct pci_dev *dev)
-> >  		return -ENODEV;
-> >  
-> >  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
-> > -	if (pos)
-> > -		return sriov_init(dev, pos);
-> > -
-> > +	if (pos) {
-> > +	/*
-> > +	 * If the device is an AMD graphics device and it supports
-> > +	 * SR-IOV it will require a large amount of resources.
-> > +	 * Before calling sriov_init() must ensure that the system
-> > +	 * BIOS also supports SR-IOV and that system BIOS has been
-> > +	 * able to allocate enough resources.
-> > +	 * If the VF BARs are zero then the system BIOS does not
-> > +	 * support SR-IOV or it could not allocate the resources
-> > +	 * and this platform will not support AMD graphics SR-IOV.
-> > +	 * Therefore do not call sriov_init().
-> > +	 * If the system BIOS does support SR-IOV then the VF BARs
-> > +	 * will be properly initialized to non-zero values.
-> > +	 */
-> > +		if (is_amd_display_adapter(dev)) {
-> > +			if (pci_vf_bar_valid(dev, pos))
-> > +				return sriov_init(dev, pos);
-> > +		} else {
-> > +			return sriov_init(dev, pos);
-> > +		}
-> > +	}
-> >  	return -ENODEV;
-> >  }
-> >    
-> 
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 587aef3..729ee90 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -18,6 +18,11 @@
+  */
+ #define PCIE_PORT_MAX_MSIX_ENTRIES	32
+ 
++/* According to the PCI Local Bus Specification REV. 3.0 the max number
++ * of MSI vectors per function is 32
++ */
++#define PCIE_PORT_MAX_MSI_ENTRIES	32
++
+ #define get_descriptor_id(type, service) (((type - 4) << 8) | service)
+ 
+ extern struct bus_type pcie_port_bus_type;
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index cea504f..e2c7bfd 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -44,14 +44,16 @@ static void release_pcie_device(struct device *dev)
+ }
+ 
+ /**
+- * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for given port
++ * pcie_port_enable_msix_or_msi - try to set up MSI-X or MSI as interrupt mode
++ * for given port
+  * @dev: PCI Express port to handle
+  * @irqs: Array of interrupt vectors to populate
+  * @mask: Bitmask of port capabilities returned by get_port_device_capability()
+  *
+  * Return value: 0 on success, error code on failure
+  */
+-static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
++static
++int pcie_port_enable_msix_or_msi(struct pci_dev *dev, int *irqs, int mask)
+ {
+ 	int nr_entries, entry, nvec = 0;
+ 
+@@ -63,6 +65,10 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 	 */
+ 	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSIX_ENTRIES,
+ 			PCI_IRQ_MSIX);
++	if (nr_entries < 0) /* MSI-x failed let's try with MSI */
++		nr_entries = pci_alloc_irq_vectors(dev, 1,
++				PCIE_PORT_MAX_MSI_ENTRIES,
++				PCI_IRQ_MSI);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+ 
+@@ -77,7 +83,13 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		 * Number field in the PCI Express Capabilities register", where
+ 		 * according to Section 7.8.2 of the specification "For MSI-X,
+ 		 * the value in this field indicates which MSI-X Table entry is
+-		 * used to generate the interrupt message."
++		 * used to generate the interrupt message." and "For MSI, the
++		 * value in this field indicates the offset between the base
++		 * Message Data and the interrupt message that is generated."
++		 *
++		 * pci_irq_vector() below is able to handle entry differently
++		 * depending on MSI vs MSI-x case
++		 *
+ 		 */
+ 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+ 		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+@@ -100,7 +112,13 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		 * MSI/MSI-X vectors assigned to the port is going to be used
+ 		 * for AER, where "For MSI-X, the value in this register
+ 		 * indicates which MSI-X Table entry is used to generate the
+-		 * interrupt message."
++		 * interrupt message."  and "For MSI, the value
++		 * in this field indicates the offset between the base Message
++		 * Data and the interrupt message that is generated."
++		 *
++		 * pci_irq_vector() below is able to handle entry differently
++		 * depending on MSI vs MSI-x case
++		 *
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+@@ -125,6 +143,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		/* Now allocate the MSI-X vectors for real */
+ 		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
+ 				PCI_IRQ_MSIX);
++		if (nr_entries < 0) /* MSI-x failed, let's try MSI*/
++			nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
++					PCI_IRQ_MSI);
+ 		if (nr_entries < 0)
+ 			return nr_entries;
+ 	}
+@@ -160,8 +181,8 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ 	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
+ 		flags &= ~PCI_IRQ_MSI;
+ 	} else {
+-		/* Try to use MSI-X if supported */
+-		if (!pcie_port_enable_msix(dev, irqs, mask))
++		/* Try to use MSI-X or MSI if supported */
++		if (!pcie_port_enable_msix_or_msi(dev, irqs, mask))
+ 			return 0;
+ 	}
+ 
+-- 
+2.7.4
