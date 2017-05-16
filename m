@@ -1,288 +1,241 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        stable@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Julien Grall <julien.grall@arm.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ross Lagerwall <ross.lagerwall@citrix.com>,
-        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
-        Anthony Liguori <aliguori@amazon.com>,
-        KarimAllah Ahmed <karahmed@amazon.de>
-Subject: [PATCH 4.11 27/28] xen: Revert commits da72ff5bfcb0 and 72a9b186292d
-Date: Thu, 11 May 2017 16:12:44 +0200
-Message-Id: <20170511141222.882133049@linuxfoundation.org>
-In-Reply-To: <20170511141221.109842231@linuxfoundation.org>
-References: <20170511141221.109842231@linuxfoundation.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 16 May 2017 12:47:32 +0300
+From: Sakari Ailus <sakari.ailus@iki.fi>
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
+ deferred probing or error
+Message-ID: <20170516094732.GM3227@valkosipuli.retiisi.org.uk>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <1804176.uxVOFWagsb@avalon>
+ <9952978e7ac69193daf67ccb77eebe29@codeaurora.org>
+ <1924197.MWBQ7kvoOo@avalon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1924197.MWBQ7kvoOo@avalon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: okaya@codeaurora.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-arm-msm@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Robin Murphy <robin.murphy@arm.com>,
+ Will Deacon <will.deacon@arm.com>,
+ Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com, sricharan@codeaurora.org,
+ linux-arm-msm-owner@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ Marek Szyprowski <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-4.11-stable review patch.  If anyone has any objections, please let me know.
+Hi Laurent,
 
-------------------
+On Tue, May 16, 2017 at 10:17:08AM +0300, Laurent Pinchart wrote:
+> Hi Sricharan,
+> 
+> On Tuesday 16 May 2017 07:53:57 sricharan@codeaurora.org wrote:
+> > On 2017-05-16 03:04, Laurent Pinchart wrote:
+> > > On Monday 15 May 2017 23:37:16 Laurent Pinchart wrote:
+> > >> On Wednesday 03 May 2017 15:54:59 Sricharan R wrote:
+> > >>> On 5/3/2017 3:24 PM, Robin Murphy wrote:
+> > >>>> On 02/05/17 19:35, Geert Uytterhoeven wrote:
+> > >>>>> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R wrote:
+> > >>>>>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+> > >>>>>> 
+> > >>>>>> Failures to look up an IOMMU when parsing the DT iommus property
+> > >>>>>> need to be handled separately from the .of_xlate() failures to
+> > >>>>>> support deferred probing.
+> > >>>>>> 
+> > >>>>>> The lack of a registered IOMMU can be caused by the lack of a driver
+> > >>>>>> for the IOMMU, the IOMMU device probe not having been performed yet,
+> > >>>>>> having been deferred, or having failed.
+> > >>>>>> 
+> > >>>>>> The first case occurs when the device tree describes the bus master
+> > >>>>>> and IOMMU topology correctly but no device driver exists for the
+> > >>>>>> IOMMU yet or the device driver has not been compiled in. Return NULL,
+> > >>>>>> the caller will configure the device without an IOMMU.
+> > >>>>>> 
+> > >>>>>> The second and third cases are handled by deferring the probe of the
+> > >>>>>> bus master device which will eventually get reprobed after the
+> > >>>>>> IOMMU.
+> > >>>>>> 
+> > >>>>>> The last case is currently handled by deferring the probe of the bus
+> > >>>>>> master device as well. A mechanism to either configure the bus
+> > >>>>>> master device without an IOMMU or to fail the bus master device probe
+> > >>>>>> depending on whether the IOMMU is optional or mandatory would be a
+> > >>>>>> good enhancement.
+> > >>>>>> 
+> > >>>>>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> > >>>>>> Signed-off-by: Laurent Pichart
+> > >>>>>> <laurent.pinchart+renesas@ideasonboard.com>
+> > >>>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> > >>>>> 
+> > >>>>> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
+> > >>>>> As the IOMMU nodes in DT are not yet enabled, all devices having
+> > >>>>> iommus properties in DT now fail to probe.
+> > >>>> 
+> > >>>> How exactly do they fail to probe? Per d7b0558230e4, if there are no
+> > >>>> ops registered then they should merely defer until we reach the point
+> > >>>> of giving up and ignoring the IOMMU. Is it just that you have no other
+> > >>>> late-probing drivers or post-init module loads to kick the deferred
+> > >>>> queue after that point? I did try to find a way to explicitly kick it
+> > >>>> from a suitably late initcall, but there didn't seem to be any obvious
+> > >>>> public interface - anyone have any suggestions?
+> > >>>> 
+> > >>>> I think that's more of a general problem with the probe deferral
+> > >>>> mechanism itself (I've seen the same thing happen with some of the
+> > >>>> CoreSight stuff on Juno due to the number of inter-component
+> > >>>> dependencies) rather than any specific fault of this series.
+> > >>> 
+> > >>> I was thinking of an additional check like below to avoid the
+> > >>> situation ?
+> > >>> 
+> > >>> From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
+> > >>> From: Sricharan R <sricharan@codeaurora.org>
+> > >>> Date: Wed, 3 May 2017 13:16:59 +0530
+> > >>> Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
+> > >>> 
+> > >>> While returning EPROBE_DEFER for iommu masters
+> > >>> take in to account of iommu nodes that could be
+> > >>> marked in DT as 'status=disabled', in which case
+> > >>> simply return NULL and let the master's probe
+> > >>> continue rather than deferring.
+> > >>> 
+> > >>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> > >>> ---
+> > >>> 
+> > >>>  drivers/iommu/of_iommu.c | 1 +
+> > >>>  1 file changed, 1 insertion(+)
+> > >>> 
+> > >>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> > >>> index 9f44ee8..e6e9bec 100644
+> > >>> --- a/drivers/iommu/of_iommu.c
+> > >>> +++ b/drivers/iommu/of_iommu.c
+> > >>> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct
+> > >>> device_node *np)
+> > >>> 
+> > >>>         ops = iommu_ops_from_fwnode(fwnode);
+> > >>>         if ((ops && !ops->of_xlate) ||
+> > >>> +           !of_device_is_available(iommu_spec->np) ||
+> > >>>             (!ops && !of_iommu_driver_present(iommu_spec->np)))
+> > >>>                 return NULL;
+> > >> 
+> > >> This looks good to me, but won't be enough. The ipmmu-vmsa driver in
+> > >> v4.12-rc1 doesn't call iommu_device_register() and thus won't be found
+> > >> by iommu_ops_from_fwnode(). Furthermore, it doesn't IOMMU_OF_DECLARE(),
+> > >> and thus will always be considered as absent.
+> > >> 
+> > >> I agree that the ipmmu-vmsa driver needs to be fixed, but it would
+> > >> have been nice to check existing IOMMU drivers before merging this patch
+> > >> series...
+> > > 
+> > > Please pardon the question, but has this patch series been tested on
+> > > ARM32 ?
+> > > 
+> > > When the device is probed the arch_setup_dma_ops() function is called.
+> > > It sets the device's dma_ops and the mapping (in
+> > > __arm_iommu_attach_device()). If probe is deferred,
+> > > arch_teardown_dma_ops() is called which in turn calls
+> > > arch_teardown_dma_ops(). This removes the mapping but doesn't touch the
+> > > dma_ops. The next time the device is probed, arch_setup_dma_ops() bails
+> > > out immediately as the dma_ops are already set, leaving us with a device
+> > > bound to IOMMU operations but with no mapping. This oopses later as soon
+> > > as the kernel tries to map memory for the device through the IOMMU.
+> > 
+> > Resetting the dma_ops for arm32 was added in this patch [1], which I
+> > missed to send in the original series, but now have added to Russell's patch
+> > tracking system.
+> 
+> Thank you. I fear that won't be enough though.
+> 
+> > [1] https://patchwork.kernel.org/patch/9434105/
+> 
+> Quoting the patch:
+> 
+> > arch_teardown_dma_ops() being the inverse of arch_setup_dma_ops()
+> > ,dma_ops should be cleared in the teardown path. Otherwise
+> > this causes problem when the probe of device is retried after
+> > being deferred. The device's iommu structures are cleared
+> > after EPROBEDEFER error, but on the next try dma_ops will still
+> > be set to old value, which is not right.
+> >
+> > Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> > Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+> > ---
+> >   arch/arm/mm/dma-mapping.c | 1 +
+> >   1 file changed, 1 insertion(+)
+> >
+> > diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+> > index ab4f745..a40f03e 100644
+> > --- a/arch/arm/mm/dma-mapping.c
+> > +++ b/arch/arm/mm/dma-mapping.c
+> > @@ -2358,6 +2358,7 @@ static void arm_teardown_iommu_dma_ops(struct device 
+> *dev)
+> >   	__arm_iommu_detach_device(dev);
+> >   	arm_iommu_release_mapping(mapping);
+> > +	set_dma_ops(dev, NULL);
+> >   }
+> >   #else
+> 
+> The subject mentions arch_teardown_dma_ops(), which I think is correct, but 
+> the patch adds the set_dma_ops() call to arm_teardown_iommu_dma_ops().
+> 
+> However, the situation is perhaps more complex. Note the check at the 
+> beginning of arch_setup_dma_ops():
+> 
+> 	/*
+> 	 * Don't override the dma_ops if they have already been set. Ideally
+> 	 * this should be the only location where dma_ops are set, remove this
+> 	 * check when all other callers of set_dma_ops will have disappeared.
+> 	 */
+> 	if (dev->dma_ops)
+> 		return;
+> 
+> If you set the dma_ops to NULL in arm_teardown_iommu_dma_ops() or 
+> arch_teardown_dma_ops(), the next call to arch_setup_dma_ops() will override 
+> them. To be safe you should only set them to NULL if they have been set by 
+> arch_setup_dma_ops(). More than that, arch_teardown_dma_ops() should probably 
+> not call arm_teardown_iommu_dma_ops() at all if the dma_ops were set by 
+> arm_iommu_attach_device() and not arch_teardown_dma_ops(). One option would be 
+> to add a field to struct dev_archdata to store that information. To avoid 
+> growing the structure, which is embedded in every struct device, you could 
+> possibly turn the dma_coherent bool into a bitfield.
+> 
+> @@ -19,7 +19,8 @@ struct dev_archdata {
+>  #ifdef CONFIG_XEN
+>  	const struct dma_map_ops *dev_dma_ops;
+>  #endif
+> -	bool dma_coherent;
+> +	bool dma_coherent:1;
+> +	bool dma_ops_setup:1;
+>  };
+>  
+>  struct omap_device;
+> 
+> I haven't checked, however, whether the dma_coherent field would need to be 
+> accessed atomically, so this might be a bad idea.
 
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+A bool bit field? :-)
 
-commit 84d582d236dc1f9085e741affc72e9ba061a67c2 upstream.
+I think I'd just use bool for both. I wouldn't expect dma_coherent change
+once it has been set before device driver probe though.
 
-Recent discussion (http://marc.info/?l=xen-devel&m=149192184523741)
-established that commit 72a9b186292d ("xen: Remove event channel
-notification through Xen PCI platform device") (and thus commit
-da72ff5bfcb0 ("partially revert "xen: Remove event channel
-notification through Xen PCI platform device"")) are unnecessary and,
-in fact, prevent HVM guests from booting on Xen releases prior to 4.0
+If you like a bit field, then I'd propose making it unsigned int.
 
-Therefore we revert both of those commits.
+-- 
+Regards,
 
-The summary of that discussion is below:
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
 
-  Here is the brief summary of the current situation:
-
-  Before the offending commit (72a9b186292):
-
-  1) INTx does not work because of the reset_watches path.
-  2) The reset_watches path is only taken if you have Xen > 4.0
-  3) The Linux Kernel by default will use vector inject if the hypervisor
-     support. So even INTx does not work no body running the kernel with
-     Xen > 4.0 would notice. Unless he explicitly disabled this feature
-     either in the kernel or in Xen (and this can only be disabled by
-     modifying the code, not user-supported way to do it).
-
-  After the offending commit (+ partial revert):
-
-  1) INTx is no longer support for HVM (only for PV guests).
-  2) Any HVM guest The kernel will not boot on Xen < 4.0 which does
-     not have vector injection support. Since the only other mode
-     supported is INTx which.
-
-  So based on this summary, I think before commit (72a9b186292) we were
-  in much better position from a user point of view.
-
-Signed-off-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Reviewed-by: Juergen Gross <jgross@suse.com>
-Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: "H. Peter Anvin" <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Stefano Stabellini <sstabellini@kernel.org>
-Cc: Julien Grall <julien.grall@arm.com>
-Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: Ross Lagerwall <ross.lagerwall@citrix.com>
-Cc: xen-devel@lists.xenproject.org
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: Anthony Liguori <aliguori@amazon.com>
-Cc: KarimAllah Ahmed <karahmed@amazon.de>
-Signed-off-by: Juergen Gross <jgross@suse.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- arch/x86/include/asm/xen/events.h |   11 +++++++++++
- arch/x86/pci/xen.c                |    2 +-
- arch/x86/xen/enlighten.c          |   16 +++++++++++-----
- arch/x86/xen/smp.c                |    2 ++
- arch/x86/xen/time.c               |    5 +++++
- drivers/xen/events/events_base.c  |   26 +++++++++++++++++---------
- drivers/xen/platform-pci.c        |   13 +++----------
- 7 files changed, 50 insertions(+), 25 deletions(-)
-
---- a/arch/x86/include/asm/xen/events.h
-+++ b/arch/x86/include/asm/xen/events.h
-@@ -20,4 +20,15 @@ static inline int xen_irqs_disabled(stru
- /* No need for a barrier -- XCHG is a barrier on x86. */
- #define xchg_xen_ulong(ptr, val) xchg((ptr), (val))
- 
-+extern int xen_have_vector_callback;
-+
-+/*
-+ * Events delivered via platform PCI interrupts are always
-+ * routed to vcpu 0 and hence cannot be rebound.
-+ */
-+static inline bool xen_support_evtchn_rebind(void)
-+{
-+	return (!xen_hvm_domain() || xen_have_vector_callback);
-+}
-+
- #endif /* _ASM_X86_XEN_EVENTS_H */
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -447,7 +447,7 @@ void __init xen_msi_init(void)
- 
- int __init pci_xen_hvm_init(void)
- {
--	if (!xen_feature(XENFEAT_hvm_pirqs))
-+	if (!xen_have_vector_callback || !xen_feature(XENFEAT_hvm_pirqs))
- 		return 0;
- 
- #ifdef CONFIG_ACPI
---- a/arch/x86/xen/enlighten.c
-+++ b/arch/x86/xen/enlighten.c
-@@ -138,6 +138,8 @@ struct shared_info xen_dummy_shared_info
- void *xen_initial_gdt;
- 
- RESERVE_BRK(shared_info_page_brk, PAGE_SIZE);
-+__read_mostly int xen_have_vector_callback;
-+EXPORT_SYMBOL_GPL(xen_have_vector_callback);
- 
- static int xen_cpu_up_prepare(unsigned int cpu);
- static int xen_cpu_up_online(unsigned int cpu);
-@@ -1861,7 +1863,9 @@ static int xen_cpu_up_prepare(unsigned i
- 		xen_vcpu_setup(cpu);
- 	}
- 
--	if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
-+	if (xen_pv_domain() ||
-+	    (xen_have_vector_callback &&
-+	     xen_feature(XENFEAT_hvm_safe_pvclock)))
- 		xen_setup_timer(cpu);
- 
- 	rc = xen_smp_intr_init(cpu);
-@@ -1877,7 +1881,9 @@ static int xen_cpu_dead(unsigned int cpu
- {
- 	xen_smp_intr_free(cpu);
- 
--	if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
-+	if (xen_pv_domain() ||
-+	    (xen_have_vector_callback &&
-+	     xen_feature(XENFEAT_hvm_safe_pvclock)))
- 		xen_teardown_timer(cpu);
- 
- 	return 0;
-@@ -1916,8 +1922,8 @@ static void __init xen_hvm_guest_init(vo
- 
- 	xen_panic_handler_init();
- 
--	BUG_ON(!xen_feature(XENFEAT_hvm_callback_vector));
--
-+	if (xen_feature(XENFEAT_hvm_callback_vector))
-+		xen_have_vector_callback = 1;
- 	xen_hvm_smp_init();
- 	WARN_ON(xen_cpuhp_setup());
- 	xen_unplug_emulated_devices();
-@@ -1958,7 +1964,7 @@ bool xen_hvm_need_lapic(void)
- 		return false;
- 	if (!xen_hvm_domain())
- 		return false;
--	if (xen_feature(XENFEAT_hvm_pirqs))
-+	if (xen_feature(XENFEAT_hvm_pirqs) && xen_have_vector_callback)
- 		return false;
- 	return true;
- }
---- a/arch/x86/xen/smp.c
-+++ b/arch/x86/xen/smp.c
-@@ -742,6 +742,8 @@ static void __init xen_hvm_smp_prepare_c
- 
- void __init xen_hvm_smp_init(void)
- {
-+	if (!xen_have_vector_callback)
-+		return;
- 	smp_ops.smp_prepare_cpus = xen_hvm_smp_prepare_cpus;
- 	smp_ops.smp_send_reschedule = xen_smp_send_reschedule;
- 	smp_ops.cpu_die = xen_cpu_die;
---- a/arch/x86/xen/time.c
-+++ b/arch/x86/xen/time.c
-@@ -432,6 +432,11 @@ static void xen_hvm_setup_cpu_clockevent
- 
- void __init xen_hvm_init_time_ops(void)
- {
-+	/* vector callback is needed otherwise we cannot receive interrupts
-+	 * on cpu > 0 and at this point we don't know how many cpus are
-+	 * available */
-+	if (!xen_have_vector_callback)
-+		return;
- 	if (!xen_feature(XENFEAT_hvm_safe_pvclock)) {
- 		printk(KERN_INFO "Xen doesn't support pvclock on HVM,"
- 				"disable pv timer\n");
---- a/drivers/xen/events/events_base.c
-+++ b/drivers/xen/events/events_base.c
-@@ -1312,6 +1312,9 @@ static int rebind_irq_to_cpu(unsigned ir
- 	if (!VALID_EVTCHN(evtchn))
- 		return -1;
- 
-+	if (!xen_support_evtchn_rebind())
-+		return -1;
-+
- 	/* Send future instances of this interrupt to other vcpu. */
- 	bind_vcpu.port = evtchn;
- 	bind_vcpu.vcpu = xen_vcpu_nr(tcpu);
-@@ -1645,15 +1648,20 @@ void xen_callback_vector(void)
- {
- 	int rc;
- 	uint64_t callback_via;
--
--	callback_via = HVM_CALLBACK_VECTOR(HYPERVISOR_CALLBACK_VECTOR);
--	rc = xen_set_callback_via(callback_via);
--	BUG_ON(rc);
--	pr_info("Xen HVM callback vector for event delivery is enabled\n");
--	/* in the restore case the vector has already been allocated */
--	if (!test_bit(HYPERVISOR_CALLBACK_VECTOR, used_vectors))
--		alloc_intr_gate(HYPERVISOR_CALLBACK_VECTOR,
--				xen_hvm_callback_vector);
-+	if (xen_have_vector_callback) {
-+		callback_via = HVM_CALLBACK_VECTOR(HYPERVISOR_CALLBACK_VECTOR);
-+		rc = xen_set_callback_via(callback_via);
-+		if (rc) {
-+			pr_err("Request for Xen HVM callback vector failed\n");
-+			xen_have_vector_callback = 0;
-+			return;
-+		}
-+		pr_info("Xen HVM callback vector for event delivery is enabled\n");
-+		/* in the restore case the vector has already been allocated */
-+		if (!test_bit(HYPERVISOR_CALLBACK_VECTOR, used_vectors))
-+			alloc_intr_gate(HYPERVISOR_CALLBACK_VECTOR,
-+					xen_hvm_callback_vector);
-+	}
- }
- #else
- void xen_callback_vector(void) {}
---- a/drivers/xen/platform-pci.c
-+++ b/drivers/xen/platform-pci.c
-@@ -67,7 +67,7 @@ static uint64_t get_callback_via(struct
- 	pin = pdev->pin;
- 
- 	/* We don't know the GSI. Specify the PCI INTx line instead. */
--	return ((uint64_t)0x01 << HVM_CALLBACK_VIA_TYPE_SHIFT) | /* PCI INTx identifier */
-+	return ((uint64_t)0x01 << 56) | /* PCI INTx identifier */
- 		((uint64_t)pci_domain_nr(pdev->bus) << 32) |
- 		((uint64_t)pdev->bus->number << 16) |
- 		((uint64_t)(pdev->devfn & 0xff) << 8) |
-@@ -90,7 +90,7 @@ static int xen_allocate_irq(struct pci_d
- static int platform_pci_resume(struct pci_dev *pdev)
- {
- 	int err;
--	if (!xen_pv_domain())
-+	if (xen_have_vector_callback)
- 		return 0;
- 	err = xen_set_callback_via(callback_via);
- 	if (err) {
-@@ -138,14 +138,7 @@ static int platform_pci_probe(struct pci
- 	platform_mmio = mmio_addr;
- 	platform_mmiolen = mmio_len;
- 
--	/* 
--	 * Xen HVM guests always use the vector callback mechanism.
--	 * L1 Dom0 in a nested Xen environment is a PV guest inside in an
--	 * HVM environment. It needs the platform-pci driver to get
--	 * notifications from L0 Xen, but it cannot use the vector callback
--	 * as it is not exported by L1 Xen.
--	 */
--	if (xen_pv_domain()) {
-+	if (!xen_have_vector_callback) {
- 		ret = xen_allocate_irq(pdev);
- 		if (ret) {
- 			dev_warn(&pdev->dev, "request_irq failed err=%d\n", ret);
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
