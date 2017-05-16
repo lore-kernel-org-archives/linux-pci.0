@@ -1,86 +1,68 @@
-Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
-To: Mason <slash.tmp@free.fr>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
- <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
- <57673076-4fbd-92ab-453c-3d77fd65407f@free.fr>
- <1b0ec9c9-1036-619e-19c7-16818ca728e3@arm.com>
- <a7d4752f-001d-ba7e-07ff-435643a7e661@free.fr>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <276e40e8-6539-2765-7ce7-9a942b56d54d@arm.com>
-Date: Thu, 25 May 2017 14:20:16 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 16 May 2017 17:15:29 +0200
+From: Robert Richter <robert.richter@cavium.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: Re: [RFC/RFT PATCH v2 3/3] PCI/ACPI: Add ACPI
+ pci_bus_find_numa_node() implementation
+Message-ID: <20170516151529.GC658@rric.localdomain>
+References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
+ <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <a7d4752f-001d-ba7e-07ff-435643a7e661@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25/05/17 13:41, Mason wrote:
-> On 25/05/2017 14:23, Marc Zyngier wrote:
->> On 25/05/17 13:00, Mason wrote:
->>> On 25/05/2017 10:48, Marc Zyngier wrote:
->>>> Please have some defines for these magic values.
->>>
->>> Typical driver do
->>> #define MUX_OFFSET 0x48
->>> and then access the register's value through
->>> readl_relaxed(pcie->base + MUX_OFFSET);
->>>
->>> I can't do that because the registers were shuffled around
->>> between revision 1 and revision 2. Thus, instead of an
->>> explicitly-named macro (MUX_OFFSET), I used an explicitly-
->>> named field (pcie->mux) and access the register's value
->>> through readl_relaxed(pcie->mux);
->>
->> That doesn't prevent you from having a TANGO_V1_MUX_OFFSET define, which
->> you can supplement with a V2 at some point.
->>
->>> This is equivalent to providing the offset definitions in the
->>> init functions, instead of at the top of the file.
->>
->> Sorry, my brain parses text far better than hex number.
+On 15.05.17 14:22:05, Lorenzo Pieralisi wrote:
+> The introduction of pci_bus_find_numa_node(pci_bus) allows at PCI
+> host bridge registration to detect the NUMA node for a given
+> struct pci_bus.dev. Implement an ACPI method that, through
+> the struct pci_bus.bridge ACPI companion, retrieve and return
+> the NUMA node corresponding to a given struct pci_bus.dev.
 > 
-> Well, the hex numbers do need to show up somewhere :-)
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci-acpi.c | 20 ++++++++++++++++++++
+>  drivers/pci/pci.c      |  2 +-
+>  include/linux/pci.h    |  6 ++++++
+>  3 files changed, 27 insertions(+), 1 deletion(-)
 > 
-> IIUC, you're saying that
-> #define MUX_OFFSET 0x48
-> is clearer than
-> pcie->mux = base + 0x48;
 
-yes.
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e9803c1..451342d 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5406,7 +5406,7 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+>  
+>  int pci_bus_find_numa_node(struct pci_bus *bus)
+>  {
+> -	return NUMA_NO_NODE;
+> +	return acpi_disabled ? NUMA_NO_NODE : acpi_pci_bus_find_numa_node(bus);
 
-> 
-> OK, I can accept that. Maybe our brains have been trained
-> to easily recognize and ingest the macro, or maybe it's
-> the caps, or maybe the fact that the statement does
-> several things (addition and assignment and hex).
-> 
-> Out of curiosity, how would you feel about
-> pcie->MUX_OFFSET = 0x48;
-> and then using
-> readl_relaxed(pcie->base + pcie->MUX_OFFSET);
-> 
-> It feels weird to me, I think mostly because it is
-> an unusual pattern.
+I looked into how this works with devicetree.
 
-Exactly. Use existing practices help the reviewers quite a lot.
+With ACPI it is set directly in pci_register_host_bridge() with
+set_dev_node().
 
-> 
-> Anyway, I'll add the macros, if that improves review and
-> maintenance.
+For the DT case the set_dev_node call sets it to NUMA_NO_NODE first.
+Since in DT the bridge is a platform device which has the node id
+assigned already (if there is one), the bus' node id is set later in
+device_add() when deriving it from the parent device which is the
+bridge. So this should work.
+
+I have tested it both DT and ACPI.
 
 Thanks,
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+-Robert
+
+>  }
+>  
+>  /**
