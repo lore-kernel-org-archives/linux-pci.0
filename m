@@ -1,135 +1,128 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [RFC/RFT PATCH 3/3] PCI/ACPI: Add ACPI pci_bus_find_numa_node()
+ implementation
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
+ <20170426100619.31758-3-lorenzo.pieralisi@arm.com>
+ <5919471B.7080607@hisilicon.com> <20170515091749.GA14348@red-moon>
+CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Sergey Temerkhanov" <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Message-ID: <591A707D.5000000@hisilicon.com>
+Date: Tue, 16 May 2017 11:22:37 +0800
 MIME-Version: 1.0
-In-Reply-To: <1494408707.31307.32.camel@mtkswgap22>
-References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
- <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
- <1494408707.31307.32.camel@mtkswgap22>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 10 May 2017 12:01:49 +0200
-Message-ID: <CAK8P3a1AUsUTNDnN+_9251sxC7R4vvkQRr37dvAke6ooCJ_oxg@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for Mediatek
- PCIe
-To: Ryder Lee <ryder.lee@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170515091749.GA14348@red-moon>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 10, 2017 at 11:31 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> On Wed, 2017-05-10 at 10:08 +0200, Arnd Bergmann wrote:
->> On Wed, May 10, 2017 at 4:07 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+On 2017/5/15 17:17, Lorenzo Pieralisi wrote:
+> On Mon, May 15, 2017 at 02:13:47PM +0800, Zhou Wang wrote:
+>> On 2017/4/26 18:06, Lorenzo Pieralisi wrote:
+>>> The introduction of pci_bus_find_numa_node(pci_bus) allows at PCI
+>>> host bridge registration to detect the NUMA node for a given
+>>> struct pci_bus.dev. Implement an ACPI method that, through
+>>> the struct pci_bus.bridge ACPI companion, retrieve and return
+>>> the NUMA node corresponding to a given struct pci_bus.dev.
+>>>
+>>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>> ---
+>>>  drivers/pci/pci-acpi.c | 20 ++++++++++++++++++++
+>>>  include/linux/pci.h    |  6 ++++++
+>>>  2 files changed, 26 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+>>> index 0018603..915da79 100644
+>>> --- a/drivers/pci/pci-acpi.c
+>>> +++ b/drivers/pci/pci-acpi.c
+>>> @@ -10,6 +10,7 @@
+>>>  #include <linux/delay.h>
+>>>  #include <linux/init.h>
+>>>  #include <linux/irqdomain.h>
+>>> +#include <linux/numa.h>
+>>>  #include <linux/pci.h>
+>>>  #include <linux/msi.h>
+>>>  #include <linux/pci_hotplug.h>
+>>> @@ -853,6 +854,25 @@ struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
+>>>  	return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
+>>>  }
+>>>  
+>>> +int acpi_pci_bus_find_numa_node(struct pci_bus *bus)
+>>> +{
+>>> +	int node = NUMA_NO_NODE;
+>>> +	struct device *bridge = get_device(bus->bridge);
+>>> +
+>>> +	if (!bridge)
+>>> +		return node;
+>>> +
+>>> +	if (has_acpi_companion(bridge)) {
+>>> +		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
+>>> +
+>>> +		node = acpi_get_node(adev->handle);
+>>> +	}
+>>> +
+>>> +	put_device(bridge);
+>>> +
+>>> +	return node;
+>>> +}
+>>> +
 >>
->> > +- ranges:
->> > +  - The first three entries are expected to translate the addresses for the root
->> > +    port registers, which are referenced by the assigned-addresses property of
->> > +    the root port nodes (see below).
+>> It seems there is no function to call this, am I right?
+> 
+> Sorry, I missed updating pci_bus_find_numa_node() while reshuffling
+> the code, apologies.
+> 
+> I will repost shortly.
+> 
+>> Another question is that: in the latest IORT revision C, "Proximity
+>> domain" has been added to the IORT spec.  So when we enable NUMA for a
+>> PCIe device, should we also consider this?
+> 
+> That's for the SMMU device.
+
+Sorry, this is another problem. Now I get it that this Proximity domain
+is for SMMU itself.
+
+Thanks,
+Zhou
+
+> 
+> Lorenzo
+> 
+>> Thanks,
+>> Zhou
 >>
->> I don't understand this part. Why do you need a static translation for these?
->> Shouldn't they just be listed in the 'reg' property of the parent node now that
->> you have the clk/reset/phy properties in the parent as well?
->
-> At first, I did like that. But I noticed that someone suggest it's
-> better to use 'assigned-addresses' to handle per-port registers, the
-> same path as tegra and marvell did, in other platform discussion thread.
-> So I just put shared register in root node. It could be rolled back if
-> you feel this is inappropriate.
-
-The marvell case is not a good example for your case: their top-level
-device is made up by the OS to help with the shared resource allocation,
-while in your case the bus bridge actually exists in hardware.
-
-I'm not too familiar with the Tegra case, and haven't looked at that here,
-but it could be an artifact of how for a while we used to list the config
-space access in the top-level "ranges" instead of the "reg" property.
-
-I'd vote for moving it back, for consistency with the other port specific
-properties that are now in the root node. Once you do that, the port
-nodes can be removed completely, which is what I was aiming for with
-the comments on the previous version.
-
->> > +Required properties:
->> > +- device_type: Must be "pci"
->> > +- assigned-addresses: Address and size of the port configuration registers
->> > +- reg: Only the first four bytes are used to refer to the correct bus number
->> > +  and device number.
->> > +- #address-cells: Must be 3
->> > +- #size-cells: Must be 2
->> > +- #interrupt-cells: Must be 1
->> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
->> > +  Please refer to the standard PCI bus binding document for a more detailed
->> > +  explanation.
+>>>  static int __init acpi_pci_init(void)
+>>>  {
+>>>  	int ret;
+>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>> index 9e62462..b40d095 100644
+>>> --- a/include/linux/pci.h
+>>> +++ b/include/linux/pci.h
+>>> @@ -1481,6 +1481,12 @@ static inline int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
+>>>  #endif
+>>>  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
+>>>  #endif
+>>> +#ifdef CONFIG_ACPI
+>>> +int acpi_pci_bus_find_numa_node(struct pci_bus *bus);
+>>> +#else
+>>> +static inline int acpi_pci_bus_find_numa_node(struct pci_bus *bus)
+>>> +{ return NUMA_NO_NODE; }
+>>> +#endif
+>>>  int pci_bus_find_numa_node(struct pci_bus *bus);
+>>>  
+>>>  /* some architectures require additional setup to direct VGA traffic */
+>>>
 >>
->> Child nodes do not normally have interrupt-map properties. Isn't this
->> already covered by the interrupt-map in the parent?
->>
->
-> I have one Intel 4 port ethernet card(0000:00:01) and MTK WLAN card
-> (0000:00:02), probe message looks good to me.
->
-> pci 0000:00:01.0: fixup irq: got 224
-> pci 0000:00:01.0: assigning IRQ 224
-> pci 0000:00:02.0: fixup irq: got 225
-> pci 0000:00:02.0: assigning IRQ 225
->
-> pci 0000:01:00.0: fixup irq: got 224
-> pci 0000:01:00.0: assigning IRQ 224
-> pci 0000:01:00.1: fixup irq: got 224
-> pci 0000:01:00.1: assigning IRQ 224
-> pci 0000:01:00.2: fixup irq: got 224
-> pci 0000:01:00.2: assigning IRQ 224
-> pci 0000:01:00.3: fixup irq: got 224
-> pci 0000:01:00.3: assigning IRQ 224
->
-> pci 0000:02:00.0: fixup irq: got 225
-> pci 0000:02:00.0: assigning IRQ 225
->
->
-> But child nodes without interrupt-map properties:
-> It seems incorrect.
->
-> pci 0000:00:01.0: fixup irq: got 224
-> pci 0000:00:01.0: assigning IRQ 224
-> pci 0000:00:02.0: fixup irq: got 225
-> pci 0000:00:02.0: assigning IRQ 225
->
-> pci 0000:01:00.0: fixup irq: got 223
-> pci 0000:01:00.0: assigning IRQ 223
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
+> 
 
-Not entirely sure what happens here, but I guess the problem
-is that the 'reg' portion of the parent interrupt-map refers to
-the port devices, not the devices attached the devices behind
-them.
-
-On a related note, I see that you still list
-
-> +- interrupts: Three interrupt outputs of the controller. Must contain an
-> +  entry for each entry in the interrupt-names property.
-> +- interrupt-names: Must include the following names
-> +  - "pcie-int0"
-> +  - "pcie-int1"
-> +  - "pcie-int2"
-
-This seems to be an artifact from the older version and should be
-removed as the driver correctly ignores the properties now.
-
-      Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
