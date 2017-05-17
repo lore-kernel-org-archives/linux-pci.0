@@ -1,60 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:44355 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757932AbdELRCf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 13:02:35 -0400
-Message-ID: <1494608535.23969.11.camel@pengutronix.de>
-Subject: Re: [RFC 1/8] pci: adding new irq api to pci-designware
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, marc.zyngier@arm.com, jingoohan1@gmail.com,
-        m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org
-Date: Fri, 12 May 2017 19:02:15 +0200
-In-Reply-To: <d9664b857b0b9fe9cba6b8de5f0b6d365fe86f36.1494606911.git.jpinto@synopsys.com>
-References: <cover.1494606911.git.jpinto@synopsys.com>
-         <d9664b857b0b9fe9cba6b8de5f0b6d365fe86f36.1494606911.git.jpinto@synopsys.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:52284 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751566AbdEQOEJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 17 May 2017 10:04:09 -0400
+Content-Type: text/plain;
+        charset=us-ascii
+From: Jon Masters <jcm@redhat.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 2/2] PCI: Avoid bus reset for Cavium cn8xxx root ports.
+Message-Id: <925EB284-D73A-44A4-AAEB-C086041C5A3E@redhat.com>
+Date: Wed, 17 May 2017 10:04:06 -0400 (EDT)
+References: <20170516001736.4001-1-david.daney@cavium.com> <20170516001736.4001-3-david.daney@cavium.com> <235a9a51-df06-84af-4e5d-b6408ceb0b7d@redhat.com> <3fbbda8a-a6ea-976e-46ba-d23646500b3a@caviumnetworks.com> <1495004825.31562.20.camel@perches.com>
+To: Joe Perches <joe@perches.com>
+In-Reply-To: <1495004825.31562.20.camel@perches.com>
+Cc: David Daney <ddaney@caviumnetworks.com>,
+        Auger Eric <eric.auger@redhat.com>,
+        David Daney <david.daney@cavium.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Robert Richter <robert.richter@cavium.com>,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Freitag, den 12.05.2017, 17:56 +0100 schrieb Joao Pinto:
-> This patch adds the new interrupt api to pecie-designware, keeping the old
-> one. A define was added to toggle between the two apis (for testing purposes).
+Hahahahahaha :)
+
+-- 
+Computer Architect | Sent from my 64-bit #ARM Powered phone
+
+> On May 17, 2017, at 03:08, Joe Perches <joe@perches.com> wrote:
 > 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 241 ++++++++++++++++++++++++++++++++-
->  drivers/pci/dwc/pcie-designware.h      |   5 +
->  2 files changed, 244 insertions(+), 2 deletions(-)
+>> On Tue, 2017-05-16 at 13:29 -0700, David Daney wrote:
+>> We really need to improve the 
+>> grammatical analysis capabilities of checkpatch.pl, I think I will lay 
+>> the blame there.
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 28ed32b..6810ea10b 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-
-[...]
-
-> +static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
-> +				    unsigned int virq, unsigned int nr_irqs,
-> +				    void *args)
-> +{
-> +	struct dw_pcie *pci = domain->host_data;
-> +	struct pcie_port *pp = &pci->pp;
-> +	unsigned long bit;
-> +
-> +	mutex_lock(&pp->lock);
-> +
-> +	WARN_ON(nr_irqs != 1);
-
-So the new API doesn't support multi MSI, where we need more than a
-single contiguous MSI in a range? If this is the case then this change
-is breaking real use-cases that work today.
-
-Regards,
-Luvas
+> Uh huh.  Best of luck.  Submit a patch...
+> 
+> ;)
+> 
