@@ -1,111 +1,73 @@
-Return-Path: <SRS0=s16d=47=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=s16d=47=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
- <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <57673076-4fbd-92ab-453c-3d77fd65407f@free.fr>
-Date: Thu, 25 May 2017 14:00:31 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 17 May 2017 16:53:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH 2/2] arm64: acpi/pci: invoke _DSM whether to preserve
+ firmware PCI setup
+Message-ID: <20170517215348.GI31462@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170411163313.18577-3-ard.biesheuvel@linaro.org>
+ <20170412172623.GA11570@red-moon>
+ <0b453fdf-8f25-8ee8-678d-996dbf2f3e48@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <0b453fdf-8f25-8ee8-678d-996dbf2f3e48@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, graeme.gregory@linaro.org,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, catalin.marinas@arm.com,
+ will.deacon@arm.com, leif.lindholm@linaro.org, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, tn@semihalf.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25/05/2017 10:48, Marc Zyngier wrote:
+On Wed, Apr 12, 2017 at 02:03:25PM -0400, Sinan Kaya wrote:
+> On 4/12/2017 1:26 PM, Lorenzo Pieralisi wrote:
+> >> +	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 0) {
+> >> +		/* preserve existing resource assignment */
+> >> +		pci_bus_claim_resources(bus);
+> > Ok. By the PCI FW specs, we should also assign unassigned resources here
+> > (ie resources that can't be claimed). Furthermore, by the PCI FW spec,
+> > if !obj this is the path we should be taking (PCI firmware specification
+> > Rev 3.1, 4.6.5, Description: 0:)
+> > 
+> > "...This situation is the same as the legacy situation where this
+> > _DSM is not provided."
+> > 
+> > which makes me think that the PCI FW specification expects FW set-up
+> > to be claimed on boot, it is my interpretation.
 
-> On 20/04/17 15:31, Marc Gonzalez wrote:
->
->> This driver is required to work around several hardware bugs in the
->> PCIe controller.
->>
->> NB: Revision 1 does not support legacy interrupts, or IO space.
->>
->> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
->> ---
->>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
->>  drivers/pci/host/Kconfig                             |   8 ++
->>  drivers/pci/host/Makefile                            |   1 +
->>  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
->>  include/linux/pci_ids.h                              |   2 +
->>  5 files changed, 204 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
->> new file mode 100644
->> index 000000000000..3353b4e77309
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
->> @@ -0,0 +1,32 @@
->> +Sigma Designs Tango PCIe controller
->> +
->> +Required properties:
->> +
->> +- compatible: "sigma,smp8759-pcie"
->> +- reg: address/size of PCI configuration space, address/size of register area
->> +- device_type: "pci"
->> +- #size-cells: <2>
->> +- #address-cells: <3>
->> +- #interrupt-cells: <1>
-> 
-> What is the point of having an #interrupt-cells when this is *not* an
-> interrupt controller (as it doesn't support legacy interrupts)?
+I read that section as saying "if the _DSM doesn't exist, or if the
+_DSM returns 0, the OS must preserve any BAR and bridge window
+assignments done by firmware."
 
-My mistake.
+I was not aware of any other statement that restricted the OS from
+changing assignments done by firmware, and I've always assumed that
+the OS completely owns PCI devices after handoff from firmware.  But
+maybe my assumption has been wrong.  And I know there are BIOSes that
+do assume the OS doesn't change things, e.g., for the HP iLO, which is
+used by runtime firmware.
 
-Thanks for kindly pointing out that the #interrupt-cells property
-is not needed when a controller doesn't support legacy interrupts.
+The _DSM is generic, not arm64-specific, so if we add support for it,
+I'd like to at least evaluate the _DSM in the generic code somewhere,
+e.g., in drivers/pci/pci-acpi.c where we evaluate it for other
+function indices.
 
-If a controller does support legacy interrupts, then I see other
-bindings define #interrupt-cells and interrupt-map.
-Is interrupt-controller also required?
-Is that redundant with msi-controller?
+Maybe we will still need arch-specific code to use the generic
+knowledge.  Or maybe we should add x86 code to prevent reassignment
+unless this _DSM returns 1, although that might break some of the
+"pci=realloc" scenarios.
 
-(Rev2 will support legacy interrupts.)
+Bjorn
 
-References for my own information:
-http://elixir.free-electrons.com/linux/latest/source/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-http://elixir.free-electrons.com/linux/latest/source/Documentation/devicetree/bindings/pci/altera-pcie.txt
-http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
-
-> As mentioned earlier, this needs to be a separate patch to be reviewed
-> by the Keepers of the Faith (aka the DT maintainers).
-
-robh already acked v3 two months ago, but can split it up,
-and CC the DT folks for v5.
-
->> +static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
->> +{
->> +	pcie->mux		= base + 0x48;
->> +	pcie->msi_status	= base + 0x80;
->> +	pcie->msi_enable	= base + 0xa0;
->> +	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
->> +
->> +	return tango_check_pcie_link(base + 0x74);
-> 
-> Please have some defines for these magic values.
-
-Typical driver do
-#define MUX_OFFSET 0x48
-and then access the register's value through
-readl_relaxed(pcie->base + MUX_OFFSET);
-
-I can't do that because the registers were shuffled around
-between revision 1 and revision 2. Thus, instead of an
-explicitly-named macro (MUX_OFFSET), I used an explicitly-
-named field (pcie->mux) and access the register's value
-through readl_relaxed(pcie->mux);
-
-This is equivalent to providing the offset definitions in the
-init functions, instead of at the top of the file.
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
