@@ -1,255 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37348 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbdE3Tuf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 15:50:35 -0400
-Date: Tue, 30 May 2017 14:50:33 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 17 May 2017 16:56:12 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ashok Raj <ashok.raj@intel.com>
-Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Joerg Roedel <joro@8bytes.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, CQ Tang <cq.tang@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 2/2] PCI: Save properties required to handle FLR for
- replay purposes.
-Message-ID: <20170530195033.GB4664@bhelgaas-glaptop.roam.corp.google.com>
-References: <1496161549-167468-1-git-send-email-ashok.raj@intel.com>
- <1496161549-167468-3-git-send-email-ashok.raj@intel.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
+ configuration to be preserved
+Message-ID: <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496161549-167468-3-git-send-email-ashok.raj@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, graeme.gregory@linaro.org,
+ linux-pci@vger.kernel.org, will.deacon@arm.com, leif.lindholm@linaro.org,
+ okaya@codeaurora.org, catalin.marinas@arm.com, bhelgaas@google.com,
+ tn@semihalf.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 30, 2017 at 09:25:49AM -0700, Ashok Raj wrote:
-> From: CQ Tang <cq.tang@intel.com>
+On Tue, Apr 11, 2017 at 05:33:11PM +0100, Ard Biesheuvel wrote:
+> This is a followup to the discussion regarding whether ACPI/arm64 systems
+> should preserve the PCI configuration performed by the firmware, or always
+> reconfigure it from scratch.
 > 
-> Requires: https://patchwork.kernel.org/patch/9593891
+> This series proposes to put it under the control of the firmware, by invoking
+> the _DSM method, and preserving the firmware configuration only when it
+> returns 0.
+> 
+> Patch #1 is a preparatory bugfix that solves the issue that I/O bridge
+> windows starting at 0x0 are dismissed when looking for parent resources.
+> 
+> Patch #2 adds the logic to invoke the _DSM and claim the existing
+> configuration rather than reallocate it from scratch if it returns '0'
+> 
+> Ard Biesheuvel (2):
+>   drivers: pci: do not disregard parent resources starting at 0x0
+>   arm64: acpi/pci: invoke _DSM whether to preserve firmware PCI setup
+> 
+>  arch/arm64/kernel/pci.c  | 20 ++++++++++++++++++--
+>  drivers/pci/pci.c        |  2 +-
+>  include/linux/pci-acpi.h |  7 ++++---
+>  3 files changed, 23 insertions(+), 6 deletions(-)
 
-The above patch (9593891) is not in my tree or Linus' tree, so I can't
-do anything with this yet.
+I applied the first to pci/resource for v4.13.  I didn't do anything
+with the second because I don't think we have consensus on what the
+right thing to do is yet.
 
-> After a FLR, pci-states need to be restored. This patch saves PASID features
-> and PRI reqs cached.
-> 
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> To: Joerg Roedel <joro@8bytes.org>
-> To: linux-pci@vger.kernel.org
-> To: linux-kernel@vger.kernel.org
-> Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>
-> Cc: David Woodhouse <dwmw2@infradead.org>
-> Cc: iommu@lists.linux-foundation.org
-> 
-> Signed-off-by: CQ Tang <cq.tang@intel.com>
-> Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-> ---
->  drivers/pci/ats.c       | 65 +++++++++++++++++++++++++++++++++++++------------
->  drivers/pci/pci.c       |  3 +++
->  include/linux/pci-ats.h | 10 ++++++++
->  include/linux/pci.h     |  6 +++++
->  4 files changed, 69 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 2126497..a769955 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -160,17 +160,16 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
->  	if (!pos)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
->  	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-> -	if ((control & PCI_PRI_CTRL_ENABLE) ||
-> -	    !(status & PCI_PRI_STATUS_STOPPED))
-> +	if (!(status & PCI_PRI_STATUS_STOPPED))
->  		return -EBUSY;
->  
->  	pci_read_config_dword(pdev, pos + PCI_PRI_MAX_REQ, &max_requests);
->  	reqs = min(max_requests, reqs);
-> +	pdev->pri_reqs_alloc = reqs;
->  	pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
->  
-> -	control |= PCI_PRI_CTRL_ENABLE;
-> +	control = PCI_PRI_CTRL_ENABLE;
->  	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
->  
->  	pdev->pri_enabled = 1;
-> @@ -206,6 +205,29 @@ void pci_disable_pri(struct pci_dev *pdev)
->  EXPORT_SYMBOL_GPL(pci_disable_pri);
->  
->  /**
-> + * pci_restore_pri_state - Restore PRI
-> + * @pdev: PCI device structure
-> + *
-> + */
-> +void pci_restore_pri_state(struct pci_dev *pdev)
-> +{
-> +   u16 control = PCI_PRI_CTRL_ENABLE;
-> +   u32 reqs = pdev->pri_reqs_alloc;
-> +   int pos;
-> +
-> +   pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-> +   if (!pos)
-> +       return;
-> +
-> +   if (!pdev->pri_enabled)
-> +       return;
-> +
-> +   pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
-> +   pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_restore_pri_state);
-> +
-> +/**
->   * pci_reset_pri - Resets device's PRI state
->   * @pdev: PCI device structure
->   *
-> @@ -224,12 +246,7 @@ int pci_reset_pri(struct pci_dev *pdev)
->  	if (!pos)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
-> -	if (control & PCI_PRI_CTRL_ENABLE)
-> -		return -EBUSY;
-> -
-> -	control |= PCI_PRI_CTRL_RESET;
-> -
-> +	control = PCI_PRI_CTRL_RESET;
->  	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
->  
->  	return 0;
-> @@ -259,12 +276,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
->  	if (!pos)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(pdev, pos + PCI_PASID_CTRL, &control);
->  	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
-> -
-> -	if (control & PCI_PASID_CTRL_ENABLE)
-> -		return -EINVAL;
-> -
->  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
->  
->  	/* User wants to enable anything unsupported? */
-> @@ -272,6 +284,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
->  		return -EINVAL;
->  
->  	control = PCI_PASID_CTRL_ENABLE | features;
-> +	pdev->pasid_features = features;
->  
->  	pci_write_config_word(pdev, pos + PCI_PASID_CTRL, control);
->  
-> @@ -305,6 +318,28 @@ void pci_disable_pasid(struct pci_dev *pdev)
->  EXPORT_SYMBOL_GPL(pci_disable_pasid);
->  
->  /**
-> + * pci_restore_pasid_state - Restore PASID capabilities.
-> + * @pdev: PCI device structure
-> + *
-> + */
-> +void pci_restore_pasid_state(struct pci_dev *pdev)
-> +{
-> +   u16 control;
-> +   int pos;
-> +
-> +   pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PASID);
-> +   if (!pos)
-> +       return;
-> +
-> +   if (!pdev->pasid_enabled)
-> +       return;
-> +
-> +   control = PCI_PASID_CTRL_ENABLE | pdev->pasid_features;
-> +   pci_write_config_word(pdev, pos + PCI_PASID_CTRL, control);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_restore_pasid_state);
-> +
-> +/**
->   * pci_pasid_features - Check which PASID features are supported
->   * @pdev: PCI device structure
->   *
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7904d02..c9a6510 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -28,6 +28,7 @@
->  #include <linux/pm_runtime.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/vmalloc.h>
-> +#include <linux/pci-ats.h>
->  #include <asm/setup.h>
->  #include <asm/dma.h>
->  #include <linux/aer.h>
-> @@ -1171,6 +1172,8 @@ void pci_restore_state(struct pci_dev *dev)
->  
->  	/* PCI Express register must be restored first */
->  	pci_restore_pcie_state(dev);
-> +	pci_restore_pasid_state(dev);
-> +	pci_restore_pri_state(dev);
->  	pci_restore_ats_state(dev);
->  	pci_restore_vc_state(dev);
->  
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 57e0b82..782fb8e 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -7,6 +7,7 @@
->  
->  int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
->  void pci_disable_pri(struct pci_dev *pdev);
-> +void pci_restore_pri_state(struct pci_dev *pdev);
->  int pci_reset_pri(struct pci_dev *pdev);
->  
->  #else /* CONFIG_PCI_PRI */
-> @@ -20,6 +21,10 @@ static inline void pci_disable_pri(struct pci_dev *pdev)
->  {
->  }
->  
-> +static inline void pci_restore_pri_state(struct pci_dev *pdev)
-> +{
-> +}
-> +
->  static inline int pci_reset_pri(struct pci_dev *pdev)
->  {
->  	return -ENODEV;
-> @@ -31,6 +36,7 @@ static inline int pci_reset_pri(struct pci_dev *pdev)
->  
->  int pci_enable_pasid(struct pci_dev *pdev, int features);
->  void pci_disable_pasid(struct pci_dev *pdev);
-> +void pci_restore_pasid_state(struct pci_dev *pdev);
->  int pci_pasid_features(struct pci_dev *pdev);
->  int pci_max_pasids(struct pci_dev *pdev);
->  
-> @@ -45,6 +51,10 @@ static inline void pci_disable_pasid(struct pci_dev *pdev)
->  {
->  }
->  
-> +static inline void pci_restore_pasid_state(struct pci_dev *pdev)
-> +{
-> +}
-> +
->  static inline int pci_pasid_features(struct pci_dev *pdev)
->  {
->  	return -EINVAL;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index bee980e..1ddb8e0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -395,6 +395,12 @@ struct pci_dev {
->  	u8		ats_stu;	/* ATS Smallest Translation Unit */
->  	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
->  #endif
-> +#ifdef CONFIG_PCI_PRI
-> +	u32		pri_reqs_alloc; /* Number of PRI requests allocated */
-> +#endif
-> +#ifdef CONFIG_PCI_PASID
-> +	u16		pasid_features;
-> +#endif
->  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
->  	size_t romlen; /* Length of ROM if it's not from the BAR */
->  	char *driver_override; /* Driver name to force a match */
-> -- 
-> 2.7.4
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
