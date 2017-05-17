@@ -1,54 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Haiyang Zhang <haiyangz@microsoft.com>
-To: Haiyang Zhang <haiyangz@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
-Date: Wed, 24 May 2017 20:43:08 +0000
-Message-ID: <BLUPR03MB1412AD9B6C5B4575F354EC4CCAFE0@BLUPR03MB1412.namprd03.prod.outlook.com>
-References: <1495658355-13103-1-git-send-email-haiyangz@exchange.microsoft.com>
-In-Reply-To: <1495658355-13103-1-git-send-email-haiyangz@exchange.microsoft.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1495004825.31562.20.camel@perches.com>
+Subject: Re: [PATCH 2/2] PCI: Avoid bus reset for Cavium cn8xxx root ports.
+From: Joe Perches <joe@perches.com>
+To: David Daney <ddaney@caviumnetworks.com>, Auger Eric
+ <eric.auger@redhat.com>,  David Daney <david.daney@cavium.com>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Date: Wed, 17 May 2017 00:07:05 -0700
+In-Reply-To: <3fbbda8a-a6ea-976e-46ba-d23646500b3a@caviumnetworks.com>
+References: <20170516001736.4001-1-david.daney@cavium.com>
+ <20170516001736.4001-3-david.daney@cavium.com>
+ <235a9a51-df06-84af-4e5d-b6408ceb0b7d@redhat.com>
+ <3fbbda8a-a6ea-976e-46ba-d23646500b3a@caviumnetworks.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jon Masters <jcm@redhat.com>, Robert Richter <robert.richter@cavium.com>,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, 2017-05-16 at 13:29 -0700, David Daney wrote:
+> We really need to improve the 
+> grammatical analysis capabilities of checkpatch.pl, I think I will lay 
+> the blame there.
+
+Uh huh.  Best of luck.  Submit a patch...
+
+;)
 
 
-> -----Original Message-----
-> From: Haiyang Zhang [mailto:haiyangz@exchange.microsoft.com]
-> Sent: Wednesday, May 24, 2017 4:39 PM
-> To: bhelgaas@google.com; linux-pci@vger.kernel.org
-> Cc: Haiyang Zhang <haiyangz@microsoft.com>; KY Srinivasan
-> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
-> olaf@aepfle.de; vkuznets@redhat.com; driverdev-
-> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
->=20
-> [This sender failed our fraud detection checks and may not be who they
-> appear to be. Learn about spoofing at http://aka.ms/LearnAboutSpoofing]
->=20
-> From: Haiyang Zhang <haiyangz@microsoft.com>
->=20
-> This patch uses the lower 16 bits of the serial number as PCI
-> domain, otherwise some drivers may not be able to handle it.
->=20
-> Besides Nvidia drivers, we also found X.org, and DPDK handle
-> only 16 bit PCI domain.
->=20
-> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
-> ---
-
-According to Stephen Hemminger <sthemmin@microsoft.com>, there are
-additional programs, like X.org, DPDK, are also using 16-bit only
-PCI domain numbers. So, I'm submitting this patch for re-consideration.
-
-Thanks,
-- Haiyang
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
