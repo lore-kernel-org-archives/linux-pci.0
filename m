@@ -1,67 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:60696 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdE3Ldb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:31 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 6/8] pci: qcom SoC driver adapted to new irq API
-Date: Tue, 30 May 2017 12:32:51 +0100
-Message-Id: <5fa4cebbfaaf3e310a34ec40f065a41ea3ff4ce1.1496142978.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 17 May 2017 17:04:24 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robert Richter <robert.richter@cavium.com>
+Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Subject: Re: [RFC/RFT PATCH v2 3/3] PCI/ACPI: Add ACPI
+ pci_bus_find_numa_node() implementation
+Message-ID: <20170517160424.GA8643@red-moon>
+References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
+ <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
+ <20170516151529.GC658@rric.localdomain>
+ <20170516180200.GA24458@red-moon>
+ <20170517134654.GA8497@red-moon>
+ <20170517143558.GP16981@rric.localdomain>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170517143558.GP16981@rric.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts Qcom SoC specific driver to use the new interrupt api
-available in pcie-designware.
+On Wed, May 17, 2017 at 04:35:58PM +0200, Robert Richter wrote:
+> On 17.05.17 14:46:54, Lorenzo Pieralisi wrote:
+> 
+> > More explicitly, I think the whole series should work also with the diff
+> > below applied on top of it. Side note: for consistency, I do not think
+> > that adding a DT counterpart to pci_bus_find_numa_node() would hurt.
+> > 
+> > Thanks !
+> > Lorenzo
+> > 
+> > -- >8 --
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 76c089f..cf0692c 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -862,7 +862,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+> >  	 */
+> >  	child->dev.class = &pcibus_class;
+> >  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+> > -	set_dev_node(&child->dev, dev_to_node(&parent->dev));
+> > +
+> 
+> Hmm, in device_add() there is already:
+> 
+> 	/* use parent numa_node */
+> 	if (parent && (dev_to_node(dev) == NUMA_NO_NODE))
+>         	set_dev_node(dev, dev_to_node(parent));
+> 
+> So there are cases where the device has a different node than the
+> parent. I am not sure if we can assume for pci that it maps always.
+> 
+> And since device_add() is called later anyway, the above change might
+> not necessary at all.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
- drivers/pci/dwc/pcie-qcom.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+That's why I _removed_ the set_dev_node() in the diff above (that applies
+to patch (2)), I do not think it is a) correct and b) necessary to
+propagate the NUMA node from bus to a child bus given that device_add()
+takes care of that already.
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 5bf23d4..4e1cc02 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -126,13 +126,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
- 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
- }
- 
--static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
- {
- 	u32 val;
-@@ -724,14 +717,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       qcom_pcie_msi_irq_handler,
--				       IRQF_SHARED, "qcom-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "cannot request msi irq\n");
--			return ret;
--		}
- 	}
- 
- 	ret = phy_init(pcie->phy);
--- 
-2.9.3
+I should post a v3 (with the diff above applied) so that we are all on
+the same page and we can test it.
+
+> But at least we must assign the node id to the
+> bridge, which is the parent. Maybe just have in
+> acpi_pci_root_create():
+> 
+> 	bridge = get_device(bus->bridge);
+> 	adev = to_acpi_device_node(bridge->fwnode);
+> 	set_dev_node(bridge, acpi_get_node(adev->handle));
+
+I do not think that's enough, I need to check again but I think that
+also the bus->dev should have its NUMA node set for things to work (and
+allow the NUMA node to propagate correctly through device_add())
+otherwise pcibus_to_node() would fail for devices sitting on the root
+bus, right ?
+
+I will check again and post v3 shortly.
+
+Thanks !
+Lorenzo
+
+> 
+> -Robert
+> 
+> 
+> >  	/*
+> >  	 * Set up the primary, secondary and subordinate
+> >  	 * bus numbers.
