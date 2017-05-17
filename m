@@ -1,72 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39972 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1764518AbdEWTjz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 15:39:55 -0400
-Date: Tue, 23 May 2017 14:39:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH 1/4] PCI: rockchip: rename rockchip_cfg_atu to
- rockchip_pcie_cfg_atu
-Message-ID: <20170523193953.GB7241@bhelgaas-glaptop.roam.corp.google.com>
-References: <1493864691-102523-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493864691-102523-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170512015105.32653-1-songxiaowei@hisilicon.com>
+References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 17 May 2017 22:29:17 +0200
+Message-ID: <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+To: Song Xiaowei <songxiaowei@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>, niklas.cassel@axis.com,
+        Duc Dang <dhdang@apm.com>, liudongdong3@huawei.com,
+        puck.chen@hisilicon.com, Guodong Xu <guodong.xu@linaro.org>,
+        wangbinghui@hisilicon.com, suzhuangluan@hisilicon.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 04, 2017 at 10:24:48AM +0800, Shawn Lin wrote:
-> Rename it in order to keep the name consistent with other
-> functions' in pcie-rockchip.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On Fri, May 12, 2017 at 3:51 AM, Song Xiaowei <songxiaowei@hisilicon.com> wrote:
+> From: songxiaowei <songxiaowei@hisilicon.com>
 
-Applied all four of these to pci/host-rockchip for v4.13, thanks!
+Looks good overall, just a few details:
 
-I dropped some extra blank lines from patch 3.
+Please fix your ~/.gitconfig to contain the same real name ("Song Xiaowei"
+instead of "songxiaowei") that you use for sending the emails.
 
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index c8ca796..ac08b4c 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -1156,7 +1156,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
->  	return 0;
->  }
->  
-> -static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
-> +static int rockchip_pcie_cfg_atu(struct rockchip_pcie *rockchip)
->  {
->  	struct device *dev = rockchip->dev;
->  	int offset;
-> @@ -1279,7 +1279,7 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
->  	if (err)
->  		return err;
->  
-> -	err = rockchip_cfg_atu(rockchip);
-> +	err = rockchip_pcie_cfg_atu(rockchip);
->  	if (err)
->  		return err;
->  
-> @@ -1396,7 +1396,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  		}
->  	}
->  
-> -	err = rockchip_cfg_atu(rockchip);
-> +	err = rockchip_pcie_cfg_atu(rockchip);
->  	if (err)
->  		goto err_free_res;
->  
-> -- 
-> 1.9.1
-> 
-> 
+> +
+> +static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
+> +{
+...
+> +       reg_val = kirin_apb_phy_readl(kirin_pcie, 0x400);
+> +       while (reg_val & pipe_clk_stable) {
+> +               udelay(100);
+> +               if (time == 0) {
+> +                       dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
+> +                       return -EINVAL;
+> +               }
+> +               time--;
+> +               reg_val = kirin_apb_phy_readl(kirin_pcie, 0x400);
+> +       }
+
+If this is not called with interrupts disabled, please use a
+sleeping function (e.g. msleep(1)) as the delay and compare
+against ktime_before() to see how much total time has expired
+when waiting for a timeout, instead of using a counter.
+
+> diff --git a/drivers/pci/dwc/pcie-kirin.h b/drivers/pci/dwc/pcie-kirin.h
+> new file mode 100644
+> index 000000000000..ad9a3b427298
+> --- /dev/null
+> +++ b/drivers/pci/dwc/pcie-kirin.h
+> @@ -0,0 +1,79 @@
+> +/*
+> + * PCIe host controller driver for Kirin 960 SoCs
+> + *
+> + * Copyright (C) 2015 Huawei Electronics Co., Ltd.
+> + *             http://www.huawei.com
+> + *
+> + * Author: Xiaowei Song <songxiaowei@huawei.com>
+
+The header is only used in one .c file, so just remove it and
+add the contents to that file.
+
+    Arnd
