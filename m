@@ -1,124 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 22 May 2017 12:31:16 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V4 3/4] ACPI/IORT: Ignore all errors except EPROBE_DEFER
-Message-ID: <20170522113116.GB10449@red-moon>
-References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
- <1495119257-26724-3-git-send-email-sricharan@codeaurora.org>
- <20170522103730.GB7553@red-moon>
- <ffb088d6-e40f-7a7d-dafb-e52dc86704fc@codeaurora.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Magnus Damm <magnus.damm@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        tn@semihalf.com, Hanjun Guo <hanjun.guo@linaro.org>,
+        okaya@codeaurora.org,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <1486136933-20328-8-git-send-email-sricharan@codeaurora.org>
+ <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
+ <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
+ <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
+ <CAMuHMdUoLp1oVT_=NG8HS-jgG6AhOeVUsGgu7fLbGY+7A+0cOg@mail.gmail.com>
+ <CANqRtoSEwdoufUxP-Rm=qZJ7G8V3ow5F0ggV3tALrfiRad+j4Q@mail.gmail.com>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <3b154db4-6ebb-c05c-91f0-beefa75fae00@codeaurora.org>
+Date: Wed, 17 May 2017 15:58:12 +0530
 MIME-Version: 1.0
-In-Reply-To: <ffb088d6-e40f-7a7d-dafb-e52dc86704fc@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- laurent.pinchart@ideasonboard.com, frowand.list@gmail.com,
- m.szyprowski@samsung.com, linux-arch@vger.kernel.org, tn@semihalf.com,
- joro@8bytes.org, magnus.damm@gmail.com, linux-acpi@vger.kernel.org,
- geert@linux-m68k.org, linux-pci@vger.kernel.org, lenb@kernel.org,
- devicetree@vger.kernel.org, arnd@arndb.de, linux-arm-msm@vger.kernel.org,
- j.neuschaefer@gmx.net, robh+dt@kernel.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CANqRtoSEwdoufUxP-Rm=qZJ7G8V3ow5F0ggV3tALrfiRad+j4Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 22, 2017 at 04:35:43PM +0530, Sricharan R wrote:
-> Hi Lorenzo,
-> 
-> On 5/22/2017 4:07 PM, Lorenzo Pieralisi wrote:
-> > Hi Sricharan,
-> > 
-> > On Thu, May 18, 2017 at 08:24:16PM +0530, Sricharan R wrote:
-> >> While deferring the probe of IOMMU masters, xlate and
-> >> add_device callbacks called from iort_iommu_configure
-> >> can pass back error values like -ENODEV, which means
-> >> the IOMMU cannot be connected with that master for real
-> >> reasons. Before the IOMMU probe deferral, all such errors
-> >> were ignored. Now all those errors are propagated back,
-> >> killing the master's probe for such errors. Instead ignore
-> >> all the errors except EPROBE_DEFER, which is the only one
-> >> of concern and let the master work without IOMMU, thus
-> >> restoring the old behavior.
-> >>
-> >> Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
-> >> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >> ---
-> >> [V4] Added this patch newly.
-> >>
-> >>  drivers/acpi/arm64/iort.c | 6 ++++++
-> >>  1 file changed, 6 insertions(+)
-> >>
-> >> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> >> index c5fecf9..16e101f 100644
-> >> --- a/drivers/acpi/arm64/iort.c
-> >> +++ b/drivers/acpi/arm64/iort.c
-> >> @@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
-> >>  	if (err)
-> >>  		ops = ERR_PTR(err);
-> >>  
-> >> +	/* Ignore all other errors apart from EPROBE_DEFER */
-> >> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
-> >> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
-> >> +		ops = NULL;
-> >> +	}
-> >> +
-> >>  	return ops;
-> >>  }
-> >>  
-> > 
-> > It is getting a bit convoluted. Is not it better to propagate the
-> > error back and let acpi_dma_configure() make a decision accordingly ?
-> > 
-> 
-> ok, I was trying to keep it in same way as DT, where of_dma_configure
-> (here acpi_dma_configure) calls of_iommu_configure(here iort_iommu_configure)
-> which ends up doing the check. So will have to be changed in both places
-> for symmetry.
-> 
-> > Something like:
-> > 
-> > -- >8 --
-> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> > index e39ec7b..3a10d757 100644
-> > --- a/drivers/acpi/scan.c
-> > +++ b/drivers/acpi/scan.c
-> > @@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-> >  	iort_set_dma_mask(dev);
-> >  
-> >  	iommu = iort_iommu_configure(dev);
-> > -	if (IS_ERR(iommu))
-> > -		return PTR_ERR(iommu);
-> > +	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
-> > +		return -EPROBE_DEFER;
-> 
-> In case of other errors apart from EPROBE_DEFER,
-> iommu = NULL should be set, before passing it on to
-> arch_setup_dma_ops.
+Hi Magnus,
 
-Ah yes, sorry, that makes it uglier :(
+<snip..>
 
-Point is, it does not make sense to me to have of/acpi_dma_configure()
-check a return code with (IS_ERR()) whilst we know the only error
-code you are allowed to handle is -EPROBE_DEFER, while at it it is
-better to make the -EPROBE_DEFER check explicit (otherwise it may
-seem that of/acpi_dma_configure() can handle an error code that
-is different from -EPROBE_DEFER - but they don't), no big deal either
-way though.
+>> Magnus, do you have a suggestion?
+> 
+> Thanks for your efforts guys!
+> 
+> I've recently been working on up-porting the IPMMU patches and
+> addressing review comments. Now with my local driver stack on top of
+> v4.12-rc (a95cfad) I did not notice these issues initially since I
+> only tested devices with IPMMU enabled. Once these issues were pointed
+> out to me by Geert I have now reproduced the 64-bit ARM specific ones
+> on r8a7796 Salvator-X.
+> 
+> On my r8a7796 platform I'm using the following IOMMU and DMA Engine devices:
+> 
+> IOMMU device IPMMU-DS0 - Connected to SYS-DMAC0
+> IOMMU device IPMMU-DS1 - Connected to SYS-DMAC1 and SYS-DMAC2
+> IOMMU device IPMMU-MM - Root device serving IPMMU-DS0 and IPMMU-DS1
+> 
+> For testing the serial port SCIF1 is used with DMA Engine devices
+> SYS-DMAC1 or SYS-DMAC2.
+> 
+> The software environment is configured as follows:
+> - The DTS comes with all devices above enabled except IPMMU-DS0 which
+> comes with status = "disabled".
+> - The IPMMU driver is during run time only allowing use of SYS-DMAC2.
+> For other devices ->of_xlate() returns -ENODEV.
+> 
+> The above used to work just fine with v4.11 or earlier.
+> 
+> My observations for v4.12-rc:
+> 
+> 1) Default state for a95cfad
+> 
+> The devices SYS-DMAC0 and SYS-DMAC1 will never probe. However SYS-DMAC2 is fine.
+> 
+> 2) After applying "[PATCH] iommu: of: Fix check for returning EPROBE_DEFER" [1]
+> 
+> This fixes SYS-DMAC0 that now probes and operates without IPMMU-DS0 as
+> expected. Same as v4.11 or earlier.
+> 
+> 3) After also applying "[PATCH] of: iommu: Ignore all errors except
+> EPROBE_DEFER" [2]
+> 
+> This fixes SYS-DMAC1 that now probes and operates without IPMMU-DS1 as
+> expected. Same as v4.11 or earlier.
+> 
+> With fix [1] and [2] things seem back to normal. Unless I'm mistaken
 
-Lorenzo
+Thanks, will use this as your Tested-by.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+ Sricharan
+
+> it also seems that [1] allows me to drop the similar patch "[PATCH/RFC
+> v2 1/4] iommu/of: Skip IOMMU devices disabled in DT".
+> 
+> Thanks for your help.
+> 
+> Cheers,
+> 
+> / magnus
+> 
+> 
+> [1] https://lkml.org/lkml/2017/5/16/25
+> [2] https://www.spinics.net/lists/arm-kernel/msg581485.html
+> [3] https://patchwork.kernel.org/patch/9540605/
+> 
+
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
