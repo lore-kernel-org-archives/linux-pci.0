@@ -1,244 +1,114 @@
-Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	helgaas@kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] PCI: add functionality for resizing resources v4
-Date: Thu,  4 May 2017 11:31:08 +0200
-Message-Id: <1493890270-1188-4-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
-References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ magnus.damm@gmail.com, geert@linux-m68k.org, j.neuschaefer@gmx.net
+Subject: [PATCH 3/3] ARM: dma-mapping: Don't tear third-party mappings
+Date: Wed, 17 May 2017 17:00:09 +0530
+Message-Id: <1495020609-13397-3-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495020609-13397-1-git-send-email-sricharan@codeaurora.org>
+References: <1495020609-13397-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-This allows device drivers to request resizing their BARs.
+arch_setup_dma_ops() is used in device probe code paths to create an
+IOMMU mapping and attach it to the device. The function assumes that the
+device is attached to a device-specific IOMMU instance (or at least a
+device-specific TLB in a shared IOMMU instance) and thus creates a
+separate mapping for every device.
 
-The function only tries to reprogram the windows of the bridge directly above
-the requesting device and only the BAR of the same type (usually mem, 64bit,
-prefetchable). This is done to make sure not to disturb other drivers by
-changing the BARs of their devices.
+On several systems (Renesas R-Car Gen2 being one of them), that
+assumption is not true, and IOMMU mappings must be shared between
+multiple devices. In those cases the IOMMU driver knows better than the
+generic ARM dma-mapping layer and attaches mapping to devices manually
+with arm_iommu_attach_device(), which sets the DMA ops for the device.
 
-If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
-returned to the calling device driver.
+The arch_setup_dma_ops() function takes this into account and bails out
+immediately if the device already has DMA ops assigned. However, the
+corresponding arch_teardown_dma_ops() function, called from driver
+unbind code paths (including probe deferral), will tear the mapping down
+regardless of who created it. When the device is reprobed
+arch_setup_dma_ops() will be called again but won't perform any
+operation as the DMA ops will still be set.
 
-v2: rebase on changes in rbar support
-v3: style cleanups, fail if memory decoding is enabled or resources
-    still allocated, resize all unused bridge BARs,
-    drop calling pci_reenable_device
-v4: print resources before releasing them, style cleanups,
-    use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
+We need to reset the DMA ops in arch_teardown_dma_ops() to fix this.
+However, we can't do so unconditionally, as then a new mapping would be
+created by arch_setup_dma_ops() when the device is reprobed, regardless
+of whether the device needs to share a mapping or not. We must thus keep
+track of whether arch_setup_dma_ops() created the mapping, and only in
+that case tear it down in arch_teardown_dma_ops().
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Keep track of that information in the dev_archdata structure. As the
+structure is embedded in all instances of struct device let's not grow
+it, but turn the existing dma_coherent bool field into a bitfield that
+can be used for other purposes.
+
+Fixes: 09515ef5ddad ("of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices")
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 ---
- drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-res.c | 59 +++++++++++++++++++++++++++++
- include/linux/pci.h     |  3 ++
- 3 files changed, 160 insertions(+)
+ arch/arm/include/asm/device.h | 3 ++-
+ arch/arm/mm/dma-mapping.c     | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index bb1001e..2b73e0e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1919,6 +1919,104 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+diff --git a/arch/arm/include/asm/device.h b/arch/arm/include/asm/device.h
+index 36ec9c8..3234fe9 100644
+--- a/arch/arm/include/asm/device.h
++++ b/arch/arm/include/asm/device.h
+@@ -19,7 +19,8 @@ struct dev_archdata {
+ #ifdef CONFIG_XEN
+ 	const struct dma_map_ops *dev_dma_ops;
+ #endif
+-	bool dma_coherent;
++	unsigned int dma_coherent:1;
++	unsigned int dma_ops_setup:1;
+ };
  
-+int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
-+{
-+	struct pci_dev_resource *dev_res;
-+	LIST_HEAD(saved);
-+	LIST_HEAD(added);
-+	LIST_HEAD(failed);
-+	unsigned int i;
-+	int ret;
-+
-+	/* Walk to the root BUS, releasing bridge BARs when possible */
-+	while (1) {
-+		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
-+		     i++) {
-+			struct resource *res = &bridge->resource[i];
-+
-+			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
-+				continue;
-+
-+			/* Ignore BARs which are still in use */
-+			if (res->child)
-+				continue;
-+
-+			ret = add_to_list(&saved, bridge, res, 0, 0);
-+			if (ret)
-+				goto cleanup;
-+
-+			dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
-+				 i, res);
-+
-+			if (res->parent)
-+				release_resource(res);
-+			res->start = 0;
-+			res->end = 0;
-+			break;
-+		}
-+		if (i == PCI_BRIDGE_RESOURCE_END)
-+			break;
-+
-+		if (!bridge->bus || !bridge->bus->self)
-+			break;
-+
-+		bridge = bridge->bus->self;
-+	}
-+
-+	if (list_empty(&saved))
-+		return -ENOENT;
-+
-+	__pci_bus_size_bridges(bridge->subordinate, &added);
-+	__pci_bridge_assign_resources(bridge, &added, &failed);
-+	BUG_ON(!list_empty(&added));
-+
-+	if (!list_empty(&failed)) {
-+		ret = -ENOSPC;
-+		goto cleanup;
-+	}
-+
-+	list_for_each_entry(dev_res, &saved, list) {
-+		/* Skip the bridge we just assigned resources for. */
-+		if (bridge == dev_res->dev)
-+			continue;
-+
-+		bridge = dev_res->dev;
-+		pci_setup_bridge(bridge->subordinate);
-+	}
-+
-+	free_list(&saved);
-+	return 0;
-+
-+cleanup:
-+	/* restore size and flags */
-+	list_for_each_entry(dev_res, &failed, list) {
-+		struct resource *res = dev_res->res;
-+
-+		res->start = dev_res->start;
-+		res->end = dev_res->end;
-+		res->flags = dev_res->flags;
-+	}
-+	free_list(&failed);
-+
-+	/* Revert to the old configuration */
-+	list_for_each_entry(dev_res, &saved, list) {
-+		struct resource *res = dev_res->res;
-+
-+		bridge = dev_res->dev;
-+		i = res - bridge->resource;
-+
-+		res->start = dev_res->start;
-+		res->end = dev_res->end;
-+		res->flags = dev_res->flags;
-+
-+		pci_claim_resource(bridge, i);
-+		pci_setup_bridge(bridge->subordinate);
-+	}
-+	free_list(&saved);
-+
-+	return ret;
-+}
-+
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 9526e34..65420ac 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -363,6 +363,65 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	return 0;
+ struct omap_device;
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index cb57f59..b5099d0 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -2431,9 +2431,13 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+ 		dev->dma_ops = xen_dma_ops;
+ 	}
+ #endif
++	dev->archdata.dma_ops_setup = true;
  }
  
-+void pci_release_resource(struct pci_dev *dev, int resno)
-+{
-+	struct resource *res = dev->resource + resno;
-+
-+	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
-+	release_resource(res);
-+	res->end = resource_size(res) - 1;
-+	res->start = 0;
-+	res->flags |= IORESOURCE_UNSET;
-+}
-+EXPORT_SYMBOL(pci_release_resource);
-+
-+int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-+{
-+	struct resource *res = dev->resource + resno;
-+	int old, ret = 0;
-+	u32 sizes;
-+	u16 cmd;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	if (cmd & PCI_COMMAND_MEMORY)
-+		return -EBUSY;
-+
-+	sizes = pci_rbar_get_possible_sizes(dev, resno);
-+	if (!sizes)
-+		return -ENOTSUPP;
-+
-+	if (!(sizes & BIT(size)))
-+		return -EINVAL;
-+
-+	old = pci_rbar_get_current_size(dev, resno);
-+	if (old < 0)
-+		return old;
-+
-+	/* Make sure the resource isn't assigned before making it larger. */
-+	pci_release_resource(dev, resno);
-+
-+	ret = pci_rbar_set_size(dev, resno, size);
-+	if (ret)
-+		goto error_reassign;
-+
-+	res->end = res->start + pci_rbar_size_to_bytes(size) - 1;
-+
-+	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
-+	if (ret)
-+		goto error_resize;
-+
-+	return 0;
-+
-+error_resize:
-+	pci_rbar_set_size(dev, resno, old);
-+	res->end = res->start + pci_rbar_size_to_bytes(old) - 1;
-+
-+error_reassign:
-+	pci_assign_unassigned_bus_resources(dev->bus);
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_resize_resource);
-+
- int pci_enable_resources(struct pci_dev *dev, int mask)
+ void arch_teardown_dma_ops(struct device *dev)
  {
- 	u16 cmd, old_cmd;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a38772a..f0a630a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1055,6 +1055,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
-+void pci_release_resource(struct pci_dev *dev, int resno);
-+int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
- bool pci_device_is_present(struct pci_dev *pdev);
- void pci_ignore_hotplug(struct pci_dev *dev);
-@@ -1135,6 +1137,7 @@ void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
- void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
-+int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
- void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
++	if (!dev->archdata.dma_ops_setup)
++		return;
++
+ 	arm_teardown_iommu_dma_ops(dev);
+ }
 -- 
-2.7.4
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
