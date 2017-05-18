@@ -1,45 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56360 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751332AbdEST65 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 May 2017 15:58:57 -0400
-Subject: [PATCH v1 2/2] PCI: Correct PCI_STD_RESOURCE_END usage
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: linux-pci@vger.kernel.org
-Cc: Douglas Lehr <dllehr@us.ibm.com>,
-        Milton Miller <miltonm@us.ibm.com>,
-        Anton Blanchard <anton@samba.org>,
-        linux-kernel@vger.kernel.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 19 May 2017 14:58:55 -0500
-Message-ID: <20170519195855.25440.29969.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170519195849.25440.65477.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170519195849.25440.65477.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=AMQT=4Y=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=AMQT=4Y=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 18 May 2017 18:46:12 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Graeme Gregory <graeme.gregory@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
+ configuration to be preserved
+Message-ID: <20170518174612.GA31373@red-moon>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
+ <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
+ <20170518154708.GA30182@red-moon>
+ <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_STD_RESOURCE_END is (confusingly) the index of the last valid BAR, not
-the *number* of BARs.  To iterate through all possible BARs, we need to
-include PCI_STD_RESOURCE_END.
+On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
+> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
+> >
+> > [...]
+> >
+> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
+> >> >> allocation under the control of the firmware, which completely removes
+> >> >> the burden of having to reason about a policy in the kernel. That
+> >> >> leaves the question which will be the default, but that is of minor
+> >> >> importance IMO.
+> >> >
+> >> > I agree; we should try to follow the spec unless we have a good reason
+> >> > not to, which argues for honoring the _DSM, so I think it's worth a
+> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
+> >> > kernel (because we don't know the effect of reassigning something the
+> >> > firmware told us not to touch).
+> >> >
+> >>
+> >> I'd like to hear Lorenzo's view on this first, but I can certainly
+> >> respin my _DSM patch to take pci=realloc into account, and move the
+> >> handling to generic code as well.
+> >
+> > I agree with both of you on _DSM implementation and interpretation.
+> >
+> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
+> > are going to trigger regressions, that's certain (ie we can then boot
+> > with pci=realloc - still, we are breaking systems), that's the reason
+> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
+> > ACPI testing before queuing it (either I can set-up a testing branch
+> > or we ask Bjorn to do it - as you guys prefer - as long as we have
+> > a branch for people to test patch(2) on ARM64 ACPI systems).
+> >
+> > You still need to assign resources that could not be claimed though
+> > so patch(2) still needs updating:
+> >
+> > PCI FW spec 3.1 - 4.6.5
+> >
+> > "...However, the operating system is free to configure the devices in this
+> > hierarchy that have not been configured by the firmware."
+> >
+> > Which in kernel-speak it means that you have to assign resources that
+> > could not be claimed.
+> >
+> 
+> Right. AFAICT this is the part that is typically handled by
+> pcibios_resource_survey() et al, whose default __weak implementations
+> are empty functions. Shall I override those for arm64 to host this
+> logic?
 
-Fixes: 9fe373f9997b ("PCI: Increase IBM ipr SAS Crocodile BARs to at least system page size")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/quirks.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I think it makes sense yes unless Bjorn spots something wrong with that
+but you should also call it in ARM64 pci_acpi_scan_root() since it is
+not called by PCI core on non-hot-added bridges, I reckon you figured
+that out already though.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 085fb787aa9e..16e6cd86ad71 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -304,7 +304,7 @@ static void quirk_extend_bar_to_page(struct pci_dev *dev)
- {
- 	int i;
- 
--	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-+	for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
- 		struct resource *r = &dev->resource[i];
- 
- 		if (r->flags & IORESOURCE_MEM && resource_size(r) < PAGE_SIZE) {
+Thanks a lot !
+Lorenzo
