@@ -1,66 +1,134 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 15 May 2017 06:51:57 -0700
-From: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Vadim.Lomovtsev@caviumnetworks.com
-Subject: Re: [RFC/RFT PATCH v2 0/3] PCI: generic device NUMA node detection
-Message-ID: <20170515135157.GB9700@localhost.localdomain>
-References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6348 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754696AbdERHwK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 03:52:10 -0400
+From: Song Xiaowei <songxiaowei@hisilicon.com>
+To: <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+        <bhelgaas@google.com>, <robh+dt@kernel.org>,
+        <mark.rutland@arm.com>, <xuwei5@hisilicon.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>
+Subject: [Patch v3 1/3] arm64: dts: hi3660: add pcie node
+Date: Thu, 18 May 2017 15:49:46 +0800
+Message-ID: <20170518074946.21362-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 15, 2017 at 02:22:02PM +0100, Lorenzo Pieralisi wrote:
-> This patch series is v2 of a previous posting:
-> 
-> v1 -> v2:
-> 
-> - Added missing call to acpi_pci_bus_find_numa_node()
-> - Rebased against v4.12-rc1
-> 
-> v1: https://lkml.org/lkml/2017/4/26/211
-> 
-> On the ARM64 architecture, the arch specific PCI pcibus_to_node() callback
-> can be triggered on struct pci_bus.sysdata structures that carry host
-> bridge specific data through different structures layout (ie sysdata
-> pointer points at different structs for different host bridges), therefore
-> it is not possible to have a unified pcibus_to_node() implementation.
-> 
-> Given that the device NUMA node is a property of the struct pci_bus (and
-> its associated struct device), move the struct pci_bus node assignment to
-> generic PCI code, where according to the platform firmware the NUMA node
-> for the device backing the struct pci_bus is retrieved and propagated
-> through the PCI bus hierarchy.
-> 
-> Lorenzo Pieralisi (3):
->   PCI: Introduce pci_bus_find_numa_node()
->   PCI: Add call to set-up NUMA node for struct pci_bus devices
->   PCI/ACPI: Add ACPI pci_bus_find_numa_node() implementation
-> 
->  drivers/pci/pci-acpi.c | 20 ++++++++++++++++++++
->  drivers/pci/pci.c      |  6 ++++++
->  drivers/pci/probe.c    |  3 ++-
->  include/linux/pci.h    |  7 +++++++
->  4 files changed, 35 insertions(+), 1 deletion(-)
->
+Add PCIe node for hi3660, and add binding documentation.
 
-Tested at dual-socketed system with Cavium ThunderX SoC.
-Tested with 4.11 kernel.
-No issues observed, numa_node value set appropriately for pci devices.
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 52 ++++++++++++++++++++++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 31 +++++++++++++
+ 2 files changed, 83 insertions(+)
 
-Tested-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-
-> -- 
-> 2.10.0
-> 
-
-
-WBR,
-Vadim
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index a339dbb15493..71491178c86c 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -85,3 +85,55 @@ Example:
+ 				 0x0 0 0 4 &mbigen_pcie0 650 4>;
+ 		status = "ok";
+ 	};
++
++
++
++HiSilicon Kirin SoC PCIe host DT description
++
++Kirin PCIe host controller is also based on Designware PCI core.
++It shares common functions with PCIe Designware core driver and inherits
++common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties
++- compatible: Should contain "hisilicon,kirin-pcie".
++- reg: Should contain rc_dbi, apb, phy, config registers location and length.
++- reg-names: Must include the following entries:
++  "dbi": controller configuration registers;
++  "apb": apb Ctrl register;
++  "phy": apb PHY register;
++  "config": PCIe configuration space registers.
++- reset-gpio: perst assert/deassert gpio
++
++Optional properties:
++- status: Either "ok" or "disabled".
++
++Kirin960 Example:
++        kirin_pcie@f4000000 {
++                        compatible = "hisilicon,kirin-pcie";
++                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
++                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF5000000 0 0x2000>;
++                        reg-names = "dbi","apb","phy", "config";
++                        bus-range = <0x0  0x1>;
++                        #address-cells = <3>;
++                        #size-cells = <2>;
++                        device_type = "pci";
++                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf6000000 0x0 0x2000000>;
++                        num-lanes = <1>;
++                        #interrupt-cells = <1>;
++                        interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
++                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
++                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
++                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
++                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
++                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
++                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
++                        clock-names = "pcie_phy_ref", "pcie_aux",
++                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
++                        reset-gpio = <&gpio11 1 0 >;
++                        status = "ok";
++        };
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 3983086bd67b..2406a54947df 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -156,5 +156,36 @@
+ 			clock-names = "uartclk", "apb_pclk";
+ 			status = "disabled";
+ 		};
++
++		kirin_pcie@f4000000 {
++			compatible = "hisilicon,kirin-pcie";
++			reg =  <0x0 0xf4000000 0x0 0x1000>,
++				<0x0 0xff3fe000 0x0 0x1000>,
++				<0x0 0xf3f20000 0x0 0x40000>,
++				<0x0 0xF5000000 0x0 0x2000>;
++			reg-names = "dbi", "apb", "phy", "config";
++			bus-range = <0x0  0x1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x02000000 0x0 0x00000000 0x0
++				0xf6000000 0x0 0x2000000>;
++			num-lanes = <1>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
++				<0x0 0 0 2 &gic 0 0 0  283 4>,
++				<0x0 0 0 3 &gic 0 0 0  284 4>,
++				<0x0 0 0 4 &gic 0 0 0  285 4>;
++			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
++				<&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++				<&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
++				<&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
++				<&crg_ctrl HI3660_ACLK_GATE_PCIE>;
++			clock-names = "pcie_phy_ref", "pcie_aux",
++				"pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
++			reset-gpio = <&gpio11 1 0 >;
++			status = "ok";
++		};
+ 	};
+ };
+-- 
+2.11.GIT
