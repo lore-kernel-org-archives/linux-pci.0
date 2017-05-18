@@ -1,56 +1,97 @@
-Return-Path: <SRS0=sbXM=4I=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=sbXM=4I=wunner.de=lukas@kernel.org>
-Date: Tue, 2 May 2017 12:49:29 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Raj, Ashok" <ashok.raj@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Subject: Re: [GIT PULL] PCI fixes for v4.10
-Message-ID: <20170502104929.GA14029@wunner.de>
-References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170209040648.GA1304@wunner.de>
- <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
- <20170209182328.GB77900@otc-nc-03>
- <20170209184613.GA78375@otc-nc-03>
- <20170502015405.GA13918@wunner.de>
- <65f46b49-950a-270f-8bc4-c3fb7513866e@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 1/3] iommu: of: Fix check for returning EPROBE_DEFER
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1495020609-13397-1-git-send-email-sricharan@codeaurora.org>
+ <20170517170430.GD31462@bhelgaas-glaptop.roam.corp.google.com>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <1c306cf1-f7fb-87b1-1fef-3b08aea04560@codeaurora.org>
+Date: Thu, 18 May 2017 14:33:57 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <65f46b49-950a-270f-8bc4-c3fb7513866e@codeaurora.org>
+In-Reply-To: <20170517170430.GD31462@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
+ magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+ linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+ robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ robin.murphy@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 01, 2017 at 10:41:20PM -0400, Sinan Kaya wrote:
-> On 5/1/2017 9:54 PM, Lukas Wunner wrote:
-> > (b) ASPM L1 enabled on boot, but disabled after powering off and back on
-> >     => I believe Sinan is working on this (+cc).
+Hi Bjorn,
+
+On 5/17/2017 10:34 PM, Bjorn Helgaas wrote:
+> On Wed, May 17, 2017 at 05:00:07PM +0530, Sricharan R wrote:
+>> Now with iommu probe deferral, we return -EPROBE_DEFER
+>> for master's that are connected to an iommu which is not
 > 
-> The decision was made not to touch ASPM registers following hotplug insertion
-> unless pcie_aspm.policy=powersave is specified.
+> s/master's/masters/
 > 
-> The discussion is here: https://lkml.org/lkml/2017/4/17/255
+> s/iommu/IOMMU/ in your English text (changelogs and comments).  That seems
+> to be the convention, based on "git log drivers/iommu/of_iommu.c"
 > 
-> This was done to maintain existing behavior and not break things.
 
-Thanks for the reference, I hadn't followed the discussion in April
-very closely, but I think the outcome of the discussion is unfortunate.
+ok, will correct those.
 
-As can be seen in Ashok's tests, merely turning slot power off and back
-on is sufficient to end up with a setting that draws more power.  That
-may be equally surprising for users as the issues would be that we seek
-to avoid with a "safety-first" ASPM policy.  In any case it seems
-undesirable.
+Regards,
+ Sricharan
 
-I hope this is not the end if it and would like to encourage you to
-keep working on this.  Perhaps it is too simple to just define a
-default policy, and what is really needed is a policy that adjusts
-itself dynamically to specific devices or workloads, or that can be
-influenced by device drivers.
 
-Thanks for your efforts,
+>> probed yet, but going to get probed, so that we can attach
+>> the correct dma_ops. So while trying to defer the probe of
+>> the master, check if the of_iommu node that it is connected
+>> to is marked in DT as 'status=disabled', then the iommu is never
+>> is going to get probed. So simply return NULL and let the master
+>> work without an iommu.
+>>
+>> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>> Tested-by: Will Deacon <will.deacon@arm.com>
+>> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+>> Acked-by: Will Deacon <will.deacon@arm.com>
+>> ---
+>>  drivers/iommu/of_iommu.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>> index 9f44ee8..e6e9bec 100644
+>> --- a/drivers/iommu/of_iommu.c
+>> +++ b/drivers/iommu/of_iommu.c
+>> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
+>>  
+>>  	ops = iommu_ops_from_fwnode(fwnode);
+>>  	if ((ops && !ops->of_xlate) ||
+>> +	    !of_device_is_available(iommu_spec->np) ||
+>>  	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+>>  		return NULL;
+>>  
+>> -- 
+>> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+>>
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-Lukas
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
