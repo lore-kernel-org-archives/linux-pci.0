@@ -1,72 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45576 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S968111AbdEWT4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 15:56:37 -0400
-Date: Tue, 23 May 2017 14:56:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sujith Pandel <sujithpshankar@gmail.com>
-Cc: linux-pci@vger.kernel.org, Shai@ScaleMP.com, Narendra_K@Dell.com
-Subject: Re: [PATCH] Add PCI domain number check to
- find_smbios_instance_string
-Message-ID: <20170523195635.GE7241@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170502105540.GA36230@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170502105540.GA36230@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ZFmV=4Y=linuxonhyperv.com=jloeser@kernel.org>
+Return-Path: <SRS0=ZFmV=4Y=linuxonhyperv.com=jloeser@kernel.org>
+From: Jork Loeser <jloeser@linuxonhyperv.com>
+To: jloeser@microsoft.com,
+	helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org,
+	olaf@aepfle.de,
+	apw@canonical.com,
+	vkuznets@redhat.com,
+	jasowang@redhat.com,
+	leann.ogasawara@canonical.com,
+	marcelo.cerri@canonical.com,
+	sthemmin@microsoft.com
+Subject: [PATCH 1/4] Hyper-V vPCI: Minor format and semantic fix
+Date: Thu, 18 May 2017 12:14:27 -0700
+Message-Id: <1495134870-18225-2-git-send-email-jloeser@linuxonhyperv.com>
+In-Reply-To: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
+References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
+Reply-To: Jork Loeser <jloeser@microsoft.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 02, 2017 at 06:55:40AM -0400, Sujith Pandel wrote:
-> The function 'find_smbios_instance_string' does not consider the
-> PCI domain number. As a result, SMBIOS type 41 device type instance
-> would be exported to sysfs for all the PCI domains which have a
-> PCI device with same bus/device/function, though PCI bus/device/func
-> from a specific PCI domain has SMBIOS type 41 device type instance
-> defined.
-> Address the issue by making 'find_smbios_instance_string' function
-> check PCI domain number as well.
-> 
-> Reported-by: Shai Fultheim <Shai@ScaleMP.com>
-> Suggested-by: Shai Fultheim <Shai@ScaleMP.com>
-> Signed-off-by: Sujith Pandel <sujithpshankar@gmail.com>
-> Signed-off-by: Narendra K <Narendra_K@Dell.com>
-> Tested-by: Shai Fultheim <Shai@ScaleMP.com>
+From: Jork Loeser <jloeser@microsoft.com>
 
-Applied to pci/misc for v4.13, thanks!
+Fix comment formatting and use proper integer fields.
 
-> ---
->  drivers/pci/pci-label.c | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
-> index 5135737..1d828a6 100644
-> --- a/drivers/pci/pci-label.c
-> +++ b/drivers/pci/pci-label.c
-> @@ -43,9 +43,11 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
->  {
->  	const struct dmi_device *dmi;
->  	struct dmi_dev_onboard *donboard;
-> +	int domain_nr;
->  	int bus;
->  	int devfn;
->  
-> +	domain_nr = pci_domain_nr(pdev->bus);
->  	bus = pdev->bus->number;
->  	devfn = pdev->devfn;
->  
-> @@ -53,8 +55,9 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
->  	while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_ONBOARD,
->  				      NULL, dmi)) != NULL) {
->  		donboard = dmi->device_data;
-> -		if (donboard && donboard->bus == bus &&
-> -					donboard->devfn == devfn) {
-> +		if (donboard && donboard->segment == domain_nr &&
-> +				donboard->bus == bus &&
-> +				donboard->devfn == devfn) {
->  			if (buf) {
->  				if (attribute == SMBIOS_ATTR_INSTANCE_SHOW)
->  					return scnprintf(buf, PAGE_SIZE,
-> -- 
-> 1.8.3.1
-> 
+Signed-off-by: Jork Loeser <jloeser@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 8493638..7bebdc6 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -245,7 +245,7 @@ struct pci_packet {
+ 
+ struct pci_version_request {
+ 	struct pci_message message_type;
+-	enum pci_message_type protocol_version;
++	u32 protocol_version;
+ } __packed;
+ 
+ /*
+@@ -1513,12 +1513,12 @@ static void pci_devices_present_work(struct work_struct *work)
+ 		put_pcichild(hpdev, hv_pcidev_ref_initial);
+ 	}
+ 
+-	switch(hbus->state) {
++	switch (hbus->state) {
+ 	case hv_pcibus_installed:
+ 		/*
+-		* Tell the core to rescan bus
+-		* because there may have been changes.
+-		*/
++		 * Tell the core to rescan bus
++		 * because there may have been changes.
++		 */
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
+-- 
+1.7.1
