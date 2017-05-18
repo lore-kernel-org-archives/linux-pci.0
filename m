@@ -1,273 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: sricharan@codeaurora.org
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-Date: Tue, 16 May 2017 17:06:10 +0300
-Message-ID: <2288554.Av5LKGd7Dv@avalon>
-In-Reply-To: <71c52ac6c5b7839388ebe1608804da45@codeaurora.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1924197.MWBQ7kvoOo@avalon> <71c52ac6c5b7839388ebe1608804da45@codeaurora.org>
+Return-Path: <SRS0=xBUr=4Y=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=xBUr=4Y=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: okaya@codeaurora.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-arm-msm@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- Magnus Damm <magnus.damm@gmail.com>, Will Deacon <will.deacon@arm.com>,
- Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-msm-owner@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com> <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 18 May 2017 16:10:28 +0100
+Message-ID: <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
+Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR configuration
+ to be preserved
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	linux-pci <linux-pci@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Graeme Gregory <graeme.gregory@linaro.org>, Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>, Leif Lindholm <leif.lindholm@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sricharan,
+On 18 May 2017 at 15:05, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, May 18, 2017 at 11:59:14AM +0100, Ard Biesheuvel wrote:
+>> On 17 May 2017 at 22:56, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Tue, Apr 11, 2017 at 05:33:11PM +0100, Ard Biesheuvel wrote:
+>> >> This is a followup to the discussion regarding whether ACPI/arm64 systems
+>> >> should preserve the PCI configuration performed by the firmware, or always
+>> >> reconfigure it from scratch.
+>> >>
+>> >> This series proposes to put it under the control of the firmware, by invoking
+>> >> the _DSM method, and preserving the firmware configuration only when it
+>> >> returns 0.
+>> >>
+>> >> Patch #1 is a preparatory bugfix that solves the issue that I/O bridge
+>> >> windows starting at 0x0 are dismissed when looking for parent resources.
+>> >>
+>> >> Patch #2 adds the logic to invoke the _DSM and claim the existing
+>> >> configuration rather than reallocate it from scratch if it returns '0'
+>> >>
+>> >> Ard Biesheuvel (2):
+>> >>   drivers: pci: do not disregard parent resources starting at 0x0
+>> >>   arm64: acpi/pci: invoke _DSM whether to preserve firmware PCI setup
+>> >>
+>> >>  arch/arm64/kernel/pci.c  | 20 ++++++++++++++++++--
+>> >>  drivers/pci/pci.c        |  2 +-
+>> >>  include/linux/pci-acpi.h |  7 ++++---
+>> >>  3 files changed, 23 insertions(+), 6 deletions(-)
+>> >
+>> > I applied the first to pci/resource for v4.13.  I didn't do anything
+>> > with the second because I don't think we have consensus on what the
+>> > right thing to do is yet.
+>>
+>> Thanks Bjorn.
+>>
+>> Re PCI reconfiguration: currently, the EFI framebuffer is broken on
+>> all systems where the associated BAR lives on a device that is not on
+>> bus 0, which is of course everything other than QEMU (which cannot use
+>> the EFI framebuffer for other reasons when running under KVM)
+>
+> I don't know much about the EFI framebuffer.  It doesn't look like
+> efifb.c does any runtime calls to EFI.  Is that code basically just
+> a way to discover the address & size of the frame buffer from EFI
+> information?
+>
 
-On Tuesday 16 May 2017 19:10:03 sricharan@codeaurora.org wrote:
-> On 2017-05-16 12:47, Laurent Pinchart wrote:
-> > On Tuesday 16 May 2017 07:53:57 sricharan@codeaurora.org wrote:
-> >> On 2017-05-16 03:04, Laurent Pinchart wrote:
-> >>> On Monday 15 May 2017 23:37:16 Laurent Pinchart wrote:
-> >>>> On Wednesday 03 May 2017 15:54:59 Sricharan R wrote:
-> >>>>> On 5/3/2017 3:24 PM, Robin Murphy wrote:
-> >>>>>> On 02/05/17 19:35, Geert Uytterhoeven wrote:
-> >>>>>>> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R wrote:
-> >>>>>>>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> >>>>>>>> 
-> >>>>>>>> Failures to look up an IOMMU when parsing the DT iommus property
-> >>>>>>>> need to be handled separately from the .of_xlate() failures to
-> >>>>>>>> support deferred probing.
-> >>>>>>>> 
-> >>>>>>>> The lack of a registered IOMMU can be caused by the lack of a
-> >>>>>>>> driver for the IOMMU, the IOMMU device probe not having been
-> >>>>>>>> performed yet, having been deferred, or having failed.
-> >>>>>>>> 
-> >>>>>>>> The first case occurs when the device tree describes the bus
-> >>>>>>>> master and IOMMU topology correctly but no device driver exists for
-> >>>>>>>> the IOMMU yet or the device driver has not been compiled in. Return
-> >>>>>>>> NULL, the caller will configure the device without an IOMMU.
-> >>>>>>>> 
-> >>>>>>>> The second and third cases are handled by deferring the probe of
-> >>>>>>>> the bus master device which will eventually get reprobed after the
-> >>>>>>>> IOMMU.
-> >>>>>>>> 
-> >>>>>>>> The last case is currently handled by deferring the probe of the
-> >>>>>>>> bus master device as well. A mechanism to either configure the bus
-> >>>>>>>> master device without an IOMMU or to fail the bus master device
-> >>>>>>>> probe depending on whether the IOMMU is optional or mandatory would
-> >>>>>>>> be a good enhancement.
-> >>>>>>>> 
-> >>>>>>>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> >>>>>>>> Signed-off-by: Laurent Pichart
-> >>>>>>>> <laurent.pinchart+renesas@ideasonboard.com>
-> >>>>>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >>>>>>> 
-> >>>>>>> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
-> >>>>>>> As the IOMMU nodes in DT are not yet enabled, all devices having
-> >>>>>>> iommus properties in DT now fail to probe.
-> >>>>>> 
-> >>>>>> How exactly do they fail to probe? Per d7b0558230e4, if there are no
-> >>>>>> ops registered then they should merely defer until we reach the
-> >>>>>> point of giving up and ignoring the IOMMU. Is it just that you have
-> >>>>>> no other late-probing drivers or post-init module loads to kick the
-> >>>>>> deferred queue after that point? I did try to find a way to
-> >>>>>> explicitly kick it from a suitably late initcall, but there didn't
-> >>>>>> seem to be any obvious public interface - anyone have any
-> >>>>>> suggestions?
-> >>>>>> 
-> >>>>>> I think that's more of a general problem with the probe deferral
-> >>>>>> mechanism itself (I've seen the same thing happen with some of the
-> >>>>>> CoreSight stuff on Juno due to the number of inter-component
-> >>>>>> dependencies) rather than any specific fault of this series.
-> >>>>> 
-> >>>>> I was thinking of an additional check like below to avoid the
-> >>>>> situation ?
-> >>>>> 
-> >>>>> From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00
-> >>>>> 2001
-> >>>>> From: Sricharan R <sricharan@codeaurora.org>
-> >>>>> Date: Wed, 3 May 2017 13:16:59 +0530
-> >>>>> Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
-> >>>>> 
-> >>>>> While returning EPROBE_DEFER for iommu masters
-> >>>>> take in to account of iommu nodes that could be
-> >>>>> marked in DT as 'status=disabled', in which case
-> >>>>> simply return NULL and let the master's probe
-> >>>>> continue rather than deferring.
-> >>>>> 
-> >>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >>>>> ---
-> >>>>> 
-> >>>>>  drivers/iommu/of_iommu.c | 1 +
-> >>>>>  1 file changed, 1 insertion(+)
-> >>>>> 
-> >>>>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> >>>>> index 9f44ee8..e6e9bec 100644
-> >>>>> --- a/drivers/iommu/of_iommu.c
-> >>>>> +++ b/drivers/iommu/of_iommu.c
-> >>>>> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct
-> >>>>> device_node *np)
-> >>>>> 
-> >>>>>         ops = iommu_ops_from_fwnode(fwnode);
-> >>>>>         if ((ops && !ops->of_xlate) ||
-> >>>>> +           !of_device_is_available(iommu_spec->np) ||
-> >>>>>             (!ops && !of_iommu_driver_present(iommu_spec->np)))
-> >>>>>                 return NULL;
-> >>>> 
-> >>>> This looks good to me, but won't be enough. The ipmmu-vmsa driver in
-> >>>> v4.12-rc1 doesn't call iommu_device_register() and thus won't be found
-> >>>> by iommu_ops_from_fwnode(). Furthermore, it doesn't
-> >>>> IOMMU_OF_DECLARE(),
-> >>>> and thus will always be considered as absent.
-> >>>> 
-> >>>> I agree that the ipmmu-vmsa driver needs to be fixed, but it would
-> >>>> have been nice to check existing IOMMU drivers before merging this
-> >>>> patch series...
-> >>> 
-> >>> Please pardon the question, but has this patch series been tested on
-> >>> ARM32 ?
-> >>> 
-> >>> When the device is probed the arch_setup_dma_ops() function is called.
-> >>> It sets the device's dma_ops and the mapping (in
-> >>> __arm_iommu_attach_device()). If probe is deferred,
-> >>> arch_teardown_dma_ops() is called which in turn calls
-> >>> arch_teardown_dma_ops(). This removes the mapping but doesn't touch the
-> >>> dma_ops. The next time the device is probed, arch_setup_dma_ops() bails
-> >>> out immediately as the dma_ops are already set, leaving us with a
-> >>> device bound to IOMMU operations but with no mapping. This oopses later
-> >>> as soon as the kernel tries to map memory for the device through the
-> >>> IOMMU.
-> >> 
-> >> Resetting the dma_ops for arm32 was added in this patch [1], which I
-> >> missed to send in the original series, but now have added to Russell's
-> >> patch tracking system.
-> > 
-> > Thank you. I fear that won't be enough though.
-> > 
-> >> [1] https://patchwork.kernel.org/patch/9434105/
-> > 
-> > Quoting the patch:
-> >
-> >> arch_teardown_dma_ops() being the inverse of arch_setup_dma_ops()
-> >> ,dma_ops should be cleared in the teardown path. Otherwise
-> >> this causes problem when the probe of device is retried after
-> >> being deferred. The device's iommu structures are cleared
-> >> after EPROBEDEFER error, but on the next try dma_ops will still
-> >> be set to old value, which is not right.
-> >> 
-> >> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-> >> ---
-> >> 
-> >>   arch/arm/mm/dma-mapping.c | 1 +
-> >>   1 file changed, 1 insertion(+)
-> >> 
-> >> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> >> index ab4f745..a40f03e 100644
-> >> --- a/arch/arm/mm/dma-mapping.c
-> >> +++ b/arch/arm/mm/dma-mapping.c
-> >> @@ -2358,6 +2358,7 @@ static void arm_teardown_iommu_dma_ops(struct
-> >> device *dev)
-> > 
-> >>   	__arm_iommu_detach_device(dev);
-> >>   	arm_iommu_release_mapping(mapping);
-> >> +	set_dma_ops(dev, NULL);
-> >>   }
-> >>   #else
-> > 
-> > The subject mentions arch_teardown_dma_ops(), which I think is correct,
-> > but the patch adds the set_dma_ops() call to arm_teardown_iommu_dma_ops().
-> > 
-> > However, the situation is perhaps more complex. Note the check at the
-> > 
-> > beginning of arch_setup_dma_ops():
-> > 	/*
-> > 	 * Don't override the dma_ops if they have already been set. Ideally
-> > 	 * this should be the only location where dma_ops are set, remove this
-> > 	 * check when all other callers of set_dma_ops will have disappeared.
-> > 	 */
-> > 	if (dev->dma_ops)
-> > 		return;
-> > 
-> > If you set the dma_ops to NULL in arm_teardown_iommu_dma_ops() or
-> > arch_teardown_dma_ops(), the next call to arch_setup_dma_ops() will
-> > override them. To be safe you should only set them to NULL if they have
-> > been set by arch_setup_dma_ops(). More than that, arch_teardown_dma_ops()
-> > should probably not call arm_teardown_iommu_dma_ops() at all if the
-> > dma_ops were set by arm_iommu_attach_device() and not
-> > arch_teardown_dma_ops(). One option would be to add a field to struct
-> > dev_archdata to store that information. To avoid growing the structure,
-> > which is embedded in every struct device, you could possibly turn the
-> > dma_coherent bool into a bitfield.
-> > 
-> > @@ -19,7 +19,8 @@ struct dev_archdata {
-> >  #ifdef CONFIG_XEN
-> >  	const struct dma_map_ops *dev_dma_ops;
-> >  #endif
-> > -	bool dma_coherent;
-> > +	bool dma_coherent:1;
-> > +	bool dma_ops_setup:1;
-> >  };
-> >  
-> >  struct omap_device;
-> > 
-> > I haven't checked, however, whether the dma_coherent field would need
-> > to be accessed atomically, so this might be a bad idea.
-> > 
-> > Last but not least, a fix must be merged in v4.12, and the sooner the
-> > better.
-> 
-> ho, yet another combination. This seems to be a problem with exynos_iommu,
-> ipmmu-vmsa, mtk_iommu_v1 which calls the arm_iommu_attach_device with its
-> own custom mapping. They are calling arm_iommu_attach_device from the
-> add_device callback and that is not always replayed when the reprobe happens
-> and these archs are storing the old mapping data in private structures which
-> might not be cleared in the teardown path.
+Yes. It is basically
 
-Yes, I know, it's messy :-/ There's a handful of non-IOMMU drivers calling 
-arm_iommu_attach_device() directly too. All these should be fixed, but in the 
-meantime, let's try not to break them.
+struct {
+  u64 base;
+  u64 size;
+  enum pixelformat fmt;
+}
 
-> I will post the fix that you have suggested.
+and the driver takes ownership of the region and proceeds to use it as
+a framebuffer. At runtime, there is not way to cross reference this
+with other protocols from the UEFI graphics driver stack (i.e., PCI
+i/o), and so moving BARs is not the only problem: on ARM systems,
+[base, base + size) could well be a slice of DRAM, in which case we
+should be using cacheable accesses, while a framebuffer behind a PCI
+BAR requires the memory accesses to hit the PCI window for the side
+effects to be noticeable.
 
-Thank you. You might want to use an unsigned int bitfield instead of a bool 
-bitfield as Sakari suggested. It would be nice to check the code setting the 
-dma_coherent field to make sure there will be no race with code setting the 
-new dma_ops_setup field (which might not be the best name, feel free to rename 
-it).
-
-I have successfully test the patch, let me know if there's anything else I can 
-do to help.
-
-> >>> I might be missing something obvious, but I don't see how this can
-> >>> work.
-> >>> 
-> >>>>>>> This can be fixed by either:
-> >>>>>>>   - Disabling CONFIG_IPMMU_VMSA, or
-> >>>>>>>   - Reverting commit 7b07cbefb68d486f (but keeping "int ret = 0;").
-> >>>>>>> 
-> >>>>>>> Note that this was a bit hard to investigate, as R-Car Gen3 support
-> >>>>>>> wasn't upstreamed yet, so bisection pointed to a merge commit.
-
--- 
-Regards,
-
-Laurent Pinchart
+Obviously, this is a very x86 centric arrangement, where BARs are
+usually preserved, and the coherency issue does not exist.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> I don't see the connection to bus 0.  As long as we figure out the
+> buffer address and configure bridges so the buffer is routed to the
+> device, the location in the bus hierarchy shouldn't matter.
+>
+
+The current code simply claims the BAR from a PCI_FIXUP_CLASS_HEADER()
+quirk, at which time the bridge windows are not configured yet, and so
+this fails unless there are no bridges to take into account. Note that
+this is an improvement over the old situation, where we simply
+dereferenced the framebuffer window described by efifb without any
+checking at all.
+
+>> So the first question is whether anyone cares. I do, but not deeply:
+>> the EFI framebuffer, while useful in cases where there is no real GFC
+>> driver, is a bit of a hack anyway.
+>>
+>> Then we have the question whether we can work around it in another
+>> way: I already proposed an alternative patch which simply records the
+>> associated BAR before PCI is reconfigured, and refuses to enable EFIFB
+>> if the BAR has moves. This is a workaround rather than a real fix, but
+>> in many cases, the kernel and UEFI appear to arrive at similar
+>> conclusions regarding where to put the framebuffer BAR, probably
+>> because of the simple reason that its size (ergo alignment) will cause
+>> it to be allocated first.
+>
+> This is reminiscent of an issue with IOMMU descriptions: IIRC, DMAR
+> and related tables are based on the current bus numbering scheme, and
+> if we renumber buses, we have to remember the "boot-time to current"
+> mapping to interpret the tables (I'm not sure we actually do this
+> today).  Maybe we need some sort of similar mapping for BARs.
+>
+
+I'd much rather take the presence of such tables as a hint that we
+should leave the PCI resource allocation alone altogether.
+
+>> Re _DSM: I think it makes sense to honour it, because it puts the
+>> allocation under the control of the firmware, which completely removes
+>> the burden of having to reason about a policy in the kernel. That
+>> leaves the question which will be the default, but that is of minor
+>> importance IMO.
+>
+> I agree; we should try to follow the spec unless we have a good reason
+> not to, which argues for honoring the _DSM, so I think it's worth a
+> try.  Booting with "pci=realloc" could override the _DSM and taint the
+> kernel (because we don't know the effect of reassigning something the
+> firmware told us not to touch).
+>
+
+I'd like to hear Lorenzo's view on this first, but I can certainly
+respin my _DSM patch to take pci=realloc into account, and move the
+handling to generic code as well.
