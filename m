@@ -1,176 +1,201 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:53628 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750951AbdEBME1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 May 2017 08:04:27 -0400
-From: Imre Deak <imre.deak@intel.com>
-To: intel-gfx@lists.freedesktop.org
-Cc: Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Marta Lofstedt <marta.lofstedt@intel.com>,
-        David Weinehall <david.weinehall@linux.intel.com>,
-        Tomi Sarvela <tomi.p.sarvela@intel.com>,
-        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?=
-        <ville.syrjala@linux.intel.com>,
-        Mika Kuoppala <mika.kuoppala@intel.com>,
-        Chris Wilson <chris@chris-wilson.co.uk>,
-        Takashi Iwai <tiwai@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: [PATCH v4 2/2] drm/i915: Prevent the system suspend complete optimization
-Date: Tue,  2 May 2017 15:04:09 +0300
-Message-Id: <1493726649-32094-2-git-send-email-imre.deak@intel.com>
-In-Reply-To: <1493726649-32094-1-git-send-email-imre.deak@intel.com>
-References: <1493726649-32094-1-git-send-email-imre.deak@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2 2/3] iommu: of: Ignore all errors except EPROBE_DEFER
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+ <6863998.WsTHer29ZI@avalon>
+ <2c3babb3-7bee-340c-d474-267a55f23cd5@codeaurora.org>
+ <2111512.n9LmSLnVgL@avalon>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <c3dc5e41-b853-9519-53a3-df870ab26230@codeaurora.org>
+Date: Thu, 18 May 2017 19:08:12 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2111512.n9LmSLnVgL@avalon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
+ magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+ catalin.marinas@arm.com, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+ robh+dt@kernel.org, bhelgaas@google.com,
+ laurent.pinchart+renesas@ideasonboard.com,
+ linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since
+Hi Laurent,
 
-commit bac2a909a096c9110525c18cbb8ce73c660d5f71
-Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Date:   Wed Jan 21 02:17:42 2015 +0100
+On 5/18/2017 6:00 PM, Laurent Pinchart wrote:
+> Hi Sricharan,
+> 
+> On Thursday 18 May 2017 17:26:14 Sricharan R wrote:
+>> On 5/18/2017 4:09 PM, Laurent Pinchart wrote:
+>>> On Thursday 18 May 2017 15:37:09 Sricharan R wrote:
+>>>> While deferring the probe of IOMMU masters,
+>>>> xlate and add_device callback can pass back error values
+>>>> like -ENODEV, which means IOMMU cannot be connected
+>>>> with that master for real reasons. So rather than
+>>>> killing the master's probe for such errors, just
+>>>> ignore the errors and let the master work without
+>>>> an IOMMU.
+>>>
+>>> I don't think this is a good idea. Why should we allow IOMMU drivers to
+>>> return an error if we're always going to ignore the error value ? That
+>>> will lead to drivers implementing slightly different behaviours, which
+>>> will be painful the day we'll need to start acting based on the error
+>>> value.
+>>
+>> The of_iommu_configure interface, before this series, was returning either
+>> correct 'iommu_ops' or NULL. Also there was no return value from
+>> of_dma_configure which calls of_iommu_configure. This means that if we block
+>> only -ENODEV now and let the other errors, the probe of the master devices
+>> can be killed for reasons apart from deferring. This would be a change in
+>> behavior introduced. All of xlate, add_device, of_pci_map_rid and others
+>> can return values apart from -ENODEV. So was thinking that restoring the
+>> old behavior, except for returning EPROBE_DEFER was the better thing to do
+>> ?
+> 
+> We went from a situation where of_iommu_configure() could return either valid 
+> operations in the case the device was to be handled by the IOMMU or NULL 
+> otherwise, to a situation where we needed a third option for probe deferral. 
+> The way we've done this, through error pointers, allows lots of other errors 
+> to be returned as well from the of_xlate and add_device operations.
+> 
 
-    PCI / PM: Avoid resuming PCI devices during system suspend
+right, this was difference in the behavior now.
 
-PCI devices will default to allowing the system suspend complete
-optimization where devices are not woken up during system suspend if
-they were already runtime suspended. This however breaks the i915/HDA
-drivers for two reasons:
+> There is currently no use for returning error codes other than -EPROBE_DEFFER 
+> from of_iommu_configure(), so your proposal is to block errors returned from 
+> the of_xlate and add_device operations inside of_iommu_configure(). My point 
+> is that, by doing so, we allow IOMMU drivers to return random error codes that 
+> are then ignored. I believe this can cause problems in the future when we will 
+> need to extend the API and standardize more error codes, as by then IOMMU 
+> drivers will return random errors (they actually do so already to some 
+> extent).
+> 
+> For of_xlate I agree with you to some extent. v4.11 just checked whether 
+> of_xlate succeeded or not, and just didn't use the IOMMU in case it failed. 
+> The exact error value was ignored, and drivers already return random errors. 
+> Going back to the v4.11 behaviour is what we need to do in the short-term, 
+> even if I believe we should standardize the error values returned from 
+> of_xlate after v4.12.
+> 
+> For add_device, however, the situation is a bit different. The add_device  
+> operation is called from the IOMMU bus notifier, and the -ENODEV error is 
+> ignored by add_iommu_group(). Any other error will cause bus_set_iommu() to 
+> fail, which makes IOMMU probing fail for the drivers that check the return 
+> value of bus_set_iommu() (some of them don't :-/).
+> 
+> Fixing all this properly requires standardizing the error codes, and going 
+> through the existing IOMMU drivers to comply with the standardized behaviour. 
 
-- The i915 driver has system suspend specific steps that it needs to
-  run, that bring the device to a different state than its runtime
-  suspended state.
+I understand your concern on standardizing the error codes from xlate,
+add_device, others and handling them properly. As you said there are quite some
+errors returned from them today. Also another thing is standardizing the
+behavior of of_iommu_configure itself. So that API serves to connect a device
+to its correct iommu_ops. When that's not possible, what should be the output
+and how should that be handled by the caller. The current behavior is to
+either 1) connect to correct ops or 2) wait for it or 3) progress further
+with plain/default dma_ops. Anyways as you said standardizing the iommu api
+ops, would make the of_iommu_configure handling more specific. Having said that
+i think similar fix needs to be done for acpi's iort_iommu_configure as
+well.
 
-- The HDA driver's suspend handler requires power that it will request
-  from the i915 driver's power domain handler. This in turn requires the
-  i915 driver to runtime resume itself, but this won't be possible if the
-  suspend complete optimization is in effect: in this case the i915
-  runtime PM is disabled and trying to get an RPM reference returns
-  -EACCESS.
+> While this shouldn't be very difficult, it's likely not material for a v4.12-
+> rc fix. We will thus likely need to merge this patch (or something very 
+> similar to it), but I'd really like to see this fixed properly for v4.13.
+> 
 
-Solve this by requiring the PCI/PM core to resume the device during
-system suspend which in effect disables the suspend complete optimization.
+When you say "merge this patch (or something similar)", is that about
+documenting the error values for of_xlate and add_device that you showed
+down below  (or) about the patch in discussion ?
 
-Regardless of the above commit the optimization stayed disabled for DRM
-devices until
+Regards,
+ Sricharan
 
-commit d14d2a8453d650bea32a1c5271af1458cd283a0f
-Author: Lukas Wunner <lukas@wunner.de>
-Date:   Wed Jun 8 12:49:29 2016 +0200
+>>> At the very least, if you want to give a specific meaning to -ENODEV, you
+>>> should check for that value specifically and not ignore all errors other
+>>> than -EPROBE_DEFER. You also need to document the meaning of the error
+>>> value. This can be done in the documentation of the of_xlate operation in
+>>> include/linux/iommu.h:
+>>>
+>>> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+>>> index 2cb54adc4a33..6ba553e7384a 100644
+>>> --- a/include/linux/iommu.h
+>>> +++ b/include/linux/iommu.h
+>>> @@ -181,7 +181,6 @@ struct iommu_resv_region {
+>>>   * @domain_window_disable: Disable a particular window for a domain
+>>>   * @domain_set_windows: Set the number of windows for a domain
+>>>   * @domain_get_windows: Return the number of windows for a domain
+>>> - * @of_xlate: add OF master IDs to iommu grouping
+>>>   * @pgsize_bitmap: bitmap of all possible supported page sizes
+>>>   */
+>>>  
+>>>  struct iommu_ops {
+>>> @@ -224,6 +223,11 @@ struct iommu_ops {
+>>>  	/* Get the number of windows per domain */
+>>>  	u32 (*domain_get_windows)(struct iommu_domain *domain);
+>>>
+>>> +	/**
+>>> +	 * @of_xlate:
+>>> +	 *
+>>> +	 * Add OF master IDs to iommu grouping.
+>>> +	 */
+>>>  	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
+>>>  	
+>>>  	unsigned long pgsize_bitmap;
+>>>
+>>> And add documentation for the error codes there.
+>>>
+>>> If you want to ignore some errors returned from the add_device operation
+>>> you should document it similarly, and in particular document which error
+>>> check(s) need to be performed by of_xlate and which are the
+>>> responsibility of add_device.
+>>>
+>>>> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with
+>>>> deferred probing or error")
+>>>> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>>>> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>>>> ---
+>>>> [V2] Corrected spelling/case in commit log
+>>>>
+>>>>  drivers/iommu/of_iommu.c | 6 ++++++
+>>>>  1 file changed, 6 insertions(+)
+>>>>
+>>>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>>>> index e6e9bec..f0d22c0 100644
+>>>> --- a/drivers/iommu/of_iommu.c
+>>>> +++ b/drivers/iommu/of_iommu.c
+>>>> @@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct
+>>>> device *dev, ops = ERR_PTR(err);
+>>>>  	}
+>>>>
+>>>> +	/* Ignore all other errors apart from EPROBE_DEFER */
+>>>> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+>>>> +		dev_info(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
+>>>> +		ops = NULL;
+>>>> +	}
+>>>> +
+>>>>  	return ops;
+>>>>  }
+> 
 
-    drm: Remove dev_pm_ops from drm_class
-
-so this patch is in practice a fix for this commit. Another reason for
-the bug staying hidden for so long is that the optimization for a device
-is disabled if it's disabled for any of its children devices. i915 may
-have a backlight device as its child which doesn't support runtime PM
-and so doesn't allow the optimization either.  So if this backlight
-device got registered the bug stayed hidden.
-
-Credits to Marta, Tomi and David who enabled pstore logging,
-that caught one instance of this issue across a suspend/
-resume-to-ram and Ville who rememberd that the optimization was enabled
-for some devices at one point.
-
-The first WARN triggered by the problem:
-
-[ 6250.746445] WARNING: CPU: 2 PID: 17384 at drivers/gpu/drm/i915/intel_runtime_pm.c:2846 intel_runtime_pm_get+0x6b/0xd0 [i915]
-[ 6250.746448] pm_runtime_get_sync() failed: -13
-[ 6250.746451] Modules linked in: snd_hda_intel i915 vgem snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp coretemp crct10dif_pclmul crc32_pclmul
-snd_hda_codec_realtek snd_hda_codec_generic ghash_clmulni_intel e1000e snd_hda_codec snd_hwdep snd_hda_core ptp mei_me pps_core snd_pcm lpc_ich mei prime_
-numbers i2c_hid i2c_designware_platform i2c_designware_core [last unloaded: i915]
-[ 6250.746512] CPU: 2 PID: 17384 Comm: kworker/u8:0 Tainted: G     U  W       4.11.0-rc5-CI-CI_DRM_334+ #1
-[ 6250.746515] Hardware name:                  /NUC5i5RYB, BIOS RYBDWi35.86A.0362.2017.0118.0940 01/18/2017
-[ 6250.746521] Workqueue: events_unbound async_run_entry_fn
-[ 6250.746525] Call Trace:
-[ 6250.746530]  dump_stack+0x67/0x92
-[ 6250.746536]  __warn+0xc6/0xe0
-[ 6250.746542]  ? pci_restore_standard_config+0x40/0x40
-[ 6250.746546]  warn_slowpath_fmt+0x46/0x50
-[ 6250.746553]  ? __pm_runtime_resume+0x56/0x80
-[ 6250.746584]  intel_runtime_pm_get+0x6b/0xd0 [i915]
-[ 6250.746610]  intel_display_power_get+0x1b/0x40 [i915]
-[ 6250.746646]  i915_audio_component_get_power+0x15/0x20 [i915]
-[ 6250.746654]  snd_hdac_display_power+0xc8/0x110 [snd_hda_core]
-[ 6250.746661]  azx_runtime_resume+0x218/0x280 [snd_hda_intel]
-[ 6250.746667]  pci_pm_runtime_resume+0x76/0xa0
-[ 6250.746672]  __rpm_callback+0xb4/0x1f0
-[ 6250.746677]  ? pci_restore_standard_config+0x40/0x40
-[ 6250.746682]  rpm_callback+0x1f/0x80
-[ 6250.746686]  ? pci_restore_standard_config+0x40/0x40
-[ 6250.746690]  rpm_resume+0x4ba/0x740
-[ 6250.746698]  __pm_runtime_resume+0x49/0x80
-[ 6250.746703]  pci_pm_suspend+0x57/0x140
-[ 6250.746709]  dpm_run_callback+0x6f/0x330
-[ 6250.746713]  ? pci_pm_freeze+0xe0/0xe0
-[ 6250.746718]  __device_suspend+0xf9/0x370
-[ 6250.746724]  ? dpm_watchdog_set+0x60/0x60
-[ 6250.746730]  async_suspend+0x1a/0x90
-[ 6250.746735]  async_run_entry_fn+0x34/0x160
-[ 6250.746741]  process_one_work+0x1f2/0x6d0
-[ 6250.746749]  worker_thread+0x49/0x4a0
-[ 6250.746755]  kthread+0x107/0x140
-[ 6250.746759]  ? process_one_work+0x6d0/0x6d0
-[ 6250.746763]  ? kthread_create_on_node+0x40/0x40
-[ 6250.746768]  ret_from_fork+0x2e/0x40
-[ 6250.746778] ---[ end trace 102a62fd2160f5e6 ]---
-
-v2:
-- Use the new pci_dev->needs_resume flag, to avoid any overhead during
-  the ->pm_prepare hook. (Rafael)
-
-v3:
-- Update commit message to reference the actual regressing commit.
-  (Lukas)
-
-v4:
-- Rebase on v4 of patch 1/2.
-
-Fixes: d14d2a8453d6 ("drm: Remove dev_pm_ops from drm_class")
-References: https://bugs.freedesktop.org/show_bug.cgi?id=100378
-References: https://bugs.freedesktop.org/show_bug.cgi?id=100770
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Marta Lofstedt <marta.lofstedt@intel.com>
-Cc: David Weinehall <david.weinehall@linux.intel.com>
-Cc: Tomi Sarvela <tomi.p.sarvela@intel.com>
-Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
-Cc: Mika Kuoppala <mika.kuoppala@intel.com>
-Cc: Chris Wilson <chris@chris-wilson.co.uk>
-Cc: Takashi Iwai <tiwai@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Imre Deak <imre.deak@intel.com>
-Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
-Reported-and-tested-by: Marta Lofstedt <marta.lofstedt@intel.com> (v3)
----
- drivers/gpu/drm/i915/i915_drv.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index 2d3c4264..b9f1607 100644
---- a/drivers/gpu/drm/i915/i915_drv.c
-+++ b/drivers/gpu/drm/i915/i915_drv.c
-@@ -1238,6 +1238,15 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto out_fini;
- 
- 	pci_set_drvdata(pdev, &dev_priv->drm);
-+	/*
-+	 * Disable the system suspend direct complete optimization, which can
-+	 * leave the device suspended skipping the driver's suspend handlers
-+	 * if the device was already runtime suspended. This is needed due to
-+	 * the difference in our runtime and system suspend sequence and
-+	 * becaue the HDA driver may require us to enable the audio power
-+	 * domain during system suspend.
-+	 */
-+	pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
- 
- 	ret = i915_driver_init_early(dev_priv, ent);
- 	if (ret < 0)
 -- 
-2.7.4
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
