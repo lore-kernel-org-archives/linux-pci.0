@@ -1,34 +1,40 @@
-Return-Path: <SRS0=gPUp=4Z=networkplumber.org=stephen@kernel.org>
-Return-Path: <SRS0=gPUp=4Z=networkplumber.org=stephen@kernel.org>
-Date: Fri, 19 May 2017 08:21:22 -0700
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jork Loeser <jloeser@microsoft.com>, olaf@aepfle.de,
- sthemmin@microsoft.com, linux-pci@vger.kernel.org, jasowang@redhat.com,
- linux-kernel@vger.kernel.org, marcelo.cerri@canonical.com,
- helgaas@kernel.org, apw@canonical.com, devel@linuxdriverproject.org,
- vkuznets@redhat.com, leann.ogasawara@canonical.com
-Subject: Re: [PATCH 4/4] Hyper-V vPCI: use vPCI protocol version 1.2
-Message-ID: <20170519082122.7f56aa38@xeon-e3>
-In-Reply-To: <20170519112701.adqxvpkorrthjf7i@mwanda>
-References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
-	<1495134870-18225-5-git-send-email-jloeser@linuxonhyperv.com>
-	<20170519112701.adqxvpkorrthjf7i@mwanda>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Song Xiaowei <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>
+CC: <puck.chen@hisilicon.com>, <songxiaowei@hisilicon.com>,
+        <guodong.xu@linaro.org>, <wangbinghui@hisilicon.com>,
+        <suzhuangluan@hisilicon.com>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+Subject: [Patch v3 3/3] defconfig: PCI: Enable  Kirin PCIe defconfig
+Date: Thu, 18 May 2017 15:45:35 +0800
+Message-ID: <20170518074535.20635-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20170518074535.20635-1-songxiaowei@hisilicon.com>
+References: <20170518074535.20635-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 19 May 2017 14:27:01 +0300
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-> >  /*
-> > + * HV_VP_SET available
-> > + */
-> > +#define HV_X64_EX_PROCESSOR_MASKS_RECOMMENDED	(1 << 11)  
-> 
-> Use BIT(11).  I thought checkpatch.pl complains about this but I guess
-> that's only with the --strict option.
-
-Since all the other field values are encoded as shifts, doing something
-different for this field stands out.  Therefore just use (1 << 11)
-or change all the previous values using BIT() macro
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 7c48028ec64a..d56d8f1062ab 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_LAYERSCAPE=y
+ CONFIG_PCI_HISI=y
+ CONFIG_PCIE_QCOM=y
++CONFIG_PCIE_KIRIN=y
+ CONFIG_PCIE_ARMADA_8K=y
+ CONFIG_ARM64_VA_BITS_48=y
+ CONFIG_SCHED_MC=y
+-- 
+2.11.GIT
