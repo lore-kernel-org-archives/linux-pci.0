@@ -1,45 +1,61 @@
-Return-Path: <SRS0=SBir=45=bombadil.srs.infradead.org=BATV+39f16232e601ddf73510+5021+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=SBir=45=bombadil.srs.infradead.org=BATV+39f16232e601ddf73510+5021+infradead.org+hch@kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: helgaas@kernel.org
-Cc: rakesh@tuxera.com,
-	linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: [PATCH] PCI: ensure the PCI device is locked over ->reset_notify calls
-Date: Tue, 23 May 2017 07:42:02 +0200
-Message-Id: <20170523054202.7985-2-hch@lst.de>
-In-Reply-To: <20170523054202.7985-1-hch@lst.de>
-References: <20170523054202.7985-1-hch@lst.de>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
+        geert@linux-m68k.org, magnus.damm@gmail.com
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V4 3/4] ACPI/IORT: Ignore all errors except EPROBE_DEFER
+Date: Thu, 18 May 2017 20:24:16 +0530
+Message-Id: <1495119257-26724-3-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
+References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Without this ->notify_reset instance may race with ->remove calls,
-which can be easily triggered in NVMe.
+While deferring the probe of IOMMU masters, xlate and
+add_device callbacks called from iort_iommu_configure
+can pass back error values like -ENODEV, which means
+the IOMMU cannot be connected with that master for real
+reasons. Before the IOMMU probe deferral, all such errors
+were ignored. Now all those errors are propagated back,
+killing the master's probe for such errors. Instead ignore
+all the errors except EPROBE_DEFER, which is the only one
+of concern and let the master work without IOMMU, thus
+restoring the old behavior.
 
-Reported-by: Rakesh Pandit <rakesh@tuxera.com>
-Tested-by: Rakesh Pandit <rakesh@tuxera.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
- drivers/pci/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+[V4] Added this patch newly.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5bba8e6..b61ad77dc322 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4275,11 +4275,13 @@ int pci_reset_function(struct pci_dev *dev)
- 	if (rc)
- 		return rc;
+ drivers/acpi/arm64/iort.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index c5fecf9..16e101f 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ 	if (err)
+ 		ops = ERR_PTR(err);
  
-+	pci_dev_lock(dev);
- 	pci_dev_save_and_disable(dev);
- 
--	rc = pci_dev_reset(dev, 0);
-+	rc = __pci_dev_reset(dev, 0);
- 
- 	pci_dev_restore(dev);
-+	pci_dev_unlock(dev);
- 
- 	return rc;
++	/* Ignore all other errors apart from EPROBE_DEFER */
++	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
++		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
++		ops = NULL;
++	}
++
+ 	return ops;
  }
+ 
 -- 
-2.11.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
