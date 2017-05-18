@@ -1,68 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
+        <hch@infradead.org>, <liudongdong3@huawei.com>
+Subject: [PATCH v3 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
+Date: Thu, 18 May 2017 11:35:48 +0100
+Message-ID: <1495103748-7876-3-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170512015105.32653-1-songxiaowei@hisilicon.com>
-References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 17 May 2017 22:29:17 +0200
-Message-ID: <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-To: Song Xiaowei <songxiaowei@hisilicon.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Keith Busch <keith.busch@intel.com>, niklas.cassel@axis.com,
-        Duc Dang <dhdang@apm.com>, liudongdong3@huawei.com,
-        puck.chen@hisilicon.com, Guodong Xu <guodong.xu@linaro.org>,
-        wangbinghui@hisilicon.com, suzhuangluan@hisilicon.com,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 12, 2017 at 3:51 AM, Song Xiaowei <songxiaowei@hisilicon.com> wrote:
-> From: songxiaowei <songxiaowei@hisilicon.com>
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Looks good overall, just a few details:
+Currently the MSI/MSIx vectors for the root port services are
+allocated calling pcie_init_service_irqs(). At the moment these
+vectors are only allocated for AER, PME, HP.
+This patch allocate an MSI/MSIx vector also for DPC.
 
-Please fix your ~/.gitconfig to contain the same real name ("Song Xiaowei"
-instead of "songxiaowei") that you use for sending the emails.
+Signed-off-by: Liudongdong <liudongdong3@huawei.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/pcie/portdrv_core.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-> +
-> +static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
-> +{
-...
-> +       reg_val = kirin_apb_phy_readl(kirin_pcie, 0x400);
-> +       while (reg_val & pipe_clk_stable) {
-> +               udelay(100);
-> +               if (time == 0) {
-> +                       dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
-> +                       return -EINVAL;
-> +               }
-> +               time--;
-> +               reg_val = kirin_apb_phy_readl(kirin_pcie, 0x400);
-> +       }
-
-If this is not called with interrupts disabled, please use a
-sleeping function (e.g. msleep(1)) as the delay and compare
-against ktime_before() to see how much total time has expired
-when waiting for a timeout, instead of using a counter.
-
-> diff --git a/drivers/pci/dwc/pcie-kirin.h b/drivers/pci/dwc/pcie-kirin.h
-> new file mode 100644
-> index 000000000000..ad9a3b427298
-> --- /dev/null
-> +++ b/drivers/pci/dwc/pcie-kirin.h
-> @@ -0,0 +1,79 @@
-> +/*
-> + * PCIe host controller driver for Kirin 960 SoCs
-> + *
-> + * Copyright (C) 2015 Huawei Electronics Co., Ltd.
-> + *             http://www.huawei.com
-> + *
-> + * Author: Xiaowei Song <songxiaowei@huawei.com>
-
-The header is only used in one .c file, so just remove it and
-add the contents to that file.
-
-    Arnd
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index 4d16cf2..6a32b42 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -123,6 +123,31 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ 		nvec = max(nvec, entry + 1);
+ 	}
+ 
++	if (mask & PCIE_PORT_SERVICE_DPC) {
++		u16 reg16, pos;
++
++		/*
++		 * The code below follows Section 6.2.10.1 of the PCI Express
++		 * Base Specification 4.0 stating that bits 4-0 of DPC
++		 * Capability Register contain a value indicating which of the
++		 * MSI/MSI-X vectors assigned to the port is going to be used
++		 * for DPC, where "For MSI-X, the value in this register
++		 * indicates which MSI-X Table entry is used to generate the
++		 * interrupt message." and "For MSI, the value in this field
++		 * indicates the offset between the base Message Data and the
++		 * interrupt message that is generated."
++		 */
++		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
++		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
++		entry = reg16 & 0x1f;
++		if (entry >= nr_entries)
++			goto out_free_irqs;
++
++		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
++
++		nvec = max(nvec, entry + 1);
++	}
++
+ 	/*
+ 	 * If nvec is equal to the allocated number of entries, we can just use
+ 	 * what we have.  Otherwise, the port has some extra entries not for the
+-- 
+2.7.4
