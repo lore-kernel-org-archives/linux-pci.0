@@ -1,101 +1,48 @@
-Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy
- <robin.murphy@arm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
-Date: Thu, 25 May 2017 09:48:30 +0100
+Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
+        <hch@infradead.org>, <liudongdong3@huawei.com>
+Subject: [PATCH v2 0/2] add MSI support for PCIe port services and DPC IRQ support
+Date: Thu, 18 May 2017 10:01:36 +0100
+Message-ID: <1495098098-1984-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/04/17 15:31, Marc Gonzalez wrote:
-> This driver is required to work around several hardware bugs in the
-> PCIe controller.
-> 
-> NB: Revision 1 does not support legacy interrupts, or IO space.
-> 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> ---
->  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
->  drivers/pci/host/Kconfig                             |   8 ++
->  drivers/pci/host/Makefile                            |   1 +
->  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
->  include/linux/pci_ids.h                              |   2 +
->  5 files changed, 204 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
-> new file mode 100644
-> index 000000000000..3353b4e77309
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
-> @@ -0,0 +1,32 @@
-> +Sigma Designs Tango PCIe controller
-> +
-> +Required properties:
-> +
-> +- compatible: "sigma,smp8759-pcie"
-> +- reg: address/size of PCI configuration space, address/size of register area
-> +- device_type: "pci"
-> +- #size-cells: <2>
-> +- #address-cells: <3>
-> +- #interrupt-cells: <1>
+From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-What is the point of having an #interrupt-cells when this is *not* an
-interrupt controller (as it doesn't support legacy interrupts)?
+This patchset:
+1) adds support for MSI interrupt vectors to be used for Roor Port services
+2) adds support for DPC Root Port service interrupt
 
-> +- ranges: translation from system to bus addresses
-> +- interrupts: spec for misc interrupts, spec for MSI
-> +- msi-controller
-> +
-> +http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
-> +http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
-> +
-> +Example:
-> +
-> +	pcie@2e000 {
-> +		compatible = "sigma,smp8759-pcie";
-> +		reg = <0x50000000 SZ_4M>, <0x2e000 0x100>;
-> +		device_type = "pci";
-> +		#size-cells = <2>;
-> +		#address-cells = <3>;
-> +		#interrupt-cells = <1>;
-> +		ranges = <0x02000000 0x0 0x00400000  0x50400000  0x0 SZ_60M>;
-> +		msi-controller;
-> +		interrupts =
-> +			<54 IRQ_TYPE_LEVEL_HIGH>, /* misc interrupts */
-> +			<55 IRQ_TYPE_LEVEL_HIGH>; /* MSI */
-> +	};
+The patchset has been tested on Hisilicon Hip08 Chipset
 
-As mentioned earlier, this needs to be a separate patch to be reviewed
-by the Keepers of the Faith (aka the DT maintainers).
+Changes from v1:
+According to comments from Christoph Hellwig in
+https://www.spinics.net/lists/kernel/msg2508842.html
+and
+https://www.spinics.net/lists/kernel/msg2508850.html
 
-[...]
+- reduced the calls of pci_alloc_irq_vectors by ORing PCI_IRQ_MSIX and 
+  PCI_IRQ_MSI
+- used a unique macro for the max number of MSI/MSIx interrupt vectors
+- reworked pcie_init_service_irqs() to call pci_alloc_irq_vectors() only
+  for legacy IRQ 
 
-> +static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
-> +{
-> +	pcie->mux		= base + 0x48;
-> +	pcie->msi_status	= base + 0x80;
-> +	pcie->msi_enable	= base + 0xa0;
-> +	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
-> +
-> +	return tango_check_pcie_link(base + 0x74);
+Gabriele Paoloni (1):
+  PCI/portdrv: add support for different MSI interrupts for PCIe port
+    services
 
-Please have some defines for these magic values.
+gabriele paoloni (1):
+  PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
 
-Thanks,
+ drivers/pci/pcie/portdrv.h      |  8 +++--
+ drivers/pci/pcie/portdrv_core.c | 71 ++++++++++++++++++++++++++++++-----------
+ 2 files changed, 58 insertions(+), 21 deletions(-)
 
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+2.7.4
