@@ -1,91 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jani Nikula <jani.nikula@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
-        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
-Date: Thu, 04 May 2017 12:37:27 +0300
-Message-ID: <87d1bpotd4.fsf@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: songxiaowei <songxiaowei@hisilicon.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        Duc Dang <dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
+        Guodong Xu <guodong.xu@linaro.org>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggMS8yXSBQQ0k6IGR3Yzoga2lyaW46IGFkZCBQQ0ll?=
+ =?utf-8?Q?_Driver_for_HiSilicon_Kirin_SoC?=
+Date: Thu, 18 May 2017 01:50:09 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C541161E84@DGGEMA505-MBS.china.huawei.com>
+References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
+ <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
+In-Reply-To: <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 04 May 2017, Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-> diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
-> index eb638a1e69d2..72bfe6ceadf8 100644
-> --- a/drivers/gpu/drm/i915/intel_acpi.c
-> +++ b/drivers/gpu/drm/i915/intel_acpi.c
-> @@ -15,13 +15,9 @@ static struct intel_dsm_priv {
->  	acpi_handle dhandle;
->  } intel_dsm_priv;
->  
-> -static const u8 intel_dsm_guid[] = {
-> -	0xd3, 0x73, 0xd8, 0x7e,
-> -	0xd0, 0xc2,
-> -	0x4f, 0x4e,
-> -	0xa8, 0x54,
-> -	0x0f, 0x13, 0x17, 0xb0, 0x1c, 0x2c
-> -};
-> +static const uuid_le intel_dsm_guid =
-> +	UUID_LE(0x7ed873d3, 0xc2d0, 0x4e4f,
-> +		0xa8, 0x54, 0x0f, 0x13, 0x17, 0xb0, 0x1c, 0x2c);
->  
->  static char *intel_dsm_port_name(u8 id)
->  {
-> @@ -80,7 +76,7 @@ static void intel_dsm_platform_mux_info(void)
->  	int i;
->  	union acpi_object *pkg, *connector_count;
->  
-> -	pkg = acpi_evaluate_dsm_typed(intel_dsm_priv.dhandle, intel_dsm_guid,
-> +	pkg = acpi_evaluate_dsm_typed(intel_dsm_priv.dhandle, &intel_dsm_guid,
->  			INTEL_DSM_REVISION_ID, INTEL_DSM_FN_PLATFORM_MUX_INFO,
->  			NULL, ACPI_TYPE_PACKAGE);
->  	if (!pkg) {
-> @@ -118,7 +114,7 @@ static bool intel_dsm_pci_probe(struct pci_dev *pdev)
->  	if (!dhandle)
->  		return false;
->  
-> -	if (!acpi_check_dsm(dhandle, intel_dsm_guid, INTEL_DSM_REVISION_ID,
-> +	if (!acpi_check_dsm(dhandle, &intel_dsm_guid, INTEL_DSM_REVISION_ID,
->  			    1 << INTEL_DSM_FN_PLATFORM_MUX_INFO)) {
->  		DRM_DEBUG_KMS("no _DSM method for intel device\n");
->  		return false;
-
-The drm/i915 hunk above is
-
-Reviewed-by: Jani Nikula <jani.nikula@intel.com>
-
-and acked for merging via whichever tree is suitable.
-
-
-BR,
-Jani.
-
--- 
-Jani Nikula, Intel Open Source Technology Center
+SGkgQXJuZCwNCg0KDQpPbiBGcmksIE1heSAxMiwgMjAxNyBhdCAzOjUxIEFNLCBTb25nIFhpYW93
+ZWkgPHNvbmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+IHdyb3RlOg0KPiBGcm9tOiBzb25neGlhb3dl
+aSA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCg0KTG9va3MgZ29vZCBvdmVyYWxsLCBqdXN0
+IGEgZmV3IGRldGFpbHM6DQoNClBsZWFzZSBmaXggeW91ciB+Ly5naXRjb25maWcgdG8gY29udGFp
+biB0aGUgc2FtZSByZWFsIG5hbWUgKCJTb25nIFhpYW93ZWkiDQppbnN0ZWFkIG9mICJzb25neGlh
+b3dlaSIpIHRoYXQgeW91IHVzZSBmb3Igc2VuZGluZyB0aGUgZW1haWxzLg0KDQpbWGlhb3dlaSBT
+b25nXSAgSSdsbCBmaXggdGhpcyBpc3N1ZSBhbmQgdXBkYXRlIHRoZSBwYXRjaC4NCg0KPiArDQo+
+ICtzdGF0aWMgaW50IGtpcmluX3BjaWVfcGh5X2luaXQoc3RydWN0IGtpcmluX3BjaWUgKmtpcmlu
+X3BjaWUpIHsNCi4uLg0KPiArICAgICAgIHJlZ192YWwgPSBraXJpbl9hcGJfcGh5X3JlYWRsKGtp
+cmluX3BjaWUsIDB4NDAwKTsNCj4gKyAgICAgICB3aGlsZSAocmVnX3ZhbCAmIHBpcGVfY2xrX3N0
+YWJsZSkgew0KPiArICAgICAgICAgICAgICAgdWRlbGF5KDEwMCk7DQo+ICsgICAgICAgICAgICAg
+ICBpZiAodGltZSA9PSAwKSB7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGRldl9lcnIoa2ly
+aW5fcGNpZS0+cGNpLT5kZXYsICJQSVBFIGNsayBpcyBub3Qgc3RhYmxlXG4iKTsNCj4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQo+ICsgICAgICAgICAgICAgICB9DQo+
+ICsgICAgICAgICAgICAgICB0aW1lLS07DQo+ICsgICAgICAgICAgICAgICByZWdfdmFsID0ga2ly
+aW5fYXBiX3BoeV9yZWFkbChraXJpbl9wY2llLCAweDQwMCk7DQo+ICsgICAgICAgfQ0KDQpJZiB0
+aGlzIGlzIG5vdCBjYWxsZWQgd2l0aCBpbnRlcnJ1cHRzIGRpc2FibGVkLCBwbGVhc2UgdXNlIGEg
+c2xlZXBpbmcgZnVuY3Rpb24gKGUuZy4gbXNsZWVwKDEpKSBhcyB0aGUgZGVsYXkgYW5kIGNvbXBh
+cmUgYWdhaW5zdCBrdGltZV9iZWZvcmUoKSB0byBzZWUgaG93IG11Y2ggdG90YWwgdGltZSBoYXMg
+ZXhwaXJlZCB3aGVuIHdhaXRpbmcgZm9yIGEgdGltZW91dCwgaW5zdGVhZCBvZiB1c2luZyBhIGNv
+dW50ZXIuDQoNCltYaWFvd2VpIFNvbmddIFRoaXMgaXNzdWUgd2FzIGZpeGVkIGluIHRoZSBwYXRj
+aCBzZW50IGF0IDIwMTctNS0xNSwgYW5kIEknbGwgc2VuZCBpdCBhZ2Fpbi4NCg0KPiBkaWZmIC0t
+Z2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uaCANCj4gYi9kcml2ZXJzL3BjaS9kd2Mv
+cGNpZS1raXJpbi5oIG5ldyBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IA0KPiAwMDAwMDAwMDAwMDAu
+LmFkOWEzYjQyNzI5OA0KPiAtLS0gL2Rldi9udWxsDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9w
+Y2llLWtpcmluLmgNCj4gQEAgLTAsMCArMSw3OSBAQA0KPiArLyoNCj4gKyAqIFBDSWUgaG9zdCBj
+b250cm9sbGVyIGRyaXZlciBmb3IgS2lyaW4gOTYwIFNvQ3MNCj4gKyAqDQo+ICsgKiBDb3B5cmln
+aHQgKEMpIDIwMTUgSHVhd2VpIEVsZWN0cm9uaWNzIENvLiwgTHRkLg0KPiArICogICAgICAgICAg
+ICAgaHR0cDovL3d3dy5odWF3ZWkuY29tDQo+ICsgKg0KPiArICogQXV0aG9yOiBYaWFvd2VpIFNv
+bmcgPHNvbmd4aWFvd2VpQGh1YXdlaS5jb20+DQoNClRoZSBoZWFkZXIgaXMgb25seSB1c2VkIGlu
+IG9uZSAuYyBmaWxlLCBzbyBqdXN0IHJlbW92ZSBpdCBhbmQgYWRkIHRoZSBjb250ZW50cyB0byB0
+aGF0IGZpbGUuDQoNCltzb25neGlhb3dlaV0gSW4gbmV3IHBhdGNoIHRoZSBoZWFkZXIgZmlsZSB3
+YXMgZGVsZXRlZCwNCg0KDQpUaGFua3MgYSBsb3QuDQoNCkJlc3QgcmVnYXJkLA0KWGlhb3dlaS4N
+Cg==
