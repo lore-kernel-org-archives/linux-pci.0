@@ -1,77 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:20004 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750792AbdEBJFm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 2 May 2017 05:05:42 -0400
-Date: Tue, 2 May 2017 12:05:38 +0300
-From: Imre Deak <imre.deak@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        intel-gfx@lists.freedesktop.org,
-        Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend
- complete optimization
-Message-ID: <20170502090538.GA21917@ideak-desk.fi.intel.com>
-Reply-To: imre.deak@intel.com
-References: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
- <23725356.i2L37sn5oF@aspire.rjw.lan>
- <20170430125713.GA29281@ideak-desk.fi.intel.com>
- <1719094.muzv4MLyNX@aspire.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1719094.muzv4MLyNX@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <99B4C6BADD9E3241B25E52B02BA737C541161E84@DGGEMA505-MBS.china.huawei.com>
+References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
+ <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com> <99B4C6BADD9E3241B25E52B02BA737C541161E84@DGGEMA505-MBS.china.huawei.com>
+From: Guodong Xu <guodong.xu@linaro.org>
+Date: Thu, 18 May 2017 14:23:11 +0800
+Message-ID: <CAFGCpxyOBtar5jCEW=_aYH_XdhgxVFDMjE5ch2DU-OsSzKQsxA@mail.gmail.com>
+Subject: =?UTF-8?B?UmU6IOetlOWkjTogW1BBVENIIDEvMl0gUENJOiBkd2M6IGtpcmluOiBhZGQgUENJZSBEcg==?=
+        =?UTF-8?B?aXZlciBmb3IgSGlTaWxpY29uIEtpcmluIFNvQw==?=
+To: songxiaowei <songxiaowei@hisilicon.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon <kishon@ti.com>, Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        Duc Dang <dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 01, 2017 at 10:36:13PM +0200, Rafael J. Wysocki wrote:
-> On Sunday, April 30, 2017 03:57:13 PM Imre Deak wrote:
-> > On Sat, Apr 29, 2017 at 12:21:57PM +0200, Rafael J. Wysocki wrote:
-> > > On Friday, April 28, 2017 11:33:02 PM Rafael J. Wysocki wrote:
-> > > > On Friday, April 28, 2017 05:16:02 PM Imre Deak wrote:
-> > > > > Some drivers - like i915 - may not support the system suspend direct
-> > > > > complete optimization due to differences in their runtime and system
-> > > > > suspend sequence. Add a flag that when set resumes the device before
-> > > > > calling the driver's system suspend handlers which effectively disables
-> > > > > the optimization.
-> > > > > 
-> > > > > Needed by the next patch fixing suspend/resume on i915.
-> > > > > 
-> > > > > Suggested by Rafael.
-> > > > > 
-> > > > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > Cc: linux-pci@vger.kernel.org
-> > > > > Cc: stable@vger.kernel.org
-> > > > > Signed-off-by: Imre Deak <imre.deak@intel.com>
-> > > > 
-> > > > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > 
-> > > > The reason why the opt-out flag was not added on day one was because we were
-> > > > not sure whether or not it would be necessary at all.
-> > > > 
-> > > > Quite evidently, it is needed.
-> > > 
-> > > But that said, it actually can be implemented as a flag in dev_flags too, say
-> > > PCI_DEV_FLAGS_NEEDS_RESUME, in analogy with PCI_DEV_FLAGS_NO_D3 that's
-> > > already there.
-> > > 
-> > > The struct size would not need to grow then which I guess would be better?
-> > 
-> > Hm, both the bit field and the flag would need to increase if running
-> > out of bits, so what's the difference? (Atm, the struct size wouldn't
-> > change either way.)
-> 
-> In the bit field case this depends on what the compiler thinks is better to be
-> entirely precise, so they are not 100% equivalent.
-> 
-> Plus, since there already are things related to PM in dev_flags, why to depart
-> from that pattern?
+On Thu, May 18, 2017 at 9:50 AM, songxiaowei <songxiaowei@hisilicon.com> wrote:
+> Hi Arnd,
+>
+>
+> On Fri, May 12, 2017 at 3:51 AM, Song Xiaowei <songxiaowei@hisilicon.com> wrote:
+>> From: songxiaowei <songxiaowei@hisilicon.com>
+>
+> Looks good overall, just a few details:
+>
+> Please fix your ~/.gitconfig to contain the same real name ("Song Xiaowei"
+> instead of "songxiaowei") that you use for sending the emails.
+>
+> [Xiaowei Song]  I'll fix this issue and update the patch.
+>
+>> +
+>> +static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie) {
+> ...
+>> +       reg_val = kirin_apb_phy_readl(kirin_pcie, 0x400);
+>> +       while (reg_val & pipe_clk_stable) {
+>> +               udelay(100);
+>> +               if (time == 0) {
+>> +                       dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
+>> +                       return -EINVAL;
+>> +               }
+>> +               time--;
+>> +               reg_val = kirin_apb_phy_readl(kirin_pcie, 0x400);
+>> +       }
+>
+> If this is not called with interrupts disabled, please use a sleeping function (e.g. msleep(1)) as the delay and compare against ktime_before() to see how much total time has expired when waiting for a timeout, instead of using a counter.
+>
+> [Xiaowei Song] This issue was fixed in the patch sent at 2017-5-15, and I'll send it again.
 
-There are a few PM related flags in the bit field too.
+Xiaowei,
 
-The need for moving it is still not clear to me, but I don't see any
-problem with it either, so will move it there.
+Please make sure you add [PATCH v..] version information when you
+making future updates. Eg.
 
---Imre
+$ git format-patch --subject-prefix="PATCH v3"
+
+-Guodong
+
+
+>
+>> diff --git a/drivers/pci/dwc/pcie-kirin.h
+>> b/drivers/pci/dwc/pcie-kirin.h new file mode 100644 index
+>> 000000000000..ad9a3b427298
+>> --- /dev/null
+>> +++ b/drivers/pci/dwc/pcie-kirin.h
+>> @@ -0,0 +1,79 @@
+>> +/*
+>> + * PCIe host controller driver for Kirin 960 SoCs
+>> + *
+>> + * Copyright (C) 2015 Huawei Electronics Co., Ltd.
+>> + *             http://www.huawei.com
+>> + *
+>> + * Author: Xiaowei Song <songxiaowei@huawei.com>
+>
+> The header is only used in one .c file, so just remove it and add the contents to that file.
+>
+> [songxiaowei] In new patch the header file was deleted,
+>
+>
+> Thanks a lot.
+>
+> Best regard,
+> Xiaowei.
