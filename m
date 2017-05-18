@@ -1,170 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52490 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753256AbdEEO5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 May 2017 10:57:49 -0400
-Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
-To: Joao Pinto <Joao.Pinto@synopsys.com>, kishon@ti.com,
-        bhelgaas@google.com, jingoohan1@gmail.com
-References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
-Cc: linux-pci@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
-Date: Fri, 5 May 2017 15:57:46 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2 2/3] iommu: of: Ignore all errors except EPROBE_DEFER
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+ <1495102030-10548-2-git-send-email-sricharan@codeaurora.org>
+ <6863998.WsTHer29ZI@avalon>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <2c3babb3-7bee-340c-d474-267a55f23cd5@codeaurora.org>
+Date: Thu, 18 May 2017 17:26:14 +0530
 MIME-Version: 1.0
-In-Reply-To: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <6863998.WsTHer29ZI@avalon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
+ magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+ catalin.marinas@arm.com, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+ robh+dt@kernel.org, bhelgaas@google.com,
+ laurent.pinchart+renesas@ideasonboard.com,
+ linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Joao,
+Hi Laurent,
 
-On 05/05/17 15:11, Joao Pinto wrote:
-> Hello,
-> I am currently adding the support for both MSI and MSI-x in pcie-designware and
-> I am now facing a dificulty.
+On 5/18/2017 4:09 PM, Laurent Pinchart wrote:
+> Hi Sricharan,
 > 
-> My test endpoint is a USB 3.1 MSI / MSI-X capable and I tested that with
-> the changes introduced by this patch we are able to enable MSI and MSI-X
-> in this endpoint (depends on the usage of the MSI_FLAG_PCI_MSIX flag).
+> Thank you for the patch.
 > 
-> The problem I am facing now is that Intc for the USB 3.1 Endpoint is completely
-> bogus (524288) when it should be 1, and so I am not receiving any interrupts
-> from the endpoint.
+> On Thursday 18 May 2017 15:37:09 Sricharan R wrote:
+>> While deferring the probe of IOMMU masters,
+>> xlate and add_device callback can pass back error values
+>> like -ENODEV, which means IOMMU cannot be connected
+>> with that master for real reasons. So rather than
+>> killing the master's probe for such errors, just
+>> ignore the errors and let the master work without
+>> an IOMMU.
+> 
+> I don't think this is a good idea. Why should we allow IOMMU drivers to return 
+> an error if we're always going to ignore the error value ? That will lead to 
+> drivers implementing slightly different behaviours, which will be painful the 
+> day we'll need to start acting based on the error value.
+> 
 
-It is not bogus at all. It is computed from the PCI requester ID in 
-pci_msi_domain_calc_hwirq. What you're seeing is the PCI/MDI domain 
-view of that interrupt, which is completely virtual.
+The of_iommu_configure interface, before this series, was returning either
+correct 'iommu_ops' or NULL. Also there was no return value from
+of_dma_configure which calls of_iommu_configure. This means that if we block
+only -ENODEV now and let the other errors, the probe of the master devices
+can be killed for reasons apart from deferring. This would be a change in
+behavior introduced. All of xlate, add_device, of_pci_map_rid and others
+can return values apart from -ENODEV. So was thinking that restoring the
+old behavior, except for returning EPROBE_DEFER was the better thing to do ? 
 
-The real thing happens in your own irqdomain, where the hwirq for IRQ46 
-is probably 1 (only you can know that). As for why it doesn't work, see 
-below:
+Regards,
+ Sricharan
 
+> At the very least, if you want to give a specific meaning to -ENODEV, you 
+> should check for that value specifically and not ignore all errors other than 
+> -EPROBE_DEFER. You also need to document the meaning of the error value. This 
+> can be done in the documentation of the of_xlate operation in 
+> include/linux/iommu.h:
 > 
-> I would apreciate that more experienced people in this interrupt subject could
-> give me an hint.
-> 
-> I send you the "lspci -v" results and /proc/interrupts.
-> 
-> Thank you so much for your help.
-> 
-> # cat /proc/interrupts
->            CPU0
->   3:        755  ARC In-core Intc   3  Timer0 (per-cpu-tick)
->   4:          0  dw-apb-ictl   4  eth0
->   8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
->   9:         37  dw-apb-ictl   7  dw-mci
->  14:          0  dw-apb-ictl  14  e001d000.i2c
->  16:          0  dw-apb-ictl  16  e001f000.i2c
->  19:        145  dw-apb-ictl  19  serial
->  45:          0   PCI-MSI   0  aerdrv
->  46:          0   PCI-MSI 524288  xhci_hcd
-> 
-> # lspci -v
-> 00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
->         Flags: bus master, fast devsel, latency 0, IRQ 45
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         Memory behind bridge: d0400000-d04fffff
->         [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
->         Capabilities: [40] Power Management version 3
->         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
->         Capabilities: [70] Express Root Port (Slot-), MSI 00
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [148] #19
->         Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
->         Kernel driver in use: pcieport
-> 
-> 01:00.0 USB controller: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller (prog-if 30 [XHCI])
->         Subsystem: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller
->         Flags: bus master, fast devsel, latency 0, IRQ 46
->         Memory at d0400000 (64-bit, non-prefetchable) [size=32K]
->         Capabilities: [50] MSI: Enable+ Count=1/8 Maskable- 64bit+
->         Capabilities: [68] MSI-X: Enable- Count=8 Masked-
->         Capabilities: [78] Power Management version 3
->         Capabilities: [80] Express Endpoint, MSI 00
->         Capabilities: [100] Virtual Channel
->         Capabilities: [200] Advanced Error Reporting
->         Capabilities: [280] #19
->         Capabilities: [300] Latency Tolerance Reporting
->         Kernel driver in use: xhci_hcd
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
->  .../devicetree/bindings/pci/designware-pcie.txt    |   2 +
->  drivers/pci/dwc/pcie-designware-host.c             | 292 ++++++++-------------
->  drivers/pci/dwc/pcie-designware-plat.c             |  35 +--
->  drivers/pci/dwc/pcie-designware.h                  |   7 +-
->  4 files changed, 143 insertions(+), 193 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> index b2480dd..41803ea 100644
-> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-> @@ -34,6 +34,8 @@ Optional properties:
->  RC mode:
->  - num-viewport: number of view ports configured in
->    hardware. If a platform does not specify it, the driver assumes 2.
-> +- num-vectors: number of available interrupt vectors. If a platform does not
-> +  specify it, the driver assumes 1.
->  - bus-range: PCI bus numbers covered (it is recommended
->    for new devicetrees to specify this property, to keep backwards
->    compatibility a range of 0x00-0xff is assumed if not present)
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 28ed32b..96a5fb3 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -11,6 +11,9 @@
->   * published by the Free Software Foundation.
+> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+> index 2cb54adc4a33..6ba553e7384a 100644
+> --- a/include/linux/iommu.h
+> +++ b/include/linux/iommu.h
+> @@ -181,7 +181,6 @@ struct iommu_resv_region {
+>   * @domain_window_disable: Disable a particular window for a domain
+>   * @domain_set_windows: Set the number of windows for a domain
+>   * @domain_get_windows: Return the number of windows for a domain
+> - * @of_xlate: add OF master IDs to iommu grouping
+>   * @pgsize_bitmap: bitmap of all possible supported page sizes
 >   */
+>  struct iommu_ops {
+> @@ -224,6 +223,11 @@ struct iommu_ops {
+>  	/* Get the number of windows per domain */
+>  	u32 (*domain_get_windows)(struct iommu_domain *domain);
 >  
-> +#include <linux/interrupt.h>
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/msi.h>
->  #include <linux/irqdomain.h>
->  #include <linux/of_address.h>
->  #include <linux/of_pci.h>
-> @@ -53,32 +56,43 @@ static struct irq_chip dw_msi_irq_chip = {
->  	.irq_unmask = pci_msi_unmask_irq,
->  };
+> +	/**
+> +	 * @of_xlate:
+> +	 *
+> +	 * Add OF master IDs to iommu grouping.
+> +	 */
+>  	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
+>  
+>  	unsigned long pgsize_bitmap;
+> 
+> 
+> And add documentation for the error codes there.
+> 
+> If you want to ignore some errors returned from the add_device operation you 
+> should document it similarly, and in particular document which error check(s) 
+> need to be performed by of_xlate and which are the responsibility of 
+> add_device.
+> 
+>> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred
+>> probing or error")
+>> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>> [V2] Corrected spelling/case in commit log
+>>
+>>  drivers/iommu/of_iommu.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>> index e6e9bec..f0d22c0 100644
+>> --- a/drivers/iommu/of_iommu.c
+>> +++ b/drivers/iommu/of_iommu.c
+>> @@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct
+>> device *dev, ops = ERR_PTR(err);
+>>  	}
+>>
+>> +	/* Ignore all other errors apart from EPROBE_DEFER */
+>> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+>> +		dev_info(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
+>> +		ops = NULL;
+>> +	}
+>> +
+>>  	return ops;
+>>  }
+> 
 
-It looks to me like the first mistake is just above. You don't seem to
-propagate the mask/unmask operations into the parent domain, so your
-interrupts are never enabled... You'd need something like this:
-
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 28ed32ba4f1b..d42b8b12f168 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -45,12 +45,22 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	return dw_pcie_write(pci->dbi_base + where, size, val);
- }
- 
-+static void dw_msi_mask_irq(struct irq_data *d)
-+{
-+	pci_msi_mask_irq(d);
-+	irq_chip_mask_parent(d);
-+}
-+
-+static void dw_msi_unmask_irq(struct irq_data *d)
-+{
-+	pci_msi_unmask_irq(d);
-+	irq_chip_unmask_parent(d);
-+}
-+
- static struct irq_chip dw_msi_irq_chip = {
- 	.name = "PCI-MSI",
--	.irq_enable = pci_msi_unmask_irq,
--	.irq_disable = pci_msi_mask_irq,
--	.irq_mask = pci_msi_mask_irq,
--	.irq_unmask = pci_msi_unmask_irq,
-+	.irq_mask = dw_msi_mask_irq,
-+	.irq_unmask = dw_msi_unmask_irq,
- };
-
-I haven't dug any further, but this should be fixed first.
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
