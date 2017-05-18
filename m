@@ -1,63 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40610 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759084AbdEYMjA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 May 2017 08:39:00 -0400
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33249 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754486AbdERImA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 04:42:00 -0400
 MIME-Version: 1.0
-In-Reply-To: <99B4C6BADD9E3241B25E52B02BA737C54116D35D@DGGEMA505-MBX.china.huawei.com>
-References: <20170518074946.21362-1-songxiaowei@hisilicon.com>
- <20170523141641.kbb4falhs574dfpu@rob-hp-laptop> <99B4C6BADD9E3241B25E52B02BA737C54116D35D@DGGEMA505-MBX.china.huawei.com>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 25 May 2017 07:38:38 -0500
-Message-ID: <CAL_JsqJV5TA2ADo35tqGXC61NWK9PDqw8Dq5m5fYHg59yaoEUA@mail.gmail.com>
-Subject: =?UTF-8?B?UmU6IOetlOWkjTogW1BhdGNoIHYzIDEvM10gYXJtNjQ6IGR0czogaGkzNjYwOiBhZGQgcA==?=
-        =?UTF-8?B?Y2llIG5vZGU=?=
-To: songxiaowei <songxiaowei@hisilicon.com>
-Cc: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
-        "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
-        Wangbinghui <wangbinghui@hisilicon.com>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>
+In-Reply-To: <20170518074535.20635-1-songxiaowei@hisilicon.com>
+References: <20170518074535.20635-1-songxiaowei@hisilicon.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 18 May 2017 10:41:54 +0200
+Message-ID: <CAK8P3a2cx9t92XKSDn8JCC4Lbq9QcaPt3swgj2mdMw3nXRZk4w@mail.gmail.com>
+Subject: Re: [Patch v3 2/3] PCI: dwc: kirin: add PCIe Driver for HiSilicon
+ Kirin SoC
+To: Song Xiaowei <songxiaowei@hisilicon.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>, niklas.cassel@axis.com,
+        Duc Dang <dhdang@apm.com>, liudongdong3@huawei.com,
+        puck.chen@hisilicon.com, Guodong Xu <guodong.xu@linaro.org>,
+        wangbinghui@hisilicon.com, suzhuangluan@hisilicon.com,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 23, 2017 at 8:39 PM, songxiaowei <songxiaowei@hisilicon.com> wrote:
-> -----邮件原件-----
-> 发件人: Rob Herring [mailto:robh@kernel.org]
-> 发送时间: 2017年5月23日 22:17
-> 收件人: songxiaowei
-> 抄送: Wangzhou (B); Gabriele Paoloni; bhelgaas@google.com; mark.rutland@arm.com; xuwei (O); catalin.marinas@arm.com; will.deacon@arm.com; linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-kernel@vger.kernel.org; Chenfeng (puck); guodong.xu@linaro.org; Wangbinghui; Suzhuangluan
-> 主题: Re: [Patch v3 1/3] arm64: dts: hi3660: add pcie node
+On Thu, May 18, 2017 at 9:45 AM, Song Xiaowei <songxiaowei@hisilicon.com> wrote:
+> Hisilicon PCIe Driver shares the common functions fo PCIe dw-host
 >
-> On Thu, May 18, 2017 at 03:49:46PM +0800, Song Xiaowei wrote:
->> Add PCIe node for hi3660, and add binding documentation.
->>
->> Cc: Guodong Xu <guodong.xu@linaro.org>
->> Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
->> ---
->>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 52 ++++++++++++++++++++++
->>  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 31 +++++++++++++
-
-[...]
-
->> +  "config": PCIe configuration space registers.
->> +- reset-gpio: perst assert/deassert gpio
+> The poweron functions is developed on hi3660 SoC, while Others Functions
+> are common for Kirin series SoCs.
 >
-> reset-gpios
-> [songxiaowei] rest-gpio is used to signal 'pcie perst': high level refers to deassert
->              and low level refers to assert. So, I think ' reset-gpio: creates perst assert/deassert signal '
->                         would be a better choice.
+> Lowpower(L1ss and SR), hotplug and MSI feature are not supported
+> currently.
+>
+> Cc: Guodong Xu <guodong.xu@linaro.org>
+> Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
 
-What I was saying is the name should be reset-gpios, not reset-gpio.
-
-Rob
+Acked-by: Arnd Bergmann <arnd@arndb.de>
