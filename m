@@ -1,13 +1,12 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 2/2] dt-bindings: pcie: Add documentation for Mediatek PCIe
-Date: Thu, 4 May 2017 17:32:56 +0800
-Message-ID: <1493890376-6713-3-git-send-email-ryder.lee@mediatek.com>
-In-Reply-To: <1493890376-6713-1-git-send-email-ryder.lee@mediatek.com>
-References: <1493890376-6713-1-git-send-email-ryder.lee@mediatek.com>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Sricharan R <sricharan@codeaurora.org>
+Subject: Re: [PATCH V2 1/3] iommu: of: Fix check for returning EPROBE_DEFER
+Date: Thu, 18 May 2017 13:47 +0300
+Message-ID: <24120310.hn6YiD4jDp@avalon>
+In-Reply-To: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -16,181 +15,68 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
+ magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+ linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+ robh+dt@kernel.org, bhelgaas@google.com,
+ laurent.pinchart+renesas@ideasonboard.com,
+ linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add documentation for PCIe host driver available in MT7623
-series SoCs.
+Hi Sricharan,
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- .../bindings/pci/mediatek,mt7623-pcie.txt          | 149 +++++++++++++++++++++
- 1 file changed, 149 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+Thank you for the patch.
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-new file mode 100644
-index 0000000..9c5d5a7
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-@@ -0,0 +1,149 @@
-+Mediatek Gen2 PCIe controller which is available on MT7623 series SoCs
-+
-+PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
-+ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
-+
-+Required properties:
-+- compatible: Should contain "mediatek,mt7623-pcie".
-+- device_type: Must be "pci"
-+- reg: Base addresses and lengths of the PCIe controller.
-+- #address-cells: Address representation for root ports (must be 3)
-+- #size-cells: Size representation for root ports (must be 2)
-+- #interrupt-cells: Size representation for interrupts (must be 1)
-+- interrupts: Three interrupt outputs of the controller. Must contain an
-+  entry for each entry in the interrupt-names property.
-+- interrupt-names: Must include the following names
-+  - "pcie-int0"
-+  - "pcie-int1"
-+  - "pcie-int2"
-+- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+- clocks: Must contain an entry for each entry in clock-names.
-+  See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+  - free_ck :for reference clock of PCIe subsys
-+  - sys_ck0 :for clock of Port0
-+  - sys_ck1 :for clock of Port1
-+  - sys_ck2 :for clock of Port2
-+- resets: Must contain an entry for each entry in reset-names.
-+  See ../reset/reset.txt for details.
-+- reset-names: Must include the following entries:
-+  - pcie-rst0 :port0 reset
-+  - pcie-rst1 :port1 reset
-+  - pcie-rst2 :port2 reset
-+- phys: list of PHY specifiers (used by generic PHY framework).
-+- phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-+  number of PHYs as specified in *phys* property.
-+- power-domains: A phandle and power domain specifier pair to the power domain
-+  which is responsible for collapsing and restoring power to the peripheral.
-+- bus-range: Range of bus numbers associated with this controller.
-+- ranges:
-+  - The first three entries are expected to translate the addresses for the root
-+    port registers, which are referenced by the assigned-addresses property of
-+    the root port nodes (see below).
-+  - The remaining entries setup the mapping for the standard I/O and memory
-+	regions.
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+
-+In addition, the device tree node must have sub-nodes describing each
-+PCIe port interface, having the following mandatory properties:
-+
-+Required properties:
-+- device_type: Must be "pci"
-+- assigned-addresses: Address and size of the port configuration registers
-+- reg: Only the first four bytes are used to refer to the correct bus number
-+  and device number.
-+- #address-cells: Must be 3
-+- #size-cells: Must be 2
-+- #interrupt-cells: Must be 1
-+- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+- ranges: Sub-ranges distributed from the PCIe controller node. An empty
-+  property is sufficient.
-+- num-lanes: Number of lanes to use for this port.
-+
-+Examples:
-+
-+	hifsys: syscon@1a000000 {
-+		compatible = "mediatek,mt7623-hifsys", "syscon";
-+		reg = <0 0x1a000000 0 0x1000>;
-+		#clock-cells = <1>;
-+		#reset-cells = <1>;
-+	};
-+
-+	pcie: pcie-controller@1a140000 {
-+		compatible = "mediatek,mt7623-pcie";
-+		device_type = "pci";
-+		reg = <0 0x1a140000 0 0x1000>; /* PCIe shared registers */
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		#interrupt-cells = <1>;
-+		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
-+		interrupt-names = "pcie-int0", "pcie-int1", "pcie-int2";
-+		interrupt-map-mask = <0xf800 0 0 0>;
-+		interrupt-map = <0x0000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
-+				 <0x0800 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
-+			     <0x1000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
-+		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
-+			     <&hifsys CLK_HIFSYS_PCIE0>,
-+				 <&hifsys CLK_HIFSYS_PCIE1>,
-+				 <&hifsys CLK_HIFSYS_PCIE2>;
-+		clock-names = "free_ck", "sys_ck0", "sys_ck1", "sys_ck2";
-+		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
-+			     <&hifsys MT2701_HIFSYS_PCIE1_RST>,
-+			     <&hifsys MT2701_HIFSYS_PCIE2_RST>;
-+		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
-+		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
-+		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
-+		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x1a142000 0 0x1a142000 0 0x1000 /* Port0 registers */
-+			  0x82000000 0 0x1a143000 0 0x1a143000 0 0x1000 /* Port1 registers */
-+			  0x82000000 0 0x1a144000 0 0x1a144000 0 0x1000 /* Port2 registers */
-+			  0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* I/O space */
-+			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>;	/* memory space */
-+
-+		pcie@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000000 0 0x1a142000 0 0x1000>;
-+			reg = <0x0000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>;
-+			ranges;
-+			num-lanes = <1>;
-+		};
-+
-+		pcie@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x1a143000 0 0x1000>;
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>;
-+			ranges;
-+			num-lanes = <1>;
-+		};
-+
-+		pcie@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x1a144000 0 0x1000>;
-+			reg = <0x1000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0>;
-+			interrupt-map = <0 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
-+			ranges;
-+			num-lanes = <1>;
-+		};
-+	};
+On Thursday 18 May 2017 15:37:08 Sricharan R wrote:
+> Now with IOMMU probe deferral, we return -EPROBE_DEFER
+> for masters that are connected to an IOMMU which is not
+> probed yet, but going to get probed, so that we can attach
+> the correct dma_ops. So while trying to defer the probe of
+> the master, check if the of_iommu node that it is connected
+> to is marked in DT as 'status=disabled', then the IOMMU is never
+> is going to get probed. So simply return NULL and let the master
+> work without an IOMMU.
+> 
+> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred
+> probing or error") Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Tested-by: Will Deacon <will.deacon@arm.com>
+> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+> Acked-by: Will Deacon <will.deacon@arm.com>
+
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+
+> ---
+> [V2] Corrected spelling/case in commit log
+> 
+>  drivers/iommu/of_iommu.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 9f44ee8..e6e9bec 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node
+> *np)
+> 
+>  	ops = iommu_ops_from_fwnode(fwnode);
+>  	if ((ops && !ops->of_xlate) ||
+> +	    !of_device_is_available(iommu_spec->np) ||
+>  	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+>  		return NULL;
+
 -- 
-1.9.1
+Regards,
+
+Laurent Pinchart
 
 
 _______________________________________________
