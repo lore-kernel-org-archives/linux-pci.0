@@ -1,129 +1,217 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:6914 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751648AbdEZCAU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 22:00:20 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 0/4]   add PCIe driver for Kirin PCIe
-Date: Fri, 26 May 2017 09:53:29 +0800
-Message-ID: <20170526015333.92482-1-songxiaowei@hisilicon.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: Re: [PATCH V2 2/3] iommu: of: Ignore all errors except EPROBE_DEFER
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+        frowand.list@gmail.com, m.szyprowski@samsung.com,
+        linux-arch@vger.kernel.org, lorenzo.pieralisi@arm.com,
+        tn@semihalf.com, joro@8bytes.org, magnus.damm@gmail.com,
+        linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+        linux-pci@vger.kernel.org, lenb@kernel.org,
+        devicetree@vger.kernel.org, arnd@arndb.de,
+        linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+        robh+dt@kernel.org, bhelgaas@google.com,
+        laurent.pinchart+renesas@ideasonboard.com,
+        linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+        hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
+References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+ <2111512.n9LmSLnVgL@avalon>
+ <c3dc5e41-b853-9519-53a3-df870ab26230@codeaurora.org>
+ <26235811.RRFMmZMDyF@avalon>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <eb0a01bf-902d-cb45-a118-89743b6110d5@codeaurora.org>
+Date: Thu, 18 May 2017 19:35:05 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <26235811.RRFMmZMDyF@avalon>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before Version Patches
-======================
-patch V7
-https://www.spinics.net/lists/linux-pci/msg61664.html
-patch V6
-https://www.spinics.net/lists/linux-pci/msg61610.html
+Hi Laurent,
 
-patch V4
-https://www.spinics.net/lists/linux-pci/msg61406.html
+On 5/18/2017 7:13 PM, Laurent Pinchart wrote:
+> Hi Sricharan
+> 
+> On Thursday 18 May 2017 19:08:12 Sricharan R wrote:
+>> On 5/18/2017 6:00 PM, Laurent Pinchart wrote:
+>>> On Thursday 18 May 2017 17:26:14 Sricharan R wrote:
+>>>> On 5/18/2017 4:09 PM, Laurent Pinchart wrote:
+>>>>> On Thursday 18 May 2017 15:37:09 Sricharan R wrote:
+>>>>>> While deferring the probe of IOMMU masters,
+>>>>>> xlate and add_device callback can pass back error values
+>>>>>> like -ENODEV, which means IOMMU cannot be connected
+>>>>>> with that master for real reasons. So rather than
+>>>>>> killing the master's probe for such errors, just
+>>>>>> ignore the errors and let the master work without
+>>>>>> an IOMMU.
+>>>>>
+>>>>> I don't think this is a good idea. Why should we allow IOMMU drivers to
+>>>>> return an error if we're always going to ignore the error value ? That
+>>>>> will lead to drivers implementing slightly different behaviours, which
+>>>>> will be painful the day we'll need to start acting based on the error
+>>>>> value.
+>>>>
+>>>> The of_iommu_configure interface, before this series, was returning
+>>>> either correct 'iommu_ops' or NULL. Also there was no return value from
+>>>> of_dma_configure which calls of_iommu_configure. This means that if we
+>>>> block only -ENODEV now and let the other errors, the probe of the master
+>>>> devices can be killed for reasons apart from deferring. This would be a
+>>>> change in behavior introduced. All of xlate, add_device, of_pci_map_rid
+>>>> and others can return values apart from -ENODEV. So was thinking that
+>>>> restoring the old behavior, except for returning EPROBE_DEFER was the
+>>>> better thing to do ?
+>>>
+>>> We went from a situation where of_iommu_configure() could return either
+>>> valid operations in the case the device was to be handled by the IOMMU or
+>>> NULL otherwise, to a situation where we needed a third option for probe
+>>> deferral. The way we've done this, through error pointers, allows lots of
+>>> other errors to be returned as well from the of_xlate and add_device
+>>> operations.
+>>
+>> right, this was difference in the behavior now.
+>>
+>>> There is currently no use for returning error codes other than
+>>> -EPROBE_DEFFER from of_iommu_configure(), so your proposal is to block
+>>> errors returned from the of_xlate and add_device operations inside
+>>> of_iommu_configure(). My point is that, by doing so, we allow IOMMU
+>>> drivers to return random error codes that are then ignored. I believe
+>>> this can cause problems in the future when we will need to extend the API
+>>> and standardize more error codes, as by then IOMMU drivers will return
+>>> random errors (they actually do so already to some extent).
+>>>
+>>> For of_xlate I agree with you to some extent. v4.11 just checked whether
+>>> of_xlate succeeded or not, and just didn't use the IOMMU in case it
+>>> failed. The exact error value was ignored, and drivers already return
+>>> random errors. Going back to the v4.11 behaviour is what we need to do in
+>>> the short-term, even if I believe we should standardize the error values
+>>> returned from of_xlate after v4.12.
+>>>
+>>> For add_device, however, the situation is a bit different. The add_device
+>>> operation is called from the IOMMU bus notifier, and the -ENODEV error is
+>>> ignored by add_iommu_group(). Any other error will cause bus_set_iommu()
+>>> to fail, which makes IOMMU probing fail for the drivers that check the
+>>> return value of bus_set_iommu() (some of them don't :-/).
+>>>
+>>> Fixing all this properly requires standardizing the error codes, and going
+>>> through the existing IOMMU drivers to comply with the standardized
+>>> behaviour.
+>>
+>> I understand your concern on standardizing the error codes from xlate,
+>> add_device, others and handling them properly. As you said there are quite
+>> some errors returned from them today. Also another thing is standardizing
+>> the behavior of of_iommu_configure itself. So that API serves to connect a
+>> device to its correct iommu_ops. When that's not possible, what should be
+>> the output and how should that be handled by the caller. The current
+>> behavior is to either 1) connect to correct ops or 2) wait for it or 3)
+>> progress further with plain/default dma_ops. Anyways as you said
+>> standardizing the iommu api ops, would make the of_iommu_configure handling
+>> more specific. Having said that i think similar fix needs to be done for
+>> acpi's iort_iommu_configure as well.
+> 
+> I'm less knowledgeable about ACPI but I think you're right. Would you like to 
+> tackle this for v4.13 ? :-)
 
-patch V3
-https://www.spinics.net/lists/linux-pci/msg61399.html
+Will add the fix for ACPI now in this series. ok, Will really see if i can
+address the standardizing part for 4.13.
+
+> 
+>>> While this shouldn't be very difficult, it's likely not material for a
+>>> v4.12- rc fix. We will thus likely need to merge this patch (or something
+>>> very similar to it), but I'd really like to see this fixed properly for
+>>> v4.13.
+>>
+>> When you say "merge this patch (or something similar)", is that about
+>> documenting the error values for of_xlate and add_device that you showed
+>> down below  (or) about the patch in discussion ?
+> 
+> I meant the patch we're discussing, "[PATCH V2 2/3] iommu: of: Ignore all 
+> errors except EPROBE_DEFER". Sorry for the confusion. One more comment about 
+> this below.
+
+ok.
+
+> 
+>>>>> At the very least, if you want to give a specific meaning to -ENODEV,
+>>>>> you should check for that value specifically and not ignore all errors
+>>>>> other than -EPROBE_DEFER. You also need to document the meaning of the
+>>>>> error value. This can be done in the documentation of the of_xlate
+>>>>> operation in include/linux/iommu.h:
+>>>>>
+>>>>> diff --git a/include/linux/iommu.h b/include/linux/iommu.h
+>>>>> index 2cb54adc4a33..6ba553e7384a 100644
+>>>>> --- a/include/linux/iommu.h
+>>>>> +++ b/include/linux/iommu.h
+>>>>> @@ -181,7 +181,6 @@ struct iommu_resv_region {
+>>>>>   * @domain_window_disable: Disable a particular window for a domain
+>>>>>   * @domain_set_windows: Set the number of windows for a domain
+>>>>>   * @domain_get_windows: Return the number of windows for a domain
+>>>>> - * @of_xlate: add OF master IDs to iommu grouping
+>>>>>   * @pgsize_bitmap: bitmap of all possible supported page sizes
+>>>>>   */
+>>>>>  struct iommu_ops {
+>>>>> @@ -224,6 +223,11 @@ struct iommu_ops {
+>>>>>  	/* Get the number of windows per domain */
+>>>>>  	u32 (*domain_get_windows)(struct iommu_domain *domain);
+>>>>>
+>>>>> +	/**
+>>>>> +	 * @of_xlate:
+>>>>> +	 *
+>>>>> +	 * Add OF master IDs to iommu grouping.
+>>>>> +	 */
+>>>>>  	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
+>>>>>  	
+>>>>>  	unsigned long pgsize_bitmap;
+>>>>>
+>>>>> And add documentation for the error codes there.
+>>>>>
+>>>>> If you want to ignore some errors returned from the add_device operation
+>>>>> you should document it similarly, and in particular document which error
+>>>>> check(s) need to be performed by of_xlate and which are the
+>>>>> responsibility of add_device.
+>>>>>
+>>>>>> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with
+>>>>>> deferred probing or error")
+>>>>>> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>>>>>> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+>>>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>>>>>> ---
+>>>>>> [V2] Corrected spelling/case in commit log
+>>>>>>
+>>>>>>  drivers/iommu/of_iommu.c | 6 ++++++
+>>>>>>  1 file changed, 6 insertions(+)
+>>>>>>
+>>>>>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>>>>>> index e6e9bec..f0d22c0 100644
+>>>>>> --- a/drivers/iommu/of_iommu.c
+>>>>>> +++ b/drivers/iommu/of_iommu.c
+>>>>>> @@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct
+>>>>>> device *dev,
+>>>>>> 			ops = ERR_PTR(err);
+>>>>>>  	}
+>>>>>>
+>>>>>> +	/* Ignore all other errors apart from EPROBE_DEFER */
+>>>>>> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+>>>>>> +		dev_info(dev, "Adding to IOMMU failed: %ld\n", 
+> PTR_ERR(ops));
+> 
+> I would turn this into a dev_dbg(), as at least the -ENODEV error returned 
+> from add_device has a defined meaning (see the comment in add_iommu_group()) 
+> and is in my opinion not a condition that should be reported in the kernel log 
+> by default.
+> 
+
+ok, will turn this in to a dev_dbg.
+
+Regards,
+ Sricharan
 
 
-Changes between V8 and V7
-=========================
-1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
-
-Changes between V7 and V6
-=========================
-1. add enumeration log Based on Hikey960 Board with these patches.
-2. fix issues as fellows:
-   (1) delete reduntant blankets in macro defination,
-   (2) add blank line in  kirin_pcie_clk_ctrl function.
-   (3) Fix compitable property in DT with the SoC name,
-       for example "hisilicon,kirin960-pcie".
-
-Changes between V6 and V4
-=========================
-1. seperate Document from .dtsi patch.
-2. fix issues according to review comments
-   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
-   patch post method and so on.
-
-Enumeration log
-===============
-These test logs come from patches running on Hikey960 Board
-(1) Connect with Atheros Communications WIFI
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
-	pci 0000:01:00.0: supports D1
-	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
-	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276	
-
-(2) Connect with Sandisk SSD
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [1b4b:1093] type 00 class 0x010802
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
-	pci 0000:01:00.0: reg 0x30: [mem 0xf6000000-0xf600ffff pref]
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:00:00.0: BAR 15: assigned [mem 0xf7100000-0xf71fffff pref]
-	pci 0000:01:00.0: BAR 6: assigned [mem 0xf7100000-0xf710ffff pref]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pci 0000:00:00.0:   bridge window [mem 0xf7100000-0xf71fffff pref]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276
-
-Patches list
-============
-Xiaowei Song (4):
-  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-  arm64: dts: hisi: add kirin pcie node
-  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-  defconfig: PCI: Enable  Kirin PCIe defconfig
-
- .../devicetree/bindings/pci/kirin-pcie.txt         |  49 ++
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
- arch/arm64/configs/defconfig                       |   1 +
- drivers/pci/dwc/Kconfig                            |  10 +
- drivers/pci/dwc/Makefile                           |   1 +
- drivers/pci/dwc/pcie-kirin.c                       | 513 +++++++++++++++++++++
- 6 files changed, 605 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
- create mode 100644 drivers/pci/dwc/pcie-kirin.c
+>>>>>> +		ops = NULL;
+>>>>>> +	}
+>>>>>> +
+>>>>>>  	return ops;
+>>>>>>  }
+> 
 
 -- 
-2.11.GIT
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
