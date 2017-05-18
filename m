@@ -1,14 +1,22 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-5-jean-philippe.brucker@arm.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <bc1237e2-3690-bc1e-b7bc-86b982c9058f@semihalf.com>
-Date: Wed, 10 May 2017 14:54:26 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ magnus.damm@gmail.com, geert@linux-m68k.org, j.neuschaefer@gmx.net,
+ laurent.pinchart+renesas@ideasonboard.com
+Subject: [PATCH V2 3/3] ARM: dma-mapping: Don't tear third-party mappings
+Date: Thu, 18 May 2017 15:37:10 +0530
+Message-Id: <1495102030-10548-3-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,57 +24,90 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: sricharan@codeaurora.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean,
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-On 27.02.2017 20:54, Jean-Philippe Brucker wrote:
-> +/*
-> + * Returns -ENOSYS if ATS is not supported either by the device or by the SMMU
-> + */
-> +static int arm_smmu_enable_ats(struct arm_smmu_master_data *master)
-> +{
-> +	int ret;
-> +	size_t stu;
-> +	struct pci_dev *pdev;
-> +	struct arm_smmu_device *smmu = master->smmu;
-> +
-> +	if (!(smmu->features & ARM_SMMU_FEAT_ATS) || !dev_is_pci(master->dev))
-> +		return -ENOSYS;
-> +
-> +	pdev = to_pci_dev(master->dev);
-> +
-> +#ifdef CONFIG_PCI_ATS
-> +	if (!pdev->ats_cap)
-> +		return -ENOSYS;
-> +#else
-> +	return -ENOSYS;
-> +#endif
+arch_setup_dma_ops() is used in device probe code paths to create an
+IOMMU mapping and attach it to the device. The function assumes that the
+device is attached to a device-specific IOMMU instance (or at least a
+device-specific TLB in a shared IOMMU instance) and thus creates a
+separate mapping for every device.
 
-Nit: This deserves to be another helper in ats.c like:
+On several systems (Renesas R-Car Gen2 being one of them), that
+assumption is not true, and IOMMU mappings must be shared between
+multiple devices. In those cases the IOMMU driver knows better than the
+generic ARM dma-mapping layer and attaches mapping to devices manually
+with arm_iommu_attach_device(), which sets the DMA ops for the device.
 
-int pci_ats_supported(struct pci_dev *dev) {
-         if (!pdev->ats_cap)
-                 return 0;
+The arch_setup_dma_ops() function takes this into account and bails out
+immediately if the device already has DMA ops assigned. However, the
+corresponding arch_teardown_dma_ops() function, called from driver
+unbind code paths (including probe deferral), will tear the mapping down
+regardless of who created it. When the device is reprobed
+arch_setup_dma_ops() will be called again but won't perform any
+operation as the DMA ops will still be set.
 
-         return 1;
-}
+We need to reset the DMA ops in arch_teardown_dma_ops() to fix this.
+However, we can't do so unconditionally, as then a new mapping would be
+created by arch_setup_dma_ops() when the device is reprobed, regardless
+of whether the device needs to share a mapping or not. We must thus keep
+track of whether arch_setup_dma_ops() created the mapping, and only in
+that case tear it down in arch_teardown_dma_ops().
 
-Thanks,
-Tomasz
+Keep track of that information in the dev_archdata structure. As the
+structure is embedded in all instances of struct device let's not grow
+it, but turn the existing dma_coherent bool field into a bitfield that
+can be used for other purposes.
+
+Fixes: 09515ef5ddad ("of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices")
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ arch/arm/include/asm/device.h | 3 ++-
+ arch/arm/mm/dma-mapping.c     | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/include/asm/device.h b/arch/arm/include/asm/device.h
+index 36ec9c8..3234fe9 100644
+--- a/arch/arm/include/asm/device.h
++++ b/arch/arm/include/asm/device.h
+@@ -19,7 +19,8 @@ struct dev_archdata {
+ #ifdef CONFIG_XEN
+ 	const struct dma_map_ops *dev_dma_ops;
+ #endif
+-	bool dma_coherent;
++	unsigned int dma_coherent:1;
++	unsigned int dma_ops_setup:1;
+ };
+ 
+ struct omap_device;
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index c742dfd..b48998f 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -2430,9 +2430,13 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+ 		dev->dma_ops = xen_dma_ops;
+ 	}
+ #endif
++	dev->archdata.dma_ops_setup = true;
+ }
+ 
+ void arch_teardown_dma_ops(struct device *dev)
+ {
++	if (!dev->archdata.dma_ops_setup)
++		return;
++
+ 	arm_teardown_iommu_dma_ops(dev);
+ }
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
 
 _______________________________________________
 linux-arm-kernel mailing list
