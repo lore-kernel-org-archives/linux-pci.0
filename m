@@ -1,14 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- iommu@lists.linux-foundation.org
-Subject: [PATCH 7/7] iommu/arm-smmu-v3: Disable tagged pointers
-Date: Wed, 24 May 2017 19:01:43 +0100
-Message-Id: <20170524180143.19855-8-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
-References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+To: Sricharan R <sricharan@codeaurora.org>
+Subject: Re: [PATCH V4 2/4] iommu: of: Ignore all errors except EPROBE_DEFER
+Date: Thu, 18 May 2017 17:56:49 +0300
+Message-ID: <2207666.NfkZRjnSBi@avalon>
+In-Reply-To: <1495119257-26724-2-git-send-email-sricharan@codeaurora.org>
+References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
+ <1495119257-26724-2-git-send-email-sricharan@codeaurora.org>
+MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,52 +16,71 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, will.deacon@arm.com,
- joro@8bytes.org, thunder.leizhen@huawei.com, rjw@rjwysocki.net,
- okaya@codeaurora.org, robh+dt@kernel.org, hanjun.guo@linaro.org,
- sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
- sunil.kovvuri@gmail.com, robin.murphy@arm.com, lenb@kernel.org
-MIME-Version: 1.0
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
+ magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+ linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+ robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ robin.murphy@arm.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
-MMU mask out bits [63:56] of an address, allowing a userspace application
-to store data in its pointers. This option is incompatible with PCI ATS.
+Hi Sricharan,
 
-If TBI is enabled in the SMMU and userspace triggers DMA transactions on
-tagged pointers, the endpoint might create ATC entries for addresses that
-include a tag. Software would then have to send ATC invalidation packets
-for each 255 possible alias of an address, or just wipe the whole address
-space. This is not a viable option, so disable TBI.
+Thank you for the patch.
 
-The impact of this change is unclear, since there are very few users of
-tagged pointers, much less SVM. But the requirement introduced by this
-patch doesn't seem excessive: a userspace application using both tagged
-pointers and SVM should now sanitize addresses (clear the tag) before
-using them for device DMA.
+On Thursday 18 May 2017 20:24:15 Sricharan R wrote:
+> While deferring the probe of IOMMU masters, xlate and
+> add_device callbacks called from of_iommu_configure
+> can pass back error values like -ENODEV, which means
+> the IOMMU cannot be connected with that master for real
+> reasons. Before the IOMMU probe deferral, all such errors
+> were ignored. Now all those errors are propagated back,
+> killing the master's probe for such errors. Instead ignore
+> all the errors except EPROBE_DEFER, which is the only one
+> of concern and let the master work without IOMMU, thus
+> restoring the old behavior.
+> 
+> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred
+> probing or error") Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 1 -
- 1 file changed, 1 deletion(-)
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 87ed6239b9a6..0b2674f8ba0f 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -997,7 +997,6 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
- 	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
- 	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
- 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
--	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
- 
- 	return val;
- }
+> ---
+> [V4] Reworded commit log and changed dev_info to dev_dbg
+> 
+>  drivers/iommu/of_iommu.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index e6e9bec..19779b8 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct
+> device *dev, ops = ERR_PTR(err);
+>  	}
+> 
+> +	/* Ignore all other errors apart from EPROBE_DEFER */
+> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
+> +		ops = NULL;
+> +	}
+> +
+>  	return ops;
+>  }
+
 -- 
-2.12.1
+Regards,
+
+Laurent Pinchart
 
 
 _______________________________________________
