@@ -1,42 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33290 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750955AbdE2JOA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 29 May 2017 05:14:00 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ magnus.damm@gmail.com, geert@linux-m68k.org, j.neuschaefer@gmx.net,
+ laurent.pinchart+renesas@ideasonboard.com
+Subject: [PATCH V2 2/3] iommu: of: Ignore all errors except EPROBE_DEFER
+Date: Thu, 18 May 2017 15:37:09 +0530
+Message-Id: <1495102030-10548-2-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-In-Reply-To: <20170528093051.11816-6-wsa+renesas@sang-engineering.com>
-References: <20170528093051.11816-1-wsa+renesas@sang-engineering.com> <20170528093051.11816-6-wsa+renesas@sang-engineering.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 29 May 2017 11:13:48 +0200
-Message-ID: <CAMuHMdV1AKU-kLj+1OgseqR1q2MOghRfWdyp6OJVe5BoW=FBkQ@mail.gmail.com>
-Subject: Re: [PATCH 5/7] pci: use proper name for the R-Car SoC
-To: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 28, 2017 at 11:30 AM, Wolfram Sang
-<wsa+renesas@sang-engineering.com> wrote:
-> It is 'R-Car', not 'RCar'. No code or binding changes, only descriptive text.
->
-> Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+While deferring the probe of IOMMU masters,
+xlate and add_device callback can pass back error values
+like -ENODEV, which means IOMMU cannot be connected
+with that master for real reasons. So rather than
+killing the master's probe for such errors, just
+ignore the errors and let the master work without
+an IOMMU.
 
-Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Tested-by: Magnus Damn <magnus.damn@gmail.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+[V2] Corrected spelling/case in commit log
 
-Gr{oetje,eeting}s,
+ drivers/iommu/of_iommu.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-                        Geert
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index e6e9bec..f0d22c0 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 			ops = ERR_PTR(err);
+ 	}
+ 
++	/* Ignore all other errors apart from EPROBE_DEFER */
++	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
++		dev_info(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
++		ops = NULL;
++	}
++
+ 	return ops;
+ }
+ 
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
