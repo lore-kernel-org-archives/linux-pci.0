@@ -1,143 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:58057 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765599AbdEXI02 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:26:28 -0400
-Message-Id: <20170524081548.771457199@linutronix.de>
-Date: Wed, 24 May 2017 10:15:32 +0200
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sebastian Siewior <bigeasy@linutronix.de>,
-        Paul McKenney <paulmck@linux.vnet.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [patch V3 21/32] PCI: Replace the racy recursion prevention
-References: <20170524081511.203800767@linutronix.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: songxiaowei <songxiaowei@hisilicon.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        Duc Dang <dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
+        Guodong Xu <guodong.xu@linaro.org>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggMS8yXSBQQ0k6IGR3Yzoga2lyaW46IGFkZCBQQ0ll?=
+ =?utf-8?Q?_Driver_for_HiSilicon_Kirin_SoC?=
+Date: Thu, 18 May 2017 07:24:53 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54116242D@DGGEMA505-MBS.china.huawei.com>
+References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
+ <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
+In-Reply-To: <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_call_probe() can called recursively when a physcial function is probed
-and the probing creates virtual functions, which are populated via
-pci_bus_add_device() which in turn can end up calling pci_call_probe()
-again.
-
-The code has an interesting way to prevent recursing into the workqueue
-code.  That's accomplished by a check whether the current task runs already
-on the numa node which is associated with the device.
-
-While that works to prevent the recursion into the workqueue code, it's
-racy versus normal execution as there is no guarantee that the node does
-not vanish after the check.
-
-There is another issue with this code. It dereferences cpumask_of_node()
-unconditionally without checking whether the node is available.
-
-Make the detection reliable by:
-
- - Mark a probed device as 'is_probed' in pci_call_probe()
- 
- - Check in pci_call_probe for a virtual function. If it's a virtual
-   function and the associated physical function device is marked
-   'is_probed' then this is a recursive call, so the call can be invoked in
-   the calling context.
-
- - Add a check whether the node is online before dereferencing it.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: linux-pci@vger.kernel.org
-Cc: Sebastian Siewior <bigeasy@linutronix.de>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-
----
- drivers/pci/pci-driver.c |   47 +++++++++++++++++++++++++----------------------
- include/linux/pci.h      |    1 +
- 2 files changed, 26 insertions(+), 22 deletions(-)
-
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -320,10 +320,19 @@ static long local_pci_probe(void *_ddi)
- 	return 0;
- }
- 
-+static bool pci_physfn_is_probed(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_PCI_IOV
-+	return dev->is_virtfn && dev->physfn->is_probed;
-+#else
-+	return false;
-+#endif
-+}
-+
- static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 			  const struct pci_device_id *id)
- {
--	int error, node;
-+	int error, node, cpu;
- 	struct drv_dev_and_id ddi = { drv, dev, id };
- 
- 	/*
-@@ -332,33 +341,27 @@ static int pci_call_probe(struct pci_dri
- 	 * on the right node.
- 	 */
- 	node = dev_to_node(&dev->dev);
-+	dev->is_probed = 1;
-+
-+	cpu_hotplug_disable();
- 
- 	/*
--	 * On NUMA systems, we are likely to call a PF probe function using
--	 * work_on_cpu().  If that probe calls pci_enable_sriov() (which
--	 * adds the VF devices via pci_bus_add_device()), we may re-enter
--	 * this function to call the VF probe function.  Calling
--	 * work_on_cpu() again will cause a lockdep warning.  Since VFs are
--	 * always on the same node as the PF, we can work around this by
--	 * avoiding work_on_cpu() when we're already on the correct node.
--	 *
--	 * Preemption is enabled, so it's theoretically unsafe to use
--	 * numa_node_id(), but even if we run the probe function on the
--	 * wrong node, it should be functionally correct.
-+	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
-+	 * device is probed from work_on_cpu() of the Physical device.
- 	 */
--	if (node >= 0 && node != numa_node_id()) {
--		int cpu;
--
--		cpu_hotplug_disable();
-+	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
-+	    pci_physfn_is_probed(dev))
-+		cpu = nr_cpu_ids;
-+	else
- 		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
--		if (cpu < nr_cpu_ids)
--			error = work_on_cpu(cpu, local_pci_probe, &ddi);
--		else
--			error = local_pci_probe(&ddi);
--		cpu_hotplug_enable();
--	} else
-+
-+	if (cpu < nr_cpu_ids)
-+		error = work_on_cpu(cpu, local_pci_probe, &ddi);
-+	else
- 		error = local_pci_probe(&ddi);
- 
-+	dev->is_probed = 0;
-+	cpu_hotplug_enable();
- 	return error;
- }
- 
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -371,6 +371,7 @@ struct pci_dev {
- 	unsigned int	irq_managed:1;
- 	unsigned int	has_secondary_link:1;
- 	unsigned int	non_compliant_bars:1;	/* broken BARs; ignore them */
-+	unsigned int	is_probed:1;		/* device probing in progress */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
- 
+DQoNCi0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCuWPkeS7tuS6ujogYXJuZGJlcmdtYW5uQGdtYWls
+LmNvbSBbbWFpbHRvOmFybmRiZXJnbWFubkBnbWFpbC5jb21dIOS7o+ihqCBBcm5kIEJlcmdtYW5u
+DQrlj5HpgIHml7bpl7Q6IDIwMTflubQ15pyIMTjml6UgNDoyOQ0K5pS25Lu25Lq6OiBzb25neGlh
+b3dlaQ0K5oqE6YCBOiBCam9ybiBIZWxnYWFzOyBLaXNob247IEppbmdvbyBIYW47IFRvbWFzeiBO
+b3dpY2tpOyBLZWl0aCBCdXNjaDsgbmlrbGFzLmNhc3NlbEBheGlzLmNvbTsgRHVjIERhbmc7IGxp
+dWRvbmdkb25nIChDKTsgQ2hlbmZlbmcgKHB1Y2spOyBHdW9kb25nIFh1OyBXYW5nYmluZ2h1aTsg
+U3V6aHVhbmdsdWFuOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBsaW51eC1wY2kNCuS4u+mi
+mDogUmU6IFtQQVRDSCAxLzJdIFBDSTogZHdjOiBraXJpbjogYWRkIFBDSWUgRHJpdmVyIGZvciBI
+aVNpbGljb24gS2lyaW4gU29DDQoNCk9uIEZyaSwgTWF5IDEyLCAyMDE3IGF0IDM6NTEgQU0sIFNv
+bmcgWGlhb3dlaSA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4gd3JvdGU6DQo+IEZyb206IHNv
+bmd4aWFvd2VpIDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPg0KDQpMb29rcyBnb29kIG92ZXJh
+bGwsIGp1c3QgYSBmZXcgZGV0YWlsczoNCg0KUGxlYXNlIGZpeCB5b3VyIH4vLmdpdGNvbmZpZyB0
+byBjb250YWluIHRoZSBzYW1lIHJlYWwgbmFtZSAoIlNvbmcgWGlhb3dlaSINCmluc3RlYWQgb2Yg
+InNvbmd4aWFvd2VpIikgdGhhdCB5b3UgdXNlIGZvciBzZW5kaW5nIHRoZSBlbWFpbHMuDQoNCj4g
+Kw0KPiArc3RhdGljIGludCBraXJpbl9wY2llX3BoeV9pbml0KHN0cnVjdCBraXJpbl9wY2llICpr
+aXJpbl9wY2llKSB7DQouLi4NCj4gKyAgICAgICByZWdfdmFsID0ga2lyaW5fYXBiX3BoeV9yZWFk
+bChraXJpbl9wY2llLCAweDQwMCk7DQo+ICsgICAgICAgd2hpbGUgKHJlZ192YWwgJiBwaXBlX2Ns
+a19zdGFibGUpIHsNCj4gKyAgICAgICAgICAgICAgIHVkZWxheSgxMDApOw0KPiArICAgICAgICAg
+ICAgICAgaWYgKHRpbWUgPT0gMCkgew0KPiArICAgICAgICAgICAgICAgICAgICAgICBkZXZfZXJy
+KGtpcmluX3BjaWUtPnBjaS0+ZGV2LCAiUElQRSBjbGsgaXMgbm90IHN0YWJsZVxuIik7DQo+ICsg
+ICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAtRUlOVkFMOw0KPiArICAgICAgICAgICAgICAg
+fQ0KPiArICAgICAgICAgICAgICAgdGltZS0tOw0KPiArICAgICAgICAgICAgICAgcmVnX3ZhbCA9
+IGtpcmluX2FwYl9waHlfcmVhZGwoa2lyaW5fcGNpZSwgMHg0MDApOw0KPiArICAgICAgIH0NCg0K
+SWYgdGhpcyBpcyBub3QgY2FsbGVkIHdpdGggaW50ZXJydXB0cyBkaXNhYmxlZCwgcGxlYXNlIHVz
+ZSBhIHNsZWVwaW5nIGZ1bmN0aW9uIChlLmcuIG1zbGVlcCgxKSkgYXMgdGhlIGRlbGF5IGFuZCBj
+b21wYXJlIGFnYWluc3Qga3RpbWVfYmVmb3JlKCkgdG8gc2VlIGhvdyBtdWNoIHRvdGFsIHRpbWUg
+aGFzIGV4cGlyZWQgd2hlbiB3YWl0aW5nIGZvciBhIHRpbWVvdXQsIGluc3RlYWQgb2YgdXNpbmcg
+YSBjb3VudGVyLg0KDQpTaW5jZSB0aGUgdGltZSBvZiBwaXBlIGNsayBzdGFibGUgaXMgZnJvbSA0
+NTB1cyB0byA1MjB1cywgSSB0aGluayBmdW5jdGlvbiB1c2xlZXBfcmFuZ2UgaXMgYmV0dGVyLg0K
+VGhlIHBhdGNoZXMgaXMgZ29pbmcgdG8gYmUgdXBkYXRlZC4NCi1YaWFvd2VpLiANCg0KPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uaCANCj4gYi9kcml2ZXJzL3BjaS9k
+d2MvcGNpZS1raXJpbi5oIG5ldyBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IA0KPiAwMDAwMDAwMDAw
+MDAuLmFkOWEzYjQyNzI5OA0KPiAtLS0gL2Rldi9udWxsDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3
+Yy9wY2llLWtpcmluLmgNCj4gQEAgLTAsMCArMSw3OSBAQA0KPiArLyoNCj4gKyAqIFBDSWUgaG9z
+dCBjb250cm9sbGVyIGRyaXZlciBmb3IgS2lyaW4gOTYwIFNvQ3MNCj4gKyAqDQo+ICsgKiBDb3B5
+cmlnaHQgKEMpIDIwMTUgSHVhd2VpIEVsZWN0cm9uaWNzIENvLiwgTHRkLg0KPiArICogICAgICAg
+ICAgICAgaHR0cDovL3d3dy5odWF3ZWkuY29tDQo+ICsgKg0KPiArICogQXV0aG9yOiBYaWFvd2Vp
+IFNvbmcgPHNvbmd4aWFvd2VpQGh1YXdlaS5jb20+DQoNClRoZSBoZWFkZXIgaXMgb25seSB1c2Vk
+IGluIG9uZSAuYyBmaWxlLCBzbyBqdXN0IHJlbW92ZSBpdCBhbmQgYWRkIHRoZSBjb250ZW50cyB0
+byB0aGF0IGZpbGUuDQoNCiAgICBBcm5kDQo=
