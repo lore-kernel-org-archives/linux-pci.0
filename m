@@ -1,138 +1,602 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1494739656.22906.32.camel@mtkswgap22>
-Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for
- Mediatek PCIe
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Date: Sun, 14 May 2017 13:27:36 +0800
-In-Reply-To: <1494504718.19420.10.camel@mtkswgap22>
-References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
- <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
- <1494408707.31307.32.camel@mtkswgap22>
- <CAK8P3a1AUsUTNDnN+_9251sxC7R4vvkQRr37dvAke6ooCJ_oxg@mail.gmail.com>
- <1494470650.20742.36.camel@mtkswgap22>
- <CAK8P3a1FVyoFufnbQFjGovoQpkxMj3kaAgjb5Q+v-DQnYKeA-g@mail.gmail.com>
- <1494493719.9564.26.camel@mtkswgap22>
- <1494504718.19420.10.camel@mtkswgap22>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:36746 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751548AbdERJWR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 05:22:17 -0400
+Subject: Re: [PATCH v4 2/3] PCI: dwc: kirin: add PCIe Driver for HiSilicon
+ Kirin SoC
+To: Song Xiaowei <songxiaowei@hisilicon.com>, <bhelgaas@google.com>,
+        <kishon@ti.com>, <jingoohan1@gmail.com>, <arnd@arndb.de>,
+        <tn@semihalf.com>, <keith.busch@intel.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>
+CC: <puck.chen@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <chenyao11@huawei.com>
+References: <20170518091640.36704-1-songxiaowei@hisilicon.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <b325663f-fbad-3301-5ae5-1c07fc6f42cb@axis.com>
+Date: Thu, 18 May 2017 11:22:09 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>,
- "moderated list:ARM/Mediatek SoC..." <linux-mediatek@lists.infradead.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170518091640.36704-1-songxiaowei@hisilicon.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Acked-by: Niklas Cassel <niklas.cassel@axis.com>
 
-Hi Arnd,
-
-Sorry to bother you again.
-
-On Thu, 2017-05-11 at 20:11 +0800, Ryder Lee wrote:
-> > interrupt-map-mask = <0xff800 0 0 0>;
-> > interrupt-map = <0x0000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
-> > 		 <0x0800 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
-> > 		 <0x1000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>,
-> > 
-> > 		 /* workaround here*/
-> > 		 <0x10000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
-> > 		 <0x20000 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
-> > 	     <0x30000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
-> > 
-> > It works well. But how could we handle the situation if root port0
-> > status = "disabled" ? I think we cannot assign child bus number
-> > dynamically from binding.
+On 05/18/2017 11:16 AM, Song Xiaowei wrote:
+> Hisilicon PCIe Driver shares the common functions fo PCIe dw-host
 > 
-> That is to say, we route it statically if port0 (or port1) is
-> unavailable. The PCI child bus enumeration should look something like
-> this:
+> The poweron functions is developed on hi3660 SoC, while Others Functions
+> are common for Kirin series SoCs.
 > 
->  pci 0000:00:01.0: fixup irq: got 224
->  pci 0000:00:01.0: assigning IRQ 224
->  pci 0000:00:02.0: fixup irq: got 225
->  pci 0000:00:02.0: assigning IRQ 225
+> Lowpower(L1ss and SR), hotplug and MSI feature are not supported
+> currently.
+> 
+> Cc: Guodong Xu <guodong.xu@linaro.org>
+> Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
+> ---
+>  drivers/pci/dwc/Kconfig      |  10 +
+>  drivers/pci/dwc/Makefile     |   1 +
+>  drivers/pci/dwc/pcie-kirin.c | 519 +++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 530 insertions(+)
+>  create mode 100644 drivers/pci/dwc/pcie-kirin.c
+> 
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index d2d2ba5b8a68..13e617b78430 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -130,4 +130,14 @@ config PCIE_ARTPEC6
+>  	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+>  	  SoCs.  This PCIe controller uses the DesignWare core.
 >  
->  Go wrong here! IRQ 223/224 should be assigned to the devices behind
-> port0 and port1.
->  pci 0000:01:00.0: fixup irq: got 223
->  pci 0000:01:00.0: assigning IRQ 223
->  pci 0000:02:00.0: fixup irq: got 224
->  pci 0000:02:00.0: assigning IRQ 224
-
-What I thought was wrong. I have misunderstood something in previous
-discussion. Actually it could work for the situation that I mentioned
-before. However, I'm not sure whether this is a proper representation
-you want to see.
-
-> > > >> On a related note, I see that you still list
-> > > >>
-> > > >> > +- interrupts: Three interrupt outputs of the controller. Must contain an
-> > > >> > +  entry for each entry in the interrupt-names property.
-> > > >> > +- interrupt-names: Must include the following names
-> > > >> > +  - "pcie-int0"
-> > > >> > +  - "pcie-int1"
-> > > >> > +  - "pcie-int2"
-> > > >>
-> > > >> This seems to be an artifact from the older version and should be
-> > > >> removed as the driver correctly ignores the properties now.
-> > > >
-> > > > Actually, everything works fine without these properties however when it
-> > > > loads we see a few weird error message:
-> > > >
-> > > > pcieport 0000:00:01.0: Signaling PME with IRQ 232
-> > > > pcieport 0000:00:02.0: enabling device (0140 -> 0142)
-> > > > pcieport 0000:00:02.0: enabling bus mastering
-> > > > irq 232: nobody cared (try booting with the "irqpoll" option)
-> > > > ...
-> > > > [<c03f6be4>] (pcie_pme_probe) from [<c03f47b8>] (pcie_port_probe_service
-> > > > +0x44/0x6c)
-> > > > (pcie_port_probe_service) from [<c0454cf8>] (driver_probe_device
-> > > > +0x280/0x470)
-> > > > ...
-> > > > (pcie_port_device_register) from [<c03f51a0>] (pcie_portdrv_probe
-> > > > +0x3c/0xb4)
-> > > > (pcie_portdrv_probe) from [<c03e7acc>] (pci_device_probe+0x98/0xfc)
-> > > > (pci_device_probe) from [<c0454cf8>] (driver_probe_device+0x280/0x470)
-> > > > handlers:
-> > > > [<c03f68b0>] pcie_pme_irq
-> > > > Disabling IRQ #233
-> > > >
-> > > > I haven't dig it out yet, but just keep them here to solve that.
-> > > 
-> > > Something is going very wrong if adding the properties helps. I can't
-> > > think of what that is, but we have to find out before the binding can
-> > > be merged.
-> > 
-> > Not really understand PME service. But I will find the reason here.
+> +config PCIE_KIRIN
+> +	depends on OF && ARM64
+> +	bool "HiSilicon Kirin series SoCs PCIe controllers"
+> +	depends on PCI
+> +	select PCIEPORTBUS
+> +	select PCIE_DW_HOST
+> +	help
+> +	  Say Y here if you want PCIe controller support on HiSilicon Kirin series SoCs
+> +	  kirin960 SoC
+> +
+>  endmenu
+> diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+> index a2df13c28798..4bd69bacd4ab 100644
+> --- a/drivers/pci/dwc/Makefile
+> +++ b/drivers/pci/dwc/Makefile
+> @@ -10,6 +10,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+>  obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+>  obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+>  obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+> +obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+>  
+>  # The following drivers are for devices that use the generic ACPI
+>  # pci_root.c driver but don't support standard ECAM config access.
+> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+> new file mode 100644
+> index 000000000000..cda6391c91ab
+> --- /dev/null
+> +++ b/drivers/pci/dwc/pcie-kirin.c
+> @@ -0,0 +1,519 @@
+> +/*
+> + * PCIe host controller driver for Kirin Phone SoCs
+> + *
+> + * Copyright (C) 2015 Hilisicon Electronics Co., Ltd.
+> + *		http://www.huawei.com
+> + *
+> + * Author: Xiaowei Song <songxiaowei@huawei.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/regmap.h>
+> +#include <asm/compiler.h>
+> +#include <linux/compiler.h>
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/gpio.h>
+> +#include <linux/err.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/of_gpio.h>
+> +#include <linux/pci.h>
+> +#include <linux/of_pci.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/resource.h>
+> +#include <linux/types.h>
+> +#include <linux/of_address.h>
+> +#include <linux/pci_regs.h>
+> +#include "pcie-designware.h"
+> +
+> +#define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
+> +
+> +#define REF_CLK_FREQ 100000000
+> +
+> +/* PCIe ELBI registers */
+> +#define SOC_PCIECTRL_CTRL0_ADDR 0x000
+> +#define SOC_PCIECTRL_CTRL1_ADDR 0x004
+> +#define SOC_PCIEPHY_CTRL2_ADDR 0x008
+> +#define SOC_PCIEPHY_CTRL3_ADDR 0x00c
+> +#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
+> +
+> +#define PCIE_APP_LTSSM_ENABLE		0x01c
+> +#define PCIE_APB_PHY_CTRL0		0x0
+> +#define PCIE_APB_PHY_CTRL1		0x4
+> +#define PCIE_APB_PHY_STATUS0		0x400
+> +#define PCIE_LINKUP_ENABLE		(0x8020)
+> +#define PCIE_LTSSM_ENABLE_BIT	  (0x1 << 11)
+> +#define PIPE_CLK_STABLE		(0x1 << 19)
+> +#define PIPE_CLK_MAX_TRY_TIMES	10
+> +#define PHY_REF_PAD_BIT	(0x1 << 8)
+> +#define PHY_PWR_DOWN_BIT	(0x1 << 22)
+> +#define PHY_RST_ACK_BIT	(0x1 << 16)
+> +
+> +/* info lacated in sysctrl */
+> +#define SCTRL_PCIE_CMOS_OFFSET		0x60
+> +#define SCTRL_PCIE_CMOS_BIT		0x10
+> +#define SCTRL_PCIE_ISO_OFFSET		0x44
+> +#define SCTRL_PCIE_ISO_BIT		0x30
+> +#define SCTRL_PCIE_HPCLK_OFFSET		0x190
+> +#define SCTRL_PCIE_HPCLK_BIT		0x184000
+> +#define SCTRL_PCIE_OE_OFFSET		0x14a
+> +#define PCIE_DEBOUNCE_PARAM		0xF0F400
+> +#define PCIE_OE_BYPASS		(0x3 << 28)
+> +
+> +/*peri_crg ctrl*/
+> +#define CRGCTRL_PCIE_ASSERT_OFFSET		0x88
+> +#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
+> +
+> +/* Time for delay*/
+> +#define REF_2_PERST_MIN		(20000)
+> +#define REF_2_PERST_MAX		(25000)
+> +#define PERST_2_ACCESS_MIN	(10000)
+> +#define PERST_2_ACCESS_MAX	(12000)
+> +#define LINK_WAIT_MIN	(900)
+> +#define LINK_WAIT_MAX		(1000)
+> +#define PIPE_CLK_WAIT_MIN	(550)
+> +#define PIPE_CLK_WAIT_MAX	(600)
+> +
+> +struct kirin_pcie {
+> +	void __iomem		*apb_base;
+> +	void __iomem		*phy_base;
+> +	struct regmap *crgctrl;
+> +	struct regmap *sysctrl;
+> +	struct clk			*apb_sys_clk;
+> +	struct clk			*apb_phy_clk;
+> +	struct clk			*phy_ref_clk;
+> +	struct clk			*pcie_aclk;
+> +	struct clk			*pcie_aux_clk;
+> +	int                 gpio_id_reset;
+> +	struct dw_pcie		*pci;
+> +};
+> +
+> +static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
+> +		u32 val, u32 reg)
+> +{
+> +	writel(val, kirin_pcie->apb_base + reg);
+> +}
+> +
+> +static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie,
+> +		u32 reg)
+> +{
+> +	return readl(kirin_pcie->apb_base + reg);
+> +}
+> +
+> +/*Registers in PCIePHY*/
+> +static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
+> +		u32 val, u32 reg)
+> +{
+> +	writel(val, kirin_pcie->phy_base + reg);
+> +}
+> +
+> +static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie,
+> +		u32 reg)
+> +{
+> +	return readl(kirin_pcie->phy_base + reg);
+> +}
+> +
+> +static int32_t kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
+> +		struct platform_device *pdev)
+> +{
+> +	kirin_pcie->phy_ref_clk = devm_clk_get(&pdev->dev, "pcie_phy_ref");
+> +	if (IS_ERR(kirin_pcie->phy_ref_clk))
+> +		return PTR_ERR(kirin_pcie->phy_ref_clk);
+> +
+> +	kirin_pcie->pcie_aux_clk = devm_clk_get(&pdev->dev, "pcie_aux");
+> +	if (IS_ERR(kirin_pcie->pcie_aux_clk))
+> +		return PTR_ERR(kirin_pcie->pcie_aux_clk);
+> +
+> +	kirin_pcie->apb_phy_clk = devm_clk_get(&pdev->dev, "pcie_apb_phy");
+> +	if (IS_ERR(kirin_pcie->apb_phy_clk))
+> +		return PTR_ERR(kirin_pcie->apb_phy_clk);
+> +
+> +	kirin_pcie->apb_sys_clk = devm_clk_get(&pdev->dev, "pcie_apb_sys");
+> +	if (IS_ERR(kirin_pcie->apb_sys_clk))
+> +		return PTR_ERR(kirin_pcie->apb_sys_clk);
+> +
+> +	kirin_pcie->pcie_aclk = devm_clk_get(&pdev->dev, "pcie_aclk");
+> +	if (IS_ERR(kirin_pcie->pcie_aclk))
+> +		return PTR_ERR(kirin_pcie->pcie_aclk);
+> +
+> +	return 0;
+> +}
+> +
+> +static int32_t kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+> +		struct platform_device *pdev)
+> +{
+> +	struct resource *apb;
+> +	struct resource *phy;
+> +	struct resource *dbi;
+> +
+> +	apb = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb");
+> +	kirin_pcie->apb_base = devm_ioremap_resource(&pdev->dev, apb);
+> +	if (IS_ERR(kirin_pcie->apb_base))
+> +		return PTR_ERR(kirin_pcie->apb_base);
+> +
+> +	phy = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
+> +	kirin_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy);
+> +	if (IS_ERR(kirin_pcie->phy_base))
+> +		return PTR_ERR(kirin_pcie->phy_base);
+> +
+> +	dbi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+> +	kirin_pcie->pci->dbi_base = devm_ioremap_resource(&pdev->dev, dbi);
+> +	if (IS_ERR(kirin_pcie->pci->dbi_base))
+> +		return PTR_ERR(kirin_pcie->pci->dbi_base);
+> +
+> +	kirin_pcie->crgctrl =
+> +		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
+> +	if (IS_ERR(kirin_pcie->crgctrl))
+> +		return PTR_ERR(kirin_pcie->crgctrl);
+> +
+> +	kirin_pcie->sysctrl =
+> +		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
+> +	if (IS_ERR(kirin_pcie->sysctrl))
+> +		return PTR_ERR(kirin_pcie->sysctrl);
+> +
+> +	return 0;
+> +}
+> +
+> +static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
+> +{
+> +	u32 reg_val;
+> +	u32 time = PIPE_CLK_MAX_TRY_TIMES;
+> +
+> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
+> +	reg_val &= ~PHY_REF_PAD_BIT;
+> +	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
+> +
+> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL0);
+> +	reg_val &= ~PHY_PWR_DOWN_BIT;
+> +	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL0);
+> +	udelay(10);
+> +
+> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
+> +	reg_val &= ~PHY_RST_ACK_BIT;
+> +	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
+> +
+> +	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
+> +	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
+> +	if (reg_val & PIPE_CLK_STABLE) {
+> +		dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
+> +{
+> +	u32 val;
+> +
+> +	regmap_read(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, &val);
+> +	val |= PCIE_DEBOUNCE_PARAM;
+> +	val &= ~PCIE_OE_BYPASS;
+> +	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
+> +}
+> +
+> +static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
+> +{
+> +	int ret = 0;
+> +
+> +	if (!enable)
+> +		goto close_clk;
+> +
+> +	ret = clk_set_rate(kirin_pcie->phy_ref_clk, REF_CLK_FREQ);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = clk_prepare_enable(kirin_pcie->phy_ref_clk);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = clk_prepare_enable(kirin_pcie->apb_sys_clk);
+> +	if (ret)
+> +		goto apb_sys_fail;
+> +
+> +	ret = clk_prepare_enable(kirin_pcie->apb_phy_clk);
+> +	if (ret)
+> +		goto apb_phy_fail;
+> +
+> +	ret = clk_prepare_enable(kirin_pcie->pcie_aclk);
+> +	if (ret)
+> +		goto aclk_fail;
+> +
+> +	ret = clk_prepare_enable(kirin_pcie->pcie_aux_clk);
+> +	if (ret)
+> +		goto aux_clk_fail;
+> +
+> +	return 0;
+> +close_clk:
+> +	clk_disable_unprepare(kirin_pcie->pcie_aux_clk);
+> +aux_clk_fail:
+> +	clk_disable_unprepare(kirin_pcie->pcie_aclk);
+> +aclk_fail:
+> +	clk_disable_unprepare(kirin_pcie->apb_phy_clk);
+> +apb_phy_fail:
+> +	clk_disable_unprepare(kirin_pcie->apb_sys_clk);
+> +apb_sys_fail:
+> +	clk_disable_unprepare(kirin_pcie->phy_ref_clk);
+> +	return ret;
+> +}
+> +
+> +static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
+> +{
+> +	int ret;
+> +
+> +	/*Power supply for Host*/
+> +	regmap_write(kirin_pcie->sysctrl,
+> +		SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
+> +	udelay(100);
+> +	kirin_pcie_oe_enable(kirin_pcie);
+> +
+> +	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
+> +	if (ret)
+> +		return ret;
+> +
+> +	/*deasset PCIeCtrl&PCIePHY*/
+> +	regmap_write(kirin_pcie->sysctrl,
+> +		SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
+> +	regmap_write(kirin_pcie->crgctrl,
+> +		CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
+> +	regmap_write(kirin_pcie->sysctrl,
+> +		SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
+> +
+> +	ret = kirin_pcie_phy_init(kirin_pcie);
+> +	if (ret)
+> +		goto close_clk;
+> +
+> +	/*perst assert Endpoint*/
+> +	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
+> +		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
+> +		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
+> +		if (ret)
+> +			goto close_clk;
+> +		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
+> +
+> +		return 0;
+> +	}
+> +
+> +close_clk:
+> +	kirin_pcie_clk_ctrl(kirin_pcie, false);
+> +	return ret;
+> +}
+> +
+> +static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
+> +		bool on)
+> +{
+> +	u32 val;
+> +
+> +	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
+> +	if (on)
+> +		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+> +	else
+> +		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+> +
+> +	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
+> +}
+> +
+> +static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
+> +		bool on)
+> +{
+> +	u32 val;
+> +
+> +	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
+> +	if (on)
+> +		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
+> +	else
+> +		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
+> +
+> +	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
+> +}
+> +
+> +static int kirin_pcie_rd_own_conf(struct pcie_port *pp,
+> +		int where, int size, u32 *val)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+> +	int ret;
+> +
+> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
+> +	ret = dw_pcie_read(pci->dbi_base + where, size, val);
+> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static int kirin_pcie_wr_own_conf(struct pcie_port *pp,
+> +		int where, int size, u32 val)
+> +{
+> +	int ret;
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+> +
+> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
+> +	ret = dw_pcie_write(pci->dbi_base + where, size, val);
+> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static u32 kirin_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> +		u32 reg, size_t size)
+> +{
+> +	u32 ret;
+> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+> +
+> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
+> +	dw_pcie_read(base + reg, size, &ret);
+> +	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
+> +
+> +	return ret;
+> +}
+> +
+> +static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+> +		u32 reg, size_t size, u32 val)
+> +{
+> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+> +
+> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
+> +	dw_pcie_write(base + reg, size, val);
+> +	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
+> +}
+> +
+> +static int kirin_pcie_link_up(struct dw_pcie *pci)
+> +{
+> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+> +	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
+> +
+> +	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
+> +		return 1;
+> +
+> +	return 0;
+> +}
+> +
+> +static int kirin_pcie_establish_link(struct pcie_port *pp)
+> +{
+> +	int count = 0;
+> +
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
+> +
+> +	if (kirin_pcie_link_up(pci))
+> +		return 0;
+> +
+> +	dw_pcie_setup_rc(pp);
+> +
+> +	/* assert LTSSM enable */
+> +	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
+> +		PCIE_APP_LTSSM_ENABLE);
+> +
+> +	/* check if the link is up or not */
+> +	while (!kirin_pcie_link_up(pci)) {
+> +		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
+> +		count++;
+> +		if (count == 1000) {
+> +			dev_err(pci->dev, "Link Fail\n");
+> +			return -EINVAL;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void kirin_pcie_host_init(struct pcie_port *pp)
+> +{
+> +	kirin_pcie_establish_link(pp);
+> +}
+> +
+> +static struct dw_pcie_ops kirin_dw_pcie_ops = {
+> +	.read_dbi = kirin_pcie_read_dbi,
+> +	.write_dbi = kirin_pcie_write_dbi,
+> +	.link_up = kirin_pcie_link_up,
+> +};
+> +
+> +static struct dw_pcie_host_ops kirin_pcie_host_ops = {
+> +	.rd_own_conf = kirin_pcie_rd_own_conf,
+> +	.wr_own_conf = kirin_pcie_wr_own_conf,
+> +	.host_init = kirin_pcie_host_init,
+> +};
+> +
+> +static int __init kirin_add_pcie_port(struct dw_pcie *pci,
+> +			struct platform_device *pdev)
+> +{
+> +	int ret;
+> +
+> +	pci->pp.ops = &kirin_pcie_host_ops;
+> +
+> +	ret = dw_pcie_host_init(&pci->pp);
+> +
+> +	return ret;
+> +}
+> +
+> +static int kirin_pcie_probe(struct platform_device *pdev)
+> +{
+> +	struct kirin_pcie *kirin_pcie;
+> +	struct dw_pcie *pci;
+> +	struct device *dev = &pdev->dev;
+> +	int ret;
+> +
+> +	if (!pdev->dev.of_node) {
+> +		dev_err(&pdev->dev, "NULL node\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	kirin_pcie = devm_kzalloc(&pdev->dev,
+> +			sizeof(struct kirin_pcie), GFP_KERNEL);
+> +	if (!kirin_pcie)
+> +		return -ENOMEM;
+> +
+> +	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
+> +	if (!pci)
+> +		return -ENOMEM;
+> +
+> +	pci->dev = dev;
+> +	pci->ops = &kirin_dw_pcie_ops;
+> +	kirin_pcie->pci = pci;
+> +
+> +	ret = kirin_pcie_get_clk(kirin_pcie, pdev);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
+> +	if (ret)
+> +		return ret;
+> +
+> +	kirin_pcie->gpio_id_reset = of_get_named_gpio(pdev->dev.of_node,
+> +			"reset-gpio", 0);
+> +	if (kirin_pcie->gpio_id_reset < 0)
+> +		return -ENODEV;
+> +
+> +	ret = kirin_pcie_power_on(kirin_pcie);
+> +	if (ret)
+> +		return ret;
+> +
+> +	platform_set_drvdata(pdev, kirin_pcie);
+> +
+> +	ret = kirin_add_pcie_port(pci, pdev);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id kirin_pcie_match[] = {
+> +	{ .compatible = "hisilicon,kirin-pcie" },
+> +	{},
+> +};
+> +
+> +struct platform_driver kirin_pcie_driver = {
+> +	.probe			= kirin_pcie_probe,
+> +	.driver			= {
+> +		.name			= "Kirin-pcie",
+> +		.of_match_table = kirin_pcie_match,
+> +		.suppress_bind_attrs = true,
+> +	},
+> +};
+> +
+> +builtin_platform_driver(kirin_pcie_driver);
 > 
-> I have do some test here. PME needs port IRQs, which interrupt type was
-> set correctly(IRQ_TYPE_LEVEL_LOW). But we cannot set it from
-> interrupt-map, according to gic_set_type() /* SPIs have restrictions on
-> the supported types */ .
-> 
-> So we need to add additional interrupt properties.
-
-I could use iPerf to test my WLAN card normally. But just ignore this
-exception message. I would definitely appreciate if someone could give
-me some hint on how to properly solve it. 
-
-Thanks a lot.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
