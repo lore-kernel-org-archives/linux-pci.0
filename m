@@ -1,93 +1,82 @@
-Return-Path: <SRS0=AgWd=4I=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=AgWd=4I=codeaurora.org=okaya@kernel.org>
-Subject: Re: [GIT PULL] PCI fixes for v4.10
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Raj, Ashok" <ashok.raj@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Yinghai Lu <yinghai@kernel.org>,
- "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- Keith Busch <keith.busch@intel.com>
-References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170209040648.GA1304@wunner.de>
- <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
- <20170209182328.GB77900@otc-nc-03> <20170209184613.GA78375@otc-nc-03>
- <20170502015405.GA13918@wunner.de>
- <65f46b49-950a-270f-8bc4-c3fb7513866e@codeaurora.org>
- <20170502104929.GA14029@wunner.de>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5db97592-4153-c55a-fe44-260d717d1ef0@codeaurora.org>
-Date: Tue, 2 May 2017 10:15:27 -0400
+Return-Path: <SRS0=0SQO=4Z=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=0SQO=4Z=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170502104929.GA14029@wunner.de>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170517171016.GE31462@bhelgaas-glaptop.roam.corp.google.com>
+References: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
+ <1494912127-12890-2-git-send-email-oza.oza@broadcom.com> <20170517171016.GE31462@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Fri, 19 May 2017 07:07:21 +0530
+Message-ID: <CAMSpPPeOadKogPNra7OxCTe59tfFV5JYd8w+GYkSpz91tRv6rw@mail.gmail.com>
+Subject: Re: [PATCH v6 1/3] of/pci/dma: fix DMA configuration for PCI masters
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>,
+	Linux IOMMU <iommu@lists.linux-foundation.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 5/2/2017 6:49 AM, Lukas Wunner wrote:
-> On Mon, May 01, 2017 at 10:41:20PM -0400, Sinan Kaya wrote:
->> On 5/1/2017 9:54 PM, Lukas Wunner wrote:
->>> (b) ASPM L1 enabled on boot, but disabled after powering off and back on
->>>     => I believe Sinan is working on this (+cc).
+On Wed, May 17, 2017 at 10:40 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Tue, May 16, 2017 at 10:52:05AM +0530, Oza Pawandeep wrote:
+>> current device framework and OF framework integration assumes
+>
+> s/current/The current/
+>
+>> dma-ranges in a way where memory-mapped devices define their
+>> dma-ranges. (child-bus-address, parent-bus-address, length).
 >>
->> The decision was made not to touch ASPM registers following hotplug insertion
->> unless pcie_aspm.policy=powersave is specified.
+>> of_dma_configure is specifically written to take care of memory
+>> mapped devices. but no implementation exists for pci to take
+>> care of pcie based memory ranges.
+>
+> s/pci/PCI/      (also other occurrences below)
+> s/pcie/PCIe/
+>
+> I don't see how PCIe is relevant here.  The bridge might support PCIe,
+> but I don't think anything here is actually specific to PCIe.  If
+> that's the case, I think it's confusing to mention PCIe.
+
+It attempts to fix of_dma_get_range for PCI master,
+because it currently it is returning *size as 0 (to the caller of_dma_configure)
+resulting into largest dma_mask which would be 64-bit mask on armv8.
+which usually has worked so far, because any other SOC's PCI RC, do not
+have the limitations as of Broadcom iproc based PCI RC.
+our RC will drop 64bit IOVAs, because it is not capable of addressing
+entire 64bit range.
+
+infact there are 2 real problems, please allow me to explain.
+please refer to my next mail in reply to Arnd Bergmann,
+
+>
+>> for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
+>> world dma-ranges.
+>> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
 >>
->> The discussion is here: https://lkml.org/lkml/2017/4/17/255
+>> this patch serves following:
 >>
->> This was done to maintain existing behavior and not break things.
-> 
-> Thanks for the reference, I hadn't followed the discussion in April
-> very closely, but I think the outcome of the discussion is unfortunate.
-> 
-> As can be seen in Ashok's tests, merely turning slot power off and back
-> on is sufficient to end up with a setting that draws more power.  That
-> may be equally surprising for users as the issues would be that we seek
-> to avoid with a "safety-first" ASPM policy.  In any case it seems
-> undesirable.
-> 
-> I hope this is not the end if it and would like to encourage you to
-> keep working on this.  Perhaps it is too simple to just define a
-> default policy, and what is really needed is a policy that adjusts
-> itself dynamically to specific devices or workloads, or that can be
-> influenced by device drivers.
-> 
+>> 1) exposes interface to the pci host driver for their
+>> inbound memory ranges
+>>
+>> 2) provide an interface to callers such as of_dma_get_ranges.
+>> so then the returned size get best possible (largest) dma_mask.
+>> because PCI RC drivers do not call APIs such as
+>> dma_set_coherent_mask() and hence rather it shows its addressing
+>> capabilities based on dma-ranges.
+>> for e.g.
+>> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+>> we should get dev->coherent_dma_mask=0x7fffffffff.
+>>
+>> 3) this patch handles multiple inbound windows and dma-ranges.
+>> it is left to the caller, how it wants to use them.
+>> the new function returns the resources in a standard and unform way
+>>
+>> 4) this way the callers of for e.g. of_dma_get_ranges
+>> does not need to change.
+>
+> Please start sentences with a capital letter.
 
-I think our conclusion was to push PM decision to a userspace utility.
-ASPM already has a knob in sysfs that can be adjusted at runtime. The
-name of the file is policy. Same argument as the kernel command line
-but it is writable. Different policies can be programmed into this
-field after OS boot.
-
-It is really the system power management entity that needs to decide
-how system should behave. 
-
-We just need to educate the userspace utility about the presence
-of ASPM policy variable.
-
-1. OS could still boot with the default parameters. 
-2. Userspace utility sets the policy variable to powersave
-3. User performs hotplug remove + insert
-4. ASPM is enabled due to policy change.
-
-I don't know anything about what this userspace utility is or if
-it understands about PCIE ASPM at all. 
-
-As an analogy, we can choose the level of power management in windows
-through Power Policy.
-
-control panel -> power options -> change advanced power options ->
-PCI Express -> Link State Power Management
-
-We want to have the same level of configuration.
-
-> Thanks for your efforts,
-> 
-> Lukas
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+will take care of your comments.
+Thanks,
+Oza.
