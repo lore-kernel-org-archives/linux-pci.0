@@ -1,215 +1,172 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2329 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:43770 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1762510AbdEYSWF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 May 2017 14:22:05 -0400
-Date: Thu, 25 May 2017 21:22:01 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Piotr Gregor <piotrgregor@rsyncme.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Neo Jia <cjia@nvidia.com>,
-        Kirti Wankhede <kwankede@nvidia.com>,
-        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvm@vger.kernel.org
-Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
-Message-ID: <20170525211833-mutt-send-email-mst@kernel.org>
-References: <20170525181321.GA13617@westernst>
+        id S1751003AbdESQ1Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 May 2017 12:27:25 -0400
+Date: Fri, 19 May 2017 11:27:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: linux-efi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "H . Peter Anvin" <hpa@zytor.com>, leif.lindholm@linaro.org,
+        lorenzo.pieralisi@arm.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 2/2] efifb: Avoid reconfiguration of BAR that covers the
+ framebuffer
+Message-ID: <20170519162716.GA684@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170404152744.26687-1-ard.biesheuvel@linaro.org>
+ <20170404152744.26687-3-ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525181321.GA13617@westernst>
+In-Reply-To: <20170404152744.26687-3-ard.biesheuvel@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 25, 2017 at 07:13:23PM +0100, Piotr Gregor wrote:
-> The test for INTx masking via config space command performed
-> in pci_intx_mask_supported should be performed before PCI device
-> can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
-> register which may collide with MSI/MSI-X interrupts.
+[+cc linux-pci]
+
+On Tue, Apr 04, 2017 at 04:27:44PM +0100, Ard Biesheuvel wrote:
+> On UEFI systems, the PCI subsystem is enumerated by the firmware,
+> and if a graphical framebuffer is exposed by a PCI device, its base
+> address and size are exposed to the OS via the Graphics Output
+> Protocol (GOP).
 > 
-> This patch simplifies test performed in pci_intx_mask_supported
-> and introduces intx_mask_support field in struct pci_dev to store
-> the result. The test itself is moved to pci_setup_device.
-> The result can be queried at any time later from the pci_dev with
+> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+> scratch at boot. This may result in the GOP framebuffer address to
+> become stale, if the BAR covering the framebuffer is modified. This
+> will cause the framebuffer to become unresponsive, and may in some
+> cases result in unpredictable behavior if the range is reassigned to
+> another device.
 > 
-> static inline bool pci_is_intx_mask_supported(struct pci_dev *pdev)
-> {
->         /*
->          * INTx masking is supported if device passed INTx test
->          * and it's INTx masking feature works properly.
->          */
->         return (pdev->intx_mask_support && !pdev->broken_intx_masking);
-> }
-> 
-> Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+> So add a non-x86 quirk to the EFI fb driver to find the BAR associated
+> with the GOP base address, and claim the BAR resource so that the PCI
+> core will not move it.
+
+I know this has already been merged as 55d728a40d36 ("efi/fb: Avoid
+reconfiguration of BAR that covers the framebuffer"), and I'm not
+suggesting that we revert it, but I have some misgivings.
+
+One is the "#ifndef CONFIG_X86".  In principle, there is nothing arch-
+specific here.  I don't think it's a good idea to build in dependencies on
+things like "this arch preserves (or reprograms) PCI BARs".  The PCI core
+may reprogram all, some, or none of the PCI BARs, depending on what (if
+anything) firmware has done.
+
+Another is the use of pci_claim_resource() to express the idea that "this
+BAR can not be moved".  We have IORESOURCE_PCI_FIXED for that purpose, and
+previous versions of the patch used that.  I understand there was some
+problem with that, but I wish we could figure out and fix that problem
+instead of using a different mechanism.
+
+I'm not even completely sold on the idea that we need to prevent the BAR
+from being moved.  I'm not a UEFI expert, but if this requirement is in the
+spec, we should reference it.  If not, it should be sufficient to remember
+the boot-time BAR value, match the GOP base to *that*, and map it to
+whatever the current BAR value is.
+
+> Fixes: 9822504c1fa5 ("efifb: Enable the efi-framebuffer platform driver ...")
+> Cc: <stable@vger.kernel.org> # v4.7+
+> Cc: Matt Fleming <matt@codeblueprint.co.uk>
+> Cc: Peter Jones <pjones@redhat.com>
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 > ---
->  drivers/pci/pci.c             | 42 +++++++++++++++++++++++-------------------
->  drivers/pci/probe.c           |  3 +++
->  drivers/uio/uio_pci_generic.c |  2 +-
->  drivers/vfio/pci/vfio_pci.c   |  2 +-
->  include/linux/pci.h           | 10 ++++++++++
->  5 files changed, 38 insertions(+), 21 deletions(-)
+>  drivers/video/fbdev/efifb.c | 66 ++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 65 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b01bd5b..bcaab9b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3709,42 +3709,46 @@ void pci_intx(struct pci_dev *pdev, int enable)
->  EXPORT_SYMBOL_GPL(pci_intx);
+> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> index 8c4dc1e1f94f..758960b6aec9 100644
+> --- a/drivers/video/fbdev/efifb.c
+> +++ b/drivers/video/fbdev/efifb.c
+> @@ -10,6 +10,7 @@
+>  #include <linux/efi.h>
+>  #include <linux/errno.h>
+>  #include <linux/fb.h>
+> +#include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/screen_info.h>
+>  #include <video/vga.h>
+> @@ -143,6 +144,8 @@ static struct attribute *efifb_attrs[] = {
+>  };
+>  ATTRIBUTE_GROUPS(efifb);
 >  
->  /**
-> - * pci_intx_mask_supported - probe for INTx masking support
-> + * pci_intx_mask_supported - probe for INTx masking support in pci_setup_device
->   * @dev: the PCI device to operate on
->   *
-> - * Check if the device dev support INTx masking via the config space
-> - * command word.
-> + * Check if the device dev supports INTx masking via the config space
-> + * command word. Executed when PCI device is setup. Result is saved
-> + * in intx_mask_support field of pci_dev and should be checked
-> + * with pci_is_intx_mask_supported() after PCI device has been setup
-> + * to avoid reading/writing of PCI_COMMAND_INTX_DISABLE register.
->   */
->  bool pci_intx_mask_supported(struct pci_dev *dev)
+> +static bool pci_dev_disabled;	/* FB base matches BAR of a disabled device */
+> +
+>  static int efifb_probe(struct platform_device *dev)
 >  {
-> -	bool mask_supported = false;
-> -	u16 orig, new;
-> +	u16 orig, toggle, new;
+>  	struct fb_info *info;
+> @@ -152,7 +155,7 @@ static int efifb_probe(struct platform_device *dev)
+>  	unsigned int size_total;
+>  	char *option = NULL;
 >  
-> +	/*
-> +	 * If device doesn't support this feature though it could pass the test.
-> +	 */
->  	if (dev->broken_intx_masking)
->  		return false;
->  
->  	pci_cfg_access_lock(dev);
->  
-> +	/*
-> +	 * Perform the test.
-> +	 */
->  	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> -	pci_write_config_word(dev, PCI_COMMAND,
-> -			      orig ^ PCI_COMMAND_INTX_DISABLE);
-> +	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
-> +	pci_write_config_word(dev, PCI_COMMAND, toggle);
->  	pci_read_config_word(dev, PCI_COMMAND, &new);
->  
->  	/*
-> -	 * There's no way to protect against hardware bugs or detect them
-> -	 * reliably, but as long as we know what the value should be, let's
-> -	 * go ahead and check it.
-> +	 * Restore initial state.
->  	 */
-> -	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
-> -		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
-> -			orig, new);
-> -	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
-> -		mask_supported = true;
-> -		pci_write_config_word(dev, PCI_COMMAND, orig);
-> -	}
-> +	pci_write_config_word(dev, PCI_COMMAND, orig);
->  
->  	pci_cfg_access_unlock(dev);
-> -	return mask_supported;
-> +
-> +	if (new == toggle)
-> +		return true;
-> +
-> +	return false;
->  }
->  EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
->  
-> @@ -3798,7 +3802,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
->   * @dev: the PCI device to operate on
->   *
->   * Check if the device dev has its INTx line asserted, mask it and
-> - * return true in that case. False is returned if not interrupt was
-> + * return true in that case. False is returned if no interrupt was
->   * pending.
->   */
->  bool pci_check_and_mask_intx(struct pci_dev *dev)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 19c8950..16c60ce 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1399,6 +1399,9 @@ int pci_setup_device(struct pci_dev *dev)
->  		}
->  	}
->  
-> +	if (pci_intx_mask_supported(dev))
-> +		dev->intx_mask_support = 1;
-> +
->  	switch (dev->hdr_type) {		    /* header type */
->  	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
->  		if (class == PCI_CLASS_BRIDGE_PCI)
-> diff --git a/drivers/uio/uio_pci_generic.c b/drivers/uio/uio_pci_generic.c
-> index d0b508b..8cd443c 100644
-> --- a/drivers/uio/uio_pci_generic.c
-> +++ b/drivers/uio/uio_pci_generic.c
-> @@ -73,7 +73,7 @@ static int probe(struct pci_dev *pdev,
+> -	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+> +	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_dev_disabled)
 >  		return -ENODEV;
->  	}
 >  
-> -	if (!pci_intx_mask_supported(pdev)) {
-> +	if (!pci_is_intx_mask_supported(pdev)) {
->  		err = -ENODEV;
->  		goto err_verify;
->  	}
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 324c52e..933456e 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -239,7 +239,7 @@ static int vfio_pci_enable(struct vfio_pci_device *vdev)
->  			vdev->nointx = true;
->  			pci_intx(pdev, 0);
->  		} else
-> -			vdev->pci_2_3 = pci_intx_mask_supported(pdev);
-> +			vdev->pci_2_3 = pci_is_intx_mask_supported(pdev);
->  	}
+>  	if (fb_get_options("efifb", &option))
+> @@ -360,3 +363,64 @@ static struct platform_driver efifb_driver = {
+>  };
 >  
->  	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 33c2b0b..0fbd278 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -367,6 +367,7 @@ struct pci_dev {
->  	unsigned int    __aer_firmware_first_valid:1;
->  	unsigned int	__aer_firmware_first:1;
->  	unsigned int	broken_intx_masking:1;
-> +	unsigned int	intx_mask_support:1;	/* INTx masking is supported */
->  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
->  	unsigned int	irq_managed:1;
->  	unsigned int	has_secondary_link:1;
-> @@ -1003,6 +1004,15 @@ int __must_check pci_reenable_device(struct pci_dev *);
->  int __must_check pcim_enable_device(struct pci_dev *pdev);
->  void pcim_pin_device(struct pci_dev *pdev);
->  
-> +static inline bool pci_is_intx_mask_supported(struct pci_dev *pdev)
+>  builtin_platform_driver(efifb_driver);
+> +
+> +#ifndef CONFIG_X86
+> +
+> +static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
+> +
+> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
 > +{
-> +	/*
-> +	 * INTx masking is supported if device passed INTx test and it's INTx
-> +	 * masking feature works properly.
-> +	 */
-> +	return (pdev->intx_mask_support && !pdev->broken_intx_masking);
+> +	u16 word;
+> +
+> +	pci_bar_found = true;
+> +
+> +	pci_read_config_word(dev, PCI_COMMAND, &word);
+> +	if (!(word & PCI_COMMAND_MEMORY)) {
+> +		pci_dev_disabled = true;
+> +		dev_err(&dev->dev,
+> +			"BAR %d: assigned to efifb but device is disabled!\n",
+> +			idx);
+> +		return;
+> +	}
+> +
+> +	if (pci_claim_resource(dev, idx)) {
+> +		pci_dev_disabled = true;
+> +		dev_err(&dev->dev,
+> +			"BAR %d: failed to claim resource for efifb!\n", idx);
+> +		return;
+> +	}
+> +
+> +	dev_info(&dev->dev, "BAR %d: assigned to efifb\n", idx);
 > +}
 > +
-
-And now there's pci_is_intx_mask_supported and pci_intx_mask_supported
-which are the same except pci_intx_mask_supported shouldn't be called by
-anyone except in one place in pci code.
-
-Pls don't do this. Rename pci_intx_mask_supported -> __pci_intx_mask_supported
-and then everyone can just keep calling pci_intx_mask_supported as previously,
-except it'll be faster and safer. And unexport
-__pci_intx_mask_supported.
-
-
->  static inline int pci_is_enabled(struct pci_dev *pdev)
->  {
->  	return (atomic_read(&pdev->enable_cnt) > 0);
+> +static void efifb_fixup_resources(struct pci_dev *dev)
+> +{
+> +	u64 base = screen_info.lfb_base;
+> +	u64 size = screen_info.lfb_size;
+> +	int i;
+> +
+> +	if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+> +		return;
+> +
+> +	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
+> +		base |= (u64)screen_info.ext_lfb_base << 32;
+> +
+> +	if (!base)
+> +		return;
+> +
+> +	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
+> +		struct resource *res = &dev->resource[i];
+> +
+> +		if (!(res->flags & IORESOURCE_MEM))
+> +			continue;
+> +
+> +		if (res->start <= base && res->end >= base + size - 1) {
+> +			claim_efifb_bar(dev, i);
+> +			break;
+> +		}
+> +	}
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_BASE_CLASS_DISPLAY,
+> +			       16, efifb_fixup_resources);
+> +
+> +#endif
 > -- 
-> 2.1.4
+> 2.9.3
+> 
