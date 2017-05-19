@@ -1,70 +1,131 @@
-Return-Path: <SRS0=bZRq=45=rsyncme.org=piotrgregor@kernel.org>
-Return-Path: <SRS0=bZRq=45=rsyncme.org=piotrgregor@kernel.org>
-Date: Wed, 24 May 2017 00:52:53 +0100
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Piotr Gregor <piotrek.gregor@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: Handle the case when PCI_COMMAND register hasn't
- changed in INTx masking test
-Message-ID: <20170523235252.GA18765@westernst>
-References: <20170510122959.4uupohiz3ukzm4c4@debian1.home>
- <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
- <20170523161929.GA24431@bhelgaas-glaptop.roam.corp.google.com>
- <20170523103904.3a20d0cc@w520.home>
- <CAO3obxb349aeDX1harujpzi_E2ZMq820wtjrODR5sYiZ=KtjwQ@mail.gmail.com>
- <20170523214531.GB20928@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:60392 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751155AbdESUor (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 May 2017 16:44:47 -0400
+Date: Fri, 19 May 2017 15:44:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "H . Peter Anvin" <hpa@zytor.com>,
+        Leif Lindholm <leif.lindholm@linaro.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 2/2] efifb: Avoid reconfiguration of BAR that covers the
+ framebuffer
+Message-ID: <20170519204445.GA25510@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170404152744.26687-1-ard.biesheuvel@linaro.org>
+ <20170404152744.26687-3-ard.biesheuvel@linaro.org>
+ <20170519162716.GA684@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu87gNJ-HN6-jgeuvg7vWePLkP0xbqcok554g2cG9aXtfA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170523214531.GB20928@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <CAKv+Gu87gNJ-HN6-jgeuvg7vWePLkP0xbqcok554g2cG9aXtfA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 23, 2017 at 04:45:31PM -0500, Bjorn Helgaas wrote:
-> On Tue, May 23, 2017 at 08:14:26PM +0100, Piotr Gregor wrote:
-> > Would the pci_setup_device() be a good place to move this check to?
+On Fri, May 19, 2017 at 05:37:30PM +0100, Ard Biesheuvel wrote:
+> Hi Bjorn,
 > 
-> Seems like a reasonable place.
+> On 19 May 2017 at 17:27, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > [+cc linux-pci]
+> >
+> > On Tue, Apr 04, 2017 at 04:27:44PM +0100, Ard Biesheuvel wrote:
+> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
+> >> and if a graphical framebuffer is exposed by a PCI device, its base
+> >> address and size are exposed to the OS via the Graphics Output
+> >> Protocol (GOP).
+> >>
+> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+> >> scratch at boot. This may result in the GOP framebuffer address to
+> >> become stale, if the BAR covering the framebuffer is modified. This
+> >> will cause the framebuffer to become unresponsive, and may in some
+> >> cases result in unpredictable behavior if the range is reassigned to
+> >> another device.
+> >>
+> >> So add a non-x86 quirk to the EFI fb driver to find the BAR associated
+> >> with the GOP base address, and claim the BAR resource so that the PCI
+> >> core will not move it.
+> >
+> > I know this has already been merged as 55d728a40d36 ("efi/fb: Avoid
+> > reconfiguration of BAR that covers the framebuffer"), and I'm not
+> > suggesting that we revert it, but I have some misgivings.
+> ...
 
-Will upload new patch moving test of INTx masking support to
-pci_setup_device(). There is just one thing: a quirk for devices
-that have this support broken (e.g. Ralink RT2800 802.11n).
+> > Another is the use of pci_claim_resource() to express the idea that "this
+> > BAR can not be moved".  We have IORESOURCE_PCI_FIXED for that purpose, and
+> > previous versions of the patch used that.  I understand there was some
+> > problem with that, but I wish we could figure out and fix that problem
+> > instead of using a different mechanism.
+> 
+> OK. The problem was that IORESOURCE_PCI_FIXED does not prevent the PCI
+> subsystem from handing out the same range to another device.
 
-It is quirk_broken_intx_masking defined in quirks.c:
+Yes, this would definitely be a problem.  There must be a path where
+we start doing the reassignment before we claim the resources that
+have already been assigned.  That's what seems backwards to me -- it
+seems like we should claim things that are valid first so we know to
+avoid them.
 
-3190 /*
-3191  * Some devices may pass our check in pci_intx_mask_supported() if
-3192  * PCI_COMMAND_INTX_DISABLE works though they actually do not properly
-3193  * support this feature.
-3194  */
-3195 static void quirk_broken_intx_masking(struct pci_dev *dev)
-3196 {
-3197         dev->broken_intx_masking = 1;
-3198 }
-3199 DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CHELSIO, 0x0030,
-3200                         quirk_broken_intx_masking);
-3201 DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n
-PCI */
-3202                         quirk_broken_intx_masking);
+> > I'm not even completely sold on the idea that we need to prevent the BAR
+> > from being moved.  I'm not a UEFI expert, but if this requirement is in the
+> > spec, we should reference it.  If not, it should be sufficient to remember
+> > the boot-time BAR value, match the GOP base to *that*, and map it to
+> > whatever the current BAR value is.
+> 
+> There is no such requirement in the spec. The graphics output protocol
+> is not described in terms of PCI, BARs etc. The framebuffer is simply
+> a memory range with side effects that is left enabled when handing
+> over to the OS.
+> 
+> In summary, I am as unhappy with the patch as you are, but it is still
+> an improvement over the previous situation, so let's simply
+> collaborate to get this into shape going forward.
+> 
+> My preference would be to investigate IORESOURCE_PCI_FIXED again,
+> because that still seems like the best way to deal with a live
+> framebuffer on a PCI device that has memory decoding enabled. It
+> should also address the issue with the current version of the patch,
+> i.e., that claiming resources at this point is not possible if the
+> device resides behind a bridge.
+> 
+> So is there any guidance you can give as to how to proceed? If we set
+> IORESOURCE_PCI_FIXED, how should be prevent the PCI layer from
+> assigning this resource elsewhere if we cannot claim it yet?
 
-The pci_intx_mask_supported() currently does check for dev->broken_intx_masking
-before performing INTx masking test by reading/writing registers.
-If we move pci_intx_mask_supported() check
-to pci_setup_device() just before header switch is entered:
+My preference would actually be to remember the boot BAR values and
+map to the current values because that avoids the unnecessary
+restriction.  The IORESOURCE_PCI_FIXED uses that seem legitimate to me
+are the legacy VGA and IDE things (stuff that's not described by BARs
+and *can't* be moved) and the new "Enhanced Allocation" stuff
+(basically a way to describe more non-BAR resources).
 
-1402         if (pci_intx_mask_supported(dev))
-1403                 dev->intx_mask_support = 1;
-1404 
-1405         switch (dev->hdr_type) {                    /* header type
-*/
+We do something sort of similar with pci_revert_fw_address(), although
+it's currently only implemented for x86.  I could imagine a more
+generic solution that could be used for this GOP issue and could also
+replace pci_revert_fw_address().
 
-will the quirk be already applied so that pci_intx_mask_supported() can
-use broken_intx_masking() flag?
-Or should it just perform the test without check for this flag and only
-when checking later for INTx masking test we will use that flag (which
-would be assigned later), so it could be for example
+Conceptually it could be as simple as adding 7 u64 boot-time BAR
+values (6 BARs + the ROM) to struct pci_dev.  We went to a lot of
+trouble to implement the pcibios_fwaddrmap stuff on x86, and I can't
+remember why it's x86-specific.  Maybe we thought the extra 56 bytes
+per dev was too much overhead (it does seem like a lot for such a
+limited use case).  Maybe there's a clever way to store just the BARs
+we actually change and keep that long enough for efifb to use it.
 
-static inline bool pci_is_intx_mask_supported(struct pci_dev *pdev)
-{
-        return (pdev->intx_mask_support && !pdev->broken_intx_masking);
-}
+It *would* be nice to fix the problem with IORESOURCE_PCI_FIXED, and I
+think it would help clean up PCI resource management a lot.  Ideally
+we would be able to claim host bridge resources even before scanning
+the bus, then claim BARs immediately when we discover them.  That
+would allow us to automatically use any setup done by firmware, and
+reassign anything that we couldn't claim.
+
+But I think this will end up being difficult because we currently do
+the PCI bus scan before looking at ACPI resources, and sometimes those
+ACPI resources overlap with the host bridge windows.  Every time I
+look at this, I get discouraged.
+
+Bjorn
