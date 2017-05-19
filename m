@@ -1,69 +1,32 @@
-Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <hch@infradead.org>, <liudongdong3@huawei.com>
-Subject: [PATCH v3 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
-Date: Thu, 18 May 2017 11:35:48 +0100
-Message-ID: <1495103748-7876-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33403 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932382AbdESBhl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 21:37:41 -0400
+Date: Thu, 18 May 2017 20:37:34 -0500
+From: Rob Herring <robh@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/2] pci: ftpci100: add clock bindings
+Message-ID: <20170519013734.rk22qe2doo4b5dpu@rob-hp-laptop>
+References: <20170515172312.1722-1-linus.walleij@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170515172312.1722-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Mon, May 15, 2017 at 07:23:12PM +0200, Linus Walleij wrote:
+> The Faraday FTPCI100 controller has two clock ports, PCLK and PCICLK.
+> We add bindings for these two clocks so we can assign them in the device
+> tree.
+> 
+> Cc: devicetree@vger.kernel.org
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+>  Documentation/devicetree/bindings/pci/faraday,ftpci100.txt | 7 +++++++
+>  1 file changed, 7 insertions(+)
 
-Currently the MSI/MSIx vectors for the root port services are
-allocated calling pcie_init_service_irqs(). At the moment these
-vectors are only allocated for AER, PME, HP.
-This patch allocate an MSI/MSIx vector also for DPC.
-
-Signed-off-by: Liudongdong <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pcie/portdrv_core.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 4d16cf2..6a32b42 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -123,6 +123,31 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 		nvec = max(nvec, entry + 1);
- 	}
- 
-+	if (mask & PCIE_PORT_SERVICE_DPC) {
-+		u16 reg16, pos;
-+
-+		/*
-+		 * The code below follows Section 6.2.10.1 of the PCI Express
-+		 * Base Specification 4.0 stating that bits 4-0 of DPC
-+		 * Capability Register contain a value indicating which of the
-+		 * MSI/MSI-X vectors assigned to the port is going to be used
-+		 * for DPC, where "For MSI-X, the value in this register
-+		 * indicates which MSI-X Table entry is used to generate the
-+		 * interrupt message." and "For MSI, the value in this field
-+		 * indicates the offset between the base Message Data and the
-+		 * interrupt message that is generated."
-+		 */
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
-+		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
-+		entry = reg16 & 0x1f;
-+		if (entry >= nr_entries)
-+			goto out_free_irqs;
-+
-+		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
-+
-+		nvec = max(nvec, entry + 1);
-+	}
-+
- 	/*
- 	 * If nvec is equal to the allocated number of entries, we can just use
- 	 * what we have.  Otherwise, the port has some extra entries not for the
--- 
-2.7.4
+Acked-by: Rob Herring <robh@kernel.org>
