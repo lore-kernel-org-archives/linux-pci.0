@@ -1,93 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37742 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbdE3T6u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 15:58:50 -0400
-Date: Tue, 30 May 2017 14:58:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: bhelgaas@google.com, kishon@ti.com, jingoohan1@gmail.com,
-        arnd@arndb.de, tn@semihalf.com, keith.busch@intel.com,
-        niklas.cassel@axis.com, dhdang@apm.com, liudongdong3@huawei.com,
-        gabriele.paoloni@huawei.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com,
-        chenyao11@huawei.com, puck.chen@hisilicon.com,
-        guodong.xu@linaro.org, wangbinghui@hisilicon.com,
-        suzhuangluan@hisilicon.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 2/4] arm64: dts: hisi: add kirin pcie node
-Message-ID: <20170530195847.GC4664@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170525030204.126233-1-songxiaowei@hisilicon.com>
- <20170525030204.126233-3-songxiaowei@hisilicon.com>
+Received: from mail-by2nam03on0125.outbound.protection.outlook.com ([104.47.42.125]:9673
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750764AbdESNs1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 19 May 2017 09:48:27 -0400
+From: KY Srinivasan <kys@microsoft.com>
+To: Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Jork Loeser <Jork.Loeser@microsoft.com>
+CC: Stephen Hemminger <stephen@networkplumber.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>
+Subject: RE: [PATCH 4/4] Hyper-V vPCI: use vPCI protocol version 1.2
+Date: Fri, 19 May 2017 13:48:19 +0000
+Message-ID: <BN6PR03MB2481B828A99B097BEE7C4717A0E50@BN6PR03MB2481.namprd03.prod.outlook.com>
+References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
+        <1495134870-18225-5-git-send-email-jloeser@linuxonhyperv.com>
+        <20170518165854.46fd92fa@xeon-e3>
+        <CY4PR21MB06313801D2312E9686F3520AF1E50@CY4PR21MB0631.namprd21.prod.outlook.com>
+ <87k25dupt3.fsf@vitty.brq.redhat.com>
+In-Reply-To: <87k25dupt3.fsf@vitty.brq.redhat.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525030204.126233-3-songxiaowei@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 25, 2017 at 11:02:02AM +0800, Xiaowei Song wrote:
-> Add PCIe node for hi3660, and add binding documentation.
-> 
-> Cc: Guodong Xu <guodong.xu@linaro.org>
-> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-> ---
->  arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 31 +++++++++++++++++++++++++++++++
->  1 file changed, 31 insertions(+)
-> 
-> diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-> index 3983086bd67b..8609e32ca46f 100644
-> --- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-> +++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-> @@ -156,5 +156,36 @@
->  			clock-names = "uartclk", "apb_pclk";
->  			status = "disabled";
->  		};
-> +
-> +		pcie@f4000000 {
-> +			compatible = "hisilicon,kirin960-pcie";
-> +			reg =  <0x0 0xf4000000 0x0 0x1000>,
-> +				<0x0 0xff3fe000 0x0 0x1000>,
-> +				<0x0 0xf3f20000 0x0 0x40000>,
-> +				<0x0 0xF5000000 0x0 0x2000>;
 
-s/0xF5000000/0xf5000000/
 
-Please indent these consistently so the cells line up, e.g.,
+> -----Original Message-----
+> From: Vitaly Kuznetsov [mailto:vkuznets@redhat.com]
+> Sent: Friday, May 19, 2017 3:03 AM
+> To: Jork Loeser <Jork.Loeser@microsoft.com>; KY Srinivasan
+> <kys@microsoft.com>
+> Cc: Stephen Hemminger <stephen@networkplumber.org>; Greg Kroah-
+> Hartman <gregkh@linuxfoundation.org>; helgaas@kernel.org;
+> olaf@aepfle.de; Stephen Hemminger <sthemmin@microsoft.com>; linux-
+> pci@vger.kernel.org; jasowang@redhat.com; linux-kernel@vger.kernel.org;
+> marcelo.cerri@canonical.com; apw@canonical.com;
+> devel@linuxdriverproject.org; leann.ogasawara@canonical.com
+> Subject: Re: [PATCH 4/4] Hyper-V vPCI: use vPCI protocol version 1.2
+>=20
+> Jork Loeser <Jork.Loeser@microsoft.com> writes:
+>=20
+> >> -----Original Message-----
+> >> From: Stephen Hemminger [mailto:stephen@networkplumber.org]
+> >> Sent: Thursday, May 18, 2017 16:59
+> >>
+> >> > From: Jork Loeser <jloeser@microsoft.com>
+> >> >
+> >> > Update the Hyper-V vPCI driver to use the Server-2016 version of the
+> >> > vPCI protocol, fixing MSI creation and retargeting issues.
+> >> >
+> >> > Signed-off-by: Jork Loeser <jloeser@microsoft.com>
+> >>
+> >> This patch conflicts with already submitted patch that removes
+> >> vmbus_cpu_number_to_vp_number()
+> >>
+> >> commit 4b28e5c28cc32652d200a31795e38ee6c819a4a2
+> >> Author: Vitaly Kuznetsov <vkuznets@redhat.com>
+> >> Date:   Mon May 15 13:38:26 2017 -0700
+> >>
+> >>     hyper-v: globalize vp_index
+> >>
+> >>     To support implementing remote TLB flushing on Hyper-V with a
+> hypercall
+> >>     we need to make vp_index available outside of vmbus module.
+> Rename and
+> >>     globalize.
+> >
+> > Thank you Stephen, easy enough to adapt.
+> >
+> > Bjorn, Greg, Vitaly: Do you have an ETA on when Vitaly's patch will be =
+in the
+> PCI or linux-next branch so I can rev?
+> >
+>=20
+> I was a bit surprised to see that these patches missed 4.12, K. Y. ACKed
+> them:
+>=20
+> https://na01.safelinks.protection.outlook.com/?url=3Dhttp%3A%2F%2Fdriverd
+> ev.linuxdriverproject.org%2Fpipermail%2Fdriverdev-devel%2F2017-
+> May%2F105466.html&data=3D02%7C01%7Ckys%40microsoft.com%7Ce1b07306
+> cc1d433acb3108d49e9e412b%7C72f988bf86f141af91ab2d7cd011db47%7C1%7
+> C0%7C636307849924808831&sdata=3D0JsGx0Ax1DN6Zak8%2BHjLNiaVZBcq%2F
+> O2%2F7DrlUtUz1%2BU%3D&reserved=3D0
+>=20
+> and no other concerns were expressed.
+>=20
+> To my understanding these patches should go through Greg's char-misc
+> tree. K. Y., Greg, please let me know if I need to rebase/resend.
 
-  reg = <0x0 0xf4000000 0x0  0x1000>,
-	<0x0 0xff3fe000 0x0  0x1000>,
-	<0x0 0xf3f20000 0x0 0x40000>,
-	<0x0 0xf5000000 0x0  0x2000>;
+My mistake; I was thinking perhaps they will go through x86 tree. Please re=
+send, I will take it
+through Greg's tree.
 
-> +			reg-names = "dbi", "apb", "phy", "config";
-> +			bus-range = <0x0  0x1>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			device_type = "pci";
-> +			ranges = <0x02000000 0x0 0x00000000 0x0
-> +				0xf6000000 0x0 0x2000000>;
-> +			num-lanes = <1>;
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0xf800 0 0 7>;
-> +			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
-> +				<0x0 0 0 2 &gic 0 0 0  283 4>,
-> +				<0x0 0 0 3 &gic 0 0 0  284 4>,
-> +				<0x0 0 0 4 &gic 0 0 0  285 4>;
-> +			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-> +				<&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-> +				<&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-> +				<&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-> +				<&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-
-Line up cells above.
-
-> +			clock-names = "pcie_phy_ref", "pcie_aux",
-> +				"pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-> +			reset-gpio = <&gpio11 1 0 >;
-> +			status = "ok";
-> +		};
->  	};
->  };
-> -- 
-> 2.11.GIT
-> 
+K. Y
+>=20
+> --
+>   Vitaly
