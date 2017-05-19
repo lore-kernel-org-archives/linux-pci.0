@@ -1,122 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35435 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935397AbdEWThC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 15:37:02 -0400
-Received: by mail-pf0-f175.google.com with SMTP id n23so123895697pfb.2
-        for <linux-pci@vger.kernel.org>; Tue, 23 May 2017 12:37:01 -0700 (PDT)
-Date: Tue, 23 May 2017 12:36:58 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-rockchip@lists.infradead.org,
-        Krishna Dhulipala <krishnad@fb.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Christoph Hellwig <hch@lst.de>, Wei Zhang <wzhang@fb.com>
-Subject: [PATCH] PCI: Make error code types consistent in
- pci_{read,write}_config_*
-Message-ID: <20170523193655.GA144183@google.com>
-References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
- <20170523184359.GB115572@google.com>
+Return-Path: <SRS0=lggU=4Z=microsoft.com=Jork.Loeser@kernel.org>
+Return-Path: <SRS0=lggU=4Z=microsoft.com=Jork.Loeser@kernel.org>
+From: Jork Loeser <Jork.Loeser@microsoft.com>
+To: Stephen Hemminger <stephen@networkplumber.org>, Greg Kroah-Hartman
+	<gregkh@linuxfoundation.org>, "helgaas@kernel.org" <helgaas@kernel.org>,
+	Vitaly Kuznetsov <vkuznets@redhat.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com"
+	<jasowang@redhat.com>, "leann.ogasawara@canonical.com"
+	<leann.ogasawara@canonical.com>, "marcelo.cerri@canonical.com"
+	<marcelo.cerri@canonical.com>, Stephen Hemminger <sthemmin@microsoft.com>
+Subject: RE: [PATCH 4/4] Hyper-V vPCI: use vPCI protocol version 1.2
+Date: Fri, 19 May 2017 02:13:55 +0000
+Message-ID: <CY4PR21MB06313801D2312E9686F3520AF1E50@CY4PR21MB0631.namprd21.prod.outlook.com>
+References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
+	<1495134870-18225-5-git-send-email-jloeser@linuxonhyperv.com>
+ <20170518165854.46fd92fa@xeon-e3>
+In-Reply-To: <20170518165854.46fd92fa@xeon-e3>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170523184359.GB115572@google.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Callers normally treat the config space accessors as returning PCBIOS_*
-error codes, not Linux error codes (or they don't look at them at all).
-We have pcibios_err_to_errno(), in case the error code needs translated.
+> -----Original Message-----
+> From: Stephen Hemminger [mailto:stephen@networkplumber.org]
+> Sent: Thursday, May 18, 2017 16:59
+>=20
+> > From: Jork Loeser <jloeser@microsoft.com>
+> >
+> > Update the Hyper-V vPCI driver to use the Server-2016 version of the
+> > vPCI protocol, fixing MSI creation and retargeting issues.
+> >
+> > Signed-off-by: Jork Loeser <jloeser@microsoft.com>
+>=20
+> This patch conflicts with already submitted patch that removes
+> vmbus_cpu_number_to_vp_number()
+>=20
+> commit 4b28e5c28cc32652d200a31795e38ee6c819a4a2
+> Author: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Date:   Mon May 15 13:38:26 2017 -0700
+>=20
+>     hyper-v: globalize vp_index
+>=20
+>     To support implementing remote TLB flushing on Hyper-V with a hyperca=
+ll
+>     we need to make vp_index available outside of vmbus module. Rename an=
+d
+>     globalize.
 
-Fixes: 4b1038834739 ("PCI: Don't attempt config access to disconnected devices")
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-+ others, change subject
+Thank you Stephen, easy enough to adapt.=20
 
-On Tue, May 23, 2017 at 11:44:01AM -0700, Brian Norris wrote:
-> But the high level code doesn't handle this
-> consistently. See, e.g., pci_read_config_byte() which can return regular
-> Linux error codes (like -ENODEV), except it also passes up the return
-> code of pci_read_config_byte() (a PCIBIOS_* code) directly.
+Bjorn, Greg, Vitaly: Do you have an ETA on when Vitaly's patch will be in t=
+he PCI or linux-next branch so I can rev?
 
-Apparently this is new (inconsistent) behavior in 4.12-rc1. Seems like
-an oversight to me.
-
-> So callers don't really know whether to treat the value from
-> pci_read_config_<foo>() as a PCIBIOS_* code (which should be translated
-> with pcibios_err_to_errno()) or as a standard Linux errno.
-> 
-> But then, there are relatively few callers (less than 10% of
-> pci_read_config_<foo>(); even fewer for writes) that actually check the
-> error codes...
-> 
-> Maybe the "fix" is to replace -ENODEV with PCIBIOS_DEVICE_NOT_FOUND for
-> the inconsistent cases (pci_{read,write}_config_{byte,word,dword}()).
-
-Fix implemented in the surrounding patch.
-
- drivers/pci/access.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index 74cf5fffb1e1..c80e37a69305 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -896,7 +896,7 @@ int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
- {
- 	if (pci_dev_is_disconnected(dev)) {
- 		*val = ~0;
--		return -ENODEV;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
- 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
- }
-@@ -906,7 +906,7 @@ int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
- {
- 	if (pci_dev_is_disconnected(dev)) {
- 		*val = ~0;
--		return -ENODEV;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
- 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
- }
-@@ -917,7 +917,7 @@ int pci_read_config_dword(const struct pci_dev *dev, int where,
- {
- 	if (pci_dev_is_disconnected(dev)) {
- 		*val = ~0;
--		return -ENODEV;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 	}
- 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
- }
-@@ -926,7 +926,7 @@ EXPORT_SYMBOL(pci_read_config_dword);
- int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
- {
- 	if (pci_dev_is_disconnected(dev))
--		return -ENODEV;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_write_config_byte);
-@@ -934,7 +934,7 @@ EXPORT_SYMBOL(pci_write_config_byte);
- int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
- {
- 	if (pci_dev_is_disconnected(dev))
--		return -ENODEV;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_write_config_word);
-@@ -943,7 +943,7 @@ int pci_write_config_dword(const struct pci_dev *dev, int where,
- 					 u32 val)
- {
- 	if (pci_dev_is_disconnected(dev))
--		return -ENODEV;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
- 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_write_config_dword);
--- 
-2.13.0.219.gdb65acc882-goog
+Thanks,
+Jork
