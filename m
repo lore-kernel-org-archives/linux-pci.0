@@ -1,17 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
- <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
- <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
- <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v9 2/7] PCI: Apply the new generic I/O management on PCI IO
- hosts
-Date: Thu, 25 May 2017 12:37:23 +0100
-Message-ID: <1495712248-5232-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
+In-Reply-To: <1494382020-26790-2-git-send-email-ryder.lee@mediatek.com>
+References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
+ <1494382020-26790-2-git-send-email-ryder.lee@mediatek.com>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Date: Sat, 20 May 2017 15:46:14 -0400
+Message-ID: <CAP=VYLrjeq57S+o0bBBH4oi8Bgwp=XgTsdO8RkWY8xuJyhLP9g@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] PCI: mediatek: Add Mediatek PCIe host controller
+ support
+To: Ryder Lee <ryder.lee@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,272 +17,120 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, minyard@acm.org, gabriele.paoloni@huawei.com,
- benh@kernel.crashing.org, john.garry@huawei.com, linux-kernel@vger.kernel.org,
- xuwei5@hisilicon.com, linuxarm@huawei.com, linux-acpi@vger.kernel.org,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, linux-pci@vger.kernel.org,
- olof@lixom.net, brian.starkey@arm.com
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ LKML <linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
+ linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+On Tue, May 9, 2017 at 10:06 PM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> Add support for the Mediatek PCIe Gen2 controller which can
+> be found on MT7623 series SoCs.
+>
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  drivers/pci/host/Kconfig         |  11 +
+>  drivers/pci/host/Makefile        |   1 +
+>  drivers/pci/host/pcie-mediatek.c | 563 +++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 575 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-mediatek.c
+>
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index f7c1d4d..aef0de9 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -174,6 +174,17 @@ config PCIE_ROCKCHIP
+>           There is 1 internal PCIe port available to support GEN2 with
+>           4 slots.
+>
+> +config PCIE_MEDIATEK
+> +       bool "Mediatek PCIe controller"
 
-After introducing the new generic I/O space management(LOGIC_IO), the
-original PCI MMIO relevant helpers need to be updated based on the new
-interfaces defined in LOGIC_IO.
-This patch adapts the corresponding code to match the changes introduced
-by LOGIC_IO.
+You've got bool here and correctly use the builtin register
+function, but you still have a couple stray references to
+the module.h header and MODULE macros.  Can you
+please also clean them up and resend with those gone?
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
----
- drivers/acpi/pci_root.c  |   8 ++--
- drivers/of/address.c     |   5 ++-
- drivers/pci/pci.c        | 101 ++++++++++-------------------------------------
- include/asm-generic/io.h |   2 +-
- include/linux/pci.h      |   3 +-
- 5 files changed, 32 insertions(+), 87 deletions(-)
+Thanks,
+Paul.
+--
 
-diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-index 919be0a..4d8cc24 100644
---- a/drivers/acpi/pci_root.c
-+++ b/drivers/acpi/pci_root.c
-@@ -730,7 +730,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
- 	}
- }
- 
--static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-+static void acpi_pci_root_remap_iospace(struct fwnode_handle *fwnode,
-+			struct resource_entry *entry)
- {
- #ifdef PCI_IOBASE
- 	struct resource *res = entry->res;
-@@ -739,7 +740,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
- 	resource_size_t length = resource_size(res);
- 	unsigned long port;
- 
--	if (pci_register_io_range(cpu_addr, length))
-+	if (pci_register_io_range(fwnode, cpu_addr, length))
- 		goto err;
- 
- 	port = pci_address_to_pio(cpu_addr);
-@@ -781,7 +782,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
- 	else {
- 		resource_list_for_each_entry_safe(entry, tmp, list) {
- 			if (entry->res->flags & IORESOURCE_IO)
--				acpi_pci_root_remap_iospace(entry);
-+				acpi_pci_root_remap_iospace(&device->fwnode,
-+						entry);
- 
- 			if (entry->res->flags & IORESOURCE_DISABLED)
- 				resource_list_destroy_entry(entry);
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 72914cd..34a55e8 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -2,8 +2,10 @@
- #define pr_fmt(fmt)	"OF: " fmt
- 
- #include <linux/device.h>
-+#include <linux/fwnode.h>
- #include <linux/io.h>
- #include <linux/ioport.h>
-+#include <linux/logic_pio.h>
- #include <linux/module.h>
- #include <linux/of_address.h>
- #include <linux/pci.h>
-@@ -323,7 +325,8 @@ int of_pci_range_to_resource(struct of_pci_range *range,
- 
- 	if (res->flags & IORESOURCE_IO) {
- 		unsigned long port;
--		err = pci_register_io_range(range->cpu_addr, range->size);
-+		err = pci_register_io_range(&np->fwnode, range->cpu_addr,
-+				range->size);
- 		if (err)
- 			goto invalid_range;
- 		port = pci_address_to_pio(range->cpu_addr);
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5b..c9fe12b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -21,6 +21,7 @@
- #include <linux/spinlock.h>
- #include <linux/string.h>
- #include <linux/log2.h>
-+#include <linux/logic_pio.h>
- #include <linux/pci-aspm.h>
- #include <linux/pm_wakeup.h>
- #include <linux/interrupt.h>
-@@ -3241,68 +3242,34 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
- }
- EXPORT_SYMBOL(pci_request_regions_exclusive);
- 
--#ifdef PCI_IOBASE
--struct io_range {
--	struct list_head list;
--	phys_addr_t start;
--	resource_size_t size;
--};
--
--static LIST_HEAD(io_range_list);
--static DEFINE_SPINLOCK(io_range_lock);
--#endif
--
- /*
-  * Record the PCI IO range (expressed as CPU physical address + size).
-  * Return a negative value if an error has occured, zero otherwise
-  */
--int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-+int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
-+			resource_size_t	size)
- {
--	int err = 0;
--
-+	int ret = 0;
- #ifdef PCI_IOBASE
--	struct io_range *range;
--	resource_size_t allocated_size = 0;
--
--	/* check if the range hasn't been previously recorded */
--	spin_lock(&io_range_lock);
--	list_for_each_entry(range, &io_range_list, list) {
--		if (addr >= range->start && addr + size <= range->start + size) {
--			/* range already registered, bail out */
--			goto end_register;
--		}
--		allocated_size += range->size;
--	}
--
--	/* range not registed yet, check for available space */
--	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
--		/* if it's too big check if 64K space can be reserved */
--		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
--			err = -E2BIG;
--			goto end_register;
--		}
--
--		size = SZ_64K;
--		pr_warn("Requested IO range too big, new size set to 64K\n");
--	}
-+	struct logic_pio_hwaddr *range;
- 
--	/* add the range to the list */
--	range = kzalloc(sizeof(*range), GFP_ATOMIC);
--	if (!range) {
--		err = -ENOMEM;
--		goto end_register;
--	}
-+	if (!size || addr + size < addr)
-+		return -EINVAL;
- 
--	range->start = addr;
-+	range = kzalloc(sizeof(*range), GFP_KERNEL);
-+	if (!range)
-+		return -ENOMEM;
-+	range->fwnode = fwnode;
- 	range->size = size;
-+	range->hw_start = addr;
-+	range->flags = PIO_CPU_MMIO;
- 
--	list_add_tail(&range->list, &io_range_list);
--
--end_register:
--	spin_unlock(&io_range_lock);
-+	ret = logic_pio_register_range(range);
-+	if (ret)
-+		kfree(range);
- #endif
- 
--	return err;
-+	return ret;
- }
- 
- phys_addr_t pci_pio_to_address(unsigned long pio)
-@@ -3310,21 +3277,10 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
- 	phys_addr_t address = (phys_addr_t)OF_BAD_ADDR;
- 
- #ifdef PCI_IOBASE
--	struct io_range *range;
--	resource_size_t allocated_size = 0;
--
--	if (pio > IO_SPACE_LIMIT)
-+	if (pio >= MMIO_UPPER_LIMIT)
- 		return address;
- 
--	spin_lock(&io_range_lock);
--	list_for_each_entry(range, &io_range_list, list) {
--		if (pio >= allocated_size && pio < allocated_size + range->size) {
--			address = range->start + pio - allocated_size;
--			break;
--		}
--		allocated_size += range->size;
--	}
--	spin_unlock(&io_range_lock);
-+	address = logic_pio_to_hwaddr(pio);
- #endif
- 
- 	return address;
-@@ -3333,25 +3289,8 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
- unsigned long __weak pci_address_to_pio(phys_addr_t address)
- {
- #ifdef PCI_IOBASE
--	struct io_range *res;
--	resource_size_t offset = 0;
--	unsigned long addr = -1;
--
--	spin_lock(&io_range_lock);
--	list_for_each_entry(res, &io_range_list, list) {
--		if (address >= res->start && address < res->start + res->size) {
--			addr = address - res->start + offset;
--			break;
--		}
--		offset += res->size;
--	}
--	spin_unlock(&io_range_lock);
--
--	return addr;
-+	return logic_pio_trans_cpuaddr(address);
- #else
--	if (address > IO_SPACE_LIMIT)
--		return (unsigned long)-1;
--
- 	return (unsigned long) address;
- #endif
- }
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index f7fbec3..41ecc09 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -949,7 +949,7 @@ static inline void iounmap(void __iomem *addr)
- #define ioport_map ioport_map
- static inline void __iomem *ioport_map(unsigned long port, unsigned int nr)
- {
--	return PCI_IOBASE + (port & IO_SPACE_LIMIT);
-+	return PCI_IOBASE + (port & MMIO_UPPER_LIMIT);
- }
- #endif
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..e420d03 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1188,7 +1188,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
- 			void *alignf_data);
- 
- 
--int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-+int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
-+			resource_size_t size);
- unsigned long pci_address_to_pio(phys_addr_t addr);
- phys_addr_t pci_pio_to_address(unsigned long pio);
- int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
--- 
-2.7.4
+> +       depends on ARM && (ARCH_MEDIATEK || COMPILE_TEST)
+> +       depends on OF
+> +       depends on PCI
+> +       select PCIEPORTBUS
+> +       help
+> +         Say Y here if you want to enable PCIe controller support on MT7623 series
+> +         SoCs. There is one single root complex with 3 root ports available.
+> +         Each port supports Gen2 lane x1.
+> +
+>  config VMD
+>         depends on PCI_MSI && X86_64 && SRCU
+>         tristate "Intel Volume Management Device Driver"
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index 4d36866..265adff 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -17,6 +17,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+>  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+>  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+>  obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
+> +obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+>  obj-$(CONFIG_VMD) += vmd.o
+>
+>  # The following drivers are for devices that use the generic ACPI
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> new file mode 100644
+> index 0000000..5e8c1bf
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -0,0 +1,563 @@
+> +/*
+> + * Mediatek PCIe host controller driver.
+> + *
+> + * Copyright (c) 2017 MediaTek Inc.
+> + * Author: Ryder Lee <ryder.lee@mediatek.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + */
+> +
+> +#include <linux/clk.h>
+> +#include <linux/delay.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
 
+[....]
 
+> +};
+> +MODULE_DEVICE_TABLE(of, mtk_pcie_ids);
+> +
+> +static struct platform_driver mtk_pcie_driver = {
+> +       .probe = mtk_pcie_probe,
+> +       .driver = {
+> +               .name = "mtk-pcie",
+> +               .of_match_table = mtk_pcie_ids,
+> +               .suppress_bind_attrs = true,
+> +       },
+> +};
+> +
+> +builtin_platform_driver(mtk_pcie_driver);
+> +
+> +MODULE_DESCRIPTION("Mediatek PCIe host controller driver.");
+> +MODULE_LICENSE("GPL v2");
+> --
+> 1.9.1
+>
 
 _______________________________________________
 linux-arm-kernel mailing list
