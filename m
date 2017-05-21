@@ -1,15 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
- <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
- <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
- <lorenzo.pieralisi@arm.com>
-Subject: [PATCH v9 4/7] LPC: Support the device-tree LPC host on Hip06/Hip07
-Date: Thu, 25 May 2017 12:37:25 +0100
-Message-ID: <1495712248-5232-5-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 1/2] PCI: mediatek: Add Mediatek PCIe host controller
+ support
+Date: Sun, 21 May 2017 11:42:24 +0800
+Message-ID: <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
+In-Reply-To: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
+References: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -18,121 +17,71 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, minyard@acm.org, gabriele.paoloni@huawei.com,
- benh@kernel.crashing.org, john.garry@huawei.com, linux-kernel@vger.kernel.org,
- xuwei5@hisilicon.com, linuxarm@huawei.com, linux-acpi@vger.kernel.org,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, linux-pci@vger.kernel.org,
- olof@lixom.net, brian.starkey@arm.com
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Add support for the Mediatek PCIe Gen2 controller which can
+be found on MT7623 series SoCs.
 
-The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals
-in I/O port addresses. This patch implements the LPC host controller
-driver which perform the I/O operations on the underlying hardware.
-We don't want to touch those existing peripherals' driver, such as
-ipmi-bt. So this driver applies the indirect-IO introduced in the previous
-patch after registering an indirect-IO node to the indirect-IO devices
-list which will be searched in the I/O accessors to retrieve the
-host-local I/O port.
-
-Signed-off-by: Zou Rongrong <zourongrong@huawei.com>
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Acked-by: Rob Herring <robh@kernel.org> #dts part
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
- drivers/bus/Kconfig                                |   9 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 544 +++++++++++++++++++++
- 4 files changed, 587 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 drivers/bus/hisi_lpc.c
+ drivers/pci/host/Kconfig         |  11 +
+ drivers/pci/host/Makefile        |   1 +
+ drivers/pci/host/pcie-mediatek.c | 553 +++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 565 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-mediatek.c
 
-diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-new file mode 100644
-index 0000000..213181f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
-@@ -0,0 +1,33 @@
-+Hisilicon Hip06 low-pin-count device
-+  Hisilicon Hip06 SoCs implement a Low Pin Count (LPC) controller, which
-+  provides I/O access to some legacy ISA devices.
-+  Hip06 is based on arm64 architecture where there is no I/O space. So, the
-+  I/O ports here are not cpu addresses, and there is no 'ranges' property in
-+  LPC device node.
-+
-+Required properties:
-+- compatible:  value should be as follows:
-+	(a) "hisilicon,hip06-lpc"
-+	(b) "hisilicon,hip07-lpc"
-+- #address-cells: must be 2 which stick to the ISA/EISA binding doc.
-+- #size-cells: must be 1 which stick to the ISA/EISA binding doc.
-+- reg: base memory range where the LPC register set is mapped.
-+
-+Note:
-+  The node name before '@' must be "isa" to represent the binding stick to the
-+  ISA/EISA binding specification.
-+
-+Example:
-+
-+isa@a01b0000 {
-+	compatible = "hisilicon,hip06-lpc";
-+	#address-cells = <2>;
-+	#size-cells = <1>;
-+	reg = <0x0 0xa01b0000 0x0 0x1000>;
-+
-+	ipmi0: bt@e4 {
-+		compatible = "ipmi-bt";
-+		device_type = "ipmi";
-+		reg = <0x01 0xe4 0x04>;
-+	};
-+};
-diff --git a/drivers/bus/Kconfig b/drivers/bus/Kconfig
-index 0a52da4..4b548dd 100644
---- a/drivers/bus/Kconfig
-+++ b/drivers/bus/Kconfig
-@@ -64,6 +64,15 @@ config BRCMSTB_GISB_ARB
- 	  arbiter. This driver provides timeout and target abort error handling
- 	  and internal bus master decoding.
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 7f47cd5..d7d7c47 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -180,6 +180,17 @@ config PCIE_ROCKCHIP
+ 	  There is 1 internal PCIe port available to support GEN2 with
+ 	  4 slots.
  
-+config HISILICON_LPC
-+	bool "Support for ISA I/O space on Hisilicon Hip0X"
-+	depends on (ARM64 && ARCH_HISI) || COMPILE_TEST
-+	select LOGIC_PIO
-+	select INDIRECT_PIO
++config PCIE_MEDIATEK
++	bool "Mediatek PCIe controller"
++	depends on ARM && (ARCH_MEDIATEK || COMPILE_TEST)
++	depends on OF
++	depends on PCI
++	select PCIEPORTBUS
 +	help
-+	  Driver needed for some legacy ISA devices attached to Low-Pin-Count
-+	  on Hisilicon Hip0X SoC.
++	  Say Y here if you want to enable PCIe controller support on MT7623 series
++	  SoCs. There is one single root complex with 3 root ports available.
++	  Each port supports Gen2 lane x1.
 +
- config IMX_WEIM
- 	bool "Freescale EIM DRIVER"
- 	depends on ARCH_MXC
-diff --git a/drivers/bus/Makefile b/drivers/bus/Makefile
-index cc6364b..28e3862 100644
---- a/drivers/bus/Makefile
-+++ b/drivers/bus/Makefile
-@@ -7,6 +7,7 @@ obj-$(CONFIG_ARM_CCI)		+= arm-cci.o
- obj-$(CONFIG_ARM_CCN)		+= arm-ccn.o
+ config VMD
+ 	depends on PCI_MSI && X86_64 && SRCU
+ 	tristate "Intel Volume Management Device Driver"
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index cab8795..b10d104 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -18,6 +18,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
+ obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
+ obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
+ obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
++obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+ obj-$(CONFIG_VMD) += vmd.o
  
- obj-$(CONFIG_BRCMSTB_GISB_ARB)	+= brcmstb_gisb.o
-+obj-$(CONFIG_HISILICON_LPC)	+= hisi_lpc.o
- obj-$(CONFIG_IMX_WEIM)		+= imx-weim.o
- obj-$(CONFIG_MIPS_CDMM)		+= mips_cdmm.o
- obj-$(CONFIG_MVEBU_MBUS) 	+= mvebu-mbus.o
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+ # The following drivers are for devices that use the generic ACPI
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
 new file mode 100644
-index 0000000..4f3bf76
+index 0000000..0cc7943
 --- /dev/null
-+++ b/drivers/bus/hisi_lpc.c
-@@ -0,0 +1,544 @@
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -0,0 +1,553 @@
 +/*
-+ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ * Author: Zou Rongrong <zourongrong@huawei.com>
++ * Mediatek PCIe host controller driver.
++ *
++ * Copyright (c) 2017 MediaTek Inc.
++ * Author: Ryder Lee <ryder.lee@mediatek.com>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License version 2 as
@@ -142,540 +91,547 @@ index 0000000..4f3bf76
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 + */
 +
-+#include <linux/acpi.h>
-+#include <linux/console.h>
++#include <linux/clk.h>
 +#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/logic_pio.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
++#include <linux/kernel.h>
 +#include <linux/of_address.h>
++#include <linux/of_pci.h>
 +#include <linux/of_platform.h>
 +#include <linux/pci.h>
-+#include <linux/serial_8250.h>
-+#include <linux/slab.h>
++#include <linux/phy/phy.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/reset.h>
 +
-+#define LPC_MIN_BUS_RANGE	0x0
++/* PCIe shared registers */
++#define PCIE_SYS_CFG		0x00
++#define PCIE_INT_ENABLE		0x0c
++#define PCIE_CFG_ADDR		0x20
++#define PCIE_CFG_DATA		0x24
 +
-+/*
-+ * The default maximal IO size for Hip06/Hip07 LPC bus.
-+ * Defining the I/O range size as 0x400 here should be sufficient for
-+ * all peripherals under the bus.
-+ */
-+#define LPC_BUS_IO_SIZE		0x400
++/* PCIe per port registers */
++#define PCIE_BAR0_SETUP		0x10
++#define PCIE_BAR1_SETUP		0x14
++#define PCIE_BAR0_MEM_BASE	0x18
++#define PCIE_CLASS		0x34
++#define PCIE_LINK_STATUS	0x50
 +
-+/*
-+ * Setting this bit means each IO operation will target to a
-+ * different port address:
-+ * 0 means repeatedly IO operations will stick on the same port,
-+ * such as BT;
-+ */
-+#define FG_INCRADDR_LPC		0x02
++#define PCIE_PORT_INT_EN(x)	BIT(20 + (x))
++#define PCIE_PORT_PERST(x)	BIT(1 + (x))
++#define PCIE_PORT_LINKUP	BIT(0)
++#define PCIE_BAR_MAP_MAX	GENMASK(31, 16)
 +
-+struct lpc_cycle_para {
-+	unsigned int opflags;
-+	unsigned int csize; /* the data length of each operation */
-+};
++#define PCIE_BAR_ENABLE		BIT(0)
++#define PCIE_REVISION_ID	BIT(0)
++#define PCIE_CLASS_CODE		(0x60400 << 8)
++#define PCIE_CONF_REG(regn)	(((regn) & GENMASK(7, 2)) | \
++				((((regn) >> 8) & GENMASK(3, 0)) << 24))
++#define PCIE_CONF_FUN(fun)	(((fun) << 8) & GENMASK(10, 8))
++#define PCIE_CONF_DEV(dev)	(((dev) << 11) & GENMASK(15, 11))
++#define PCIE_CONF_BUS(bus)	(((bus) << 16) & GENMASK(23, 16))
++#define PCIE_CONF_ADDR(regn, fun, dev, bus) \
++	(PCIE_CONF_REG(regn) | PCIE_CONF_FUN(fun) | \
++	 PCIE_CONF_DEV(dev) | PCIE_CONF_BUS(bus))
 +
-+struct hisilpc_dev {
-+	spinlock_t cycle_lock;
-+	void __iomem  *membase;
-+	struct logic_pio_hwaddr *io_host;
-+};
++/* Mediatek specific configuration registers */
++#define PCIE_FTS_NUM		0x70c
++#define PCIE_FTS_NUM_MASK	GENMASK(15, 8)
++#define PCIE_FTS_NUM_L0(x)	((x) & 0xff << 8)
 +
-+/* The maximum continuous cycles per burst */
-+#define LPC_MAX_BURST	16
-+/* The IO cycle counts supported is four per operation at maximum */
-+#define LPC_MAX_DULEN	4
-+#if LPC_MAX_DULEN > LPC_MAX_BURST
-+#error "LPC.. MAX_DULEN must be not bigger than MAX_OPCNT!"
-+#endif
-+
-+#if LPC_MAX_BURST % LPC_MAX_DULEN
-+#error "LPC.. LPC_MAX_BURST must be multiple of LPC_MAX_DULEN!"
-+#endif
-+
-+#define LPC_REG_START		0x00 /* start a new LPC cycle */
-+#define LPC_REG_OP_STATUS	0x04 /* the current LPC status */
-+#define LPC_REG_IRQ_ST		0x08 /* interrupt enable&status */
-+#define LPC_REG_OP_LEN		0x10 /* how many LPC cycles each start */
-+#define LPC_REG_CMD		0x14 /* command for the required LPC cycle */
-+#define LPC_REG_ADDR		0x20 /* LPC target address */
-+#define LPC_REG_WDATA		0x24 /* data to be written */
-+#define LPC_REG_RDATA		0x28 /* data coming from peer */
-+
-+
-+/* The command register fields */
-+#define LPC_CMD_SAMEADDR	0x08
-+#define LPC_CMD_TYPE_IO		0x00
-+#define LPC_CMD_WRITE		0x01
-+#define LPC_CMD_READ		0x00
-+/* the bit attribute is W1C. 1 represents OK. */
-+#define LPC_STAT_BYIRQ		0x02
-+
-+#define LPC_STATUS_IDLE		0x01
-+#define LPC_OP_FINISHED		0x02
-+
-+#define START_WORK		0x01
-+
-+/*
-+ * The minimal nanosecond interval for each query on LPC cycle status.
-+ */
-+#define LPC_NSEC_PERWAIT	100
-+/*
-+ * The maximum waiting time is about 128us.
-+ * It is specific for stream I/O, such as ins.
-+ * The fastest IO cycle time is about 390ns, but the worst case will wait
-+ * for extra 256 lpc clocks, so (256 + 13) * 30ns = 8 us. The maximum
-+ * burst cycles is 16. So, the maximum waiting time is about 128us under
-+ * worst case.
-+ * choose 1300 as the maximum.
-+ */
-+#define LPC_MAX_WAITCNT		1300
-+/* About 10us. This is specific for single IO operation, such as inb. */
-+#define LPC_PEROP_WAITCNT	100
-+
-+
-+static inline int wait_lpc_idle(unsigned char *mbase,
-+				unsigned int waitcnt) {
-+	u32 opstatus;
-+
-+	while (waitcnt--) {
-+		ndelay(LPC_NSEC_PERWAIT);
-+		opstatus = readl(mbase + LPC_REG_OP_STATUS);
-+		if (opstatus & LPC_STATUS_IDLE)
-+			return (opstatus & LPC_OP_FINISHED) ? 0 : (-EIO);
-+	}
-+	return -ETIME;
-+}
-+
-+/*
-+ * hisilpc_target_in - trigger a series of lpc cycles to read required data
-+ *		       from target peripheral.
-+ * @pdev: pointer to hisi lpc device
-+ * @para: some parameters used to control the lpc I/O operations
-+ * @ptaddr: the lpc I/O target port address
-+ * @buf: where the read back data is stored
-+ * @opcnt: how many I/O operations required in this calling
-+ *
-+ * Only one byte data is read each I/O operation.
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int
-+hisilpc_target_in(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
-+		  unsigned long ptaddr, unsigned char *buf,
-+		  unsigned long opcnt)
-+{
-+	unsigned long cnt_per_trans;
-+	unsigned int cmd_word;
-+	unsigned int waitcnt;
-+	int ret;
-+
-+	if (!buf || !opcnt || !para || !para->csize || !lpcdev)
-+		return -EINVAL;
-+
-+	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
-+	waitcnt = LPC_PEROP_WAITCNT;
-+	if (!(para->opflags & FG_INCRADDR_LPC)) {
-+		cmd_word |= LPC_CMD_SAMEADDR;
-+		waitcnt = LPC_MAX_WAITCNT;
-+	}
-+
-+	ret = 0;
-+	cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
-+	for (; opcnt && !ret; cnt_per_trans = para->csize) {
-+		unsigned long flags;
-+
-+		/* whole operation must be atomic */
-+		spin_lock_irqsave(&lpcdev->cycle_lock, flags);
-+
-+		writel_relaxed(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
-+
-+		writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
-+
-+		writel_relaxed(ptaddr, lpcdev->membase + LPC_REG_ADDR);
-+
-+		writel(START_WORK, lpcdev->membase + LPC_REG_START);
-+
-+		/* whether the operation is finished */
-+		ret = wait_lpc_idle(lpcdev->membase, waitcnt);
-+		if (!ret) {
-+			opcnt -= cnt_per_trans;
-+			for (cnt_per_trans--; cnt_per_trans--; buf++)
-+				*buf = readb_relaxed(lpcdev->membase +
-+					LPC_REG_RDATA);
-+			*buf = readb(lpcdev->membase + LPC_REG_RDATA);
-+		}
-+
-+		spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
-+	}
-+
-+	return ret;
-+}
-+
-+/*
-+ * hisilpc_target_out - trigger a series of lpc cycles to write required
-+ *			data to target peripheral.
-+ * @pdev: pointer to hisi lpc device
-+ * @para: some parameters used to control the lpc I/O operations
-+ * @ptaddr: the lpc I/O target port address
-+ * @buf: where the data to be written is stored
-+ * @opcnt: how many I/O operations required
-+ *
-+ * Only one byte data is read each I/O operation.
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int
-+hisilpc_target_out(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
-+		   unsigned long ptaddr, const unsigned char *buf,
-+		   unsigned long opcnt)
-+{
-+	unsigned long cnt_per_trans;
-+	unsigned int cmd_word;
-+	unsigned int waitcnt;
-+	int ret;
-+
-+	if (!buf || !opcnt || !para || !lpcdev)
-+		return -EINVAL;
-+
-+	/* default is increasing address */
-+	cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_WRITE;
-+	waitcnt = LPC_PEROP_WAITCNT;
-+	if (!(para->opflags & FG_INCRADDR_LPC)) {
-+		cmd_word |= LPC_CMD_SAMEADDR;
-+		waitcnt = LPC_MAX_WAITCNT;
-+	}
-+
-+	ret = 0;
-+	cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
-+	for (; opcnt && !ret; cnt_per_trans = para->csize) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&lpcdev->cycle_lock, flags);
-+
-+		writel_relaxed(cnt_per_trans, lpcdev->membase + LPC_REG_OP_LEN);
-+		writel_relaxed(cmd_word, lpcdev->membase + LPC_REG_CMD);
-+		writel_relaxed(ptaddr, lpcdev->membase + LPC_REG_ADDR);
-+
-+		opcnt -= cnt_per_trans;
-+		for (; cnt_per_trans--; buf++)
-+			writeb_relaxed(*buf, lpcdev->membase + LPC_REG_WDATA);
-+
-+		writel(START_WORK, lpcdev->membase + LPC_REG_START);
-+
-+		/* whether the operation is finished */
-+		ret = wait_lpc_idle(lpcdev->membase, waitcnt);
-+
-+		spin_unlock_irqrestore(&lpcdev->cycle_lock, flags);
-+	}
-+
-+	return ret;
-+}
-+
-+static inline unsigned long
-+hisi_lpc_pio_to_addr(struct hisilpc_dev *lpcdev, unsigned long pio)
-+{
-+	return pio - lpcdev->io_host->io_start +
-+		lpcdev->io_host->hw_start;
-+}
-+
++#define PCIE_FC_CREDIT		0x73c
++#define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
++#define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
 +
 +/**
-+ * hisilpc_comm_in - read/input the data from the I/O peripheral
-+ *		     through LPC.
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @pio: the target I/O port address.
-+ * @dlen: the data length required to read from the target I/O port.
-+ *
-+ * when succeed, the data read back is stored in buffer pointed by inbuf.
-+ * For inb, return the data read from I/O or -1 when error occur.
++ * struct mtk_pcie_port - PCIe port information
++ * @base: IO mapped register base
++ * @list: port list
++ * @pcie: pointer to PCIe host info
++ * @reset: pointer to port reset control
++ * @sys_ck: pointer to bus clock
++ * @phy: pointer to phy control block
++ * @lane: lane count
++ * @index: port index
 + */
-+static u32 hisilpc_comm_in(void *devobj, unsigned long pio, size_t dlen)
-+{
-+	int ret = 0;
-+	u32 rd_data = 0;
-+	unsigned long ptaddr;
-+	unsigned char *newbuf;
-+	struct lpc_cycle_para iopara;
-+	struct hisilpc_dev *lpcdev = devobj;
-+
-+	if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN)
-+		return -1;
-+
-+	newbuf = (unsigned char *)&rd_data;
-+
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+
-+	iopara.opflags = FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
-+
-+	ret = hisilpc_target_in(lpcdev, &iopara, ptaddr, newbuf, dlen);
-+	if (ret)
-+		return -1;
-+
-+	return le32_to_cpu(rd_data);
-+}
++struct mtk_pcie_port {
++	void __iomem *base;
++	struct list_head list;
++	struct mtk_pcie *pcie;
++	struct reset_control *reset;
++	struct clk *sys_ck;
++	struct phy *phy;
++	u32 lane;
++	u32 index;
++};
 +
 +/**
-+ * hisilpc_comm_out - output the data whose maximum length is four bytes
-+		      to the I/O peripheral through the LPC host.
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @outval: a value to be outputted from caller, maximum is four bytes.
-+ * @pio: the target I/O port address.
-+ * @dlen: the data length required writing to the target I/O port.
-+ *
-+ * This function is corresponding to out(b,w,l) only
-+ *
++ * struct mtk_pcie - PCIe host information
++ * @dev: pointer to PCIe device
++ * @base: IO mapped register Base
++ * @free_ck: free-run reference clock
++ * @io: IO resource
++ * @pio: PIO resource
++ * @mem: non-prefetchable memory resource
++ * @busn: bus range
++ * @offset: IO / Memory offset
++ * @ports: pointer to PCIe port information
 + */
-+static void hisilpc_comm_out(void *devobj, unsigned long pio,
-+			     u32 outval, size_t dlen)
++struct mtk_pcie {
++	struct device *dev;
++	void __iomem *base;
++	struct clk *free_ck;
++
++	struct resource io;
++	struct resource pio;
++	struct resource mem;
++	struct resource busn;
++	struct {
++		resource_size_t mem;
++		resource_size_t io;
++	} offset;
++	struct list_head ports;
++};
++
++static inline bool mtk_pcie_link_is_up(struct mtk_pcie_port *port)
 +{
-+	unsigned long ptaddr;
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	const unsigned char *newbuf;
-+
-+	if (!lpcdev || !dlen || dlen > LPC_MAX_DULEN)
-+		return;
-+
-+	outval = cpu_to_le32(outval);
-+
-+	newbuf = (const unsigned char *)&outval;
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+
-+	iopara.opflags = FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
-+
-+	hisilpc_target_out(lpcdev, &iopara, ptaddr, newbuf, dlen);
++	return !!(readl(port->base + PCIE_LINK_STATUS) &
++		  PCIE_PORT_LINKUP);
 +}
 +
-+/*
-+ * hisilpc_comm_ins - read/input the data in buffer to the I/O
-+ *		peripheral through LPC, it corresponds to ins(b,w,l)
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @pio: the target I/O port address.
-+ * @inbuf: a buffer where read/input data bytes are stored.
-+ * @dlen: the data length required writing to the target I/O port.
-+ * @count: how many data units whose length is dlen will be read.
-+ *
-+ */
-+static u32
-+hisilpc_comm_ins(void *devobj, unsigned long pio, void *inbuf,
-+		 size_t dlen, unsigned int count)
++static void mtk_pcie_port_free(struct mtk_pcie_port *port)
 +{
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	unsigned char *newbuf;
-+	unsigned int loopcnt, cntleft;
-+	unsigned long ptaddr;
++	struct mtk_pcie *pcie = port->pcie;
++	struct device *dev = pcie->dev;
 +
-+	if (!lpcdev || !inbuf || !count || !dlen || dlen > LPC_MAX_DULEN ||
-+			count % dlen)
-+		return -EINVAL;
++	devm_iounmap(dev, port->base);
++	list_del(&port->list);
++	devm_kfree(dev, port);
++}
 +
-+	iopara.opflags = 0;
-+	if (dlen > 1)
-+		iopara.opflags |= FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
++static void mtk_pcie_put_resources(struct mtk_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	struct mtk_pcie_port *port, *tmp;
 +
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+	newbuf = (unsigned char *)inbuf;
-+	/*
-+	 * ensure data stream whose length is multiple of dlen to be processed
-+	 * each IO input
-+	 */
-+	cntleft = count * dlen;
-+	do {
-+		int ret;
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
++		phy_power_off(port->phy);
++		clk_disable_unprepare(port->sys_ck);
++		mtk_pcie_port_free(port);
++	}
 +
-+		loopcnt = (cntleft >= LPC_MAX_BURST) ? LPC_MAX_BURST : cntleft;
-+		ret = hisilpc_target_in(lpcdev, &iopara, ptaddr,
-+					newbuf, loopcnt);
-+		if (ret)
-+			return ret;
-+		newbuf += loopcnt;
-+		cntleft -= loopcnt;
-+	} while (cntleft);
++	clk_disable_unprepare(pcie->free_ck);
++	pm_runtime_put_sync(dev);
++	pm_runtime_disable(dev);
++}
++
++static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
++				      unsigned int devfn, int where)
++{
++	struct pci_host_bridge *host = pci_find_host_bridge(bus);
++	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
++
++	writel(PCIE_CONF_ADDR(where, PCI_FUNC(devfn), PCI_SLOT(devfn),
++			      bus->number), pcie->base + PCIE_CFG_ADDR);
++
++	return pcie->base + PCIE_CFG_DATA + (where & 3);
++}
++
++static struct pci_ops mtk_pcie_ops = {
++	.map_bus = mtk_pcie_map_bus,
++	.read  = pci_generic_config_read,
++	.write = pci_generic_config_write,
++};
++
++static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
++{
++	struct mtk_pcie *pcie = port->pcie;
++	u32 func = PCI_FUNC(port->index << 3);
++	u32 slot = PCI_SLOT(port->index << 3);
++	u32 val;
++
++	/* enable interrupt */
++	val = readl(pcie->base + PCIE_INT_ENABLE);
++	val |= PCIE_PORT_INT_EN(port->index);
++	writel(val, pcie->base + PCIE_INT_ENABLE);
++
++	/* map to all DDR region. We need to set it before cfg operation. */
++	writel(PCIE_BAR_MAP_MAX | PCIE_BAR_ENABLE,
++	       port->base + PCIE_BAR0_SETUP);
++
++	/* configure class Code and revision ID */
++	writel(PCIE_CLASS_CODE | PCIE_REVISION_ID,
++	       port->base + PCIE_CLASS);
++
++	/* configure FC credit */
++	writel(PCIE_CONF_ADDR(PCIE_FC_CREDIT, func, slot, 0),
++	       pcie->base + PCIE_CFG_ADDR);
++	val = readl(pcie->base + PCIE_CFG_DATA);
++	val &= ~PCIE_FC_CREDIT_MASK;
++	val |= PCIE_FC_CREDIT_VAL(0x806c);
++	writel(PCIE_CONF_ADDR(PCIE_FC_CREDIT, func, slot, 0),
++	       pcie->base + PCIE_CFG_ADDR);
++	writel(val, pcie->base + PCIE_CFG_DATA);
++
++	/* configure RC FTS number to 250 when it leaves L0s */
++	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
++	       pcie->base + PCIE_CFG_ADDR);
++	val = readl(pcie->base + PCIE_CFG_DATA);
++	val &= ~PCIE_FTS_NUM_MASK;
++	val |= PCIE_FTS_NUM_L0(0x50);
++	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
++	       pcie->base + PCIE_CFG_ADDR);
++	writel(val, pcie->base + PCIE_CFG_DATA);
++}
++
++static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
++{
++	struct mtk_pcie *pcie = port->pcie;
++	u32 val;
++
++	/* assert port PERST_N */
++	val = readl(pcie->base + PCIE_SYS_CFG);
++	val |= PCIE_PORT_PERST(port->index);
++	writel(val, pcie->base + PCIE_SYS_CFG);
++
++	/* de-assert port PERST_N */
++	val = readl(pcie->base + PCIE_SYS_CFG);
++	val &= ~PCIE_PORT_PERST(port->index);
++	writel(val, pcie->base + PCIE_SYS_CFG);
++
++	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
++	msleep(100);
++}
++
++static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
++{
++	struct device *dev = port->pcie->dev;
++	int err;
++
++	err = clk_prepare_enable(port->sys_ck);
++	if (err) {
++		dev_err(dev, "failed to enable port%d clock\n", port->index);
++		goto err_sys_clk;
++	}
++
++	reset_control_assert(port->reset);
++	reset_control_deassert(port->reset);
++
++	err = phy_power_on(port->phy);
++	if (err) {
++		dev_err(dev, "failed to power on port%d phy\n", port->index);
++		goto err_phy_on;
++	}
++
++	mtk_pcie_assert_ports(port);
++
++	/* if link up, then setup root port configuration space */
++	if (mtk_pcie_link_is_up(port)) {
++		mtk_pcie_configure_rc(port);
++		return 0;
++	}
++
++	dev_info(dev, "Port%d link down\n", port->index);
++
++	phy_power_off(port->phy);
++err_phy_on:
++	clk_disable_unprepare(port->sys_ck);
++	mtk_pcie_port_free(port);
++err_sys_clk:
++	return err;
++}
++
++static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
++				struct mtk_pcie_port **p,
++				struct device_node *node,
++				int index)
++{
++	struct mtk_pcie_port *port;
++	struct resource *regs;
++	struct device *dev = pcie->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	char name[10];
++	int err;
++
++	*p = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
++	if (!*p)
++		return -ENOMEM;
++
++	port = *p;
++
++	err = of_property_read_u32(node, "num-lanes", &port->lane);
++	if (err) {
++		dev_err(dev, "missing num-lanes property\n");
++		return err;
++	}
++
++	regs = platform_get_resource(pdev, IORESOURCE_MEM, index + 1);
++	port->base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(port->base)) {
++		dev_err(dev, "failed to map port%d base\n", index);
++		return PTR_ERR(port->base);
++	}
++
++	snprintf(name, sizeof(name), "sys_ck%d", index);
++	port->sys_ck = devm_clk_get(dev, name);
++	if (IS_ERR(port->sys_ck)) {
++		dev_err(dev, "failed to get port%d clock\n", index);
++		return PTR_ERR(port->sys_ck);
++	}
++
++	snprintf(name, sizeof(name), "pcie-rst%d", index);
++	port->reset = devm_reset_control_get(dev, name);
++	if (IS_ERR(port->reset)) {
++		dev_err(dev, "failed to get port%d reset\n", index);
++		return PTR_ERR(port->reset);
++	}
++
++	snprintf(name, sizeof(name), "pcie-phy%d", index);
++	port->phy = devm_phy_get(dev, name);
++	if (IS_ERR(port->phy)) {
++		dev_err(dev, "failed to get port%d phy\n", index);
++		return PTR_ERR(port->phy);
++	}
++
++	port->index = index;
++	port->pcie = pcie;
++
++	INIT_LIST_HEAD(&port->list);
++	list_add_tail(&port->list, &pcie->ports);
 +
 +	return 0;
 +}
 +
-+/*
-+ * hisilpc_comm_outs - write/output the data in buffer to the I/O
-+ *		peripheral through LPC, it corresponds to outs(b,w,l)
-+ * @devobj: pointer to the device information relevant to LPC controller.
-+ * @pio: the target I/O port address.
-+ * @outbuf: a buffer where write/output data bytes are stored.
-+ * @dlen: the data length required writing to the target I/O port .
-+ * @count: how many data units whose length is dlen will be written.
-+ *
-+ */
-+static void
-+hisilpc_comm_outs(void *devobj, unsigned long pio, const void *outbuf,
-+		  size_t dlen, unsigned int count)
++static int mtk_pcie_handle_shared_resource(struct mtk_pcie *pcie)
 +{
-+	struct hisilpc_dev *lpcdev = devobj;
-+	struct lpc_cycle_para iopara;
-+	const unsigned char *newbuf;
-+	unsigned int loopcnt, cntleft;
-+	unsigned long ptaddr;
++	struct device *dev = pcie->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct resource *regs;
++	int err;
 +
-+	if (!lpcdev || !outbuf || !count || !dlen || dlen > LPC_MAX_DULEN ||
-+			count % dlen)
-+		return;
++	/* get shared registers */
++	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	pcie->base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(pcie->base)) {
++		dev_err(dev, "failed to map shared register\n");
++		return PTR_ERR(pcie->base);
++	}
 +
-+	iopara.opflags = 0;
-+	if (dlen > 1)
-+		iopara.opflags |= FG_INCRADDR_LPC;
-+	iopara.csize = dlen;
++	pcie->free_ck = devm_clk_get(dev, "free_ck");
++	if (IS_ERR(pcie->free_ck)) {
++		dev_err(dev, "failed to get free_ck\n");
++		return PTR_ERR(pcie->free_ck);
++	}
 +
-+	ptaddr = hisi_lpc_pio_to_addr(lpcdev, pio);
-+	newbuf = (unsigned char *)outbuf;
-+	/*
-+	 * ensure data stream whose length is multiple of dlen to be processed
-+	 * each IO input
-+	 */
-+	cntleft = count * dlen;
-+	do {
-+		loopcnt = (cntleft >= LPC_MAX_BURST) ? LPC_MAX_BURST : cntleft;
-+		if (hisilpc_target_out(lpcdev, &iopara, ptaddr, newbuf,
-+						loopcnt))
-+			break;
-+		newbuf += loopcnt;
-+		cntleft -= loopcnt;
-+	} while (cntleft);
++	pm_runtime_enable(dev);
++	err = pm_runtime_get_sync(dev);
++	if (err)
++		goto err_pm;
++
++	/* enable top level clock */
++	err = clk_prepare_enable(pcie->free_ck);
++	if (err) {
++		dev_err(dev, "failed to enable free_ck\n");
++		goto err_free_ck;
++	}
++
++	return 0;
++
++err_free_ck:
++	pm_runtime_put_sync(dev);
++err_pm:
++	pm_runtime_disable(dev);
++
++	return err;
 +}
 +
-+static struct hostio_ops hisi_lpc_ops = {
-+	.pfin = hisilpc_comm_in,
-+	.pfout = hisilpc_comm_out,
-+	.pfins = hisilpc_comm_ins,
-+	.pfouts = hisilpc_comm_outs,
-+};
-+
-+/**
-+ * hisilpc_probe - the probe callback function for hisi lpc device,
-+ *		   will finish all the initialization.
-+ * @pdev: the platform device corresponding to hisi lpc
-+ *
-+ * Returns 0 on success, non-zero on fail.
-+ *
-+ */
-+static int hisilpc_probe(struct platform_device *pdev)
++static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
 +{
-+	struct device *dev = &pdev->dev;
-+	struct resource *res;
-+	struct hisilpc_dev *lpcdev;
-+	int ret = 0;
++	struct device *dev = pcie->dev;
++	struct device_node *node = dev->of_node, *child;
++	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++	struct resource res;
++	int err, linkup = 0;
 +
-+	dev_info(dev, "probing...\n");
++	/* parse shared resources */
++	err = mtk_pcie_handle_shared_resource(pcie);
++	if (err)
++		return err;
 +
-+	lpcdev = devm_kzalloc(dev, sizeof(struct hisilpc_dev), GFP_KERNEL);
-+	if (!lpcdev)
++	if (of_pci_range_parser_init(&parser, node)) {
++		dev_err(dev, "missing \"ranges\" property\n");
++		return -EINVAL;
++	}
++
++	for_each_of_pci_range(&parser, &range) {
++		err = of_pci_range_to_resource(&range, node, &res);
++		if (err < 0)
++			return err;
++
++		switch (res.flags & IORESOURCE_TYPE_BITS) {
++		case IORESOURCE_IO:
++			pcie->offset.io = res.start - range.pci_addr;
++
++			memcpy(&pcie->pio, &res, sizeof(res));
++			pcie->pio.name = node->full_name;
++
++			pcie->io.start = range.cpu_addr;
++			pcie->io.end = range.cpu_addr + range.size - 1;
++			pcie->io.flags = IORESOURCE_MEM;
++			pcie->io.name = "I/O";
++
++			memcpy(&res, &pcie->io, sizeof(res));
++			break;
++
++		case IORESOURCE_MEM:
++			pcie->offset.mem = res.start - range.pci_addr;
++
++			memcpy(&pcie->mem, &res, sizeof(res));
++			pcie->mem.name = "non-prefetchable";
++			break;
++		}
++	}
++
++	err = of_pci_parse_bus_range(node, &pcie->busn);
++	if (err < 0) {
++		dev_err(dev, "failed to parse ranges property: %d\n", err);
++		pcie->busn.name = node->name;
++		pcie->busn.start = 0;
++		pcie->busn.end = 0xff;
++		pcie->busn.flags = IORESOURCE_BUS;
++	}
++
++	for_each_child_of_node(node, child) {
++		struct mtk_pcie_port *port;
++		int index;
++
++		err = of_pci_get_devfn(child);
++		if (err < 0) {
++			dev_err(dev, "failed to parse devfn: %d\n", err);
++			return err;
++		}
++
++		index = PCI_SLOT(err);
++
++		if (!of_device_is_available(child))
++			continue;
++
++		err = mtk_pcie_parse_ports(pcie, &port, child, index);
++		if (err)
++			return err;
++
++		/* enable each port, and then check link status */
++		err = mtk_pcie_enable_ports(port);
++		if (!err)
++			linkup++;
++	}
++
++	return !linkup;
++}
++
++static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
++{
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
++	struct list_head *windows = &host->windows;
++	struct device *dev = pcie->dev;
++	int err;
++
++	pci_add_resource_offset(windows, &pcie->pio, pcie->offset.io);
++	pci_add_resource_offset(windows, &pcie->mem, pcie->offset.mem);
++	pci_add_resource(windows, &pcie->busn);
++
++	err = devm_request_pci_bus_resources(dev, windows);
++	if (err < 0)
++		return err;
++
++	pci_remap_iospace(&pcie->pio, pcie->io.start);
++
++	return 0;
++}
++
++static int mtk_pcie_register_host(struct pci_host_bridge *host)
++{
++	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
++	struct pci_bus *child;
++	int err;
++
++	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
++	host->busnr = pcie->busn.start;
++	host->dev.parent = pcie->dev;
++	host->ops = &mtk_pcie_ops;
++
++	err = pci_register_host_bridge(host);
++	if (err < 0)
++		return err;
++
++	pci_scan_child_bus(host->bus);
++
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_bus_size_bridges(host->bus);
++	pci_bus_assign_resources(host->bus);
++
++	list_for_each_entry(child, &host->bus->children, node)
++		pcie_bus_configure_settings(child);
++
++	pci_bus_add_devices(host->bus);
++
++	return 0;
++}
++
++static int mtk_pcie_probe(struct platform_device *pdev)
++{
++	struct mtk_pcie *pcie;
++	struct pci_host_bridge *host;
++	int err;
++
++	host = pci_alloc_host_bridge(sizeof(*pcie));
++	if (!host)
 +		return -ENOMEM;
 +
-+	spin_lock_init(&lpcdev->cycle_lock);
++	pcie = pci_host_bridge_priv(host);
 +
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		dev_err(dev, "no MEM resource\n");
-+		return -ENODEV;
-+	}
++	pcie->dev = &pdev->dev;
++	platform_set_drvdata(pdev, pcie);
++	INIT_LIST_HEAD(&pcie->ports);
 +
-+	lpcdev->membase = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(lpcdev->membase)) {
-+		dev_err(dev, "remap failed\n");
-+		return PTR_ERR(lpcdev->membase);
-+	}
++	err = mtk_pcie_parse_and_add_res(pcie);
++	if (err)
++		return err;
 +
-+	/* register the LPC host PIO resources */
-+	if (!has_acpi_companion(dev)) {
-+		struct logic_pio_hwaddr *range;
++	err = mtk_pcie_request_resources(pcie);
++	if (err)
++		goto put_resources;
 +
-+		range = kzalloc(sizeof(*range), GFP_KERNEL);
-+		if (!range)
-+			return -ENOMEM;
-+		range->fwnode = dev->fwnode;
-+		range->flags = PIO_INDIRECT;
-+		range->size = LPC_BUS_IO_SIZE;
-+		range->hw_start = LPC_MIN_BUS_RANGE;
++	err = mtk_pcie_register_host(host);
++	if (err)
++		goto put_resources;
 +
-+		ret = logic_pio_register_range(range);
-+		if (ret) {
-+			kfree(range);
-+			dev_err(dev, "OF: register IO range FAIL!\n");
-+			return -ret;
-+		}
-+		lpcdev->io_host = range;
-+	}
-+	if (!lpcdev->io_host) {
-+		dev_err(dev, "Hisilpc IO hasn't registered!\n");
-+		return -EFAULT;
-+	}
++	return 0;
 +
-+	lpcdev->io_host->devpara = lpcdev;
-+	lpcdev->io_host->ops = &hisi_lpc_ops;
-+
-+	platform_set_drvdata(pdev, lpcdev);
-+
-+	/*
-+	 * It is time to start the children scannings....
-+	 * For ACPI children, the corresponding devices had been created
-+	 * during the ACPI enumeration.
-+	 * The OF scanning must be performed after initialization of 'lpcdev'
-+	 * to avoid some children which complete the scanning trigger the
-+	 * MMIO accesses which will probably cause panic.
-+	 */
-+	if (!has_acpi_companion(dev))
-+		ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
-+
-+	if (!ret) {
-+		dev_info(dev, "hslpc end probing. range[%pa - sz:%pa]\n",
-+			&lpcdev->io_host->io_start,
-+			&lpcdev->io_host->size);
-+	} else {
-+		/*
-+		 * When LPC probing is not completely successful, set 'devpara'
-+		 * as NULL. This will make all the LPC I/O return failure
-+		 * directly without any hardware operations. It will prevent
-+		 * some peripherals which had not finished the initialization to
-+		 * manipulate I/O for safety.
-+		 */
-+		lpcdev->io_host->devpara = NULL;
-+		dev_info(dev, "OF: scan hisilpc children got failed(%d)\n",
-+			ret);
-+	}
-+
-+	return ret;
++put_resources:
++	mtk_pcie_put_resources(pcie);
++	return err;
 +}
 +
-+static const struct of_device_id hisilpc_of_match[] = {
-+	{ .compatible = "hisilicon,hip06-lpc", },
-+	{ .compatible = "hisilicon,hip07-lpc", },
++static const struct of_device_id mtk_pcie_ids[] = {
++	{ .compatible = "mediatek,mt7623-pcie"},
++	{ .compatible = "mediatek,mt2701-pcie"},
 +	{},
 +};
 +
-+static struct platform_driver hisilpc_driver = {
++static struct platform_driver mtk_pcie_driver = {
++	.probe = mtk_pcie_probe,
 +	.driver = {
-+		.name           = "hisi_lpc",
-+		.of_match_table = hisilpc_of_match,
++		.name = "mtk-pcie",
++		.of_match_table = mtk_pcie_ids,
++		.suppress_bind_attrs = true,
 +	},
-+	.probe = hisilpc_probe,
 +};
-+
-+builtin_platform_driver(hisilpc_driver);
++builtin_platform_driver(mtk_pcie_driver);
 -- 
-2.7.4
-
+1.9.1
 
 
 _______________________________________________
