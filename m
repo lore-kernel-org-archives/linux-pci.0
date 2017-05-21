@@ -1,118 +1,91 @@
-Return-Path: <SRS0=7ZsP=46=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=7ZsP=46=rock-chips.com=shawn.lin@kernel.org>
-Subject: Re: [PATCH] PCI: rockchip: Configure RC's MPS setting
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1493887204-5501-1-git-send-email-shawn.lin@rock-chips.com>
- <20170523194232.GC7241@bhelgaas-glaptop.roam.corp.google.com>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
- Brian Norris <briannorris@chromium.org>, linux-rockchip@lists.infradead.org
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <9ce525e3-ef8d-d15d-254c-824b8a2743c5@rock-chips.com>
-Date: Wed, 24 May 2017 09:05:50 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 0/2] Add PCIe host driver support for Mediatek SoCs
+Date: Sun, 21 May 2017 11:42:23 +0800
+Message-ID: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <20170523194232.GC7241@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi,
 
-在 2017/5/24 3:42, Bjorn Helgaas 写道:
-> On Thu, May 04, 2017 at 04:40:04PM +0800, Shawn Lin wrote:
->> The default value of MPS for RC is 128 bytes, but actually
->> it could support 256 bytes. So this patch fix this issue.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->
-> Applied to pci/host-rockchip for v4.13, thanks!
->
-> This didn't apply cleanly on top of the previous restructuring
-> patches, so I'm attaching the patch as applied.  Let me know if you
-> want the MPS setting with the PCIE_RC_BAR_CONF instead of with the
-> PCIE_RC_CONFIG_LINK_CAP.
+This patch series add Mediatek Gen2 PCIe host controller driver and
+dt-binding document. It can be found on MT7623 series SoCs.
 
-it looks good, thanks.
+This driver was validated using Broadcom Tigon3 and Intel(R) 82575/82576
+gigabit ethernet card.
 
->
-> commit 60f8ed61a6bc729ba3367e6f1a2dd3a80c94cd73
-> Author: Shawn Lin <shawn.lin@rock-chips.com>
-> Date:   Tue May 23 14:32:56 2017 -0500
->
->     PCI: rockchip: Configure RC's MPS setting
->
->     The default value of MPS for RC is 128 bytes, but actually it could support
->     256 bytes.  So this patch fixes this issue.
->
->     Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index bf0ff579e515..2e832b1d6c24 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -146,6 +146,9 @@
->  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
->  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
->  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-> +#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
-> +#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
-> +#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
->  #define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
->  #define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
->  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
-> @@ -701,6 +704,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
->  	}
->
-> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCSR);
-> +	status &= ~PCIE_RC_CONFIG_DCSR_MPS_MASK;
-> +	status |= PCIE_RC_CONFIG_DCSR_MPS_256;
-> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
-> +
->  	return 0;
->  }
->
->
->> ---
->>
->>  drivers/pci/host/pcie-rockchip.c | 8 ++++++++
->>  1 file changed, 8 insertions(+)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index 0e020b6..a05fec5 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -146,6 +146,9 @@
->>  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
->>  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
->>  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
->> +#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
->> +#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
->> +#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
->>  #define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
->>  #define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
->>  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
->> @@ -664,6 +667,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->>  		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
->>  	}
->>
->> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCSR);
->> +	status &= ~PCIE_RC_CONFIG_DCSR_MPS_MASK;
->> +	status |= PCIE_RC_CONFIG_DCSR_MPS_256;
->> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
->> +
->>  	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
->>
->>  	rockchip_pcie_write(rockchip,
->> --
->> 1.9.1
->>
->>
->
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
->
->
->
+
+Changes since v5:
+- rebase to Linux 4.12-rc1.
+- remove redundant module.h header and MODULE macros.
+
+Changes since v4:
+- move the per-port registers to the parent node.
+- use a valid compatible for hifsys controller.
+- use the 'sysirq' instead of 'gic' as a correct 'interrupt-parent' of the
+  interrupt-map properties.
+
+  'sysirq' is an interrupt-controller that could help us to reverse GIC SPIs polarity
+  so that we could properly set irq type to level low without any extra properties.
+  It was a mistake to select wrong interrupt-parent on the previous versions.
+  Now, we could remove unnecessary interrupt properties entirely from binding.
+
+Changes since v3:
+- correct sub-nodes unit addresses.
+
+Changes since v2:
+- modify Kconfig to avoid kbuild test error on some architecture.
+- change compatible string.
+- revise binding document:
+  add missing interrupt-names.
+  remove the board dts example and drop 'status' properties.
+  remove unnecessary descriptions bout standard PCI bus binding.
+
+Changes since v1:
+- add .suppress_bind_attrs.
+- remove unnecessary *_valid_device() pattern.
+- remove PCI_PROBE_ONLY.
+- use the regular readl() instead of readl_relaxed().
+- add .map_bus() and change to use pci_generic_config_read/pci_generic_config_write.
+- revise dt-binding document and move nonstandard properties to root node.
+- change compatible string.
+- use interrupt-map property and replace mtk_pcie_map_irq() with of_irq_parse_and_map_pci().
+- use the new pci_register_host_bridge() method instead of pci_scan_root_bus()*
+
+Ryder Lee (2):
+  PCI: mediatek: Add Mediatek PCIe host controller support
+  dt-bindings: pcie: Add documentation for Mediatek PCIe
+
+ .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 +++++
+ drivers/pci/host/Kconfig                           |  11 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-mediatek.c                   | 553 +++++++++++++++++++++
+ 4 files changed, 695 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-mediatek.c
+
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
