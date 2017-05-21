@@ -1,96 +1,81 @@
-Return-Path: <SRS0=DoF8=45=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=DoF8=45=arm.com=robin.murphy@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Mason <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- Jiang Liu <jiang.liu@linux.intel.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
-Date: Tue, 23 May 2017 19:03:36 +0100
+Return-Path: <SRS0=uLZ3=43=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=uLZ3=43=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Christoph Hellwig <hch@infradead.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lukas@wunner.de"
+	<lukas@wunner.de>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "mika.westerberg@linux.intel.com"
+	<mika.westerberg@linux.intel.com>,
+        "liudongdong (C)"
+	<liudongdong3@huawei.com>
+Subject: RE: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
+ interrupts for PCIe port services
+Date: Sun, 21 May 2017 15:00:46 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A45545@FRAEML521-MBX.china.huawei.com>
+References: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495103748-7876-2-git-send-email-gabriele.paoloni@huawei.com>
+ <20170521083234.GA20658@infradead.org>
+In-Reply-To: <20170521083234.GA20658@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/05/17 18:54, Mason wrote:
-> On 23/05/2017 19:03, Bjorn Helgaas wrote:
->> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
->>> On 20/04/2017 16:28, Marc Gonzalez wrote:
->>>
->>>> +static int tango_set_affinity(struct irq_data *data,
->>>> +		const struct cpumask *mask, bool force)
->>>> +{
->>>> +	return -EINVAL;
->>>> +}
->>>> +
->>>> +static struct irq_chip tango_chip = {
->>>> +	.irq_ack		= tango_ack,
->>>> +	.irq_mask		= tango_mask,
->>>> +	.irq_unmask		= tango_unmask,
->>>> +	.irq_set_affinity	= tango_set_affinity,
->>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
->>>> +};
->>>
->>> Hmmm... I'm wondering why .irq_set_affinity is required.
->>>
->>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
->>> first calls __irq_can_set_affinity() to check whether
->>> desc->irq_data.chip->irq_set_affinity) exists.
->>>
->>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
->>> which calls chip->irq_set_affinity(data, mask, force);
->>> = msi_domain_set_affinity()
->>> which calls parent->chip->irq_set_affinity() unconditionally.
->>>
->>> Would it make sense to test that the callback is implemented
->>> before calling it?
->>>
->>>
->>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
->>
->> I'm not sure what you're asking.
->>
->> Is this a bug report for the v4 tango driver?
-> 
-> No.
-> 
->> Or are you asking whether msi_domain_set_affinity() should be changed
->> to check whether parent->chip->irq_set_affinity is implemented?
-> 
-> Yes. The way things are implemented now, drivers are forced
-> to define an irq_set_affinity callback, even if it just returns
-> an error, otherwise, the kernel crashes, because of the
-> unconditional function pointer deref. 
-> 
->> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
->> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
->> generic msi irq domain support"), so if there's a problem here, it's most
->> likely in the tango code.
-> 
-> The issue is having to define an "empty" function.
-> (Unnecessary code bloat and maintenance.)
+Hi Christoph
 
-AFAICS, only one driver (other than this one) implements a "do nothing"
-set_affinity callback - everyone else who doesn't do anything hardware
-specific just passes it along via irq_chip_set_affinity_parent().
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: 21 May 2017 09:33
+> To: Gabriele Paoloni
+> Cc: bhelgaas@google.com; helgaas@kernel.org; Linuxarm; linux-
+> pci@vger.kernel.org; lukas@wunner.de; linux-kernel@vger.kernel.org;
+> mika.westerberg@linux.intel.com; hch@infradead.org; liudongdong (C)
+> Subject: Re: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
+> interrupts for PCIe port services
+>=20
+> > +		 *
+> > +		 * pci_irq_vector() below is able to handle entry
+> diff erently
+> > +		 * depending on MSI vs MSI-x case
+> > +		 *
+> >  		 */
+>=20
+> One more instance of this comment left :)
 
-Robin.
+I thought that in your previous review you meant to say that we should
+avoid 2 instances of the same comment (in this patchset I only have this=20
+instance as I have removed the same comment from patch 2/2...)
 
-> 
-> I'll send a patch illustrating exactly what I intended.
-> 
-> Regards.
-> 
+>=20
+> >  		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+> >  		entry =3D (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+> > @@ -100,7 +107,10 @@ static int pcie_port_enable_msix(struct pci_dev
+> *dev, int *irqs, int mask)
+> >  		 * MSI/MSI-X vectors assigned to the port is going to be
+> used
+> >  		 * for AER, where "For MSI-X, the value in this register
+> >  		 * indicates which MSI-X Table entry is used to generate
+> the
+> > -		 * interrupt message."
+> > +		 * interrupt message."  and "For MSI, the value
+> > +		 * in this field indicates the offset between the base
+> Message
+> > +		 * Data and the interrupt message that is generated."
+> > +		 *
+> >  		 */
+>=20
+> And while this is getting a little too deep into nitpicking:  we
+> usually
+> don't add empty lines to the end of comments.
+
+Ok I can remove the extra line and send out patch v4...
+
+Many thanks
+Gab
