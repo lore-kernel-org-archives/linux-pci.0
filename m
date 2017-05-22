@@ -1,79 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f193.google.com ([209.85.216.193]:35453 "EHLO
-        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932911AbdEXLah (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 07:30:37 -0400
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Xiaowei Song'" <songxiaowei@hisilicon.com>
-Cc: <bhelgaas@google.com>, <kishon@ti.com>, <arnd@arndb.de>,
-        <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <guodong.xu@linaro.org>, <wangbinghui@hisilicon.com>,
-        <suzhuangluan@hisilicon.com>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20170524081248.67198-1-songxiaowei@hisilicon.com>
-In-Reply-To: <20170524081248.67198-1-songxiaowei@hisilicon.com>
-Subject: Re: [PATCH v6 0/4] DT and Driver review comments fix
-Date: Wed, 24 May 2017 07:30:34 -0400
-Message-ID: <000801d2d481$2932f200$7b98d600$@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:34688 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934403AbdEVWA7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 May 2017 18:00:59 -0400
+Date: Mon, 22 May 2017 17:00:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Peter Robinson <pbrobinson@gmail.com>
+Cc: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci: dwc: dra7xx: Depend on appropriate SoC or compile
+ test
+Message-ID: <20170522220056.GF19733@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170515122617.20706-1-pbrobinson@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170515122617.20706-1-pbrobinson@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wednesday, May 24, 2017 4:13 AM, Xiaowei Song wrote:
+On Mon, May 15, 2017 at 01:26:17PM +0100, Peter Robinson wrote:
+> The PCI controller attached to a SoC isn't much use if the core SoC isn't
+> enabled, unless of course it's compile testing, so add appropriate dependency.
 > 
-> Before Version Patches
-> ======================
-> 
-> patch V4
-> https://www.spinics.net/lists/linux-pci/msg61406.html
-> 
-> patch V3
-> https://www.spinics.net/lists/linux-pci/msg61399.html
+> Signed-off-by: Peter Robinson <pbrobinson@gmail.com>
 
-Hi Xiaowei Song,
+Applied to pci/host-dra7xx for v4.13, thanks!
 
-I think that you need to receive 'tested-by' from other people such as
-colleagues or other developers. Or, would you share the result of 'lspci'
-for your HiSilicon Kirin PCIe Host controller? That will help other
-maintainers to review your patches.
+Kishon, let me know if you object.  I think I'll start speculatively
+applying simple patches without maintainer acks to try to streamline
+things, on the assumption that you'll speak up if you object.
 
-Best regards,
-Jingoo Han
-
+> ---
+>  drivers/pci/dwc/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> Changes between V6 and V5
-> =========================
-> 1. seperate Document from .dtsi patch.
-> 2. fix issues according to review comments
->    from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
->    patch post method and so on.
+> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> index b7e15526d676..d34b6dfbb351 100644
+> --- a/drivers/pci/dwc/Kconfig
+> +++ b/drivers/pci/dwc/Kconfig
+> @@ -16,6 +16,7 @@ config PCIE_DW_EP
+>  
+>  config PCI_DRA7XX
+>  	bool "TI DRA7xx PCIe controller"
+> +	depends on SOC_DRA7XX || COMPILE_TEST
+>  	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+>  	depends on OF && HAS_IOMEM && TI_PIPE3
+>  	help
+> -- 
+> 2.13.0
 > 
-> Patches list
-> ============
-> 
-> Xiaowei Song (4):
->   PCI: hisi: Add DT binding for PCIe of Kirin SoC series
->   arm64: dts: hisi: add kirin pcie node
->   PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
->   defconfig: PCI: Enable  Kirin PCIe defconfig
-> 
->  .../devicetree/bindings/pci/kirin-pcie.txt         |  49 ++
->  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
->  arch/arm64/configs/defconfig                       |   1 +
->  drivers/pci/dwc/Kconfig                            |  10 +
->  drivers/pci/dwc/Makefile                           |   1 +
->  drivers/pci/dwc/pcie-kirin.c                       | 511
-> +++++++++++++++++++++
->  6 files changed, 603 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
->  create mode 100644 drivers/pci/dwc/pcie-kirin.c
-> 
-> --
-> 2.11.GIT
