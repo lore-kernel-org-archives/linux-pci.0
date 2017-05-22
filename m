@@ -1,108 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40706 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751722AbdEWTme (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 15:42:34 -0400
-Date: Tue, 23 May 2017 14:42:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: Configure RC's MPS setting
-Message-ID: <20170523194232.GC7241@bhelgaas-glaptop.roam.corp.google.com>
-References: <1493887204-5501-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V4 3/4] ACPI/IORT: Ignore all errors except EPROBE_DEFER
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
+ <1495119257-26724-3-git-send-email-sricharan@codeaurora.org>
+ <20170522103730.GB7553@red-moon>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <ffb088d6-e40f-7a7d-dafb-e52dc86704fc@codeaurora.org>
+Date: Mon, 22 May 2017 16:35:43 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493887204-5501-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170522103730.GB7553@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ laurent.pinchart@ideasonboard.com, frowand.list@gmail.com,
+ m.szyprowski@samsung.com, linux-arch@vger.kernel.org, tn@semihalf.com,
+ joro@8bytes.org, magnus.damm@gmail.com, linux-acpi@vger.kernel.org,
+ geert@linux-m68k.org, linux-pci@vger.kernel.org, lenb@kernel.org,
+ devicetree@vger.kernel.org, arnd@arndb.de, linux-arm-msm@vger.kernel.org,
+ j.neuschaefer@gmx.net, robh+dt@kernel.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 04, 2017 at 04:40:04PM +0800, Shawn Lin wrote:
-> The default value of MPS for RC is 128 bytes, but actually
-> it could support 256 bytes. So this patch fix this issue.
+Hi Lorenzo,
+
+On 5/22/2017 4:07 PM, Lorenzo Pieralisi wrote:
+> Hi Sricharan,
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Applied to pci/host-rockchip for v4.13, thanks!
-
-This didn't apply cleanly on top of the previous restructuring
-patches, so I'm attaching the patch as applied.  Let me know if you
-want the MPS setting with the PCIE_RC_BAR_CONF instead of with the
-PCIE_RC_CONFIG_LINK_CAP.
-
-commit 60f8ed61a6bc729ba3367e6f1a2dd3a80c94cd73
-Author: Shawn Lin <shawn.lin@rock-chips.com>
-Date:   Tue May 23 14:32:56 2017 -0500
-
-    PCI: rockchip: Configure RC's MPS setting
-    
-    The default value of MPS for RC is 128 bytes, but actually it could support
-    256 bytes.  So this patch fixes this issue.
-    
-    Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index bf0ff579e515..2e832b1d6c24 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -146,6 +146,9 @@
- #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
- #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
- #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-+#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
-+#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
-+#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
- #define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
- #define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
- #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
-@@ -701,6 +704,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
- 	}
- 
-+	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCSR);
-+	status &= ~PCIE_RC_CONFIG_DCSR_MPS_MASK;
-+	status |= PCIE_RC_CONFIG_DCSR_MPS_256;
-+	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
-+
- 	return 0;
- }
- 
-
-> ---
+> On Thu, May 18, 2017 at 08:24:16PM +0530, Sricharan R wrote:
+>> While deferring the probe of IOMMU masters, xlate and
+>> add_device callbacks called from iort_iommu_configure
+>> can pass back error values like -ENODEV, which means
+>> the IOMMU cannot be connected with that master for real
+>> reasons. Before the IOMMU probe deferral, all such errors
+>> were ignored. Now all those errors are propagated back,
+>> killing the master's probe for such errors. Instead ignore
+>> all the errors except EPROBE_DEFER, which is the only one
+>> of concern and let the master work without IOMMU, thus
+>> restoring the old behavior.
+>>
+>> Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>> [V4] Added this patch newly.
+>>
+>>  drivers/acpi/arm64/iort.c | 6 ++++++
+>>  1 file changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index c5fecf9..16e101f 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>>  	if (err)
+>>  		ops = ERR_PTR(err);
+>>  
+>> +	/* Ignore all other errors apart from EPROBE_DEFER */
+>> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+>> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
+>> +		ops = NULL;
+>> +	}
+>> +
+>>  	return ops;
+>>  }
+>>  
 > 
->  drivers/pci/host/pcie-rockchip.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
+> It is getting a bit convoluted. Is not it better to propagate the
+> error back and let acpi_dma_configure() make a decision accordingly ?
 > 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 0e020b6..a05fec5 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -146,6 +146,9 @@
->  #define   PCIE_RC_CONFIG_DCR_CSPL_SHIFT		18
->  #define   PCIE_RC_CONFIG_DCR_CSPL_LIMIT		0xff
->  #define   PCIE_RC_CONFIG_DCR_CPLS_SHIFT		26
-> +#define PCIE_RC_CONFIG_DCSR		(PCIE_RC_CONFIG_BASE + 0xc8)
-> +#define   PCIE_RC_CONFIG_DCSR_MPS_MASK		GENMASK(7, 5)
-> +#define   PCIE_RC_CONFIG_DCSR_MPS_256		(0x1 << 5)
->  #define PCIE_RC_CONFIG_LINK_CAP		(PCIE_RC_CONFIG_BASE + 0xcc)
->  #define   PCIE_RC_CONFIG_LINK_CAP_L0S		BIT(10)
->  #define PCIE_RC_CONFIG_LCS		(PCIE_RC_CONFIG_BASE + 0xd0)
-> @@ -664,6 +667,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LINK_CAP);
->  	}
+
+ok, I was trying to keep it in same way as DT, where of_dma_configure
+(here acpi_dma_configure) calls of_iommu_configure(here iort_iommu_configure)
+which ends up doing the check. So will have to be changed in both places
+for symmetry.
+
+> Something like:
+> 
+> -- >8 --
+> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> index e39ec7b..3a10d757 100644
+> --- a/drivers/acpi/scan.c
+> +++ b/drivers/acpi/scan.c
+> @@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>  	iort_set_dma_mask(dev);
 >  
-> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCSR);
-> +	status &= ~PCIE_RC_CONFIG_DCSR_MPS_MASK;
-> +	status |= PCIE_RC_CONFIG_DCSR_MPS_256;
-> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
-> +
->  	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
+>  	iommu = iort_iommu_configure(dev);
+> -	if (IS_ERR(iommu))
+> -		return PTR_ERR(iommu);
+> +	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
+> +		return -EPROBE_DEFER;
+
+In case of other errors apart from EPROBE_DEFER,
+iommu = NULL should be set, before passing it on to
+arch_setup_dma_ops.
+
+Regards,
+ Sricharan
+
 >  
->  	rockchip_pcie_write(rockchip,
-> -- 
-> 1.9.1
+>  	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>  	/*
 > 
-> 
+
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
