@@ -1,116 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
- geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org,
- linux@armlinux.org.uk
-Subject: [PATCH v6 4/6] ARM: dma-mapping: Don't tear down third-party mappings
-Date: Sat, 27 May 2017 19:17:43 +0530
-Message-Id: <1495892865-9506-4-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
-References: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37958 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757407AbdEVUOS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 May 2017 16:14:18 -0400
+Date: Mon, 22 May 2017 14:14:16 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: IO Space Allocation Question on ARM64
+Message-ID: <20170522141416.4fdc09a3@w520.home>
+In-Reply-To: <31f48cf6-fd97-98fe-ac7c-ad80870df68b@codeaurora.org>
+References: <31f48cf6-fd97-98fe-ac7c-ad80870df68b@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+On Mon, 22 May 2017 13:50:31 -0400
+Sinan Kaya <okaya@codeaurora.org> wrote:
 
-arch_setup_dma_ops() is used in device probe code paths to create an
-IOMMU mapping and attach it to the device. The function assumes that the
-device is attached to a device-specific IOMMU instance (or at least a
-device-specific TLB in a shared IOMMU instance) and thus creates a
-separate mapping for every device.
+> We are seeing IO space allocation failure on QDF2400 with multiple switch hierarchy
+> below. This card has 20 PCI bridges with endpoints attached to each one to increase
+> the number of endpoints supported.
+> 
+> QDF2400 supports a maximum of 64k IO space aka 16 bit IO on the root port.
+> 
+> -+-[0003:00]---00.0-[01-16]----00.0-[02-16]--+-00.0-[03]----00.0
+>  |                                           +-01.0-[04]----00.0
+>  |                                           +-02.0-[05]----00.0
+>  |                                           +-03.0-[06]----00.0
+>  |                                           +-04.0-[07]----00.0
+>  |                                           +-05.0-[08]----00.0
+>  |                                           +-06.0-[09]----00.0
+>  |                                           +-07.0-[0a]----00.0
+>  |                                           +-08.0-[0b]--
+>  |                                           +-09.0-[0c]--
+>  |                                           +-0a.0-[0d]--
+>  |                                           +-0b.0-[0e]--
+>  |                                           +-0c.0-[0f]--
+>  |                                           +-0d.0-[10]--
+>  |                                           +-0e.0-[11]--
+>  |                                           +-0f.0-[12]--
+>  |                                           +-10.0-[13]--
+>  |                                           +-11.0-[14]--
+>  |                                           +-12.0-[15]--
+>  |                                           \-13.0-[16]--
+> 
+> What we so far is that Linux is assigning an IO resource for every single bridge
+> that it finds even though there is nothing connected behind on some of the bridges.
+> Do we know the reason for this behavior?
+> 
+> [    4.288269] pci 0003:00:00.0: BAR 13: failed to assign [io  size 0x15000]
+> [    4.317175] pci 0003:01:00.0: BAR 13: failed to assign [io  size 0x14000]
+> [    4.644518] pci 0003:02:00.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.657539] pci 0003:02:01.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.670560] pci 0003:02:02.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.683581] pci 0003:02:03.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.696602] pci 0003:02:04.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.709623] pci 0003:02:05.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.722644] pci 0003:02:06.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.735664] pci 0003:02:07.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.748685] pci 0003:02:08.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.761706] pci 0003:02:09.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.774727] pci 0003:02:0a.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.787748] pci 0003:02:0b.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.800768] pci 0003:02:0c.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.813789] pci 0003:02:0d.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.826810] pci 0003:02:0e.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.839831] pci 0003:02:0f.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.852852] pci 0003:02:10.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.865873] pci 0003:02:11.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.878893] pci 0003:02:12.0: BAR 13: failed to assign [io  size 0x1000]
+> [    4.891914] pci 0003:02:13.0: BAR 13: failed to assign [io  size 0x1000]
+> 
+> UEFI seems to be assigning an IO resource to bridge only if finds an endpoint
+> behind it with an actual IO BAR space.
 
-On several systems (Renesas R-Car Gen2 being one of them), that
-assumption is not true, and IOMMU mappings must be shared between
-multiple devices. In those cases the IOMMU driver knows better than the
-generic ARM dma-mapping layer and attaches mapping to devices manually
-with arm_iommu_attach_device(), which sets the DMA ops for the device.
+If it's anything like we saw with similar issues on QEMU, it might be
+because the slots report themselves as hotplug capable and Linux tries
+to allocate minimum apertures for any hotplug slot.  See hpiosize
+and hpmemsize options for pci=.  Thanks,
 
-The arch_setup_dma_ops() function takes this into account and bails out
-immediately if the device already has DMA ops assigned. However, the
-corresponding arch_teardown_dma_ops() function, called from driver
-unbind code paths (including probe deferral), will tear the mapping down
-regardless of who created it. When the device is reprobed
-arch_setup_dma_ops() will be called again but won't perform any
-operation as the DMA ops will still be set.
-
-We need to reset the DMA ops in arch_teardown_dma_ops() to fix this.
-However, we can't do so unconditionally, as then a new mapping would be
-created by arch_setup_dma_ops() when the device is reprobed, regardless
-of whether the device needs to share a mapping or not. We must thus keep
-track of whether arch_setup_dma_ops() created the mapping, and only in
-that case tear it down in arch_teardown_dma_ops().
-
-Keep track of that information in the dev_archdata structure. As the
-structure is embedded in all instances of struct device let's not grow
-it, but turn the existing dma_coherent bool field into a bitfield that
-can be used for other purposes.
-
-Fixes: 09515ef5ddad ("of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices")
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
----
- arch/arm/include/asm/device.h | 3 ++-
- arch/arm/mm/dma-mapping.c     | 4 ++++
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/arch/arm/include/asm/device.h b/arch/arm/include/asm/device.h
-index 36ec9c8..3234fe9 100644
---- a/arch/arm/include/asm/device.h
-+++ b/arch/arm/include/asm/device.h
-@@ -19,7 +19,8 @@ struct dev_archdata {
- #ifdef CONFIG_XEN
- 	const struct dma_map_ops *dev_dma_ops;
- #endif
--	bool dma_coherent;
-+	unsigned int dma_coherent:1;
-+	unsigned int dma_ops_setup:1;
- };
- 
- struct omap_device;
-diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-index c742dfd..b48998f 100644
---- a/arch/arm/mm/dma-mapping.c
-+++ b/arch/arm/mm/dma-mapping.c
-@@ -2430,9 +2430,13 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
- 		dev->dma_ops = xen_dma_ops;
- 	}
- #endif
-+	dev->archdata.dma_ops_setup = true;
- }
- 
- void arch_teardown_dma_ops(struct device *dev)
- {
-+	if (!dev->archdata.dma_ops_setup)
-+		return;
-+
- 	arm_teardown_iommu_dma_ops(dev);
- }
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Alex
