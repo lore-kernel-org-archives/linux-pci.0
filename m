@@ -1,29 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44378 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750885AbdE3V3w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 17:29:52 -0400
-Date: Tue, 30 May 2017 16:29:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Carlo Pisani <carlojpisani@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PowerPC405 DHT-Walnut, PCI_IO problems
-Message-ID: <20170530212950.GC14896@bhelgaas-glaptop.roam.corp.google.com>
-References: <CA+QBN9ANaDgcTDVeMA45m7gkH65x2OMBaa4y_xg5t4KX7WavZw@mail.gmail.com>
- <20170530174143.GA27080@bhelgaas-glaptop.roam.corp.google.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34026 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936015AbdEVVUE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2017 17:20:04 -0400
+Subject: Re: IO Space Allocation Question on ARM64
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>
+References: <31f48cf6-fd97-98fe-ac7c-ad80870df68b@codeaurora.org>
+ <20170522141416.4fdc09a3@w520.home>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <112199ef-40fe-1c78-c2d8-bee0071f3ddf@codeaurora.org>
+Date: Mon, 22 May 2017 17:20:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170530174143.GA27080@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170522141416.4fdc09a3@w520.home>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 30, 2017 at 12:41:43PM -0500, Bjorn Helgaas wrote:
-> ...
-> Could you open a report at http://bugzilla.kernel.org, component
-> drivers/PCI, and attach the following to it?
-> 
->   - complete dmesg log from 2.6.22 and 4.11
->   - complete "lspci -vvxxx" output from 4.11
->   - /proc/ioports contents from 4.11
+Hi Alex,
 
-Bug report at https://bugzilla.kernel.org/show_bug.cgi?id=195933
+On 5/22/2017 4:14 PM, Alex Williamson wrote:
+>> UEFI seems to be assigning an IO resource to bridge only if finds an endpoint
+>> behind it with an actual IO BAR space.
+> If it's anything like we saw with similar issues on QEMU, it might be
+> because the slots report themselves as hotplug capable and Linux tries
+> to allocate minimum apertures for any hotplug slot.  See hpiosize
+> and hpmemsize options for pci=.  Thanks,
+
+That was it. I was suspicious of this but didn't realize that we were allocating
+0x1000 as a minimum due to hotplug.
+
+Thanks for the suggestion. I didn't know the hpmemsize and hpiosize arguments.
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
