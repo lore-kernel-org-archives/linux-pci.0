@@ -1,71 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:54148 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755576AbdEOREY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:04:24 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [RFC v2 6/8] pci: qcom SoC driver adapted to new irq API
-Date: Mon, 15 May 2017 18:03:46 +0100
-Message-Id: <563a29c88bf8a0bb3ebb5396356a7bf6f6d3c71b.1494867112.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
-References: <cover.1494867112.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
-References: <cover.1494867112.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Message-ID: <1495480137.6967.77.camel@linux.intel.com>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
+        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+Cc: "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>
+Date: Mon, 22 May 2017 22:08:57 +0300
+In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts Qcom SoC specific driver to use the new interrupt api
-available in pcie-designware.
+On Thu, 2017-05-04 at 12:21 +0300, Andy Shevchenko wrote:
+> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
+> bytes. Instead we convert them to use uuid_le type. At the same time
+> we
+> convert current users.
+> 
+> acpi_str_to_uuid() becomes useless after the conversion and it's safe
+> to
+> get rid of it.
+> 
+> The conversion fixes a potential bug in int340x_thermal as well since
+> we have to use memcmp() on binary data.
+> 
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Borislav Petkov <bp@suse.de>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Amir Goldstein <amir73il@gmail.com>
+> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+> Cc: Jani Nikula <jani.nikula@linux.intel.com>
+> Cc: Ben Skeggs <bskeggs@redhat.com>
+> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> Cc: Felipe Balbi <balbi@kernel.org>
+> Cc: Mathias Nyman <mathias.nyman@intel.com>
+> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Liam Girdwood <lgirdwood@gmail.com>
+> Cc: Mark Brown <broonie@kernel.org>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-changes v1->v2:
-- just to keep up patch set version
+Thank you everyone who gave a tag to this.
 
- drivers/pci/dwc/pcie-qcom.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+I'm going to split and rebase on top of Christoph's branch
+http://git.infradead.org/users/hch/vfs.git/shortlog/refs/heads/uuid-type
+s
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 5bf23d4..4e1cc02 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -126,13 +126,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
- 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
- }
+followed by changing types and API calls accordingly (without changing a
+logic!).
+
+So, I would like to keep tags in place. If there is any objection, speak
+up now!
  
--static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
- {
- 	u32 val;
-@@ -724,14 +717,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       qcom_pcie_msi_irq_handler,
--				       IRQF_SHARED, "qcom-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "cannot request msi irq\n");
--			return ret;
--		}
- 	}
- 
- 	ret = phy_init(pcie->phy);
+Thanks!
+
 -- 
-2.9.3
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
