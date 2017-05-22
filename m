@@ -1,35 +1,113 @@
-Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>
-Subject: [PATCH 0/2] PCI/portdrv: add MSI support for PCIe port services and DPC IRQ support
-Date: Tue, 16 May 2017 11:25:40 +0100
-Message-ID: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6798 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757679AbdEVMgn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2017 08:36:43 -0400
+From: Timmy Li <lixiaoping3@huawei.com>
+Subject: Re: [PATCH] arm64: PCI: free all allocated memory in case of failure
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: <bhelgaas@google.com>, <tn@semihalf.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linuxarm@huawei.com>, <gabriele.paoloni@huawei.com>
+References: <20170512095747.744688-1-lixiaoping3@huawei.com>
+ <20170512102825.GA10929@red-moon>
+Message-ID: <84e06412-9aa9-3fe5-d727-036d62114c27@huawei.com>
+Date: Mon, 22 May 2017 20:32:09 +0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170512102825.GA10929@red-moon>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+Hi Lorenzo,
 
-This patchset:
-1) adds support for MSI interrupt vectors to be used for Roor Port services
-2) adds support for DPC Root Port service interrupt 
+Thanks for your review and sorry for the late reply.
 
-The patchset has been tested on Hisilicon Hip08 Chipset
+On 2017/5/12 18:28, Lorenzo Pieralisi wrote:
+> On Fri, May 12, 2017 at 05:57:47PM +0800, Timmy Li wrote:
+>> There are some memory allocations in pci_acpi_scan_root(). But
+>> ri, root_ops and ri->cfg are not freed properly in failure cases,
+>> which results in memory leaks. This patch fixes the potential
+>> memory leaks.
+>>
+>> Signed-off-by: Timmy Li <lixiaoping3@huawei.com>
+>> ---
+>>  arch/arm64/kernel/pci.c | 22 ++++++++++++++--------
+>>  1 file changed, 14 insertions(+), 8 deletions(-)
+>>
+>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> index 4f0e3eb..e7e88ce 100644
+>> --- a/arch/arm64/kernel/pci.c
+>> +++ b/arch/arm64/kernel/pci.c
+>> @@ -188,25 +188,22 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>  
+>>  	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+>>  	if (!ri)
+>> -		return NULL;
+>> +		goto err_allocri;
+>>  
+>>  	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
+>>  	if (!root_ops)
+>> -		return NULL;
+>> +		goto err_allocops;
 
-Gabriele Paoloni (1):
-  PCI/portdrv: add support for different MSI interrupts for PCIe port
-    services
+I think it is still needed to free ri here When ri is allocated successfully and root_ops is not. Considering this is the only remain place that need to fix, a simple way to do this would be:
+if (!root_ops) {
++	kfree(ri);
+	return NULL;
+}
 
-gabriele paoloni (1):
-  PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
+>>  
+>>  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
+>> -	if (!ri->cfg) {
+>> -		kfree(ri);
+>> -		kfree(root_ops);
+>> -		return NULL;
+>> -	}
+>> +	if (!ri->cfg)
+>> +		goto err_ecam;
+>>  
+>>  	root_ops->release_info = pci_acpi_generic_release_info;
+> 
+> You are missing this ^^^^^^^^^
+> 
+>>  	root_ops->prepare_resources = pci_acpi_root_prepare_resources;
+>>  	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
+>>  	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
+>>  	if (!bus)
+> 
+> And how it works if (bus == NULL) here.
 
- drivers/pci/pcie/portdrv.h      |  5 ++++
- drivers/pci/pcie/portdrv_core.c | 62 +++++++++++++++++++++++++++++++++++++----
- 2 files changed, 61 insertions(+), 6 deletions(-)
+You are correct. There is no need to do anything When acpi_pci_root_create() fails.
 
--- 
-2.7.4
+> 
+> Lorenzo
+> 
+>> -		return NULL;
+>> +		goto err_rootcreate;
+>>  
+>>  	pci_bus_size_bridges(bus);
+>>  	pci_bus_assign_resources(bus);
+>> @@ -215,6 +212,15 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>>  		pcie_bus_configure_settings(child);
+>>  
+>>  	return bus;
+>> +
+>> +err_rootcreate:
+>> +	pci_ecam_free(ri->cfg);
+>> +err_ecam:
+>> +	kfree(root_ops);
+>> +err_allocops:
+>> +	kfree(ri);
+>> +err_allocri:
+>> +	return NULL;
+>>  }
+>>  
+>>  void pcibios_add_bus(struct pci_bus *bus)
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> .
+> 
