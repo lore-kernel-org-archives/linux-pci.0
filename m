@@ -1,61 +1,163 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:35120 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751710AbdEXBAT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 21:00:19 -0400
-Received: by mail-pf0-f180.google.com with SMTP id n23so130219168pfb.2
-        for <linux-pci@vger.kernel.org>; Tue, 23 May 2017 18:00:18 -0700 (PDT)
-Date: Tue, 23 May 2017 18:00:15 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
-Message-ID: <20170524010014.GA109842@google.com>
-References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
- <20170523180048.GA115572@google.com>
- <3fea7598-501e-6131-612a-977f005e9a2b@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:47526 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1762071AbdEVUJm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 May 2017 16:09:42 -0400
+Date: Mon, 22 May 2017 15:09:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH] PCI/MSI: Ignore affinity if pre/post vector count is
+ more than min_vecs
+Message-ID: <20170522200934.GB19733@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170518174747.657-1-himanshu.madhani@cavium.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <3fea7598-501e-6131-612a-977f005e9a2b@rock-chips.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170518174747.657-1-himanshu.madhani@cavium.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 24, 2017 at 08:54:14AM +0800, Shawn Lin wrote:
-> 在 2017/5/24 2:00, Brian Norris 写道:
-> >On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
-> >>This patch checks the link status before reading and
-> >>writing configure space of devices attached to the RC.
-> >>If the link status is down, we shouldn't try to access
-> >>the devices.
-> >
-> >I'm curious, in what situations are you seeing the link down? In all the
-> >cases where I can manage to screw up my endpoint and see system aborts
-> >due to config accesses, this check still says the link is up. Presumably
-> >you have some test cases that benefit from this though.
+On Thu, May 18, 2017 at 10:47:47AM -0700, Himanshu Madhani wrote:
+> From: Michael Hernandez <michael.hernandez@cavium.com>
+> 
+> min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
+> which may just include the vectors that don't need affinity.
+> 
+> Disabling affinity settings causes the qla2xxx driver scsi_add_host
+> to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
+> affinity masks on each vector.
+> 
+> Fixes: dfef358bd1be ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
+> Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> Cc: <stable@vger.kernel.org> # 4.10
 
-NB: Bjorn asked a similar question in a different form. The underlying
-concern though, is that this is racy.
+Applied with Christoph's reviewed-by to pci/msi for v4.13, thanks!
 
-> Of course. This patch doesn't prevent all these cases, for instance,
-> you do a memory read/write in the EP function driver, since it doesn't
-> call these two APIs at all.
-
-Of course. I'm only talking about config accesses.
-
-> The reason for me to added this check is that I saw a external abort
-> down to rockchip_pcie_rd_own_conf, of which I highly suspected was that
-> the link was re-init or total broken at that time.
-
-I've seen plenty of aborts in this function as well, but I've verified
-that the link was still reported "up" in all the cases I could reproduce.
-
-So, do you "suspect" or did you "prove"? e.g., log cases where this
-check actually helps?
-
-And to Bjorn's point: do you know *why* such cases were hit? That would
-help to understand if the cases you're worrying about are hopelessly
-racy, or if there's some way to ensure synchronization.
-
-Brian
+> ---
+> v5 --> v6
+> o Fixed more review comments from Bjorn. 
+> 
+> v4 --> v5
+> o Fixed Zero day kernel build failure.
+> 
+> v3 --> v4
+> o Moved pre/post reserved vector range checks to affinity.c as per
+>   comments from Bjorn Helgaas.
+> 
+> v2 --> v3
+> o fixed code as per review comments.
+> 
+> v1 --> v2
+> o Moved the check from pci_alloc_irq_vectors_affinity() to
+>   __pci_enable_{msi|msix}_range()
+> 
+> ---
+>  drivers/pci/msi.c         | 14 ++------------
+>  include/linux/interrupt.h |  4 ++--
+>  kernel/irq/affinity.c     | 13 ++++++++++++-
+>  3 files changed, 16 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 7f73bacf13ed..a5c13d052f18 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1091,7 +1091,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  
+>  	for (;;) {
+>  		if (affd) {
+> -			nvec = irq_calc_affinity_vectors(nvec, affd);
+> +			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+>  			if (nvec < minvec)
+>  				return -ENOSPC;
+>  		}
+> @@ -1138,7 +1138,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+>  
+>  	for (;;) {
+>  		if (affd) {
+> -			nvec = irq_calc_affinity_vectors(nvec, affd);
+> +			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+>  			if (nvec < minvec)
+>  				return -ENOSPC;
+>  		}
+> @@ -1206,16 +1206,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+>  	if (flags & PCI_IRQ_AFFINITY) {
+>  		if (!affd)
+>  			affd = &msi_default_affd;
+> -
+> -		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+> -			return -EINVAL;
+> -
+> -		/*
+> -		 * If there aren't any vectors left after applying the pre/post
+> -		 * vectors don't bother with assigning affinity.
+> -		 */
+> -		if (affd->pre_vectors + affd->post_vectors == min_vecs)
+> -			affd = NULL;
+>  	} else {
+>  		if (WARN_ON(affd))
+>  			affd = NULL;
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index 53144e78a369..63b246dd8258 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -291,7 +291,7 @@ extern int
+>  irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+>  
+>  struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
+> -int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
+> +int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd);
+>  
+>  #else /* CONFIG_SMP */
+>  
+> @@ -331,7 +331,7 @@ irq_create_affinity_masks(int nvec, const struct irq_affinity *affd)
+>  }
+>  
+>  static inline int
+> -irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
+> +irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
+>  {
+>  	return maxvec;
+>  }
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index 4544b115f5eb..e70642ed9858 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -66,6 +66,13 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  	struct cpumask *masks;
+>  	cpumask_var_t nmsk;
+>  
+> +	/*
+> +	 * If there aren't any vectors left after applying the pre/post
+> +	 * vectors don't bother with assigning affinity.
+> +	 */
+> +	if (!affv)
+> +		return NULL;
+> +
+>  	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
+>  		return NULL;
+>  
+> @@ -138,15 +145,19 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+>  
+>  /**
+>   * irq_calc_affinity_vectors - Calculate the optimal number of vectors
+> + * @minvec:	The minimum number of vectors available
+>   * @maxvec:	The maximum number of vectors available
+>   * @affd:	Description of the affinity requirements
+>   */
+> -int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
+> +int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
+>  {
+>  	int resv = affd->pre_vectors + affd->post_vectors;
+>  	int vecs = maxvec - resv;
+>  	int cpus;
+>  
+> +	if (resv > minvec)
+> +		return 0;
+> +
+>  	/* Stabilize the cpumasks */
+>  	get_online_cpus();
+>  	cpus = cpumask_weight(cpu_online_mask);
+> -- 
+> 2.12.0.264.gd6db3f2
+> 
