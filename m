@@ -1,194 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55354 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750938AbdE3Rlq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 13:41:46 -0400
-Date: Tue, 30 May 2017 12:41:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Carlo Pisani <carlojpisani@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PowerPC405 DHT-Walnut, PCI_IO problems
-Message-ID: <20170530174143.GA27080@bhelgaas-glaptop.roam.corp.google.com>
-References: <CA+QBN9ANaDgcTDVeMA45m7gkH65x2OMBaa4y_xg5t4KX7WavZw@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 22 May 2017 13:18:38 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Oza Pawandeep <oza.oza@broadcom.com>
+Subject: Re: [PATCH v7 0/3] PCI/IOMMU: Reserve IOVAs for PCI inbound memory
+Message-ID: <20170522131838.71258483@w520.home>
+In-Reply-To: <1495471182-12490-1-git-send-email-oza.oza@broadcom.com>
+References: <1495471182-12490-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+QBN9ANaDgcTDVeMA45m7gkH65x2OMBaa4y_xg5t4KX7WavZw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
+ linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ bcm-kernel-feedback-list@broadcom.com, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Carlo,
+On Mon, 22 May 2017 22:09:39 +0530
+Oza Pawandeep <oza.oza@broadcom.com> wrote:
 
-Welcome!
+> iproc based PCI RC and Stingray SOC has limitaiton of addressing only 512GB
+> memory at once.
+> 
+> IOVA allocation honors device's coherent_dma_mask/dma_mask.
+> In PCI case, current code honors DMA mask set by EP, there is no
+> concept of PCI host bridge dma-mask,  should be there and hence
+> could truly reflect the limitation of PCI host bridge.
+> 
+> However assuming Linux takes care of largest possible dma_mask, still the
+> limitation could exist, because of the way memory banks are implemented.
+> 
+> for e.g. memory banks:
+> <0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
+> <0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
+> <0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
+> <0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
+> 
+> When run User space (SPDK) which internally uses vfio in order to access
+> PCI EndPoint directly.
+> 
+> Vfio uses huge-pages which could come from 640G/0x000000a0. 
+> And the way vfio maps the hugepage is to have phys addr as iova,
+> and ends up calling VFIO_IOMMU_MAP_DMA ends up calling iommu_map,
+> inturn arm_lpae_map mapping iovas out of range.
+> 
+> So the way kernel allocates IOVA (where it honours device dma_mask) and
+> the way userspace gets IOVA is different.
+> 
+> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>; will not work.
+> 
+> Instead we have to go for scattered dma-ranges leaving holes.
+> Hence, we have to reserve IOVA allocations for inbound memory.
+> The patch-set caters to only addressing IOVA allocation problem.
 
-On Tue, May 30, 2017 at 10:52:21AM +0200, Carlo Pisani wrote:
-> hi
-> it's my first post here, so I want to say hello to everyone.
-> I am a student of Politecnico of Milano (italy), who needs to use a
-> PowerPC405GP based board, loaded with uboot v1.2. This board derives
-> from the Development Board made by IBM under the name "Walnut".
-> 
-> Here (1) you can see a picture of the board
-> 
-> The difference between "Walnut" and "DHT-Walnut" are
-> Walnut has a soldered PS/2 keyboard controller, DHT-Walnut doesn't have
-> Walnut has a soldered fpga, DHT-Walnut doesn't have
-> Walnut has a soldered RTC-chip, DHT-Walnut doesn't have
-> Walnut has no soldered pATA chip, Walnut comes with PDC20265
-> 
-> So, as these two boards are similar, I am using the profile "Walnut".
-> 
-> I started with linux 2.6.22, which was the last kernel known of having
-> been tested, and everything (including PDC20265) works as expected!
-> 
-> Unfortunately this kernel is "too old" for modern stage3-glibc rootfs (gentoo)
-> So I moved into more modern kernels, and I switched into 2.6.39, and
-> 4.11 where I found problems with PCI_IO
-> 
-> Moving from 2.6.22 required a special support: arch/powerpc/boot/cuboot-walnut.c
-> 
-> which provides
-> 
-> void my_platform_init(void);
-> void walnut_init(void *mac0);
-> void platform_init(unsigned long r3, unsigned long r4, unsigned long
-> r5, unsigned long r6, unsigned long r7);
-> 
-> 
-> This way the kenrel can boot from uboot v1.2, but there are problems
-> with the soldered PDC20265 128 Pin, PQFP ASIC chip by Promise
-> Technologies. This chip is a PCI bus (32-bit PCI interface compliant
-> to PCI Rev 2.2) mastering ATA/ATAPI controller which supports complete
-> UDMA/100 specifications. Its datasheet says it communicates with the
-> PCI bus using a burst bus mastering and advanced scatter/gather engine
-> for better overall system performance.
-> 
-> On Kernel 2.6.22 I can grab the following
-> 
-> ----------------- dmesg: ----------------------------------------------------
-> PCI: Probing PCI hardware
-> PCI: Cannot allocate resource region 4 of device 0000:00:04.0
-> 
-> Uniform Multi-Platform E-IDE driver Revision: 7.00alpha2
-> ide: Assuming 33MHz system bus speed for PIO modes; override with idebus=xx
-> PDC20265: IDE controller at PCI slot 0000:00:04.0
-> PDC20265: chipset revision 2
-> PDC20265: not 100% native mode: will probe irqs later
-> PDC20265: (U)DMA Burst Bit DISABLED Primary PCI Mode Secondary PCI Mode.
->     ide0: BM-DMA at 0x1000-0x1007, BIOS settings: hda:DMA, hdb:pio
->     ide1: BM-DMA at 0x1008-0x100f, BIOS settings: hdc:pio, hdd:pio
-> 
-> ----------------- lspci: ----------------------------------------------------
-> 00:04.0 Class 0101: Device 105a:0d30 (rev 02) (prog-if 8a [Master SecP PriP])
->         Subsystem: Device 105a:4d33
->         Flags: bus master, medium devsel, latency 128, IRQ 31
->         I/O ports at 121f0 [size=8]
->         I/O ports at 123f4 [size=1]
->         I/O ports at 12170 [size=8]
->         I/O ports at 12374 [size=1]
->         I/O ports at 13000 [size=64]
->         Memory at 81000000 (32-bit, non-prefetchable) [size=128K]
->         Expansion ROM at <ignored> [disabled]
->         Capabilities: [58] Power Management version 1
->         Kernel driver in use: Promise_Old_IDE
-> 
-> See what is reported by kernel 4.11
-> 
-> ----------------- dmesg: ----------------------------------------------------
-> PCI host bridge /plb/pci@ec000000 (primary) ranges:
->  MEM 0x0000000080000000..0x000000009fffffff -> 0x0000000080000000
->   IO 0x00000000b0000000..0xffc10000b000ffff -> 0x0000000000000000
-> 4xx PCI DMA offset set to 0x00000000
-> 4xx PCI DMA window base to 0x0000000000000000
-> DMA window size 0x0000000080000000
-> PCI: Probing PCI hardware
-> PCI host bridge to bus 0008:00
-> pci_bus 0008:00: root bus resource [io  0x0000-0xffffff]
-> pci_bus 0008:00: root bus resource [mem 0x80000000-0x9fffffff]
-> pci_bus 0008:00: root bus resource [bus 00-ff]
-> PCI: Hiding 4xx host bridge resources 0008:00:00.0
-> pci 0008:00:04.0: [Firmware Bug]: reg 0x10: invalid BAR (can't size)
-> pci 0008:00:04.0: [Firmware Bug]: reg 0x14: invalid BAR (can't size)
-> pci 0008:00:04.0: [Firmware Bug]: reg 0x18: invalid BAR (can't size)
-> pci 0008:00:04.0: [Firmware Bug]: reg 0x1c: invalid BAR (can't size)
-> pci 0008:00:04.0: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
-> pci 0008:00:04.0: legacy IDE quirk: reg 0x14: [io  0x03f6]
-> pci 0008:00:04.0: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
-> pci 0008:00:04.0: legacy IDE quirk: reg 0x1c: [io  0x0376]
-> pci 0008:00:00.0: of_irq_parse_pci: failed with rc=-22
-> pci 0008:00:03.0: BAR 1: assigned [mem 0x80000000-0x807fffff pref]
-> pci 0008:00:04.0: BAR 5: assigned [mem 0x80800000-0x8081ffff]
-> pci 0008:00:03.0: BAR 6: assigned [mem 0x80820000-0x8082ffff pref]
-> pci 0008:00:03.0: BAR 0: assigned [mem 0x80830000-0x80833fff]
-> pci 0008:00:04.0: BAR 6: assigned [mem 0x80834000-0x80837fff pref]
-> pci 0008:00:02.0: BAR 0: assigned [mem 0x80838000-0x80838fff]
-> pci 0008:00:02.1: BAR 0: assigned [mem 0x80839000-0x808390ff]
-> pci 0008:00:04.0: BAR 4: assigned [io  0x1000-0x103f]
-> pci 0008:00:03.0: vgaarb: setting as boot VGA device
-> pci 0008:00:03.0: vgaarb: VGA device added:
-> decodes=io+mem,owns=io+mem,locks=none
-> pci 0008:00:03.0: vgaarb: bridge control possible
-> 
-> pata_pdc202xx_old 0008:00:04.0: can't enable device: BAR 0 [io  size
-> 0x0008] not assigned
-> pata_pdc202xx_old: probe of 0008:00:04.0 failed with error -22
-> 
-> --------------- devicetree lines about PCI
-> ------------------------------------------------
-> ranges = <
-> 0x02000000 0x00000000 0x80000000
-> 0x80000000 0x00000000 0x20000000
-> 
-> 0x01000000 0x00000000 0x00000000
-> 0x00001000 0x00000000 0x00001000>;
-> 
-> 
-> It seems to me a problem related to "legacy PCI_IO", but I am not sure
-> about the meaning of "quirks"
 
-Sounds like a good guess.  PCI quirks are a mechanism for working
-around hardware defects or cases that don't quite conform to the PCI
-spec.
+The description here confuses me, with vfio the user owns the iova
+allocation problem.  Mappings are only identity mapped if the user
+chooses to do so.  The dma_mask of the device is set by the driver and
+only relevant to the DMA-API.  vfio is a meta-driver and doesn't know
+the dma_mask of any particular device, that's the user's job.  Is the
+net result of what's happening here for the vfio case simply to expose
+extra reserved regions in sysfs, which the user can then consume to
+craft a compatible iova?  Thanks,
 
-Normally PCI devices have programmable address decoders ("BARs") where
-we can configure the address space they should consume.  Some legacy
-devices, including IDE, are allowed to consume fixed address space
-that can't be detected or configured via BARs.  The only reference I
-can find to this is in sec 2.1 of the "PCI IDE Controller
-Specification", rev 1.0 from 3/4/1994.  
+Alex
 
-The "invalid BAR" and "legacy IDE quirk" messages are all related to
-this legacy device issue.  On 2.6.22, it looks like BAR 0 was at
-0x121f0, while on v4.11 it's at 0x1f0.  The 0x1f0 address is the bus
-address from the spec.  On 2.6.22 it looks like the CPU port number is
-offset from the bus address by 0x12000, so maybe that I/O offset got
-lost somewhere on the way to v4.11.
+> 
+> Changes since v7:
+> - Robin's comment addressed
+> where he wanted to remove depedency between IOMMU and OF layer.
+> - Bjorn Helgaas's comments addressed.
+> 
+> Changes since v6:
+> - Robin's comments addressed.
+> 
+> Changes since v5:
+> Changes since v4:
+> Changes since v3:
+> Changes since v2:
+> - minor changes, redudant checkes removed
+> - removed internal review
+> 
+> Changes since v1:
+> - address Rob's comments.
+> - Add a get_dma_ranges() function to of_bus struct..
+> - Convert existing contents of of_dma_get_range function to
+>   of_bus_default_dma_get_ranges and adding that to the
+>   default of_bus struct.
+> - Make of_dma_get_range call of_bus_match() and then bus->get_dma_ranges.
+> 
+> 
+> Oza Pawandeep (3):
+>   OF/PCI: expose inbound memory interface to PCI RC drivers.
+>   IOMMU/PCI: reserve IOVA for inbound memory for PCI masters
+>   PCI: add support for inbound windows resources
+> 
+>  drivers/iommu/dma-iommu.c | 44 ++++++++++++++++++++--
+>  drivers/of/of_pci.c       | 96 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/probe.c       | 30 +++++++++++++--
+>  include/linux/of_pci.h    |  7 ++++
+>  include/linux/pci.h       |  1 +
+>  5 files changed, 170 insertions(+), 8 deletions(-)
+> 
 
-Could you open a report at http://bugzilla.kernel.org, component
-drivers/PCI, and attach the following to it?
 
-  - complete dmesg log from 2.6.22 and 4.11
-  - complete "lspci -vvxxx" output from 4.11
-  - /proc/ioports contents from 4.11
-
-Are you using the same DTS for both 2.6.22 and 4.11?  If not, please
-attach the 2.6.22 DTS to the bugzilla.
-
-> I am lost, I am neither an expert of PCI, nor of linux, I don't know
-> if the problem is related to
-> 
-> a) the boot-wrapper I need to support in order to make dht-walnut to
-> bootstrap (cuImage, uImage legacy) -> arch/powerpc/boot/cuboot-$board
-> b) the DeviceTree setup (arch/powerpc/boot/dts/walnut.dts)
-> c) something wrong with new kernels
-> 
-> 
-> I can say that everything PCI_MEM_ONLY (e.g. MGA Matrox1 ) I tried worked
-> 
-> any tips/tricks/advice/opinion?
-> 
-> thanks
-> Carlo
-> 
-> 
-> (1) a picture of the board
-> http://elinux.org/images/5/5a/Com1191.jpg
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
