@@ -1,100 +1,100 @@
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Robin Murphy <robin.murphy@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- Jiang Liu <jiang.liu@linux.intel.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
-Date: Tue, 23 May 2017 21:15:16 +0200
-MIME-Version: 1.0
-In-Reply-To: <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        oss-drivers@netronome.com,
+        Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
+Date: Mon, 22 May 2017 15:50:23 -0700
+Message-Id: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/05/2017 20:03, Robin Murphy wrote:
-> On 23/05/17 18:54, Mason wrote:
->> On 23/05/2017 19:03, Bjorn Helgaas wrote:
->>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
->>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
->>>>
->>>>> +static int tango_set_affinity(struct irq_data *data,
->>>>> +		const struct cpumask *mask, bool force)
->>>>> +{
->>>>> +	return -EINVAL;
->>>>> +}
->>>>> +
->>>>> +static struct irq_chip tango_chip = {
->>>>> +	.irq_ack		= tango_ack,
->>>>> +	.irq_mask		= tango_mask,
->>>>> +	.irq_unmask		= tango_unmask,
->>>>> +	.irq_set_affinity	= tango_set_affinity,
->>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
->>>>> +};
->>>>
->>>> Hmmm... I'm wondering why .irq_set_affinity is required.
->>>>
->>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
->>>> first calls __irq_can_set_affinity() to check whether
->>>> desc->irq_data.chip->irq_set_affinity) exists.
->>>>
->>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
->>>> which calls chip->irq_set_affinity(data, mask, force);
->>>> = msi_domain_set_affinity()
->>>> which calls parent->chip->irq_set_affinity() unconditionally.
->>>>
->>>> Would it make sense to test that the callback is implemented
->>>> before calling it?
->>>>
->>>>
->>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
->>>
->>> I'm not sure what you're asking.
->>>
->>> Is this a bug report for the v4 tango driver?
->>
->> No.
->>
->>> Or are you asking whether msi_domain_set_affinity() should be changed
->>> to check whether parent->chip->irq_set_affinity is implemented?
->>
->> Yes. The way things are implemented now, drivers are forced
->> to define an irq_set_affinity callback, even if it just returns
->> an error, otherwise, the kernel crashes, because of the
->> unconditional function pointer deref. 
->>
->>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
->>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
->>> generic msi irq domain support"), so if there's a problem here, it's most
->>> likely in the tango code.
->>
->> The issue is having to define an "empty" function.
->> (Unnecessary code bloat and maintenance.)
-> 
-> AFAICS, only one driver (other than this one) implements a "do nothing"
-> set_affinity callback - everyone else who doesn't do anything hardware
-> specific just passes it along via irq_chip_set_affinity_parent().
+PCI core sets the driver pointer before calling ->probe() and only
+clears it after ->remove().  This means driver's ->sriov_configure()
+callback will happily race with probe() and remove(), most likely
+leading to BUGs, since drivers don't expect this.
 
-I counted 4. Where did I mess up?
+We could reorder pointer assignments, or try detecting races in all
+drivers, but it seems simpler and cleaner to just hold the device lock
+instead of special SR-IOV lock, since that lock is already supposed
+to synchronize the driver callbacks.
 
-advk_msi_set_affinity
-altera_msi_set_affinity
-nwl_msi_set_affinity
-vmd_irq_set_affinity
-tango_set_affinity
+Remove the iov lock completely, since we remove the last user.
 
-Regards.
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ drivers/pci/iov.c       | 4 ----
+ drivers/pci/pci-sysfs.c | 5 ++---
+ drivers/pci/pci.h       | 1 -
+ 3 files changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index d9dc7363ac77..120485d6f352 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -461,8 +461,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	else
+ 		iov->dev = dev;
+ 
+-	mutex_init(&iov->lock);
+-
+ 	dev->sriov = iov;
+ 	dev->is_physfn = 1;
+ 	rc = compute_max_vf_buses(dev);
+@@ -491,8 +489,6 @@ static void sriov_release(struct pci_dev *dev)
+ 	if (dev != dev->sriov->dev)
+ 		pci_dev_put(dev->sriov->dev);
+ 
+-	mutex_destroy(&dev->sriov->lock);
+-
+ 	kfree(dev->sriov);
+ 	dev->sriov = NULL;
+ }
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 31e99613a12e..7755559558df 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -472,7 +472,6 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+ 				  const char *buf, size_t count)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct pci_sriov *iov = pdev->sriov;
+ 	int ret;
+ 	u16 num_vfs;
+ 
+@@ -483,7 +482,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+ 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+ 		return -ERANGE;
+ 
+-	mutex_lock(&iov->dev->sriov->lock);
++	device_lock(&pdev->dev);
+ 
+ 	if (num_vfs == pdev->sriov->num_VFs)
+ 		goto exit;
+@@ -518,7 +517,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+ 			 num_vfs, ret);
+ 
+ exit:
+-	mutex_unlock(&iov->dev->sriov->lock);
++	device_unlock(&pdev->dev);
+ 
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f8113e5b9812..93f4044b8f4b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -272,7 +272,6 @@ struct pci_sriov {
+ 	u16 driver_max_VFs;	/* max num VFs driver supports */
+ 	struct pci_dev *dev;	/* lowest numbered PF */
+ 	struct pci_dev *self;	/* this PF */
+-	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+ 	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+ 	bool drivers_autoprobe;	/* auto probing of VFs by driver */
+ };
+-- 
+2.11.0
