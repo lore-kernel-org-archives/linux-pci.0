@@ -1,90 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:44394 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965419AbdEOOBA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 10:01:00 -0400
-Subject: Re: [RFC] pci: adding new interrupt api to pcie-designware
-To: Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
-        <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-        <marc.zyngier@arm.com>
-References: <5593732728f7c7f5e8c58ac49f394e688bcc192d.1494332566.git.jpinto@synopsys.com>
- <5915E0F2.2070109@ti.com> <de48ca7f-149c-9c64-85b0-7e9fa66920cb@synopsys.com>
-CC: <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <5919B4A8.2060604@ti.com>
-Date: Mon, 15 May 2017 10:01:12 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 22 May 2017 12:31:16 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Sricharan R <sricharan@codeaurora.org>
+Subject: Re: [PATCH V4 3/4] ACPI/IORT: Ignore all errors except EPROBE_DEFER
+Message-ID: <20170522113116.GB10449@red-moon>
+References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
+ <1495119257-26724-3-git-send-email-sricharan@codeaurora.org>
+ <20170522103730.GB7553@red-moon>
+ <ffb088d6-e40f-7a7d-dafb-e52dc86704fc@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <de48ca7f-149c-9c64-85b0-7e9fa66920cb@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ffb088d6-e40f-7a7d-dafb-e52dc86704fc@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ laurent.pinchart@ideasonboard.com, frowand.list@gmail.com,
+ m.szyprowski@samsung.com, linux-arch@vger.kernel.org, tn@semihalf.com,
+ joro@8bytes.org, magnus.damm@gmail.com, linux-acpi@vger.kernel.org,
+ geert@linux-m68k.org, linux-pci@vger.kernel.org, lenb@kernel.org,
+ devicetree@vger.kernel.org, arnd@arndb.de, linux-arm-msm@vger.kernel.org,
+ j.neuschaefer@gmx.net, robh+dt@kernel.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/15/2017 07:13 AM, Joao Pinto wrote:
+On Mon, May 22, 2017 at 04:35:43PM +0530, Sricharan R wrote:
+> Hi Lorenzo,
 > 
-> Hi Murali,
+> On 5/22/2017 4:07 PM, Lorenzo Pieralisi wrote:
+> > Hi Sricharan,
+> > 
+> > On Thu, May 18, 2017 at 08:24:16PM +0530, Sricharan R wrote:
+> >> While deferring the probe of IOMMU masters, xlate and
+> >> add_device callbacks called from iort_iommu_configure
+> >> can pass back error values like -ENODEV, which means
+> >> the IOMMU cannot be connected with that master for real
+> >> reasons. Before the IOMMU probe deferral, all such errors
+> >> were ignored. Now all those errors are propagated back,
+> >> killing the master's probe for such errors. Instead ignore
+> >> all the errors except EPROBE_DEFER, which is the only one
+> >> of concern and let the master work without IOMMU, thus
+> >> restoring the old behavior.
+> >>
+> >> Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
+> >> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> >> ---
+> >> [V4] Added this patch newly.
+> >>
+> >>  drivers/acpi/arm64/iort.c | 6 ++++++
+> >>  1 file changed, 6 insertions(+)
+> >>
+> >> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> >> index c5fecf9..16e101f 100644
+> >> --- a/drivers/acpi/arm64/iort.c
+> >> +++ b/drivers/acpi/arm64/iort.c
+> >> @@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+> >>  	if (err)
+> >>  		ops = ERR_PTR(err);
+> >>  
+> >> +	/* Ignore all other errors apart from EPROBE_DEFER */
+> >> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+> >> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
+> >> +		ops = NULL;
+> >> +	}
+> >> +
+> >>  	return ops;
+> >>  }
+> >>  
+> > 
+> > It is getting a bit convoluted. Is not it better to propagate the
+> > error back and let acpi_dma_configure() make a decision accordingly ?
+> > 
 > 
-> Às 5:21 PM de 5/12/2017, Murali Karicheri escreveu:
->> On 05/09/2017 08:33 AM, Joao Pinto wrote:
->>> This is a proposal for the update of the interrupt API in pcie-designware.
->>>
->>> *SoC specific drivers*
->>> All SoC specific drivers that use the common infrastructure (pci-qcom,
->>> pci-artpec6, pci-exynos, pci-imx6) were updated to be compatible.
->>> Other SoC specific drivers like pci-dra7, pci-armada8k, pci-hisi, pci-spear13xx
->>> and pci-layerscape will also work fine.
->>>
->>> *Work still to be done - need some inputs*
->>> The pci-keystone driver is the one that I would appreciate some opinions, since
->>> it uses the "old" dw_pcie_msi_chip. I think we have 3 options:
->>>
->>> a) Keep the old API + new API in pcie-designware just for pci-keystone to use
->>> the dw_pcie_msi_chip structure
->>> b) Move the old API from pcie-designware to pci-keystone for it to use the
->>> dw_pcie_msi_chip structure
->>> c) Adapt pci-keystone to use the new API also
->>>
->>> *Tests*
->>> I made tests with a PCI 4.80 Core IP, using pcie-designware-plat driver.
->>> I used an MSI-only Endpoint and a MSI/MSIX Endpoint and the APi adapted very
->>> well to the situation.
->>>
->>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->>> ---
->>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>  drivers/pci/dwc/pcie-designware-host.c | 342 +++++++++++++++++----------------
->>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>  drivers/pci/dwc/pcie-designware.h      |   6 +-
->>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>  7 files changed, 179 insertions(+), 253 deletions(-)
+> ok, I was trying to keep it in same way as DT, where of_dma_configure
+> (here acpi_dma_configure) calls of_iommu_configure(here iort_iommu_configure)
+> which ends up doing the check. So will have to be changed in both places
+> for symmetry.
 > 
-> [...]
+> > Something like:
+> > 
+> > -- >8 --
+> > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > index e39ec7b..3a10d757 100644
+> > --- a/drivers/acpi/scan.c
+> > +++ b/drivers/acpi/scan.c
+> > @@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+> >  	iort_set_dma_mask(dev);
+> >  
+> >  	iommu = iort_iommu_configure(dev);
+> > -	if (IS_ERR(iommu))
+> > -		return PTR_ERR(iommu);
+> > +	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
+> > +		return -EPROBE_DEFER;
 > 
->>
->> What do you see the challenge in porting the PCI-Keystone driver to the new
->> interrupt API (option c)? I haven't had a chance to review your patches and recent
->> changes in Linux kernel for PCI as we are currently using v4.9 kernel for
->> our platforms. One key difference in the PCI Core used in Keystone SoC is that
->> the MSI is not implemented using standard registers as in newer PCI Designware
->> core. It uses application register space for MSI interrupts. Given that
->> is the case, do you see any issue in porting the driver to the new API?
->>
->> I should be able to test your patch on Keystone.
->>
-> 
-> I don't see any issue in porting it, and I have sent a RFC patch-set in Friday
-> including the porting of the keystone SoC driver. If you could test it with the
-> new API it would be great, just to have a sanity check.
-> 
-> A v2 of the RFC will be sent soon, so I would suggest for you to wait until v2
-> is available, that way you could test with the latest.
-> 
-> Thanks for the help,
-> Joao
-> 
-Ok. Will do
+> In case of other errors apart from EPROBE_DEFER,
+> iommu = NULL should be set, before passing it on to
+> arch_setup_dma_ops.
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+Ah yes, sorry, that makes it uglier :(
+
+Point is, it does not make sense to me to have of/acpi_dma_configure()
+check a return code with (IS_ERR()) whilst we know the only error
+code you are allowed to handle is -EPROBE_DEFER, while at it it is
+better to make the -EPROBE_DEFER check explicit (otherwise it may
+seem that of/acpi_dma_configure() can handle an error code that
+is different from -EPROBE_DEFER - but they don't), no big deal either
+way though.
+
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
