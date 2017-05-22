@@ -1,127 +1,180 @@
-Return-Path: <SRS0=baKf=46=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=baKf=46=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Robin Murphy <robin.murphy@arm.com>, Mason <slash.tmp@free.fr>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
- <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>, Jiang Liu <jiang.liu@linux.intel.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
-Date: Wed, 24 May 2017 11:22:36 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40214 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933776AbdEVVTG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 May 2017 17:19:06 -0400
+Date: Mon, 22 May 2017 16:18:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v2] PCI: use IDA to manage domain number if not getting
+ it from DT
+Message-ID: <20170522211859.GC19733@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495072037-135458-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495072037-135458-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/05/17 11:00, Robin Murphy wrote:
-> On 23/05/17 20:15, Mason wrote:
->> On 23/05/2017 20:03, Robin Murphy wrote:
->>> On 23/05/17 18:54, Mason wrote:
->>>> On 23/05/2017 19:03, Bjorn Helgaas wrote:
->>>>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
->>>>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
->>>>>>
->>>>>>> +static int tango_set_affinity(struct irq_data *data,
->>>>>>> +		const struct cpumask *mask, bool force)
->>>>>>> +{
->>>>>>> +	return -EINVAL;
->>>>>>> +}
->>>>>>> +
->>>>>>> +static struct irq_chip tango_chip = {
->>>>>>> +	.irq_ack		= tango_ack,
->>>>>>> +	.irq_mask		= tango_mask,
->>>>>>> +	.irq_unmask		= tango_unmask,
->>>>>>> +	.irq_set_affinity	= tango_set_affinity,
->>>>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
->>>>>>> +};
->>>>>>
->>>>>> Hmmm... I'm wondering why .irq_set_affinity is required.
->>>>>>
->>>>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
->>>>>> first calls __irq_can_set_affinity() to check whether
->>>>>> desc->irq_data.chip->irq_set_affinity) exists.
->>>>>>
->>>>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
->>>>>> which calls chip->irq_set_affinity(data, mask, force);
->>>>>> = msi_domain_set_affinity()
->>>>>> which calls parent->chip->irq_set_affinity() unconditionally.
->>>>>>
->>>>>> Would it make sense to test that the callback is implemented
->>>>>> before calling it?
->>>>>>
->>>>>>
->>>>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
->>>>>
->>>>> I'm not sure what you're asking.
->>>>>
->>>>> Is this a bug report for the v4 tango driver?
->>>>
->>>> No.
->>>>
->>>>> Or are you asking whether msi_domain_set_affinity() should be changed
->>>>> to check whether parent->chip->irq_set_affinity is implemented?
->>>>
->>>> Yes. The way things are implemented now, drivers are forced
->>>> to define an irq_set_affinity callback, even if it just returns
->>>> an error, otherwise, the kernel crashes, because of the
->>>> unconditional function pointer deref. 
->>>>
->>>>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
->>>>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
->>>>> generic msi irq domain support"), so if there's a problem here, it's most
->>>>> likely in the tango code.
->>>>
->>>> The issue is having to define an "empty" function.
->>>> (Unnecessary code bloat and maintenance.)
->>>
->>> AFAICS, only one driver (other than this one) implements a "do nothing"
->>> set_affinity callback - everyone else who doesn't do anything hardware
->>> specific just passes it along via irq_chip_set_affinity_parent().
->>
->> I counted 4. Where did I mess up?
->>
->> advk_msi_set_affinity
->> altera_msi_set_affinity
->> nwl_msi_set_affinity
->> vmd_irq_set_affinity
->> tango_set_affinity
+On Thu, May 18, 2017 at 09:47:17AM +0800, Shawn Lin wrote:
+> If not getting domain number from DT, the domain number will
+> keep increasing once doing unbind/bind RC drivers. This could
+> introduce pointless tree view of lspci as shows below:
 > 
-> Fair point - I went through drivers/irqchip and the various
-> arch-specific instances and found ls_scfg_msi_set_affinity(), but
-> somehow skipped over drivers/pci. Anyway, I think the question stands of
-> why are these handful of drivers *not* using irq_chip_set_affinity_parent()?
+> -+-[0001:00]---00.0-[01]----00.0
+>   \-[0000:00]-
+> 
+> The more test we do, the lengthier it would be. The more serious
+> issue is that if attaching two hierarchies for two different domains
+> belonging to two root bridges, so when doing unbind/bind test for one
+> of them and keep the other, then the domain number would finally
+> overflow and make the two hierarchies of devices share the some domain
+> number but actually they shouldn't. So it looks like we need to invent
+> a new indexing ID mechanism to manage domain number. This patch
+> introduces idr to achieve our purpose.
+> 
+> Cc: Brian Norris <briannorris@chromium.org>
+> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+> Changes in v2:
+> - add a remove wrapper
+> - rename use_dt_domains to ida_domain and set this bit
+> in pci_get_new_domain_nr and test it in the remove wrapper.
+> 
+>  drivers/pci/pci.c    | 23 +++++++++++++++++------
+>  drivers/pci/remove.c |  2 ++
+>  include/linux/pci.h  |  9 +++++++--
+>  3 files changed, 26 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..8affda5 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/delay.h>
+>  #include <linux/dmi.h>
+> +#include <linux/idr.h>
+>  #include <linux/init.h>
+>  #include <linux/of.h>
+>  #include <linux/of_pci.h>
+> @@ -5340,19 +5341,29 @@ static void pci_no_domains(void)
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS
+> -static atomic_t __domain_nr = ATOMIC_INIT(-1);
+> +DEFINE_IDA(__domain_nr);
+>  
+> -int pci_get_new_domain_nr(void)
+> +int pci_get_new_domain_nr(struct pci_bus *bus)
+>  {
+> -	return atomic_inc_return(&__domain_nr);
+> +	bus->ida_domain = true;
+> +	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
+> +}
+> +
+> +void pci_put_old_domain_nr(struct pci_bus *bus)
+> +{
+> +	if (bus->ida_domain)
+> +		ida_simple_remove(&__domain_nr, bus->domain_nr);
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> -static int of_pci_bus_find_domain_nr(struct device *parent)
+> +static int of_pci_bus_find_domain_nr(struct pci_bus *bus,
+> +				     struct device *parent)
+>  {
+>  	static int use_dt_domains = -1;
+>  	int domain = -1;
+>  
+> +	bus->ida_domain = false;
+> +
+>  	if (parent)
+>  		domain = of_get_pci_domain_nr(parent->of_node);
+>  	/*
+> @@ -5385,7 +5396,7 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+>  		use_dt_domains = 1;
+>  	} else if (domain < 0 && use_dt_domains != 1) {
+>  		use_dt_domains = 0;
+> -		domain = pci_get_new_domain_nr();
+> +		domain = pci_get_new_domain_nr(bus);
+>  	} else {
+>  		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+>  			parent->of_node->full_name);
+> @@ -5397,7 +5408,7 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+>  
+>  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+>  {
+> -	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
+> +	return acpi_disabled ? of_pci_bus_find_domain_nr(bus, parent) :
+>  			       acpi_pci_bus_find_domain_nr(bus);
+>  }
+>  #endif
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 73a03d3..1bbbb37 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>  	list_for_each_entry_safe(child, tmp,
+>  				 &bus->devices, bus_list)
+>  		pci_remove_bus_device(child);
+> +
+> +	pci_put_old_domain_nr(bus);
+>  	pci_remove_bus(bus);
+>  	host_bridge->bus = NULL;
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33c2b0b..d4f6fb8 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -513,6 +513,7 @@ struct pci_bus {
+>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  	int		domain_nr;
+> +	bool		ida_domain;	/* get domain number from IDA */
 
-Probably because they don't have a parent, in the hierarchical sense.
-All they have is a chained interrupt (*puke*). Which implies that
-changing the affinity of one MSI would affect all of them, completely
-confusing unsuspecting userspace such as irqbalance.
+The fact that ida_domain is a member of struct pci_bus suggests that
+it can be a per-bus property.  However, I think it is actually a
+system-wide property.  If we get the domain from DT for some buses but
+via IDA for other buses, there's no mechanism to prevent collisions,
+is there?
 
-> As an outsider, it naively seems logical that the affinity of an MSI
-> which just gets translated to a wired interrupt should propagate through
-> to the affinity of that wired interrupt, but maybe there are reasons not
-> to; I really don't know.
+If it's a system-wide property, I'd rather have a single global
+variable for it because that makes it more obvious to the reader that
+we don't have to worry about collisions between a DT domain number and
+one from IDA.
 
-See above. The main issue is that HW folks haven't understood the actual
-use of MSIs, and persist in implementing them as an afterthought, based
-on some cascading interrupt controller design.
-
-Sad. So sad.
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+>  #endif
+>  
+>  	char		name[48];
+> @@ -1445,13 +1446,17 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+>   * configuration space.
+>   */
+>  #ifdef CONFIG_PCI_DOMAINS
+> +extern struct ida __domain_nr;
+>  extern int pci_domains_supported;
+> -int pci_get_new_domain_nr(void);
+> +int pci_get_new_domain_nr(struct pci_bus *bus);
+> +void pci_put_old_domain_nr(struct pci_bus *bus);
+>  #else
+>  enum { pci_domains_supported = 0 };
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+> +static inline int pci_get_new_domain_nr(struct pci_bus *bus)
+> +{ return -ENOSYS; }
+> +static inline void pci_put_old_domain_nr(struct pci_bus *bus) { }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>  
+>  /*
+> -- 
+> 1.9.1
+> 
+> 
