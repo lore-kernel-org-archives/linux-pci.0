@@ -1,72 +1,155 @@
-Return-Path: <SRS0=xBUr=4Y=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=xBUr=4Y=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=ZCbz=44=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=ZCbz=44=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
+        <hch@infradead.org>, <liudongdong3@huawei.com>
+Subject: [PATCH v4 1/2] PCI/portdrv: add support for different MSI interrupts for PCIe port services
+Date: Mon, 22 May 2017 15:06:57 +0100
+Message-ID: <1495462018-7756-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1495462018-7756-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1495462018-7756-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170518154708.GA30182@red-moon>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com> <20170518154708.GA30182@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 18 May 2017 17:51:44 +0100
-Message-ID: <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR configuration
- to be preserved
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>, Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
->
-> [...]
->
->> >> Re _DSM: I think it makes sense to honour it, because it puts the
->> >> allocation under the control of the firmware, which completely removes
->> >> the burden of having to reason about a policy in the kernel. That
->> >> leaves the question which will be the default, but that is of minor
->> >> importance IMO.
->> >
->> > I agree; we should try to follow the spec unless we have a good reason
->> > not to, which argues for honoring the _DSM, so I think it's worth a
->> > try.  Booting with "pci=realloc" could override the _DSM and taint the
->> > kernel (because we don't know the effect of reassigning something the
->> > firmware told us not to touch).
->> >
->>
->> I'd like to hear Lorenzo's view on this first, but I can certainly
->> respin my _DSM patch to take pci=realloc into account, and move the
->> handling to generic code as well.
->
-> I agree with both of you on _DSM implementation and interpretation.
->
-> Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
-> are going to trigger regressions, that's certain (ie we can then boot
-> with pci=realloc - still, we are breaking systems), that's the reason
-> why for patch(2) I'd like to create a branch and send a CFT for ARM64
-> ACPI testing before queuing it (either I can set-up a testing branch
-> or we ask Bjorn to do it - as you guys prefer - as long as we have
-> a branch for people to test patch(2) on ARM64 ACPI systems).
->
-> You still need to assign resources that could not be claimed though
-> so patch(2) still needs updating:
->
-> PCI FW spec 3.1 - 4.6.5
->
-> "...However, the operating system is free to configure the devices in this
-> hierarchy that have not been configured by the firmware."
->
-> Which in kernel-speak it means that you have to assign resources that
-> could not be claimed.
->
+Currently PCIe port services are assigned with different interrutps
+only if MSI-x are supported by calling pcie_port_enable_msix().
+If a root port supports MSI instead of MSI-x currently we fall back
+to use a single shared interrupt for all the services.
+This patch renames and extends pcie_port_enable_msix() to use MSI in
+case MSI-x allocation fails.
 
-Right. AFAICT this is the part that is typically handled by
-pcibios_resource_survey() et al, whose default __weak implementations
-are empty functions. Shall I override those for arm64 to host this
-logic?
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/pcie/portdrv.h      |  8 +++++---
+ drivers/pci/pcie/portdrv_core.c | 41 +++++++++++++++++++++++------------------
+ 2 files changed, 28 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 587aef3..1993e2c 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -13,10 +13,12 @@
+ 
+ #define PCIE_PORT_DEVICE_MAXSERVICES   5
+ /*
+- * According to the PCI Express Base Specification 2.0, the indices of
+- * the MSI-X table entries used by port services must not exceed 31
++ * According to the PCI Express Base Specification REV. 3.1 and according
++ * to the PCI Local Bus Specification REV. 3.0 respectively, the indices of
++ * the MSI-X table entries or the max number of MSI vectors used by port
++ * services must not exceed 31
+  */
+-#define PCIE_PORT_MAX_MSIX_ENTRIES	32
++#define PCIE_PORT_MAX_MSI_ENTRIES	32
+ 
+ #define get_descriptor_id(type, service) (((type - 4) << 8) | service)
+ 
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index cea504f..e5d5ffe 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -44,14 +44,15 @@ static void release_pcie_device(struct device *dev)
+ }
+ 
+ /**
+- * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for given port
++ * pcie_port_enable_irq_vec - try to set up MSI-X or MSI as interrupt mode
++ * for given port
+  * @dev: PCI Express port to handle
+  * @irqs: Array of interrupt vectors to populate
+  * @mask: Bitmask of port capabilities returned by get_port_device_capability()
+  *
+  * Return value: 0 on success, error code on failure
+  */
+-static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
++static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ {
+ 	int nr_entries, entry, nvec = 0;
+ 
+@@ -61,8 +62,8 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 	 * equal to the number of entries this port actually uses, we'll happily
+ 	 * go through without any tricks.
+ 	 */
+-	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSIX_ENTRIES,
+-			PCI_IRQ_MSIX);
++	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
++			PCI_IRQ_MSIX | PCI_IRQ_MSI);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+ 
+@@ -77,7 +78,12 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		 * Number field in the PCI Express Capabilities register", where
+ 		 * according to Section 7.8.2 of the specification "For MSI-X,
+ 		 * the value in this field indicates which MSI-X Table entry is
+-		 * used to generate the interrupt message."
++		 * used to generate the interrupt message." and "For MSI, the
++		 * value in this field indicates the offset between the base
++		 * Message Data and the interrupt message that is generated."
++		 *
++		 * pci_irq_vector() below is able to handle entry differently
++		 * depending on MSI vs MSI-x case
+ 		 */
+ 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+ 		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+@@ -100,7 +106,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		 * MSI/MSI-X vectors assigned to the port is going to be used
+ 		 * for AER, where "For MSI-X, the value in this register
+ 		 * indicates which MSI-X Table entry is used to generate the
+-		 * interrupt message."
++		 * interrupt message."  and "For MSI, the value
++		 * in this field indicates the offset between the base Message
++		 * Data and the interrupt message that is generated."
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+@@ -124,7 +132,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 
+ 		/* Now allocate the MSI-X vectors for real */
+ 		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
+-				PCI_IRQ_MSIX);
++				PCI_IRQ_MSIX | PCI_IRQ_MSI);
+ 		if (nr_entries < 0)
+ 			return nr_entries;
+ 	}
+@@ -146,26 +154,23 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+  */
+ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ {
+-	unsigned flags = PCI_IRQ_LEGACY | PCI_IRQ_MSI;
+ 	int ret, i;
+ 
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+ 		irqs[i] = -1;
+ 
+ 	/*
+-	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
+-	 * INTx or other interrupts, e.g. system shared interrupt.
++	 * Make sure MSI can be used for PCIe PME or hotplug. otherwise we have
++	 * to use INTx or other interrupts, e.g. system shared interrupt.
+ 	 */
+-	if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
+-	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
+-		flags &= ~PCI_IRQ_MSI;
+-	} else {
+-		/* Try to use MSI-X if supported */
+-		if (!pcie_port_enable_msix(dev, irqs, mask))
++	if (!((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) &&
++	    !((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi()))
++		/* Try to use MSI-X or MSI if supported */
++		if (!pcie_port_enable_irq_vec(dev, irqs, mask))
+ 			return 0;
+-	}
+ 
+-	ret = pci_alloc_irq_vectors(dev, 1, 1, flags);
++	/* fall back to legacy IRQ */
++	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_LEGACY);
+ 	if (ret < 0)
+ 		return -ENODEV;
+ 
+-- 
+2.7.4
