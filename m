@@ -1,190 +1,423 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:35533 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750902AbdE3Pop (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 11:44:45 -0400
-Received: by mail-wr0-f174.google.com with SMTP id q97so8345521wrb.2
-        for <linux-pci@vger.kernel.org>; Tue, 30 May 2017 08:44:35 -0700 (PDT)
-Subject: Re: [RFC PATCH v2] pci: Concurrency issue in NVMe Init through PCIe
- switch
-To: Srinath Mannam <srinath.mannam@broadcom.com>, bhelgaas@google.com
-References: <1496135297-19680-1-git-send-email-srinath.mannam@broadcom.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com
-From: Scott Branden <scott.branden@broadcom.com>
-Message-ID: <07dbc07b-9cef-7677-5fc4-50b291e7e792@broadcom.com>
-Date: Tue, 30 May 2017 08:44:25 -0700
+Received: from smtprelay.synopsys.com ([198.182.47.9]:58963 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757783AbdEVJYN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2017 05:24:13 -0400
+Subject: Re: [RFC v2 1/8] pci: adding new irq api to pci-designware
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1494867112.git.jpinto@synopsys.com>
+ <8e4d88a4d6735ba08ebf0855d33830df5989a2e5.1494867112.git.jpinto@synopsys.com>
+ <867f1a7g6m.fsf@arm.com>
+CC: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <m-karicheri2@ti.com>, <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <2775bb8b-b5cc-ebca-d26c-09a3edadc46a@synopsys.com>
+Date: Mon, 22 May 2017 10:24:04 +0100
 MIME-Version: 1.0
-In-Reply-To: <1496135297-19680-1-git-send-email-srinath.mannam@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <867f1a7g6m.fsf@arm.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Srinath,
 
+Hi Mark,
 
-On 17-05-30 02:08 AM, Srinath Mannam wrote:
-> We found a concurrency issue in NVMe Init when we initialize
-> multiple NVMe connected over PCIe switch.
->
-> Setup details:
->   - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
->   - Two NVMe cards are connected to PCIe RC through bridge as shown
->     in the below figure.
->
->                     [RC]
->                      |
->                   [BRIDGE]
->                      |
->                 -----------
->                |           |
->              [NVMe]      [NVMe]
->
-> Issue description:
-> After PCIe enumeration completed NVMe driver probe function called
-> for both the devices from two CPUS simultaneously.
->  From nvme_probe, pci_enable_device_mem called for both the EPs. This
-> function called pci_enable_bridge enable recursively until RC.
->
-> Inside pci_enable_bridge function, at two places concurrency issue is
-> observed.
->
-> Place 1:
->    CPU 0:
->      1. Done Atomic increment dev->enable_cnt
->         in pci_enable_device_flags
->      2. Inside pci_enable_resources
->      3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
->      4. Ready to set PCI_COMMAND_MEMORY (0x2) in
->         pci_write_config_word(dev, PCI_COMMAND, cmd)
->    CPU 1:
->      1. Check pci_is_enabled in function pci_enable_bridge
->         and it is true
->      2. Check (!dev->is_busmaster) also true
->      3. Gone into pci_set_master
->      4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
->      5. Ready to set PCI_COMMAND_MASTER (0x4) in
->         pci_write_config_word(dev, PCI_COMMAND, cmd)
->
-> By the time of last point for both the CPUs are read value 0 and
-> ready to write 2 and 4.
-> After last point final value in PCI_COMMAND register is 4 instead of 6.
->
-> Place 2:
->    CPU 0:
->      1. Done Atomic increment dev->enable_cnt in
->         pci_enable_device_flags
->
-> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> ---
-> Changes since v1:
->   - Used mutex to syncronize pci_enable_bridge
->
->   drivers/pci/pci.c   | 4 ++++
->   drivers/pci/probe.c | 1 +
->   include/linux/pci.h | 1 +
->   3 files changed, 6 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b01bd5b..5bff3e7 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1347,7 +1347,9 @@ static void pci_enable_bridge(struct pci_dev *dev)
->   {
->   	struct pci_dev *bridge;
->   	int retval;
-> +	struct mutex *lock = &dev->bridge_lock;
->   
-> +	mutex_lock(lock);
->   	bridge = pci_upstream_bridge(dev);
->   	if (bridge)
->   		pci_enable_bridge(bridge);
-> @@ -1355,6 +1357,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
->   	if (pci_is_enabled(dev)) {
->   		if (!dev->is_busmaster)
->   			pci_set_master(dev);
-> +		mutex_unlock(lock);
->   		return;
->   	}
->   
-> @@ -1363,6 +1366,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
->   		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
->   			retval);
->   	pci_set_master(dev);
-> +	mutex_unlock(lock);
->   }
-Looking at above function I think it should be restructured so that 
-mute_unlock only needs to be called in one place.
-How about below to make things more clear?
+Às 9:44 AM de 5/21/2017, Marc Zyngier escreveu:
+> On Mon, May 15 2017 at 06:03:41 PM, Joao Pinto <Joao.Pinto@synopsys.com> wrote:
+>> This patch adds the new interrupt api to pcie-designware, keeping the old
+>> one. Although the old API is still available, pcie-designware initiates with
+>> the new one.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>> changes v1->v2:
+>> - Now there's no config to toggle between the 2 APIs, so pcie-designware
+>> initiaties wih the new one by default
+>> - Using lower_32_bits / upper_32_bits
+>> - Instead of mutex, now using spinlocks
+>> - Instead of always reading PCIE_MSI_INTR0_ENABLE, now we use an internal
+>> variable
+>> - dw_pcie_irq_domain_alloc() was updated to enable Multi-MSI
+>> - using irq_domain_create_linear() instead of irq_domain_add_linear()
+>>
+>>  drivers/pci/dwc/pcie-designware-host.c | 272 +++++++++++++++++++++++++++++----
+>>  drivers/pci/dwc/pcie-designware.h      |  15 ++
+>>  2 files changed, 258 insertions(+), 29 deletions(-)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+>> index 28ed32b..78ce002 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> @@ -11,6 +11,7 @@
+>>   * published by the Free Software Foundation.
+>>   */
+>>  
+>> +#include <linux/irqchip/chained_irq.h>
+>>  #include <linux/irqdomain.h>
+>>  #include <linux/of_address.h>
+>>  #include <linux/of_pci.h>
+>> @@ -53,6 +54,28 @@ static struct irq_chip dw_msi_irq_chip = {
+>>  	.irq_unmask = pci_msi_unmask_irq,
+>>  };
+>>  
+>> +static void dw_msi_mask_irq(struct irq_data *d) {
+>> +	pci_msi_mask_irq(d);
+>> +	irq_chip_mask_parent(d);
+>> +}
+>> +
+>> +static void dw_msi_unmask_irq(struct irq_data *d) {
+>> +	pci_msi_unmask_irq(d);
+>> +	irq_chip_unmask_parent(d);
+>> +}
+>> +
+>> +static struct irq_chip dw_pcie_msi_irq_chip = {
+>> +	.name = "PCI-MSI",
+>> +	.irq_mask = dw_msi_mask_irq,
+>> +	.irq_unmask = dw_msi_unmask_irq,
+>> +};
+>> +
+>> +static struct msi_domain_info dw_pcie_msi_domain_info = {
+>> +	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+>> +		     MSI_FLAG_PCI_MSIX),
+> 
+> How is Multi-MSI supported if you don't pass the MSI_FLAG_MULTI_PCI_MSI
+> flag?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 563901c..82c232e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1347,22 +1347,29 @@ static void pci_enable_bridge(struct pci_dev *dev)
-  {
-         struct pci_dev *bridge;
-         int retval;
-+       struct mutex *lock = &dev->bridge_lock;
-+
-+       /*
-+        * Add comment here explaining what needs concurrency protection
-+        */
-+       mutex_lock(lock);
+Well spoted, it was lost in the merge.
 
-         bridge = pci_upstream_bridge(dev);
-         if (bridge)
-                 pci_enable_bridge(bridge);
+> 
+>> +	.chip	= &dw_pcie_msi_irq_chip,
+>> +};
+>> +
+>>  /* MSI int handler */
+>>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>  {
+>> @@ -81,6 +104,191 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>>  	return ret;
+>>  }
+>>  
+>> +/* Chained MSI interrupt service routine */
+>> +static void dw_chained_msi_isr(struct irq_desc *desc)
+>> +{
+>> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+>> +	struct pcie_port *pp;
+>> +	struct dw_pcie *pci;
+>> +
+>> +	chained_irq_enter(chip, desc);
+>> +	pci = irq_desc_get_handler_data(desc);
+>> +	pp = &pci->pp;
+>> +
+>> +	dw_handle_msi_irq(pp);
+>> +
+>> +	chained_irq_exit(chip, desc);
+>> +}
+>> +
+>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>> +{
+>> +	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	u64 msi_target;
+>> +
+>> +	if (pp->ops->get_msi_addr)
+>> +		msi_target = pp->ops->get_msi_addr(pp);
+>> +	else
+>> +		msi_target = virt_to_phys((void *)pp->msi_data);
+>> +
+>> +	msg->address_lo = lower_32_bits(msi_target);
+>> +	msg->address_hi = upper_32_bits(msi_target);
+>> +
+>> +	if (pp->ops->get_msi_data)
+>> +		msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+> 
+> I've already asked about the reason for this indirection, and I'd
+> appreciate an answer.
 
--       if (pci_is_enabled(dev)) {
--               if (!dev->is_busmaster)
--                       pci_set_master(dev);
--               return;
-+       if (!pci_is_enabled(dev)) {
-+               retval = pci_enable_device(dev);
-+               if (retval)
-+                       dev_err(&dev->dev,
-+                               "Error enabling bridge (%d), continuing\n",
-+                               retval);
-         }
+I answered in a previous e-mail. There are some SoCs using Synopsys PCIe Core
+that have a custom way of managing some operations, like the msi_data,
+msi_addrr, the mask/unmask of interrupts, etc. That is the reason why we have
+these callbacks. An SoC specific driver fills their callbacks, call the
+pcie-designware functions that they need and initialize their IP. There is a
+group of drivers that are standard, like the pcie-designware-plat, exynos, qcom,
+artpec6, imx6, etc.
 
--       retval = pci_enable_device(dev);
--       if (retval)
--               dev_err(&dev->dev, "Error enabling bridge (%d), 
-continuing\n",
--                       retval);
--       pci_set_master(dev);
-+       if (!dev->is_busmaster)
-+               pci_set_master(dev);
-+
-+       mutex_unlock(lock);
-  }
+> 
+>> +	else
+>> +		msg->data = data->hwirq;
+>> +
+>> +	dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+>> +		(int)data->hwirq, msg->address_hi, msg->address_lo);
+>> +}
+>> +
+>> +static int dw_pci_msi_set_affinity(struct irq_data *irq_data,
+>> +				   const struct cpumask *mask, bool force)
+>> +{
+>> +	return -EINVAL;
+>> +}
+>> +
+>> +static void dw_pci_bottom_mask(struct irq_data *data)
+>> +{
+>> +	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	unsigned int res, bit, ctrl;
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&pp->lock, flags);
+>> +
+>> +	if (pp->ops->msi_clear_irq)
+>> +		pp->ops->msi_clear_irq(pp, data->hwirq);
+> 
+> Same thing. If you have to have that kind of indirection, then this is a
+> different irqchip altogether. Also, see below for the coding-style.
 
->   
->   static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 19c8950..1c25d1c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -880,6 +880,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
->   	child->dev.parent = child->bridge;
->   	pci_set_bus_of_node(child);
->   	pci_set_bus_speed(child);
-> +	mutex_init(&bridge->bridge_lock);
->   
->   	/* Set up default resource pointers and names.. */
->   	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 33c2b0b..7e88f41 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -266,6 +266,7 @@ struct pci_dev {
->   	void		*sysdata;	/* hook for sys-specific extension */
->   	struct proc_dir_entry *procent;	/* device entry in /proc/bus/pci */
->   	struct pci_slot	*slot;		/* Physical slot this device is in */
-> +	struct mutex bridge_lock;
->   
->   	unsigned int	devfn;		/* encoded device & function index */
->   	unsigned short	vendor;
-Regards,
-  Scott
+We can have a different irqchip for each SoC specifc driver that needs it, but
+the change would be bigger. I suggest that we keep the current method and get
+every driver working properly using the new API and after that I can make a
+second round of patches targetting these callbacks. What do you think?
+
+> 
+>> +	else {
+>> +		ctrl = data->hwirq / 32;
+>> +		res = ctrl * 12;
+>> +		bit = data->hwirq % 32;
+>> +
+>> +		pp->irq_status[ctrl] &= ~(1 << bit);
+>> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+>> +				    pp->irq_status[ctrl]);
+>> +	}
+>> +
+>> +	spin_unlock_irqrestore(&pp->lock, flags);
+>> +}
+>> +
+>> +static void dw_pci_bottom_unmask(struct irq_data *data)
+>> +{
+>> +	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	unsigned int res, bit, ctrl;
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&pp->lock, flags);
+>> +
+>> +	if (pp->ops->msi_set_irq)
+>> +		pp->ops->msi_set_irq(pp, data->hwirq);
+>> +	else {
+> 
+> Coding-style:
+> 
+>         if (...) {
+>         	...
+>         } else {
+> 
+>> +		ctrl = data->hwirq / 32;
+>> +		res = ctrl * 12;
+>> +		bit = data->hwirq % 32;
+>> +
+>> +		pp->irq_status[ctrl] |= 1 << bit;
+>> +		dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+>> +				    pp->irq_status[ctrl]);
+>> +	}
+
+Yes correct. I did not run the checkpatch, because I was more worried about the
+functionality. I will run it next patch version.
+
+>> +
+>> +	spin_unlock_irqrestore(&pp->lock, flags);
+>> +}
+>> +
+>> +static struct irq_chip dw_pci_msi_bottom_irq_chip = {
+>> +	.name			= "DWPCI-MSI",
+>> +	.irq_compose_msi_msg	= dw_pci_setup_msi_msg,
+>> +	.irq_set_affinity	= dw_pci_msi_set_affinity,
+>> +	.irq_mask		= dw_pci_bottom_mask,
+>> +	.irq_unmask		= dw_pci_bottom_unmask,
+>> +};
+>> +
+>> +static int dw_pcie_irq_domain_alloc(struct irq_domain *domain,
+>> +				    unsigned int virq, unsigned int nr_irqs,
+>> +				    void *args)
+>> +{
+>> +	struct dw_pcie *pci = domain->host_data;
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	unsigned long flags;
+>> +	unsigned long bit;
+>> +	u32 i;
+>> +
+>> +	spin_lock_irqsave(&pp->lock, flags);
+>> +
+>> +	bit = bitmap_find_next_zero_area(pp->msi_irq_in_use, pp->num_vectors, 0,
+>> +					 nr_irqs, 0);
+>> +
+>> +	if (bit >= pp->num_vectors) {
+>> +		spin_unlock_irqrestore(&pp->lock, flags);
+>> +		return -ENOSPC;
+>> +	}
+>> +
+>> +	bitmap_set(pp->msi_irq_in_use, bit, nr_irqs);
+>> +
+>> +	spin_unlock_irqrestore(&pp->lock, flags);
+>> +
+>> +	for (i = 0; i < nr_irqs; i++)
+>> +		irq_domain_set_info(domain, virq + i, bit + i,
+>> +				    &dw_pci_msi_bottom_irq_chip,
+>> +				    domain->host_data, handle_simple_irq,
+>> +				    NULL, NULL);
+>> +
+>> +	return 0;
+> 
+> How does this work when you're using the indirection I've moaned about
+> earlier? How can you guarantee that there are similar number of
+> available vectors?
+
+With MSI_FLAG_MULTI_PCI_MSI, this approach would work properly correct?
+
+> 
+>> +}
+>> +
+>> +static void dw_pcie_irq_domain_free(struct irq_domain *domain,
+>> +				    unsigned int virq, unsigned int nr_irqs)
+>> +{
+>> +	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+>> +	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&pp->lock, flags);
+>> +	bitmap_clear(pp->msi_irq_in_use, data->hwirq, nr_irqs);
+>> +	spin_unlock_irqrestore(&pp->lock, flags);
+>> +}
+>> +
+>> +static const struct irq_domain_ops dw_pcie_msi_domain_ops = {
+>> +	.alloc	= dw_pcie_irq_domain_alloc,
+>> +	.free	= dw_pcie_irq_domain_free,
+>> +};
+>> +
+>> +int dw_pcie_allocate_domains(struct dw_pcie *pci)
+>> +{
+>> +	struct pcie_port *pp = &pci->pp;
+>> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pci->dev->of_node);
+>> +
+>> +	pp->irq_domain = irq_domain_create_linear(fwnode, pp->num_vectors,
+>> +					       &dw_pcie_msi_domain_ops, pci);
+>> +	if (!pp->irq_domain) {
+>> +		dev_err(pci->dev, "failed to create IRQ domain\n");
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	pp->msi_domain = pci_msi_create_irq_domain(fwnode,
+>> +						   &dw_pcie_msi_domain_info,
+>> +						   pp->irq_domain);
+>> +	if (!pp->msi_domain) {
+>> +		dev_err(pci->dev, "failed to create MSI domain\n");
+>> +		irq_domain_remove(pp->irq_domain);
+>> +		return -ENOMEM;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +void dw_pcie_free_msi(struct pcie_port *pp)
+>> +{
+>> +	irq_set_chained_handler(pp->msi_irq, NULL);
+>> +	irq_set_handler_data(pp->msi_irq, NULL);
+>> +
+>> +	irq_domain_remove(pp->msi_domain);
+>> +	irq_domain_remove(pp->irq_domain);
+>> +}
+>> +
+>>  void dw_pcie_msi_init(struct pcie_port *pp)
+>>  {
+>>  	u64 msi_target;
+>> @@ -97,13 +305,14 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>>  
+>>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+>>  {
+>> -	unsigned int res, bit, val;
+>> +	unsigned int res, bit, ctrl;
+>>  
+>> -	res = (irq / 32) * 12;
+>> +	ctrl = irq / 32;
+>> +	res = ctrl * 12;
+>>  	bit = irq % 32;
+>> -	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+>> -	val &= ~(1 << bit);
+>> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+>> +	pp->irq_status[ctrl] &= ~(1 << bit);
+>> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+>> +			    pp->irq_status[ctrl]);
+>>  }
+>>  
+>>  static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+>> @@ -125,13 +334,14 @@ static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+>>  
+>>  static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+>>  {
+>> -	unsigned int res, bit, val;
+>> +	unsigned int res, bit, ctrl;
+>>  
+>> -	res = (irq / 32) * 12;
+>> +	ctrl = irq / 32;
+>> +	res = ctrl * 12;
+>>  	bit = irq % 32;
+>> -	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+>> -	val |= 1 << bit;
+>> -	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+>> +	pp->irq_status[ctrl] |= 1 << bit;
+>> +	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+>> +			    pp->irq_status[ctrl]);
+>>  }
+>>  
+>>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>> @@ -279,11 +489,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  	struct device *dev = pci->dev;
+>>  	struct device_node *np = dev->of_node;
+>>  	struct platform_device *pdev = to_platform_device(dev);
+>> +	struct resource_entry *win, *tmp;
+>>  	struct pci_bus *bus, *child;
+>>  	struct resource *cfg_res;
+>>  	int i, ret;
+>> +
+>>  	LIST_HEAD(res);
+>> -	struct resource_entry *win, *tmp;
+>> +
+>> +	spin_lock_init(&pci->pp.lock);
+>>  
+>>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>>  	if (cfg_res) {
+>> @@ -378,17 +591,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>  
+>>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>>  		if (!pp->ops->msi_host_init) {
+>> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+>> -						MAX_MSI_IRQS, &msi_domain_ops,
+>> -						&dw_pcie_msi_chip);
+>> -			if (!pp->irq_domain) {
+>> -				dev_err(dev, "irq domain init failed\n");
+>> -				ret = -ENXIO;
+>> +			ret = of_property_read_u32(np, "num-vectors",
+>> +						   &pp->num_vectors);
+>> +			if (ret)
+>> +				pp->num_vectors = 1;
+> 
+> 1? As in "one bit only"? Is that a valid configuration? Also, all of
+> this code seems to assume a maximum number of 32 MSIs. Is that a real
+> limitation? Because if that's the case, you can drop all the stuff about
+> ctrl and the '* 12' offset all over the code.
+
+The IP is capable of handling 256, distributed by 8 registers of 32-bit (shifted
+by 12). For now the driver is hardcoded to handle 32 and so you have ctrl = 1 (1
+register).
+
+> 
+> Thanks,
+> 
+> 	M.
+> 
+
+Thanks,
+Joao
