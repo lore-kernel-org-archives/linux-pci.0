@@ -1,64 +1,114 @@
-Return-Path: <SRS0=ZFmV=4Y=linuxonhyperv.com=jloeser@kernel.org>
-Return-Path: <SRS0=ZFmV=4Y=linuxonhyperv.com=jloeser@kernel.org>
-From: Jork Loeser <jloeser@linuxonhyperv.com>
-To: jloeser@microsoft.com,
-	helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org,
-	olaf@aepfle.de,
-	apw@canonical.com,
-	vkuznets@redhat.com,
-	jasowang@redhat.com,
-	leann.ogasawara@canonical.com,
-	marcelo.cerri@canonical.com,
-	sthemmin@microsoft.com
-Subject: [PATCH 1/4] Hyper-V vPCI: Minor format and semantic fix
-Date: Thu, 18 May 2017 12:14:27 -0700
-Message-Id: <1495134870-18225-2-git-send-email-jloeser@linuxonhyperv.com>
-In-Reply-To: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
-References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
-Reply-To: Jork Loeser <jloeser@microsoft.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:32910 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1763104AbdEVXiX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 22 May 2017 19:38:23 -0400
+Date: Mon, 22 May 2017 18:38:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Piotr Gregor <piotrgregor@rsyncme.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: Handle the case when PCI_COMMAND register hasn't
+ changed in INTx masking test
+Message-ID: <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170510122959.4uupohiz3ukzm4c4@debian1.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170510122959.4uupohiz3ukzm4c4@debian1.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jork Loeser <jloeser@microsoft.com>
+Hi Piotr,
 
-Fix comment formatting and use proper integer fields.
+On Wed, May 10, 2017 at 01:30:01PM +0100, Piotr Gregor wrote:
+> The check for interrupt masking support is done by reading
+> the PCI_COMMAND config word
+> 
+> 	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> 
+> then flipping the PCI_COMMAND_INTX_DISABLE bit and writing result back
+> 
+> 	pci_write_config_word(dev, PCI_COMMAND,
+> 		orig ^ PCI_COMMAND_INTX_DISABLE);
+> 
+> The expected result is that following read of the PCI_COMMAND
+> 
+> 	pci_read_config_word(dev, PCI_COMMAND, &new);
+> 
+> returns PCI_COMMAND with only PCI_COMMAND_INTX_DISABLE bit changed.
+> 
+> There are two possible outcomes:
+> 
+> 	1.	Command is the same (hasn't changed)
+> 	2.	Commmand has changed
+> 
+> And the second of them may be decoupled to:
+> 
+> 	2.1	Command changed only for PCI_COMMAND_INTX_DISABLE bit
+> 		(hasn't changed for bits different than PCI_COMMAND_INTX_DISABLE)
+> 	2.2	Command changed for bit(s) different than PCI_COMMAND_INTX_DISABLE bit
+> 		(and maybe for PCI_COMMAND_INTX_DISABLE too)
+> 
+> The 2.1 is expected result and anything else is error.
+> The 2.2 outcome is handled by pci_intx_mask_supported by printing
+> appropriate message to the log, but outcome 1 is not handled.
+> 
+> Log the message about command not being changed at all.
+> 
+> Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+> ---
+>  drivers/pci/pci.c | 14 ++++++++++++--
+>  1 file changed, 12 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..67a611e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3712,7 +3712,7 @@ EXPORT_SYMBOL_GPL(pci_intx);
+>   * pci_intx_mask_supported - probe for INTx masking support
+>   * @dev: the PCI device to operate on
+>   *
+> - * Check if the device dev support INTx masking via the config space
+> + * Check if the device dev supports INTx masking via the config space
+>   * command word.
+>   */
+>  bool pci_intx_mask_supported(struct pci_dev *dev)
+> @@ -3736,11 +3736,21 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+>  	 * go ahead and check it.
+>  	 */
+>  	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+> +		/*
+> +		 * If anything else than PCI_COMMAND_INTX_DISABLE bit has
+> +		 * changed (and maybe PCI_COMMAND_INTX_DISABLE too)
+> +		 */
+>  		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+>  			orig, new);
+>  	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+> +		/*
+> +		 * OK. Only PCI_COMMAND_INTX_DISABLE bit has changed
+> +		 */
+>  		mask_supported = true;
+>  		pci_write_config_word(dev, PCI_COMMAND, orig);
+> +	} else {
+> +		dev_err(&dev->dev, "Command register hasn't changed when written from 0x%x to 0x%x: driver or hardware bug?\n",
+> +			orig, new);
 
-Signed-off-by: Jork Loeser <jloeser@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+Bit 10 was a reserved bit in PCI r2.2 and was defined as
+PCI_COMMAND_INTX_DISABLE in r2.3 of the spec, so I don't think we
+should treat this as an error.
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 8493638..7bebdc6 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -245,7 +245,7 @@ struct pci_packet {
- 
- struct pci_version_request {
- 	struct pci_message message_type;
--	enum pci_message_type protocol_version;
-+	u32 protocol_version;
- } __packed;
- 
- /*
-@@ -1513,12 +1513,12 @@ static void pci_devices_present_work(struct work_struct *work)
- 		put_pcichild(hpdev, hv_pcidev_ref_initial);
- 	}
- 
--	switch(hbus->state) {
-+	switch (hbus->state) {
- 	case hv_pcibus_installed:
- 		/*
--		* Tell the core to rescan bus
--		* because there may have been changes.
--		*/
-+		 * Tell the core to rescan bus
-+		 * because there may have been changes.
-+		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
--- 
-1.7.1
+>  	}
+>  
+>  	pci_cfg_access_unlock(dev);
+> @@ -3798,7 +3808,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>   * @dev: the PCI device to operate on
+>   *
+>   * Check if the device dev has its INTx line asserted, mask it and
+> - * return true in that case. False is returned if not interrupt was
+> + * return true in that case. False is returned if interrupt wasn't
+>   * pending.
+>   */
+>  bool pci_check_and_mask_intx(struct pci_dev *dev)
+> -- 
+> 2.1.4
+> 
