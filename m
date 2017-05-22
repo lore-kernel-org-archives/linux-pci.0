@@ -1,101 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:58060 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765630AbdEXI02 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:26:28 -0400
-Message-Id: <20170524081548.691198590@linutronix.de>
-Date: Wed, 24 May 2017 10:15:31 +0200
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sebastian Siewior <bigeasy@linutronix.de>,
-        Paul McKenney <paulmck@linux.vnet.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [patch V3 20/32] PCI: Use cpu_hotplug_disable() instead of
- get_online_cpus()
-References: <20170524081511.203800767@linutronix.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 05/30] iommu/arm-smmu-v3: Disable tagged pointers when
+ ATS is in use
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-6-jean-philippe.brucker@arm.com>
+From: "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
+Message-ID: <592284D7.60002@huawei.com>
+Date: Mon, 22 May 2017 14:27:35 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170227195441.5170-6-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, LinuxArm <linuxarm@huawei.com>,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Converting the hotplug locking, i.e. get_online_cpus(), to a percpu rwsem
-unearthed a circular lock dependency which was hidden from lockdep due to
-the lockdep annotation of get_online_cpus() which prevents lockdep from
-creating full dependency chains. There are several variants of this. And
-example is:
 
-Chain exists of:
 
-cpu_hotplug_lock.rw_sem --> drm_global_mutex --> &item->mutex
+On 2017/2/28 3:54, Jean-Philippe Brucker wrote:
+> The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
+> MMU mask out bits [63:56] of an address, allowing a userspace application
+> to store data in its pointers.
+> 
+> The ATS doesn't have an architected mechanism to enable TBI, and might
+> create ATC entries for addresses that include a tag. Software would then
+> have to send ATC invalidation packets for each 255 possible alias of an
+> address, or just wipe the whole address space. This is not a viable
+> option, so disable TBI when ATS is in use.
+> 
+> It is unclear for the moment how this restriction will affect user
+> applications. One example I can imagine (with my complete lack of
+> knowledge about JIT engines and their use of tagged pointers) is a JIT
+> translating a WebCL applications that uses SVM. Since this kind of
+> interpreted language doesn't expose addresses, the interpreter and SVM
+> implementations will be given the opportunity to do the right thing and
+> remove tags before handing pointers to devices.
+> 
+> Ideally we should remove TBI only for domains that are susceptible to use
+> ATS. But at the point we're writing the context descriptor of a domain, we
+> are still probing the first device in the group. If that device doesn't
+> have an ATC but the next one does, we would then have to clear the TBI
+> bit, invalidate the ATCs of previous devices, and notify the drivers that
+> their devices cannot use tagged pointers anymore. Such a level of
+> complexity doesn't make any sense here since it is unlikely devices will
+> use tagged pointers at all.
+> 
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> ---
+>  drivers/iommu/arm-smmu-v3.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+> index e7b940146ae3..06b29d4fcf65 100644
+> --- a/drivers/iommu/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm-smmu-v3.c
+> @@ -987,7 +987,7 @@ static void arm_smmu_cmdq_issue_cmd(struct arm_smmu_device *smmu,
+>  }
+>  
+>  /* Context descriptor manipulation functions */
+> -static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
+> +static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_device *smmu, u64 tcr)
+>  {
+>  	u64 val = 0;
+>  
+> @@ -1000,7 +1000,8 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
+>  	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
+>  	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
+>  	val |= ARM_SMMU_TCR2CD(tcr, IPS);
+> -	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+> +	if (!(smmu->features & ARM_SMMU_FEAT_ATS))
+> +		val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+Maybe we should always disable TBI. Otherwise, a device behind a ATS supported or
+non-supported SMMU should use different strategies.
 
-CPU0                    CPU1
-----                    ----
-lock(&item->mutex);
-                        lock(drm_global_mutex);
-                        lock(&item->mutex);
-lock(cpu_hotplug_lock.rw_sem);
+>  
+>  	return val;
+>  }
+> @@ -1014,7 +1015,7 @@ static void arm_smmu_write_ctx_desc(struct arm_smmu_device *smmu,
+>  	 * We don't need to issue any invalidation here, as we'll invalidate
+>  	 * the STE when installing the new entry anyway.
+>  	 */
+> -	val = arm_smmu_cpu_tcr_to_cd(cfg->cd.tcr) |
+> +	val = arm_smmu_cpu_tcr_to_cd(smmu, cfg->cd.tcr) |
+>  #ifdef __BIG_ENDIAN
+>  	      CTXDESC_CD_0_ENDI |
+>  #endif
+> 
 
-because there are dependencies through workqueues. The call chain is:
+-- 
+Thanks!
+BestRegards
 
-	get_online_cpus
-	apply_workqueue_attrs
-	__alloc_workqueue_key
-	ttm_mem_global_init
-	ast_ttm_mem_global_init
-	drm_global_item_ref
-	ast_mm_init
-	ast_driver_load
-	drm_dev_register
-	drm_get_pci_dev
-	ast_pci_probe
-	local_pci_probe
-	work_for_cpu_fn
-	process_one_work
-	worker_thread
 
-This is not a problem of get_online_cpus() recursion, it's a possible
-deadlock undetected by lockdep so far.
-
-The cure is to use cpu_hotplug_disable() instead of get_online_cpus() to
-protect the PCI probing.
-
-There is a side effect to this: cpu_hotplug_disable() makes a concurrent
-cpu hotplug attempt via the sysfs interfaces fail with -EBUSY, but PCI
-probing usually happens during the boot process where no interaction is
-possible. Any later invocations are infrequent enough and concurrent
-hotplug attempts are so unlikely that the danger of user space visible
-regressions is very close to zero. Anyway, thats preferrable over a real
-deadlock.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Sebastian Siewior <bigeasy@linutronix.de>
-Cc: Steven Rostedt <rostedt@goodmis.org>
-Cc: linux-pci@vger.kernel.org
-
----
- drivers/pci/pci-driver.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -349,13 +349,13 @@ static int pci_call_probe(struct pci_dri
- 	if (node >= 0 && node != numa_node_id()) {
- 		int cpu;
- 
--		get_online_cpus();
-+		cpu_hotplug_disable();
- 		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
- 		if (cpu < nr_cpu_ids)
- 			error = work_on_cpu(cpu, local_pci_probe, &ddi);
- 		else
- 			error = local_pci_probe(&ddi);
--		put_online_cpus();
-+		cpu_hotplug_enable();
- 	} else
- 		error = local_pci_probe(&ddi);
- 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
