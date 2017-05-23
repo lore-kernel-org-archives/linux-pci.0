@@ -1,96 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14629 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750979AbdE1K6P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 28 May 2017 06:58:15 -0400
-Date: Sun, 28 May 2017 18:54:16 +0800
-From: "Du, Changbin" <changbin.du@intel.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: "Du, Changbin" <changbin.du@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [Q] What about PCI mmio access alignment?
-Message-ID: <20170528105415.GA17556@intel.com>
-References: <20170525101256.GA12183@intel.com>
- <CAHp75VcfYuDAO-1e0VHOmeudS2dDti1FM8+N+gNVEux-D8PMUQ@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 23 May 2017 13:35:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
+Message-ID: <20170523183548.GB2637@bhelgaas-glaptop.roam.corp.google.com>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+ <20170523172409.GD24431@bhelgaas-glaptop.roam.corp.google.com>
+ <7a46cfa6-3c8a-33a6-a821-da49535c5c8a@free.fr>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="KsGdsel6WgEHnImy"
-In-Reply-To: <CAHp75VcfYuDAO-1e0VHOmeudS2dDti1FM8+N+gNVEux-D8PMUQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <7a46cfa6-3c8a-33a6-a821-da49535c5c8a@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
+ David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, May 23, 2017 at 07:43:16PM +0200, Mason wrote:
+> On 23/05/2017 19:24, Bjorn Helgaas wrote:
+> > On Thu, Apr 20, 2017 at 04:31:25PM +0200, Marc Gonzalez wrote:
+> >> This driver is required to work around several hardware bugs in the
+> >> PCIe controller.
+> >>
+> >> NB: Revision 1 does not support legacy interrupts, or IO space.
+> >>
+> >> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> >> ---
+> >>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
+> >>  drivers/pci/host/Kconfig                             |   8 ++
+> >>  drivers/pci/host/Makefile                            |   1 +
+> >>  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
+> >>  include/linux/pci_ids.h                              |   2 +
+> >>  5 files changed, 204 insertions(+)
+> >> ...
+> > 
+> >> +static int smp8759_config_read(struct pci_bus *bus,
+> >> +		unsigned int devfn, int where, int size, u32 *val)
+> >> +{
+> >> +	int ret;
+> >> +	struct pci_config_window *cfg = bus->sysdata;
+> >> +	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
+> >> +
+> >> +	/*
+> >> +	 * QUIRK #1
+> >> +	 * Reads in configuration space outside devfn 0 return garbage.
+> >> +	 */
+> >> +	if (devfn != 0)
+> >> +		return PCIBIOS_FUNC_NOT_SUPPORTED;
+> >> +
+> >> +	/*
+> >> +	 * QUIRK #2
+> >> +	 * Unfortunately, config and mem spaces are muxed.
+> >> +	 * Linux does not support such a setting, since drivers are free
+> >> +	 * to access mem space directly, at any time.
+> >> +	 * Therefore, we can only PRAY that config and mem space accesses
+> >> +	 * NEVER occur concurrently.
+> >> +	 */
+> >> +	writel_relaxed(1, pcie->mux);
+> >> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
+> >> +	writel_relaxed(0, pcie->mux);
+> > 
+> > This is a major issue and possibly even a security problem.
+> > Unprivileged users can cause config accesses via lspci/setpci.
+> 
+> Since the host bridge doesn't support hotplug in any way,
+> how about setting a flag once enumeration is complete,
+> to prevent all future config accesses?
 
---KsGdsel6WgEHnImy
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+I thought about that, too, but I'm not sure it will work becuase I
+think drivers will need to do at least a few config accesses, e.g.,
+pci_enable_device() may write PCI_COMMAND to set PCI_COMMAND_MEMORY,
+it may read PCI_INTERRUPT_PIN, etc.  And MSI setup requires config
+access, too.
 
-Thank you. I have some experiment on my PC. The result is:
-  o I always can get expected value if the unaligned access doesn't across a
-    DWORD boundary, like readw(bar0+1). I suspect that the chipset should r=
-ead
-    a whole DWORD in behind. This may trigger unexpected behaviour on devic=
-e.
-  o If read across DWORD boundary, I get some intersting value, like
-    readl(bar0+2). For some device, I get a cyclic shifted value of the fir=
-st
-    DWORD, while some device return all FF.
+> > I don't have a good suggestion for addressing it, but if you can't
+> > make this work reliably, you need at least a dev_err() in the probe
+> > function and probably a taint of the kernel (see add_taint()).
+> 
+> There is a chance that the issue will get fixed in rev2
+> of the bridge. But obviously, that won't help for rev1
+> already in the wild.
 
-So my conclusion is that no unaligned access and at least access one DWORD =
-size.
+Hopefully there will be a way to distinguish rev2 from rev1.
 
-On Sat, May 27, 2017 at 06:32:48PM +0300, Andy Shevchenko wrote:
-> On Thu, May 25, 2017 at 1:12 PM, Du, Changbin <changbin.du@intel.com> wro=
-te:
-> > I have a basic quesion about the alignment when access PCI bar mmio spa=
-ce. Is
-> > the address accessed must be DW aligned and count must be DW aligned?
->=20
-> I guess the best answer is PCI architecture specification.
-> Book I have nearby tells me IIDnMS that yes, you have to follow alignment.
->=20
-> > As far as I know, The address field of TLB ignore lower 2 bits and the =
-unit of
-> > length field also is DW. So does it mean above question is Yes? Else wi=
-ll CPU
-> > handle unaligned access for mmio space?
->=20
-> Here you perhaps meant the bus, not the CPU. PCI allows it as long as
-> actual device allows it.
->=20
-> (I recall patch series that tries to micro optimize PCI config space
-> access by grouping some bytes into words or even dwords, and it was
-> rejected).
->=20
-> > I want to know wether below access illegal or not:
-> >   - readb(bar0)
-> >   - readb(bar0 + 1)
-> >   - readl(bar0)
->=20
-> It depends.
->=20
-> --=20
-> With Best Regards,
-> Andy Shevchenko
+Bjorn
 
---=20
-Thanks,
-Changbin Du
-
---KsGdsel6WgEHnImy
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEcBAEBAgAGBQJZKqxXAAoJEAanuZwLnPNUhD0IAKgiMbcU+LGtbAdEAypZACVt
-bIFfNXE8WDWOCrSCJ3bxOnhkraiD9ZfE1tyyud/cldD/59fICbePSSp74Q+Q8j1w
-OWI8JQNATi++NRNBUlF1ZLIOVsCpOblUQts2xkqdsSoWwRa6D22UGqoO8BxiaFam
-NTQNrS/1SSYRHag77Ju+CvZegVobFlpPrOSCN2qXsydBdhMvYzsl+z3CVtTgHHeV
-lWuWB9HovNz0zbhECU7u/gyUQ3wyKmkeSthoMDme+YERvsw2S5ZSQRayn4kPnL+c
-jc6nmbTCWljWAuBa8ZVEUGABv1306dNcRLGYUu4WIy8FGGIUH5DNCdJWg8Ftwqc=
-=+BDH
------END PGP SIGNATURE-----
-
---KsGdsel6WgEHnImy--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
