@@ -1,59 +1,139 @@
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <hch@infradead.org>, <liudongdong3@huawei.com>
-Subject: [PATCH v5 0/2] add MSI support for PCIe port services and DPC IRQ support
-Date: Tue, 23 May 2017 15:23:57 +0100
-Message-ID: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 23 May 2017 09:52:41 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Nate Watterson <nwatters@codeaurora.org>
+Subject: Re: [PATCH V11 08/11] drivers: acpi: Handle IOMMU lookup failure
+ with deferred probing or error
+Message-ID: <20170523085241.GA18204@red-moon>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+ <1491823266-1209-9-git-send-email-sricharan@codeaurora.org>
+ <41668eff-271c-1c4c-7665-3bf0faa74669@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <41668eff-271c-1c4c-7665-3bf0faa74669@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: gregkh@linuxfoundation.org, catalin.marinas@arm.com, will.deacon@arm.com,
+ okaya@codeaurora.org, frowand.list@gmail.com, m.szyprowski@samsung.com,
+ linux-arch@vger.kernel.org, tn@semihalf.com, joro@8bytes.org,
+ linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, lenb@kernel.org,
+ devicetree@vger.kernel.org, arnd@arndb.de, linux-arm-msm@vger.kernel.org,
+ robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ robin.murphy@arm.com, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ Sricharan R <sricharan@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Tue, May 23, 2017 at 02:26:10AM -0400, Nate Watterson wrote:
+> Hi Sricharan,
+> 
+> On 4/10/2017 7:21 AM, Sricharan R wrote:
+> >This is an equivalent to the DT's handling of the iommu master's probe
+> >with deferred probing when the corrsponding iommu is not probed yet.
+> >The lack of a registered IOMMU can be caused by the lack of a driver for
+> >the IOMMU, the IOMMU device probe not having been performed yet, having
+> >been deferred, or having failed.
+> >
+> >The first case occurs when the firmware describes the bus master and
+> >IOMMU topology correctly but no device driver exists for the IOMMU yet
+> >or the device driver has not been compiled in. Return NULL, the caller
+> >will configure the device without an IOMMU.
+> >
+> >The second and third cases are handled by deferring the probe of the bus
+> >master device which will eventually get reprobed after the IOMMU.
+> >
+> >The last case is currently handled by deferring the probe of the bus
+> >master device as well. A mechanism to either configure the bus master
+> >device without an IOMMU or to fail the bus master device probe depending
+> >on whether the IOMMU is optional or mandatory would be a good
+> >enhancement.
+> >
+> >Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> >Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+> >[Lorenzo: Added fixes for dma_coherent_mask overflow, acpi_dma_configure
+> >           called multiple times for same device]
+> >Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> >Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> >---
+> >  drivers/acpi/arm64/iort.c  | 33 ++++++++++++++++++++++++++++++++-
+> >  drivers/acpi/scan.c        | 11 ++++++++---
+> >  drivers/base/dma-mapping.c |  2 +-
+> >  include/acpi/acpi_bus.h    |  2 +-
+> >  include/linux/acpi.h       |  7 +++++--
+> >  5 files changed, 47 insertions(+), 8 deletions(-)
+> >
+> >diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> >index 3dd9ec3..e323ece 100644
+> >--- a/drivers/acpi/arm64/iort.c
+> >+++ b/drivers/acpi/arm64/iort.c
+> >@@ -543,6 +543,14 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+> >  	const struct iommu_ops *ops = NULL;
+> >  	int ret = -ENODEV;
+> >  	struct fwnode_handle *iort_fwnode;
+> >+	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+> >+
+> >+	/*
+> >+	 * If we already translated the fwspec there
+> >+	 * is nothing left to do, return the iommu_ops.
+> >+	 */
+> >+	if (fwspec && fwspec->ops)
+> >+		return fwspec->ops;
+> 
+> Is this logic strictly required? It breaks masters with multiple SIDs
+> as only the first SID is actually added to the master's fwspec.
 
-This patchset:
-1) adds support for MSI interrupt vectors to be used for Roor Port services
-2) adds support for DPC Root Port service interrupt
+My bad, that's indeed a silly bug I introduced. Please let me know if the
+patch below fixes it, we will send it upstream shortly.
 
-The patchset has been tested on Hisilicon Hip08 Chipset
+Lorenzo
 
-Changes from v4:
-- removed meaningless comment
+-- >8 --
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index c5fecf9..e326f2a 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -666,14 +666,6 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ 	int ret = -ENODEV;
+ 	struct fwnode_handle *iort_fwnode;
+ 
+-	/*
+-	 * If we already translated the fwspec there
+-	 * is nothing left to do, return the iommu_ops.
+-	 */
+-	ops = iort_fwspec_iommu_ops(dev->iommu_fwspec);
+-	if (ops)
+-		return ops;
+-
+ 	if (node) {
+ 		iort_fwnode = iort_get_fwnode(node);
+ 		if (!iort_fwnode)
+@@ -735,6 +727,14 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ 	u32 streamid = 0;
+ 	int err;
+ 
++	/*
++	 * If we already translated the fwspec there
++	 * is nothing left to do, return the iommu_ops.
++	 */
++	ops = iort_fwspec_iommu_ops(dev->iommu_fwspec);
++	if (ops)
++		return ops;
++
+ 	if (dev_is_pci(dev)) {
+ 		struct pci_bus *bus = to_pci_dev(dev)->bus;
+ 		u32 rid;
 
-Changes from v3:
-- removed 2 extra lines at the bottom of comments
-
-Changes from v2:
-- Fixed comment mismatch for function pcie_port_enable_irq_vec
-- removed redundant commet on pci_irq_vector()
-
-Changes from v1:
-According to comments from Christoph Hellwig in
-https://www.spinics.net/lists/kernel/msg2508842.html
-and
-https://www.spinics.net/lists/kernel/msg2508850.html
-
-- reduced the calls of pci_alloc_irq_vectors by ORing PCI_IRQ_MSIX and 
-  PCI_IRQ_MSI
-- used a unique macro for the max number of MSI/MSIx interrupt vectors
-- reworked pcie_init_service_irqs() to call pci_alloc_irq_vectors() only
-  for legacy IRQ
 
 
-Gabriele Paoloni (1):
-  PCI/portdrv: add support for different MSI interrupts for PCIe port
-    services
-
-gabriele paoloni (1):
-  PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
-
- drivers/pci/pcie/portdrv.h      |  8 ++++--
- drivers/pci/pcie/portdrv_core.c | 63 +++++++++++++++++++++++++++++------------
- 2 files changed, 50 insertions(+), 21 deletions(-)
-
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
