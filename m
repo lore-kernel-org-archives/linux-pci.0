@@ -1,68 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=t3s2=45=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=t3s2=45=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH] pci: dwc: dra7xx: Depend on appropriate SoC or compile
+ test
+To: Bjorn Helgaas <helgaas@kernel.org>, Peter Robinson <pbrobinson@gmail.com>
+References: <20170515122617.20706-1-pbrobinson@gmail.com>
+ <20170522220056.GF19733@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <b287ce77-505c-a51d-ae73-664e6bd30797@ti.com>
+Date: Tue, 23 May 2017 12:11:19 +0530
 MIME-Version: 1.0
-In-Reply-To: <20170509063439.GC9791@collabora.com>
-References: <20170508150224.GA7458@collabora.com>
- <CAOMZO5DjFxAus3B03Om0xoqxKuY2TkbcjCY1YEUK9s_R8C_DNA@mail.gmail.com>
- <20170509063439.GC9791@collabora.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Tue, 9 May 2017 07:21:24 -0300
-Message-ID: <CAOMZO5CXjb7LVT5ByP1RqgBPkkfRn7PcRPmW3hos=UNXGnok=A@mail.gmail.com>
-Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
- into host-only and core structures
-To: Peter Senna Tschudin <peter.senna@collabora.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, Tim Harvey <tharvey@gateworks.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Kishon Vijay Abraham I <kishon@ti.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170522220056.GF19733@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Peter,
+Hi Bjorn,
 
-On Tue, May 9, 2017 at 3:34 AM, Peter Senna Tschudin
-<peter.senna@collabora.com> wrote:
+On Tuesday 23 May 2017 03:30 AM, Bjorn Helgaas wrote:
+> On Mon, May 15, 2017 at 01:26:17PM +0100, Peter Robinson wrote:
+>> The PCI controller attached to a SoC isn't much use if the core SoC isn't
+>> enabled, unless of course it's compile testing, so add appropriate dependency.
+>>
+>> Signed-off-by: Peter Robinson <pbrobinson@gmail.com>
+> 
+> Applied to pci/host-dra7xx for v4.13, thanks!
+> 
+> Kishon, let me know if you object.  I think I'll start speculatively
+> applying simple patches without maintainer acks to try to streamline
+> things, on the assumption that you'll speak up if you object.
 
-> Something that ocurred to me is that u-boot is initializing the PCI, and
-> the PCI networkd cards.  Ideally this should not affect anything, but
-> can this be related to the issue?
+Sorry for not giving my Ack earlier.
 
-Yes, in order to narrow things down: please boot 4.11 without PCI
-support in U-Boot.
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 
-The problem is that mx6q does not have a way to properly reset the PCI block.
-
-On the board I tested there is no PCI support in U-Boot.
-
-Maybe we need the following approach in U-Boot as Lucas did for Barebox:
-https://git.pengutronix.de/cgit/barebox/commit/?id=f1da98da2760c21487bbba8f7fb957c843a22896
-
-According to this patch that went into 4.11 the bootloader must put
-PCI back in a safe state:
-https://patchwork.kernel.org/patch/9528911
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-Kishon
+> 
+>> ---
+>>  drivers/pci/dwc/Kconfig | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>> index b7e15526d676..d34b6dfbb351 100644
+>> --- a/drivers/pci/dwc/Kconfig
+>> +++ b/drivers/pci/dwc/Kconfig
+>> @@ -16,6 +16,7 @@ config PCIE_DW_EP
+>>  
+>>  config PCI_DRA7XX
+>>  	bool "TI DRA7xx PCIe controller"
+>> +	depends on SOC_DRA7XX || COMPILE_TEST
+>>  	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+>>  	depends on OF && HAS_IOMEM && TI_PIPE3
+>>  	help
+>> -- 
+>> 2.13.0
+>>
