@@ -1,78 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:6839 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbdEaHBj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 03:01:39 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v9 2/4] arm64: dts: hisi: add kirin pcie node
-Date: Wed, 31 May 2017 15:01:07 +0800
-Message-ID: <20170531070109.81569-3-songxiaowei@hisilicon.com>
-In-Reply-To: <20170531070109.81569-1-songxiaowei@hisilicon.com>
-References: <20170531070109.81569-1-songxiaowei@hisilicon.com>
+Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Christoph Hellwig <hch@infradead.org>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "lukas@wunner.de"
+	<lukas@wunner.de>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "mika.westerberg@linux.intel.com"
+	<mika.westerberg@linux.intel.com>,
+        "liudongdong (C)"
+	<liudongdong3@huawei.com>
+Subject: RE: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
+ interrupts for PCIe port services
+Date: Tue, 23 May 2017 14:25:21 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A5484A@FRAEML521-MBX.china.huawei.com>
+References: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495103748-7876-2-git-send-email-gabriele.paoloni@huawei.com>
+ <20170521083234.GA20658@infradead.org>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A45545@FRAEML521-MBX.china.huawei.com>
+ <20170522174411.GA29861@infradead.org>
+In-Reply-To: <20170522174411.GA29861@infradead.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCIe node for hi3660, and add binding documentation.
+Hi Christoph
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: 22 May 2017 18:44
+> To: Gabriele Paoloni
+> Cc: Christoph Hellwig; bhelgaas@google.com; helgaas@kernel.org;
+> Linuxarm; linux-pci@vger.kernel.org; lukas@wunner.de; linux-
+> kernel@vger.kernel.org; mika.westerberg@linux.intel.com; liudongdong
+> (C)
+> Subject: Re: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
+> interrupts for PCIe port services
+>=20
+> On Sun, May 21, 2017 at 03:00:46PM +0000, Gabriele Paoloni wrote:
+> >
+> > I thought that in your previous review you meant to say that we
+> should
+> > avoid 2 instances of the same comment (in this patchset I only have
+> this
+> > instance as I have removed the same comment from patch 2/2...)
+>=20
+> No, there is no pointin the comment.  The whole point of pci_irq_vector
+> is to abstract away from how to get at the interrupt in detail.  There
+> is no need to comment on this at the callsite.  If you think the
+> existing documentation for the function is not good enough send a patch
+> to improve it there instead of commenting the callsites.
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index 3983086bd67b..e8feb2fb4d53 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -156,5 +156,36 @@
- 			clock-names = "uartclk", "apb_pclk";
- 			status = "disabled";
- 		};
-+
-+		pcie@f4000000 {
-+			compatible = "hisilicon,kirin960-pcie";
-+			reg = <0x0 0xf4000000 0x0 0x1000>,
-+			      <0x0 0xff3fe000 0x0 0x1000>,
-+			      <0x0 0xf3f20000 0x0 0x40000>,
-+			      <0x0 0xF5000000 0x0 0x2000>;
-+			reg-names = "dbi", "apb", "phy", "config";
-+			bus-range = <0x0  0x1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x02000000 0x0 0x00000000 0x0
-+				  0xf6000000 0x0 0x2000000>;
-+			num-lanes = <1>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0xf800 0 0 7>;
-+			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
-+					<0x0 0 0 2 &gic 0 0 0  283 4>,
-+					<0x0 0 0 3 &gic 0 0 0  284 4>,
-+					<0x0 0 0 4 &gic 0 0 0  285 4>;
-+			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+				 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+			clock-names = "pcie_phy_ref", "pcie_aux",
-+				      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-+			reset-gpios = <&gpio11 1 0 >;
-+			status = "ok";
-+		};
- 	};
- };
--- 
-2.11.GIT
+Ok got it. I have just sent out v5 where this is fixed.
+Thanks
+Gab
