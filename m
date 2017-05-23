@@ -1,83 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36502 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbdEDUKh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 May 2017 16:10:37 -0400
-From: Thierry Reding <thierry.reding@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>,
-        Stephen Warren <swarren@wwwdotorg.org>,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCH 2/2] PCI: tegra: Do not allocate MSI target memory
-Date: Thu,  4 May 2017 22:10:32 +0200
-Message-Id: <20170504201032.32633-2-thierry.reding@gmail.com>
-In-Reply-To: <20170504201032.32633-1-thierry.reding@gmail.com>
-References: <20170504201032.32633-1-thierry.reding@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=aZCs=45=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=aZCs=45=redhat.com=alex.williamson@kernel.org>
+Date: Tue, 23 May 2017 15:04:04 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Daney <david.daney@cavium.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-pci@vger.kernel.org, Jon Masters
+ <jcm@redhat.com>, Robert Richter <robert.richter@cavium.com>,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 0/2] PCI: Workaround for bus reset on Cavium cn8xxx root
+ ports
+Message-ID: <20170523150404.221b01c7@w520.home>
+In-Reply-To: <20170523204750.GC15055@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170516001736.4001-1-david.daney@cavium.com>
+	<20170523204750.GC15055@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <treding@nvidia.com>
+On Tue, 23 May 2017 15:47:50 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-The PCI host bridge found on Tegra SoCs doesn't require the MSI target
-address to be backed by physical system memory. Writes are intercepted
-within the controller and never make it to the memory pointed to.
+> On Mon, May 15, 2017 at 05:17:34PM -0700, David Daney wrote:
+> > With the recent improvements in arm64 and vfio-pci, we are seeing
+> > failures like this (on cn8890 based systems):
+> > 
+> > [  235.622361] Unhandled fault: synchronous external abort (0x96000210) at 0xfffffc00c1000100
+> > [  235.630625] Internal error: : 96000210 [#1] PREEMPT SMP
+> > .
+> > .
+> > .
+> > [  236.208820] [<fffffc0008411250>] pci_generic_config_read+0x38/0x9c
+> > [  236.214992] [<fffffc0008435ed4>] thunder_pem_config_read+0x54/0x1e8
+> > [  236.221250] [<fffffc0008411620>] pci_bus_read_config_dword+0x74/0xa0
+> > [  236.227596] [<fffffc000841853c>] pci_find_next_ext_capability.part.15+0x40/0xb8
+> > [  236.234896] [<fffffc0008419428>] pci_find_ext_capability+0x20/0x30
+> > [  236.241068] [<fffffc0008423e2c>] pci_restore_vc_state+0x34/0x88
+> > [  236.246979] [<fffffc000841af3c>] pci_restore_state.part.37+0x2c/0x1fc
+> > [  236.253410] [<fffffc000841b174>] pci_dev_restore+0x4c/0x50
+> > [  236.258887] [<fffffc000841b19c>] pci_bus_restore+0x24/0x4c
+> > [  236.264362] [<fffffc000841c2dc>] pci_try_reset_bus+0x7c/0xa0
+> > [  236.270021] [<fffffc00060a1ab0>] vfio_pci_ioctl+0xc34/0xc3c [vfio_pci]
+> > [  236.276547] [<fffffc0005eb0410>] vfio_device_fops_unl_ioctl+0x20/0x30 [vfio]
+> > [  236.283587] [<fffffc000824b314>] do_vfs_ioctl+0xac/0x744
+> > [  236.288890] [<fffffc000824ba30>] SyS_ioctl+0x84/0x98
+> > [  236.293846] [<fffffc0008082ca0>] __sys_trace_return+0x0/0x4
+> > 
+> > These are caused by the inability of the PCIe root port and Intel
+> > e1000e to sucessfully do a bus reset.
+> > 
+> > The proposed fix is to not do a bus reset on these systems.
+> > 
+> > David Daney (2):
+> >   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device.
+> >   PCI: Avoid bus reset for Cavium cn8xxx root ports.
+> > 
+> >  drivers/pci/pci.c    | 4 ++++
+> >  drivers/pci/quirks.c | 8 ++++++++
+> >  2 files changed, 12 insertions(+)  
+> 
+> Applied with Eric's reviewed-by and typo fixes to pci/virtualization for
+> v4.13, thanks!
 
-Since no actual system memory is required, remove the allocation of a
-single page and hardcode the MSI target address with a special address
-that maps to the last 4 KiB page within the range that is reserved for
-system memory and memory-mapped I/O in the FPCI address map.
+Hmm, well let me again express my concerns that I'm really not sure how
+to support this since it removes our last opportunity to reset devices
+that may otherwise have no reset mechanism.  Certain classes of devices
+are entirely unsupportable for the code path indicated above without a
+bus reset.  If we have an endpoint device that goes bonkers at a bus
+reset, at least we know it's going to behave just as poorly no matter
+what the host platform.  This series allows endpoints that work
+perfectly well on one host to be handled differently on another.  It
+certainly suggests something non-spec compliant about the root port
+implementation and I wish there was more analysis about exactly what
+that problem is since this is coming from the hardware vendor.
 
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/pci/host/pci-tegra.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+https://lkml.org/lkml/2017/5/16/662
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index e69f828a9ab2..4f795a5dcbed 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -233,7 +233,6 @@ struct tegra_msi {
- 	struct msi_controller chip;
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
- 	struct irq_domain *domain;
--	unsigned long pages;
- 	struct mutex lock;
- 	u64 phys;
- 	int irq;
-@@ -1550,9 +1549,22 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
- 		goto err;
- 	}
- 
--	/* setup AFI/FPCI range */
--	msi->pages = __get_free_pages(GFP_KERNEL, 0);
--	msi->phys = virt_to_phys((void *)msi->pages);
-+	/*
-+	 * The PCI host bridge on Tegra contains some logic that intercepts
-+	 * MSI writes, which means that the MSI target address doesn't have
-+	 * to point to actual physical memory. Rather than allocating one 4
-+	 * KiB page of system memory that's never used, we can simply pick
-+	 * an arbitrary address within an area reserved for system memory
-+	 * in the FPCI address map.
-+	 *
-+	 * However, in order to avoid confusion, we pick an address that
-+	 * doesn't map to physical memory. The FPCI address map reserves a
-+	 * 1012 GiB region for system memory and memory-mapped I/O. Since
-+	 * none of the Tegra SoCs that contain this PCI host bridge can
-+	 * address more than 16 GiB of system memory, the last 4 KiB of
-+	 * these 1012 GiB is a good candidate.
-+	 */
-+	msi->phys = 0xfcfffff000;
- 
- 	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
- 	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
-@@ -1604,8 +1616,6 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
- 	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
- 	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
- 
--	free_pages(msi->pages, 0);
--
- 	if (msi->irq > 0)
- 		free_irq(msi->irq, pcie);
- 
--- 
-2.12.0
+Thanks,
+Alex
