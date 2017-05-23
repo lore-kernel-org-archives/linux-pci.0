@@ -1,140 +1,181 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Robin Murphy <robin.murphy@arm.com>
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-Date: Tue, 16 May 2017 17:10:04 +0300
-Message-ID: <1825810.fLbCv8umR7@avalon>
-In-Reply-To: <5724f819-40db-e830-1ec1-62c887ba39ee@arm.com>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1924197.MWBQ7kvoOo@avalon> <5724f819-40db-e830-1ec1-62c887ba39ee@arm.com>
+Return-Path: <SRS0=bZRq=45=rsyncme.org=piotrgregor@kernel.org>
+Return-Path: <SRS0=bZRq=45=rsyncme.org=piotrgregor@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Magnus Damm <magnus.damm@gmail.com>, linux-arm-msm@vger.kernel.org,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
- okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com, sricharan@codeaurora.org,
- linux-arm-msm-owner@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170523103904.3a20d0cc@w520.home>
+References: <20170510122959.4uupohiz3ukzm4c4@debian1.home> <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
+ <20170523161929.GA24431@bhelgaas-glaptop.roam.corp.google.com> <20170523103904.3a20d0cc@w520.home>
+From: Piotr Gregor <piotrgregor@rsyncme.org>
+Date: Tue, 23 May 2017 21:25:11 +0100
+Message-ID: <CAK+oA4XK+wg7dSxycJD5WqzW82_o0xdowkFZW8mUyfLcm_+-pw@mail.gmail.com>
+Subject: Re: [PATCH] pci: Handle the case when PCI_COMMAND register hasn't
+ changed in INTx masking test
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+Would the pci_setup_device() be a good place to move this check into?
 
-On Tuesday 16 May 2017 15:04:55 Robin Murphy wrote:
-> On 16/05/17 08:17, Laurent Pinchart wrote:
-> > On Tuesday 16 May 2017 07:53:57 sricharan@codeaurora.org wrote:
-
-[snip]
-
-> >> arch_teardown_dma_ops() being the inverse of arch_setup_dma_ops()
-> >> ,dma_ops should be cleared in the teardown path. Otherwise
-> >> this causes problem when the probe of device is retried after
-> >> being deferred. The device's iommu structures are cleared
-> >> after EPROBEDEFER error, but on the next try dma_ops will still
-> >> be set to old value, which is not right.
-> >> 
-> >> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-> >> ---
-> >> 
-> >>   arch/arm/mm/dma-mapping.c | 1 +
-> >>   1 file changed, 1 insertion(+)
-> >> 
-> >> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> >> index ab4f745..a40f03e 100644
-> >> --- a/arch/arm/mm/dma-mapping.c
-> >> +++ b/arch/arm/mm/dma-mapping.c
-> >> @@ -2358,6 +2358,7 @@ static void arm_teardown_iommu_dma_ops(struct
-> >> device *dev)
-> > 
-> >>   	__arm_iommu_detach_device(dev);
-> >>   	arm_iommu_release_mapping(mapping);
-> >> +	set_dma_ops(dev, NULL);
-> >>   }
-> >>   #else
-> > 
-> > The subject mentions arch_teardown_dma_ops(), which I think is correct,
-> > but the patch adds the set_dma_ops() call to arm_teardown_iommu_dma_ops().
-> > 
-> > However, the situation is perhaps more complex. Note the check at the
-> > beginning of arch_setup_dma_ops():
-> > 	/*
-> > 	 * Don't override the dma_ops if they have already been set. Ideally
-> > 	 * this should be the only location where dma_ops are set, remove this
-> > 	 * check when all other callers of set_dma_ops will have disappeared.
-> > 	 */
-> > 	if (dev->dma_ops)
-> > 		return;
-> > 
-> > If you set the dma_ops to NULL in arm_teardown_iommu_dma_ops() or
-> > arch_teardown_dma_ops(), the next call to arch_setup_dma_ops() will
-> > override them. To be safe you should only set them to NULL if they have
-> > been set by arch_setup_dma_ops(). More than that, arch_teardown_dma_ops()
-> > should probably not call arm_teardown_iommu_dma_ops() at all if the
-> > dma_ops were set by arm_iommu_attach_device() and not
-> > arch_teardown_dma_ops().
-> 
-> Under what circumstances is that an issue? We'll only be tearing down
-> the DMA ops when unbinding the driver,
-
-Or when deferring probe.
-
-> and I think it would be erroneous to expect the device to retain much state
-> after that. Everything else would be set up from scratch again if it get
-> reprobed later, so why not the DMA ops?
-
-Because the DMA ops might have been set elsewhere than arch_setup_dma_ops(). 
-If you look at the patch that added the above warning, its commit message 
-states
-
-commit 26b37b946a5c2658dbc37dd5d6df40aaa9685d70 (iommu-joerg/arm/core)
-Author: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-Date:   Fri May 15 02:00:02 2015 +0300
-
-    arm: dma-mapping: Don't override dma_ops in arch_setup_dma_ops()
-    
-    The arch_setup_dma_ops() function is in charge of setting dma_ops with a
-    call to set_dma_ops(). set_dma_ops() is also called from
-    
-    - highbank and mvebu bus notifiers
-    - dmabounce (to be replaced with swiotlb)
-    - arm_iommu_attach_device
-    
-    (arm_iommu_attach_device is itself called from IOMMU and bus master
-    device drivers)
-    
-    To allow the arch_setup_dma_ops() call to be moved from device add time
-    to device probe time we must ensure that dma_ops already setup by any of
-    the above callers will not be overriden.
-    
-    Aftering replacing dmabounce with swiotlb, converting IOMMU drivers to
-    of_xlate and taking care of highbank and mvebu, the workaround should be
-    removed.
-
-I'm concerned about potentially breaking these if we unconditionally remove 
-the DMA ops and mapping.
-
--- 
-Regards,
-
-Laurent Pinchart
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Tue, May 23, 2017 at 5:39 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Tue, 23 May 2017 11:19:29 -0500
+> Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+>> [+cc Alex]
+>>
+>> On Mon, May 22, 2017 at 06:38:20PM -0500, Bjorn Helgaas wrote:
+>> > Hi Piotr,
+>> >
+>> > On Wed, May 10, 2017 at 01:30:01PM +0100, Piotr Gregor wrote:
+>> > > The check for interrupt masking support is done by reading
+>> > > the PCI_COMMAND config word
+>> > >
+>> > >   pci_read_config_word(dev, PCI_COMMAND, &orig);
+>> > >
+>> > > then flipping the PCI_COMMAND_INTX_DISABLE bit and writing result back
+>> > >
+>> > >   pci_write_config_word(dev, PCI_COMMAND,
+>> > >           orig ^ PCI_COMMAND_INTX_DISABLE);
+>> > >
+>> > > The expected result is that following read of the PCI_COMMAND
+>> > >
+>> > >   pci_read_config_word(dev, PCI_COMMAND, &new);
+>> > >
+>> > > returns PCI_COMMAND with only PCI_COMMAND_INTX_DISABLE bit changed.
+>> > >
+>> > > There are two possible outcomes:
+>> > >
+>> > >   1.      Command is the same (hasn't changed)
+>> > >   2.      Commmand has changed
+>> > >
+>> > > And the second of them may be decoupled to:
+>> > >
+>> > >   2.1     Command changed only for PCI_COMMAND_INTX_DISABLE bit
+>> > >           (hasn't changed for bits different than PCI_COMMAND_INTX_DISABLE)
+>> > >   2.2     Command changed for bit(s) different than PCI_COMMAND_INTX_DISABLE bit
+>> > >           (and maybe for PCI_COMMAND_INTX_DISABLE too)
+>> > >
+>> > > The 2.1 is expected result and anything else is error.
+>> > > The 2.2 outcome is handled by pci_intx_mask_supported by printing
+>> > > appropriate message to the log, but outcome 1 is not handled.
+>> > >
+>> > > Log the message about command not being changed at all.
+>> > >
+>> > > Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+>> > > ---
+>> > >  drivers/pci/pci.c | 14 ++++++++++++--
+>> > >  1 file changed, 12 insertions(+), 2 deletions(-)
+>> > >
+>> > > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> > > index b01bd5b..67a611e 100644
+>> > > --- a/drivers/pci/pci.c
+>> > > +++ b/drivers/pci/pci.c
+>> > > @@ -3712,7 +3712,7 @@ EXPORT_SYMBOL_GPL(pci_intx);
+>> > >   * pci_intx_mask_supported - probe for INTx masking support
+>> > >   * @dev: the PCI device to operate on
+>> > >   *
+>> > > - * Check if the device dev support INTx masking via the config space
+>> > > + * Check if the device dev supports INTx masking via the config space
+>> > >   * command word.
+>> > >   */
+>> > >  bool pci_intx_mask_supported(struct pci_dev *dev)
+>> > > @@ -3736,11 +3736,21 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+>> > >    * go ahead and check it.
+>> > >    */
+>> > >   if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+>> > > +         /*
+>> > > +          * If anything else than PCI_COMMAND_INTX_DISABLE bit has
+>> > > +          * changed (and maybe PCI_COMMAND_INTX_DISABLE too)
+>> > > +          */
+>> > >           dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+>> > >                   orig, new);
+>> > >   } else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+>> > > +         /*
+>> > > +          * OK. Only PCI_COMMAND_INTX_DISABLE bit has changed
+>> > > +          */
+>> > >           mask_supported = true;
+>> > >           pci_write_config_word(dev, PCI_COMMAND, orig);
+>> > > + } else {
+>> > > +         dev_err(&dev->dev, "Command register hasn't changed when written from 0x%x to 0x%x: driver or hardware bug?\n",
+>> > > +                 orig, new);
+>> >
+>> > Bit 10 was a reserved bit in PCI r2.2 and was defined as
+>> > PCI_COMMAND_INTX_DISABLE in r2.3 of the spec, so I don't think we
+>> > should treat this as an error.
+>
+> Agreed, the only reason I can think that we'd ever want to point this
+> out as a hardware bug would be if the device is PCI-express or if we
+> can find other evidence in config space that the device should be
+> compliant to the PCI 2.3 spec.  Also, dev_err is sort of justified in
+> the original error case because something unexpected happened.  The
+> register is being poked from somewhere else or changed spontaneously.
+> Not supporting INTx masking is a completely valid state for hardware,
+> so I'd at best consider it a dev_dbg level test.
+>
+>>
+>> If we make a change here, I think it should be simplified to look like
+>> this:
+>>
+>>   pci_cfg_access_lock(dev);
+>>
+>>   pci_read_config_word(dev, PCI_COMMAND, &orig);
+>>   toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
+>>   pci_write_config_word(dev, PCI_COMMAND, toggle);
+>>   pci_read_config_word(dev, PCI_COMMAND, &new);
+>>   pci_write_config_word(dev, PCI_COMMAND, orig);
+>>
+>>   pci_cfg_access_unlock(dev);
+>>
+>>   if (new == toggle)
+>>     return true;
+>>
+>>   return false;
+>>
+>> I don't really see the value in cluttering the code to check for
+>> things that "can't happen."  There's an infinite amount of that sort
+>> of stuff.  If we know about possible issues, that's one thing, but
+>> this seems like just looking for trouble.
+>
+> I can imagine it being useful to allow a user to have some visibility
+> to this property for a device, but a printk doesn't feel like a useful
+> way to do that.  I don't know if it's worth a sysfs attribute though.
+>
+>> It makes me a little nervous to have this interface that toggles
+>> PCI_COMMAND_INTX_DISABLE at run-time.  This could be called after a
+>> driver has set up interrupts, and I think there are some interactions
+>> between INTx and MSI/MSI-X that might cause unexpected things to
+>> happen if we toggle PCI_COMMAND_INTX_DISABLE.
+>>
+>> I'd rather have the core check it once during enumeration (before we
+>> give it to a driver and before any interrupts are configured) and save
+>> the result in struct pci_dev.
+>
+> I think that would be fine, the only users are uio and vfio, the former
+> testing it in the probe function, the latter testing it before giving
+> the user access to the device (and therefore before interrupts are
+> configured).  Thanks,
+>
+> Alex
+>
+>>
+>> > >   }
+>> > >
+>> > >   pci_cfg_access_unlock(dev);
+>> > > @@ -3798,7 +3808,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>> > >   * @dev: the PCI device to operate on
+>> > >   *
+>> > >   * Check if the device dev has its INTx line asserted, mask it and
+>> > > - * return true in that case. False is returned if not interrupt was
+>> > > + * return true in that case. False is returned if interrupt wasn't
+>> > >   * pending.
+>>
+>> We should definitely fix this typo.  Maybe "if no interrupt was
+>> pending"?
+>>
+>> > >   */
+>> > >  bool pci_check_and_mask_intx(struct pci_dev *dev)
+>> > > --
+>> > > 2.1.4
+>> > >
+>
