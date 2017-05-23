@@ -1,19 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1494423139.2322.60.camel@pengutronix.de>
-Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
- into host-only and core structures
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Fabio Estevam <festevam@gmail.com>
-Date: Wed, 10 May 2017 15:32:19 +0200
-In-Reply-To: <CAOMZO5CwtT=Zz8+CrT2TA5W7YHFRnDKgthRyChvUpF+f_QsYcQ@mail.gmail.com>
-References: <20170508150224.GA7458@collabora.com>
- <CAOMZO5DjFxAus3B03Om0xoqxKuY2TkbcjCY1YEUK9s_R8C_DNA@mail.gmail.com>
- <20170509063439.GC9791@collabora.com>
- <CAOMZO5CXjb7LVT5ByP1RqgBPkkfRn7PcRPmW3hos=UNXGnok=A@mail.gmail.com>
- <20170510131722.GA29556@collabora.com>
- <CAOMZO5CwtT=Zz8+CrT2TA5W7YHFRnDKgthRyChvUpF+f_QsYcQ@mail.gmail.com>
-Mime-Version: 1.0
+Date: Tue, 23 May 2017 15:47:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Daney <david.daney@cavium.com>
+Subject: Re: [PATCH 0/2] PCI: Workaround for bus reset on Cavium cn8xxx root
+ ports
+Message-ID: <20170523204750.GC15055@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170516001736.4001-1-david.daney@cavium.com>
+MIME-Version: 1.0
+In-Reply-To: <20170516001736.4001-1-david.daney@cavium.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,78 +16,54 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, Tim Harvey <tharvey@gateworks.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Kishon Vijay Abraham I <kishon@ti.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Peter Senna Tschudin <peter.senna@collabora.com>,
- Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Robert Richter <robert.richter@cavium.com>, Jon Masters <jcm@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 10.05.2017, 10:27 -0300 schrieb Fabio Estevam:
-> On Wed, May 10, 2017 at 10:17 AM, Peter Senna Tschudin
-> <peter.senna@collabora.com> wrote:
-> > On Tue, May 09, 2017 at 07:21:24AM -0300, Fabio Estevam wrote:
-> >> Hi Peter,
-> >>
-> >> On Tue, May 9, 2017 at 3:34 AM, Peter Senna Tschudin
-> >> <peter.senna@collabora.com> wrote:
-> >>
-> >> > Something that ocurred to me is that u-boot is initializing the PCI, and
-> >> > the PCI networkd cards.  Ideally this should not affect anything, but
-> >> > can this be related to the issue?
-> >>
-> >> Yes, in order to narrow things down: please boot 4.11 without PCI
-> >> support in U-Boot.
-> >
-> > Yes, removing the PCI code from u-boot makes 4.11 to boot. But latest
-> > next still hangs.
+On Mon, May 15, 2017 at 05:17:34PM -0700, David Daney wrote:
+> With the recent improvements in arm64 and vfio-pci, we are seeing
+> failures like this (on cn8890 based systems):
 > 
-> Ok, good. At least we see the same behaviour now.
+> [  235.622361] Unhandled fault: synchronous external abort (0x96000210) at 0xfffffc00c1000100
+> [  235.630625] Internal error: : 96000210 [#1] PREEMPT SMP
+> .
+> .
+> .
+> [  236.208820] [<fffffc0008411250>] pci_generic_config_read+0x38/0x9c
+> [  236.214992] [<fffffc0008435ed4>] thunder_pem_config_read+0x54/0x1e8
+> [  236.221250] [<fffffc0008411620>] pci_bus_read_config_dword+0x74/0xa0
+> [  236.227596] [<fffffc000841853c>] pci_find_next_ext_capability.part.15+0x40/0xb8
+> [  236.234896] [<fffffc0008419428>] pci_find_ext_capability+0x20/0x30
+> [  236.241068] [<fffffc0008423e2c>] pci_restore_vc_state+0x34/0x88
+> [  236.246979] [<fffffc000841af3c>] pci_restore_state.part.37+0x2c/0x1fc
+> [  236.253410] [<fffffc000841b174>] pci_dev_restore+0x4c/0x50
+> [  236.258887] [<fffffc000841b19c>] pci_bus_restore+0x24/0x4c
+> [  236.264362] [<fffffc000841c2dc>] pci_try_reset_bus+0x7c/0xa0
+> [  236.270021] [<fffffc00060a1ab0>] vfio_pci_ioctl+0xc34/0xc3c [vfio_pci]
+> [  236.276547] [<fffffc0005eb0410>] vfio_device_fops_unl_ioctl+0x20/0x30 [vfio]
+> [  236.283587] [<fffffc000824b314>] do_vfs_ioctl+0xac/0x744
+> [  236.288890] [<fffffc000824ba30>] SyS_ioctl+0x84/0x98
+> [  236.293846] [<fffffc0008082ca0>] __sys_trace_return+0x0/0x4
 > 
-> We still need a fix for the mx6q hang on systems with PCI switch for
-> linux/next or 4.12-rc1.
-
-I will take a look at this today.
-
+> These are caused by the inability of the PCIe root port and Intel
+> e1000e to sucessfully do a bus reset.
 > 
-> >> The problem is that mx6q does not have a way to properly reset the PCI block.
-> >>
-> >> On the board I tested there is no PCI support in U-Boot.
-> >>
-> >> Maybe we need the following approach in U-Boot as Lucas did for Barebox:
-> >> https://git.pengutronix.de/cgit/barebox/commit/?id=f1da98da2760c21487bbba8f7fb957c843a22896
-> >
-> > Maybe we do need, but the kernel is working on v4.10 for our use case,
-> > and it is not working any longer on v4.11. What is the way to continue
-> > from here?
+> The proposed fix is to not do a bus reset on these systems.
 > 
-> There is no other way other than fixing U-Boot on this case.
+> David Daney (2):
+>   PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device.
+>   PCI: Avoid bus reset for Cavium cn8xxx root ports.
+> 
+>  drivers/pci/pci.c    | 4 ++++
+>  drivers/pci/quirks.c | 8 ++++++++
+>  2 files changed, 12 insertions(+)
 
-You could also revert the change in the kernel if you are absolutely
-sure that this won't cause issues on your system (you are not using the
-internal watchdog etc.).
-
-But for the long run and to make sure that _all_ use-cases work
-properly, there is no way around fixing your bootloader to behave
-correctly.
-
-Regards,
-Lucas
-
+Applied with Eric's reviewed-by and typo fixes to pci/virtualization for
+v4.13, thanks!
 
 _______________________________________________
 linux-arm-kernel mailing list
