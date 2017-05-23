@@ -1,60 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33226 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751116AbdEaQvf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 31 May 2017 12:51:35 -0400
-Date: Wed, 31 May 2017 11:51:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: rakesh@tuxera.com, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] PCI: ensure the PCI device is locked over ->reset_notify
- calls
-Message-ID: <20170531165131.GA4496@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170523054202.7985-1-hch@lst.de>
- <20170523054202.7985-2-hch@lst.de>
- <20170530222844.GE14896@bhelgaas-glaptop.roam.corp.google.com>
- <20170531045848.GA4001@lst.de>
+Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+ <20170523172409.GD24431@bhelgaas-glaptop.roam.corp.google.com>
+ <7a46cfa6-3c8a-33a6-a821-da49535c5c8a@free.fr>
+ <20170523183548.GB2637@bhelgaas-glaptop.roam.corp.google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <9bb2fdd4-59c3-13e9-7c7d-65107be6a32d@free.fr>
+Date: Tue, 23 May 2017 21:29:05 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170531045848.GA4001@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170523183548.GB2637@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 31, 2017 at 06:58:48AM +0200, Christoph Hellwig wrote:
-> On Tue, May 30, 2017 at 05:28:44PM -0500, Bjorn Helgaas wrote:
-> > [+cc Alex]
-> > 
-> > On Tue, May 23, 2017 at 07:42:02AM +0200, Christoph Hellwig wrote:
-> > > Without this ->notify_reset instance may race with ->remove calls,
-> > 
-> > Do you mean the .reset_notify() method in struct pci_error_handlers?
-> > I don't see a "notify_reset" symbol.
+On 23/05/2017 20:35, Bjorn Helgaas wrote:
+> On Tue, May 23, 2017 at 07:43:16PM +0200, Mason wrote:
+>> On 23/05/2017 19:24, Bjorn Helgaas wrote:
+>>> On Thu, Apr 20, 2017 at 04:31:25PM +0200, Marc Gonzalez wrote:
+>>>> This driver is required to work around several hardware bugs in the
+>>>> PCIe controller.
+>>>>
+>>>> NB: Revision 1 does not support legacy interrupts, or IO space.
+>>>>
+>>>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+>>>> ---
+>>>>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
+>>>>  drivers/pci/host/Kconfig                             |   8 ++
+>>>>  drivers/pci/host/Makefile                            |   1 +
+>>>>  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
+>>>>  include/linux/pci_ids.h                              |   2 +
+>>>>  5 files changed, 204 insertions(+)
+>>>> ...
+>>>
+>>>> +static int smp8759_config_read(struct pci_bus *bus,
+>>>> +		unsigned int devfn, int where, int size, u32 *val)
+>>>> +{
+>>>> +	int ret;
+>>>> +	struct pci_config_window *cfg = bus->sysdata;
+>>>> +	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
+>>>> +
+>>>> +	/*
+>>>> +	 * QUIRK #1
+>>>> +	 * Reads in configuration space outside devfn 0 return garbage.
+>>>> +	 */
+>>>> +	if (devfn != 0)
+>>>> +		return PCIBIOS_FUNC_NOT_SUPPORTED;
+>>>> +
+>>>> +	/*
+>>>> +	 * QUIRK #2
+>>>> +	 * Unfortunately, config and mem spaces are muxed.
+>>>> +	 * Linux does not support such a setting, since drivers are free
+>>>> +	 * to access mem space directly, at any time.
+>>>> +	 * Therefore, we can only PRAY that config and mem space accesses
+>>>> +	 * NEVER occur concurrently.
+>>>> +	 */
+>>>> +	writel_relaxed(1, pcie->mux);
+>>>> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
+>>>> +	writel_relaxed(0, pcie->mux);
+>>>
+>>> This is a major issue and possibly even a security problem.
+>>> Unprivileged users can cause config accesses via lspci/setpci.
+>>
+>> Since the host bridge doesn't support hotplug in any way,
+>> how about setting a flag once enumeration is complete,
+>> to prevent all future config accesses?
 > 
-> Yes.
+> I thought about that, too, but I'm not sure it will work becuase I
+> think drivers will need to do at least a few config accesses, e.g.,
+> pci_enable_device() may write PCI_COMMAND to set PCI_COMMAND_MEMORY,
+> it may read PCI_INTERRUPT_PIN, etc.  And MSI setup requires config
+> access, too.
 > 
-> > Can you elaborate on exactly how this race happens?  I'm trying to
-> > figure out whether this is also a problem or potential problem with
-> > other reset paths like pci_try_reset_function(), pci_reset_bus(),
-> > pci_try_reset_bus(), pci_reset_slot(), and pci_try_reset_slot().
-> > 
-> > What does the race look like when it happens?  Oops, panic, etc?
-> > 
-> > Can this also be triggered via the sysfs "reset" file?
+>>> I don't have a good suggestion for addressing it, but if you can't
+>>> make this work reliably, you need at least a dev_err() in the probe
+>>> function and probably a taint of the kernel (see add_taint()).
+>>
+>> There is a chance that the issue will get fixed in rev2
+>> of the bridge. But obviously, that won't help for rev1
+>> already in the wild.
 > 
-> Here is the original bug report:
-> 
-> http://lists.infradead.org/pipermail/linux-nvme/2017-May/010345.html
-> 
-> the issue is triggered through sysfs.
+> Hopefully there will be a way to distinguish rev2 from rev1.
 
-Thanks.
+rev2 is embedded in a new SoC, so the DT node will specify a
+different compatible string. A "preview" of the intent was
+given in an older patch:
+"[RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge"
 
-Do you have any thoughts on whether the paths I mentioned above are
-also susceptible?
-
-I don't want to apply a patch that fixes one issue while leaving
-similar ones unfixed.
-
-Bjorn
+Regards.
