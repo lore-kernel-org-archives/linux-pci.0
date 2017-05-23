@@ -1,40 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:52421 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751824AbdEWFZs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 01:25:48 -0400
-Date: Mon, 22 May 2017 22:25:46 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>,
-        Alexander Duyck <alexander.h.duyck@intel.com>,
-        oss-drivers@netronome.com
-Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
-Message-ID: <20170523052546.GA1408@infradead.org>
-References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v4 0/2] Tango PCIe controller support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <20170523171758.GC24431@bhelgaas-glaptop.roam.corp.google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <cb5d08d6-bbbe-486f-b721-2eeeb410ab5e@free.fr>
+Date: Tue, 23 May 2017 20:07:53 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170522225023.14010-1-jakub.kicinski@netronome.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170523171758.GC24431@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:
-> PCI core sets the driver pointer before calling ->probe() and only
-> clears it after ->remove().  This means driver's ->sriov_configure()
-> callback will happily race with probe() and remove(), most likely
-> leading to BUGs, since drivers don't expect this.
+On 23/05/2017 19:17, Bjorn Helgaas wrote:
+>
+> On Thu, Apr 20, 2017 at 04:24:39PM +0200, Marc Gonzalez wrote:
+>
+>> This patch was split in two, to ease review of two orthogonal
+>> parts (MSI controller and host bridge). NB: the patch is
+>> just split in two where host bridge support starts.
 > 
-> We could reorder pointer assignments, or try detecting races in all
-> drivers, but it seems simpler and cleaner to just hold the device lock
-> instead of special SR-IOV lock, since that lock is already supposed
-> to synchronize the driver callbacks.
-> 
-> Remove the iov lock completely, since we remove the last user.
+> The split is backwards.  The first patch should add basic host bridge
+> support that is functional, though lacking MSI support.  The second should
+> add the MSI support.
 
-Having just debugged a different method vs ->remove race I violently
-agree.
+OK, I'll invert the patches.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Note: the bridge does not support legacy interrupts.
+Without MSI support, EPs can't interrupt the host.
+Is that still considered functional?
+
+Regards.
