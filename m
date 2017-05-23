@@ -1,78 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:54969 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750866AbdE2IDz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 May 2017 04:03:55 -0400
-Subject: Re: [pci:pci/host-qcom 1/2] drivers/pci/dwc/pcie-qcom.c:587:27:
- error: 'struct qcom_pcie' has no member named 'pp'
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        kbuild test robot <fengguang.wu@intel.com>
-References: <201705251416.wWZWNQ8s%fengguang.wu@intel.com>
- <CAErSpo5snPK3t7EKmCsrNOEgeCPK+hMX=PrUp3NwOUTkUDhSQg@mail.gmail.com>
-Cc: "kbuild-all@01.org" <kbuild-all@01.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: John Crispin <john@phrozen.org>
-Message-ID: <e26abbfd-b5c6-3e88-f91a-aeb1515d91f8@phrozen.org>
-Date: Mon, 29 May 2017 10:03:53 +0200
+Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <bhelgaas@google.com>, <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
+        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
+        <hch@infradead.org>, <liudongdong3@huawei.com>
+Subject: [PATCH v5 1/2] PCI/portdrv: add support for different MSI interrupts for PCIe port services
+Date: Tue, 23 May 2017 15:23:58 +0100
+Message-ID: <1495549439-10372-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo5snPK3t7EKmCsrNOEgeCPK+hMX=PrUp3NwOUTkUDhSQg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
+Currently PCIe port services are assigned with different interrutps
+only if MSI-x are supported by calling pcie_port_enable_msix().
+If a root port supports MSI instead of MSI-x currently we fall back
+to use a single shared interrupt for all the services.
+This patch renames and extends pcie_port_enable_msix() to use MSI in
+case MSI-x allocation fails.
 
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/pcie/portdrv.h      |  8 +++++---
+ drivers/pci/pcie/portdrv_core.c | 38 ++++++++++++++++++++------------------
+ 2 files changed, 25 insertions(+), 21 deletions(-)
 
-On 25/05/17 21:58, Bjorn Helgaas wrote:
-> I think I fixed the problems below, but I'm a little confused as to
-> why you didn't see them when you built this code.  So please
-> double-check https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-qcom&id=a06cb1bf781789efb54c0f01a49e3011df9592ae
-> and make sure I did it correctly.
-
-yes the fix is correct. I was runtime testing on an older kernel rev. 
-and apparently did not correctly compile test the version i sent on 
-latest head.
-
-     John
-
->
-> On Thu, May 25, 2017 at 1:53 AM, kbuild test robot
-> <fengguang.wu@intel.com> wrote:
->> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-qcom
->> head:   ebacba9579462bdc009f4cfc1b605b3ca7a7a1d2
->> commit: c48a46bd07da450476175f9081e83db29441d9d3 [1/2] PCI: qcom: Add support for IPQ4019 PCIe controller
->> config: arm-allmodconfig (attached as .config)
->> compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
->> reproduce:
->>          wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->>          chmod +x ~/bin/make.cross
->>          git checkout c48a46bd07da450476175f9081e83db29441d9d3
->>          # save the attached .config to linux build tree
->>          make.cross ARCH=arm
->>
->> All errors (new ones prefixed by >>):
->>
->>     drivers/pci/dwc/pcie-qcom.c: In function 'qcom_pcie_get_resources_v3':
->>>> drivers/pci/dwc/pcie-qcom.c:587:27: error: 'struct qcom_pcie' has no member named 'pp'
->>       struct device *dev = pcie->pp.dev;
->>                                ^~
->>     drivers/pci/dwc/pcie-qcom.c: In function 'qcom_pcie_init_v3':
->>     drivers/pci/dwc/pcie-qcom.c:673:27: error: 'struct qcom_pcie' has no member named 'pp'
->>       struct device *dev = pcie->pp.dev;
->>                                ^~
->>
->> vim +587 drivers/pci/dwc/pcie-qcom.c
->>
->>     581          return 0;
->>     582  }
->>     583
->>     584  static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
->>     585  {
->>     586          struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
->>   > 587          struct device *dev = pcie->pp.dev;
->>     588
->>     589          res->aux_clk = devm_clk_get(dev, "aux");
->>     590          if (IS_ERR(res->aux_clk))
->>
->> ---
->> 0-DAY kernel test infrastructure                Open Source Technology Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
+index 587aef3..1993e2c 100644
+--- a/drivers/pci/pcie/portdrv.h
++++ b/drivers/pci/pcie/portdrv.h
+@@ -13,10 +13,12 @@
+ 
+ #define PCIE_PORT_DEVICE_MAXSERVICES   5
+ /*
+- * According to the PCI Express Base Specification 2.0, the indices of
+- * the MSI-X table entries used by port services must not exceed 31
++ * According to the PCI Express Base Specification REV. 3.1 and according
++ * to the PCI Local Bus Specification REV. 3.0 respectively, the indices of
++ * the MSI-X table entries or the max number of MSI vectors used by port
++ * services must not exceed 31
+  */
+-#define PCIE_PORT_MAX_MSIX_ENTRIES	32
++#define PCIE_PORT_MAX_MSI_ENTRIES	32
+ 
+ #define get_descriptor_id(type, service) (((type - 4) << 8) | service)
+ 
+diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+index cea504f..07d8e01 100644
+--- a/drivers/pci/pcie/portdrv_core.c
++++ b/drivers/pci/pcie/portdrv_core.c
+@@ -44,14 +44,15 @@ static void release_pcie_device(struct device *dev)
+ }
+ 
+ /**
+- * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for given port
++ * pcie_port_enable_irq_vec - try to set up MSI-X or MSI as interrupt mode
++ * for given port
+  * @dev: PCI Express port to handle
+  * @irqs: Array of interrupt vectors to populate
+  * @mask: Bitmask of port capabilities returned by get_port_device_capability()
+  *
+  * Return value: 0 on success, error code on failure
+  */
+-static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
++static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
+ {
+ 	int nr_entries, entry, nvec = 0;
+ 
+@@ -61,8 +62,8 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 	 * equal to the number of entries this port actually uses, we'll happily
+ 	 * go through without any tricks.
+ 	 */
+-	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSIX_ENTRIES,
+-			PCI_IRQ_MSIX);
++	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
++			PCI_IRQ_MSIX | PCI_IRQ_MSI);
+ 	if (nr_entries < 0)
+ 		return nr_entries;
+ 
+@@ -77,7 +78,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		 * Number field in the PCI Express Capabilities register", where
+ 		 * according to Section 7.8.2 of the specification "For MSI-X,
+ 		 * the value in this field indicates which MSI-X Table entry is
+-		 * used to generate the interrupt message."
++		 * used to generate the interrupt message." and "For MSI, the
++		 * value in this field indicates the offset between the base
++		 * Message Data and the interrupt message that is generated."
+ 		 */
+ 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
+ 		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
+@@ -100,7 +103,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 		 * MSI/MSI-X vectors assigned to the port is going to be used
+ 		 * for AER, where "For MSI-X, the value in this register
+ 		 * indicates which MSI-X Table entry is used to generate the
+-		 * interrupt message."
++		 * interrupt message."  and "For MSI, the value
++		 * in this field indicates the offset between the base Message
++		 * Data and the interrupt message that is generated."
+ 		 */
+ 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+ 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
+@@ -124,7 +129,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+ 
+ 		/* Now allocate the MSI-X vectors for real */
+ 		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
+-				PCI_IRQ_MSIX);
++				PCI_IRQ_MSIX | PCI_IRQ_MSI);
+ 		if (nr_entries < 0)
+ 			return nr_entries;
+ 	}
+@@ -146,26 +151,23 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+  */
+ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
+ {
+-	unsigned flags = PCI_IRQ_LEGACY | PCI_IRQ_MSI;
+ 	int ret, i;
+ 
+ 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
+ 		irqs[i] = -1;
+ 
+ 	/*
+-	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
+-	 * INTx or other interrupts, e.g. system shared interrupt.
++	 * Make sure MSI can be used for PCIe PME or hotplug. otherwise we have
++	 * to use INTx or other interrupts, e.g. system shared interrupt.
+ 	 */
+-	if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
+-	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
+-		flags &= ~PCI_IRQ_MSI;
+-	} else {
+-		/* Try to use MSI-X if supported */
+-		if (!pcie_port_enable_msix(dev, irqs, mask))
++	if (!((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) &&
++	    !((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi()))
++		/* Try to use MSI-X or MSI if supported */
++		if (!pcie_port_enable_irq_vec(dev, irqs, mask))
+ 			return 0;
+-	}
+ 
+-	ret = pci_alloc_irq_vectors(dev, 1, 1, flags);
++	/* fall back to legacy IRQ */
++	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_LEGACY);
+ 	if (ret < 0)
+ 		return -ENODEV;
+ 
+-- 
+2.7.4
