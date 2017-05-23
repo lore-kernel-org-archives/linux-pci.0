@@ -1,12 +1,22 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 0/2] Add PCIe host driver support for Mediatek SoCs
-Date: Thu, 4 May 2017 17:32:54 +0800
-Message-ID: <1493890376-6713-1-git-send-email-ryder.lee@mediatek.com>
-MIME-Version: 1.0
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
+ geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org
+Subject: [PATCH v5 2/5] iommu: of: Ignore all errors except EPROBE_DEFER
+Date: Tue, 23 May 2017 18:31:30 +0530
+Message-Id: <1495544493-14219-2-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
+References: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,56 +24,71 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
+Cc: sricharan@codeaurora.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+While deferring the probe of IOMMU masters, xlate and
+add_device callbacks called from of_iommu_configure
+can pass back error values like -ENODEV, which means
+the IOMMU cannot be connected with that master for real
+reasons. Before the IOMMU probe deferral, all such errors
+were ignored. Now all those errors are propagated back,
+killing the master's probe for such errors. Instead ignore
+all the errors except EPROBE_DEFER, which is the only one
+of concern and let the master work without IOMMU, thus
+restoring the old behavior. Also make explicit that
+of_dma_configure handles only -EPROBE_DEFER from
+of_iommu_configure.
 
-This patch series add Mediatek Gen2 PCIe host controller driver and
-dt-binding document. It can be found on MT7623 series SoCs.
+Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Tested-by: Magnus Damn <magnus.damn@gmail.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+[v5] Added the check in of_dma_configure
 
-This driver was validated using Broadcom Tigon3 and Intel(R) 82575/82576
-gigabit ethernet card.
+ drivers/iommu/of_iommu.c | 6 ++++++
+ drivers/of/device.c      | 4 ++--
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-Changes since v2:
-- modify Kconfig to avoid kbuild test error on some architecture.
-- change compatible string.
-- revise binding document:
-  add missing interrupt-names.
-  remove the board dts example and drop 'status' properties.
-  remove unnecessary descriptions bout standard PCI bus binding.
-
-Changes since v1:
-- add .suppress_bind_attrs.
-- remove unnecessary *_valid_device() pattern.
-- remove PCI_PROBE_ONLY.
-- use the regular readl() instead of readl_relaxed().
-- add .map_bus() and change to use pci_generic_config_read/pci_generic_config_write.
-- revise dt-binding document and move nonstandard properties to root node.
-- change compatible string.
-- use interrupt-map property and replace mtk_pcie_map_irq() with of_irq_parse_and_map_pci().
-- use the new pci_register_host_bridge() method instead of pci_scan_root_bus().
-
-Ryder Lee (2):
-  PCI: mediatek: Add Mediatek PCIe host controller support
-  dt-bindings: pcie: Add documentation for Mediatek PCIe
-
- .../bindings/pci/mediatek,mt7623-pcie.txt          | 149 ++++++
- drivers/pci/host/Kconfig                           |  11 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-mediatek.c                   | 563 +++++++++++++++++++++
- 4 files changed, 724 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
- create mode 100644 drivers/pci/host/pcie-mediatek.c
-
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index e6e9bec..19779b8 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 			ops = ERR_PTR(err);
+ 	}
+ 
++	/* Ignore all other errors apart from EPROBE_DEFER */
++	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
++		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
++		ops = NULL;
++	}
++
+ 	return ops;
+ }
+ 
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 9416d05..28c38c7 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -144,8 +144,8 @@ int of_dma_configure(struct device *dev, struct device_node *np)
+ 		coherent ? " " : " not ");
+ 
+ 	iommu = of_iommu_configure(dev, np);
+-	if (IS_ERR(iommu))
+-		return PTR_ERR(iommu);
++	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
++		return -EPROBE_DEFER;
+ 
+ 	dev_dbg(dev, "device is%sbehind an iommu\n",
+ 		iommu ? " " : " not ");
 -- 
-1.9.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
 
 _______________________________________________
