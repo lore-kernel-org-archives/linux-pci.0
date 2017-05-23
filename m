@@ -1,12 +1,20 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v4 0/2] Add PCIe host driver support for Mediatek SoCs
-Date: Mon, 15 May 2017 11:09:53 +0800
-Message-ID: <1494817795-15366-1-git-send-email-ryder.lee@mediatek.com>
-MIME-Version: 1.0
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
+ geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org
+Subject: [PATCH v5 1/5] iommu: of: Fix check for returning EPROBE_DEFER
+Date: Tue, 23 May 2017 18:31:29 +0530
+Message-Id: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,83 +22,47 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
+Cc: sricharan@codeaurora.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Now with IOMMU probe deferral, we return -EPROBE_DEFER
+for masters that are connected to an IOMMU which is not
+probed yet, but going to get probed, so that we can attach
+the correct dma_ops. So while trying to defer the probe of
+the master, check if the of_iommu node that it is connected
+to is marked in DT as 'status=disabled', then the IOMMU is never
+is going to get probed. So simply return NULL and let the master
+work without an IOMMU.
 
-This patch series add Mediatek Gen2 PCIe host controller driver and
-dt-binding document. It can be found on MT7623 series SoCs.
+Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Tested-by: Will Deacon <will.deacon@arm.com>
+Tested-by: Magnus Damn <magnus.damn@gmail.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+---
+ drivers/iommu/of_iommu.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-This driver was validated using Broadcom Tigon3 and Intel(R) 82575/82576
-gigabit ethernet card.
-
-
-P.S.
-
-Hi Arnd,
-
-I still keep interrupt-map properties of the child nodes in this version.
-Because I consider if some ports link down that will break the order
-of child buses we made in the binding. In such case, I'm not sure how to
-cover it just using the 'bus' portion of the device address in the
-interrupt-map properties from parent node.
-
-But if you feel this is inappropriate, I will remove those in next version.
-
-Changes since v4:
-- move the per-port registers to the parent node.
-- use a valid compatible for hifsys controller.
-- use the 'sysirq' instead of 'gic' as a correct 'interrupt-parent' of the
-  interrupt-map properties.
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 9f44ee8..e6e9bec 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
  
-  'sysirq' is an interrupt-controller that could help us to inverse GIC SPIs polarity
-  so that we could properly set irq type to level low without any extra properties.
-  I made a **big mistake** to select wrong interrupt-parent in previous version.
-  Now, we could remove interrupt properties entirely from binding.
-
-Changes since v3:
-- correct sub-nodes unit addresses.
-
-Changes since v2:
-- modify Kconfig to avoid kbuild test error on some architecture.
-- change compatible string.
-- revise binding document:
-  add missing interrupt-names.
-  remove the board dts example and drop 'status' properties.
-  remove unnecessary descriptions bout standard PCI bus binding.
-
-Changes since v1:
-- add .suppress_bind_attrs.
-- remove unnecessary *_valid_device() pattern.
-- remove PCI_PROBE_ONLY.
-- use the regular readl() instead of readl_relaxed().
-- add .map_bus() and change to use pci_generic_config_read/pci_generic_config_write.
-- revise dt-binding document and move nonstandard properties to root node.
-- change compatible string.
-- use interrupt-map property and replace mtk_pcie_map_irq() with of_irq_parse_and_map_pci().
-- use the new pci_register_host_bridge() method instead of pci_scan_root_bus()
-
-Ryder Lee (2):
-  PCI: mediatek: Add Mediatek PCIe host controller support
-  dt-bindings: pcie: Add documentation for Mediatek PCIe
-
- .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 +++++
- drivers/pci/host/Kconfig                           |  11 +
- drivers/pci/host/Makefile                          |   1 +
- drivers/pci/host/pcie-mediatek.c                   | 559 +++++++++++++++++++++
- 4 files changed, 701 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
- create mode 100644 drivers/pci/host/pcie-mediatek.c
-
+ 	ops = iommu_ops_from_fwnode(fwnode);
+ 	if ((ops && !ops->of_xlate) ||
++	    !of_device_is_available(iommu_spec->np) ||
+ 	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+ 		return NULL;
+ 
 -- 
-1.9.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
 
 _______________________________________________
