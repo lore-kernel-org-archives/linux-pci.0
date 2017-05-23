@@ -1,53 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34120 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750860AbdEUJEz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 21 May 2017 05:04:55 -0400
-From: Vincent Legoll <vincent.legoll@gmail.com>
-To: hpa@zytor.com, mingo@redhat.com, tglx@linutronix.de,
-        bhelgaas@google.com, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Vincent Legoll <vincent.legoll@gmail.com>
-Subject: [PATCH] PCI: fix whitespace in printk() to align log entries
-Date: Sun, 21 May 2017 11:04:41 +0200
-Message-Id: <1495357481-15750-1-git-send-email-vincent.legoll@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 23 May 2017 13:30:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: [PATCH v4 0/2] Tango PCIe controller support
+Message-ID: <20170523183050.GA2637@bhelgaas-glaptop.roam.corp.google.com>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <20170523171758.GC24431@bhelgaas-glaptop.roam.corp.google.com>
+ <cb5d08d6-bbbe-486f-b721-2eeeb410ab5e@free.fr>
+MIME-Version: 1.0
+In-Reply-To: <cb5d08d6-bbbe-486f-b721-2eeeb410ab5e@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
+ David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the space character between "PCI" and the colon.
+On Tue, May 23, 2017 at 08:07:53PM +0200, Mason wrote:
+> On 23/05/2017 19:17, Bjorn Helgaas wrote:
+> >
+> > On Thu, Apr 20, 2017 at 04:24:39PM +0200, Marc Gonzalez wrote:
+> >
+> >> This patch was split in two, to ease review of two orthogonal
+> >> parts (MSI controller and host bridge). NB: the patch is
+> >> just split in two where host bridge support starts.
+> > 
+> > The split is backwards.  The first patch should add basic host bridge
+> > support that is functional, though lacking MSI support.  The second should
+> > add the MSI support.
+> 
+> OK, I'll invert the patches.
+> 
+> Note: the bridge does not support legacy interrupts.
+> Without MSI support, EPs can't interrupt the host.
+> Is that still considered functional?
 
-This was printed before the patch:
+Yes.  The driver can at least claim the host bridge and enumerate PCI
+devices.  If you add the MSI support first, that code is completely
+dead and can never be called until the second patch is merged.
 
-PCI : PCI BIOS area is rw and x. Use pci=nobios if you want it NX.
+Bjorn
 
-Whereas other PCI printks are like that:
-
-$ dmesg | grep 'PCI:'
-[    0.649178] PCI: MMCONFIG for domain 0000 [bus 00-7f] at [mem 0xf0000000-0xf7ffffff] (base 0xf0000000)
-[    0.649180] PCI: MMCONFIG at [mem 0xf0000000-0xf7ffffff] reserved in E820
-[    0.649186] PCI: Using configuration type 1 for base access
-[    0.676407] PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
-[    0.784009] PCI: Using ACPI for IRQ routing
-[    0.795599] PCI: pci_cache_line_size set to 64 bytes
-[    0.811154] PCI: CLS 0 bytes, default 64
-
-Signed-off-by: Vincent Legoll <vincent.legoll@gmail.com>
----
- arch/x86/pci/pcbios.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/pcbios.c b/arch/x86/pci/pcbios.c
-index c1bdb9e..7659540 100644
---- a/arch/x86/pci/pcbios.c
-+++ b/arch/x86/pci/pcbios.c
-@@ -46,7 +46,7 @@ static inline void set_bios_x(void)
- 	pcibios_enabled = 1;
- 	set_memory_x(PAGE_OFFSET + BIOS_BEGIN, (BIOS_END - BIOS_BEGIN) >> PAGE_SHIFT);
- 	if (__supported_pte_mask & _PAGE_NX)
--		printk(KERN_INFO "PCI : PCI BIOS area is rw and x. Use pci=nobios if you want it NX.\n");
-+		printk(KERN_INFO "PCI: PCI BIOS area is rw and x. Use pci=nobios if you want it NX.\n");
- }
- 
- /*
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
