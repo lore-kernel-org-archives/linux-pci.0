@@ -1,92 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52102 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758239AbdEONEC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 15 May 2017 09:04:02 -0400
-Date: Mon, 15 May 2017 14:05:00 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [RFC/RFT PATCH 1/3] PCI: Introduce pci_bus_find_numa_node()
-Message-ID: <20170515130500.GA19201@red-moon>
-References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
- <1494593045-19911-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20170512155040.GA11377@red-moon>
- <20170512171846.GA21391@localhost.localdomain>
- <20170515125711.GA9700@localhost.localdomain>
+Return-Path: <SRS0=DoF8=45=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=DoF8=45=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
+To: Mason <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Jiang Liu <jiang.liu@linux.intel.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
+ <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
+ <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
+ <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
+Date: Tue, 23 May 2017 19:03:36 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515125711.GA9700@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 15, 2017 at 05:57:11AM -0700, Vadim Lomovtsev wrote:
-> On Fri, May 12, 2017 at 10:18:46AM -0700, Vadim Lomovtsev wrote:
-> Hi Lorenzo,
+On 23/05/17 18:54, Mason wrote:
+> On 23/05/2017 19:03, Bjorn Helgaas wrote:
+>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
+>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
+>>>
+>>>> +static int tango_set_affinity(struct irq_data *data,
+>>>> +		const struct cpumask *mask, bool force)
+>>>> +{
+>>>> +	return -EINVAL;
+>>>> +}
+>>>> +
+>>>> +static struct irq_chip tango_chip = {
+>>>> +	.irq_ack		= tango_ack,
+>>>> +	.irq_mask		= tango_mask,
+>>>> +	.irq_unmask		= tango_unmask,
+>>>> +	.irq_set_affinity	= tango_set_affinity,
+>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+>>>> +};
+>>>
+>>> Hmmm... I'm wondering why .irq_set_affinity is required.
+>>>
+>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
+>>> first calls __irq_can_set_affinity() to check whether
+>>> desc->irq_data.chip->irq_set_affinity) exists.
+>>>
+>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
+>>> which calls chip->irq_set_affinity(data, mask, force);
+>>> = msi_domain_set_affinity()
+>>> which calls parent->chip->irq_set_affinity() unconditionally.
+>>>
+>>> Would it make sense to test that the callback is implemented
+>>> before calling it?
+>>>
+>>>
+>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+>>
+>> I'm not sure what you're asking.
+>>
+>> Is this a bug report for the v4 tango driver?
 > 
-> > Hi Lorenzo
-> > 
-> > On Fri, May 12, 2017 at 04:50:40PM +0100, Lorenzo Pieralisi wrote:
-> > > Hi Vadim,
-> > > 
-> > > On Fri, May 12, 2017 at 05:44:05AM -0700, Vadim Lomovtsev wrote:
-> > > > Hi Lorenzo,
-> > > > 
-> > > > Are there any news related to these patches ?
-> > > 
-> > > Not really, I have not received any feedback but I was expecting some
-> > > to make progress here. Have you tested it ?
-> > >
-> > > Please let me know, thanks !
-> > 
-> > Not yet. Plan to test them after weekend and will get back to you.
-> >
+> No.
 > 
-> Here is the results of testing you patches at dual-socketed board
-> with Cavium ThunderX SoC.
+>> Or are you asking whether msi_domain_set_affinity() should be changed
+>> to check whether parent->chip->irq_set_affinity is implemented?
 > 
-> Each boot kernel boot with acpi=force argument.
+> Yes. The way things are implemented now, drivers are forced
+> to define an irq_set_affinity callback, even if it just returns
+> an error, otherwise, the kernel crashes, because of the
+> unconditional function pointer deref. 
 > 
-> 1. The 4.12-rc1 couldn't find rootfs partition so can't be tested.
-> 2.1  The 4.11 without your patch set 0 to numa node for pci device
->   cat /sys/bus/pci/devices/*/numa_node
->   got zeroes here for all devices
-> 2.2 The 4.11 with your patches applied set -1 to numa_node for all pci devices
->   same command provides "-1"
+>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
+>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
+>> generic msi irq domain support"), so if there's a problem here, it's most
+>> likely in the tango code.
 > 
-> So looking at your patches..
-> 
-> At the patch 1/3 you implemented pci_bus_find_numa_node function:
-> 
-> +int pci_bus_find_numa_node(struct pci_bus *bus)
-> +{
-> +	return NUMA_NO_NODE;
-> +}
-> 
-> Then at the 2/3 patch it is called from pci_register_host_bridge:
-> @@ -770,6 +770,7 @@ int pci_register_host_bridge(struct pci_host_bridge *bridge)
-> [..]
-> +	set_dev_node(&bus->dev, pci_bus_find_numa_node(bus));
-> 
-> I suppose that is why I'm seeing those -1 in the numa_node field.
-> 
-> And at the patch 3/3 you implemented acpi_pci_bus_find_numa_node function
->  +int acpi_pci_bus_find_numa_node(struct pci_bus *bus)
-> which implements actual work of getting numa node value,
-> but it seems that nodoby calls it, isn't it ?
-> 
-> Don't we need to update pci_bus_find_numa_node with proper calling
-> of acpi_pci_bus_find_numa_node() ?
+> The issue is having to define an "empty" function.
+> (Unnecessary code bloat and maintenance.)
 
-Yes:
+AFAICS, only one driver (other than this one) implements a "do nothing"
+set_affinity callback - everyone else who doesn't do anything hardware
+specific just passes it along via irq_chip_set_affinity_parent().
 
-https://lkml.org/lkml/2017/4/26/211
+Robin.
 
-Apologies for wasting your time, v2 coming with the actual call,
-please have a look.
-
-Thanks,
-Lorenzo
+> 
+> I'll send a patch illustrating exactly what I intended.
+> 
+> Regards.
+> 
