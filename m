@@ -1,111 +1,133 @@
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	helgaas@kernel.org
-Subject: [PATCH v6 4/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v3
-Date: Tue,  9 May 2017 18:49:06 +0200
-Message-Id: <1494348547-1465-5-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V11 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Sricharan R <sricharan@codeaurora.org>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+ <1491823266-1209-9-git-send-email-sricharan@codeaurora.org>
+ <41668eff-271c-1c4c-7665-3bf0faa74669@codeaurora.org>
+ <20170523085241.GA18204@red-moon>
+ <c6d5c033-a8f9-03e3-9963-cd291ae2d7e1@codeaurora.org>
+ <20170523092659.GA19999@red-moon>
+From: Nate Watterson <nwatters@codeaurora.org>
+Message-ID: <647cbf74-d171-365c-7ef5-9f1e5986716c@codeaurora.org>
+Date: Tue, 23 May 2017 07:27:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170523092659.GA19999@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ tn@semihalf.com, joro@8bytes.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, robh+dt@kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ gregkh@linuxfoundation.org, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ robin.murphy@arm.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+Hi Lorenzo,
 
-Most BIOS don't enable this because of compatibility reasons.
+On 5/23/2017 5:26 AM, Lorenzo Pieralisi wrote:
+> On Tue, May 23, 2017 at 02:31:17PM +0530, Sricharan R wrote:
+>> Hi Lorenzo,
+>>
+>> On 5/23/2017 2:22 PM, Lorenzo Pieralisi wrote:
+>>> On Tue, May 23, 2017 at 02:26:10AM -0400, Nate Watterson wrote:
+>>>> Hi Sricharan,
+>>>>
+>>>> On 4/10/2017 7:21 AM, Sricharan R wrote:
+>>>>> This is an equivalent to the DT's handling of the iommu master's probe
+>>>>> with deferred probing when the corrsponding iommu is not probed yet.
+>>>>> The lack of a registered IOMMU can be caused by the lack of a driver for
+>>>>> the IOMMU, the IOMMU device probe not having been performed yet, having
+>>>>> been deferred, or having failed.
+>>>>>
+>>>>> The first case occurs when the firmware describes the bus master and
+>>>>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+>>>>> or the device driver has not been compiled in. Return NULL, the caller
+>>>>> will configure the device without an IOMMU.
+>>>>>
+>>>>> The second and third cases are handled by deferring the probe of the bus
+>>>>> master device which will eventually get reprobed after the IOMMU.
+>>>>>
+>>>>> The last case is currently handled by deferring the probe of the bus
+>>>>> master device as well. A mechanism to either configure the bus master
+>>>>> device without an IOMMU or to fail the bus master device probe depending
+>>>>> on whether the IOMMU is optional or mandatory would be a good
+>>>>> enhancement.
+>>>>>
+>>>>> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>>>> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+>>>>> [Lorenzo: Added fixes for dma_coherent_mask overflow, acpi_dma_configure
+>>>>>            called multiple times for same device]
+>>>>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>>>>> ---
+>>>>>   drivers/acpi/arm64/iort.c  | 33 ++++++++++++++++++++++++++++++++-
+>>>>>   drivers/acpi/scan.c        | 11 ++++++++---
+>>>>>   drivers/base/dma-mapping.c |  2 +-
+>>>>>   include/acpi/acpi_bus.h    |  2 +-
+>>>>>   include/linux/acpi.h       |  7 +++++--
+>>>>>   5 files changed, 47 insertions(+), 8 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>>>>> index 3dd9ec3..e323ece 100644
+>>>>> --- a/drivers/acpi/arm64/iort.c
+>>>>> +++ b/drivers/acpi/arm64/iort.c
+>>>>> @@ -543,6 +543,14 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+>>>>>   	const struct iommu_ops *ops = NULL;
+>>>>>   	int ret = -ENODEV;
+>>>>>   	struct fwnode_handle *iort_fwnode;
+>>>>> +	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+>>>>> +
+>>>>> +	/*
+>>>>> +	 * If we already translated the fwspec there
+>>>>> +	 * is nothing left to do, return the iommu_ops.
+>>>>> +	 */
+>>>>> +	if (fwspec && fwspec->ops)
+>>>>> +		return fwspec->ops;
+>>>>
+>>>> Is this logic strictly required? It breaks masters with multiple SIDs
+>>>> as only the first SID is actually added to the master's fwspec.
+>>>
+>>> My bad, that's indeed a silly bug I introduced. Please let me know if the
+>>> patch below fixes it, we will send it upstream shortly.
+>>>
+>>
+>> oops, i think emails crossed. Please let me know if you are ok to add
+>> this to the other fixes.
+> 
+> No worries, yes I am ok thanks but please give Nate some time to report
+> back to make sure the diff I sent actually fixes the problem.
 
-Manually enable a 64bit BAR of 64GB size so that we have
-enough room for PCI devices.
+The patch you sent fixes the problem. Thanks for the quick turnaround.
 
-v2: style cleanups, increase size, add resource name, set correct flags,
-    print message that windows was added
-v3: add defines for all the magic numbers, style cleanups
+> 
+> Apologies for the breakage.
+> 
+> Lorenzo
+> 
+>>
+>> Regards,
+>>   Sricharan
+>>
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- arch/x86/pci/fixup.c | 69 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 69 insertions(+)
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 6d52b94..1c36ed6 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -571,3 +571,72 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-+
-+#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
-+#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
-+#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
-+#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
-+
-+#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
-+#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
-+
-+#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
-+#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
-+#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
-+#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
-+
-+static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-+{
-+	struct resource *res, *conflict;
-+	u32 base, limit, high;
-+	unsigned i;
-+
-+	for (i = 0; i < 8; ++i) {
-+		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
-+		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
-+
-+		/* Is this slot free? */
-+		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
-+			      AMD_141b_MMIO_BASE_WE_MASK)))
-+			break;
-+
-+		base >>= 8;
-+		base |= high << 24;
-+
-+		/* Abort if a slot already configures a 64bit BAR. */
-+		if (base > 0x10000)
-+			return;
-+	}
-+	if (i == 8)
-+		return;
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return;
-+
-+	res->name = "PCI Bus 0000:00";
-+	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
-+		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-+	res->start = 0x100000000ull;
-+	res->end = 0xfd00000000ull - 1;
-+
-+	/* Just grab the free area behind system memory for this */
-+	while ((conflict = request_resource_conflict(&iomem_resource, res)))
-+		res->start = conflict->end + 1;
-+
-+	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-+
-+	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
-+		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
-+	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
-+	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
-+		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
-+		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
-+
-+	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
-+	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
-+	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
-+
-+	pci_bus_add_resource(dev->bus, res, 0);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
 -- 
-2.7.4
+Qualcomm Datacenter Technologies as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
