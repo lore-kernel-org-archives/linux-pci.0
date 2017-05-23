@@ -1,71 +1,166 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
- geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org
-Subject: [PATCH v5 1/5] iommu: of: Fix check for returning EPROBE_DEFER
-Date: Tue, 23 May 2017 18:31:29 +0530
-Message-Id: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0058.outbound.protection.outlook.com ([104.47.33.58]:17057
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933975AbdEWMPQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 May 2017 08:15:16 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: "Cheng, Collins" <Collins.Cheng@amd.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Subject: RE: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
+ incapable platform
+Date: Tue, 23 May 2017 12:15:11 +0000
+Message-ID: <BN6PR12MB165200CAE0F4E2367E301DE0F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+In-Reply-To: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now with IOMMU probe deferral, we return -EPROBE_DEFER
-for masters that are connected to an IOMMU which is not
-probed yet, but going to get probed, so that we can attach
-the correct dma_ops. So while trying to defer the probe of
-the master, check if the of_iommu node that it is connected
-to is marked in DT as 'status=disabled', then the IOMMU is never
-is going to get probed. So simply return NULL and let the master
-work without an IOMMU.
+> -----Original Message-----
+> From: Cheng, Collins
+> Sent: Thursday, May 11, 2017 10:51 PM
+> To: Bjorn Helgaas; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.or=
+g
+> Cc: Deucher, Alexander; Zytaruk, Kelly
+> Subject: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
+> incapable platform
+>=20
+> Hi Helgaas,
+>=20
+> Some AMD GPUs have hardware support for graphics SR-IOV.
+> If the SR-IOV capable GPU is plugged into the SR-IOV incapable
+> platform. It would cause a problem on PCI resource allocation in
+> current Linux kernel.
+>=20
+> Therefore in order to allow the PF (Physical Function) device of
+> SR-IOV capable GPU to work on the SR-IOV incapable platform,
+> it is required to verify conditions for initializing BAR resources
+> on AMD SR-IOV capable GPUs.
+>=20
+> If the device is an AMD graphics device and it supports
+> SR-IOV it will require a large amount of resources.
+> Before calling sriov_init() must ensure that the system
+> BIOS also supports SR-IOV and that system BIOS has been
+> able to allocate enough resources.
+> If the VF BARs are zero then the system BIOS does not
+> support SR-IOV or it could not allocate the resources
+> and this platform will not support AMD graphics SR-IOV.
+> Therefore do not call sriov_init().
+> If the system BIOS does support SR-IOV then the VF BARs
+> will be properly initialized to non-zero values.
+>=20
+> Below is the patch against to Kernel 4.8 & 4.9. Please review.
 
-Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Tested-by: Will Deacon <will.deacon@arm.com>
-Tested-by: Magnus Damn <magnus.damn@gmail.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
----
- drivers/iommu/of_iommu.c | 1 +
- 1 file changed, 1 insertion(+)
+For upstream, the patch should be against Linus' master or the Bjorn's pci-=
+next tree.
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 9f44ee8..e6e9bec 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
- 
- 	ops = iommu_ops_from_fwnode(fwnode);
- 	if ((ops && !ops->of_xlate) ||
-+	    !of_device_is_available(iommu_spec->np) ||
- 	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
- 		return NULL;
- 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Alex
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>=20
+> I checked the drivers/pci/quirks.c, it looks the workarounds/fixes in
+> quirks.c are for specific devices and one or more device ID are defined
+> for the specific devices. However my patch is for all AMD SR-IOV
+> capable GPUs, that includes all existing and future AMD server GPUs.
+> So it doesn't seem like a good fit to put the fix in quirks.c.
+>=20
+>=20
+>=20
+> Signed-off-by: Collins Cheng <collins.cheng@amd.com>
+> ---
+>  drivers/pci/iov.c | 63
+> ++++++++++++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 60 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index e30f05c..e4f1405 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -523,6 +523,45 @@ static void sriov_restore_state(struct pci_dev *dev)
+>  		msleep(100);
+>  }
+>=20
+> +/*
+> + * pci_vf_bar_valid - check if VF BARs have resource allocated
+> + * @dev: the PCI device
+> + * @pos: register offset of SR-IOV capability in PCI config space
+> + * Returns true any VF BAR has resource allocated, false
+> + * if all VF BARs are empty.
+> + */
+> +static bool pci_vf_bar_valid(struct pci_dev *dev, int pos)
+> +{
+> +	int i;
+> +	u32 bar_value;
+> +	u32 bar_size_mask =3D ~(PCI_BASE_ADDRESS_SPACE |
+> +			PCI_BASE_ADDRESS_MEM_TYPE_64 |
+> +			PCI_BASE_ADDRESS_MEM_PREFETCH);
+> +
+> +	for (i =3D 0; i < PCI_SRIOV_NUM_BARS; i++) {
+> +		pci_read_config_dword(dev, pos + PCI_SRIOV_BAR + i * 4,
+> &bar_value);
+> +		if (bar_value & bar_size_mask)
+> +			return true;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +/*
+> + * is_amd_display_adapter - check if it is an AMD/ATI GPU device
+> + * @dev: the PCI device
+> + *
+> + * Returns true if device is an AMD/ATI display adapter,
+> + * otherwise return false.
+> + */
+> +
+> +static bool is_amd_display_adapter(struct pci_dev *dev)
+> +{
+> +	return (((dev->class >> 16) =3D=3D PCI_BASE_CLASS_DISPLAY) &&
+> +		(dev->vendor =3D=3D PCI_VENDOR_ID_ATI ||
+> +		dev->vendor =3D=3D PCI_VENDOR_ID_AMD));
+> +}
+> +
+>  /**
+>   * pci_iov_init - initialize the IOV capability
+>   * @dev: the PCI device
+> @@ -537,9 +576,27 @@ int pci_iov_init(struct pci_dev *dev)
+>  		return -ENODEV;
+>=20
+>  	pos =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
+> -	if (pos)
+> -		return sriov_init(dev, pos);
+> -
+> +	if (pos) {
+> +	/*
+> +	 * If the device is an AMD graphics device and it supports
+> +	 * SR-IOV it will require a large amount of resources.
+> +	 * Before calling sriov_init() must ensure that the system
+> +	 * BIOS also supports SR-IOV and that system BIOS has been
+> +	 * able to allocate enough resources.
+> +	 * If the VF BARs are zero then the system BIOS does not
+> +	 * support SR-IOV or it could not allocate the resources
+> +	 * and this platform will not support AMD graphics SR-IOV.
+> +	 * Therefore do not call sriov_init().
+> +	 * If the system BIOS does support SR-IOV then the VF BARs
+> +	 * will be properly initialized to non-zero values.
+> +	 */
+> +		if (is_amd_display_adapter(dev)) {
+> +			if (pci_vf_bar_valid(dev, pos))
+> +				return sriov_init(dev, pos);
+> +		} else {
+> +			return sriov_init(dev, pos);
+> +		}
+> +	}
+>  	return -ENODEV;
+>  }
+>=20
+> --
+> 1.9.1
+>=20
+>=20
+>=20
+> -Collins Cheng
