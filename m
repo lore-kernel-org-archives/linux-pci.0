@@ -1,83 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 17 May 2017 12:04:30 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45576 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S968111AbdEWT4h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 May 2017 15:56:37 -0400
+Date: Tue, 23 May 2017 14:56:35 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH 1/3] iommu: of: Fix check for returning EPROBE_DEFER
-Message-ID: <20170517170430.GD31462@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495020609-13397-1-git-send-email-sricharan@codeaurora.org>
+To: Sujith Pandel <sujithpshankar@gmail.com>
+Cc: linux-pci@vger.kernel.org, Shai@ScaleMP.com, Narendra_K@Dell.com
+Subject: Re: [PATCH] Add PCI domain number check to
+ find_smbios_instance_string
+Message-ID: <20170523195635.GE7241@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170502105540.GA36230@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <1495020609-13397-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
- lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
- magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
- linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
- arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
- robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
- rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
- robin.murphy@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170502105540.GA36230@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 17, 2017 at 05:00:07PM +0530, Sricharan R wrote:
-> Now with iommu probe deferral, we return -EPROBE_DEFER
-> for master's that are connected to an iommu which is not
-
-s/master's/masters/
-
-s/iommu/IOMMU/ in your English text (changelogs and comments).  That seems
-to be the convention, based on "git log drivers/iommu/of_iommu.c"
-
-> probed yet, but going to get probed, so that we can attach
-> the correct dma_ops. So while trying to defer the probe of
-> the master, check if the of_iommu node that it is connected
-> to is marked in DT as 'status=disabled', then the iommu is never
-> is going to get probed. So simply return NULL and let the master
-> work without an iommu.
+On Tue, May 02, 2017 at 06:55:40AM -0400, Sujith Pandel wrote:
+> The function 'find_smbios_instance_string' does not consider the
+> PCI domain number. As a result, SMBIOS type 41 device type instance
+> would be exported to sysfs for all the PCI domains which have a
+> PCI device with same bus/device/function, though PCI bus/device/func
+> from a specific PCI domain has SMBIOS type 41 device type instance
+> defined.
+> Address the issue by making 'find_smbios_instance_string' function
+> check PCI domain number as well.
 > 
-> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Tested-by: Will Deacon <will.deacon@arm.com>
-> Tested-by: Magnus Damn <magnus.damn@gmail.com>
-> Acked-by: Will Deacon <will.deacon@arm.com>
+> Reported-by: Shai Fultheim <Shai@ScaleMP.com>
+> Suggested-by: Shai Fultheim <Shai@ScaleMP.com>
+> Signed-off-by: Sujith Pandel <sujithpshankar@gmail.com>
+> Signed-off-by: Narendra K <Narendra_K@Dell.com>
+> Tested-by: Shai Fultheim <Shai@ScaleMP.com>
+
+Applied to pci/misc for v4.13, thanks!
+
 > ---
->  drivers/iommu/of_iommu.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/pci/pci-label.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 9f44ee8..e6e9bec 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
+> diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+> index 5135737..1d828a6 100644
+> --- a/drivers/pci/pci-label.c
+> +++ b/drivers/pci/pci-label.c
+> @@ -43,9 +43,11 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
+>  {
+>  	const struct dmi_device *dmi;
+>  	struct dmi_dev_onboard *donboard;
+> +	int domain_nr;
+>  	int bus;
+>  	int devfn;
 >  
->  	ops = iommu_ops_from_fwnode(fwnode);
->  	if ((ops && !ops->of_xlate) ||
-> +	    !of_device_is_available(iommu_spec->np) ||
->  	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
->  		return NULL;
+> +	domain_nr = pci_domain_nr(pdev->bus);
+>  	bus = pdev->bus->number;
+>  	devfn = pdev->devfn;
 >  
+> @@ -53,8 +55,9 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
+>  	while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_ONBOARD,
+>  				      NULL, dmi)) != NULL) {
+>  		donboard = dmi->device_data;
+> -		if (donboard && donboard->bus == bus &&
+> -					donboard->devfn == devfn) {
+> +		if (donboard && donboard->segment == domain_nr &&
+> +				donboard->bus == bus &&
+> +				donboard->devfn == devfn) {
+>  			if (buf) {
+>  				if (attribute == SMBIOS_ATTR_INSTANCE_SHOW)
+>  					return scnprintf(buf, PAGE_SIZE,
 > -- 
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> 1.8.3.1
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
