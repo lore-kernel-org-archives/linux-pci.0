@@ -1,172 +1,83 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lukas@wunner.de" <lukas@wunner.de>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam03on0055.outbound.protection.outlook.com ([104.47.42.55]:43296
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S966083AbdEWTyP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 May 2017 15:54:15 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'David Woodhouse' <dwmw2@infradead.org>,
+        'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>
-Subject: RE: [PATCH 1/2] PCI/portdrv: add support for different MSI
- interrupts for PCIe port services
-Date: Tue, 16 May 2017 15:02:57 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A2E3DD@FRAEML521-MBX.china.huawei.com>
-References: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
- <1494930342-7132-2-git-send-email-gabriele.paoloni@huawei.com>
- <20170516120642.GA2991@infradead.org>
-In-Reply-To: <20170516120642.GA2991@infradead.org>
-Content-Type: text/plain; charset="us-ascii"
+        Daniel Drake <drake@endlessm.com>,
+        Samuel Sieb <samuel@sieb.net>, Joerg Roedel <jroedel@suse.de>
+Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Date: Tue, 23 May 2017 19:54:12 +0000
+Message-ID: <BN6PR12MB1652A0F240C19F2CF3304300F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+         <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <1493893297.4904.71.camel@infradead.org>
+In-Reply-To: <1493893297.4904.71.camel@infradead.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph
-
-Many thanks for your comments
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: 16 May 2017 13:07
-> To: Gabriele Paoloni
-> Cc: bhelgaas@google.com; helgaas@kernel.org; Linuxarm; linux-
-> pci@vger.kernel.org; lukas@wunner.de; linux-kernel@vger.kernel.org;
-> mika.westerberg@linux.intel.com
-> Subject: Re: [PATCH 1/2] PCI/portdrv: add support for different MSI
-> interrupts for PCIe port services
-> 
-> > --- a/drivers/pci/pcie/portdrv.h
-> > +++ b/drivers/pci/pcie/portdrv.h
-> > @@ -18,6 +18,11 @@
-> >   */
-> >  #define PCIE_PORT_MAX_MSIX_ENTRIES	32
-> >
-> > +/* According to the PCI Local Bus Specification REV. 3.0 the max
-> number
-> > + * of MSI vectors per function is 32
-> > + */
-> > +#define PCIE_PORT_MAX_MSI_ENTRIES	32
-> 
-> Just rename the above define to PCIE_PORT_MAX_MSI_ENTRIES and update
-> the comment.
-
-Ok agreed
-
-> 
-> >  /**
-> > - * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for
-> given port
-> > + * pcie_port_enable_msix_or_msi - try to set up MSI-X or MSI as
-> interrupt mode
-> 
-> .. and just call this pcie_port_enable_multi_vec or maybe even just
-> pcie_port_enable_msi.
-
-Maybe pcie_port_enable_irq_vec ?
- 
-> 
-> > +static
-> > +int pcie_port_enable_msix_or_msi(struct pci_dev *dev, int *irqs, int
-> mask)
-> 
-> This style of indentation is entirely wrong.
-
-Sorry about this; I'll fix it in V2
-
-> 
-> >  {
-> >  	int nr_entries, entry, nvec = 0;
-> >
-> > @@ -63,6 +65,10 @@ static int pcie_port_enable_msix(struct pci_dev
-> *dev, int *irqs, int mask)
-> >  	 */
-> >  	nr_entries = pci_alloc_irq_vectors(dev, 1,
-> PCIE_PORT_MAX_MSIX_ENTRIES,
-> >  			PCI_IRQ_MSIX);
-> > +	if (nr_entries < 0) /* MSI-x failed let's try with MSI */
-> > +		nr_entries = pci_alloc_irq_vectors(dev, 1,
-> > +				PCIE_PORT_MAX_MSI_ENTRIES,
-> > +				PCI_IRQ_MSI);
-> 
-> Just pass PCI_IRQ_MSI | PCI_IRQ_MSIX in the above call.
-
-Yes you're right, thanks for spotting this
-
-> 
-> 
-> >  		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> >  		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS,
-> &reg32);
-> > @@ -125,6 +143,9 @@ static int pcie_port_enable_msix(struct pci_dev
-> *dev, int *irqs, int mask)
-> >  		/* Now allocate the MSI-X vectors for real */
-> >  		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
-> >  				PCI_IRQ_MSIX);
-> > +		if (nr_entries < 0) /* MSI-x failed, let's try MSI*/
-> > +			nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
-> > +					PCI_IRQ_MSI);
-> 
-> Same here.
-
-Yep, thanks
-
-> 
-> >  		if (nr_entries < 0)
-> >  			return nr_entries;
-> >  	}
-> > @@ -160,8 +181,8 @@ static int pcie_init_service_irqs(struct pci_dev
-> *dev, int *irqs, int mask)
-> >  	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
-> >  		flags &= ~PCI_IRQ_MSI;
-> >  	} else {
-> > -		/* Try to use MSI-X if supported */
-> > -		if (!pcie_port_enable_msix(dev, irqs, mask))
-> > +		/* Try to use MSI-X or MSI if supported */
-> > +		if (!pcie_port_enable_msix_or_msi(dev, irqs, mask))
-> >  			return 0;
-> >  	}
-> 
-> We have another pci_alloc_irq_vectors call just below this which
-> also passes PCI_IRQ_MSI, but we won't reach it anymore with your
-> changes I think, so pcie_init_service_irqs will need some updates.
-> (after checking that your code still works fine for single-MSI setups,
-> of course)
-
-I think we can reach that call if both MSI and MSIx fails and then it
-will fall back to legacy IRQ. However you are right in saying that the
-code should be reworked. Now it would be:
-
-static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
-{
-	int ret, i;
-
-	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
-		irqs[i] = -1;
-
-	/*
-	 * Make sure MSI can be used for PCIe PME or hotplug. otherwise we have to
-	 * use INTx or other interrupts, e.g. system shared interrupt.
-	 */
-	if (!((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) &&
-	    !((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi()))
-		/* Try to use MSI-X or MSI if supported */
-		if (!pcie_port_enable_msix_or_msi(dev, irqs, mask))
-			return 0;
-
-	/* fall back to legacy IRQ */
-	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_LEGACY);
-	if (ret < 0)
-		return -ENODEV;
-
-	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++) {
-		if (i != PCIE_PORT_SERVICE_VC_SHIFT)
-			irqs[i] = pci_irq_vector(dev, 0);
-	}
-
-	return 0;
-}
-
-What do you think?
-
-Again many thanks
-Gab    
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYXZpZCBXb29kaG91c2UgW21h
+aWx0bzpkd213MkBpbmZyYWRlYWQub3JnXQ0KPiBTZW50OiBUaHVyc2RheSwgTWF5IDA0LCAyMDE3
+IDY6MjIgQU0NCj4gVG86IERldWNoZXIsIEFsZXhhbmRlcjsgJ0pvZXJnIFJvZWRlbCc7IEJqb3Ju
+IEhlbGdhYXMNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmc7IERhbmllbCBEcmFrZTsNCj4gU2FtdWVsIFNpZWI7IEpvZXJnIFJvZWRl
+bA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWlyayBm
+b3IgQU1EIFN0b25leSBHUFVzDQo+IA0KPiBPbiBGcmksIDIwMTctMDQtMDcgYXQgMTY6NDYgKzAw
+MDAsIERldWNoZXIsIEFsZXhhbmRlciB3cm90ZToNCj4gPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogSm9lcmcgUm9lZGVsIFttYWlsdG86am9yb0A4Ynl0
+ZXMub3JnXQ0KPiA+ID4gU2VudDogRnJpZGF5LCBBcHJpbCAwNywgMjAxNyAxMDozMiBBTQ0KPiA+
+ID4gVG86IEJqb3JuIEhlbGdhYXMNCj4gPiA+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
+OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBEYW5pZWwNCj4gRHJha2U7DQo+ID4gPiBE
+ZXVjaGVyLCBBbGV4YW5kZXI7IFNhbXVlbCBTaWViOyBEYXZpZCBXb29kaG91c2U7IEpvZXJnIFJv
+ZWRlbA0KPiA+ID4gU3ViamVjdDogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWly
+ayBmb3IgQU1EIFN0b25leSBHUFVzDQo+ID4gPg0KPiA+ID4gRnJvbTogSm9lcmcgUm9lZGVsIDxq
+cm9lZGVsQHN1c2UuZGU+DQo+ID4gPg0KPiA+ID4gQVRTIGlzIGJyb2tlbiBvbiB0aGlzIGhhcmR3
+YXJlIGFuZCBjYXVzZXMgSU9NTVUgc3RhbGxzIGFuZA0KPiA+ID4gc3lzdGVtIGZhaWx1cmUuIERp
+c2FibGUgQVRTIG9uIHRoZXNlIGRldmljZXMgdG8gbWFrZSB0aGVtDQo+ID4gPiB1c2FibGUgYWdh
+aW4gd2l0aCBJT01NVSBlbmFibGVkLg0KPiA+ID4NCj4gPiA+IE5vdGUgdGhhdCB0aGUgY29tbWl0
+IGluIHRoZSBGaXhlcy10YWcgaXMgbm90IGJ1Z2d5LCBpdA0KPiA+ID4ganVzdCB1bmNvdmVycyB0
+aGUgcHJvYmxlbSBpbiB0aGUgaGFyZHdhcmUgYnkgaW5jcmVhc2luZw0KPiA+ID4gdGhlIEFUUy1m
+bHVzaCByYXRlLg0KPiA+ID4NCj4gPiA+IEZpeGVzOiBiMTUxNmExNDY1N2EgKCdpb21tdS9hbWQ6
+IEltcGxlbWVudCBmbHVzaCBxdWV1ZScpDQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBKb2VyZyBSb2Vk
+ZWwgPGpyb2VkZWxAc3VzZS5kZT4NCj4gPiBBY2tlZC1ieTogQWxleCBEZXVjaGVyIDxhbGV4YW5k
+ZXIuZGV1Y2hlckBhbWQuY29tPg0KPiANCj4gQWxleCwgYXJlIHlvdSBhYmxlIHRvIGNvbmZpcm0g
+dGhhdCBpdCBpcyAqb25seSogdGhlIGRldmljZSB3aXRoIFBDSSBJRA0KPiAweDk4ZTQgd2hpY2gg
+aGFzIHRoaXMgcHJvYmxlbSwgb3IgKG1vcmUgbGlrZWx5KSBjb21lIHVwIHdpdGggYW4NCj4gZXho
+YXVzdGl2ZSBsaXN0PyBUaGFua3MuDQo+IA0KPiBXZSdsbCB3YW50IHRoZSBzYW1lIGJsYWNrbGlz
+dCBpbiBYZW4gdG9vLCB3b24ndCB3ZT8NCg0KSSBmaW5hbGx5IGdvdCBhbiBhbnN3ZXIgZnJvbSB0
+aGUgaHcgdGVhbSBhbmQgd2UgdmFsaWRhdGVkIEFUUyBvbiBzdG9uZXkgYXMgd2VsbCBzbyBpbiB0
+aGVvcnkgdGhpcyBwYXRjaCBzaG91bGRu4oCZdCBhY3R1YWxseSBiZSBuZWVkZWQuICBJIHRoaW5r
+IHdlIG1heSBhY3R1YWxseSBiZSBwYXBlcmluZyBvdmVyIHNvbWUgb3RoZXIgaXNzdWUuICBUaGUg
+Zm9sbG93aW5nIHBhdGNoIHNlZW1zIHRvIGFsc28gZml4IHRoaXMgaXNzdWUgKGFuZCBvdGhlciBp
+c3N1ZXMpOg0KaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvc3RhYmxlL21zZzE3MjYzMS5o
+dG1sDQoNCkFsZXgNCg0KPiANCj4gPiA+DQo+ID4gPiAtLS0NCj4gPiA+IMKgZHJpdmVycy9wY2kv
+cXVpcmtzLmMgfCAxOSArKysrKysrKysrKysrKysrKysrDQo+ID4gPiDCoDEgZmlsZSBjaGFuZ2Vk
+LCAxOSBpbnNlcnRpb25zKCspDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNp
+L3F1aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiA+IGluZGV4IDY3MzY4MzYuLjdj
+YmUzMTYgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+ID4gKysr
+IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiA+IEBAIC00NjM0LDMgKzQ2MzQsMjIgQEAgc3Rh
+dGljIHZvaWQgcXVpcmtfbm9fYWVyc2lkKHN0cnVjdCBwY2lfZGV2DQo+ICpwZGV2KQ0KPiA+ID4g
+wqBERUNMQVJFX1BDSV9GSVhVUF9FQVJMWShQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDIwMzEsDQo+
+ID4gPiBxdWlya19ub19hZXJzaWQpOw0KPiA+ID4gwqBERUNMQVJFX1BDSV9GSVhVUF9FQVJMWShQ
+Q0lfVkVORE9SX0lEX0lOVEVMLCAweDIwMzIsDQo+ID4gPiBxdWlya19ub19hZXJzaWQpOw0KPiA+
+ID4gwqBERUNMQVJFX1BDSV9GSVhVUF9FQVJMWShQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDIwMzMs
+DQo+ID4gPiBxdWlya19ub19hZXJzaWQpOw0KPiA+ID4gKw0KPiA+ID4gKyNpZmRlZiBDT05GSUdf
+UENJX0FUUw0KPiA+ID4gKy8qDQo+ID4gPiArICogU29tZSBkZXZpY2VzIGhhdmUgYSBicm9rZW4g
+QVRTIGltcGxlbWVudGF0aW9uIGNhdXNpbmcgSU9NTVUNCj4gc3RhbGxzLg0KPiA+ID4gKyAqIERv
+bid0IHVzZSBBVFMgZm9yIHRob3NlIGRldmljZXMuDQo+ID4gPiArICovDQo+ID4gPiArc3RhdGlj
+IHZvaWQgcXVpcmtfZGlzYWJsZV9hdHMoc3RydWN0IHBjaV9kZXYgKnBkZXYpDQo+ID4gPiArew0K
+PiA+ID4gKwkvKg0KPiA+ID4gKwnCoCogU2V0IHBkZXYtPmF0c19jYXAgPSAwIHRvIG1ha2UgcGNp
+X2VuYWJsZV9hdHMoKSBiYWlsIG91dA0KPiA+ID4gKwnCoCogZWFybHkuDQo+ID4gPiArCcKgKi8N
+Cj4gPiA+ICsJZGV2X2luZm8oJnBkZXYtPmRldiwgIlFVSVJLOiBEaXNhYmxpbmcgQVRTIik7DQo+
+ID4gPiArCXBkZXYtPmF0c19jYXAgPSAwOw0KPiA+ID4gK30NCj4gPiA+ICsNCj4gPiA+ICsvKiBB
+TUQgU3RvbmV5IHBsYXRmb3JtIEdQVSAqLw0KPiA+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFM
+KFBDSV9WRU5ET1JfSURfQVRJLCAweDk4ZTQsDQo+IHF1aXJrX2Rpc2FibGVfYXRzKTsNCj4gPiA+
+ICsjZW5kaWYgLyogQ09ORklHX1BDSV9BVFMgKi8NCj4gPiA+IC0tDQo+ID4gPiAxLjkuMQ0K
