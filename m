@@ -1,52 +1,23 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 30 May 2017 15:31:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Xiaowei Song <songxiaowei@hisilicon.com>
-Cc: bhelgaas@google.com, kishon@ti.com, jingoohan1@gmail.com,
-        arnd@arndb.de, tn@semihalf.com, keith.busch@intel.com,
-        niklas.cassel@axis.com, dhdang@apm.com, liudongdong3@huawei.com,
-        gabriele.paoloni@huawei.com, robh+dt@kernel.org,
-        mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com,
-        chenyao11@huawei.com, puck.chen@hisilicon.com,
-        guodong.xu@linaro.org, wangbinghui@hisilicon.com,
-        suzhuangluan@hisilicon.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v8 4/4] defconfig: PCI: Enable  Kirin PCIe defconfig
-Message-ID: <20170530203154.GF4664@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170526015333.92482-1-songxiaowei@hisilicon.com>
- <20170526015333.92482-5-songxiaowei@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170526015333.92482-5-songxiaowei@hisilicon.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=SBir=45=bombadil.srs.infradead.org=BATV+39f16232e601ddf73510+5021+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=SBir=45=bombadil.srs.infradead.org=BATV+39f16232e601ddf73510+5021+infradead.org+hch@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: helgaas@kernel.org
+Cc: rakesh@tuxera.com,
+	linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: avoid null pointer rereference during FLR
+Date: Tue, 23 May 2017 07:42:01 +0200
+Message-Id: <20170523054202.7985-1-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-Subject line:
+Hi all,
 
-  arm64: defconfig: Enable Kirin PCIe
+Rakesh reported a bug where a FLR can trivially crash his system.
+The reason for that is that NVMe unbinds the driver from the PCI device
+on an unrecoverable error, and that races with the reset_notify method.
 
-(Hint: run "git log --oneline <file>" to see what pattern you should
-follow)
-
-On Fri, May 26, 2017 at 09:53:33AM +0800, Xiaowei Song wrote:
-> Cc: Guodong Xu <guodong.xu@linaro.org>
-> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-> ---
->  arch/arm64/configs/defconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-> index 7c48028ec64a..d56d8f1062ab 100644
-> --- a/arch/arm64/configs/defconfig
-> +++ b/arch/arm64/configs/defconfig
-> @@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
->  CONFIG_PCI_LAYERSCAPE=y
->  CONFIG_PCI_HISI=y
->  CONFIG_PCIE_QCOM=y
-> +CONFIG_PCIE_KIRIN=y
->  CONFIG_PCIE_ARMADA_8K=y
->  CONFIG_ARM64_VA_BITS_48=y
->  CONFIG_SCHED_MC=y
-> -- 
-> 2.11.GIT
-> 
+This is fairly easily fixable by taking the device lock for a slightly
+longer period.  Note that the other PCI error handling methods actually
+have the same issue, but with them not taking the lock yet and me having
+no good way to reproducibly call them I'm a little reluctant to touch
+them, but it would be great if we could fix those issues as well.
