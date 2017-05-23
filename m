@@ -1,117 +1,152 @@
-Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 23 May 2017 11:19:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Piotr Gregor <piotrgregor@rsyncme.org>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] pci: Handle the case when PCI_COMMAND register hasn't
+ changed in INTx masking test
+Message-ID: <20170523161929.GA24431@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170510122959.4uupohiz3ukzm4c4@debian1.home>
+ <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1493890270-1188-4-git-send-email-deathsimple@vodafone.de>
-References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de> <1493890270-1188-4-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sun, 7 May 2017 13:58:19 +0300
-Message-ID: <CAHp75Vch0ytjeSqDRDtYcMymLgDF5b5sR5W+8kdAnMSFYJgRsg@mail.gmail.com>
-Subject: Re: [PATCH 3/5] PCI: add functionality for resizing resources v4
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 4, 2017 at 12:31 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> This allows device drivers to request resizing their BARs.
->
-> The function only tries to reprogram the windows of the bridge directly a=
-bove
-> the requesting device and only the BAR of the same type (usually mem, 64b=
-it,
-> prefetchable). This is done to make sure not to disturb other drivers by
-> changing the BARs of their devices.
->
-> If reprogramming the bridge BAR fails the old status is restored and -ENO=
-SPC
-> returned to the calling device driver.
+[+cc Alex]
 
-My comments below.
+On Mon, May 22, 2017 at 06:38:20PM -0500, Bjorn Helgaas wrote:
+> Hi Piotr,
+> 
+> On Wed, May 10, 2017 at 01:30:01PM +0100, Piotr Gregor wrote:
+> > The check for interrupt masking support is done by reading
+> > the PCI_COMMAND config word
+> > 
+> > 	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> > 
+> > then flipping the PCI_COMMAND_INTX_DISABLE bit and writing result back
+> > 
+> > 	pci_write_config_word(dev, PCI_COMMAND,
+> > 		orig ^ PCI_COMMAND_INTX_DISABLE);
+> > 
+> > The expected result is that following read of the PCI_COMMAND
+> > 
+> > 	pci_read_config_word(dev, PCI_COMMAND, &new);
+> > 
+> > returns PCI_COMMAND with only PCI_COMMAND_INTX_DISABLE bit changed.
+> > 
+> > There are two possible outcomes:
+> > 
+> > 	1.	Command is the same (hasn't changed)
+> > 	2.	Commmand has changed
+> > 
+> > And the second of them may be decoupled to:
+> > 
+> > 	2.1	Command changed only for PCI_COMMAND_INTX_DISABLE bit
+> > 		(hasn't changed for bits different than PCI_COMMAND_INTX_DISABLE)
+> > 	2.2	Command changed for bit(s) different than PCI_COMMAND_INTX_DISABLE bit
+> > 		(and maybe for PCI_COMMAND_INTX_DISABLE too)
+> > 
+> > The 2.1 is expected result and anything else is error.
+> > The 2.2 outcome is handled by pci_intx_mask_supported by printing
+> > appropriate message to the log, but outcome 1 is not handled.
+> > 
+> > Log the message about command not being changed at all.
+> > 
+> > Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+> > ---
+> >  drivers/pci/pci.c | 14 ++++++++++++--
+> >  1 file changed, 12 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> > index b01bd5b..67a611e 100644
+> > --- a/drivers/pci/pci.c
+> > +++ b/drivers/pci/pci.c
+> > @@ -3712,7 +3712,7 @@ EXPORT_SYMBOL_GPL(pci_intx);
+> >   * pci_intx_mask_supported - probe for INTx masking support
+> >   * @dev: the PCI device to operate on
+> >   *
+> > - * Check if the device dev support INTx masking via the config space
+> > + * Check if the device dev supports INTx masking via the config space
+> >   * command word.
+> >   */
+> >  bool pci_intx_mask_supported(struct pci_dev *dev)
+> > @@ -3736,11 +3736,21 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
+> >  	 * go ahead and check it.
+> >  	 */
+> >  	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+> > +		/*
+> > +		 * If anything else than PCI_COMMAND_INTX_DISABLE bit has
+> > +		 * changed (and maybe PCI_COMMAND_INTX_DISABLE too)
+> > +		 */
+> >  		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+> >  			orig, new);
+> >  	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+> > +		/*
+> > +		 * OK. Only PCI_COMMAND_INTX_DISABLE bit has changed
+> > +		 */
+> >  		mask_supported = true;
+> >  		pci_write_config_word(dev, PCI_COMMAND, orig);
+> > +	} else {
+> > +		dev_err(&dev->dev, "Command register hasn't changed when written from 0x%x to 0x%x: driver or hardware bug?\n",
+> > +			orig, new);
+> 
+> Bit 10 was a reserved bit in PCI r2.2 and was defined as
+> PCI_COMMAND_INTX_DISABLE in r2.3 of the spec, so I don't think we
+> should treat this as an error.
 
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long =
-type)
-> +{
-> +       struct pci_dev_resource *dev_res;
-> +       LIST_HEAD(saved);
-> +       LIST_HEAD(added);
-> +       LIST_HEAD(failed);
-> +       unsigned int i;
-> +       int ret;
-> +
-> +       /* Walk to the root BUS, releasing bridge BARs when possible */
-> +       while (1) {
-> +               for (i =3D PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_=
-END;
-> +                    i++) {
-> +                       struct resource *res =3D &bridge->resource[i];
-> +
-> +                       if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
-> +                               continue;
-> +
-> +                       /* Ignore BARs which are still in use */
-> +                       if (res->child)
-> +                               continue;
-> +
-> +                       ret =3D add_to_list(&saved, bridge, res, 0, 0);
-> +                       if (ret)
-> +                               goto cleanup;
-> +
-> +                       dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
-> +                                i, res);
-> +
-> +                       if (res->parent)
-> +                               release_resource(res);
-> +                       res->start =3D 0;
-> +                       res->end =3D 0;
-> +                       break;
-> +               }
-> +               if (i =3D=3D PCI_BRIDGE_RESOURCE_END)
-> +                       break;
-> +
-> +               if (!bridge->bus || !bridge->bus->self)
-> +                       break;
-> +
-> +               bridge =3D bridge->bus->self;
-> +       }
-> +
+If we make a change here, I think it should be simplified to look like
+this:
 
-Please, consider to refactor as I proposed the other day.
+  pci_cfg_access_lock(dev);
 
-> +}
+  pci_read_config_word(dev, PCI_COMMAND, &orig);
+  toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
+  pci_write_config_word(dev, PCI_COMMAND, toggle);
+  pci_read_config_word(dev, PCI_COMMAND, &new);
+  pci_write_config_word(dev, PCI_COMMAND, orig);
 
-> +int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-> +{
-> +       struct resource *res =3D dev->resource + resno;
+  pci_cfg_access_unlock(dev);
 
-> +       int old, ret =3D 0;
+  if (new == toggle)
+    return true;
 
-Redundant assignment.
+  return false;
 
-> +       u32 sizes;
-> +       u16 cmd;
-> +
+I don't really see the value in cluttering the code to check for
+things that "can't happen."  There's an infinite amount of that sort
+of stuff.  If we know about possible issues, that's one thing, but
+this seems like just looking for trouble.
 
-> +       ret =3D pci_rbar_set_size(dev, resno, size);
-> +       if (ret)
-> +               goto error_reassign;
-> +
+It makes me a little nervous to have this interface that toggles
+PCI_COMMAND_INTX_DISABLE at run-time.  This could be called after a
+driver has set up interrupts, and I think there are some interactions
+between INTx and MSI/MSI-X that might cause unexpected things to
+happen if we toggle PCI_COMMAND_INTX_DISABLE.
 
-> +       return 0;
-> +
-> +error_resize:
-> +       pci_rbar_set_size(dev, resno, old);
-> +       res->end =3D res->start + pci_rbar_size_to_bytes(old) - 1;
-> +
-> +error_reassign:
-> +       pci_assign_unassigned_bus_resources(dev->bus);
-> +       return ret;
-> +}
+I'd rather have the core check it once during enumeration (before we
+give it to a driver and before any interrupts are configured) and save
+the result in struct pci_dev.
 
---=20
-With Best Regards,
-Andy Shevchenko
+> >  	}
+> >  
+> >  	pci_cfg_access_unlock(dev);
+> > @@ -3798,7 +3808,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+> >   * @dev: the PCI device to operate on
+> >   *
+> >   * Check if the device dev has its INTx line asserted, mask it and
+> > - * return true in that case. False is returned if not interrupt was
+> > + * return true in that case. False is returned if interrupt wasn't
+> >   * pending.
+
+We should definitely fix this typo.  Maybe "if no interrupt was
+pending"?
+
+> >   */
+> >  bool pci_check_and_mask_intx(struct pci_dev *dev)
+> > -- 
+> > 2.1.4
+> > 
