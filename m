@@ -1,62 +1,96 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 23 May 2017 13:30:50 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59930 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933470AbdEWTUi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 May 2017 15:20:38 -0400
+Date: Tue, 23 May 2017 14:20:14 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v4 0/2] Tango PCIe controller support
-Message-ID: <20170523183050.GA2637@bhelgaas-glaptop.roam.corp.google.com>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <20170523171758.GC24431@bhelgaas-glaptop.roam.corp.google.com>
- <cb5d08d6-bbbe-486f-b721-2eeeb410ab5e@free.fr>
+To: Imre Deak <imre.deak@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jani Nikula <jani.nikula@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v5 1/2] PCI / PM: Add needs_resume flag to avoid suspend
+ complete optimization
+Message-ID: <20170523192014.GA4585@bhelgaas-glaptop.roam.corp.google.com>
+References: <1493726649-32094-1-git-send-email-imre.deak@intel.com>
+ <1493891315-11867-1-git-send-email-imre.deak@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <cb5d08d6-bbbe-486f-b721-2eeeb410ab5e@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1493891315-11867-1-git-send-email-imre.deak@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 23, 2017 at 08:07:53PM +0200, Mason wrote:
-> On 23/05/2017 19:17, Bjorn Helgaas wrote:
-> >
-> > On Thu, Apr 20, 2017 at 04:24:39PM +0200, Marc Gonzalez wrote:
-> >
-> >> This patch was split in two, to ease review of two orthogonal
-> >> parts (MSI controller and host bridge). NB: the patch is
-> >> just split in two where host bridge support starts.
-> > 
-> > The split is backwards.  The first patch should add basic host bridge
-> > support that is functional, though lacking MSI support.  The second should
-> > add the MSI support.
+On Thu, May 04, 2017 at 12:48:35PM +0300, Imre Deak wrote:
+> Some drivers - like i915 - may not support the system suspend direct
+> complete optimization due to differences in their runtime and system
+> suspend sequence. Add a flag that when set resumes the device before
+> calling the driver's system suspend handlers which effectively disables
+> the optimization.
 > 
-> OK, I'll invert the patches.
+> Needed by the next patch fixing suspend/resume on i915.
 > 
-> Note: the bridge does not support legacy interrupts.
-> Without MSI support, EPs can't interrupt the host.
-> Is that still considered functional?
+> Suggested by Rafael.
+> 
+> v2-v3:
+> - unchanged
+> 
+> v4:
+> - Move the flag to dev_flags instead of using a bit field. (Rafael)
+> 
+> v5:
+> - Rebase on pci/next branch using the free next enum number available.
+> 
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Imre Deak <imre.deak@intel.com>
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Yes.  The driver can at least claim the host bridge and enumerate PCI
-devices.  If you add the MSI support first, that code is completely
-dead and can never be called until the second patch is merged.
+Applied this patch only to for-linus for v4.12.  I'll try to remember to cc
+you when I ask Linus to pull it.
 
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> 
+> [ Bjorn, could you apply this one patch to the pci tree? We would merge
+>   the second patch via the drm-tip tree once this one shows up in Linus'
+>   tree. ]
+> ---
+>  drivers/pci/pci.c   | 3 ++-
+>  include/linux/pci.h | 5 +++++
+>  2 files changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..563901c 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2144,7 +2144,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
+>  
+>  	if (!pm_runtime_suspended(dev)
+>  	    || pci_target_state(pci_dev) != pci_dev->current_state
+> -	    || platform_pci_need_resume(pci_dev))
+> +	    || platform_pci_need_resume(pci_dev)
+> +	    || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
+>  		return false;
+>  
+>  	/*
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 88185ff..ce82b60 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -183,6 +183,11 @@ enum pci_dev_flags {
+>  	PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
+>  	/* Do not use FLR even if device advertises PCI_AF_CAP */
+>  	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
+> +	/*
+> +	 * Resume before calling the driver's system suspend hooks, disabling
+> +	 * the direct_complete optimization.
+> +	 */
+> +	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
+>  };
+>  
+>  enum pci_irq_reroute_variant {
+> -- 
+> 2.7.4
+> 
