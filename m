@@ -1,53 +1,41 @@
-Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48924 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753027AbdEWUHV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 May 2017 16:07:21 -0400
+Date: Tue, 23 May 2017 15:07:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: John Crispin <john@phrozen.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH] PCI: qcom: Add support for IPQ4019 PCIe controller
+Message-ID: <20170523200719.GG7241@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170505152524.29337-1-john@phrozen.org>
 MIME-Version: 1.0
-In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
-References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sun, 7 May 2017 13:50:07 +0300
-Message-ID: <CAHp75VcrKTirCH6gHj1DoLzz5JhfzpvVb34M9e5-OQOjO4Mymw@mail.gmail.com>
-Subject: Re: Resizeable PCI BAR support v5
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170505152524.29337-1-john@phrozen.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 4, 2017 at 12:31 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> Hi everyone,
->
-> this is the fifth incarnation of this set of patches. It enables device
-> drivers to resize and most likely also relocate the PCI BAR of devices
-> they manage to allow the CPU to access all of the device local memory at =
-once.
->
-> This is very useful for GFX device drivers where the default PCI BAR is o=
-nly
-> about 256MB in size for compatibility reasons, but the device easily have
-> multiple gigabyte of local memory.
->
-> Noteable changed compared to v4:
-> 1. Patch #1 is new and a minor cleanup to the PCI code.
-> 2. Some more helpers added to patch #2
-> 3. We now print a note to syslog before releasing resources.
-> 4. Add defines for registers and bits used to add new root hub window.
->
-> I've addressed mostly every review comment I've got so far and it looks l=
-ike we
-> are getting closer to landing this. Any more suggestions/hints how we cou=
-ld
-> improve the patchset would be very welcome.
->
+Stanimir?
 
-Thanks for an update.
+On Fri, May 05, 2017 at 05:25:24PM +0200, John Crispin wrote:
+> Add support for the IPQ4019 PCIe controller. IPQ4019 supports Gen
+> 1/2, one lane, one PCIe root complex with support for MSI and legacy
+> interrupts, and it conforms to PCI Express Base 2.1 specification.
+> 
+> The core init is the sames as for the MSM8996, however the clocks and
+> reset lines differ.
+> 
+> Signed-off-by: John Crispin <john@phrozen.org>
+> ---
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  20 +-
+>  drivers/pci/host/pcie-qcom.c                       | 304 +++++++++++++++++++++
 
-I'm going to comment individual patches.
+pcie-qcom.c was recently moved to drivers/pci/dwc, but I was able to
+apply this by hand pretty easily.  But I would like Stanimir's ack
+first.
 
-Just for the future, please use versioning in the patches themselves
-(hint: -vX to git-format-patch).
-
---=20
-With Best Regards,
-Andy Shevchenko
+Bjorn
