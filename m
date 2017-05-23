@@ -1,71 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:60652 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750965AbdE3LdM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:12 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 2/8] pci: exynos SoC driver adapted to new irq API
-Date: Tue, 30 May 2017 12:32:47 +0100
-Message-Id: <ce8fe48093c7e7cc9768ebef188f97af5f8905b3.1496142978.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:34228 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758270AbdEWSoE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 14:44:04 -0400
+Received: by mail-pf0-f177.google.com with SMTP id 9so122718729pfj.1
+        for <linux-pci@vger.kernel.org>; Tue, 23 May 2017 11:44:04 -0700 (PDT)
+Date: Tue, 23 May 2017 11:44:01 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
+Message-ID: <20170523184359.GB115572@google.com>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts Exynos SoC specific driver to use the new interrupt api
-available in pcie-designware.
+I forgot, I had one more comment:
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
----
- drivers/pci/dwc/pci-exynos.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
+> This patch checks the link status before reading and
+> writing configure space of devices attached to the RC.
+> If the link status is down, we shouldn't try to access
+> the devices.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  drivers/pci/host/pcie-rockchip.c | 12 ++++++++++++
+>  1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 0e020b6..1e64227 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -275,9 +275,21 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
+>  	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
+>  }
+>  
+> +static inline bool rockchip_pcie_link_up(struct rockchip_pcie *rockchip)
+> +{
+> +	return PCIE_LINK_UP(rockchip_pcie_read(rockchip,
+> +					PCIE_CLIENT_BASIC_STATUS1));
+> +}
+> +
+>  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+>  				      struct pci_bus *bus, int dev)
+>  {
+> +	/* do not access the devices if the link isn't completed */
+> +	if (bus->number != rockchip->root_bus_nr) {
+> +		if (!rockchip_pcie_link_up(rockchip))
+> +			return 0;
 
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-index 546082a..e49c39a 100644
---- a/drivers/pci/dwc/pci-exynos.c
-+++ b/drivers/pci/dwc/pci-exynos.c
-@@ -490,15 +490,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct exynos_pcie *ep = arg;
--	struct dw_pcie *pci = ep->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void exynos_pcie_msi_init(struct exynos_pcie *ep)
- {
- 	struct dw_pcie *pci = ep->pci;
-@@ -622,15 +613,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
- 			dev_err(dev, "failed to get msi irq\n");
- 			return -ENODEV;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--					exynos_pcie_msi_irq_handler,
--					IRQF_SHARED | IRQF_NO_THREAD,
--					"exynos-pcie", ep);
--		if (ret) {
--			dev_err(dev, "failed to request msi irq\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
--- 
-2.9.3
+Not exactly a criticism of this patch directly, but the error handling
+sequence that this triggers is strange, and I think it's inconsistent.
+
+A 0 result here becomes PCIBIOS_DEVICE_NOT_FOUND for either the read or
+write conf helpers. But the high level code doesn't handle this
+consistently. See, e.g., pci_read_config_byte() which can return regular
+Linux error codes (like -ENODEV), except it also passes up the return
+code of pci_read_config_byte() (a PCIBIOS_* code) directly.
+
+So callers don't really know whether to treat the value from
+pci_read_config_<foo>() as a PCIBIOS_* code (which should be translated
+with pcibios_err_to_errno()) or as a standard Linux errno.
+
+But then, there are relatively few callers (less than 10% of
+pci_read_config_<foo>(); even fewer for writes) that actually check the
+error codes...
+
+Maybe the "fix" is to replace -ENODEV with PCIBIOS_DEVICE_NOT_FOUND for
+the inconsistent cases (pci_{read,write}_config_{byte,word,dword}()).
+
+Brian
+
+> +	}
+> +
+>  	/* access only one slot on each root port */
+>  	if (bus->number == rockchip->root_bus_nr && dev > 0)
+>  		return 0;
+> -- 
+> 1.9.1
+> 
+> 
