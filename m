@@ -1,79 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:35164 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757145AbdELSN7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 14:13:59 -0400
-Received: by mail-pg0-f68.google.com with SMTP id i63so8498617pgd.2
-        for <linux-pci@vger.kernel.org>; Fri, 12 May 2017 11:13:59 -0700 (PDT)
-Subject: [PATCH] pci: Disable master abort while waiting for an FLR to
- complete
-From: Alexander Duyck <alexander.duyck@gmail.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        alex.williamson@redhat.com, briannorris@chromium.org
-Date: Fri, 12 May 2017 11:13:57 -0700
-Message-ID: <20170512181107.13853.34680.stgit@localhost.localdomain>
+Received: from mail.kernel.org ([198.145.29.99]:46468 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967265AbdEWT71 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 23 May 2017 15:59:27 -0400
+Date: Tue, 23 May 2017 14:59:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Stephen Warren <swarren@wwwdotorg.org>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: Re: [PATCH 1/2] PCI: tegra: Support MSI 64-bit addressing
+Message-ID: <20170523195925.GF7241@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170504201032.32633-1-thierry.reding@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170504201032.32633-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Alexander Duyck <alexander.h.duyck@intel.com>
+On Thu, May 04, 2017 at 10:10:31PM +0200, Thierry Reding wrote:
+> From: Thierry Reding <treding@nvidia.com>
+> 
+> The MSI target address can reside beyond the 32-bit boundary on devices
+> with more than 2 GiB of system memory. The PCI host bridge on Tegra can
+> easily support 64-bit addresses, so make sure to pass the upper 32 bits
+> of the target address to endpoints when allocating MSI entries.
+> 
+> Signed-off-by: Thierry Reding <treding@nvidia.com>
 
-This patch is meant to address issues seen when performing on FLR on some
-systems as the long wait can result in a master abort when reading a
-function that is not yet ready.
+Applied both with Stephen's ack to pci/host-tegra for v4.13, thanks!
 
-To prevent the master abort from being reported up we should disable
-reporting for it while waiting on the reset. Once the reset is completed
-then we can re-enable the master abort for the bus.
-
-Fixes: 5adecf817dd6 ("PCI: Wait for up to 1000ms after FLR reset")
-
-Reported-by: Brian Norris <briannorris@chromium.org>
-Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
----
-
-I haven't been able to test this code as I don't have a system that can
-reproduce the issue. The fix itself is based on the issue as reported by
-Brian so I am hoping he can test this on the Samsung Chromebook Plus with
-RK399 OP1 that this was seen on.
-
- drivers/pci/pci.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..acbdbabeaa0e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3758,14 +3758,31 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
-  */
- static void pci_flr_wait(struct pci_dev *dev)
- {
-+	struct pci_dev *bridge = dev->bus->self;
- 	int i = 0;
-+	u16 bctl;
- 	u32 id;
- 
-+	/*
-+	 * Disable MasterAbortMode while we are waiting to avoid reporting
-+	 * bus errors for reading the command register on a device that is
-+	 * not ready (in some architectures)
-+	 */
-+	if (bridge) {
-+		pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &bctl);
-+		pci_write_config_word(bridge, PCI_BRIDGE_CONTROL,
-+				      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
-+	}
-+
- 	do {
- 		msleep(100);
- 		pci_read_config_dword(dev, PCI_COMMAND, &id);
- 	} while (i++ < 10 && id == ~0);
- 
-+	/* restore bridge state */
-+	if (bridge)
-+		pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bctl);
-+
- 	if (id == ~0)
- 		dev_warn(&dev->dev, "Failed to return from FLR\n");
- 	else if (i > 1)
+> ---
+>  drivers/pci/host/pci-tegra.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index ecf8b4f1bf05..e69f828a9ab2 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -235,6 +235,7 @@ struct tegra_msi {
+>  	struct irq_domain *domain;
+>  	unsigned long pages;
+>  	struct mutex lock;
+> +	u64 phys;
+>  	int irq;
+>  };
+>  
+> @@ -1468,9 +1469,8 @@ static int tegra_msi_setup_irq(struct msi_controller *chip,
+>  
+>  	irq_set_msi_desc(irq, desc);
+>  
+> -	msg.address_lo = virt_to_phys((void *)msi->pages);
+> -	/* 32 bit address only */
+> -	msg.address_hi = 0;
+> +	msg.address_lo = lower_32_bits(msi->phys);
+> +	msg.address_hi = upper_32_bits(msi->phys);
+>  	msg.data = hwirq;
+>  
+>  	pci_write_msi_msg(irq, &msg);
+> @@ -1519,7 +1519,6 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+>  	const struct tegra_pcie_soc *soc = pcie->soc;
+>  	struct tegra_msi *msi = &pcie->msi;
+>  	struct device *dev = pcie->dev;
+> -	unsigned long base;
+>  	int err;
+>  	u32 reg;
+>  
+> @@ -1553,10 +1552,10 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+>  
+>  	/* setup AFI/FPCI range */
+>  	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+> -	base = virt_to_phys((void *)msi->pages);
+> +	msi->phys = virt_to_phys((void *)msi->pages);
+>  
+> -	afi_writel(pcie, base >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+> -	afi_writel(pcie, base, AFI_MSI_AXI_BAR_ST);
+> +	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+> +	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
+>  	/* this register is in 4K increments */
+>  	afi_writel(pcie, 1, AFI_MSI_BAR_SZ);
+>  
+> -- 
+> 2.12.0
+> 
