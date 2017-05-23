@@ -1,47 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:6912 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S939462AbdEZB5O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 21:57:14 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 4/4] defconfig: PCI: Enable  Kirin PCIe defconfig
-Date: Fri, 26 May 2017 09:53:33 +0800
-Message-ID: <20170526015333.92482-5-songxiaowei@hisilicon.com>
-In-Reply-To: <20170526015333.92482-1-songxiaowei@hisilicon.com>
-References: <20170526015333.92482-1-songxiaowei@hisilicon.com>
+Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
+To: Robin Murphy <robin.murphy@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Jiang Liu <jiang.liu@linux.intel.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
+ <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
+ <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
+ <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
+ <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
+Date: Tue, 23 May 2017 21:15:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+On 23/05/2017 20:03, Robin Murphy wrote:
+> On 23/05/17 18:54, Mason wrote:
+>> On 23/05/2017 19:03, Bjorn Helgaas wrote:
+>>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
+>>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
+>>>>
+>>>>> +static int tango_set_affinity(struct irq_data *data,
+>>>>> +		const struct cpumask *mask, bool force)
+>>>>> +{
+>>>>> +	return -EINVAL;
+>>>>> +}
+>>>>> +
+>>>>> +static struct irq_chip tango_chip = {
+>>>>> +	.irq_ack		= tango_ack,
+>>>>> +	.irq_mask		= tango_mask,
+>>>>> +	.irq_unmask		= tango_unmask,
+>>>>> +	.irq_set_affinity	= tango_set_affinity,
+>>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+>>>>> +};
+>>>>
+>>>> Hmmm... I'm wondering why .irq_set_affinity is required.
+>>>>
+>>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
+>>>> first calls __irq_can_set_affinity() to check whether
+>>>> desc->irq_data.chip->irq_set_affinity) exists.
+>>>>
+>>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
+>>>> which calls chip->irq_set_affinity(data, mask, force);
+>>>> = msi_domain_set_affinity()
+>>>> which calls parent->chip->irq_set_affinity() unconditionally.
+>>>>
+>>>> Would it make sense to test that the callback is implemented
+>>>> before calling it?
+>>>>
+>>>>
+>>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+>>>
+>>> I'm not sure what you're asking.
+>>>
+>>> Is this a bug report for the v4 tango driver?
+>>
+>> No.
+>>
+>>> Or are you asking whether msi_domain_set_affinity() should be changed
+>>> to check whether parent->chip->irq_set_affinity is implemented?
+>>
+>> Yes. The way things are implemented now, drivers are forced
+>> to define an irq_set_affinity callback, even if it just returns
+>> an error, otherwise, the kernel crashes, because of the
+>> unconditional function pointer deref. 
+>>
+>>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
+>>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
+>>> generic msi irq domain support"), so if there's a problem here, it's most
+>>> likely in the tango code.
+>>
+>> The issue is having to define an "empty" function.
+>> (Unnecessary code bloat and maintenance.)
+> 
+> AFAICS, only one driver (other than this one) implements a "do nothing"
+> set_affinity callback - everyone else who doesn't do anything hardware
+> specific just passes it along via irq_chip_set_affinity_parent().
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 7c48028ec64a..d56d8f1062ab 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
- CONFIG_PCI_LAYERSCAPE=y
- CONFIG_PCI_HISI=y
- CONFIG_PCIE_QCOM=y
-+CONFIG_PCIE_KIRIN=y
- CONFIG_PCIE_ARMADA_8K=y
- CONFIG_ARM64_VA_BITS_48=y
- CONFIG_SCHED_MC=y
--- 
-2.11.GIT
+I counted 4. Where did I mess up?
+
+advk_msi_set_affinity
+altera_msi_set_affinity
+nwl_msi_set_affinity
+vmd_irq_set_affinity
+tango_set_affinity
+
+Regards.
