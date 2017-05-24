@@ -1,86 +1,47 @@
-Return-Path: <SRS0=AMQT=4Y=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=AMQT=4Y=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 18 May 2017 18:46:12 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
- configuration to be preserved
-Message-ID: <20170518174612.GA31373@red-moon>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
- <20170518154708.GA30182@red-moon>
- <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34722 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161115AbdEXWv6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 May 2017 18:51:58 -0400
+Subject: [PATCH 0/2] Replace driver's usage of hard-coded device IDs to
+ #defines
+From: Myron Stowe <myron.stowe@redhat.com>
+To: linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Cc: bhelgaas@google.com, saeedm@mellanox.com, noaos@mellanox.com,
+        tariqt@mellanox.com
+Date: Wed, 24 May 2017 16:47:34 -0600
+Message-ID: <20170524224734.24221.33787.stgit@amt.stowe>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
-> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
-> >
-> > [...]
-> >
-> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
-> >> >> allocation under the control of the firmware, which completely removes
-> >> >> the burden of having to reason about a policy in the kernel. That
-> >> >> leaves the question which will be the default, but that is of minor
-> >> >> importance IMO.
-> >> >
-> >> > I agree; we should try to follow the spec unless we have a good reason
-> >> > not to, which argues for honoring the _DSM, so I think it's worth a
-> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
-> >> > kernel (because we don't know the effect of reassigning something the
-> >> > firmware told us not to touch).
-> >> >
-> >>
-> >> I'd like to hear Lorenzo's view on this first, but I can certainly
-> >> respin my _DSM patch to take pci=realloc into account, and move the
-> >> handling to generic code as well.
-> >
-> > I agree with both of you on _DSM implementation and interpretation.
-> >
-> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
-> > are going to trigger regressions, that's certain (ie we can then boot
-> > with pci=realloc - still, we are breaking systems), that's the reason
-> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
-> > ACPI testing before queuing it (either I can set-up a testing branch
-> > or we ask Bjorn to do it - as you guys prefer - as long as we have
-> > a branch for people to test patch(2) on ARM64 ACPI systems).
-> >
-> > You still need to assign resources that could not be claimed though
-> > so patch(2) still needs updating:
-> >
-> > PCI FW spec 3.1 - 4.6.5
-> >
-> > "...However, the operating system is free to configure the devices in this
-> > hierarchy that have not been configured by the firmware."
-> >
-> > Which in kernel-speak it means that you have to assign resources that
-> > could not be claimed.
-> >
-> 
-> Right. AFAICT this is the part that is typically handled by
-> pcibios_resource_survey() et al, whose default __weak implementations
-> are empty functions. Shall I override those for arm64 to host this
-> logic?
+Noa Osherovich introduced a series of new Mellanox device ID definitions to
+help differentiate specific controllers that needed INTx masking quirks [1].
 
-I think it makes sense yes unless Bjorn spots something wrong with that
-but you should also call it in ARM64 pci_acpi_scan_root() since it is
-not called by PCI core on non-hot-added bridges, I reckon you figured
-that out already though.
+Bjorn Helgaas followed on, using the device ID definitions Noa provided to
+replace hard-coded values within the mxl4 ID table [2].
+    
+This patch continues along similar lines, adding a few additional Mellanox
+device ID definitions and converting the net/mlx5e driver's mlx5 ID table to
+use the defines so tools like 'grep' and 'cscope' can be used to help
+identify relationships with other aspects (such as INTx masking).
 
-Thanks a lot !
-Lorenzo
+
+[1]  7254383341b PCI: Add Mellanox device IDs
+     d76d2fe05fd PCI: Convert Mellanox broken INTx quirks to be for listed
+                 devices only
+
+[2]  c19e4b9037f net/mlx4_core: Use device ID defines
+
+
+Myron Stowe (2):
+      PCI: Add Mellanox device IDs
+      net/mlx5e: Use device ID defines
+
+
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |   12 ++++++------
+ include/linux/pci_ids.h                        |    3 +++
+ 2 files changed, 9 insertions(+), 6 deletions(-)
+
+--
