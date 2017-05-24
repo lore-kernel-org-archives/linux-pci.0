@@ -1,59 +1,75 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.mpynet.fi ([82.197.21.85]:64451 "EHLO mx2.mpynet.fi"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751129AbdE2JTM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 29 May 2017 05:19:12 -0400
-Date: Mon, 29 May 2017 12:19:09 +0300
-From: Rakesh Pandit <rakesh@tuxera.com>
-To: <linux-pci@vger.kernel.org>
-CC: <helgaas@kernel.org>, <linux-nvme@lists.infradead.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] PCI: ensure the PCI device is locked over ->reset_notify
- calls
-Message-ID: <20170529091909.GA33654@dhcp-216.srv.tuxera.com>
-References: <20170523054202.7985-1-hch@lst.de>
- <20170523054202.7985-2-hch@lst.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 0/1] ARM64/PCI: ACPI NUMA node set-up
+Date: Wed, 24 May 2017 18:22:18 +0100
+Message-Id: <20170524172219.5689-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>, Robert Richter <robert.richter@cavium.com>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-In-Reply-To: <20170523054202.7985-2-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+This patch series is v3 of a previous posting:
 
-On Tue, May 23, 2017 at 07:42:02AM +0200, Christoph Hellwig wrote:
-> Without this ->notify_reset instance may race with ->remove calls,
-> which can be easily triggered in NVMe.
->
+v2 -> v3
 
-Any input on this sometime before next -rc release would be great ?
+- Dropped generic approach
+  # It was not consistent between ACPI and DT and not reusable on x86/IA64
+- Trimmed the series to one patch ARM64 specific, three-line patch fixes
+  the issue
+- Rebased against v4.12-rc2
+- Dropped RFC/RFT tag
 
-> Reported-by: Rakesh Pandit <rakesh@tuxera.com>
-> Tested-by: Rakesh Pandit <rakesh@tuxera.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/pci.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b01bd5bba8e6..b61ad77dc322 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4275,11 +4275,13 @@ int pci_reset_function(struct pci_dev *dev)
->  	if (rc)
->  		return rc;
->  
-> +	pci_dev_lock(dev);
->  	pci_dev_save_and_disable(dev);
->  
-> -	rc = pci_dev_reset(dev, 0);
-> +	rc = __pci_dev_reset(dev, 0);
->  
->  	pci_dev_restore(dev);
-> +	pci_dev_unlock(dev);
->  
->  	return rc;
->  }
-> -- 
-> 2.11.0
-> 
+v2: https://lkml.org/lkml/2017/5/15/433
+
+v1 -> v2:
+
+- Added missing call to acpi_pci_bus_find_numa_node()
+- Rebased against v4.12-rc1
+
+v1: https://lkml.org/lkml/2017/4/26/211
+
+--- Original Cover Letter --
+
+On the ARM64 architecture, the arch specific PCI pcibus_to_node() callback
+can be triggered on struct pci_bus.sysdata structures that carry host
+bridge specific data through different structures layout (ie sysdata
+pointer points at different structs for different host bridges), therefore
+it is not possible to have a unified pcibus_to_node() implementation.
+
+Given that the device NUMA node is a property of the struct pci_bus (and
+its associated struct device), move the struct pci_bus node assignment to
+generic PCI code, where according to the platform firmware the NUMA node
+for the device backing the struct pci_bus is retrieved and propagated
+through the PCI bus hierarchy.
+
+Lorenzo Pieralisi (1):
+  ARM64/PCI: Set root bus NUMA node on ACPI systems
+
+ arch/arm64/kernel/pci.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
