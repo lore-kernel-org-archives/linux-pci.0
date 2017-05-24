@@ -1,16 +1,12 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-Date: Tue, 16 May 2017 00:34:18 +0300
-Message-ID: <1804176.uxVOFWagsb@avalon>
-In-Reply-To: <1900421.tkAiezvoW8@avalon>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
- <1900421.tkAiezvoW8@avalon>
-MIME-Version: 1.0
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v3 1/1] ARM64/PCI: Set root bus NUMA node on ACPI systems
+Date: Wed, 24 May 2017 18:22:19 +0100
+Message-Id: <20170524172219.5689-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170524172219.5689-1-lorenzo.pieralisi@arm.com>
+References: <20170524172219.5689-1-lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,141 +14,67 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Magnus Damm <magnus.damm@gmail.com>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
- okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
- Robin Murphy <robin.murphy@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ Will Deacon <will.deacon@arm.com>, Robert Richter <robert.richter@cavium.com>,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Catalin Marinas <catalin.marinas@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sricharan,
+PCI core requires the NUMA node for the struct pci_host_bridge.dev to
+be set by using the pcibus_to_node(struct pci_bus*) API, that on ARM64
+systems relies on the struct pci_host_bridge->bus.dev NUMA node.
 
-On Monday 15 May 2017 23:37:16 Laurent Pinchart wrote:
-> On Wednesday 03 May 2017 15:54:59 Sricharan R wrote:
-> > On 5/3/2017 3:24 PM, Robin Murphy wrote:
-> >> On 02/05/17 19:35, Geert Uytterhoeven wrote:
-> >>> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R wrote:
-> >>>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> >>>> 
-> >>>> Failures to look up an IOMMU when parsing the DT iommus property need
-> >>>> to be handled separately from the .of_xlate() failures to support
-> >>>> deferred probing.
-> >>>> 
-> >>>> The lack of a registered IOMMU can be caused by the lack of a driver
-> >>>> for the IOMMU, the IOMMU device probe not having been performed yet,
-> >>>> having been deferred, or having failed.
-> >>>> 
-> >>>> The first case occurs when the device tree describes the bus master
-> >>>> and IOMMU topology correctly but no device driver exists for the IOMMU
-> >>>> yet or the device driver has not been compiled in. Return NULL, the
-> >>>> caller will configure the device without an IOMMU.
-> >>>> 
-> >>>> The second and third cases are handled by deferring the probe of the
-> >>>> bus master device which will eventually get reprobed after the IOMMU.
-> >>>> 
-> >>>> The last case is currently handled by deferring the probe of the bus
-> >>>> master device as well. A mechanism to either configure the bus master
-> >>>> device without an IOMMU or to fail the bus master device probe
-> >>>> depending on whether the IOMMU is optional or mandatory would be a good
-> >>>> enhancement.
-> >>>> 
-> >>>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> >>>> Signed-off-by: Laurent Pichart
-> >>>> <laurent.pinchart+renesas@ideasonboard.com>
-> >>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >>> 
-> >>> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
-> >>> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
-> >>> properties in DT now fail to probe.
-> >> 
-> >> How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
-> >> registered then they should merely defer until we reach the point of
-> >> giving up and ignoring the IOMMU. Is it just that you have no other
-> >> late-probing drivers or post-init module loads to kick the deferred
-> >> queue after that point? I did try to find a way to explicitly kick it
-> >> from a suitably late initcall, but there didn't seem to be any obvious
-> >> public interface - anyone have any suggestions?
-> >> 
-> >> I think that's more of a general problem with the probe deferral
-> >> mechanism itself (I've seen the same thing happen with some of the
-> >> CoreSight stuff on Juno due to the number of inter-component
-> >> dependencies) rather than any specific fault of this series.
-> > 
-> > I was thinking of an additional check like below to avoid the
-> > situation ?
-> > 
-> > From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
-> > From: Sricharan R <sricharan@codeaurora.org>
-> > Date: Wed, 3 May 2017 13:16:59 +0530
-> > Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
-> > 
-> > While returning EPROBE_DEFER for iommu masters
-> > take in to account of iommu nodes that could be
-> > marked in DT as 'status=disabled', in which case
-> > simply return NULL and let the master's probe
-> > continue rather than deferring.
-> > 
-> > Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> > ---
-> > 
-> >  drivers/iommu/of_iommu.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> > index 9f44ee8..e6e9bec 100644
-> > --- a/drivers/iommu/of_iommu.c
-> > +++ b/drivers/iommu/of_iommu.c
-> > @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node
-> > *np)
-> > 
-> >         ops = iommu_ops_from_fwnode(fwnode);
-> >         if ((ops && !ops->of_xlate) ||
-> > +           !of_device_is_available(iommu_spec->np) ||
-> >             (!ops && !of_iommu_driver_present(iommu_spec->np)))
-> >                 return NULL;
-> 
-> This looks good to me, but won't be enough. The ipmmu-vmsa driver in
-> v4.12-rc1 doesn't call iommu_device_register() and thus won't be found by
-> iommu_ops_from_fwnode(). Furthermore, it doesn't IOMMU_OF_DECLARE(), and
-> thus will always be considered as absent.
-> 
-> I agree that the ipmmu-vmsa driver needs to be fixed, but it would have been
-> nice to check existing IOMMU drivers before merging this patch series...
+The struct pci_host_bridge.dev NUMA node is then propagated through
+the PCI device hierarchy as PCI devices (and bridges) are enumerated
+under it.
 
-Please pardon the question, but has this patch series been tested on ARM32 ?
+Therefore, in order to set-up the PCI NUMA hierarchy appropriately, the
+struct pci_host_bridge->bus.dev NUMA node must be set before core
+code calls pcibus_to_node(struct pci_bus*) on it so that PCI core can
+retrieve the NUMA node for the struct pci_host_bridge.dev device and can
+propagate it through the PCI bus tree.
 
-When the device is probed the arch_setup_dma_ops() function is called. It sets 
-the device's dma_ops and the mapping (in __arm_iommu_attach_device()). If 
-probe is deferred, arch_teardown_dma_ops() is called which in turn calls 
-arch_teardown_dma_ops(). This removes the mapping but doesn't touch the 
-dma_ops. The next time the device is probed, arch_setup_dma_ops() bails out 
-immediately as the dma_ops are already set, leaving us with a device bound to 
-IOMMU operations but with no mapping. This oopses later as soon as the kernel 
-tries to map memory for the device through the IOMMU.
+On ARM64 ACPI based systems the struct pci_host_bridge->bus.dev NUMA
+node can be set-up in pcibios_root_bridge_prepare() by parsing the root
+bridge ACPI device firmware binding.
 
-I might be missing something obvious, but I don't see how this can work.
+Add code to the pcibios_root_bridge_prepare() that, when booting with
+ACPI, parse the root bridge ACPI device companion NUMA binding and set
+the corresponding struct pci_host_bridge->bus.dev NUMA node
+appropriately.
 
-> >>> This can be fixed by either:
-> >>>   - Disabling CONFIG_IPMMU_VMSA, or
-> >>>   - Reverting commit 7b07cbefb68d486f (but keeping "int ret = 0;").
-> >>> 
-> >>> Note that this was a bit hard to investigate, as R-Car Gen3 support
-> >>> wasn't upstreamed yet, so bisection pointed to a merge commit.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+---
+ arch/arm64/kernel/pci.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 4f0e3eb..1082834 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -108,7 +108,10 @@ int pcibios_root_bridge_prepare(struct pci_host_bridge *bridge)
+ 	if (!acpi_disabled) {
+ 		struct pci_config_window *cfg = bridge->bus->sysdata;
+ 		struct acpi_device *adev = to_acpi_device(cfg->parent);
++		struct device *bus_dev = &bridge->bus->dev;
++
+ 		ACPI_COMPANION_SET(&bridge->dev, adev);
++		set_dev_node(bus_dev, acpi_get_node(acpi_device_handle(adev)));
+ 	}
+ 
+ 	return 0;
 -- 
-Regards,
-
-Laurent Pinchart
+2.10.0
 
 
 _______________________________________________
