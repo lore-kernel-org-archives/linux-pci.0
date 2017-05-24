@@ -1,135 +1,127 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:36468 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750912AbdE3JId (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 05:08:33 -0400
-Received: by mail-pf0-f171.google.com with SMTP id m17so66695593pfg.3
-        for <linux-pci@vger.kernel.org>; Tue, 30 May 2017 02:08:33 -0700 (PDT)
-From: Srinath Mannam <srinath.mannam@broadcom.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [RFC PATCH v2] pci: Concurrency issue in NVMe Init through PCIe switch
-Date: Tue, 30 May 2017 14:38:17 +0530
-Message-Id: <1496135297-19680-1-git-send-email-srinath.mannam@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=baKf=46=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=baKf=46=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
+To: Robin Murphy <robin.murphy@arm.com>, Mason <slash.tmp@free.fr>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
+ <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
+ <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
+ <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
+ <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
+ <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
+ <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Jiang Liu <jiang.liu@linux.intel.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
+Date: Wed, 24 May 2017 11:22:36 +0100
+MIME-Version: 1.0
+In-Reply-To: <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-We found a concurrency issue in NVMe Init when we initialize
-multiple NVMe connected over PCIe switch.
+On 24/05/17 11:00, Robin Murphy wrote:
+> On 23/05/17 20:15, Mason wrote:
+>> On 23/05/2017 20:03, Robin Murphy wrote:
+>>> On 23/05/17 18:54, Mason wrote:
+>>>> On 23/05/2017 19:03, Bjorn Helgaas wrote:
+>>>>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
+>>>>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
+>>>>>>
+>>>>>>> +static int tango_set_affinity(struct irq_data *data,
+>>>>>>> +		const struct cpumask *mask, bool force)
+>>>>>>> +{
+>>>>>>> +	return -EINVAL;
+>>>>>>> +}
+>>>>>>> +
+>>>>>>> +static struct irq_chip tango_chip = {
+>>>>>>> +	.irq_ack		= tango_ack,
+>>>>>>> +	.irq_mask		= tango_mask,
+>>>>>>> +	.irq_unmask		= tango_unmask,
+>>>>>>> +	.irq_set_affinity	= tango_set_affinity,
+>>>>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+>>>>>>> +};
+>>>>>>
+>>>>>> Hmmm... I'm wondering why .irq_set_affinity is required.
+>>>>>>
+>>>>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
+>>>>>> first calls __irq_can_set_affinity() to check whether
+>>>>>> desc->irq_data.chip->irq_set_affinity) exists.
+>>>>>>
+>>>>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
+>>>>>> which calls chip->irq_set_affinity(data, mask, force);
+>>>>>> = msi_domain_set_affinity()
+>>>>>> which calls parent->chip->irq_set_affinity() unconditionally.
+>>>>>>
+>>>>>> Would it make sense to test that the callback is implemented
+>>>>>> before calling it?
+>>>>>>
+>>>>>>
+>>>>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+>>>>>
+>>>>> I'm not sure what you're asking.
+>>>>>
+>>>>> Is this a bug report for the v4 tango driver?
+>>>>
+>>>> No.
+>>>>
+>>>>> Or are you asking whether msi_domain_set_affinity() should be changed
+>>>>> to check whether parent->chip->irq_set_affinity is implemented?
+>>>>
+>>>> Yes. The way things are implemented now, drivers are forced
+>>>> to define an irq_set_affinity callback, even if it just returns
+>>>> an error, otherwise, the kernel crashes, because of the
+>>>> unconditional function pointer deref. 
+>>>>
+>>>>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
+>>>>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
+>>>>> generic msi irq domain support"), so if there's a problem here, it's most
+>>>>> likely in the tango code.
+>>>>
+>>>> The issue is having to define an "empty" function.
+>>>> (Unnecessary code bloat and maintenance.)
+>>>
+>>> AFAICS, only one driver (other than this one) implements a "do nothing"
+>>> set_affinity callback - everyone else who doesn't do anything hardware
+>>> specific just passes it along via irq_chip_set_affinity_parent().
+>>
+>> I counted 4. Where did I mess up?
+>>
+>> advk_msi_set_affinity
+>> altera_msi_set_affinity
+>> nwl_msi_set_affinity
+>> vmd_irq_set_affinity
+>> tango_set_affinity
+> 
+> Fair point - I went through drivers/irqchip and the various
+> arch-specific instances and found ls_scfg_msi_set_affinity(), but
+> somehow skipped over drivers/pci. Anyway, I think the question stands of
+> why are these handful of drivers *not* using irq_chip_set_affinity_parent()?
 
-Setup details:
- - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
- - Two NVMe cards are connected to PCIe RC through bridge as shown
-   in the below figure.
+Probably because they don't have a parent, in the hierarchical sense.
+All they have is a chained interrupt (*puke*). Which implies that
+changing the affinity of one MSI would affect all of them, completely
+confusing unsuspecting userspace such as irqbalance.
 
-                   [RC]
-                    |
-                 [BRIDGE]
-                    |
-               -----------
-              |           |
-            [NVMe]      [NVMe]
+> As an outsider, it naively seems logical that the affinity of an MSI
+> which just gets translated to a wired interrupt should propagate through
+> to the affinity of that wired interrupt, but maybe there are reasons not
+> to; I really don't know.
 
-Issue description:
-After PCIe enumeration completed NVMe driver probe function called
-for both the devices from two CPUS simultaneously.
->From nvme_probe, pci_enable_device_mem called for both the EPs. This
-function called pci_enable_bridge enable recursively until RC.
+See above. The main issue is that HW folks haven't understood the actual
+use of MSIs, and persist in implementing them as an afterthought, based
+on some cascading interrupt controller design.
 
-Inside pci_enable_bridge function, at two places concurrency issue is
-observed.
+Sad. So sad.
 
-Place 1:
-  CPU 0:
-    1. Done Atomic increment dev->enable_cnt
-       in pci_enable_device_flags
-    2. Inside pci_enable_resources
-    3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
-    4. Ready to set PCI_COMMAND_MEMORY (0x2) in
-       pci_write_config_word(dev, PCI_COMMAND, cmd)
-  CPU 1:
-    1. Check pci_is_enabled in function pci_enable_bridge
-       and it is true
-    2. Check (!dev->is_busmaster) also true
-    3. Gone into pci_set_master
-    4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
-    5. Ready to set PCI_COMMAND_MASTER (0x4) in
-       pci_write_config_word(dev, PCI_COMMAND, cmd)
-
-By the time of last point for both the CPUs are read value 0 and
-ready to write 2 and 4.
-After last point final value in PCI_COMMAND register is 4 instead of 6.
-
-Place 2:
-  CPU 0:
-    1. Done Atomic increment dev->enable_cnt in
-       pci_enable_device_flags
-
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
----
-Changes since v1:
- - Used mutex to syncronize pci_enable_bridge
-
- drivers/pci/pci.c   | 4 ++++
- drivers/pci/probe.c | 1 +
- include/linux/pci.h | 1 +
- 3 files changed, 6 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5b..5bff3e7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1347,7 +1347,9 @@ static void pci_enable_bridge(struct pci_dev *dev)
- {
- 	struct pci_dev *bridge;
- 	int retval;
-+	struct mutex *lock = &dev->bridge_lock;
- 
-+	mutex_lock(lock);
- 	bridge = pci_upstream_bridge(dev);
- 	if (bridge)
- 		pci_enable_bridge(bridge);
-@@ -1355,6 +1357,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	if (pci_is_enabled(dev)) {
- 		if (!dev->is_busmaster)
- 			pci_set_master(dev);
-+		mutex_unlock(lock);
- 		return;
- 	}
- 
-@@ -1363,6 +1366,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
- 			retval);
- 	pci_set_master(dev);
-+	mutex_unlock(lock);
- }
- 
- static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 19c8950..1c25d1c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -880,6 +880,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	child->dev.parent = child->bridge;
- 	pci_set_bus_of_node(child);
- 	pci_set_bus_speed(child);
-+	mutex_init(&bridge->bridge_lock);
- 
- 	/* Set up default resource pointers and names.. */
- 	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..7e88f41 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -266,6 +266,7 @@ struct pci_dev {
- 	void		*sysdata;	/* hook for sys-specific extension */
- 	struct proc_dir_entry *procent;	/* device entry in /proc/bus/pci */
- 	struct pci_slot	*slot;		/* Physical slot this device is in */
-+	struct mutex bridge_lock;
- 
- 	unsigned int	devfn;		/* encoded device & function index */
- 	unsigned short	vendor;
+	M.
 -- 
-2.7.4
+Jazz is not dead. It just smells funny...
