@@ -1,104 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-arm-kernel@lists.infradead.org, linux-efi@vger.kernel.org
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
-From: Heyi Guo <heyi.guo@linaro.org>
-Message-ID: <f8773b97-7085-ddb3-5dc4-d65cc1f5bce0@linaro.org>
-Date: Wed, 3 May 2017 11:09:51 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35120 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751710AbdEXBAT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 21:00:19 -0400
+Received: by mail-pf0-f180.google.com with SMTP id n23so130219168pfb.2
+        for <linux-pci@vger.kernel.org>; Tue, 23 May 2017 18:00:18 -0700 (PDT)
+Date: Tue, 23 May 2017 18:00:15 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
+Message-ID: <20170524010014.GA109842@google.com>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170523180048.GA115572@google.com>
+ <3fea7598-501e-6131-612a-977f005e9a2b@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, matt@codeblueprint.co.uk,
- linux-pci@vger.kernel.org, pjones@redhat.com, hanjun.guo@linaro.org,
- bhelgaas@google.com, yinghai@kernel.org
-Content-Type: text/plain; charset="gbk"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3fea7598-501e-6131-612a-977f005e9a2b@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQXJkLAoKSSBoYXZlIG9uZSBjb21tZW50IGluY2xpbmVkLgoKCtTaIDMvMjIvMjAxNyAxMToz
-MCBQTSwgQXJkIEJpZXNoZXV2ZWwg0LS1wDoKPiBPbiBVRUZJIHN5c3RlbXMsIHRoZSBQQ0kgc3Vi
-c3lzdGVtIGlzIGVudW1lcmF0ZWQgYnkgdGhlIGZpcm13YXJlLAo+IGFuZCBpZiBhIGdyYXBoaWNh
-bCBmcmFtZWJ1ZmZlciBpcyBleHBvc2VkIGJ5IGEgUENJIGRldmljZSwgaXRzIGJhc2UKPiBhZGRy
-ZXNzIGFuZCBzaXplIGFyZSBleHBvc2VkIHRvIHRoZSBPUyB2aWEgdGhlIEdyYXBoaWNzIE91dHB1
-dAo+IFByb3RvY29sIChHT1ApLgo+Cj4gT24gYXJtNjQgUENJIHN5c3RlbXMsIHRoZSBlbnRpcmUg
-UENJIGhpZXJhcmNoeSBpcyByZWNvbmZpZ3VyZWQgZnJvbQo+IHNjcmF0Y2ggYXQgYm9vdC4gVGhp
-cyBtYXkgcmVzdWx0IGluIHRoZSBHT1AgZnJhbWVidWZmZXIgYWRkcmVzcyB0bwo+IGJlY29tZSBz
-dGFsZSwgaWYgdGhlIEJBUiBjb3ZlcmluZyB0aGUgZnJhbWVidWZmZXIgaXMgbW9kaWZpZWQuIFRo
-aXMKPiB3aWxsIGNhdXNlIHRoZSBmcmFtZWJ1ZmZlciB0byBiZWNvbWUgdW5yZXNwb25zaXZlLCBh
-bmQgbWF5IGluIHNvbWUKPiBjYXNlcyByZXN1bHQgaW4gdW5wcmVkaWN0YWJsZSBiZWhhdmlvciBp
-ZiB0aGUgcmFuZ2UgaXMgcmVhc3NpZ25lZCB0bwo+IGFub3RoZXIgZGV2aWNlLgo+Cj4gU28gYWRk
-IGEgcXVpcmsgdG8gdGhlIEVGSSBmYiBkcml2ZXIgdG8gZmluZCB0aGUgQkFSIGFzc29jaWF0ZWQg
-d2l0aAo+IHRoZSBHT1AgYmFzZSBhZGRyZXNzLCBhbmQgc2V0IHRoZSBJT1JFU09VUkNFX1BDSV9G
-SVhFRCBhdHRyaWJ1dGUgc28KPiB0aGF0IHRoZSBQQ0kgY29yZSB3aWxsIGxlYXZlIGl0IGFsb25l
-Lgo+Cj4gQ2M6IE1hdHQgRmxlbWluZyA8bWF0dEBjb2RlYmx1ZXByaW50LmNvLnVrPgo+IENjOiBQ
-ZXRlciBKb25lcyA8cGpvbmVzQHJlZGhhdC5jb20+Cj4gU2lnbmVkLW9mZi1ieTogQXJkIEJpZXNo
-ZXV2ZWwgPGFyZC5iaWVzaGV1dmVsQGxpbmFyby5vcmc+Cj4gLS0tCj4gdjM6IGNoZWNrIGRldmlj
-ZSBpcyBlbmFibGVkIGJlZm9yZSBhdHRlbXB0aW5nIHRvIGNsYWltIHRoZSByZXNvdXJjZQo+Cj4g
-ICBkcml2ZXJzL3ZpZGVvL2ZiZGV2L2VmaWZiLmMgfCA2MCArKysrKysrKysrKysrKysrKysrLQo+
-ICAgMSBmaWxlIGNoYW5nZWQsIDU5IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPgo+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3ZpZGVvL2ZiZGV2L2VmaWZiLmMgYi9kcml2ZXJzL3ZpZGVvL2Zi
-ZGV2L2VmaWZiLmMKPiBpbmRleCA4YzRkYzFlMWY5NGYuLjg4ZjY1Mzg2NGEwMSAxMDA2NDQKPiAt
-LS0gYS9kcml2ZXJzL3ZpZGVvL2ZiZGV2L2VmaWZiLmMKPiArKysgYi9kcml2ZXJzL3ZpZGVvL2Zi
-ZGV2L2VmaWZiLmMKPiBAQCAtMTAsNiArMTAsNyBAQAo+ICAgI2luY2x1ZGUgPGxpbnV4L2VmaS5o
-Pgo+ICAgI2luY2x1ZGUgPGxpbnV4L2Vycm5vLmg+Cj4gICAjaW5jbHVkZSA8bGludXgvZmIuaD4K
-PiArI2luY2x1ZGUgPGxpbnV4L3BjaS5oPgo+ICAgI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2Rl
-dmljZS5oPgo+ICAgI2luY2x1ZGUgPGxpbnV4L3NjcmVlbl9pbmZvLmg+Cj4gICAjaW5jbHVkZSA8
-dmlkZW8vdmdhLmg+Cj4gQEAgLTE0Myw2ICsxNDQsOSBAQCBzdGF0aWMgc3RydWN0IGF0dHJpYnV0
-ZSAqZWZpZmJfYXR0cnNbXSA9IHsKPiAgIH07Cj4gICBBVFRSSUJVVEVfR1JPVVBTKGVmaWZiKTsK
-PiAgIAo+ICtzdGF0aWMgYm9vbCBwY2lfYmFyX2ZvdW5kOwkvKiBkaWQgd2UgZmluZCBhIEJBUiBt
-YXRjaGluZyB0aGUgZWZpZmIgYmFzZT8gKi8KPiArc3RhdGljIGJvb2wgcGNpX2Rldl9kaXNhYmxl
-ZDsJLyogd2FzIHRoZSBkZXZpY2UgZGlzYWJsZWQ/ICovCj4gKwo+ICAgc3RhdGljIGludCBlZmlm
-Yl9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpkZXYpCj4gICB7Cj4gICAJc3RydWN0IGZi
-X2luZm8gKmluZm87Cj4gQEAgLTE1Miw3ICsxNTYsNyBAQCBzdGF0aWMgaW50IGVmaWZiX3Byb2Jl
-KHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKmRldikKPiAgIAl1bnNpZ25lZCBpbnQgc2l6ZV90b3Rh
-bDsKPiAgIAljaGFyICpvcHRpb24gPSBOVUxMOwo+ICAgCj4gLQlpZiAoc2NyZWVuX2luZm8ub3Jp
-Z192aWRlb19pc1ZHQSAhPSBWSURFT19UWVBFX0VGSSkKPiArCWlmIChzY3JlZW5faW5mby5vcmln
-X3ZpZGVvX2lzVkdBICE9IFZJREVPX1RZUEVfRUZJIHx8IHBjaV9kZXZfZGlzYWJsZWQpCj4gICAJ
-CXJldHVybiAtRU5PREVWOwo+ICAgCj4gICAJaWYgKGZiX2dldF9vcHRpb25zKCJlZmlmYiIsICZv
-cHRpb24pKQo+IEBAIC0zNjAsMyArMzY0LDU3IEBAIHN0YXRpYyBzdHJ1Y3QgcGxhdGZvcm1fZHJp
-dmVyIGVmaWZiX2RyaXZlciA9IHsKPiAgIH07Cj4gICAKPiAgIGJ1aWx0aW5fcGxhdGZvcm1fZHJp
-dmVyKGVmaWZiX2RyaXZlcik7Cj4gKwo+ICtzdGF0aWMgdm9pZCBjbGFpbV9lZmlmYl9iYXIoc3Ry
-dWN0IHBjaV9kZXYgKmRldiwgaW50IGlkeCkKPiArewo+ICsJdTE2IHdvcmQ7Cj4gKwo+ICsJcGNp
-X2Jhcl9mb3VuZCA9IHRydWU7Cj4gKwo+ICsJcGNpX3JlYWRfY29uZmlnX3dvcmQoZGV2LCBQQ0lf
-Q09NTUFORCwgJndvcmQpOwo+ICsJaWYgKCEod29yZCAmIFBDSV9DT01NQU5EX01FTU9SWSkpIHsK
-PiArCQlwY2lfZGV2X2Rpc2FibGVkID0gdHJ1ZTsKPiArCQlkZXZfZXJyKCZkZXYtPmRldiwKPiAr
-CQkJIkJBUiAlZDogYXNzaWduZWQgdG8gZWZpZmIgYnV0IGRldmljZSBpcyBkaXNhYmxlZCFcbiIs
-Cj4gKwkJCWlkeCk7Cj4gKwkJcmV0dXJuOwo+ICsJfQo+ICsKPiArCWlmIChwY2lfY2xhaW1fcmVz
-b3VyY2UoZGV2LCBpZHgpKSB7Cj4gKwkJcGNpX2Rldl9kaXNhYmxlZCA9IHRydWU7Cj4gKwkJZGV2
-X2VycigmZGV2LT5kZXYsCj4gKwkJCSJCQVIgJWQ6IGZhaWxlZCB0byBjbGFpbSByZXNvdXJjZSBm
-b3IgZWZpZmIhXG4iLCBpZHgpOwo+ICsJCXJldHVybjsKPiArCX0KPiArCj4gKwlkZXZfaW5mbygm
-ZGV2LT5kZXYsICJCQVIgJWQ6IGFzc2lnbmVkIHRvIGVmaWZiXG4iLCBpZHgpOwo+ICt9Cj4gKwo+
-ICtzdGF0aWMgdm9pZCBlZmlmYl9maXh1cF9yZXNvdXJjZXMoc3RydWN0IHBjaV9kZXYgKmRldikK
-PiArewo+ICsJdTY0IGJhc2UgPSBzY3JlZW5faW5mby5sZmJfYmFzZTsKPiArCXU2NCBzaXplID0g
-c2NyZWVuX2luZm8ubGZiX3NpemU7Cj4gKwlpbnQgaTsKPiArCj4gKwlpZiAocGNpX2Jhcl9mb3Vu
-ZCB8fCBzY3JlZW5faW5mby5vcmlnX3ZpZGVvX2lzVkdBICE9IFZJREVPX1RZUEVfRUZJKQo+ICsJ
-CXJldHVybjsKPiArCj4gKwlpZiAoc2NyZWVuX2luZm8uY2FwYWJpbGl0aWVzICYgVklERU9fQ0FQ
-QUJJTElUWV82NEJJVF9CQVNFKQo+ICsJCWJhc2UgfD0gKHU2NClzY3JlZW5faW5mby5leHRfbGZi
-X2Jhc2UgPDwgMzI7Cj4gKwo+ICsJaWYgKCFiYXNlKQo+ICsJCXJldHVybjsKPiArCj4gKwlmb3Ig
-KGkgPSAwOyBpIDwgUENJX1NURF9SRVNPVVJDRV9FTkQ7IGkrKykgewo+ICsJCXN0cnVjdCByZXNv
-dXJjZSAqcmVzID0gJmRldi0+cmVzb3VyY2VbaV07Cj4gKwo+ICsJCWlmICghKHJlcy0+ZmxhZ3Mg
-JiBJT1JFU09VUkNFX01FTSkpCj4gKwkJCWNvbnRpbnVlOwo+ICsKPiArCQlpZiAocmVzLT5zdGFy
-dCA8PSBiYXNlICYmIHJlcy0+ZW5kID49IGJhc2UgKyBzaXplIC0gMSkgewpIYXZlIHdlIGNvbnNp
-ZGVyZWQgUENJIGFkZHJlc3MgdHJhbnNsYXRpb24gaGVyZT8gSSBzdXBwb3NlIHRoZSBhZGRyZXNz
-IApyZXBvcnRlZCBieSBFRkkgR09QIHNob3VsZCBiZSB0aGUgYWRkcmVzcyBvZiBDUFUgZG9tYWlu
-LCBub3QgYWRkcmVzcyBvZiAKUENJIGRvbWFpbi4gQWRkcmVzcyByZWFkIGZyb20gUENJIEJBUiBp
-cyBQQ0kgYWRkcmVzcyB3aGljaCBzaG91bGQgYWRkIAp0cmFuc2xhdGlvbiBvZmZzZXQgYmVmb3Jl
-IGJlaW5nIGNvbXBhcmVkIHRvIENQVSBkb21haW4gYWRkcmVzcy4KCkkndmUgbm90IGZhbWlsaWFy
-IHdpdGggTGludXggY29kZSwgc28gcGxlYXNlIGlnbm9yZSBteSBjb21tZW50IGlmIHRoZSAKY29k
-ZSBoYXMgc3VwcG9ydGVkIGFkZHJlc3MgdHJhbnNsYXRpb24uCgpSZWdhcmRzLAoKR2FyeSAoSGV5
-aSBHdW8pCgo+ICsJCQljbGFpbV9lZmlmYl9iYXIoZGV2LCBpKTsKPiArCQkJYnJlYWs7Cj4gKwkJ
-fQo+ICsJfQo+ICt9Cj4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfQU5ZX0lELCBQQ0lf
-QU5ZX0lELCBlZmlmYl9maXh1cF9yZXNvdXJjZXMpOwoKCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0Cmxp
-bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFk
-Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Wed, May 24, 2017 at 08:54:14AM +0800, Shawn Lin wrote:
+> 在 2017/5/24 2:00, Brian Norris 写道:
+> >On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
+> >>This patch checks the link status before reading and
+> >>writing configure space of devices attached to the RC.
+> >>If the link status is down, we shouldn't try to access
+> >>the devices.
+> >
+> >I'm curious, in what situations are you seeing the link down? In all the
+> >cases where I can manage to screw up my endpoint and see system aborts
+> >due to config accesses, this check still says the link is up. Presumably
+> >you have some test cases that benefit from this though.
+
+NB: Bjorn asked a similar question in a different form. The underlying
+concern though, is that this is racy.
+
+> Of course. This patch doesn't prevent all these cases, for instance,
+> you do a memory read/write in the EP function driver, since it doesn't
+> call these two APIs at all.
+
+Of course. I'm only talking about config accesses.
+
+> The reason for me to added this check is that I saw a external abort
+> down to rockchip_pcie_rd_own_conf, of which I highly suspected was that
+> the link was re-init or total broken at that time.
+
+I've seen plenty of aborts in this function as well, but I've verified
+that the link was still reported "up" in all the cases I could reproduce.
+
+So, do you "suspect" or did you "prove"? e.g., log cases where this
+check actually helps?
+
+And to Bjorn's point: do you know *why* such cases were hit? That would
+help to understand if the cases you're worrying about are hopelessly
+racy, or if there's some way to ensure synchronization.
+
+Brian
