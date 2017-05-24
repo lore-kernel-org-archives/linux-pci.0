@@ -1,145 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/3] arm64: dts: hi3660: add pcie node
-To: Song Xiaowei <songxiaowei@hisilicon.com>, <bhelgaas@google.com>,
-        <kishon@ti.com>, <jingoohan1@gmail.com>, <arnd@arndb.de>,
-        <tn@semihalf.com>, <keith.busch@intel.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>
-CC: <puck.chen@hisilicon.com>, <guodong.xu@linaro.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6811 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967154AbdEXIOw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:14:52 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
         <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <20170515062745.70082-1-songxiaowei@hisilicon.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <9e2ed522-d808-8984-cc5a-316c392363d5@axis.com>
-Date: Mon, 15 May 2017 10:19:18 +0200
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 0/4] DT and Driver review comments fix
+Date: Wed, 24 May 2017 16:12:44 +0800
+Message-ID: <20170524081248.67198-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20170515062745.70082-1-songxiaowei@hisilicon.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Song
+Before Version Patches
+======================
 
+patch V4
+https://www.spinics.net/lists/linux-pci/msg61406.html
 
-You forgot to add the device tree maintainers
-and the device tree mailing list to this patch.
+patch V3
+https://www.spinics.net/lists/linux-pci/msg61399.html
 
-If you use ./scripts/get_maintainer.pl <patch>
-it will show you this information.
+Changes between V6 and V5
+=========================
+1. seperate Document from .dtsi patch.
+2. fix issues according to review comments
+   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
+   patch post method and so on.
 
+Patches list
+============
 
-Regards,
-Niklas
+Xiaowei Song (4):
+  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+  arm64: dts: hisi: add kirin pcie node
+  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+  defconfig: PCI: Enable  Kirin PCIe defconfig
 
+ .../devicetree/bindings/pci/kirin-pcie.txt         |  49 ++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
+ arch/arm64/configs/defconfig                       |   1 +
+ drivers/pci/dwc/Kconfig                            |  10 +
+ drivers/pci/dwc/Makefile                           |   1 +
+ drivers/pci/dwc/pcie-kirin.c                       | 511 +++++++++++++++++++++
+ 6 files changed, 603 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
 
-On 05/15/2017 08:27 AM, Song Xiaowei wrote:
-> Add PCIe node for hi3660, and add binding documentation.
-> 
-> Cc: Guodong Xu <guodong.xu@linaro.org>
-> Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
-> ---
->  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 52 ++++++++++++++++++++++
->  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 31 +++++++++++++
->  2 files changed, 83 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> index a339dbb15493..71491178c86c 100644
-> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> @@ -85,3 +85,55 @@ Example:
->  				 0x0 0 0 4 &mbigen_pcie0 650 4>;
->  		status = "ok";
->  	};
-> +
-> +
-> +
-> +HiSilicon Kirin SoC PCIe host DT description
-> +
-> +Kirin PCIe host controller is also based on Designware PCI core.
-> +It shares common functions with PCIe Designware core driver and inherits
-> +common properties defined in
-> +Documentation/devicetree/bindings/pci/designware-pci.txt.
-> +
-> +Additional properties are described here:
-> +
-> +Required properties
-> +- compatible: Should contain "hisilicon,kirin-pcie".
-> +- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-> +- reg-names: Must include the following entries:
-> +  "dbi": controller configuration registers;
-> +  "apb": apb Ctrl register;
-> +  "phy": apb PHY register;
-> +  "config": PCIe configuration space registers.
-> +- reset-gpio: perst assert/deassert gpio
-> +
-> +Optional properties:
-> +- status: Either "ok" or "disabled".
-> +
-> +Kirin960 Example:
-> +        kirin_pcie@f4000000 {
-> +                        compatible = "hisilicon,kirin-pcie";
-> +                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
-> +                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF5000000 0 0x2000>;
-> +                        reg-names = "dbi","apb","phy", "config";
-> +                        bus-range = <0x0  0x1>;
-> +                        #address-cells = <3>;
-> +                        #size-cells = <2>;
-> +                        device_type = "pci";
-> +                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf6000000 0x0 0x2000000>;
-> +                        num-lanes = <1>;
-> +                        #interrupt-cells = <1>;
-> +                        interrupt-map-mask = <0xf800 0 0 7>;
-> +			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
-> +                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
-> +                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
-> +                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-> +                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-> +                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-> +                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-> +                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-> +                        clock-names = "pcie_phy_ref", "pcie_aux",
-> +                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-> +                        reset-gpio = <&gpio11 1 0 >;
-> +                        status = "ok";
-> +        };
-> diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-> index 3983086bd67b..2406a54947df 100644
-> --- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-> +++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-> @@ -156,5 +156,36 @@
->  			clock-names = "uartclk", "apb_pclk";
->  			status = "disabled";
->  		};
-> +
-> +		kirin_pcie@f4000000 {
-> +			compatible = "hisilicon,kirin-pcie";
-> +			reg =  <0x0 0xf4000000 0x0 0x1000>,
-> +				<0x0 0xff3fe000 0x0 0x1000>,
-> +				<0x0 0xf3f20000 0x0 0x40000>,
-> +				<0x0 0xF5000000 0x0 0x2000>;
-> +			reg-names = "dbi", "apb", "phy", "config";
-> +			bus-range = <0x0  0x1>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			device_type = "pci";
-> +			ranges = <0x02000000 0x0 0x00000000 0x0
-> +				0xf6000000 0x0 0x2000000>;
-> +			num-lanes = <1>;
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0xf800 0 0 7>;
-> +			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
-> +				<0x0 0 0 2 &gic 0 0 0  283 4>,
-> +				<0x0 0 0 3 &gic 0 0 0  284 4>,
-> +				<0x0 0 0 4 &gic 0 0 0  285 4>;
-> +			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-> +				<&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-> +				<&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-> +				<&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-> +				<&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-> +			clock-names = "pcie_phy_ref", "pcie_aux",
-> +				"pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-> +			reset-gpio = <&gpio11 1 0 >;
-> +			status = "ok";
-> +		};
->  	};
->  };
-> 
+-- 
+2.11.GIT
