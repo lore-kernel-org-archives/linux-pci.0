@@ -1,143 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Cheng, Collins" <Collins.Cheng@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Subject: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV incapable
- platform
-Date: Fri, 12 May 2017 02:50:32 +0000
-Message-ID: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux-foundation.org
+Subject: [PATCH 1/7] PCI: Move ATS declarations outside of CONFIG_PCI
+Date: Wed, 24 May 2017 19:01:37 +0100
+Message-Id: <20170524180143.19855-2-jean-philippe.brucker@arm.com>
+In-Reply-To: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, will.deacon@arm.com,
+ joro@8bytes.org, thunder.leizhen@huawei.com, rjw@rjwysocki.net,
+ okaya@codeaurora.org, robh+dt@kernel.org, hanjun.guo@linaro.org,
+ sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
+ sunil.kovvuri@gmail.com, robin.murphy@arm.com, lenb@kernel.org
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Helgaas,
+Currently ATS helpers like pci_enable_ats are only defined when CONFIG_PCI
+is enabled. The ARM SMMU driver might get built with CONFIG_PCI disabled.
+It would thus have to wrap any use of ATS helpers around #ifdef
+CONFIG_PCI, which isn't ideal.
 
-Some AMD GPUs have hardware support for graphics SR-IOV.
-If the SR-IOV capable GPU is plugged into the SR-IOV incapable
-platform. It would cause a problem on PCI resource allocation in
-current Linux kernel.
+A nicer solution is to always define these helpers. Since CONFIG_PCI_ATS
+is only enabled in association with CONFIG_PCI, move defines outside of
+CONFIG_PCI to prevent build failure when PCI is disabled.
 
-Therefore in order to allow the PF (Physical Function) device of
-SR-IOV capable GPU to work on the SR-IOV incapable platform,
-it is required to verify conditions for initializing BAR resources
-on AMD SR-IOV capable GPUs.
-
-If the device is an AMD graphics device and it supports
-SR-IOV it will require a large amount of resources.
-Before calling sriov_init() must ensure that the system
-BIOS also supports SR-IOV and that system BIOS has been
-able to allocate enough resources.
-If the VF BARs are zero then the system BIOS does not
-support SR-IOV or it could not allocate the resources
-and this platform will not support AMD graphics SR-IOV.
-Therefore do not call sriov_init().
-If the system BIOS does support SR-IOV then the VF BARs
-will be properly initialized to non-zero values.
-
-Below is the patch against to Kernel 4.8 & 4.9. Please review.
-
-I checked the drivers/pci/quirks.c, it looks the workarounds/fixes in
-quirks.c are for specific devices and one or more device ID are defined
-for the specific devices. However my patch is for all AMD SR-IOV
-capable GPUs, that includes all existing and future AMD server GPUs.
-So it doesn't seem like a good fit to put the fix in quirks.c.
-
-
-
-Signed-off-by: Collins Cheng <collins.cheng@amd.com>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/iov.c | 63 +++++++++++++++++++++++++++++++++++++++++++++++++++=
-+---
- 1 file changed, 60 insertions(+), 3 deletions(-)
+ include/linux/pci.h | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index e30f05c..e4f1405 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -523,6 +523,45 @@ static void sriov_restore_state(struct pci_dev *dev)
- 		msleep(100);
- }
-=20
-+/*
-+ * pci_vf_bar_valid - check if VF BARs have resource allocated
-+ * @dev: the PCI device
-+ * @pos: register offset of SR-IOV capability in PCI config space
-+ * Returns true any VF BAR has resource allocated, false
-+ * if all VF BARs are empty.
-+ */
-+static bool pci_vf_bar_valid(struct pci_dev *dev, int pos)
-+{
-+	int i;
-+	u32 bar_value;
-+	u32 bar_size_mask =3D ~(PCI_BASE_ADDRESS_SPACE |
-+			PCI_BASE_ADDRESS_MEM_TYPE_64 |
-+			PCI_BASE_ADDRESS_MEM_PREFETCH);
-+
-+	for (i =3D 0; i < PCI_SRIOV_NUM_BARS; i++) {
-+		pci_read_config_dword(dev, pos + PCI_SRIOV_BAR + i * 4, &bar_value);
-+		if (bar_value & bar_size_mask)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+/*
-+ * is_amd_display_adapter - check if it is an AMD/ATI GPU device
-+ * @dev: the PCI device
-+ *
-+ * Returns true if device is an AMD/ATI display adapter,
-+ * otherwise return false.
-+ */
-+
-+static bool is_amd_display_adapter(struct pci_dev *dev)
-+{
-+	return (((dev->class >> 16) =3D=3D PCI_BASE_CLASS_DISPLAY) &&
-+		(dev->vendor =3D=3D PCI_VENDOR_ID_ATI ||
-+		dev->vendor =3D=3D PCI_VENDOR_ID_AMD));
-+}
-+
- /**
-  * pci_iov_init - initialize the IOV capability
-  * @dev: the PCI device
-@@ -537,9 +576,27 @@ int pci_iov_init(struct pci_dev *dev)
- 		return -ENODEV;
-=20
- 	pos =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
--	if (pos)
--		return sriov_init(dev, pos);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33c2b0b77429..775d495ef8d7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1415,19 +1415,6 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
+ void ht_destroy_irq(unsigned int irq);
+ #endif /* CONFIG_HT_IRQ */
+ 
+-#ifdef CONFIG_PCI_ATS
+-/* Address Translation Service */
+-void pci_ats_init(struct pci_dev *dev);
+-int pci_enable_ats(struct pci_dev *dev, int ps);
+-void pci_disable_ats(struct pci_dev *dev);
+-int pci_ats_queue_depth(struct pci_dev *dev);
+-#else
+-static inline void pci_ats_init(struct pci_dev *d) { }
+-static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
+-static inline void pci_disable_ats(struct pci_dev *d) { }
+-static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
+-#endif
 -
-+	if (pos) {
-+	/*
-+	 * If the device is an AMD graphics device and it supports
-+	 * SR-IOV it will require a large amount of resources.
-+	 * Before calling sriov_init() must ensure that the system
-+	 * BIOS also supports SR-IOV and that system BIOS has been
-+	 * able to allocate enough resources.
-+	 * If the VF BARs are zero then the system BIOS does not
-+	 * support SR-IOV or it could not allocate the resources
-+	 * and this platform will not support AMD graphics SR-IOV.
-+	 * Therefore do not call sriov_init().
-+	 * If the system BIOS does support SR-IOV then the VF BARs
-+	 * will be properly initialized to non-zero values.
-+	 */
-+		if (is_amd_display_adapter(dev)) {
-+			if (pci_vf_bar_valid(dev, pos))
-+				return sriov_init(dev, pos);
-+		} else {
-+			return sriov_init(dev, pos);
-+		}
-+	}
- 	return -ENODEV;
- }
-=20
---=20
-1.9.1
+ #ifdef CONFIG_PCIE_PTM
+ int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
+ #else
+@@ -1613,6 +1600,19 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #define dev_is_pf(d) (false)
+ #endif /* CONFIG_PCI */
+ 
++#ifdef CONFIG_PCI_ATS
++/* Address Translation Service */
++void pci_ats_init(struct pci_dev *dev);
++int pci_enable_ats(struct pci_dev *dev, int ps);
++void pci_disable_ats(struct pci_dev *dev);
++int pci_ats_queue_depth(struct pci_dev *dev);
++#else
++static inline void pci_ats_init(struct pci_dev *d) { }
++static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
++static inline void pci_disable_ats(struct pci_dev *d) { }
++static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
++#endif
++
+ /* Include architecture-dependent settings and functions */
+ 
+ #include <asm/pci.h>
+-- 
+2.12.1
 
 
-
--Collins Cheng
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
