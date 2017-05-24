@@ -1,154 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43798 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750922AbdELDUx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 May 2017 23:20:53 -0400
-Date: Thu, 11 May 2017 21:20:51 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: "Cheng, Collins" <Collins.Cheng@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
- incapable platform
-Message-ID: <20170511212051.3b802325@t450s.home>
-In-Reply-To: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
-References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+Received: from lucky1.263xmail.com ([211.157.147.133]:33514 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751137AbdEXBPM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 21:15:12 -0400
+Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
+To: Brian Norris <briannorris@chromium.org>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170523180048.GA115572@google.com>
+ <3fea7598-501e-6131-612a-977f005e9a2b@rock-chips.com>
+ <20170524010014.GA109842@google.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <30a7917c-4e2f-c0be-2d0b-04e05013708c@rock-chips.com>
+Date: Wed, 24 May 2017 09:14:52 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170524010014.GA109842@google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 12 May 2017 02:50:32 +0000
-"Cheng, Collins" <Collins.Cheng@amd.com> wrote:
+Hi Brian,
 
-> Hi Helgaas,
-> 
-> Some AMD GPUs have hardware support for graphics SR-IOV.
-> If the SR-IOV capable GPU is plugged into the SR-IOV incapable
-> platform. It would cause a problem on PCI resource allocation in
-> current Linux kernel.
-> 
-> Therefore in order to allow the PF (Physical Function) device of
-> SR-IOV capable GPU to work on the SR-IOV incapable platform,
-> it is required to verify conditions for initializing BAR resources
-> on AMD SR-IOV capable GPUs.
-> 
-> If the device is an AMD graphics device and it supports
-> SR-IOV it will require a large amount of resources.
-> Before calling sriov_init() must ensure that the system
-> BIOS also supports SR-IOV and that system BIOS has been
-> able to allocate enough resources.
-> If the VF BARs are zero then the system BIOS does not
-> support SR-IOV or it could not allocate the resources
-> and this platform will not support AMD graphics SR-IOV.
-> Therefore do not call sriov_init().
-> If the system BIOS does support SR-IOV then the VF BARs
-> will be properly initialized to non-zero values.
-> 
-> Below is the patch against to Kernel 4.8 & 4.9. Please review.
-> 
-> I checked the drivers/pci/quirks.c, it looks the workarounds/fixes in
-> quirks.c are for specific devices and one or more device ID are defined
-> for the specific devices. However my patch is for all AMD SR-IOV
-> capable GPUs, that includes all existing and future AMD server GPUs.
-> So it doesn't seem like a good fit to put the fix in quirks.c.
+在 2017/5/24 9:00, Brian Norris 写道:
+> On Wed, May 24, 2017 at 08:54:14AM +0800, Shawn Lin wrote:
+>> 在 2017/5/24 2:00, Brian Norris 写道:
+>>> On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
+>>>> This patch checks the link status before reading and
+>>>> writing configure space of devices attached to the RC.
+>>>> If the link status is down, we shouldn't try to access
+>>>> the devices.
+>>>
+>>> I'm curious, in what situations are you seeing the link down? In all the
+>>> cases where I can manage to screw up my endpoint and see system aborts
+>>> due to config accesses, this check still says the link is up. Presumably
+>>> you have some test cases that benefit from this though.
+>
+> NB: Bjorn asked a similar question in a different form. The underlying
+> concern though, is that this is racy.
 
+yes, I saw that.
 
-Why is an AMD graphics card unique here?  Doesn't sriov_init() always
-need to be able to deal with devices of any type where the BIOS hasn't
-initialized the SR-IOV capability?  Some SR-IOV devices can fit their
-VFs within a minimum bridge aperture, most cannot.  I don't understand
-why the VF resource requirements being exceptionally large dictates
-that they receive special handling.  Thanks,
+>
+>> Of course. This patch doesn't prevent all these cases, for instance,
+>> you do a memory read/write in the EP function driver, since it doesn't
+>> call these two APIs at all.
+>
+> Of course. I'm only talking about config accesses.
 
-Alex
+okay.
 
-> Signed-off-by: Collins Cheng <collins.cheng@amd.com>
-> ---
->  drivers/pci/iov.c | 63 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 60 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index e30f05c..e4f1405 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -523,6 +523,45 @@ static void sriov_restore_state(struct pci_dev *dev)
->  		msleep(100);
->  }
->  
-> +/*
-> + * pci_vf_bar_valid - check if VF BARs have resource allocated
-> + * @dev: the PCI device
-> + * @pos: register offset of SR-IOV capability in PCI config space
-> + * Returns true any VF BAR has resource allocated, false
-> + * if all VF BARs are empty.
-> + */
-> +static bool pci_vf_bar_valid(struct pci_dev *dev, int pos)
-> +{
-> +	int i;
-> +	u32 bar_value;
-> +	u32 bar_size_mask = ~(PCI_BASE_ADDRESS_SPACE |
-> +			PCI_BASE_ADDRESS_MEM_TYPE_64 |
-> +			PCI_BASE_ADDRESS_MEM_PREFETCH);
-> +
-> +	for (i = 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> +		pci_read_config_dword(dev, pos + PCI_SRIOV_BAR + i * 4, &bar_value);
-> +		if (bar_value & bar_size_mask)
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +/*
-> + * is_amd_display_adapter - check if it is an AMD/ATI GPU device
-> + * @dev: the PCI device
-> + *
-> + * Returns true if device is an AMD/ATI display adapter,
-> + * otherwise return false.
-> + */
-> +
-> +static bool is_amd_display_adapter(struct pci_dev *dev)
-> +{
-> +	return (((dev->class >> 16) == PCI_BASE_CLASS_DISPLAY) &&
-> +		(dev->vendor == PCI_VENDOR_ID_ATI ||
-> +		dev->vendor == PCI_VENDOR_ID_AMD));
-> +}
-> +
->  /**
->   * pci_iov_init - initialize the IOV capability
->   * @dev: the PCI device
-> @@ -537,9 +576,27 @@ int pci_iov_init(struct pci_dev *dev)
->  		return -ENODEV;
->  
->  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
-> -	if (pos)
-> -		return sriov_init(dev, pos);
-> -
-> +	if (pos) {
-> +	/*
-> +	 * If the device is an AMD graphics device and it supports
-> +	 * SR-IOV it will require a large amount of resources.
-> +	 * Before calling sriov_init() must ensure that the system
-> +	 * BIOS also supports SR-IOV and that system BIOS has been
-> +	 * able to allocate enough resources.
-> +	 * If the VF BARs are zero then the system BIOS does not
-> +	 * support SR-IOV or it could not allocate the resources
-> +	 * and this platform will not support AMD graphics SR-IOV.
-> +	 * Therefore do not call sriov_init().
-> +	 * If the system BIOS does support SR-IOV then the VF BARs
-> +	 * will be properly initialized to non-zero values.
-> +	 */
-> +		if (is_amd_display_adapter(dev)) {
-> +			if (pci_vf_bar_valid(dev, pos))
-> +				return sriov_init(dev, pos);
-> +		} else {
-> +			return sriov_init(dev, pos);
-> +		}
-> +	}
->  	return -ENODEV;
->  }
->  
+>
+>> The reason for me to added this check is that I saw a external abort
+>> down to rockchip_pcie_rd_own_conf, of which I highly suspected was that
+>> the link was re-init or total broken at that time.
+>
+> I've seen plenty of aborts in this function as well, but I've verified
+> that the link was still reported "up" in all the cases I could reproduce.
+>
+
+I think it's reasonable as the link could be retrained automatically if
+it's not totaly broken at all. Did you poweroff the endpoint and could
+still pass this check?
+
+> So, do you "suspect" or did you "prove"? e.g., log cases where this
+> check actually helps?
+
+I was powering off the devices and did a lspci, and saw the log cases
+there. I will check this again.
+
+>
+> And to Bjorn's point: do you know *why* such cases were hit? That would
+> help to understand if the cases you're worrying about are hopelessly
+> racy, or if there's some way to ensure synchronization.
+>
+> Brian
+>
+>
+>
