@@ -1,82 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:32994 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750934AbdEDMqJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 May 2017 08:46:09 -0400
-Date: Thu, 4 May 2017 14:46:05 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
-        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-Message-ID: <20170504124604.GA14127@8bytes.org>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:58060 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1765630AbdEXI02 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:26:28 -0400
+Message-Id: <20170524081548.691198590@linutronix.de>
+Date: Wed, 24 May 2017 10:15:31 +0200
+From: Thomas Gleixner <tglx@linutronix.de>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sebastian Siewior <bigeasy@linutronix.de>,
+        Paul McKenney <paulmck@linux.vnet.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [patch V3 20/32] PCI: Use cpu_hotplug_disable() instead of
+ get_online_cpus()
+References: <20170524081511.203800767@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 04, 2017 at 12:21:51PM +0300, Andy Shevchenko wrote:
-> diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
-> index cbf7763d8091..420d51b286ad 100644
-> --- a/drivers/iommu/dmar.c
-> +++ b/drivers/iommu/dmar.c
-> @@ -1808,10 +1808,9 @@ IOMMU_INIT_POST(detect_intel_iommu);
->   * for Directed-IO Architecture Specifiction, Rev 2.2, Section 8.8
->   * "Remapping Hardware Unit Hot Plug".
->   */
-> -static u8 dmar_hp_uuid[] = {
-> -	/* 0000 */    0xA6, 0xA3, 0xC1, 0xD8, 0x9B, 0xBE, 0x9B, 0x4C,
-> -	/* 0008 */    0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF
-> -};
-> +static uuid_le dmar_hp_uuid =
-> +	UUID_LE(0xD8C1A3A6, 0xBE9B, 0x4C9B,
-> +		0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF);
->  
->  /*
->   * Currently there's only one revision and BIOS will not check the revision id,
-> @@ -1824,7 +1823,7 @@ static u8 dmar_hp_uuid[] = {
->  
->  static inline bool dmar_detect_dsm(acpi_handle handle, int func)
->  {
-> -	return acpi_check_dsm(handle, dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
-> +	return acpi_check_dsm(handle, &dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
->  }
->  
->  static int dmar_walk_dsm_resource(acpi_handle handle, int func,
-> @@ -1843,7 +1842,7 @@ static int dmar_walk_dsm_resource(acpi_handle handle, int func,
->  	if (!dmar_detect_dsm(handle, func))
->  		return 0;
->  
-> -	obj = acpi_evaluate_dsm_typed(handle, dmar_hp_uuid, DMAR_DSM_REV_ID,
-> +	obj = acpi_evaluate_dsm_typed(handle, &dmar_hp_uuid, DMAR_DSM_REV_ID,
->  				      func, NULL, ACPI_TYPE_BUFFER);
->  	if (!obj)
->  		return -ENODEV;
+Converting the hotplug locking, i.e. get_online_cpus(), to a percpu rwsem
+unearthed a circular lock dependency which was hidden from lockdep due to
+the lockdep annotation of get_online_cpus() which prevents lockdep from
+creating full dependency chains. There are several variants of this. And
+example is:
 
-DMAR part is
+Chain exists of:
 
-	Acked-by: Joerg Roedel <jroedel@suse.de>
+cpu_hotplug_lock.rw_sem --> drm_global_mutex --> &item->mutex
+
+CPU0                    CPU1
+----                    ----
+lock(&item->mutex);
+                        lock(drm_global_mutex);
+                        lock(&item->mutex);
+lock(cpu_hotplug_lock.rw_sem);
+
+because there are dependencies through workqueues. The call chain is:
+
+	get_online_cpus
+	apply_workqueue_attrs
+	__alloc_workqueue_key
+	ttm_mem_global_init
+	ast_ttm_mem_global_init
+	drm_global_item_ref
+	ast_mm_init
+	ast_driver_load
+	drm_dev_register
+	drm_get_pci_dev
+	ast_pci_probe
+	local_pci_probe
+	work_for_cpu_fn
+	process_one_work
+	worker_thread
+
+This is not a problem of get_online_cpus() recursion, it's a possible
+deadlock undetected by lockdep so far.
+
+The cure is to use cpu_hotplug_disable() instead of get_online_cpus() to
+protect the PCI probing.
+
+There is a side effect to this: cpu_hotplug_disable() makes a concurrent
+cpu hotplug attempt via the sysfs interfaces fail with -EBUSY, but PCI
+probing usually happens during the boot process where no interaction is
+possible. Any later invocations are infrequent enough and concurrent
+hotplug attempts are so unlikely that the danger of user space visible
+regressions is very close to zero. Anyway, thats preferrable over a real
+deadlock.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Sebastian Siewior <bigeasy@linutronix.de>
+Cc: Steven Rostedt <rostedt@goodmis.org>
+Cc: linux-pci@vger.kernel.org
+
+---
+ drivers/pci/pci-driver.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -349,13 +349,13 @@ static int pci_call_probe(struct pci_dri
+ 	if (node >= 0 && node != numa_node_id()) {
+ 		int cpu;
+ 
+-		get_online_cpus();
++		cpu_hotplug_disable();
+ 		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
+ 		if (cpu < nr_cpu_ids)
+ 			error = work_on_cpu(cpu, local_pci_probe, &ddi);
+ 		else
+ 			error = local_pci_probe(&ddi);
+-		put_online_cpus();
++		cpu_hotplug_enable();
+ 	} else
+ 		error = local_pci_probe(&ddi);
+ 
