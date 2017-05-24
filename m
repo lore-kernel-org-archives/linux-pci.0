@@ -1,91 +1,126 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46466 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936906AbdEYTnz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 25 May 2017 15:43:55 -0400
-Date: Thu, 25 May 2017 14:43:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v4] PCI: use IDA to manage domain number if not getting
- it from DT
-Message-ID: <20170525194353.GA3390@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495611455-41952-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux-foundation.org
+Subject: [PATCH 5/7] iommu/arm-smmu-v3: Link domains and devices
+Date: Wed, 24 May 2017 19:01:41 +0100
+Message-Id: <20170524180143.19855-6-jean-philippe.brucker@arm.com>
+In-Reply-To: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, will.deacon@arm.com,
+ joro@8bytes.org, thunder.leizhen@huawei.com, rjw@rjwysocki.net,
+ okaya@codeaurora.org, robh+dt@kernel.org, hanjun.guo@linaro.org,
+ sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
+ sunil.kovvuri@gmail.com, robin.murphy@arm.com, lenb@kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495611455-41952-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 24, 2017 at 03:37:35PM +0800, Shawn Lin wrote:
-> If not getting domain number from DT, the domain number will
-> keep increasing once doing unbind/bind RC drivers. This could
-> introduce pointless tree view of lspci as shows below:
-> 
-> -+-[0001:00]---00.0-[01]----00.0
->   \-[0000:00]-
-> 
-> The more test we do, the lengthier it would be. The more serious
-> issue is that if attaching two hierarchies for two different domains
-> belonging to two root bridges, so when doing unbind/bind test for one
-> of them and keep the other, then the domain number would finally
-> overflow and make the two hierarchies of devices share the some domain
-> number but actually they shouldn't. So it looks like we need to invent
-> a new indexing ID mechanism to manage domain number. This patch
-> introduces idr to achieve our purpose.
-> 
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> ---
-> 
-> Changes in v4:
-> - make domain_nr depends on CONFIG_PCI_DOMAINS instead of
-> CONFIG_PCI_DOMAINS_GENERIC.(reported by Kbuild Robot)
+When removing a mapping from a domain, we need to send an invalidation to
+all devices that might have stored it in their Address Translation Cache
+(ATC). In addition with SVM, we'll need to invalidate context descriptors
+of all devices attached to a domain.
 
-I'm confused about why you posted this v4.  It addresses a kbuild
-issue, but not any of the questions from my review of v3, so reviewing
-v4 would be a waste of my time.
+Maintain a list of devices in each domain, protected by a spinlock. It is
+updated every time we attach or detach devices to and from domains.
 
-But since we're here, my naive suggestion:
+It needs to be a spinlock because we'll invalidate ATC entries from
+within hardirq-safe contexts, but it may be possible to relax the read
+side with RCU later.
 
->> 1) If we're using ACPI, every host bridge must have a _SEG method,
->> and it supplies the domain.  We ignore any bridge without _SEG.
->>
->> 2) If we're using DT, every host bridge must supply
->> "linux,pci-domain", and it supplies the domain.  We ignore any
->> bridge without "linux,pci-domain".
->>
->> 3) Otherwise, we always use IDA.
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-was *too* simplistic.  _SEG is optional.  If it's missing we default
-to domain 0.
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 380969aa60d5..524e1b051962 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -630,6 +630,9 @@ struct arm_smmu_device {
+ struct arm_smmu_master_data {
+ 	struct arm_smmu_device		*smmu;
+ 	struct arm_smmu_strtab_ent	ste;
++
++	struct arm_smmu_domain		*domain;
++	struct list_head		list; /* domain->devices */
+ };
+ 
+ /* SMMU private data for an IOMMU domain */
+@@ -654,6 +657,9 @@ struct arm_smmu_domain {
+ 	};
+ 
+ 	struct iommu_domain		domain;
++
++	struct list_head		devices;
++	spinlock_t			devices_lock;
+ };
+ 
+ struct arm_smmu_option_prop {
+@@ -1407,6 +1413,9 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
+ 
+ 	mutex_init(&smmu_domain->init_mutex);
+ 	spin_lock_init(&smmu_domain->pgtbl_lock);
++	INIT_LIST_HEAD(&smmu_domain->devices);
++	spin_lock_init(&smmu_domain->devices_lock);
++
+ 	return &smmu_domain->domain;
+ }
+ 
+@@ -1609,7 +1618,17 @@ static void arm_smmu_install_ste_for_dev(struct iommu_fwspec *fwspec)
+ 
+ static void arm_smmu_detach_dev(struct device *dev)
+ {
++	unsigned long flags;
+ 	struct arm_smmu_master_data *master = dev->iommu_fwspec->iommu_priv;
++	struct arm_smmu_domain *smmu_domain = master->domain;
++
++	if (smmu_domain) {
++		spin_lock_irqsave(&smmu_domain->devices_lock, flags);
++		list_del(&master->list);
++		spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
++
++		master->domain = NULL;
++	}
+ 
+ 	master->ste.assigned = false;
+ 	arm_smmu_install_ste_for_dev(dev->iommu_fwspec);
+@@ -1618,6 +1637,7 @@ static void arm_smmu_detach_dev(struct device *dev)
+ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
+ {
+ 	int ret = 0;
++	unsigned long flags;
+ 	struct arm_smmu_device *smmu;
+ 	struct arm_smmu_domain *smmu_domain = to_smmu_domain(domain);
+ 	struct arm_smmu_master_data *master;
+@@ -1653,6 +1673,11 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
+ 	}
+ 
+ 	ste->assigned = true;
++	master->domain = smmu_domain;
++
++	spin_lock_irqsave(&smmu_domain->devices_lock, flags);
++	list_add(&master->list, &smmu_domain->devices);
++	spin_unlock_irqrestore(&smmu_domain->devices_lock, flags);
+ 
+ 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_BYPASS) {
+ 		ste->s1_cfg = NULL;
+-- 
+2.12.1
 
-The point is that we can't mix the IDA with either the ACPI or DT
-info.  I think for ACPI it should be easy: if _SEG exists, we use
-that.  If _SEG doesn't exist, the spec says we that bridge is in
-domain 0.  So I think we should never use IDA if we're using ACPI.
 
-For DT, I think we can't use IDA if *any* bridge uses
-"linux,pci-domain", because there's no way to allocate a specified
-domain from the IDA.
-
-Of course, we see the bridges one at a time, so we don't know ahead of
-time whether any uses "linux,pci-domain".  I think that means we have
-to decide when we see the very first host bridge which strategy to
-use.  If the first host bridge has "linux,pci-domain", we use that,
-and if future host bridges don't supply "linux,pci-domain", we
-probably have to ignore the whole bridge.
-
-If the first host bridge doesn't have "linux,pci-domain", we use IDA,
-and we probably have to ignore any future bridges that *do* have
-"linux,pci-domain".
-
-So it seems like "linux,pci-domain" is basically an all-or-none
-proposition.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
