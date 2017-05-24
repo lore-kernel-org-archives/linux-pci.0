@@ -1,120 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:40681 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936209AbdEYMo2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 08:44:28 -0400
-Date: Thu, 25 May 2017 14:44:45 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
-Message-ID: <20170525124445.GA4181@wunner.de>
-References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
- <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
- <20170506090755.GB19740@wunner.de>
- <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
- <20170510084143.GA16261@wunner.de>
- <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
- <20170525123047.GA4172@wunner.de>
- <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:48724 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S941010AbdEXVd7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 May 2017 17:33:59 -0400
+Date: Wed, 24 May 2017 16:33:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
+Message-ID: <20170524213353.GB2794@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170523194443.GD7241@bhelgaas-glaptop.roam.corp.google.com>
+ <c2331eef-b76d-720d-3750-6d754d53710a@rock-chips.com>
+ <20170524011507.GA112603@google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170524011507.GA112603@google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 25, 2017 at 05:36:01AM -0700, Ard Biesheuvel wrote:
-> On 25 May 2017 at 05:30, Lukas Wunner <lukas@wunner.de> wrote:
-> > On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
-> >> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
-> >> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
-> >> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
-> >> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
-> >> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
-> >> >> >> > The CPER parser assumes that the class code is big endian, but at least
-> >> >> >> > on this edk2-derived Intel Purley platform it's little endian:
-> >> >> > [snip]
-> >> >> >> > --- a/include/linux/cper.h
-> >> >> >> > +++ b/include/linux/cper.h
-> >> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
-> >> >> >> >         struct {
-> >> >> >> >                 __u16   vendor_id;
-> >> >> >> >                 __u16   device_id;
-> >> >> >> > -               __u8    class_code[3];
-> >> >> >> > +               __u32   class_code:24;
-> >> >> >>
-> >> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
-> >> >> >> order of p[] above?
-> >> >> >
-> >> >> > Hm, why would you like to avoid it?
-> >> >>
-> >> >> Because we shouldn't use bitfields in structs in code that should be
-> >> >> portable across archs with different endiannesses.
-> >> >
-> >> > The CPER header is defined in the UEFI spec and UEFI mandates that the
-> >> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
-> >> >
-> >>
-> >> No it does not mandate that at all. It mandates how the core should be
-> >> configured when running in UEFI, but the OS can do anything it likes.
-> >>
-> >> We are still interested in adding limited UEFI support to big endian
-> >> arm64 in the future (i.e., access to a limited set of firmware tables
-> >> but no runtime services), and I am not going to merge anything that
-> >> moves us away from that goal.
-> >>
-> >> > So your argument seems moot to me.  Am I missing something?  Do you
-> >> > have another argument?
-> >> >
-> >> > Moreover, the vendor_id and device_id fields are little endian as well
-> >> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
-> >> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
-> >> >
-> >>
-> >> Indeed. I am aware we will need to add various endian-neutral
-> >> accessors in the future.
-> >>
-> >> >> >  The class_code element isn't
-> >> >> > referenced anywhere else in the kernel and this isn't a uapi header,
-> >> >> > so the change would only impact out-of-tree drivers.  Not sure if
-> >> >> > any exist which might be interested in CPER parsing.
-> >> >> >
-> >> >>
-> >> >> The point is that the change in the struct definition is simply not
-> >> >> necessary, given that inverting the order of p[] already achieves
-> >> >> exactly what we want.
-> >> >
-> >> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
-> >> > Please excuse my stubbornness.
-> >> >
-> >>
-> >> Stubbornness alone is not going to convince me. What *could* convince
-> >> me (although unlikely) is a quote from the C spec which explains why
-> >> it is 100% legal to make assumptions about how bitfields are projected
-> >> onto byte locations in memory.
-> >
-> > All structs in cper.h are declared "packed", so what you're asking for
-> > isn't defined in the C spec but in the GCC documentation:
-> >
-> >    "The packed attribute specifies that a variable or structure field
-> >     should have the smallest possible alignment -- one byte for a variable,
-> >     and one bit for a field, unless you specify a larger value with the
-> >     aligned attribute."
-> >
-> > So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
-> > le16_to_cpu() etc both for the class_code changed by the patch as well as
-> > all the other members of the struct not touched by the patch when adding
-> > "endianness mixed mode" for aarch64.
+On Tue, May 23, 2017 at 06:15:07PM -0700, Brian Norris wrote:
+> (Since Shawn didn't quite answer this piece)
 > 
-> I'm not talking about the 'packed' attribute but about the fact that
-> the C spec does not guarantee that bitfields are projected onto byte
-> locations in memory in the way you expect.
+> On Wed, May 24, 2017 at 09:04:33AM +0800, Shawn Lin wrote:
+> > 在 2017/5/24 3:44, Bjorn Helgaas 写道:
+> > >On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
+> > >>This patch checks the link status before reading and
+> > >>writing configure space of devices attached to the RC.
+> > >>If the link status is down, we shouldn't try to access
+> > >>the devices.
+> > >
+> > >What bad things happen without this patch?
+> 
+> On this SoC, I've seen this sort of behavior (reading the config space
+> when the device isn't responding) yield aborts, which panic the system. 
 
-What relevance does that have as long as the header file uses a pragma
-specific to gcc (or other compilers that are compatible to gcc with
-respect to that pragma (such as clang)), and gcc guarantees the
-correct layout regardless of endianness?
+Trying to read config space of a device that doesn't exist is an
+essential part of enumeration, and we expect whatever error occurs at
+the hardware level to get turned into 0xffffffff data at the CPU (as
+in pci_bus_read_dev_vendor_id()).
+
+Shawn mentioned some issue with memory read/write as well.  I think we
+need to sort out how to handle both the config space issue and the
+memory issue.  This patch seems like it papers over part of it and
+reduces the urgency of finding a real solution.
+
+I'm going to drop this for now, pending a more detailed explanation.
+
+Bjorn
