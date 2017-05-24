@@ -1,85 +1,137 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V2 1/3] iommu: of: Fix check for returning EPROBE_DEFER
-Date: Thu, 18 May 2017 13:47 +0300
-Message-ID: <24120310.hn6YiD4jDp@avalon>
-In-Reply-To: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
-References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49482 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033205AbdEXVyD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 17:54:03 -0400
+Received: from [10.228.68.174] (global_nat1_iad_fw.qualcomm.com [129.46.232.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: okaya@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 856A1608C5
+        for <linux-pci@vger.kernel.org>; Wed, 24 May 2017 21:54:01 +0000 (UTC)
+To: Linux PCI <linux-pci@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: PCI Secondary Bus Reset Analysis
+Message-ID: <a6d9150a-d975-36d7-fffc-8b16c52c0f20@codeaurora.org>
+Date: Wed, 24 May 2017 17:54:00 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
- lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
- magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
- linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
- arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
- robh+dt@kernel.org, bhelgaas@google.com,
- laurent.pinchart+renesas@ideasonboard.com,
- linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sricharan,
+I have been surveying the code path to see if we are saving and restoring the
+device settings following secondary bus reset. I have done this work before. 
+I wanted to have some fresh eyes on this problem. 
 
-Thank you for the patch.
+Here is what I found:
 
-On Thursday 18 May 2017 15:37:08 Sricharan R wrote:
-> Now with IOMMU probe deferral, we return -EPROBE_DEFER
-> for masters that are connected to an IOMMU which is not
-> probed yet, but going to get probed, so that we can attach
-> the correct dma_ops. So while trying to defer the probe of
-> the master, check if the of_iommu node that it is connected
-> to is marked in DT as 'status=disabled', then the IOMMU is never
-> is going to get probed. So simply return NULL and let the master
-> work without an IOMMU.
-> 
-> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred
-> probing or error") Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Tested-by: Will Deacon <will.deacon@arm.com>
-> Tested-by: Magnus Damn <magnus.damn@gmail.com>
-> Acked-by: Will Deacon <will.deacon@arm.com>
+handle_error_source()
+	do_recovery()
+		reset_link()
+			default_reset_link()
+				pci_reset_bridge_secondary_bus
+handle_error_source()
+	do_recovery()
+		reset_link()
+			aer_root_reset()
+				Disable Root's interrupt in response to error messages (ROOT_PORT_INTR_ON_MESG_MASK)
+				pci_reset_bridge_secondary_bus()
+				Clear Root Error Status
+				Enable Root Port's interrupt in response to error messages	(ROOT_PORT_INTR_ON_MESG_MASK)
 
-Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+vfio_pci_disable()
+	vfio_pci_try_bus_reset()
+		pci_try_reset_bus()
+			pci_bus_save_and_disable()
+				pci_set_power_state(D0)
+				pci_save_state()
+					Save the first 64 bytes
+					pci_save_pcie_state()
+					        pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &cap[i++]);
+						pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &cap[i++]);
+						pcie_capability_read_word(dev, PCI_EXP_SLTCTL, &cap[i++]);
+						pcie_capability_read_word(dev, PCI_EXP_RTCTL,  &cap[i++]);
+						pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &cap[i++]);
+						pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &cap[i++]);
+						pcie_capability_read_word(dev, PCI_EXP_SLTCTL2, &cap[i++]);
+					pci_save_vc_state()
+				pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
+			pci_reset_bridge_secondary_bus()
+			pci_bus_restore()
+				pci_restore_pcie_state()
+				pci_restore_ats_state()
+				pci_restore_vc_state()
+				pci_cleanup_aer_error_status_regs()
+				pci_restore_config_space()
+				pci_restore_msi_state()
+				pci_enable_acs()
+				pci_restore_iov_state()
 
-> ---
-> [V2] Corrected spelling/case in commit log
-> 
->  drivers/iommu/of_iommu.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 9f44ee8..e6e9bec 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node
-> *np)
-> 
->  	ops = iommu_ops_from_fwnode(fwnode);
->  	if ((ops && !ops->of_xlate) ||
-> +	    !of_device_is_available(iommu_spec->np) ||
->  	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
->  		return NULL;
+vfio_pci_ioctl()
+	pci_try_reset_bus()
+		pci_bus_save_and_disable()
+		pci_reset_bridge_secondary_bus()
+		pci_bus_restore()
+
+pci_reset_bus()
+	pci_bus_save_and_disable()
+	pci_bus_reset()
+		pci_reset_bridge_secondary_bus()
+	pci_bus_restore()
+
+pci_reset_function()
+	pci_dev_save_and_disable()
+	pci_dev_reset()
+		__pci_dev_reset()
+			pci_parent_bus_reset()
+				pci_reset_bridge_secondary_bus()
+	pci_dev_restore()
+
+pcistub_device_release()
+	__pci_reset_function_locked()
+		__pci_dev_reset()
+			pci_parent_bus_reset()
+				pci_reset_bridge_secondary_bus()
+	pci_restore_state(dev)
+
+pci_try_reset_function()
+	pci_dev_save_and_disable()
+	__pci_dev_reset()
+		pci_parent_bus_reset()
+			pci_reset_bridge_secondary_bus()
+	pci_dev_restore()
+
+pci_reset_slot()
+	pci_slot_save_and_disable()
+	pci_slot_reset()
+		pci_reset_hotplug_slot()
+			reset_slot()
+				pciehp_reset_slot()
+					pci_reset_bridge_secondary_bus()
+	pci_slot_restore()
+
+pci_try_reset_slot()
+	pci_slot_save_and_disable()
+	pci_reset_hotplug_slot()
+		reset_slot()
+			pciehp_reset_slot()
+				pci_reset_bridge_secondary_bus()
+	pci_slot_restore()
+
+trigger_sbr()
+	pci_reset_bridge_secondary_bus()
+
+
+The summary is:
+1. AER doesn't save and restore the bus state. 
+2. pci_reset_function() and pci_try_reset_function() saves and restores
+device state but it can actually reset the bus without restoring other device states.
+3. trigger_sbr() doesn't save anything. 
+
+I can submit some patches to pick up from where I left but I wanted to hear other's opinion
+on what the behavior should be and if I missed something.
 
 -- 
-Regards,
-
-Laurent Pinchart
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
