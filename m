@@ -1,124 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 07/30] iommu/arm-smmu-v3: Add second level of context
- descriptor table
-To: Tomasz Nowicki <tn@semihalf.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-8-jean-philippe.brucker@arm.com>
- <ef690c27-95cc-c15d-7e70-7e89de7bc08a@semihalf.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <7ba38e5b-cbce-f468-42fc-2949e1a06176@arm.com>
-Date: Mon, 15 May 2017 14:57:15 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46622 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S967047AbdEXO5Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 May 2017 10:57:16 -0400
+Date: Wed, 24 May 2017 08:57:12 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: "Cheng, Collins" <Collins.Cheng@amd.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
+ incapable platform
+Message-ID: <20170524085712.4947e575@w520.home>
+In-Reply-To: <BN6PR12MB124978AC5216B07455A0CD06ECFE0@BN6PR12MB1249.namprd12.prod.outlook.com>
+References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170511212051.3b802325@t450s.home>
+        <BN6PR12MB12492048A370FDEB7C14C8E8ECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170511220113.2dfb6d3d@t450s.home>
+        <BN6PR12MB12496DDEE84348A22AEA8AACECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170512084304.3cf10653@t450s.home>
+        <BN6PR12MB1249DA8407F452C407A7E2F2ECE10@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170515115332.0077753c@w520.home>
+        <CAKgT0Ud1ODumcWsKeA8cyPfsOiHwvfF9tWKiM6QxubPpVjuUpQ@mail.gmail.com>
+        <20170522094409.7e2968c2@w520.home>
+        <BN6PR12MB1249C0626CE2AF98B2CDBCD8ECF90@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170523122013.6e2e4e59@w520.home>
+        <BN6PR12MB124978AC5216B07455A0CD06ECFE0@BN6PR12MB1249.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <ef690c27-95cc-c15d-7e70-7e89de7bc08a@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15/05/17 13:47, Tomasz Nowicki wrote:
-> Hi Jean,
+On Wed, 24 May 2017 08:57:53 +0000
+"Cheng, Collins" <Collins.Cheng@amd.com> wrote:
+
+> Hi Alex,
 > 
-> On 27.02.2017 20:54, Jean-Philippe Brucker wrote:
->> @@ -1213,17 +1356,59 @@ static void arm_smmu_free_cd_tables(struct
->> arm_smmu_master_data *master)
->>  __maybe_unused
->>  static int arm_smmu_alloc_cd(struct arm_smmu_master_data *master)
->>  {
->> +    int ssid;
->> +    int i, ret;
->>      struct arm_smmu_cd_cfg *cfg = &master->ste.cd_cfg;
->>
->> -    return arm_smmu_bitmap_alloc(cfg->context_map,
->> ilog2(cfg->num_entries));
->> +    if (cfg->linear)
->> +        return arm_smmu_bitmap_alloc(cfg->table.context_map,
->> +                         ilog2(cfg->num_entries));
->> +
->> +    /* Find first leaf table with an empty slot, or allocate a new leaf */
->> +    for (i = cfg->l1.cur_table; i < cfg->num_entries; i++) {
->> +        struct arm_smmu_cd_table *table = &cfg->l1.tables[i];
->> +
->> +        if (!table->cdptr) {
->> +            __le64 *l1ptr = cfg->l1.ptr + i * CTXDESC_L1_DESC_DWORD;
->> +
->> +            ret = arm_smmu_alloc_cd_leaf_table(master->smmu, table,
->> +                               CTXDESC_NUM_L2_ENTRIES);
->> +            if (ret)
->> +                return ret;
->> +
->> +            arm_smmu_write_cd_l1_desc(l1ptr, table);
->> +            arm_smmu_sync_cd(master, i << CTXDESC_SPLIT, false);
->> +        }
->> +
->> +        ssid = arm_smmu_bitmap_alloc(table->context_map, CTXDESC_SPLIT);
->> +        if (ssid < 0)
->> +            continue;
->> +
->> +        cfg->l1.cur_table = i;
->> +        return i << CTXDESC_SPLIT | ssid;
->> +    }
->> +
->> +    return -ENOSPC;
->>  }
->>
->>  __maybe_unused
->>  static void arm_smmu_free_cd(struct arm_smmu_master_data *master, u32
->> ssid)
->>  {
->> +    unsigned long l1_idx, idx;
->>      struct arm_smmu_cd_cfg *cfg = &master->ste.cd_cfg;
->>
->> -    arm_smmu_bitmap_free(cfg->context_map, ssid);
->> +    if (cfg->linear) {
->> +        arm_smmu_bitmap_free(cfg->table.context_map, ssid);
->> +        return;
->> +    }
->> +
->> +    l1_idx = ssid >> CTXDESC_SPLIT;
->> +    idx = ssid & ((1 << CTXDESC_SPLIT) - 1);
->> +    arm_smmu_bitmap_free(cfg->l1.tables[l1_idx].context_map, idx);
->> +
->> +    /* Prepare next allocation */
->> +    if (cfg->l1.cur_table > idx)
->> +        cfg->l1.cur_table = idx;
->>  }
-> 
-> I am not sure what is the logic here. idx becomes index of l1.tables in
-> arm_smmu_alloc_cd() which in turn may be out of allocated memory. I may
-> miss something. Can you please elaborate on this?
+> How do you know "particular this system offers no 64-bit MMIO", from dmesg log?
 
-The code is wrong, this should be:
+>From this:
 
-+    if (cfg->l1.cur_table > l1_idx)
-+        cfg->l1.cur_table = l1_idx;
+> [    0.891319] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
+> [    0.891321] pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window]
+> [    0.891322] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+> [    0.891323] pci_bus 0000:00: root bus resource [mem 0x88800000-0xdfffffff window]
+> [    0.891324] pci_bus 0000:00: root bus resource [mem 0xfd000000-0xfe7fffff window]
+> [    0.891325] pci_bus 0000:00: root bus resource [bus 00-fe]
 
-Which tells alloc_cd() that there is a free slot in table l1_idx. It would
-also look better with a min(). However this allocator will be replaced by
-a global (IDR) allocator in next version, as requested by other users of
-the IOMMU API.
+There are only 32-bit ranges listed.  Thanks,
 
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Alex
