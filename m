@@ -1,68 +1,54 @@
-Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=1vUR=4Y=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <hch@infradead.org>, <liudongdong3@huawei.com>
-Subject: [PATCH v2 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
-Date: Thu, 18 May 2017 10:01:38 +0100
-Message-ID: <1495098098-1984-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1495098098-1984-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1495098098-1984-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Haiyang Zhang <haiyangz@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
+Date: Wed, 24 May 2017 20:43:08 +0000
+Message-ID: <BLUPR03MB1412AD9B6C5B4575F354EC4CCAFE0@BLUPR03MB1412.namprd03.prod.outlook.com>
+References: <1495658355-13103-1-git-send-email-haiyangz@exchange.microsoft.com>
+In-Reply-To: <1495658355-13103-1-git-send-email-haiyangz@exchange.microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
 
-Currently the MSI/MSIx vectors for the root port services are
-allocated calling pcie_init_service_irqs(). At the moment these
-vectors are only allocated for AER, PME, HP.
-This patch allocate an MSI/MSIx vector also for DPC.
 
-Signed-off-by: Liudongdong <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/pcie/portdrv_core.c | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+> -----Original Message-----
+> From: Haiyang Zhang [mailto:haiyangz@exchange.microsoft.com]
+> Sent: Wednesday, May 24, 2017 4:39 PM
+> To: bhelgaas@google.com; linux-pci@vger.kernel.org
+> Cc: Haiyang Zhang <haiyangz@microsoft.com>; KY Srinivasan
+> <kys@microsoft.com>; Stephen Hemminger <sthemmin@microsoft.com>;
+> olaf@aepfle.de; vkuznets@redhat.com; driverdev-
+> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org
+> Subject: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
+>=20
+> [This sender failed our fraud detection checks and may not be who they
+> appear to be. Learn about spoofing at http://aka.ms/LearnAboutSpoofing]
+>=20
+> From: Haiyang Zhang <haiyangz@microsoft.com>
+>=20
+> This patch uses the lower 16 bits of the serial number as PCI
+> domain, otherwise some drivers may not be able to handle it.
+>=20
+> Besides Nvidia drivers, we also found X.org, and DPDK handle
+> only 16 bit PCI domain.
+>=20
+> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+> ---
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index 254bc73..4a8a1df 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -126,6 +126,31 @@ static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
- 		nvec = max(nvec, entry + 1);
- 	}
- 
-+	if (mask & PCIE_PORT_SERVICE_DPC) {
-+		u16 reg16, pos;
-+
-+		/*
-+		 * The code below follows Section 6.2.10.1 of the PCI Express
-+		 * Base Specification 4.0 stating that bits 4-0 of DPC
-+		 * Capability Register contain a value indicating which of the
-+		 * MSI/MSI-X vectors assigned to the port is going to be used
-+		 * for DPC, where "For MSI-X, the value in this register
-+		 * indicates which MSI-X Table entry is used to generate the
-+		 * interrupt message." and "For MSI, the value in this field
-+		 * indicates the offset between the base Message Data and the
-+		 * interrupt message that is generated."
-+		 */
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
-+		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
-+		entry = reg16 & 0x1f;
-+		if (entry >= nr_entries)
-+			goto out_free_irqs;
-+
-+		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
-+
-+		nvec = max(nvec, entry + 1);
-+	}
-+
- 	/*
- 	 * If nvec is equal to the allocated number of entries, we can just use
- 	 * what we have.  Otherwise, the port has some extra entries not for the
--- 
-2.7.4
+According to Stephen Hemminger <sthemmin@microsoft.com>, there are
+additional programs, like X.org, DPDK, are also using 16-bit only
+PCI domain numbers. So, I'm submitting this patch for re-consideration.
+
+Thanks,
+- Haiyang
