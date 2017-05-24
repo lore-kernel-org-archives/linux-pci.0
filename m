@@ -1,62 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Daney <david.daney@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 2/2] PCI: Avoid bus reset for Cavium cn8xxx root ports.
-Date: Mon, 15 May 2017 17:17:36 -0700
-Message-Id: <20170516001736.4001-3-david.daney@cavium.com>
-In-Reply-To: <20170516001736.4001-1-david.daney@cavium.com>
-References: <20170516001736.4001-1-david.daney@cavium.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:34176 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161115AbdEXWwQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 May 2017 18:52:16 -0400
+Subject: [PATCH 2/2] net/mlx5e: Use device ID defines
+From: Myron Stowe <myron.stowe@redhat.com>
+To: linux-pci@vger.kernel.org, netdev@vger.kernel.org
+Cc: bhelgaas@google.com, saeedm@mellanox.com, noaos@mellanox.com,
+        tariqt@mellanox.com
+Date: Wed, 24 May 2017 16:47:52 -0600
+Message-ID: <20170524224752.24221.41019.stgit@amt.stowe>
+In-Reply-To: <20170524224734.24221.33787.stgit@amt.stowe>
+References: <20170524224734.24221.33787.stgit@amt.stowe>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jon Masters <jcm@redhat.com>, Robert Richter <robert.richter@cavium.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- David Daney <david.daney@cavium.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Root ports of cn8xxx do not function after bus reset when used with
-some e1000e and LSI HBA devices.  Add a quirk to prevent bus reset on
-these root ports.
+Use Mellanox device ID definitions in the mlx5 ID table so tools such as
+'grep' and 'cscope' can be used to help find related aspects.
 
-Signed-off-by: David Daney <david.daney@cavium.com>
+No functional change intended.
+
+Signed-off-by: Myron Stowe <myron.stowe@redhat.com>
 ---
- drivers/pci/quirks.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/ethernet/mellanox/mlx5/core/main.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 085fb78..02cd847 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3347,6 +3347,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
+diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+index 0c123d5..98642eb 100644
+--- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
++++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
+@@ -1508,17 +1508,17 @@ static void shutdown(struct pci_dev *pdev)
+ }
  
-+/*
-+ * Root port on some Cavium CN8xxx chips do not successfully complete
-+ * a bus reset when used with certain types child devices.  Config
-+ * space access to the child may quit responding.  Flag the root port
-+ * as not supporting bus reset.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
-+
- static void quirk_no_pm_reset(struct pci_dev *dev)
- {
- 	/*
--- 
-2.9.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ static const struct pci_device_id mlx5_core_pci_table[] = {
+-	{ PCI_VDEVICE(MELLANOX, 0x1011) },			/* Connect-IB */
++	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTIB) },
+ 	{ PCI_VDEVICE(MELLANOX, 0x1012), MLX5_PCI_DEV_IS_VF},	/* Connect-IB VF */
+-	{ PCI_VDEVICE(MELLANOX, 0x1013) },			/* ConnectX-4 */
++	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX4) },
+ 	{ PCI_VDEVICE(MELLANOX, 0x1014), MLX5_PCI_DEV_IS_VF},	/* ConnectX-4 VF */
+-	{ PCI_VDEVICE(MELLANOX, 0x1015) },			/* ConnectX-4LX */
++	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX) },
+ 	{ PCI_VDEVICE(MELLANOX, 0x1016), MLX5_PCI_DEV_IS_VF},	/* ConnectX-4LX VF */
+-	{ PCI_VDEVICE(MELLANOX, 0x1017) },			/* ConnectX-5, PCIe 3.0 */
++	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX5) },
+ 	{ PCI_VDEVICE(MELLANOX, 0x1018), MLX5_PCI_DEV_IS_VF},	/* ConnectX-5 VF */
+-	{ PCI_VDEVICE(MELLANOX, 0x1019) },			/* ConnectX-5 Ex */
++	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX5_EX) },
+ 	{ PCI_VDEVICE(MELLANOX, 0x101a), MLX5_PCI_DEV_IS_VF},	/* ConnectX-5 Ex VF */
+-	{ PCI_VDEVICE(MELLANOX, 0x101b) },			/* ConnectX-6 */
++	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX6) },
+ 	{ PCI_VDEVICE(MELLANOX, 0x101c), MLX5_PCI_DEV_IS_VF},	/* ConnectX-6 VF */
+ 	{ 0, }
+ };
