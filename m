@@ -1,84 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37958 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:49226 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757407AbdEVUOS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 May 2017 16:14:18 -0400
-Date: Mon, 22 May 2017 14:14:16 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: IO Space Allocation Question on ARM64
-Message-ID: <20170522141416.4fdc09a3@w520.home>
-In-Reply-To: <31f48cf6-fd97-98fe-ac7c-ad80870df68b@codeaurora.org>
-References: <31f48cf6-fd97-98fe-ac7c-ad80870df68b@codeaurora.org>
+        id S1033069AbdEXVma (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 May 2017 17:42:30 -0400
+Date: Wed, 24 May 2017 16:42:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-mips@linux-mips.org,
+        Joshua Kinard <kumba@gentoo.org>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v1 2/2] MIPS: PCI: Remove unused busn_offset
+Message-ID: <20170524214227.GC2794@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170519195559.25338.30891.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170519195606.25338.73798.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170519195606.25338.73798.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 22 May 2017 13:50:31 -0400
-Sinan Kaya <okaya@codeaurora.org> wrote:
+On Fri, May 19, 2017 at 02:56:06PM -0500, Bjorn Helgaas wrote:
+> pci_add_resource_offset() is for host bridge windows where the bridge
+> translates CPU addresses to PCI bus addresses by adding an offset.  To my
+> knowledge, no host bridge translates bus numbers, so this is only useful
+> for MEM and IO windows.  In any event, host->busn_offset is never set to
+> anything other than zero, so pci_add_resource() is sufficient.
+> 
+> a2e50f53d535 ("MIPS: PCI: Add a hook for IORESOURCE_BUS in
+> pci_controller/bridge_controller") also added busn_resource itself.  This
+> is currently unused but may be used by future SGI IP27 fixes, so I left it
+> there.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Joshua Kinard <kumba@gentoo.org>
 
-> We are seeing IO space allocation failure on QDF2400 with multiple switch hierarchy
-> below. This card has 20 PCI bridges with endpoints attached to each one to increase
-> the number of endpoints supported.
-> 
-> QDF2400 supports a maximum of 64k IO space aka 16 bit IO on the root port.
-> 
-> -+-[0003:00]---00.0-[01-16]----00.0-[02-16]--+-00.0-[03]----00.0
->  |                                           +-01.0-[04]----00.0
->  |                                           +-02.0-[05]----00.0
->  |                                           +-03.0-[06]----00.0
->  |                                           +-04.0-[07]----00.0
->  |                                           +-05.0-[08]----00.0
->  |                                           +-06.0-[09]----00.0
->  |                                           +-07.0-[0a]----00.0
->  |                                           +-08.0-[0b]--
->  |                                           +-09.0-[0c]--
->  |                                           +-0a.0-[0d]--
->  |                                           +-0b.0-[0e]--
->  |                                           +-0c.0-[0f]--
->  |                                           +-0d.0-[10]--
->  |                                           +-0e.0-[11]--
->  |                                           +-0f.0-[12]--
->  |                                           +-10.0-[13]--
->  |                                           +-11.0-[14]--
->  |                                           +-12.0-[15]--
->  |                                           \-13.0-[16]--
-> 
-> What we so far is that Linux is assigning an IO resource for every single bridge
-> that it finds even though there is nothing connected behind on some of the bridges.
-> Do we know the reason for this behavior?
-> 
-> [    4.288269] pci 0003:00:00.0: BAR 13: failed to assign [io  size 0x15000]
-> [    4.317175] pci 0003:01:00.0: BAR 13: failed to assign [io  size 0x14000]
-> [    4.644518] pci 0003:02:00.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.657539] pci 0003:02:01.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.670560] pci 0003:02:02.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.683581] pci 0003:02:03.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.696602] pci 0003:02:04.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.709623] pci 0003:02:05.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.722644] pci 0003:02:06.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.735664] pci 0003:02:07.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.748685] pci 0003:02:08.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.761706] pci 0003:02:09.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.774727] pci 0003:02:0a.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.787748] pci 0003:02:0b.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.800768] pci 0003:02:0c.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.813789] pci 0003:02:0d.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.826810] pci 0003:02:0e.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.839831] pci 0003:02:0f.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.852852] pci 0003:02:10.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.865873] pci 0003:02:11.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.878893] pci 0003:02:12.0: BAR 13: failed to assign [io  size 0x1000]
-> [    4.891914] pci 0003:02:13.0: BAR 13: failed to assign [io  size 0x1000]
-> 
-> UEFI seems to be assigning an IO resource to bridge only if finds an endpoint
-> behind it with an actual IO BAR space.
+I applied both of these to pci/misc for v4.13.
 
-If it's anything like we saw with similar issues on QEMU, it might be
-because the slots report themselves as hotplug capable and Linux tries
-to allocate minimum apertures for any hotplug slot.  See hpiosize
-and hpmemsize options for pci=.  Thanks,
-
-Alex
+> ---
+>  arch/mips/include/asm/pci.h |    1 -
+>  arch/mips/pci/pci-legacy.c  |    3 +--
+>  2 files changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+> index 1000c1b4c875..52f551ee492d 100644
+> --- a/arch/mips/include/asm/pci.h
+> +++ b/arch/mips/include/asm/pci.h
+> @@ -39,7 +39,6 @@ struct pci_controller {
+>  	unsigned long io_offset;
+>  	unsigned long io_map_base;
+>  	struct resource *busn_resource;
+> -	unsigned long busn_offset;
+>  
+>  #ifndef CONFIG_PCI_DOMAINS_GENERIC
+>  	unsigned int index;
+> diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
+> index 3a84f6c0c840..174575a9a112 100644
+> --- a/arch/mips/pci/pci-legacy.c
+> +++ b/arch/mips/pci/pci-legacy.c
+> @@ -86,8 +86,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
+>  				hose->mem_resource, hose->mem_offset);
+>  	pci_add_resource_offset(&resources,
+>  				hose->io_resource, hose->io_offset);
+> -	pci_add_resource_offset(&resources,
+> -				hose->busn_resource, hose->busn_offset);
+> +	pci_add_resource(&resources, hose->busn_resource);
+>  	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+>  				&resources);
+>  	hose->bus = bus;
+> 
