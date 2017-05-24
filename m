@@ -1,194 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:34333 "EHLO
-        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761417AbdEZJRE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 May 2017 05:17:04 -0400
-Received: by mail-io0-f169.google.com with SMTP id k91so6099764ioi.1
-        for <linux-pci@vger.kernel.org>; Fri, 26 May 2017 02:16:56 -0700 (PDT)
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6813 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938010AbdEXIV6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:21:58 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 1/4] PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+Date: Wed, 24 May 2017 16:12:45 +0800
+Message-ID: <20170524081248.67198-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20170524081248.67198-1-songxiaowei@hisilicon.com>
+References: <20170524081248.67198-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20170526060843.GA4446@wunner.de>
-References: <20170506090755.GB19740@wunner.de> <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
- <20170510084143.GA16261@wunner.de> <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
- <20170525123047.GA4172@wunner.de> <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
- <20170525124445.GA4181@wunner.de> <CAKv+Gu-7dr=upMcs2SsE+7+LRA2q82=exDrtt6CMniiMjZU2YA@mail.gmail.com>
- <20170525125650.GA4196@wunner.de> <CAKv+Gu_==Q5L+w2ihZ6u-=_AKZJun8D=sUWhgx6Pvzt-K99fTA@mail.gmail.com>
- <20170526060843.GA4446@wunner.de>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Fri, 26 May 2017 11:16:55 +0200
-Message-ID: <CAKv+Gu_fbNSK+LuWmQGqLHtu3rF9BdYwNB+K-myNXS=X+goXkQ@mail.gmail.com>
-Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25 May 2017 at 23:08, Lukas Wunner <lukas@wunner.de> wrote:
-> On Thu, May 25, 2017 at 06:07:35AM -0700, Ard Biesheuvel wrote:
->> On 25 May 2017 at 05:56, Lukas Wunner <lukas@wunner.de> wrote:
->> > On Thu, May 25, 2017 at 05:47:59AM -0700, Ard Biesheuvel wrote:
->> >> On 25 May 2017 at 05:44, Lukas Wunner <lukas@wunner.de> wrote:
->> >> > On Thu, May 25, 2017 at 05:36:01AM -0700, Ard Biesheuvel wrote:
->> >> >> On 25 May 2017 at 05:30, Lukas Wunner <lukas@wunner.de> wrote:
->> >> >> > On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
->> >> >> >> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
->> >> >> >> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
->> >> >> >> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
->> >> >> >> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
->> >> >> >> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
->> >> >> >> >> >> > The CPER parser assumes that the class code is big endian, but at least
->> >> >> >> >> >> > on this edk2-derived Intel Purley platform it's little endian:
->> >> >> >> >> > [snip]
->> >> >> >> >> >> > --- a/include/linux/cper.h
->> >> >> >> >> >> > +++ b/include/linux/cper.h
->> >> >> >> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
->> >> >> >> >> >> >         struct {
->> >> >> >> >> >> >                 __u16   vendor_id;
->> >> >> >> >> >> >                 __u16   device_id;
->> >> >> >> >> >> > -               __u8    class_code[3];
->> >> >> >> >> >> > +               __u32   class_code:24;
->> >> >> >> >> >>
->> >> >> >> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
->> >> >> >> >> >> order of p[] above?
->> >> >> >> >> >
->> >> >> >> >> > Hm, why would you like to avoid it?
->> >> >> >> >>
->> >> >> >> >> Because we shouldn't use bitfields in structs in code that should be
->> >> >> >> >> portable across archs with different endiannesses.
->> >> >> >> >
->> >> >> >> > The CPER header is defined in the UEFI spec and UEFI mandates that the
->> >> >> >> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
->> >> >> >> >
->> >> >> >>
->> >> >> >> No it does not mandate that at all. It mandates how the core should be
->> >> >> >> configured when running in UEFI, but the OS can do anything it likes.
->> >> >> >>
->> >> >> >> We are still interested in adding limited UEFI support to big endian
->> >> >> >> arm64 in the future (i.e., access to a limited set of firmware tables
->> >> >> >> but no runtime services), and I am not going to merge anything that
->> >> >> >> moves us away from that goal.
->> >> >> >>
->> >> >> >> > So your argument seems moot to me.  Am I missing something?  Do you
->> >> >> >> > have another argument?
->> >> >> >> >
->> >> >> >> > Moreover, the vendor_id and device_id fields are little endian as well
->> >> >> >> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
->> >> >> >> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
->> >> >> >> >
->> >> >> >>
->> >> >> >> Indeed. I am aware we will need to add various endian-neutral
->> >> >> >> accessors in the future.
->> >> >> >>
->> >> >> >> >> >  The class_code element isn't
->> >> >> >> >> > referenced anywhere else in the kernel and this isn't a uapi header,
->> >> >> >> >> > so the change would only impact out-of-tree drivers.  Not sure if
->> >> >> >> >> > any exist which might be interested in CPER parsing.
->> >> >> >> >> >
->> >> >> >> >>
->> >> >> >> >> The point is that the change in the struct definition is simply not
->> >> >> >> >> necessary, given that inverting the order of p[] already achieves
->> >> >> >> >> exactly what we want.
->> >> >> >> >
->> >> >> >> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
->> >> >> >> > Please excuse my stubbornness.
->> >> >> >> >
->> >> >> >>
->> >> >> >> Stubbornness alone is not going to convince me. What *could* convince
->> >> >> >> me (although unlikely) is a quote from the C spec which explains why
->> >> >> >> it is 100% legal to make assumptions about how bitfields are projected
->> >> >> >> onto byte locations in memory.
->> >> >> >
->> >> >> > All structs in cper.h are declared "packed", so what you're asking for
->> >> >> > isn't defined in the C spec but in the GCC documentation:
->> >> >> >
->> >> >> >    "The packed attribute specifies that a variable or structure field
->> >> >> >     should have the smallest possible alignment -- one byte for a variable,
->> >> >> >     and one bit for a field, unless you specify a larger value with the
->> >> >> >     aligned attribute."
->> >> >> >
->> >> >> > So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
->> >> >> > le16_to_cpu() etc both for the class_code changed by the patch as well as
->> >> >> > all the other members of the struct not touched by the patch when adding
->> >> >> > "endianness mixed mode" for aarch64.
->> >> >>
->> >> >> I'm not talking about the 'packed' attribute but about the fact that
->> >> >> the C spec does not guarantee that bitfields are projected onto byte
->> >> >> locations in memory in the way you expect.
->> >> >
->> >> > What relevance does that have as long as the header file uses a pragma
->> >> > specific to gcc (or other compilers that are compatible to gcc with
->> >> > respect to that pragma (such as clang)), and gcc guarantees the
->> >> > correct layout regardless of endianness?
->> >>
->> >> The relevance is that we should not add GCC specific code because you
->> >> think it looks prettier.
->> >
->> > The code already *is* gcc-specific.
->> >
->>
->> The entire kernel is GCC specific. But that does not justify adding
->> more GCC-isms throughout the code.
->
-> How is the patch adding a GCC-ism?
->
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+---
+ .../devicetree/bindings/pci/kirin-pcie.txt         | 49 ++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
 
-Because you rely on behavior which is not defined by the C spec.
-
->
->> >> And where does GCC guarantee the correct layout? Did you find an
->> >> unambiguous GCC documentation reference that explains how bitfields
->> >> are mapped onto byte locations?
->> >
->> > See the excerpt I quoted above.
->> >
->>
->> 'packed' has nothing to do with it. This is about bitfields in structs.
->
-> 'packed' has *everything* to do with it. :-)
->
-> The struct contains a *single* bitfield surrounded by non-bitfields.
-> If there were multiple consecutive bitfields, then yes, things wouldn't
-> be as clear.
->
-> The bitfield as well as all surrounding non-bitfields have a size which
-> is a multiple of full bytes.  And this is where the 'packed' attribute
-> comes into play, it guarantees that there's no padding as long as all
-> members of the struct are byte-aligned.
->
-
-No, it does not guarantee that at all. Observed behavior != guarantee.
-'Guarantee' implies that it is documented in a pertinent spec, and
-that we can file a bug with the GCC/Clang projects if the behavior
-changes at any point.
-
-Nobody is asking you to theorize and make inferences about how
-attribute X and behavior Y offer guarantee Z. All it takes is an
-unambiguous quote from the C spec that describes how the struct
-definition is mapped onto bits in memory. You have offered no such
-quote, for which I don't blame you because I am convinced that the C
-spec does not define this in sufficient detail.
-
->
->>
->> >
->> >> Or does 'guarantee' mean 'I tested it and it works'?
->> >
->> > I tested it with x86_64 (le) and ppc32 (be) and it works.
->> > I don't have an aarch64 machine available here.
->> >
->>
->> Good.
->
-> Good to merge then?
->
-
-No. For the last time, this patch will not be merged. The only
-approach that will be merged is keeping the char[3] array and
-inverting the order of the printk() arguments.
-
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+new file mode 100644
+index 000000000000..ffbdcba287f0
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -0,0 +1,49 @@
++HiSilicon Kirin SoCs PCIe host DT description
++
++Kirin PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver
++and inherits common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties
++- compatible:
++	"hisilicon,hi3660-pcie" for PCIe of Kirin960 SoC
++- reg: Should contain rc_dbi, apb, phy, config registers location and length.
++- reg-names: Must include the following entries:
++  "dbi": controller configuration registers;
++  "apb": apb Ctrl register defined by Kirin;
++  "phy": apb PHY register defined by Kirin;
++  "config": PCIe configuration space registers.
++- reset-gpio: The gpio to generate PCIe perst assert and deassert signal.
++
++Optional properties:
++
++Example based on kirin960:
++
++        pcie@f4000000 {
++                        compatible = "hisilicon,kirin-pcie";
++                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
++                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
++                        reg-names = "dbi","apb","phy", "config";
++                        bus-range = <0x0  0x1>;
++                        #address-cells = <3>;
++                        #size-cells = <2>;
++                        device_type = "pci";
++                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf5000000 0x0 0x2000000>;
++                        num-lanes = <1>;
++                        #interrupt-cells = <1>;
++                        interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
++                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
++                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
++                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
++                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
++                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
++                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
++                        clock-names = "pcie_phy_ref", "pcie_aux",
++                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
++                        reset-gpio = <&gpio11 1 0 >;
++        };
 -- 
-Ard.
+2.11.GIT
