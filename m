@@ -1,86 +1,93 @@
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- Jiang Liu <jiang.liu@linux.intel.com>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
-Date: Tue, 23 May 2017 19:54:37 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ iommu@lists.linux-foundation.org
+Subject: [PATCH 0/7] Add PCI ATS support to SMMUv3
+Date: Wed, 24 May 2017 19:01:36 +0100
+Message-Id: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, will.deacon@arm.com,
+ joro@8bytes.org, thunder.leizhen@huawei.com, rjw@rjwysocki.net,
+ okaya@codeaurora.org, robh+dt@kernel.org, hanjun.guo@linaro.org,
+ sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
+ sunil.kovvuri@gmail.com, robin.murphy@arm.com, lenb@kernel.org
 MIME-Version: 1.0
-In-Reply-To: <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/05/2017 19:03, Bjorn Helgaas wrote:
-> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
->> On 20/04/2017 16:28, Marc Gonzalez wrote:
->>
->>> +static int tango_set_affinity(struct irq_data *data,
->>> +		const struct cpumask *mask, bool force)
->>> +{
->>> +	return -EINVAL;
->>> +}
->>> +
->>> +static struct irq_chip tango_chip = {
->>> +	.irq_ack		= tango_ack,
->>> +	.irq_mask		= tango_mask,
->>> +	.irq_unmask		= tango_unmask,
->>> +	.irq_set_affinity	= tango_set_affinity,
->>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
->>> +};
->>
->> Hmmm... I'm wondering why .irq_set_affinity is required.
->>
->> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
->> first calls __irq_can_set_affinity() to check whether
->> desc->irq_data.chip->irq_set_affinity) exists.
->>
->> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
->> which calls chip->irq_set_affinity(data, mask, force);
->> = msi_domain_set_affinity()
->> which calls parent->chip->irq_set_affinity() unconditionally.
->>
->> Would it make sense to test that the callback is implemented
->> before calling it?
->>
->>
->> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
-> 
-> I'm not sure what you're asking.
-> 
-> Is this a bug report for the v4 tango driver?
+PCIe devices can implement their own TLB, named Address Translation Cache
+(ATC). In order to support Address Translation Service (ATS), the
+following changes are needed in software:
 
-No.
+* Enable ATS on endpoints when the system supports it. Both PCI root
+  complex and associated SMMU must implement the ATS protocol.
 
-> Or are you asking whether msi_domain_set_affinity() should be changed
-> to check whether parent->chip->irq_set_affinity is implemented?
+* When unmapping an IOVA, send an ATC invalidate request to the endpoint
+  in addition to the usual SMMU IOTLB invalidations.
 
-Yes. The way things are implemented now, drivers are forced
-to define an irq_set_affinity callback, even if it just returns
-an error, otherwise, the kernel crashes, because of the
-unconditional function pointer deref. 
+I previously sent this as part of a lengthy RFC [1] adding SVM (ATS +
+PASID + PRI) support to SMMUv3. The next PASID/PRI version is almost
+ready, but isn't likely to get merged because it needs hardware testing,
+so I will send it later. PRI depends on ATS, but ATS should be useful on
+its own.
 
-> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
-> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
-> generic msi irq domain support"), so if there's a problem here, it's most
-> likely in the tango code.
+Without PASID and PRI, ATS is used for accelerating transactions. Instead
+of having all memory accesses go through SMMU translation, the endpoint
+can translate IOVA->PA once, store the result in its ATC, then issue
+subsequent transactions using the PA, partially bypassing the SMMU. So in
+theory it should be faster while keeping the advantages of an IOMMU,
+namely scatter-gather and access control.
 
-The issue is having to define an "empty" function.
-(Unnecessary code bloat and maintenance.)
+The ATS patches can now be tested on some hardware, even though the lack
+of compatible PCI endpoints makes it difficult to assess what performance
+optimizations we need. That's why the ATS implementation is a bit rough at
+the moment, and we will work on optimizing things like invalidation ranges
+later.
 
-I'll send a patch illustrating exactly what I intended.
+Since the RFC [1]:
+* added DT and ACPI patches,
+* added invalidate-all on domain detach,
+* removed smmu_group again,
+* removed invalidation print from the fast path,
+* disabled tagged pointers for good,
+* some style changes.
 
-Regards.
+These patches are based on Linux v4.12-rc2
+
+[1] https://www.spinics.net/lists/linux-pci/msg58650.html
+
+Jean-Philippe Brucker (7):
+  PCI: Move ATS declarations outside of CONFIG_PCI
+  dt-bindings: PCI: Describe ATS property for root complex nodes
+  iommu/of: Check ATS capability in root complex nodes
+  ACPI/IORT: Check ATS capability in root complex nodes
+  iommu/arm-smmu-v3: Link domains and devices
+  iommu/arm-smmu-v3: Add support for PCI ATS
+  iommu/arm-smmu-v3: Disable tagged pointers
+
+ .../devicetree/bindings/pci/pci-iommu.txt          |   8 +
+ drivers/acpi/arm64/iort.c                          |  10 +
+ drivers/iommu/arm-smmu-v3.c                        | 258 ++++++++++++++++++++-
+ drivers/iommu/of_iommu.c                           |   8 +
+ include/linux/iommu.h                              |   4 +
+ include/linux/pci.h                                |  26 +--
+ 6 files changed, 293 insertions(+), 21 deletions(-)
+
+-- 
+2.12.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
