@@ -1,90 +1,70 @@
-Return-Path: <SRS0=1op+=4W=bombadil.srs.infradead.org=BATV+d8c56d9a67374e13c9b4+5014+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=1op+=4W=bombadil.srs.infradead.org=BATV+d8c56d9a67374e13c9b4+5014+infradead.org+hch@kernel.org>
-Date: Tue, 16 May 2017 05:06:42 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: bhelgaas@google.com, helgaas@kernel.org, linuxarm@huawei.com,
-	linux-pci@vger.kernel.org, lukas@wunner.de,
-	linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com
-Subject: Re: [PATCH 1/2] PCI/portdrv: add support for different MSI
- interrupts for PCIe port services
-Message-ID: <20170516120642.GA2991@infradead.org>
-References: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
- <1494930342-7132-2-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <SRS0=jRHk=46=chromium.org=briannorris@kernel.org>
+Return-Path: <SRS0=jRHk=46=chromium.org=briannorris@kernel.org>
+Date: Wed, 24 May 2017 14:43:50 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
+Message-ID: <20170524214349.GA22374@google.com>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170523194443.GD7241@bhelgaas-glaptop.roam.corp.google.com>
+ <c2331eef-b76d-720d-3750-6d754d53710a@rock-chips.com>
+ <20170524011507.GA112603@google.com>
+ <20170524213353.GB2794@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1494930342-7132-2-git-send-email-gabriele.paoloni@huawei.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170524213353.GB2794@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> --- a/drivers/pci/pcie/portdrv.h
-> +++ b/drivers/pci/pcie/portdrv.h
-> @@ -18,6 +18,11 @@
->   */
->  #define PCIE_PORT_MAX_MSIX_ENTRIES	32
->  
-> +/* According to the PCI Local Bus Specification REV. 3.0 the max number
-> + * of MSI vectors per function is 32
-> + */
-> +#define PCIE_PORT_MAX_MSI_ENTRIES	32
+On Wed, May 24, 2017 at 04:33:53PM -0500, Bjorn Helgaas wrote:
+> On Tue, May 23, 2017 at 06:15:07PM -0700, Brian Norris wrote:
+> > (Since Shawn didn't quite answer this piece)
+> > 
+> > On Wed, May 24, 2017 at 09:04:33AM +0800, Shawn Lin wrote:
+> > > 在 2017/5/24 3:44, Bjorn Helgaas 写道:
+> > > >What bad things happen without this patch?
+> > 
+> > On this SoC, I've seen this sort of behavior (reading the config space
+> > when the device isn't responding) yield aborts, which panic the system. 
+> 
+> Trying to read config space of a device that doesn't exist is an
+> essential part of enumeration, and we expect whatever error occurs at
+> the hardware level to get turned into 0xffffffff data at the CPU (as
+> in pci_bus_read_dev_vendor_id()).
 
-Just rename the above define to PCIE_PORT_MAX_MSI_ENTRIES and update
-the comment.
+Understood.
 
->  /**
-> - * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for given port
-> + * pcie_port_enable_msix_or_msi - try to set up MSI-X or MSI as interrupt mode
+> Shawn mentioned some issue with memory read/write as well.  I think we
+> need to sort out how to handle both the config space issue and the
+> memory issue.
 
-.. and just call this pcie_port_enable_multi_vec or maybe even just
-pcie_port_enable_msi.
+Is the memory space issue actually a problem? I don't see anything in
+the spec that says how these should behave when the device is off.
 
-> +static
-> +int pcie_port_enable_msix_or_msi(struct pci_dev *dev, int *irqs, int mask)
+(I mean, it's always nice if there are fewer ways to crash the system.
+But I thought mem 0xffffffff was only a convention, not a standard.)
 
-This style of indentation is entirely wrong.
+> This patch seems like it papers over part of it and
+> reduces the urgency of finding a real solution.
 
->  {
->  	int nr_entries, entry, nvec = 0;
->  
-> @@ -63,6 +65,10 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
->  	 */
->  	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSIX_ENTRIES,
->  			PCI_IRQ_MSIX);
-> +	if (nr_entries < 0) /* MSI-x failed let's try with MSI */
-> +		nr_entries = pci_alloc_irq_vectors(dev, 1,
-> +				PCIE_PORT_MAX_MSI_ENTRIES,
-> +				PCI_IRQ_MSI);
+I've been bugging Shawn about this for a while already. It's not clear
+there's really a good solution so far, apart from hacking the arch
+exception handlers, like you're doing in the imx6 driver:
 
-Just pass PCI_IRQ_MSI | PCI_IRQ_MSIX in the above call.
+commit 415b6185c541dc0a21457ff307cdb61950a6eb9f
+Author: Lucas Stach <l.stach@pengutronix.de>
+Date:   Mon May 22 17:06:30 2017 -0500
 
+    PCI: imx6: Fix config read timeout handling
 
->  		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
->  		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
-> @@ -125,6 +143,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
->  		/* Now allocate the MSI-X vectors for real */
->  		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
->  				PCI_IRQ_MSIX);
-> +		if (nr_entries < 0) /* MSI-x failed, let's try MSI*/
-> +			nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
-> +					PCI_IRQ_MSI);
+I don't think the ARM64 maintainers have been fond of adding similar
+"hook" code...
 
-Same here.
+> I'm going to drop this for now, pending a more detailed explanation.
 
->  		if (nr_entries < 0)
->  			return nr_entries;
->  	}
-> @@ -160,8 +181,8 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->  	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
->  		flags &= ~PCI_IRQ_MSI;
->  	} else {
-> -		/* Try to use MSI-X if supported */
-> -		if (!pcie_port_enable_msix(dev, irqs, mask))
-> +		/* Try to use MSI-X or MSI if supported */
-> +		if (!pcie_port_enable_msix_or_msi(dev, irqs, mask))
->  			return 0;
->  	}
+Fine with me.
 
-We have another pci_alloc_irq_vectors call just below this which
-also passes PCI_IRQ_MSI, but we won't reach it anymore with your
-changes I think, so pcie_init_service_irqs will need some updates.
-(after checking that your code still works fine for single-MSI setups,
-of course)
+Brian
