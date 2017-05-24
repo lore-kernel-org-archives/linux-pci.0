@@ -1,143 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56848 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1948854AbdEZXr3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 May 2017 19:47:29 -0400
-Date: Fri, 26 May 2017 18:47:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34433 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752713AbdEXB0A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 21:26:00 -0400
+Received: by mail-pf0-f182.google.com with SMTP id 9so130711147pfj.1
+        for <linux-pci@vger.kernel.org>; Tue, 23 May 2017 18:26:00 -0700 (PDT)
+Date: Tue, 23 May 2017 18:25:57 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>,
-        Alexander Duyck <alexander.h.duyck@intel.com>,
-        oss-drivers@netronome.com
-Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
-Message-ID: <20170526234726.GD21531@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
+Message-ID: <20170524012556.GA128370@google.com>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170523180048.GA115572@google.com>
+ <3fea7598-501e-6131-612a-977f005e9a2b@rock-chips.com>
+ <20170524010014.GA109842@google.com>
+ <30a7917c-4e2f-c0be-2d0b-04e05013708c@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <30a7917c-4e2f-c0be-2d0b-04e05013708c@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jakub,
-
-On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:
-> PCI core sets the driver pointer before calling ->probe() and only
-> clears it after ->remove().  This means driver's ->sriov_configure()
-> callback will happily race with probe() and remove(), most likely
-> leading to BUGs, since drivers don't expect this.
-
-I guess you're referring to the pci_dev->driver pointer set by
-local_pci_probe(), and this is important because sriov_numvfs_store()
-checks that pointer, right?
-
-I was trying to make sure there weren't other similar problems elsewhere.
-But I don't see any other sysfs functions that use pci_dev->driver in that
-way, so I think this is the only one.
-
-I think this looks good.
-
-    pci_bus_add_devices
-      pci_bus_add_device
-        pci_create_sysfs_dev_files
-        device_attach
-          __device_attach
-            device_lock(dev)
-            __device_attach_driver
-              ...
-                local_pci_probe
-                  pci_dev->driver = pci_drv       <--- set
-                  pci_drv->probe()
-            device_unlock(dev)
-
-    sriov_numvfs_store
-  -   mutex_lock(&iov->dev->sriov->lock)
-  +   device_lock(&pdev->dev)
-      if (pdev->driver && pdev->driver->sriov_configure)  <--- test
-        pdev->driver->sriov_configure
-  -   mutex_unlock(&iov->dev->sriov->lock)
-  +   device_unlock(&pdev->dev)
-
-> We could reorder pointer assignments, or try detecting races in all
-> drivers, but it seems simpler and cleaner to just hold the device lock
-> instead of special SR-IOV lock, since that lock is already supposed
-> to synchronize the driver callbacks.
+On Wed, May 24, 2017 at 09:14:52AM +0800, Shawn Lin wrote:
+> 在 2017/5/24 9:00, Brian Norris 写道:
+> >On Wed, May 24, 2017 at 08:54:14AM +0800, Shawn Lin wrote:
+> >>The reason for me to added this check is that I saw a external abort
+> >>down to rockchip_pcie_rd_own_conf, of which I highly suspected was that
+> >>the link was re-init or total broken at that time.
+> >
+> >I've seen plenty of aborts in this function as well, but I've verified
+> >that the link was still reported "up" in all the cases I could reproduce.
+> >
 > 
-> Remove the iov lock completely, since we remove the last user.
+> I think it's reasonable as the link could be retrained automatically if
+> it's not totaly broken at all. Did you poweroff the endpoint and could
+> still pass this check?
+
+I don't think I powered it off entirely, but I did try asserting its PD#
+pin, which powers of most of the functionality -- enough that it
+apparently causes aborts, but doesn't bring the link down.
+
+> >So, do you "suspect" or did you "prove"? e.g., log cases where this
+> >check actually helps?
 > 
-> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-> ---
->  drivers/pci/iov.c       | 4 ----
->  drivers/pci/pci-sysfs.c | 5 ++---
->  drivers/pci/pci.h       | 1 -
->  3 files changed, 2 insertions(+), 8 deletions(-)
+> I was powering off the devices and did a lspci, and saw the log cases
+> there. I will check this again.
 > 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index d9dc7363ac77..120485d6f352 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -461,8 +461,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	else
->  		iov->dev = dev;
->  
-> -	mutex_init(&iov->lock);
-> -
->  	dev->sriov = iov;
->  	dev->is_physfn = 1;
->  	rc = compute_max_vf_buses(dev);
-> @@ -491,8 +489,6 @@ static void sriov_release(struct pci_dev *dev)
->  	if (dev != dev->sriov->dev)
->  		pci_dev_put(dev->sriov->dev);
->  
-> -	mutex_destroy(&dev->sriov->lock);
-> -
->  	kfree(dev->sriov);
->  	dev->sriov = NULL;
->  }
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 31e99613a12e..7755559558df 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -472,7 +472,6 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  				  const char *buf, size_t count)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> -	struct pci_sriov *iov = pdev->sriov;
->  	int ret;
->  	u16 num_vfs;
->  
-> @@ -483,7 +482,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->  		return -ERANGE;
->  
-> -	mutex_lock(&iov->dev->sriov->lock);
-> +	device_lock(&pdev->dev);
->  
->  	if (num_vfs == pdev->sriov->num_VFs)
->  		goto exit;
-> @@ -518,7 +517,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  			 num_vfs, ret);
->  
->  exit:
-> -	mutex_unlock(&iov->dev->sriov->lock);
-> +	device_unlock(&pdev->dev);
->  
->  	if (ret < 0)
->  		return ret;
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index f8113e5b9812..93f4044b8f4b 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -272,7 +272,6 @@ struct pci_sriov {
->  	u16 driver_max_VFs;	/* max num VFs driver supports */
->  	struct pci_dev *dev;	/* lowest numbered PF */
->  	struct pci_dev *self;	/* this PF */
-> -	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
->  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
->  	bool drivers_autoprobe;	/* auto probing of VFs by driver */
->  };
-> -- 
-> 2.11.0
-> 
+> >
+> >And to Bjorn's point: do you know *why* such cases were hit? That would
+> >help to understand if the cases you're worrying about are hopelessly
+> >racy, or if there's some way to ensure synchronization.
+
+OK, so you've answered this question: losing power is hopelessly racy.
+
+I guess it's up to Bjorn as to whether this racy check is useful at all
+then.
+
+Brian
