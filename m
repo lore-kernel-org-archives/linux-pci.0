@@ -1,53 +1,295 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 5 May 2017 11:57:39 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
-        USB list <linux-usb@vger.kernel.org>,
-        alsa-devel@alsa-project.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-Message-ID: <20170505095739.GB6762@lst.de>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com> <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com> <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com> <1493976265.30052.21.camel@linux.intel.com> <CAOQ4uxjErce01+xyDnM=nCJS+avQ4g6hQVvH3fVotj7Ws2moCQ@mail.gmail.com>
+Return-Path: <SRS0=rfYl=46=mm-sol.com=svarbanov@kernel.org>
+Return-Path: <SRS0=rfYl=46=mm-sol.com=svarbanov@kernel.org>
+Subject: Re: [PATCH] PCI: qcom: Add support for IPQ4019 PCIe controller
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170505152524.29337-1-john@phrozen.org>
+ <20170523200719.GG7241@bhelgaas-glaptop.roam.corp.google.com>
+ <41f174d7-7d11-f80f-5508-17f53af1ee97@mm-sol.com>
+ <20170524210418.GA31459@bhelgaas-glaptop.roam.corp.google.com>
+Cc: John Crispin <john@phrozen.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <64663df7-7000-7276-d9ca-337321f850a0@mm-sol.com>
+Date: Thu, 25 May 2017 00:55:47 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOQ4uxjErce01+xyDnM=nCJS+avQ4g6hQVvH3fVotj7Ws2moCQ@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170524210418.GA31459@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 05, 2017 at 12:50:31PM +0300, Amir Goldstein wrote:
-> To complete the picture for folks not cc'ed on my patches,
-> xfs use case suggests there is also justification for the additional helpers:
-> 
-> uuid_is_null() / uuid_equal()
-> guid_is_null() / guid_equal()
+Hi Bjorn,
 
-The is_null is useful and I bet we'll find other instances.  I'm
-not sure _equals really adds much value over the existing _cmp
-helpers, but on the other hand they are so trivial that we might as
-well add them.
+On 25.05.2017 00:04, Bjorn Helgaas wrote:
+> On Wed, May 24, 2017 at 02:31:27AM +0300, Stanimir Varbanov wrote:
+>> Hi,
+>>
+>> On 23.05.2017 23:07, Bjorn Helgaas wrote:
+>>> Stanimir?
+>>>
+>>> On Fri, May 05, 2017 at 05:25:24PM +0200, John Crispin wrote:
+>>>> Add support for the IPQ4019 PCIe controller. IPQ4019 supports Gen
+>>>> 1/2, one lane, one PCIe root complex with support for MSI and legacy
+>>>> interrupts, and it conforms to PCI Express Base 2.1 specification.
+>>>>
+>>>> The core init is the sames as for the MSM8996, however the clocks and
+>>>> reset lines differ.
+>>>>
+>>>> Signed-off-by: John Crispin <john@phrozen.org>
+>>>> ---
+>>>> .../devicetree/bindings/pci/qcom,pcie.txt          |  20 +-
+>>>> drivers/pci/host/pcie-qcom.c                       | 304 +++++++++++++++++++++
+>>>
+>>> pcie-qcom.c was recently moved to drivers/pci/dwc, but I was able to
+>>> apply this by hand pretty easily.  But I would like Stanimir's ack
+>>> first.
+>>
+>> Bjorn, thanks for the reminder.
+>>
+>> Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+>
+> Thanks.
+>
+> Rob took the trouble to provide useful comments, so I'm a bit
+> disappointed that there hasn't been a response them.
+>
+> Re the verbose error messages, I agree they make the code ugly.  I
+> think John copied the existing style, which is reasonable.  I don't
+> see a good way to move the message into the callee, e.g.,
+> reset_control_assert(), because that's a generic function with
+> hundreds of callers.  But most of those callers don't check the return
+> value.  I'm not sure whether there's really any value in checking
+> here.
 
-The other thing XFS has is uuid_copy.
+I have an idea how all those reset controls will become more beautiful. 
+I'm just waiting this [1] to me merged. When this happened I will post a 
+cleanup patch for resets and error messages.
+
+>
+> Re the ordering in the deinit() functions vs the init() error paths,
+> the new v3 code uses the same ordering as the existing v1 code, i.e.,
+>
+>   qcom_pcie_deinit_v3
+>     reset_control_assert
+>     clk_disable_unprepare
+>
+>   qcom_pcie_init_v3
+>       reset_control_deassert
+>       clk_prepare_enable
+>     err:
+>       clk_disable_unprepare
+>       reset_control_assert
+>
+> In general, there's just a worrying lack of symmetry across the init,
+> deinit, and error paths of all the versions.
+
+Probably the order doesn't matter in deinit case so let's keep it as is 
+in John's patch.
+
+>
+> I would also propose the patch below, which doesn't change any code,
+> but moves a few functions so all the v0 code is together, all the v1
+> code is together and in the same order, etc.
+
+Thanks, looks good to me.
+
+regards,
+Stan
+
+[1] https://lkml.org/lkml/2017/5/22/273
+
+>
+> Bjorn
+>
+>
+>
+> commit ebacba9579462bdc009f4cfc1b605b3ca7a7a1d2
+> Author: Bjorn Helgaas <bhelgaas@google.com>
+> Date:   Wed May 24 15:19:36 2017 -0500
+>
+>     PCI: qcom: Reorder to put v0 functions together, v1 functions together, etc
+>
+>     Previously the v0, v1, and v2 functions were not grouped together in a
+>     consistent order.  Reorder them to make them consistent.
+>
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> index 9b186518cb72..5872a6771ea5 100644
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -152,26 +152,6 @@ static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+>  	return dw_handle_msi_irq(pp);
+>  }
+>
+> -static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+> -{
+> -	u32 val;
+> -
+> -	/* enable link training */
+> -	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+> -	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
+> -	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+> -}
+> -
+> -static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
+> -{
+> -	u32 val;
+> -
+> -	/* enable link training */
+> -	val = readl(pcie->parf + PCIE20_PARF_LTSSM);
+> -	val |= BIT(8);
+> -	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
+> -}
+> -
+>  static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+>  {
+>  	struct dw_pcie *pci = pcie->pci;
+> @@ -186,6 +166,16 @@ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+>  	return dw_pcie_wait_for_link(pci);
+>  }
+>
+> +static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+> +{
+> +	u32 val;
+> +
+> +	/* enable link training */
+> +	val = readl(pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+> +	val |= PCIE20_ELBI_SYS_CTRL_LT_ENABLE;
+> +	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+> +}
+> +
+>  static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
+> @@ -236,36 +226,6 @@ static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
+>  	return PTR_ERR_OR_ZERO(res->phy_reset);
+>  }
+>
+> -static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
+> -{
+> -	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
+> -	struct dw_pcie *pci = pcie->pci;
+> -	struct device *dev = pci->dev;
+> -
+> -	res->vdda = devm_regulator_get(dev, "vdda");
+> -	if (IS_ERR(res->vdda))
+> -		return PTR_ERR(res->vdda);
+> -
+> -	res->iface = devm_clk_get(dev, "iface");
+> -	if (IS_ERR(res->iface))
+> -		return PTR_ERR(res->iface);
+> -
+> -	res->aux = devm_clk_get(dev, "aux");
+> -	if (IS_ERR(res->aux))
+> -		return PTR_ERR(res->aux);
+> -
+> -	res->master_bus = devm_clk_get(dev, "master_bus");
+> -	if (IS_ERR(res->master_bus))
+> -		return PTR_ERR(res->master_bus);
+> -
+> -	res->slave_bus = devm_clk_get(dev, "slave_bus");
+> -	if (IS_ERR(res->slave_bus))
+> -		return PTR_ERR(res->slave_bus);
+> -
+> -	res->core = devm_reset_control_get(dev, "core");
+> -	return PTR_ERR_OR_ZERO(res->core);
+> -}
+> -
+>  static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
+> @@ -394,6 +354,36 @@ static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
+>  	return ret;
+>  }
+>
+> +static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
+> +{
+> +	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
+> +	struct dw_pcie *pci = pcie->pci;
+> +	struct device *dev = pci->dev;
+> +
+> +	res->vdda = devm_regulator_get(dev, "vdda");
+> +	if (IS_ERR(res->vdda))
+> +		return PTR_ERR(res->vdda);
+> +
+> +	res->iface = devm_clk_get(dev, "iface");
+> +	if (IS_ERR(res->iface))
+> +		return PTR_ERR(res->iface);
+> +
+> +	res->aux = devm_clk_get(dev, "aux");
+> +	if (IS_ERR(res->aux))
+> +		return PTR_ERR(res->aux);
+> +
+> +	res->master_bus = devm_clk_get(dev, "master_bus");
+> +	if (IS_ERR(res->master_bus))
+> +		return PTR_ERR(res->master_bus);
+> +
+> +	res->slave_bus = devm_clk_get(dev, "slave_bus");
+> +	if (IS_ERR(res->slave_bus))
+> +		return PTR_ERR(res->slave_bus);
+> +
+> +	res->core = devm_reset_control_get(dev, "core");
+> +	return PTR_ERR_OR_ZERO(res->core);
+> +}
+> +
+>  static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
+> @@ -474,6 +464,16 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
+>  	return ret;
+>  }
+>
+> +static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
+> +{
+> +	u32 val;
+> +
+> +	/* enable link training */
+> +	val = readl(pcie->parf + PCIE20_PARF_LTSSM);
+> +	val |= BIT(8);
+> +	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
+> +}
+> +
+>  static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
+> @@ -500,6 +500,17 @@ static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
+>  	return PTR_ERR_OR_ZERO(res->pipe_clk);
+>  }
+>
+> +static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+> +{
+> +	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
+> +
+> +	clk_disable_unprepare(res->pipe_clk);
+> +	clk_disable_unprepare(res->slave_clk);
+> +	clk_disable_unprepare(res->master_clk);
+> +	clk_disable_unprepare(res->cfg_clk);
+> +	clk_disable_unprepare(res->aux_clk);
+> +}
+> +
+>  static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
+>  {
+>  	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
+> @@ -865,17 +876,6 @@ static int qcom_pcie_link_up(struct dw_pcie *pci)
+>  	return !!(val & PCI_EXP_LNKSTA_DLLLA);
+>  }
+>
+> -static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+> -{
+> -	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
+> -
+> -	clk_disable_unprepare(res->pipe_clk);
+> -	clk_disable_unprepare(res->slave_clk);
+> -	clk_disable_unprepare(res->master_clk);
+> -	clk_disable_unprepare(res->cfg_clk);
+> -	clk_disable_unprepare(res->aux_clk);
+> -}
+> -
+>  static void qcom_pcie_host_init(struct pcie_port *pp)
+>  {
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
