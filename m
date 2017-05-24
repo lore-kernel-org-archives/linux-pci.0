@@ -1,76 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47132 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:49300 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754724AbdEDP3P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 May 2017 11:29:15 -0400
-Date: Thu, 4 May 2017 17:29:01 +0200
-From: Benjamin Tissoires <benjamin.tissoires@redhat.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
-        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-Message-ID: <20170504152901.GA16181@mail.corp.redhat.com>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+        id S1033414AbdEXVnK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 24 May 2017 17:43:10 -0400
+Date: Wed, 24 May 2017 16:43:08 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Douglas Lehr <dllehr@us.ibm.com>,
+        Milton Miller <miltonm@us.ibm.com>,
+        Anton Blanchard <anton@samba.org>,
+        linux-kernel@vger.kernel.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v1 2/2] PCI: Correct PCI_STD_RESOURCE_END usage
+Message-ID: <20170524214308.GD2794@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170519195849.25440.65477.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170519195855.25440.29969.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170519195855.25440.29969.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On May 04 2017 or thereabouts, Andy Shevchenko wrote:
-> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
-> bytes. Instead we convert them to use uuid_le type. At the same time we
-> convert current users.
+On Fri, May 19, 2017 at 02:58:55PM -0500, Bjorn Helgaas wrote:
+> PCI_STD_RESOURCE_END is (confusingly) the index of the last valid BAR, not
+> the *number* of BARs.  To iterate through all possible BARs, we need to
+> include PCI_STD_RESOURCE_END.
 > 
-> acpi_str_to_uuid() becomes useless after the conversion and it's safe to
-> get rid of it.
-> 
-> The conversion fixes a potential bug in int340x_thermal as well since
-> we have to use memcmp() on binary data.
-> 
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Amir Goldstein <amir73il@gmail.com>
-> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
-> Cc: Jani Nikula <jani.nikula@linux.intel.com>
-> Cc: Ben Skeggs <bskeggs@redhat.com>
-> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Adrian Hunter <adrian.hunter@intel.com>
-> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Zhang Rui <rui.zhang@intel.com>
-> Cc: Felipe Balbi <balbi@kernel.org>
-> Cc: Mathias Nyman <mathias.nyman@intel.com>
-> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> Cc: Liam Girdwood <lgirdwood@gmail.com>
-> Cc: Mark Brown <broonie@kernel.org>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
+> Fixes: 9fe373f9997b ("PCI: Increase IBM ipr SAS Crocodile BARs to at least system page size")
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-For i2c-hid:
-Acked-by: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+I applied both of these to pci/misc for v4.13.
+
+> ---
+>  drivers/pci/quirks.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 085fb787aa9e..16e6cd86ad71 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -304,7 +304,7 @@ static void quirk_extend_bar_to_page(struct pci_dev *dev)
+>  {
+>  	int i;
+>  
+> -	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
+> +	for (i = 0; i <= PCI_STD_RESOURCE_END; i++) {
+>  		struct resource *r = &dev->resource[i];
+>  
+>  		if (r->flags & IORESOURCE_MEM && resource_size(r) < PAGE_SIZE) {
+> 
