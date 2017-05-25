@@ -1,76 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:40019 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755154AbdEKIQb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 04:16:31 -0400
-Message-ID: <1494490587.15454.9.camel@pengutronix.de>
-Subject: Re: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple
- devices are attached
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        patchwork-lst@pengutronix.de
-Date: Thu, 11 May 2017 10:16:27 +0200
-In-Reply-To: <CAJ+vNU0pcivE53grF6n939gXC0E6-HN4fFJ7Pm9hq3nV1YYSUQ@mail.gmail.com>
-References: <20170426181502.770-1-l.stach@pengutronix.de>
-         <CAJ+vNU0AEZtc+DaYSV7S1LtXCncVh9nV4hG7BtYxJE=m6-80EA@mail.gmail.com>
-         <1493282584.13947.6.camel@pengutronix.de>
-         <CAJ+vNU3tHG2c0XJhs3qD0xS4BP==fWEwP6Y78+4WpUmn-KksBg@mail.gmail.com>
-         <CAJ+vNU0pcivE53grF6n939gXC0E6-HN4fFJ7Pm9hq3nV1YYSUQ@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 25 May 2017 08:52:08 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+Cc: Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>, linux-pci@vger.kernel.org,
+        driverdev-devel@linuxdriverproject.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
+Message-ID: <20170525082215.4736027d@xeon-e3>
+In-Reply-To: <20170525141955.6cee8fbb@alans-desktop>
+References: <1495658355-13103-1-git-send-email-haiyangz@exchange.microsoft.com>
+ <BLUPR03MB1412AD9B6C5B4575F354EC4CCAFE0@BLUPR03MB1412.namprd03.prod.outlook.com>
+ <20170525141955.6cee8fbb@alans-desktop>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim,
+On Thu, 25 May 2017 14:19:55 +0100
+Alan Cox <gnomes@lxorguk.ukuu.org.uk> wrote:
 
-Am Mittwoch, den 10.05.2017, 14:44 -0700 schrieb Tim Harvey:
-> On Thu, Apr 27, 2017 at 8:32 AM, Tim Harvey <tharvey@gateworks.com> wrote:
-> > On Thu, Apr 27, 2017 at 1:43 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> >> Am Mittwoch, den 26.04.2017, 14:11 -0700 schrieb Tim Harvey:
-> >>> On Wed, Apr 26, 2017 at 11:15 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> >>> > The DWC host does not support legacy PCI IRQs and MSIs at the same time,
-> >>> > so we need to fall back to using only legacy IRQs if there is a chance
-> >>> > that multiple devices with differing MSI capabilities are connected to
-> >>> > the host. The only configuration where MSIs can be safely used is when
-> >>> > the device below the host bridge is not a bridge, i.e. the only device
-> >>> > connected to this host.
-> >>> >
-> >>> > By disallowing MSI allocation when multiple devices might be attached
-> >>> > we get those configurations in a working state. The only configurations
-> >>> > that depend on MSIs being available, that I am aware of, are some
-> >>> > embedded devices with a PCIe attached FPGA, that is incapable of
-> >>> > generating PCI legacy IRQs. Those are kept working by allowing MSIs
-> >>> > when only a single device is attached to the host.
-> >>> >
-> >>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> >>> > ---
-[...]
-> Lucas,
+> > > Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+> > > ---    
+> > 
+> > According to Stephen Hemminger <sthemmin@microsoft.com>, there are
+> > additional programs, like X.org, DPDK, are also using 16-bit only
+> > PCI domain numbers. So, I'm submitting this patch for re-consideration.  
 > 
-> Are you not able to repeat my findings?
+> The correct way to handle this is to send the needed patches to DPDK and
+> to X.org both of whom will I am sure be delighted to get it fixed in
+> their codebase.
 
-Yes, I see what's going on.
-
-> Since Linux 4.8 IMX PCIe is completely broken for PCIe devices that do
-> not support MSI interrupts (and there are a whole lot of 802.11n
-> radios that fall into this category) as you can no longer disable MSI
-> because the IMX PCIe driver depends on it.
-> 
-> It seems like your patch is the right approach but something must
-> still be getting set that causes the legacy interrupts to not fire.
-
-The issue here are the port-services, which are using MSI when
-available, which might conflict with the device requirements, even if
-only a single device is attached.
-
-Probably we need to disable MSI on all systems, unless we know that we
-absolutely need them (EP devices, which don't support legacy IRQs). I'll
-send a patch to do this, but other issues have been higher priority
-again.
-
-Regards,
-Lucas
+Both projects have stable ABI requirements. And the lead time to get
+the change propagated out to applications is long (>5yrs) even longer
+with the Enterprise distro's. As developers we can all just pass the
+buck but this doesn't help users in any reasonable time fram. It is not
+as simple as just making a patch or pull request for their upstream
+code bases.
