@@ -1,84 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
-To: Tomasz Nowicki <tn@semihalf.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-5-jean-philippe.brucker@arm.com>
- <bc1237e2-3690-bc1e-b7bc-86b982c9058f@semihalf.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <d4ad80e6-4654-710c-4b30-35fd81ab3f06@arm.com>
-Date: Wed, 10 May 2017 14:35:20 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:41807 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756740AbdEYMaa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 08:30:30 -0400
+Date: Thu, 25 May 2017 14:30:47 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+Message-ID: <20170525123047.GA4172@wunner.de>
+References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
+ <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
+ <20170506090755.GB19740@wunner.de>
+ <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
+ <20170510084143.GA16261@wunner.de>
+ <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <bc1237e2-3690-bc1e-b7bc-86b982c9058f@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/05/17 13:54, Tomasz Nowicki wrote:
-> Hi Jean,
+On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
+> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
+> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
+> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
+> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
+> >> >> > The CPER parser assumes that the class code is big endian, but at least
+> >> >> > on this edk2-derived Intel Purley platform it's little endian:
+> >> > [snip]
+> >> >> > --- a/include/linux/cper.h
+> >> >> > +++ b/include/linux/cper.h
+> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
+> >> >> >         struct {
+> >> >> >                 __u16   vendor_id;
+> >> >> >                 __u16   device_id;
+> >> >> > -               __u8    class_code[3];
+> >> >> > +               __u32   class_code:24;
+> >> >>
+> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
+> >> >> order of p[] above?
+> >> >
+> >> > Hm, why would you like to avoid it?
+> >>
+> >> Because we shouldn't use bitfields in structs in code that should be
+> >> portable across archs with different endiannesses.
+> >
+> > The CPER header is defined in the UEFI spec and UEFI mandates that the
+> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
+> >
 > 
-> On 27.02.2017 20:54, Jean-Philippe Brucker wrote:
->> +/*
->> + * Returns -ENOSYS if ATS is not supported either by the device or by
->> the SMMU
->> + */
->> +static int arm_smmu_enable_ats(struct arm_smmu_master_data *master)
->> +{
->> +    int ret;
->> +    size_t stu;
->> +    struct pci_dev *pdev;
->> +    struct arm_smmu_device *smmu = master->smmu;
->> +
->> +    if (!(smmu->features & ARM_SMMU_FEAT_ATS) || !dev_is_pci(master->dev))
->> +        return -ENOSYS;
->> +
->> +    pdev = to_pci_dev(master->dev);
->> +
->> +#ifdef CONFIG_PCI_ATS
->> +    if (!pdev->ats_cap)
->> +        return -ENOSYS;
->> +#else
->> +    return -ENOSYS;
->> +#endif
+> No it does not mandate that at all. It mandates how the core should be
+> configured when running in UEFI, but the OS can do anything it likes.
 > 
-> Nit: This deserves to be another helper in ats.c like:
+> We are still interested in adding limited UEFI support to big endian
+> arm64 in the future (i.e., access to a limited set of firmware tables
+> but no runtime services), and I am not going to merge anything that
+> moves us away from that goal.
 > 
-> int pci_ats_supported(struct pci_dev *dev) {
->         if (!pdev->ats_cap)
->                 return 0;
+> > So your argument seems moot to me.  Am I missing something?  Do you
+> > have another argument?
+> >
+> > Moreover, the vendor_id and device_id fields are little endian as well
+> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
+> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
+> >
 > 
->         return 1;
-> }
+> Indeed. I am aware we will need to add various endian-neutral
+> accessors in the future.
+> 
+> >> >  The class_code element isn't
+> >> > referenced anywhere else in the kernel and this isn't a uapi header,
+> >> > so the change would only impact out-of-tree drivers.  Not sure if
+> >> > any exist which might be interested in CPER parsing.
+> >> >
+> >>
+> >> The point is that the change in the struct definition is simply not
+> >> necessary, given that inverting the order of p[] already achieves
+> >> exactly what we want.
+> >
+> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
+> > Please excuse my stubbornness.
+> >
+> 
+> Stubbornness alone is not going to convince me. What *could* convince
+> me (although unlikely) is a quote from the C spec which explains why
+> it is 100% legal to make assumptions about how bitfields are projected
+> onto byte locations in memory.
 
-Indeed, although in my next version I'll remove this check altogether.
-Instead I now rely on pci_enable_ats to check for ats_cap (as discussed in
-patch 3). The downside is that we can't distinguish between absence of ATS
-and error in enabling ATS. So we don't print a message in the latter case
-anymore, we expect device drivers to check whether ATS is enabled.
+All structs in cper.h are declared "packed", so what you're asking for
+isn't defined in the C spec but in the GCC documentation:
+
+   "The packed attribute specifies that a variable or structure field
+    should have the smallest possible alignment -- one byte for a variable,
+    and one bit for a field, unless you specify a larger value with the
+    aligned attribute."
+
+So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
+le16_to_cpu() etc both for the class_code changed by the patch as well as
+all the other members of the struct not touched by the patch when adding
+"endianness mixed mode" for aarch64.
 
 Thanks,
-Jean
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lukas
