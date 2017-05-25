@@ -1,199 +1,596 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sun, 7 May 2017 14:43:22 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v4 3/3] PCI/of fix of_dma_get_range; get PCI specific
- dma-ranges
-Message-ID: <201705071445.4WikSZFy%fengguang.wu@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6818 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937754AbdEYDFw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 23:05:52 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 3/4] PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+Date: Thu, 25 May 2017 11:02:03 +0800
+Message-ID: <20170525030204.126233-4-songxiaowei@hisilicon.com>
+In-Reply-To: <20170525030204.126233-1-songxiaowei@hisilicon.com>
+References: <20170525030204.126233-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="17pEHd4RhPHOinZp"
-In-Reply-To: <1493992040-31222-4-git-send-email-oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
- linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- bcm-kernel-feedback-list@broadcom.com, kbuild-all@01.org,
- Oza Pawandeep <oza.oza@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hisilicon PCIe Driver shares the common functions for PCIe dw-host
 
---17pEHd4RhPHOinZp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+The poweron functions is developed on hi3660 SoC,
+while Others Functions are common for Kirin series SoCs.
 
-Hi Oza,
+Low power mode(L1 sub-state and Suspend/Resume), hotplug
+and MSI feature are not supported currently.
 
-[auto build test ERROR on v4.9-rc8]
-[cannot apply to iommu/next next-20170505]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Oza-Pawandeep/OF-PCI-address-PCI-inbound-memory-limitations/20170507-141549
-config: c6x-evmc6678_defconfig (attached as .config)
-compiler: c6x-elf-gcc (GCC) 6.2.0
-reproduce:
-        wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=c6x 
-
-All errors (new ones prefixed by >>):
-
->> drivers/of/address.c:580:21: error: 'of_bus_isa_get_dma_ranges' undeclared here (not in a function)
-      .get_dma_ranges = of_bus_isa_get_dma_ranges,
-                        ^~~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/of/address.c:591:21: error: 'of_bus_default_get_dma_ranges' undeclared here (not in a function)
-      .get_dma_ranges = of_bus_default_get_dma_ranges,
-                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-vim +/of_bus_isa_get_dma_ranges +580 drivers/of/address.c
-
-   574			.addresses = "reg",
-   575			.match = of_bus_isa_match,
-   576			.count_cells = of_bus_isa_count_cells,
-   577			.map = of_bus_isa_map,
-   578			.translate = of_bus_isa_translate,
-   579			.get_flags = of_bus_isa_get_flags,
- > 580			.get_dma_ranges = of_bus_isa_get_dma_ranges,
-   581		},
-   582		/* Default */
-   583		{
-   584			.name = "default",
-   585			.addresses = "reg",
-   586			.match = NULL,
-   587			.count_cells = of_bus_default_count_cells,
-   588			.map = of_bus_default_map,
-   589			.translate = of_bus_default_translate,
-   590			.get_flags = of_bus_default_get_flags,
- > 591			.get_dma_ranges = of_bus_default_get_dma_ranges,
-   592		},
-   593	};
-   594	
-
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/pci/dwc/Kconfig      |  10 +
+ drivers/pci/dwc/Makefile     |   1 +
+ drivers/pci/dwc/pcie-kirin.c | 513 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 524 insertions(+)
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
 
---17pEHd4RhPHOinZp
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-H4sICFHADlkAAy5jb25maWcAjVvbc9s2s3/vX8FJz0M7c5I4tuMmc8YPIAlKqEiCAUBZ9gtH
-kZlEE1vyp0u/5L8/uwAl8bJQ2plOLOziQmAvv10sfv/t94Dtd+vn+W65mD89/Qy+1qt6M9/V
-j8GX5VP9f0Esg1yagMfCvAHmdLna/3i7uPkRXL/5+Obi9WbxIZjUm1X9FETr1Zfl1z10Xq5X
-v/3+WyTzRIyq6GZ2+xN6Nj+zrAyW22C13gXbendqT4pOe9Oq7jTPqhHPuRJRpQuRpzKawHgN
-/UCJWCpCxQyvYp6y+yHD+I6L0dgMCWE5ai8PVluF8O+Eq5ynxIpinjR/pUKb21dvn5af3z6v
-H/dP9fbt/5Q5y3ileMqZ5m/fLOyWvDr0FepTdScVrh/25/dgZPf6CYffv5x2LFRywvNK5pXO
-itOKRS5MxfNpxRROnglze3V53GUlta4imRUi5bevXrW+yLVVhmtDfA/sJ0unXGkh806/NqFi
-pZH0ZrAyNdVYaoNffvvqj9V6Vf95/GJ9r6eiiE4f0TTgv5FJT+3JmOUxrLx1FKXmcKjtWe2m
-wSYG2/3n7c/trn4+bdrhPHGP9VjetfYNWmKZMZG3llEwpTmSCFlCEeNTnht9OCizfK43W2pa
-I6IJnBSHKVvClctq/IA7n8m8/UnQWMAcMhYRsZuul3Db0G47/RyDEIN4aZg3g6M5rC8qyrdm
-vv0e7GChwXz1GGx38902mC8W6/1qt1x97a0YOlQsimSZG5F3FCDUcVUoGXEQJ+Awg/1XURlo
-aiPy+wpo7bHgZ8Vn8MWU4Okes2F6orELaR5wKG1Ymja7SjIZxbnlNIpF3DsOLgnMGa9CKQ3J
-FZYijcEO5JcRSRcT9wepT9g9ARkUibl9d91SxJGSZaHJAaMxjyaFFLnB0zVScUo+QMNAcOFo
-OmpidJVrgh3VLNc9jVI93iOtELGPpGF1sTUB9gtonnudaLAHheIRmOGY3ny0zcRKw3QCXafW
-wqm4a/EUy2BgLUsVWbt2GCquRg+iZR2hIYSGy05L+pCxTsPsoUeXvd/XHWcQVbIATRMPvEqk
-Qt2FfzKWR9Tx9Lk1/NExfB2Dx3IwqyKXsT3NptEpy+l3BsZV4Km1V6VH3GSgLHZI0AhKt+xp
-NPROX7uKMz0n0Kzvs47YHNqqXheCIdQyLUGz4DMi0qEfWUNwkFYgjJi2tqlQoAMtB+/c82F7
-0gTUX7XY7ShJ2f3IBFYwI+bmhUxbJ6DFKGdp0pI3a1TbDdYL2IaTaSiSM9vHREugWDwVsLyG
-u3XMGc9CppTonis08jjuqo61uA2+KurNl/Xmeb5a1AH/p16BfWdg6SO08OCdTqZ4mrmFV9a+
-OzdxkoC0DEHZYF8pEQaswAwAkEm3CwspIYORumwypG0D9K8SsM2ImCoFjl5mJGOWsQKFTN5V
-ZY7KLwDWPXiMCWyrAWwYM8MqgCkiEWB4hMczgEdLRAqujqSWQA45bfzGbMqrm+sQsBcsZpSj
-JYzQOxI7YnmZisbOAY2lbEmyJUZpvyXOWMUK4Y6kZ3zA4YFXUNLwCFwCMWEm4zIFNAAmwioH
-6lNLl0aGhYD8UpAGEL/L3kfZhY6ZHtMuTjNQPo1ro+Qc+wI2ieSYKxQ1/Aw8vs4XAMgAHp7A
-0QhkSpIze2yHnKIE2M8eaMEoktPXn+dbiEy+O4V42awhRnHg5jjW4asq5G/OnXstl535APzw
-Gw4fRHkptDU6Q4t60TuAlmrbBrT/EWy8ZPGAVOZks+txJJ50QsYNCKf3rukOaOqI1T3feuAU
-tBI0ZDQBqifeLYAlMlgjiFtcTdCMk868E6GlYcySlsFuXH2ou6jz1NzD/AMW8A98pIS593JF
-WQyqDk4IMb4aCFIx3+yWGKMG5udLvW0LD/QwwthNjKfo5mNK6XQs9Ym15S0S0Wl24YoM9OJb
-jfFh20YL6VBVLmU7xGtaY87sJwwpUfKpvW+HAOzQ4UyM5umJCzjTq5n39tXiy39OcWxu9xfD
-cSuxEFB0IqmGrmBRDf0cjex7pxCgezq3iU3vk/MHP/PAKWN5EAtA/S0U0LR2Q+aG0+okjdfB
-tGGagOexYDkxmVPnjM2qB4gOpYrB17+7agRws17U2+16E+xAAG249qWe7/abrjBqGVUm01eX
-F9HN9fv3tBPs8Pz1a56/Lv8FzzXl7VscN399OG2gy5SAW8+chWRxjPbj9uLHhwv333FPAOwB
-9GkF/dBQIQRGRFQ579E2zIiTGgHoWmwM3LCLyBNpB6AWXKTgswtjhQTOS99+tP+1tH18r+1y
-K+M8PBmTZ1lZNVjE2T8+Q/d/++7IwkEvAfBaoZhkHQ+YcrAiDDSI3PWHAkSRpoQlZXrAMvOs
-wD3LO6mSQ/sU0HdumKJtY8NFO8KH6t3FBYVpHqrL9xe9JMZVl7U3Cj3MLQxzPBtry8YKcxEH
-Q8l/1Iv9bv75qbaZx8Bi3V3LZEI4nmTG4pwkLkQrqQRNvbDAsepIicJ0/IwjoOCdQSKy9KQF
-XO9MaCp9g0uIy6wDgXI+TKDE9T9LgPDxZvmPcwmnXOBy0TQH8gU9VOvrSwfpxzwtbNhANYP3
-MeOOJQOHabIiofw0oKw8ZqnMO9GXGy4RKrtjirtESEth7yymaS/gyAq+wJmCdjgLOPjI0VnY
-cSSXlGjWnwB2CXvg74DrbFiAAIDaZ4ueq1hBLKnIo2sY+FR5cL5jwCRpMwy4qExOacWF2KMa
-38OKIcCT9ITHbCIYBZhWRL55AXTqMWxPjGmjhMAr4X4bPFqZ6biHzFAWIjYtvZBJe49kglGV
-8eSBgYpagSm09gAVZyq9p0kHS99u63ljaIE9VL20TxtvFZLMDjZoj8KIOYT7+OMsSoxAWIaZ
-wh5T2gFf7VbQ8dyFz7cfiMHVfWFk2kNOTrlVGAePyy3ascfgc72Y77d1gAnVCrQQXL5Ak+C6
-PNWLXf3YMnDN8OBKh6tC/+oWdEmRbLLp3V/obU/eJ1Yyq4qJieLpMKuQLbcLSq5AtbJ7PEdy
-f3kepVKXoO8apd8n1RrWRAOny/6BO+PPYYuyYLt/eVlvdu3lOEr18Sqa3Qy6mfrHfBuI1Xa3
-2T/bjMj223wDG7/bzFdbHCqA+LDGA1ksX/DPg7llT7t6Mw+SYsTA3Wye/wvdgsf1f1dP6/lj
-4O5zDrxitYNoMxORVUVnoA80HYmEaJ6CaAxbTwON19udlxjNN4/UNF7+9csRUerdfFcH2Xw1
-/1rjjgR/RFJnf/a9Da7vONxpr6OxpE9tllpw5yWypDyYTdlNcTfL16KRtdYZH8GAFhh9dm4O
-mIgrNDm+jLQWXgKaVJLIDN2e0QmmfJoNPkSsXva74ZecsiZ5UQ6lewwHagVMvJUBdunifLwR
-on0IyzipLhFI+RyMx6alwIcQ3dy3N3JKGVdwA7OPHwAb37eMd8pHLLr3Nh6Mz/ub7soBFQMa
-dWBC0Rtpk2FgoXLKr4MB68QE8HviGpzkACiaPwWPR/HtT/4BYOVgf/L16rUlbF13awmI42rG
-KCFoh2DB4+sdj46ifOa5+3AcLDUc4M7fho1wwH/B+iu2GaYsZ1Whf8nJFH1R1ZATnVZp8atB
-4BefMUzmiZGIwL/RyAYkrEnT04nDIhOVu82l+4/vzuWA1dXHm+vBgRZRFgkWLAi5b9mMu3MI
-0ETwf0FPChud3ofl0HCJy4hUc8+9oC48Zgn2hN6Lrh1z3woGlJizIOwqtjUFG2t7P33o5aim
-CBZP68X3PoGvbJgF8S8m2zD/AKAECxMwJLa3IKDPWYHp8t0aZquD3bc6mD8+2rQZ6JMddfum
-vbxRIaQvdXf3jkZ/8g78BZt6LiQtFQAmp4XW0XVZFCkNLsd33nviMVcZoyPvO2aicSyp2xGt
-Q5hVaxHaG3pnn9ar5WIb6OXTcrFeBeF88f3laW5xxun0NXV9EkaA/PvDhRuAH4v1c7B9qRfL
-LxAPsixk7cGw2xDL7Z92yy/71cKmNRv3RNjMLIlt+ES7wQRdbsbBXKR8FvnuaI5c4zSKaTVA
-Hj67z6UGq8M8uWRkGoub68t3VYEohjxCE0GMoEV05R1iwrMipf0OkjNzc/WRzoshWWfvL2jh
-ZOHs/cXF+d3Cmz2PiCHZiIplV1fvZ5XRETuzVybzAADFRyVEXh5DnPFYMKsBFEYYbeYv31A2
-e8rPoiL4g+0fl2sAjsdU5J+D8i3LnGzmz3Xwef/lC9jceGhzE0+uHmL4FOutKpARaoUnfDJi
-YGt8rhcgBxXklqCIchyJCpy2SXmThW0lRYDeTNptPF4OjaMO3Cz1sM4I2yxueOxCZ2wvvv3c
-Yr1ckM5/ojMaahrOBsaUBpYQXyJ9FnExJTmQOmLxyGP6kFymhah6LuvEcEefS5Z5hJBnGnNx
-9HL5HeDAmJ7J3YWKEJCK50ZGGSyp8lkBwOpEdsSF0hkLyyRYHzNhrfRLDuG0SGmpYeUsFrrw
-5RymQh1SPMM5p8sNzEYdKHYTEnawq6pNKL3YrLfrL7tg/POl3ryeBl/39ZZGnIAOe9fQhzAq
-nTTZh0lZHPzBMXLQL8uVdeU9aYxso17vN7TFd6a6EB7gN3Y1D1WU/YIhM6Xn5uDAYTyFnTxr
-GEDCaOFjIg3lbLCrqn5e72oMbUn4bzgGjTC6wuzKsPfL8/Zrf7c0MP6hbeVaIFcQRi1f/jy5
-2l6MfPTFeh2RKyjzmfBnOuyFCf3FRYZhTqK4J8cyM163wjPpye4Ljw8p7jJC2oT6FI3b9VNM
-ZRWgfntllavbd21AD9bca2osQMPQwSiZ+iB/kg0PCK1ju45wkDn1mU/EqMWMVZcf8gwBNG3S
-OlxgMGnpBTRVTWTOLId/RoSaEaOjvywa+o52qc4zIERA55QxUGxogdjqcbNePnZ0OI+VFN4k
-BffIn6Hb8f48BQg8mNnmwjooAM5nsGbLNeiKFzbuJDsqApJ8WXmKPoB2dYZ27aMpLiBeTbSP
-/refNPOTRon2rjQ0Z6bLRXqma3Lp7wkUgP9iBj6UKiXjM8QvSad469Dmiiz6qbbDuFjwgnRX
-2Xu0snmMSPK+T2+vh+c2tS3IrHmic2lE0iquj/sNwjVU/ZLFhDkCuQ+fSulJzFlKZOhADetR
-E+0VkwRrojy05kqiR3aCO19860FcPbjAdeT4tZLZW0yto/gT0i+0/Hhzc+FbRRkn1Apiqd8m
-zLzNjW9cV4DiGXUKfb2yagbS6MzVtt4/ru2162m6g+1zVxftO0LZKt8/2UhsBpeSxopT0oN3
-g+1hbIlq51q5BLibAmpmI0+e2f7j1ye8lrXC7SoDPVuQEtnperHfLHc/Kag54feeFDSPSqxC
-AgTLtXWDBpyWL7/meM8SyUtaex89ZirmWHiIahXJ4t5ehkaoze28qSvYOa2LRX5qt9zFXmfR
-pk/kTDXpvmSwceny82a++Rls1vvdclV37uoNXiUr3SlTONX5nejERx+fcshOLYUC+Yog4KOw
-s4re3fSZzbuLWCS0KAFZmLLyjHV12Rvr6hJ2Lk08V6cNQwpRTHj/gejqKNe+pSALU3e+KNhx
-hB4ID1Q6vZGK0Pak4RGQPnjMaoylrnhITTVwcxy0M7aJ3PPb8wArwUqdFD6wdbPwIEEqD9WG
-7fZrsn32gM3939Xsw82gzcK1Ysgr2M31oBFwL9VmxmUWDgj4bGg4bhj93T70ptWzG6dv6z1g
-aBF6DxlalO6Dhhah/bChwy897a2dwISIkJ1bGNeEYKNflqUxZD81HHQVjFEmopvu8wmpYo/c
-xDEdKOBbLazSJzYOpCiJO8U8uinyos0qwnZPddUxDaTx5Q0TlL/SoHDu09s1+N/mi++u4Ni2
-vmyWq913m0F/fK4h3iQ8iLsqsTEwMQ04Dw0OD58N2TLtg6W+vW4ZYSnNYZi4/4TGTbV+fgHn
-/do+/wIAs/i+tYtauPYNtS5X8IIVdBT4zG3l+B1TeetRTweKOo6s1Ma9XqIQo8LXkDjI7buL
-y9YXoa8sKqazql9E3IL5LLYzABcNn1wZMgwQytSTXLKfSDtWjsVH2i19WEkEftKWAQOmyPBC
-gBKQHovbLJmn98PhXDXoHWeTQ6GgJxOCETjAl27xRWeoY42VyzzVz2twwHH9ef/1a68SHoEU
-RlI8175nEW5IZLSIgg5+cZhCApjNfe8n3DAy/Bu2xIOW8NUJJnrPHZSt+weQ4wOAjmtKi4Mj
-unJNxUfeennH5/Iotq7z3ILGvTKYpn4PNjtI14vv+xenZuP56mtHtzC6KgsYZfhyozUFEgH2
-5u7tI8l094m8kGodTg4SA1Io6ViwQ6+mLC356fGCI6JhkqW5bRUOHYrQe4+EevS+6eiS/Yft
-ervD5nk8tB69U8AFTjgvfNJ3yC725nMIFbOjR+0I/tg2adTt/wbP+139o4Y/6t3izZs3fw5t
-4+G5+Tk5wqdmZysKnWMEBYAvOMPWxOP2KdABS9HD2sgfhMpgEVYfZPRGnTidPMMB/wMMD6Wn
-tqdZnDg7SyF+xaHP2Q2bGhDcU+rjeCLFIQTCGuzhGeOTYdoAKgj0vS+Kmyfg+CDYPrz1lQ38
-aqftAFwl5zn+1TC/eLb8SZ/RSbdPYC+cr1F+L9McvJUjcA+2RpiOlZuDqbhSUoG+/+1cHp1v
-cc9FKB53SvgOHdCJqbe73jnZolv7NlD7rgnxQrEpI8L6b/8uhvYNuJduz3lqK/nPsbnnq376
-Ae2SYU/3u8Z8hsXKfgbEQvmoqYD2PLtCvgkwmu41SZdhGKR36Q7Q+ull6ckxW6rCl4L2PeGZ
-b/U9Juw8cvT3Tye0b3fLwzpxzH74WQ6V5mcGGeDnE/ji2fmTRA8DltyfEWJZkXp8gY047lhu
-dFWGmuX4LhLrmGlkixyEM3d3rUfI+v/fDnEMvEUAAA==
-
---17pEHd4RhPHOinZp
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---17pEHd4RhPHOinZp--
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index d2d2ba5b8a68..13e617b78430 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -130,4 +130,14 @@ config PCIE_ARTPEC6
+ 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+ 	  SoCs.  This PCIe controller uses the DesignWare core.
+ 
++config PCIE_KIRIN
++	depends on OF && ARM64
++	bool "HiSilicon Kirin series SoCs PCIe controllers"
++	depends on PCI
++	select PCIEPORTBUS
++	select PCIE_DW_HOST
++	help
++	  Say Y here if you want PCIe controller support on HiSilicon Kirin series SoCs
++	  kirin960 SoC
++
+ endmenu
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index a2df13c28798..4bd69bacd4ab 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+ obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
++obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+ 
+ # The following drivers are for devices that use the generic ACPI
+ # pci_root.c driver but don't support standard ECAM config access.
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+new file mode 100644
+index 000000000000..2fe3b226957b
+--- /dev/null
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -0,0 +1,513 @@
++/*
++ * PCIe host controller driver for Kirin Phone SoCs
++ *
++ * Copyright (C) 2017 Hilisicon Electronics Co., Ltd.
++ *		http://www.huawei.com
++ *
++ * Author: Xiaowei Song <songxiaowei@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <asm/compiler.h>
++#include <linux/compiler.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/err.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/mfd/syscon.h>
++#include <linux/of_address.h>
++#include <linux/of_gpio.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/pci_regs.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/resource.h>
++#include <linux/types.h>
++#include "pcie-designware.h"
++
++#define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
++
++#define REF_CLK_FREQ 100000000
++
++/* PCIe ELBI registers */
++#define SOC_PCIECTRL_CTRL0_ADDR 0x000
++#define SOC_PCIECTRL_CTRL1_ADDR 0x004
++#define SOC_PCIEPHY_CTRL2_ADDR 0x008
++#define SOC_PCIEPHY_CTRL3_ADDR 0x00c
++#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
++
++#define PCIE_APP_LTSSM_ENABLE		0x01c
++#define PCIE_APB_PHY_CTRL0		0x0
++#define PCIE_APB_PHY_CTRL1		0x4
++#define PCIE_APB_PHY_STATUS0		0x400
++#define PCIE_LINKUP_ENABLE		(0x8020)
++#define PCIE_LTSSM_ENABLE_BIT	  (0x1 << 11)
++#define PIPE_CLK_STABLE		(0x1 << 19)
++#define PIPE_CLK_MAX_TRY_TIMES	10
++#define PHY_REF_PAD_BIT	(0x1 << 8)
++#define PHY_PWR_DOWN_BIT	(0x1 << 22)
++#define PHY_RST_ACK_BIT	(0x1 << 16)
++
++/* info lacated in sysctrl */
++#define SCTRL_PCIE_CMOS_OFFSET		0x60
++#define SCTRL_PCIE_CMOS_BIT		0x10
++#define SCTRL_PCIE_ISO_OFFSET		0x44
++#define SCTRL_PCIE_ISO_BIT		0x30
++#define SCTRL_PCIE_HPCLK_OFFSET		0x190
++#define SCTRL_PCIE_HPCLK_BIT		0x184000
++#define SCTRL_PCIE_OE_OFFSET		0x14a
++#define PCIE_DEBOUNCE_PARAM		0xF0F400
++#define PCIE_OE_BYPASS		(0x3 << 28)
++
++/* peri_crg ctrl */
++#define CRGCTRL_PCIE_ASSERT_OFFSET		0x88
++#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
++
++/* Time for delay */
++#define REF_2_PERST_MIN		20000
++#define REF_2_PERST_MAX		25000
++#define PERST_2_ACCESS_MIN	10000
++#define PERST_2_ACCESS_MAX	12000
++#define LINK_WAIT_MIN		900
++#define LINK_WAIT_MAX		1000
++#define PIPE_CLK_WAIT_MIN	550
++#define PIPE_CLK_WAIT_MAX	600
++
++struct kirin_pcie {
++	struct dw_pcie		*pci;
++	void __iomem		*apb_base;
++	void __iomem		*phy_base;
++	struct regmap *crgctrl;
++	struct regmap *sysctrl;
++	struct clk			*apb_sys_clk;
++	struct clk			*apb_phy_clk;
++	struct clk			*phy_ref_clk;
++	struct clk			*pcie_aclk;
++	struct clk			*pcie_aux_clk;
++	int                 gpio_id_reset;
++};
++
++static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
++		u32 val, u32 reg)
++{
++	writel(val, kirin_pcie->apb_base + reg);
++}
++
++static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie,
++		u32 reg)
++{
++	return readl(kirin_pcie->apb_base + reg);
++}
++
++/*Registers in PCIePHY*/
++static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
++		u32 val, u32 reg)
++{
++	writel(val, kirin_pcie->phy_base + reg);
++}
++
++static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie,
++		u32 reg)
++{
++	return readl(kirin_pcie->phy_base + reg);
++}
++
++static int32_t kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
++		struct platform_device *pdev)
++{
++	kirin_pcie->phy_ref_clk = devm_clk_get(&pdev->dev, "pcie_phy_ref");
++	if (IS_ERR(kirin_pcie->phy_ref_clk))
++		return PTR_ERR(kirin_pcie->phy_ref_clk);
++
++	kirin_pcie->pcie_aux_clk = devm_clk_get(&pdev->dev, "pcie_aux");
++	if (IS_ERR(kirin_pcie->pcie_aux_clk))
++		return PTR_ERR(kirin_pcie->pcie_aux_clk);
++
++	kirin_pcie->apb_phy_clk = devm_clk_get(&pdev->dev, "pcie_apb_phy");
++	if (IS_ERR(kirin_pcie->apb_phy_clk))
++		return PTR_ERR(kirin_pcie->apb_phy_clk);
++
++	kirin_pcie->apb_sys_clk = devm_clk_get(&pdev->dev, "pcie_apb_sys");
++	if (IS_ERR(kirin_pcie->apb_sys_clk))
++		return PTR_ERR(kirin_pcie->apb_sys_clk);
++
++	kirin_pcie->pcie_aclk = devm_clk_get(&pdev->dev, "pcie_aclk");
++	if (IS_ERR(kirin_pcie->pcie_aclk))
++		return PTR_ERR(kirin_pcie->pcie_aclk);
++
++	return 0;
++}
++
++static int32_t kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
++		struct platform_device *pdev)
++{
++	struct resource *apb;
++	struct resource *phy;
++	struct resource *dbi;
++
++	apb = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb");
++	kirin_pcie->apb_base = devm_ioremap_resource(&pdev->dev, apb);
++	if (IS_ERR(kirin_pcie->apb_base))
++		return PTR_ERR(kirin_pcie->apb_base);
++
++	phy = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
++	kirin_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy);
++	if (IS_ERR(kirin_pcie->phy_base))
++		return PTR_ERR(kirin_pcie->phy_base);
++
++	dbi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
++	kirin_pcie->pci->dbi_base = devm_ioremap_resource(&pdev->dev, dbi);
++	if (IS_ERR(kirin_pcie->pci->dbi_base))
++		return PTR_ERR(kirin_pcie->pci->dbi_base);
++
++	kirin_pcie->crgctrl =
++		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
++	if (IS_ERR(kirin_pcie->crgctrl))
++		return PTR_ERR(kirin_pcie->crgctrl);
++
++	kirin_pcie->sysctrl =
++		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
++	if (IS_ERR(kirin_pcie->sysctrl))
++		return PTR_ERR(kirin_pcie->sysctrl);
++
++	return 0;
++}
++
++static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
++{
++	u32 reg_val;
++	u32 time = PIPE_CLK_MAX_TRY_TIMES;
++
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
++	reg_val &= ~PHY_REF_PAD_BIT;
++	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
++
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL0);
++	reg_val &= ~PHY_PWR_DOWN_BIT;
++	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL0);
++	udelay(10);
++
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
++	reg_val &= ~PHY_RST_ACK_BIT;
++	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
++
++	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++	if (reg_val & PIPE_CLK_STABLE) {
++		dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
++{
++	u32 val;
++
++	regmap_read(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, &val);
++	val |= PCIE_DEBOUNCE_PARAM;
++	val &= ~PCIE_OE_BYPASS;
++	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
++}
++
++static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
++{
++	int ret = 0;
++
++	if (!enable)
++		goto close_clk;
++
++	ret = clk_set_rate(kirin_pcie->phy_ref_clk, REF_CLK_FREQ);
++	if (ret)
++		return ret;
++
++	ret = clk_prepare_enable(kirin_pcie->phy_ref_clk);
++	if (ret)
++		return ret;
++
++	ret = clk_prepare_enable(kirin_pcie->apb_sys_clk);
++	if (ret)
++		goto apb_sys_fail;
++
++	ret = clk_prepare_enable(kirin_pcie->apb_phy_clk);
++	if (ret)
++		goto apb_phy_fail;
++
++	ret = clk_prepare_enable(kirin_pcie->pcie_aclk);
++	if (ret)
++		goto aclk_fail;
++
++	ret = clk_prepare_enable(kirin_pcie->pcie_aux_clk);
++	if (ret)
++		goto aux_clk_fail;
++
++	return 0;
++
++close_clk:
++	clk_disable_unprepare(kirin_pcie->pcie_aux_clk);
++aux_clk_fail:
++	clk_disable_unprepare(kirin_pcie->pcie_aclk);
++aclk_fail:
++	clk_disable_unprepare(kirin_pcie->apb_phy_clk);
++apb_phy_fail:
++	clk_disable_unprepare(kirin_pcie->apb_sys_clk);
++apb_sys_fail:
++	clk_disable_unprepare(kirin_pcie->phy_ref_clk);
++
++	return ret;
++}
++
++static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
++{
++	int ret;
++
++	/* Power supply for Host */
++	regmap_write(kirin_pcie->sysctrl,
++		SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
++	udelay(100);
++	kirin_pcie_oe_enable(kirin_pcie);
++
++	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
++	if (ret)
++		return ret;
++
++	/* ISO disable, PCIeCtrl,PHY assert and clk gate clear */
++	regmap_write(kirin_pcie->sysctrl,
++		SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
++	regmap_write(kirin_pcie->crgctrl,
++		CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
++	regmap_write(kirin_pcie->sysctrl,
++		SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
++
++	ret = kirin_pcie_phy_init(kirin_pcie);
++	if (ret)
++		goto close_clk;
++
++	/* perst assert Endpoint */
++	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
++		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
++		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
++		if (ret)
++			goto close_clk;
++		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
++
++		return 0;
++	}
++
++close_clk:
++	kirin_pcie_clk_ctrl(kirin_pcie, false);
++	return ret;
++}
++
++static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
++		bool on)
++{
++	u32 val;
++
++	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
++	if (on)
++		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
++	else
++		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
++
++	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
++}
++
++static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
++		bool on)
++{
++	u32 val;
++
++	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
++	if (on)
++		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
++	else
++		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
++
++	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
++}
++
++static int kirin_pcie_rd_own_conf(struct pcie_port *pp,
++		int where, int size, u32 *val)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++	int ret;
++
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
++	ret = dw_pcie_read(pci->dbi_base + where, size, val);
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
++
++	return ret;
++}
++
++static int kirin_pcie_wr_own_conf(struct pcie_port *pp,
++		int where, int size, u32 val)
++{
++	int ret;
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
++	ret = dw_pcie_write(pci->dbi_base + where, size, val);
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
++
++	return ret;
++}
++
++static u32 kirin_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
++		u32 reg, size_t size)
++{
++	u32 ret;
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
++	dw_pcie_read(base + reg, size, &ret);
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
++
++	return ret;
++}
++
++static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
++		u32 reg, size_t size, u32 val)
++{
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
++	dw_pcie_write(base + reg, size, val);
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
++}
++
++static int kirin_pcie_link_up(struct dw_pcie *pci)
++{
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++
++	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
++		return 1;
++
++	return 0;
++}
++
++static int kirin_pcie_establish_link(struct pcie_port *pp)
++{
++	int count = 0;
++
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	if (kirin_pcie_link_up(pci))
++		return 0;
++
++	dw_pcie_setup_rc(pp);
++
++	/* assert LTSSM enable */
++	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
++		PCIE_APP_LTSSM_ENABLE);
++
++	/* check if the link is up or not */
++	while (!kirin_pcie_link_up(pci)) {
++		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
++		count++;
++		if (count == 1000) {
++			dev_err(pci->dev, "Link Fail\n");
++			return -EINVAL;
++		}
++	}
++
++	return 0;
++}
++
++static void kirin_pcie_host_init(struct pcie_port *pp)
++{
++	kirin_pcie_establish_link(pp);
++}
++
++static struct dw_pcie_ops kirin_dw_pcie_ops = {
++	.read_dbi = kirin_pcie_read_dbi,
++	.write_dbi = kirin_pcie_write_dbi,
++	.link_up = kirin_pcie_link_up,
++};
++
++static struct dw_pcie_host_ops kirin_pcie_host_ops = {
++	.rd_own_conf = kirin_pcie_rd_own_conf,
++	.wr_own_conf = kirin_pcie_wr_own_conf,
++	.host_init = kirin_pcie_host_init,
++};
++
++static int __init kirin_add_pcie_port(struct dw_pcie *pci,
++			struct platform_device *pdev)
++{
++	pci->pp.ops = &kirin_pcie_host_ops;
++
++	return dw_pcie_host_init(&pci->pp);
++}
++
++static int kirin_pcie_probe(struct platform_device *pdev)
++{
++	struct kirin_pcie *kirin_pcie;
++	struct dw_pcie *pci;
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	if (!pdev->dev.of_node) {
++		dev_err(&pdev->dev, "NULL node\n");
++		return -EINVAL;
++	}
++
++	kirin_pcie = devm_kzalloc(&pdev->dev,
++			sizeof(struct kirin_pcie), GFP_KERNEL);
++	if (!kirin_pcie)
++		return -ENOMEM;
++
++	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
++	if (!pci)
++		return -ENOMEM;
++
++	pci->dev = dev;
++	pci->ops = &kirin_dw_pcie_ops;
++	kirin_pcie->pci = pci;
++
++	ret = kirin_pcie_get_clk(kirin_pcie, pdev);
++	if (ret)
++		return ret;
++
++	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
++	if (ret)
++		return ret;
++
++	kirin_pcie->gpio_id_reset = of_get_named_gpio(pdev->dev.of_node,
++			"reset-gpio", 0);
++	if (kirin_pcie->gpio_id_reset < 0)
++		return -ENODEV;
++
++	ret = kirin_pcie_power_on(kirin_pcie);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, kirin_pcie);
++
++	return kirin_add_pcie_port(pci, pdev);
++}
++
++static const struct of_device_id kirin_pcie_match[] = {
++	{ .compatible = "hisilicon,kirin960-pcie" },
++	{},
++};
++
++struct platform_driver kirin_pcie_driver = {
++	.probe			= kirin_pcie_probe,
++	.driver			= {
++		.name			= "kirin-pcie",
++		.of_match_table = kirin_pcie_match,
++		.suppress_bind_attrs = true,
++	},
++};
++
++builtin_platform_driver(kirin_pcie_driver);
+-- 
+2.11.GIT
