@@ -1,109 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-To: Magnus Damm <magnus.damm@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        tn@semihalf.com, Hanjun Guo <hanjun.guo@linaro.org>,
-        okaya@codeaurora.org,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1486136933-20328-8-git-send-email-sricharan@codeaurora.org>
- <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
- <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
- <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
- <CAMuHMdUoLp1oVT_=NG8HS-jgG6AhOeVUsGgu7fLbGY+7A+0cOg@mail.gmail.com>
- <CANqRtoSEwdoufUxP-Rm=qZJ7G8V3ow5F0ggV3tALrfiRad+j4Q@mail.gmail.com>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <3b154db4-6ebb-c05c-91f0-beefa75fae00@codeaurora.org>
-Date: Wed, 17 May 2017 15:58:12 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40610 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759084AbdEYMjA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 May 2017 08:39:00 -0400
 MIME-Version: 1.0
-In-Reply-To: <CANqRtoSEwdoufUxP-Rm=qZJ7G8V3ow5F0ggV3tALrfiRad+j4Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <99B4C6BADD9E3241B25E52B02BA737C54116D35D@DGGEMA505-MBX.china.huawei.com>
+References: <20170518074946.21362-1-songxiaowei@hisilicon.com>
+ <20170523141641.kbb4falhs574dfpu@rob-hp-laptop> <99B4C6BADD9E3241B25E52B02BA737C54116D35D@DGGEMA505-MBX.china.huawei.com>
+From: Rob Herring <robh@kernel.org>
+Date: Thu, 25 May 2017 07:38:38 -0500
+Message-ID: <CAL_JsqJV5TA2ADo35tqGXC61NWK9PDqw8Dq5m5fYHg59yaoEUA@mail.gmail.com>
+Subject: =?UTF-8?B?UmU6IOetlOWkjTogW1BhdGNoIHYzIDEvM10gYXJtNjQ6IGR0czogaGkzNjYwOiBhZGQgcA==?=
+        =?UTF-8?B?Y2llIG5vZGU=?=
+To: songxiaowei <songxiaowei@hisilicon.com>
+Cc: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
+        "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Magnus,
+On Tue, May 23, 2017 at 8:39 PM, songxiaowei <songxiaowei@hisilicon.com> wrote:
+> -----邮件原件-----
+> 发件人: Rob Herring [mailto:robh@kernel.org]
+> 发送时间: 2017年5月23日 22:17
+> 收件人: songxiaowei
+> 抄送: Wangzhou (B); Gabriele Paoloni; bhelgaas@google.com; mark.rutland@arm.com; xuwei (O); catalin.marinas@arm.com; will.deacon@arm.com; linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-kernel@vger.kernel.org; Chenfeng (puck); guodong.xu@linaro.org; Wangbinghui; Suzhuangluan
+> 主题: Re: [Patch v3 1/3] arm64: dts: hi3660: add pcie node
+>
+> On Thu, May 18, 2017 at 03:49:46PM +0800, Song Xiaowei wrote:
+>> Add PCIe node for hi3660, and add binding documentation.
+>>
+>> Cc: Guodong Xu <guodong.xu@linaro.org>
+>> Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
+>> ---
+>>  .../devicetree/bindings/pci/hisilicon-pcie.txt     | 52 ++++++++++++++++++++++
+>>  arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 31 +++++++++++++
 
-<snip..>
+[...]
 
->> Magnus, do you have a suggestion?
-> 
-> Thanks for your efforts guys!
-> 
-> I've recently been working on up-porting the IPMMU patches and
-> addressing review comments. Now with my local driver stack on top of
-> v4.12-rc (a95cfad) I did not notice these issues initially since I
-> only tested devices with IPMMU enabled. Once these issues were pointed
-> out to me by Geert I have now reproduced the 64-bit ARM specific ones
-> on r8a7796 Salvator-X.
-> 
-> On my r8a7796 platform I'm using the following IOMMU and DMA Engine devices:
-> 
-> IOMMU device IPMMU-DS0 - Connected to SYS-DMAC0
-> IOMMU device IPMMU-DS1 - Connected to SYS-DMAC1 and SYS-DMAC2
-> IOMMU device IPMMU-MM - Root device serving IPMMU-DS0 and IPMMU-DS1
-> 
-> For testing the serial port SCIF1 is used with DMA Engine devices
-> SYS-DMAC1 or SYS-DMAC2.
-> 
-> The software environment is configured as follows:
-> - The DTS comes with all devices above enabled except IPMMU-DS0 which
-> comes with status = "disabled".
-> - The IPMMU driver is during run time only allowing use of SYS-DMAC2.
-> For other devices ->of_xlate() returns -ENODEV.
-> 
-> The above used to work just fine with v4.11 or earlier.
-> 
-> My observations for v4.12-rc:
-> 
-> 1) Default state for a95cfad
-> 
-> The devices SYS-DMAC0 and SYS-DMAC1 will never probe. However SYS-DMAC2 is fine.
-> 
-> 2) After applying "[PATCH] iommu: of: Fix check for returning EPROBE_DEFER" [1]
-> 
-> This fixes SYS-DMAC0 that now probes and operates without IPMMU-DS0 as
-> expected. Same as v4.11 or earlier.
-> 
-> 3) After also applying "[PATCH] of: iommu: Ignore all errors except
-> EPROBE_DEFER" [2]
-> 
-> This fixes SYS-DMAC1 that now probes and operates without IPMMU-DS1 as
-> expected. Same as v4.11 or earlier.
-> 
-> With fix [1] and [2] things seem back to normal. Unless I'm mistaken
+>> +  "config": PCIe configuration space registers.
+>> +- reset-gpio: perst assert/deassert gpio
+>
+> reset-gpios
+> [songxiaowei] rest-gpio is used to signal 'pcie perst': high level refers to deassert
+>              and low level refers to assert. So, I think ' reset-gpio: creates perst assert/deassert signal '
+>                         would be a better choice.
 
-Thanks, will use this as your Tested-by.
+What I was saying is the name should be reset-gpios, not reset-gpio.
 
-Regards,
- Sricharan
-
-> it also seems that [1] allows me to drop the similar patch "[PATCH/RFC
-> v2 1/4] iommu/of: Skip IOMMU devices disabled in DT".
-> 
-> Thanks for your help.
-> 
-> Cheers,
-> 
-> / magnus
-> 
-> 
-> [1] https://lkml.org/lkml/2017/5/16/25
-> [2] https://www.spinics.net/lists/arm-kernel/msg581485.html
-> [3] https://patchwork.kernel.org/patch/9540605/
-> 
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Rob
