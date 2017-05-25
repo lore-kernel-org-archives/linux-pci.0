@@ -1,122 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59690 "EHLO mail.kernel.org"
+Received: from mga03.intel.com ([134.134.136.65]:48083 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751991AbdEDVnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 May 2017 17:43:09 -0400
-Date: Thu, 4 May 2017 16:43:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 10/13] PCI: Only treat non-pref mmio64 as pref if all
- bridges have MEM_64
-Message-ID: <20170504214303.GB9648@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421050500.13957-1-yinghai@kernel.org>
- <20170421050500.13957-11-yinghai@kernel.org>
+        id S1755275AbdEYKQw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 May 2017 06:16:52 -0400
+Date: Thu, 25 May 2017 18:12:57 +0800
+From: "Du, Changbin" <changbin.du@intel.com>
+To: linux-pci@vger.kernel.org
+Cc: changbin.du@intel.com, linux-kernel@vger.kernel.org
+Subject: [Q] What about PCI mmio access alignment?
+Message-ID: <20170525101256.GA12183@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170421050500.13957-11-yinghai@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="SUOF0GtieIMvvwua"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 10:04:57PM -0700, Yinghai Lu wrote:
-> If any bridge up to root only have 32bit pref mmio, We don't need to
-> treat device non-pref mmio64 as as pref mmio64.
 
-I don't understand the reasoning here.  
+--SUOF0GtieIMvvwua
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Apparently it is only safe to put a non-prefetchable PCIe BAR in a
-prefetchable window if all upstream bridges have a 64-bit prefetchable
-window?  Why is that?  Why is it important that the prefetchable
-window be 64-bit?  I don't see this mentioned in the implementation
-note.
+Hi, guys,
+I have a basic quesion about the alignment when access PCI bar mmio space. Is
+the address accessed must be DW aligned and count must be DW aligned?
 
-Does this mean "PCI: Check pref compatible bit for mem64 resource of
-PCIe device" can make unsafe assignments until we apply this patch?
-If so, I don't want that sort of bisection hole.
+As far as I know, The address field of TLB ignore lower 2 bits and the unit of
+length field also is DW. So does it mean above question is Yes? Else will CPU
+handle unaligned access for mmio space?
 
-What bad thing happens without this patch?
+I want to know wether below access illegal or not:
+  - readb(bar0)
+  - readb(bar0 + 1)
+  - readl(bar0)
 
-> We need to move pci_bridge_check_ranges calling early.
-> For parent bridges pref mmio BAR may not allocated by BIOS, res flags
-> is still 0, we need to have it correct set before we check them for
-> child device resources.
-> 
-> -v2: check all bus resources instead of just res[15].
-> 
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-> ---
->  drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
->  1 file changed, 29 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 3de66e6..b3fd314 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -735,6 +735,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
->  	return -EINVAL;
->  }
->  
-> +static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
-> +{
-> +	if (pci_is_root_bus(bus))
-> +		return true;
-> +
-> +	if (bus->self) {
-> +		int i;
-> +		bool found = false;
-> +		struct resource *res;
-> +
-> +		pci_bus_for_each_resource(bus, res, i)
-> +			if (res->flags & IORESOURCE_MEM_64) {
-> +				found = true;
-> +				break;
-> +			}
-> +
-> +		if (!found)
-> +			return false;
-> +	}
-> +
-> +	return pci_up_path_over_pref_mem64(bus->parent);
-> +}
-> +
->  int pci_resource_pref_compatible(const struct pci_dev *dev,
->  				 struct resource *res)
->  {
-> @@ -743,7 +766,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
->  
->  	if ((res->flags & IORESOURCE_MEM) &&
->  	    (res->flags & IORESOURCE_MEM_64) &&
-> -	    dev->on_all_pcie_path)
-> +	    dev->on_all_pcie_path &&
-> +	    pci_up_path_over_pref_mem64(dev->bus))
->  		return res->flags | IORESOURCE_PREFETCH;
->  
->  	return res->flags;
-> @@ -1236,6 +1260,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
->  	struct resource *b_res;
->  	int ret;
->  
-> +	if (!pci_is_root_bus(bus) &&
-> +	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
-> +		pci_bridge_check_ranges(bus);
-> +
->  	list_for_each_entry(dev, &bus->devices, bus_list) {
->  		struct pci_bus *b = dev->subordinate;
->  		if (!b)
-> @@ -1263,7 +1291,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
->  		break;
->  
->  	case PCI_CLASS_BRIDGE_PCI:
-> -		pci_bridge_check_ranges(bus);
->  		if (bus->self->is_hotplug_bridge) {
->  			additional_io_size  = pci_hotplug_io_size;
->  			additional_mem_size = pci_hotplug_mem_size;
-> -- 
-> 2.9.3
-> 
+Thanks,
+Changbin Du
+
+--SUOF0GtieIMvvwua
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJZJq4oAAoJEAanuZwLnPNUVioH/itIChSCXqNBQlYK15avvp37
++HUW+SXu9gLYKZrDXhBqjy70V58dqDYyeq78ToLxlv0kgBK28QprA7LvO3JYDcFo
+HmeidsisuewASkcPJeZ390JUMjgRmLfFz5/iJ1bi1l6hFERa8xnsTcVOux+ESPqp
+jLAVBtDxZivt+Gbx6eZ7oiasvOkfhx7suEzES5NvzkEC+IKMRjge5ZJ6mwPquein
+C1wERsXCt3fIE2AjvukTced2JAWLjy1f4BIr3Ys6pBV0Ux1As52jt0qPQdZQgMyb
+TT7q+GLlEdb5gn+S8tXj0BQ6BBn3/Gfi7P7u5Rw1NtCDgy0n91vGgqFCqBrMLgs=
+=vMEV
+-----END PGP SIGNATURE-----
+
+--SUOF0GtieIMvvwua--
