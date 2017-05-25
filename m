@@ -1,68 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 31 May 2017 14:12:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-Message-ID: <20170531191258.GA18454@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
- <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
- <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
- <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
- <20170531173414.GB4496@bhelgaas-glaptop.roam.corp.google.com>
- <4885137f-7c1c-5742-4f66-f48c32ce7abb@free.fr>
- <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58514 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1162851AbdEYP47 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 May 2017 11:56:59 -0400
+Date: Thu, 25 May 2017 09:56:55 -0600
+From: Myron Stowe <mstowe@redhat.com>
+To: David Miller <davem@davemloft.net>
+Cc: myron.stowe@redhat.com, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, bhelgaas@google.com, saeedm@mellanox.com,
+        noaos@mellanox.com, tariqt@mellanox.com
+Subject: Re: [PATCH 0/2] Replace driver's usage of hard-coded device IDs to
+ #defines
+Message-ID: <20170525095655.3a577ea2@zim>
+In-Reply-To: <20170524.200249.1492095559302424098.davem@davemloft.net>
+References: <20170524224734.24221.33787.stgit@amt.stowe>
+        <20170524.200249.1492095559302424098.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 31, 2017 at 02:00:37PM -0500, Bjorn Helgaas wrote:
-> On Wed, May 31, 2017 at 08:49:04PM +0200, Mason wrote:
-> > On 31/05/2017 19:34, Bjorn Helgaas wrote:
-> > ...
+On Wed, 24 May 2017 20:02:49 -0400 (EDT)
+David Miller <davem@davemloft.net> wrote:
+
+> From: Myron Stowe <myron.stowe@redhat.com>
+> Date: Wed, 24 May 2017 16:47:34 -0600
 > 
-> > > This would be more an IRQ patch than a PCI patch, but if I were
-> > > reviewing it, I would look for assurance that *all* the no-op
-> > > .irq_set_affinity callbacks were cleaned up, not just those in
-> > > drivers/pci/host.
+> > Noa Osherovich introduced a series of new Mellanox device ID
+> > definitions to help differentiate specific controllers that needed
+> > INTx masking quirks [1].
 > > 
-> > Are you saying the patch is *wrong* if not all "do-nothing"
-> > callbacks are cleaned up?
+> > Bjorn Helgaas followed on, using the device ID definitions Noa
+> > provided to replace hard-coded values within the mxl4 ID table [2].
+> >     
+> > This patch continues along similar lines, adding a few additional
+> > Mellanox device ID definitions and converting the net/mlx5e
+> > driver's mlx5 ID table to use the defines so tools like 'grep' and
+> > 'cscope' can be used to help identify relationships with other
+> > aspects (such as INTx masking).  
 > 
-> I'm saying that (1) this probably wouldn't be applied via the PCI
-> tree, and (2) if it *were* applied via PCI, I would ask that all the
-> no-op callbacks were cleaned up at the same time.
+> If you're adding pci_ids.h defines, it's only valid to do so if you
+> actually use the defines in more than one location.
 > 
-> Huh, that sounds a lot like what I wrote above.  Was I unclear?
+> This patch series is not doing that.
 
-I'm afraid this sounded snarky, which isn't my intention.  It seems
-like there's a useful patch here, and I didn't want to see it get
-ignored for lack of following the usual process.  If this is all
-obvious to you, my apologies and please ignore my suggestion.
+Hi David,
 
-Bjorn
+Yes, now that you mention that again I do vaguely remember past
+conversations stating similar constraints which is a little odd as
+Noa's series did exactly that.  It was Bjorn, in a separate patch, that
+made the connection to the driver with commit c19e4b9037f
+("net/mlx4_core: Use device ID defines") [1] and even after such, some
+of the introduced #defines are still currently singular in usage.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Anyway, the part I'm interested in is creating a more transparent
+association between the Mellanox controllers that need the INTx masking
+quirk and their drivers, something that remains very opaque currently
+for a few of the remaining instances (PCI_DEVICE_ID_MELLANOX_CONNECTIB,
+PCI_DEVICE_ID_MELLANOX_CONNECTX4, and
+PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX).
+
+I'd like to hear back from others as to whether or not there is truly
+concern about adding the #defines such as I submitted with singular
+usages and if so I can re-submit a more focused patch which would
+effectively be the first three substitutions in "[PATCH 2/2] net/mlx5e:
+Use device ID defines".
+
+
+[1] Perhaps Noa's submission had a similar discussion as while it was
+a separate series from which Bjorn then made the connection to the
+driver, all the patches came in via the same merge commit 25831571419
+("Merge branch 'pci/virtualization' into next").
+
+
+ Thanks for your
+feedback,
+ Myron
