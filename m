@@ -1,108 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:33752 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751638AbdEEPyf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 May 2017 11:54:35 -0400
-Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
-        <bhelgaas@google.com>, <jingoohan1@gmail.com>
-References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
- <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
-CC: <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <6617cd15-5d79-cad8-879b-a8c953ba9a41@synopsys.com>
-Date: Fri, 5 May 2017 16:54:30 +0100
+Received: from szxga03-in.huawei.com ([45.249.212.189]:6901 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941370AbdEYDCi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 23:02:38 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 0/4]  add PCIe driver for Kirin PCIe
+Date: Thu, 25 May 2017 11:02:00 +0800
+Message-ID: <20170525030204.126233-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Mark,
+Before Version Patches
+======================
+patch V6
+https://www.spinics.net/lists/linux-pci/msg61610.html
 
-Às 3:57 PM de 5/5/2017, Marc Zyngier escreveu:
-> Joao,
-> 
-> On 05/05/17 15:11, Joao Pinto wrote:
+patch V4
+https://www.spinics.net/lists/linux-pci/msg61406.html
 
-snip (...)
+patch V3
+https://www.spinics.net/lists/linux-pci/msg61399.html
 
-> It looks to me like the first mistake is just above. You don't seem to
-> propagate the mask/unmask operations into the parent domain, so your
-> interrupts are never enabled... You'd need something like this:
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 28ed32ba4f1b..d42b8b12f168 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -45,12 +45,22 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
->  	return dw_pcie_write(pci->dbi_base + where, size, val);
->  }
->  
-> +static void dw_msi_mask_irq(struct irq_data *d)
-> +{
-> +	pci_msi_mask_irq(d);
-> +	irq_chip_mask_parent(d);
-> +}
-> +
-> +static void dw_msi_unmask_irq(struct irq_data *d)
-> +{
-> +	pci_msi_unmask_irq(d);
-> +	irq_chip_unmask_parent(d);
-> +}
-> +
->  static struct irq_chip dw_msi_irq_chip = {
->  	.name = "PCI-MSI",
-> -	.irq_enable = pci_msi_unmask_irq,
-> -	.irq_disable = pci_msi_mask_irq,
-> -	.irq_mask = pci_msi_mask_irq,
-> -	.irq_unmask = pci_msi_unmask_irq,
-> +	.irq_mask = dw_msi_mask_irq,
-> +	.irq_unmask = dw_msi_unmask_irq,
->  };
-> 
-> I haven't dug any further, but this should be fixed first.
-> 
-> Thanks,
-> 
-> 	M.
-> 
-
-I added the changes that you suggested and firstly it crashed, and then I found
-out that in the domain parent structure (dw_pci_msi_bottom_irq_chip) did not
-have irq_mask and irq_unmask functions. I put it like this, just for testing:
-
-static struct irq_chip dw_pci_msi_bottom_irq_chip = {
-	.name			= "DW MSI",
-	.irq_compose_msi_msg	= dw_pci_compose_msi_msg,
-	.irq_set_affinity	= dw_pci_msi_set_affinity,
-+	.irq_mask		= pci_msi_mask_irq,
-+	.irq_unmask		= pci_msi_unmask_irq,
-};
-
-Maybe irq_mask and irq_unmask should not be pci_msi_mask_irq /
-pci_msi_unmask_irq, but I did not find any existing case that needed it. Do we
-have any documentation about IRQ domains that I can check?
-
-Interrupts
- 45:          0   PCI-MSI   0  aerdrv
- 46:          0   PCI-MSI 524288  xhci_hcd
-
-The MSI seems to be well configured in the Bridge and in the Endpoint, so some
-glue is missing in the driver.
-
-00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
-Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
-Address: 000000009a238000  Data: 0000
+Changes between V7 and V6
+=========================
+1. add enumeration log Based on Hikey960 Board with these patches.
+2. fix issues as fellows:
+   (1) delete reduntant blankets in macro defination,
+   (2) add blank line in  kirin_pcie_clk_ctrl function.
+   (3) Fix compitable property in DT with the SoC name,
+       for example "hisilicon,kirin960-pcie".
 
 
-01:00.0 USB controller: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller
-(prog-if 30 [XHCI])
-(...)
-Capabilities: [50] MSI: Enable+ Count=1/8 Maskable- 64bit+
-Address: 000000009a238000  Data: 0001
+Enumeration log
+===============
+These test logs come from patches running on Hikey960 Board
+(1) Connect with Atheros Communications WIFI
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
+	pci 0000:01:00.0: supports D1
+	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
+	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276	
 
-Thanks for the support.
+(2) Connect with Sandisk SSD
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [1b4b:1093] type 00 class 0x010802
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
+	pci 0000:01:00.0: reg 0x30: [mem 0xf6000000-0xf600ffff pref]
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:00:00.0: BAR 15: assigned [mem 0xf7100000-0xf71fffff pref]
+	pci 0000:01:00.0: BAR 6: assigned [mem 0xf7100000-0xf710ffff pref]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pci 0000:00:00.0:   bridge window [mem 0xf7100000-0xf71fffff pref]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276
 
-Joao
+Patches list
+============
+
+Xiaowei Song (4):
+  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+  arm64: dts: hisi: add kirin pcie node
+  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+  defconfig: PCI: Enable  Kirin PCIe defconfig
+
+ .../devicetree/bindings/pci/kirin-pcie.txt         |  49 ++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
+ arch/arm64/configs/defconfig                       |   1 +
+ drivers/pci/dwc/Kconfig                            |  10 +
+ drivers/pci/dwc/Makefile                           |   1 +
+ drivers/pci/dwc/pcie-kirin.c                       | 513 +++++++++++++++++++++
+ 6 files changed, 605 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
+
+-- 
+2.11.GIT
