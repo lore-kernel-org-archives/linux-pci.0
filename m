@@ -1,136 +1,101 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V4 3/4] ACPI/IORT: Ignore all errors except EPROBE_DEFER
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
- <1495119257-26724-3-git-send-email-sricharan@codeaurora.org>
- <20170522103730.GB7553@red-moon>
- <ffb088d6-e40f-7a7d-dafb-e52dc86704fc@codeaurora.org>
- <20170522113116.GB10449@red-moon>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <0c599944-5815-778b-57ae-5b3a6105c8d4@codeaurora.org>
-Date: Mon, 22 May 2017 18:32:29 +0530
+Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy
+ <robin.murphy@arm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
+Date: Thu, 25 May 2017 09:48:30 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170522113116.GB10449@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- laurent.pinchart@ideasonboard.com, frowand.list@gmail.com,
- m.szyprowski@samsung.com, linux-arch@vger.kernel.org, tn@semihalf.com,
- joro@8bytes.org, magnus.damm@gmail.com, linux-acpi@vger.kernel.org,
- geert@linux-m68k.org, linux-pci@vger.kernel.org, lenb@kernel.org,
- devicetree@vger.kernel.org, arnd@arndb.de, linux-arm-msm@vger.kernel.org,
- j.neuschaefer@gmx.net, robh+dt@kernel.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
-
-On 5/22/2017 5:01 PM, Lorenzo Pieralisi wrote:
-> On Mon, May 22, 2017 at 04:35:43PM +0530, Sricharan R wrote:
->> Hi Lorenzo,
->>
->> On 5/22/2017 4:07 PM, Lorenzo Pieralisi wrote:
->>> Hi Sricharan,
->>>
->>> On Thu, May 18, 2017 at 08:24:16PM +0530, Sricharan R wrote:
->>>> While deferring the probe of IOMMU masters, xlate and
->>>> add_device callbacks called from iort_iommu_configure
->>>> can pass back error values like -ENODEV, which means
->>>> the IOMMU cannot be connected with that master for real
->>>> reasons. Before the IOMMU probe deferral, all such errors
->>>> were ignored. Now all those errors are propagated back,
->>>> killing the master's probe for such errors. Instead ignore
->>>> all the errors except EPROBE_DEFER, which is the only one
->>>> of concern and let the master work without IOMMU, thus
->>>> restoring the old behavior.
->>>>
->>>> Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
->>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->>>> ---
->>>> [V4] Added this patch newly.
->>>>
->>>>  drivers/acpi/arm64/iort.c | 6 ++++++
->>>>  1 file changed, 6 insertions(+)
->>>>
->>>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->>>> index c5fecf9..16e101f 100644
->>>> --- a/drivers/acpi/arm64/iort.c
->>>> +++ b/drivers/acpi/arm64/iort.c
->>>> @@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
->>>>  	if (err)
->>>>  		ops = ERR_PTR(err);
->>>>  
->>>> +	/* Ignore all other errors apart from EPROBE_DEFER */
->>>> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
->>>> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
->>>> +		ops = NULL;
->>>> +	}
->>>> +
->>>>  	return ops;
->>>>  }
->>>>  
->>>
->>> It is getting a bit convoluted. Is not it better to propagate the
->>> error back and let acpi_dma_configure() make a decision accordingly ?
->>>
->>
->> ok, I was trying to keep it in same way as DT, where of_dma_configure
->> (here acpi_dma_configure) calls of_iommu_configure(here iort_iommu_configure)
->> which ends up doing the check. So will have to be changed in both places
->> for symmetry.
->>
->>> Something like:
->>>
->>> -- >8 --
->>> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
->>> index e39ec7b..3a10d757 100644
->>> --- a/drivers/acpi/scan.c
->>> +++ b/drivers/acpi/scan.c
->>> @@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
->>>  	iort_set_dma_mask(dev);
->>>  
->>>  	iommu = iort_iommu_configure(dev);
->>> -	if (IS_ERR(iommu))
->>> -		return PTR_ERR(iommu);
->>> +	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
->>> +		return -EPROBE_DEFER;
->>
->> In case of other errors apart from EPROBE_DEFER,
->> iommu = NULL should be set, before passing it on to
->> arch_setup_dma_ops.
+On 20/04/17 15:31, Marc Gonzalez wrote:
+> This driver is required to work around several hardware bugs in the
+> PCIe controller.
 > 
-> Ah yes, sorry, that makes it uglier :(
+> NB: Revision 1 does not support legacy interrupts, or IO space.
 > 
-> Point is, it does not make sense to me to have of/acpi_dma_configure()
-> check a return code with (IS_ERR()) whilst we know the only error
-> code you are allowed to handle is -EPROBE_DEFER, while at it it is
-> better to make the -EPROBE_DEFER check explicit (otherwise it may
-> seem that of/acpi_dma_configure() can handle an error code that
-> is different from -EPROBE_DEFER - but they don't), no big deal either
-> way though.
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> ---
+>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
+>  drivers/pci/host/Kconfig                             |   8 ++
+>  drivers/pci/host/Makefile                            |   1 +
+>  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci_ids.h                              |   2 +
+>  5 files changed, 204 insertions(+)
 > 
+> diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
+> new file mode 100644
+> index 000000000000..3353b4e77309
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
+> @@ -0,0 +1,32 @@
+> +Sigma Designs Tango PCIe controller
+> +
+> +Required properties:
+> +
+> +- compatible: "sigma,smp8759-pcie"
+> +- reg: address/size of PCI configuration space, address/size of register area
+> +- device_type: "pci"
+> +- #size-cells: <2>
+> +- #address-cells: <3>
+> +- #interrupt-cells: <1>
 
-ok, in which case, the above check that you have shown
-to be added additionally to the original patch.
+What is the point of having an #interrupt-cells when this is *not* an
+interrupt controller (as it doesn't support legacy interrupts)?
 
-Regards,
- Sricharan
+> +- ranges: translation from system to bus addresses
+> +- interrupts: spec for misc interrupts, spec for MSI
+> +- msi-controller
+> +
+> +http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
+> +http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
+> +
+> +Example:
+> +
+> +	pcie@2e000 {
+> +		compatible = "sigma,smp8759-pcie";
+> +		reg = <0x50000000 SZ_4M>, <0x2e000 0x100>;
+> +		device_type = "pci";
+> +		#size-cells = <2>;
+> +		#address-cells = <3>;
+> +		#interrupt-cells = <1>;
+> +		ranges = <0x02000000 0x0 0x00400000  0x50400000  0x0 SZ_60M>;
+> +		msi-controller;
+> +		interrupts =
+> +			<54 IRQ_TYPE_LEVEL_HIGH>, /* misc interrupts */
+> +			<55 IRQ_TYPE_LEVEL_HIGH>; /* MSI */
+> +	};
 
+As mentioned earlier, this needs to be a separate patch to be reviewed
+by the Keepers of the Faith (aka the DT maintainers).
+
+[...]
+
+> +static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
+> +{
+> +	pcie->mux		= base + 0x48;
+> +	pcie->msi_status	= base + 0x80;
+> +	pcie->msi_enable	= base + 0xa0;
+> +	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
+> +
+> +	return tango_check_pcie_link(base + 0x74);
+
+Please have some defines for these magic values.
+
+Thanks,
+
+	M.
 -- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jazz is not dead. It just smells funny...
