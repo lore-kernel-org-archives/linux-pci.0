@@ -1,71 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:41345 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755111AbdEORET (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 13:04:19 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [RFC v2 5/8] pci: generic PCIe DW driver adapted to new irq API
-Date: Mon, 15 May 2017 18:03:45 +0100
-Message-Id: <3d440aad766cfae56181a108d9028b01b7baf952.1494867112.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
-References: <cover.1494867112.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494867112.git.jpinto@synopsys.com>
-References: <cover.1494867112.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=s16d=47=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=s16d=47=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+ <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <57673076-4fbd-92ab-453c-3d77fd65407f@free.fr>
+Date: Thu, 25 May 2017 14:00:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts the generic PCIe DW driver to use the new interrupt api
-available in pcie-designware.
+On 25/05/2017 10:48, Marc Zyngier wrote:
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-changes v1->v2:
-- just to keep up patch set version
+> On 20/04/17 15:31, Marc Gonzalez wrote:
+>
+>> This driver is required to work around several hardware bugs in the
+>> PCIe controller.
+>>
+>> NB: Revision 1 does not support legacy interrupts, or IO space.
+>>
+>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+>> ---
+>>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
+>>  drivers/pci/host/Kconfig                             |   8 ++
+>>  drivers/pci/host/Makefile                            |   1 +
+>>  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci_ids.h                              |   2 +
+>>  5 files changed, 204 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
+>> new file mode 100644
+>> index 000000000000..3353b4e77309
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
+>> @@ -0,0 +1,32 @@
+>> +Sigma Designs Tango PCIe controller
+>> +
+>> +Required properties:
+>> +
+>> +- compatible: "sigma,smp8759-pcie"
+>> +- reg: address/size of PCI configuration space, address/size of register area
+>> +- device_type: "pci"
+>> +- #size-cells: <2>
+>> +- #address-cells: <3>
+>> +- #interrupt-cells: <1>
+> 
+> What is the point of having an #interrupt-cells when this is *not* an
+> interrupt controller (as it doesn't support legacy interrupts)?
 
- drivers/pci/dwc/pcie-designware-plat.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+My mistake.
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 32091b3..3b9717b 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -28,13 +28,6 @@ struct dw_plat_pcie {
- 	struct dw_pcie		*pci;
- };
- 
--static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void dw_plat_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -64,14 +57,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 		pp->msi_irq = platform_get_irq(pdev, 0);
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--					dw_plat_pcie_msi_irq_handler,
--					IRQF_SHARED, "dw-plat-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "failed to request MSI IRQ\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
--- 
-2.9.3
+Thanks for kindly pointing out that the #interrupt-cells property
+is not needed when a controller doesn't support legacy interrupts.
+
+If a controller does support legacy interrupts, then I see other
+bindings define #interrupt-cells and interrupt-map.
+Is interrupt-controller also required?
+Is that redundant with msi-controller?
+
+(Rev2 will support legacy interrupts.)
+
+References for my own information:
+http://elixir.free-electrons.com/linux/latest/source/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+http://elixir.free-electrons.com/linux/latest/source/Documentation/devicetree/bindings/pci/altera-pcie.txt
+http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
+
+> As mentioned earlier, this needs to be a separate patch to be reviewed
+> by the Keepers of the Faith (aka the DT maintainers).
+
+robh already acked v3 two months ago, but can split it up,
+and CC the DT folks for v5.
+
+>> +static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
+>> +{
+>> +	pcie->mux		= base + 0x48;
+>> +	pcie->msi_status	= base + 0x80;
+>> +	pcie->msi_enable	= base + 0xa0;
+>> +	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
+>> +
+>> +	return tango_check_pcie_link(base + 0x74);
+> 
+> Please have some defines for these magic values.
+
+Typical driver do
+#define MUX_OFFSET 0x48
+and then access the register's value through
+readl_relaxed(pcie->base + MUX_OFFSET);
+
+I can't do that because the registers were shuffled around
+between revision 1 and revision 2. Thus, instead of an
+explicitly-named macro (MUX_OFFSET), I used an explicitly-
+named field (pcie->mux) and access the register's value
+through readl_relaxed(pcie->mux);
+
+This is equivalent to providing the offset definitions in the
+init functions, instead of at the top of the file.
+
+Regards.
