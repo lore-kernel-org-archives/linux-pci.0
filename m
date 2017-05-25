@@ -1,95 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 17 May 2017 18:15:51 +0200
-From: Robert Richter <robert.richter@cavium.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Subject: Re: [RFC/RFT PATCH v2 3/3] PCI/ACPI: Add ACPI
- pci_bus_find_numa_node() implementation
-Message-ID: <20170517161551.GQ16981@rric.localdomain>
-References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
- <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
- <20170516151529.GC658@rric.localdomain>
- <20170516180200.GA24458@red-moon>
- <20170517134654.GA8497@red-moon>
- <20170517143558.GP16981@rric.localdomain>
- <20170517160424.GA8643@red-moon>
+Return-Path: <SRS0=/K38=47=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=/K38=47=rock-chips.com=shawn.lin@kernel.org>
+Subject: Re: [PATCH v3] PCI: use IDA to manage domain number if not getting it
+ from DT
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1495525511-202465-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170524223027.GA7958@bhelgaas-glaptop.roam.corp.google.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Brian Norris <briannorris@chromium.org>,
+ Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <5a9f53fc-d0e3-4701-6640-e8a34cf95c06@rock-chips.com>
+Date: Thu, 25 May 2017 08:38:20 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170517160424.GA8643@red-moon>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170524223027.GA7958@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17.05.17 17:04:24, Lorenzo Pieralisi wrote:
-> On Wed, May 17, 2017 at 04:35:58PM +0200, Robert Richter wrote:
-> > On 17.05.17 14:46:54, Lorenzo Pieralisi wrote:
-> > 
-> > > More explicitly, I think the whole series should work also with the diff
-> > > below applied on top of it. Side note: for consistency, I do not think
-> > > that adding a DT counterpart to pci_bus_find_numa_node() would hurt.
-> > > 
-> > > Thanks !
-> > > Lorenzo
-> > > 
-> > > -- >8 --
-> > > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > > index 76c089f..cf0692c 100644
-> > > --- a/drivers/pci/probe.c
-> > > +++ b/drivers/pci/probe.c
-> > > @@ -862,7 +862,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
-> > >  	 */
-> > >  	child->dev.class = &pcibus_class;
-> > >  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> > > -	set_dev_node(&child->dev, dev_to_node(&parent->dev));
-> > > +
-> > 
-> > Hmm, in device_add() there is already:
-> > 
-> > 	/* use parent numa_node */
-> > 	if (parent && (dev_to_node(dev) == NUMA_NO_NODE))
-> >         	set_dev_node(dev, dev_to_node(parent));
-> > 
-> > So there are cases where the device has a different node than the
-> > parent. I am not sure if we can assume for pci that it maps always.
-> > 
-> > And since device_add() is called later anyway, the above change might
-> > not necessary at all.
-> 
-> That's why I _removed_ the set_dev_node() in the diff above (that applies
-> to patch (2)), I do not think it is a) correct and b) necessary to
-> propagate the NUMA node from bus to a child bus given that device_add()
-> takes care of that already.
+Hi Bjorn,
 
-Ah, right, you removed it instead.
+On 2017/5/25 6:30, Bjorn Helgaas wrote:
+> Hi Shawn,
+>
+> On Tue, May 23, 2017 at 03:45:11PM +0800, Shawn Lin wrote:
 
-> 
-> I should post a v3 (with the diff above applied) so that we are all on
-> the same page and we can test it.
-> 
-> > But at least we must assign the node id to the
-> > bridge, which is the parent. Maybe just have in
-> > acpi_pci_root_create():
-> > 
-> > 	bridge = get_device(bus->bridge);
-> > 	adev = to_acpi_device_node(bridge->fwnode);
-> > 	set_dev_node(bridge, acpi_get_node(adev->handle));
-> 
-> I do not think that's enough, I need to check again but I think that
-> also the bus->dev should have its NUMA node set for things to work (and
-> allow the NUMA node to propagate correctly through device_add())
-> otherwise pcibus_to_node() would fail for devices sitting on the root
-> bus, right ?
+[...]
 
-Yeah, maybe another hop is in between and the node id for bus->dev is
-used. Which need to be set then.
+>> +		domain = pci_get_new_domain_nr(bus);
+>
+> These comments and logic are too complicated for my puny brain.  Much of
+> this was pre-existing, of course.  Surely there's a simpler way?
 
-> 
-> I will check again and post v3 shortly.
+yup, I think we could simplify the code.
 
-Thanks,
+>
+> 1) If we're using ACPI, every host bridge must have a _SEG method, and it
+> supplies the domain.  We ignore any bridge without _SEG.
+>
+> 2) If we're using DT, every host bridge must supply "linux,pci-domain", and
+> it supplies the domain.  We ignore any bridge without "linux,pci-domain".
+>
+> 3) Otherwise, we always use IDA.
 
--Robert
+I plan to create a new function to allocate domain number using IDA as
+then we don't touch the logic of of_pci_bus_find_domain_nr, and the
+name of of_pci_bus_find_domain_nr explicitly say that the domain number
+comes from DT.
+
+Then I could put the condition check inside the pci_bus_find_domain_nr
+as your suggested.
+
+
+Does it looks ok to you?
+
+>
+>>  	} else {
+>>  		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+
+[...]
+
+>>  		pci_remove_bus_device(child);
+>> +
+>> +	pci_put_old_domain_nr(bus);
+>
+> In your current patch, ida_domain defaults to true, and it is only set
+> to false in of_pci_bus_find_domain_nr(), which is only called when
+> ACPI is disabled.  Therefore, ida_domain will be true when we're using
+> ACPI, and I think pci_put_old_domain_nr() will erroneously remove
+> domains from tha IDA.
+>
+
+woops, I forgot to check the ACPI cases.
+
+>>  	pci_remove_bus(bus);
+>>  	host_bridge->bus = NULL;
+>>
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 33c2b0b..9296e31 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1445,13 +1445,17 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+>>   * configuration space.
+>>   */
+>>  #ifdef CONFIG_PCI_DOMAINS
+>> +extern struct ida __domain_nr;
+>>  extern int pci_domains_supported;
+>> -int pci_get_new_domain_nr(void);
+>> +int pci_get_new_domain_nr(struct pci_bus *bus);
+>> +void pci_put_old_domain_nr(struct pci_bus *bus);
+>>  #else
+>>  enum { pci_domains_supported = 0 };
+>>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+>> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>> +static inline int pci_get_new_domain_nr(struct pci_bus *bus)
+>> +{ return -ENOSYS; }
+>> +static inline void pci_put_old_domain_nr(struct pci_bus *bus) { }
+>>  #endif /* CONFIG_PCI_DOMAINS */
+>>
+>>  /*
+>> --
+>> 1.9.1
+>>
+>>
+>
+>
+>
