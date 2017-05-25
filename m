@@ -1,55 +1,32 @@
-Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lukas@wunner.de"
-	<lukas@wunner.de>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com"
-	<mika.westerberg@linux.intel.com>
-Subject: RE: [PATCH 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP
- service
-Date: Tue, 16 May 2017 15:27:40 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A2E479@FRAEML521-MBX.china.huawei.com>
-References: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
- <1494930342-7132-3-git-send-email-gabriele.paoloni@huawei.com>
- <20170516121112.GA16209@infradead.org>
-In-Reply-To: <20170516121112.GA16209@infradead.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37125 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033988AbdEYUUf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 16:20:35 -0400
+Received: by mail-wm0-f46.google.com with SMTP id d127so112010862wmf.0
+        for <linux-pci@vger.kernel.org>; Thu, 25 May 2017 13:20:34 -0700 (PDT)
+Date: Thu, 25 May 2017 21:17:42 +0100
+From: Piotr Gregor <piotrgregor@rsyncme.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "Michael S. Tsirkin" <mst@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankede@nvidia.com>,
+        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org
+Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170525201741.GA14175@westernst>
+References: <20170525181321.GA13617@westernst>
+ <20170525211833-mutt-send-email-mst@kernel.org>
+ <20170525123839.6d296856@w520.home>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170525123839.6d296856@w520.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: 16 May 2017 13:11
-> To: Gabriele Paoloni
-> Cc: bhelgaas@google.com; helgaas@kernel.org; Linuxarm; linux-
-> pci@vger.kernel.org; lukas@wunner.de; linux-kernel@vger.kernel.org;
-> mika.westerberg@linux.intel.com
-> Subject: Re: [PATCH 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC
-> RP service
->=20
-> > +		 * pci_irq_vector() below is able to handle entry
-> differently
-> > +		 * depending on MSI vs MSI-x case
-> > +		 *
-
-Ok I'll remove this in V2
-
->=20
-> No need to mention that for every users.
->=20
-> Except for that this looks fine:
->=20
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Many thanks
-Gab
+Very good suggestions. Will be reflected in changed patch.
