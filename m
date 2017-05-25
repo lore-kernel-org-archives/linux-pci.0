@@ -1,69 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Daney <david.daney@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 0/2] PCI: Workaround for bus reset on Cavium cn8xxx root ports
-Date: Mon, 15 May 2017 17:17:34 -0700
-Message-Id: <20170516001736.4001-1-david.daney@cavium.com>
+Return-Path: <SRS0=s16d=47=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=s16d=47=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
+To: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+ <62bb805a-abd6-9aca-3641-8037f42a3b95@arm.com>
+ <57673076-4fbd-92ab-453c-3d77fd65407f@free.fr>
+ <1b0ec9c9-1036-619e-19c7-16818ca728e3@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <a7d4752f-001d-ba7e-07ff-435643a7e661@free.fr>
+Date: Thu, 25 May 2017 14:41:41 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jon Masters <jcm@redhat.com>, Robert Richter <robert.richter@cavium.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- David Daney <david.daney@cavium.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1b0ec9c9-1036-619e-19c7-16818ca728e3@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-With the recent improvements in arm64 and vfio-pci, we are seeing
-failures like this (on cn8890 based systems):
+On 25/05/2017 14:23, Marc Zyngier wrote:
+> On 25/05/17 13:00, Mason wrote:
+>> On 25/05/2017 10:48, Marc Zyngier wrote:
+>>> Please have some defines for these magic values.
+>>
+>> Typical driver do
+>> #define MUX_OFFSET 0x48
+>> and then access the register's value through
+>> readl_relaxed(pcie->base + MUX_OFFSET);
+>>
+>> I can't do that because the registers were shuffled around
+>> between revision 1 and revision 2. Thus, instead of an
+>> explicitly-named macro (MUX_OFFSET), I used an explicitly-
+>> named field (pcie->mux) and access the register's value
+>> through readl_relaxed(pcie->mux);
+> 
+> That doesn't prevent you from having a TANGO_V1_MUX_OFFSET define, which
+> you can supplement with a V2 at some point.
+> 
+>> This is equivalent to providing the offset definitions in the
+>> init functions, instead of at the top of the file.
+> 
+> Sorry, my brain parses text far better than hex number.
 
-[  235.622361] Unhandled fault: synchronous external abort (0x96000210) at 0xfffffc00c1000100
-[  235.630625] Internal error: : 96000210 [#1] PREEMPT SMP
-.
-.
-.
-[  236.208820] [<fffffc0008411250>] pci_generic_config_read+0x38/0x9c
-[  236.214992] [<fffffc0008435ed4>] thunder_pem_config_read+0x54/0x1e8
-[  236.221250] [<fffffc0008411620>] pci_bus_read_config_dword+0x74/0xa0
-[  236.227596] [<fffffc000841853c>] pci_find_next_ext_capability.part.15+0x40/0xb8
-[  236.234896] [<fffffc0008419428>] pci_find_ext_capability+0x20/0x30
-[  236.241068] [<fffffc0008423e2c>] pci_restore_vc_state+0x34/0x88
-[  236.246979] [<fffffc000841af3c>] pci_restore_state.part.37+0x2c/0x1fc
-[  236.253410] [<fffffc000841b174>] pci_dev_restore+0x4c/0x50
-[  236.258887] [<fffffc000841b19c>] pci_bus_restore+0x24/0x4c
-[  236.264362] [<fffffc000841c2dc>] pci_try_reset_bus+0x7c/0xa0
-[  236.270021] [<fffffc00060a1ab0>] vfio_pci_ioctl+0xc34/0xc3c [vfio_pci]
-[  236.276547] [<fffffc0005eb0410>] vfio_device_fops_unl_ioctl+0x20/0x30 [vfio]
-[  236.283587] [<fffffc000824b314>] do_vfs_ioctl+0xac/0x744
-[  236.288890] [<fffffc000824ba30>] SyS_ioctl+0x84/0x98
-[  236.293846] [<fffffc0008082ca0>] __sys_trace_return+0x0/0x4
+Well, the hex numbers do need to show up somewhere :-)
 
-These are caused by the inability of the PCIe root port and Intel
-e1000e to sucessfully do a bus reset.
+IIUC, you're saying that
+#define MUX_OFFSET 0x48
+is clearer than
+pcie->mux = base + 0x48;
 
-The proposed fix is to not do a bus reset on these systems.
+OK, I can accept that. Maybe our brains have been trained
+to easily recognize and ingest the macro, or maybe it's
+the caps, or maybe the fact that the statement does
+several things (addition and assignment and hex).
 
-David Daney (2):
-  PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device.
-  PCI: Avoid bus reset for Cavium cn8xxx root ports.
+Out of curiosity, how would you feel about
+pcie->MUX_OFFSET = 0x48;
+and then using
+readl_relaxed(pcie->base + pcie->MUX_OFFSET);
 
- drivers/pci/pci.c    | 4 ++++
- drivers/pci/quirks.c | 8 ++++++++
- 2 files changed, 12 insertions(+)
+It feels weird to me, I think mostly because it is
+an unusual pattern.
 
--- 
-2.9.4
+Anyway, I'll add the macros, if that improves review and
+maintenance.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards.
