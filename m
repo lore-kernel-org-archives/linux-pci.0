@@ -1,81 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:53361 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751482AbdEEHai (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 5 May 2017 03:30:38 -0400
-Date: Fri, 5 May 2017 09:30:35 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
-        USB list <linux-usb@vger.kernel.org>,
-        alsa-devel@alsa-project.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>, Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-Message-ID: <20170505073035.GA3112@lst.de>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com> <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com> <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 25 May 2017 16:53:26 +0100
+From: Catalin Marinas <catalin.marinas@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH] ARM64: PCI: Fix struct acpi_pci_root_ops allocation
+ failure path
+Message-ID: <20170525155326.GB1610@e104818-lin.cambridge.arm.com>
+References: <20170522154828.10872-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170522154828.10872-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ Timmy Li <lixiaoping3@huawei.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 05, 2017 at 10:06:06AM +0300, Amir Goldstein wrote:
-> I much rather that you sort out uuid helpers in a way that will
-> satisfy the filesystem
-> needs (just provide the helpers don't need to convert filesystems code).
-
-Yeah.
-
-> IMO, you should acknowledge that the common use case for filesystems is
-> to handle an opaque char[16] which most likely holds a uuid_be and you
-> should provide 'neutral' helpers to satisfy this use case.
+On Mon, May 22, 2017 at 04:48:28PM +0100, Lorenzo Pieralisi wrote:
+> From: Timmy Li <lixiaoping3@huawei.com>
 > 
-> The simplest would be to typedef uuid_t to struct uuid_be and to name 'neutral'
-> helpers' uuid_cmp/uuid_copy(uuid_t *, uuid_t *), similar to my proposal.
+> Commit 093d24a20442 ("arm64: PCI: Manage controller-specific data on
+> per-controller basis") added code to allocate ACPI PCI root_ops
+> dynamically on a per host bridge basis but failed to update the
+> corresponding memory allocation failure path in pci_acpi_scan_root()
+> leading to a potential memory leakage.
+> 
+> Fix it by adding the required kfree call.
+> 
+> Fixes: 093d24a20442 ("arm64: PCI: Manage controller-specific data on per-controller basis")
+> Signed-off-by: Timmy Li <lixiaoping3@huawei.com>
+> [lorenzo.pieralisi@arm.com: refactored code, rewrote commit log]
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> CC: Will Deacon <will.deacon@arm.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Cc: Tomasz Nowicki <tn@semihalf.com>
 
-It's not jut neutral, it's the right thing to to.  The Apollo / DCE
-uuids (later also specified in RFC 4122) are big endian, so we should
-use the name there.
+I queued the patch for 4.12. Thanks.
 
-> Christoph also suggested a similar treatment to typedef guid_t to
-> struct uuid_le.
+-- 
+Catalin
 
-Exactly.  The whole idea of "little endian UUIDs" comes from the
-Wintel world, and if you look at the relevant specs they are almost
-exclusively referred to as GUIDs.
-
-The magic XFS and AFS types for specific interpretations of one of
-the RFC4122 formats don't really help, but I'll just send a patch
-to kill them off for XFS ASAP to at least get that out, and we
-probably should revert at least
-
-"afs: Move UUID struct to linux/uuid.h"
-
-That moved the AFS mess to common code as a start, and then
-also clean up the way we generate random UUIDs, where we currently
-have le helper, a be helper and then also generate_random_uuid
-just to confuse the heck out of people.  With no description of
-either of them.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
