@@ -1,103 +1,120 @@
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	helgaas@kernel.org
-Subject: [PATCH v6 1/5] PCI: add a define for the PCI resource type mask v2
-Date: Tue,  9 May 2017 18:49:03 +0200
-Message-Id: <1494348547-1465-2-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:40681 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936209AbdEYMo2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 08:44:28 -0400
+Date: Thu, 25 May 2017 14:44:45 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+Message-ID: <20170525124445.GA4181@wunner.de>
+References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
+ <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
+ <20170506090755.GB19740@wunner.de>
+ <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
+ <20170510084143.GA16261@wunner.de>
+ <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
+ <20170525123047.GA4172@wunner.de>
+ <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Thu, May 25, 2017 at 05:36:01AM -0700, Ard Biesheuvel wrote:
+> On 25 May 2017 at 05:30, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
+> >> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
+> >> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
+> >> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
+> >> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
+> >> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
+> >> >> >> > The CPER parser assumes that the class code is big endian, but at least
+> >> >> >> > on this edk2-derived Intel Purley platform it's little endian:
+> >> >> > [snip]
+> >> >> >> > --- a/include/linux/cper.h
+> >> >> >> > +++ b/include/linux/cper.h
+> >> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
+> >> >> >> >         struct {
+> >> >> >> >                 __u16   vendor_id;
+> >> >> >> >                 __u16   device_id;
+> >> >> >> > -               __u8    class_code[3];
+> >> >> >> > +               __u32   class_code:24;
+> >> >> >>
+> >> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
+> >> >> >> order of p[] above?
+> >> >> >
+> >> >> > Hm, why would you like to avoid it?
+> >> >>
+> >> >> Because we shouldn't use bitfields in structs in code that should be
+> >> >> portable across archs with different endiannesses.
+> >> >
+> >> > The CPER header is defined in the UEFI spec and UEFI mandates that the
+> >> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
+> >> >
+> >>
+> >> No it does not mandate that at all. It mandates how the core should be
+> >> configured when running in UEFI, but the OS can do anything it likes.
+> >>
+> >> We are still interested in adding limited UEFI support to big endian
+> >> arm64 in the future (i.e., access to a limited set of firmware tables
+> >> but no runtime services), and I am not going to merge anything that
+> >> moves us away from that goal.
+> >>
+> >> > So your argument seems moot to me.  Am I missing something?  Do you
+> >> > have another argument?
+> >> >
+> >> > Moreover, the vendor_id and device_id fields are little endian as well
+> >> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
+> >> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
+> >> >
+> >>
+> >> Indeed. I am aware we will need to add various endian-neutral
+> >> accessors in the future.
+> >>
+> >> >> >  The class_code element isn't
+> >> >> > referenced anywhere else in the kernel and this isn't a uapi header,
+> >> >> > so the change would only impact out-of-tree drivers.  Not sure if
+> >> >> > any exist which might be interested in CPER parsing.
+> >> >> >
+> >> >>
+> >> >> The point is that the change in the struct definition is simply not
+> >> >> necessary, given that inverting the order of p[] already achieves
+> >> >> exactly what we want.
+> >> >
+> >> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
+> >> > Please excuse my stubbornness.
+> >> >
+> >>
+> >> Stubbornness alone is not going to convince me. What *could* convince
+> >> me (although unlikely) is a quote from the C spec which explains why
+> >> it is 100% legal to make assumptions about how bitfields are projected
+> >> onto byte locations in memory.
+> >
+> > All structs in cper.h are declared "packed", so what you're asking for
+> > isn't defined in the C spec but in the GCC documentation:
+> >
+> >    "The packed attribute specifies that a variable or structure field
+> >     should have the smallest possible alignment -- one byte for a variable,
+> >     and one bit for a field, unless you specify a larger value with the
+> >     aligned attribute."
+> >
+> > So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
+> > le16_to_cpu() etc both for the class_code changed by the patch as well as
+> > all the other members of the struct not touched by the patch when adding
+> > "endianness mixed mode" for aarch64.
+> 
+> I'm not talking about the 'packed' attribute but about the fact that
+> the C spec does not guarantee that bitfields are projected onto byte
+> locations in memory in the way you expect.
 
-We use this mask multiple times in the bus setup.
-
-v2: fix some style nit picks
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/pci/pci.h       |  4 ++++
- drivers/pci/setup-bus.c | 12 +++---------
- 2 files changed, 7 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 4518562..56ad106 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -6,6 +6,10 @@
- 
- #define PCI_FIND_CAP_TTL	48
- 
-+#define PCI_RES_TYPE_MASK \
-+	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
-+	 IORESOURCE_MEM_64)
-+
- extern const unsigned char pcie_link_speed[];
- 
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f30ca75..efebd70 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1532,8 +1532,6 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- {
- 	struct pci_dev *dev = bus->self;
- 	struct resource *r;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 	unsigned old_flags = 0;
- 	struct resource *b_res;
- 	int idx = 1;
-@@ -1576,7 +1574,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
- 	 */
- 	release_child_resources(r);
- 	if (!release_resource(r)) {
--		type = old_flags = r->flags & type_mask;
-+		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
- 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
- 					PCI_BRIDGE_RESOURCES + idx, r);
- 		/* keep the old size */
-@@ -1767,8 +1765,6 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	enum release_type rel_type = leaf_only;
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 	int pci_try_num = 1;
- 	enum enable_type enable_local;
- 
-@@ -1827,7 +1823,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
- 	 */
- 	list_for_each_entry(fail_res, &fail_head, list)
- 		pci_bus_release_bridge_resources(fail_res->dev->bus,
--						 fail_res->flags & type_mask,
-+						 fail_res->flags & PCI_RES_TYPE_MASK,
- 						 rel_type);
- 
- 	/* restore size and flags */
-@@ -1871,8 +1867,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 	LIST_HEAD(fail_head);
- 	struct pci_dev_resource *fail_res;
- 	int retval;
--	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
--				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
- 
- again:
- 	__pci_bus_size_bridges(parent, &add_list);
-@@ -1898,7 +1892,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- 	 */
- 	list_for_each_entry(fail_res, &fail_head, list)
- 		pci_bus_release_bridge_resources(fail_res->dev->bus,
--						 fail_res->flags & type_mask,
-+						 fail_res->flags & PCI_RES_TYPE_MASK,
- 						 whole_subtree);
- 
- 	/* restore size and flags */
--- 
-2.7.4
+What relevance does that have as long as the header file uses a pragma
+specific to gcc (or other compilers that are compatible to gcc with
+respect to that pragma (such as clang)), and gcc guarantees the
+correct layout regardless of endianness?
