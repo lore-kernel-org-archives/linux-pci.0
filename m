@@ -1,293 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-00010702.pphosted.com ([148.163.156.75]:60948 "EHLO
-        mx0b-00010702.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750703AbdESH2O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 19 May 2017 03:28:14 -0400
-From: Wong Vee Khee <vee.khee.wong@ni.com>
-To: <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <jhearn@ni.com>,
-        <Ram.Amrani@cavium.com>, <hui.chun.ong@ni.com>,
-        <shhuiw@foxmail.com>, <rajatja@google.com>,
-        <linux-pci@vger.kernel.org>, <keith.busch@inte.com>,
-        <jonathan.yong@intel.com>, vwong <vee.khee.wong@ni.com>
-Subject: [PATCH v3] pci-sysfs: Make PCI bridge attribute visible in sysfs
-Date: Fri, 19 May 2017 15:27:48 +0800
-Message-ID: <1495178868-63025-1-git-send-email-vee.khee.wong@ni.com>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:33827 "EHLO
+        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761711AbdEYMsA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 08:48:00 -0400
+Received: by mail-io0-f181.google.com with SMTP id k91so135642684ioi.1
+        for <linux-pci@vger.kernel.org>; Thu, 25 May 2017 05:48:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170525124445.GA4181@wunner.de>
+References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
+ <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
+ <20170506090755.GB19740@wunner.de> <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
+ <20170510084143.GA16261@wunner.de> <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
+ <20170525123047.GA4172@wunner.de> <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
+ <20170525124445.GA4181@wunner.de>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 25 May 2017 05:47:59 -0700
+Message-ID: <CAKv+Gu-7dr=upMcs2SsE+7+LRA2q82=exDrtt6CMniiMjZU2YA@mail.gmail.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: vwong <vee.khee.wong@ni.com>
+On 25 May 2017 at 05:44, Lukas Wunner <lukas@wunner.de> wrote:
+> On Thu, May 25, 2017 at 05:36:01AM -0700, Ard Biesheuvel wrote:
+>> On 25 May 2017 at 05:30, Lukas Wunner <lukas@wunner.de> wrote:
+>> > On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
+>> >> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
+>> >> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
+>> >> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> >> > The CPER parser assumes that the class code is big endian, but at least
+>> >> >> >> > on this edk2-derived Intel Purley platform it's little endian:
+>> >> >> > [snip]
+>> >> >> >> > --- a/include/linux/cper.h
+>> >> >> >> > +++ b/include/linux/cper.h
+>> >> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
+>> >> >> >> >         struct {
+>> >> >> >> >                 __u16   vendor_id;
+>> >> >> >> >                 __u16   device_id;
+>> >> >> >> > -               __u8    class_code[3];
+>> >> >> >> > +               __u32   class_code:24;
+>> >> >> >>
+>> >> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
+>> >> >> >> order of p[] above?
+>> >> >> >
+>> >> >> > Hm, why would you like to avoid it?
+>> >> >>
+>> >> >> Because we shouldn't use bitfields in structs in code that should be
+>> >> >> portable across archs with different endiannesses.
+>> >> >
+>> >> > The CPER header is defined in the UEFI spec and UEFI mandates that the
+>> >> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
+>> >> >
+>> >>
+>> >> No it does not mandate that at all. It mandates how the core should be
+>> >> configured when running in UEFI, but the OS can do anything it likes.
+>> >>
+>> >> We are still interested in adding limited UEFI support to big endian
+>> >> arm64 in the future (i.e., access to a limited set of firmware tables
+>> >> but no runtime services), and I am not going to merge anything that
+>> >> moves us away from that goal.
+>> >>
+>> >> > So your argument seems moot to me.  Am I missing something?  Do you
+>> >> > have another argument?
+>> >> >
+>> >> > Moreover, the vendor_id and device_id fields are little endian as well
+>> >> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
+>> >> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
+>> >> >
+>> >>
+>> >> Indeed. I am aware we will need to add various endian-neutral
+>> >> accessors in the future.
+>> >>
+>> >> >> >  The class_code element isn't
+>> >> >> > referenced anywhere else in the kernel and this isn't a uapi header,
+>> >> >> > so the change would only impact out-of-tree drivers.  Not sure if
+>> >> >> > any exist which might be interested in CPER parsing.
+>> >> >> >
+>> >> >>
+>> >> >> The point is that the change in the struct definition is simply not
+>> >> >> necessary, given that inverting the order of p[] already achieves
+>> >> >> exactly what we want.
+>> >> >
+>> >> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
+>> >> > Please excuse my stubbornness.
+>> >> >
+>> >>
+>> >> Stubbornness alone is not going to convince me. What *could* convince
+>> >> me (although unlikely) is a quote from the C spec which explains why
+>> >> it is 100% legal to make assumptions about how bitfields are projected
+>> >> onto byte locations in memory.
+>> >
+>> > All structs in cper.h are declared "packed", so what you're asking for
+>> > isn't defined in the C spec but in the GCC documentation:
+>> >
+>> >    "The packed attribute specifies that a variable or structure field
+>> >     should have the smallest possible alignment -- one byte for a variable,
+>> >     and one bit for a field, unless you specify a larger value with the
+>> >     aligned attribute."
+>> >
+>> > So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
+>> > le16_to_cpu() etc both for the class_code changed by the patch as well as
+>> > all the other members of the struct not touched by the patch when adding
+>> > "endianness mixed mode" for aarch64.
+>>
+>> I'm not talking about the 'packed' attribute but about the fact that
+>> the C spec does not guarantee that bitfields are projected onto byte
+>> locations in memory in the way you expect.
+>
+> What relevance does that have as long as the header file uses a pragma
+> specific to gcc (or other compilers that are compatible to gcc with
+> respect to that pragma (such as clang)), and gcc guarantees the
+> correct layout regardless of endianness?
 
- In this commit, we are exposing PCIe bridges attributes
- such as secondary bus number, subordinate bus number,
- max link speed and link width, current link speed and
- link width to sysfs located in /sys/bus/pci/devices/...
-
- Part of the reasons we are doing this rather than getting
- these information through parsing lspci is due to the fact
- that accessing PCIe link information via lspci require root
- privilege.
-
- This changes also allow clients to get PCIe bridges information
- easily because lspci list out all PCIe devices.
-
-Signed-off-by: Wong Vee Khee <vee.khee.wong@ni.com>
-Signed-off-by: Hui Chun Ong <hui.chun.ong@ni.com>
----
- drivers/pci/pci-sysfs.c       | 197 +++++++++++++++++++++++++++++++++++++++++-
- include/uapi/linux/pci_regs.h |   1 +
- 2 files changed, 194 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 31e9961..a2ada91 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -154,6 +154,127 @@ static ssize_t resource_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(resource);
- 
-+static ssize_t max_link_speed_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u32 linkcap;
-+	int err;
-+	const char *speed;
-+
-+	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-+
-+	if (!err) {
-+		switch (linkcap & PCI_EXP_LNKCAP_SLS) {
-+		case PCI_EXP_LNKCAP_SLS_8_0GB:
-+			speed = "8 GT/s";
-+			break;
-+		case PCI_EXP_LNKCAP_SLS_5_0GB:
-+			speed = "5 GT/s";
-+			break;
-+		case PCI_EXP_LNKCAP_SLS_2_5GB:
-+			speed = "2.5 GT/s";
-+			break;
-+		default:
-+			speed = "Unknown speed";
-+		}
-+
-+		return sprintf(buf, "%s\n", speed);
-+	}
-+
-+	return -EINVAL;
-+}
-+static DEVICE_ATTR_RO(max_link_speed);
-+
-+static ssize_t max_link_width_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u32 linkcap;
-+	int err;
-+
-+	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-+
-+	return err ? -EINVAL : sprintf(
-+		buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
-+}
-+static DEVICE_ATTR_RO(max_link_width);
-+
-+static ssize_t current_link_speed_show(struct device *dev,
-+				       struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u16 linkstat;
-+	int err;
-+	const char *speed;
-+
-+	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
-+
-+	if (!err) {
-+		switch (linkstat & PCI_EXP_LNKSTA_CLS) {
-+		case PCI_EXP_LNKSTA_CLS_8_0GB:
-+			speed = "8 GT/s";
-+			break;
-+		case PCI_EXP_LNKSTA_CLS_5_0GB:
-+			speed = "5 GT/s";
-+			break;
-+		case PCI_EXP_LNKSTA_CLS_2_5GB:
-+			speed = "2.5 GT/s";
-+			break;
-+		default:
-+			speed = "Unknown speed";
-+		}
-+
-+		return sprintf(buf, "%s\n", speed);
-+	}
-+
-+	return -EINVAL;
-+}
-+static DEVICE_ATTR_RO(current_link_speed);
-+
-+static ssize_t current_link_width_show(struct device *dev,
-+				       struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u16 linkstat;
-+	int err;
-+
-+	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
-+
-+	return err ? -EINVAL : sprintf(
-+		buf, "%u\n",
-+		(linkstat & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT);
-+}
-+static DEVICE_ATTR_RO(current_link_width);
-+
-+static ssize_t secondary_bus_number_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u8 sec_bus;
-+	int err;
-+
-+	err = pci_read_config_byte(pci_dev, PCI_SECONDARY_BUS, &sec_bus);
-+
-+	return err ? -EINVAL : sprintf(buf, "%u\n", sec_bus);
-+}
-+static DEVICE_ATTR_RO(secondary_bus_number);
-+
-+static ssize_t subordinate_bus_number_show(struct device *dev,
-+					   struct device_attribute *attr,
-+					   char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u8 sub_bus;
-+	int err;
-+
-+	err = pci_read_config_byte(pci_dev, PCI_SUBORDINATE_BUS, &sub_bus);
-+
-+	return err ? -EINVAL : sprintf(buf, "%u\n", sub_bus);
-+}
-+static DEVICE_ATTR_RO(subordinate_bus_number);
-+
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
- {
-@@ -629,12 +750,17 @@ static struct attribute *pci_dev_attrs[] = {
- 	NULL,
- };
- 
--static const struct attribute_group pci_dev_group = {
--	.attrs = pci_dev_attrs,
-+static struct attribute *pci_bridge_attrs[] = {
-+	&dev_attr_subordinate_bus_number.attr,
-+	&dev_attr_secondary_bus_number.attr,
-+	NULL,
- };
- 
--const struct attribute_group *pci_dev_groups[] = {
--	&pci_dev_group,
-+static struct attribute *pcie_dev_attrs[] = {
-+	&dev_attr_current_link_speed.attr,
-+	&dev_attr_current_link_width.attr,
-+	&dev_attr_max_link_width.attr,
-+	&dev_attr_max_link_speed.attr,
- 	NULL,
- };
- 
-@@ -1557,6 +1683,57 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
- 	return a->mode;
- }
- 
-+static umode_t pci_bridge_attrs_are_visible(struct kobject *kobj,
-+					    struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (pci_is_bridge(pdev))
-+		return a->mode;
-+
-+	return 0;
-+}
-+
-+static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
-+					  struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (pci_is_pcie(pdev))
-+		return a->mode;
-+
-+	return 0;
-+}
-+
-+static const struct attribute_group pci_dev_group = {
-+	.attrs = pci_dev_attrs,
-+};
-+
-+const struct attribute_group *pci_dev_groups[] = {
-+	&pci_dev_group,
-+	NULL,
-+};
-+
-+static const struct attribute_group pci_bridge_group = {
-+	.attrs = pci_bridge_attrs,
-+};
-+
-+const struct attribute_group *pci_bridge_groups[] = {
-+	&pci_bridge_group,
-+	NULL,
-+};
-+
-+static const struct attribute_group pcie_dev_group = {
-+	.attrs = pcie_dev_attrs,
-+};
-+
-+const struct attribute_group *pcie_dev_groups[] = {
-+	&pcie_dev_group,
-+	NULL,
-+};
-+
- static struct attribute_group pci_dev_hp_attr_group = {
- 	.attrs = pci_dev_hp_attrs,
- 	.is_visible = pci_dev_hp_attrs_are_visible,
-@@ -1592,12 +1769,24 @@ static struct attribute_group pci_dev_attr_group = {
- 	.is_visible = pci_dev_attrs_are_visible,
- };
- 
-+static struct attribute_group pci_bridge_attr_group = {
-+	.attrs = pci_bridge_attrs,
-+	.is_visible = pci_bridge_attrs_are_visible,
-+};
-+
-+static struct attribute_group pcie_dev_attr_group = {
-+	.attrs = pcie_dev_attrs,
-+	.is_visible = pcie_dev_attrs_are_visible,
-+};
-+
- static const struct attribute_group *pci_dev_attr_groups[] = {
- 	&pci_dev_attr_group,
- 	&pci_dev_hp_attr_group,
- #ifdef CONFIG_PCI_IOV
- 	&sriov_dev_attr_group,
- #endif
-+	&pci_bridge_attr_group,
-+	&pcie_dev_attr_group,
- 	NULL,
- };
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index d56bb00..c22d3eb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -517,6 +517,7 @@
- #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
- #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
- #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
-+#define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
- #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
--- 
-2.7.4
+The relevance is that we should not add GCC specific code because you
+think it looks prettier. And where does GCC guarantee the correct
+layout? Did you find an unambiguous GCC documentation reference that
+explains how bitfields are mapped onto byte locations? Or does
+'guarantee' mean 'I tested it and it works'?
