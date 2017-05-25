@@ -1,72 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36946 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1761585AbdEWTae (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 15:30:34 -0400
-Date: Tue, 23 May 2017 14:30:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: control vpcie0v9 for system PM
-Message-ID: <20170523193032.GA7241@bhelgaas-glaptop.roam.corp.google.com>
-References: <1493710283-164065-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:6819 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937754AbdEYDGE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 23:06:04 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 4/4] defconfig: PCI: Enable  Kirin PCIe defconfig
+Date: Thu, 25 May 2017 11:02:04 +0800
+Message-ID: <20170525030204.126233-5-songxiaowei@hisilicon.com>
+In-Reply-To: <20170525030204.126233-1-songxiaowei@hisilicon.com>
+References: <20170525030204.126233-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1493710283-164065-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 02, 2017 at 03:31:23PM +0800, Shawn Lin wrote:
-> vpcie0v9 is used for PHY, so we could disable it as
-> we don't need PHY to work then in S3 if folks assign it
-> DT. But we should note that there is a side effect that
-> we could not support beacon wakeup if we disable vpcie0v9
-> for aggressive power-saving.
-> 
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Applied to pci/host-rockchip for v4.13, thanks!
-
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 11 +++++++++++
->  1 file changed, 11 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 0e020b6..c8ca796 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -1251,6 +1251,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
->  	clk_disable_unprepare(rockchip->aclk_perf_pcie);
->  	clk_disable_unprepare(rockchip->aclk_pcie);
->  
-> +	if (!IS_ERR(rockchip->vpcie0v9))
-> +		regulator_disable(rockchip->vpcie0v9);
-> +
->  	return ret;
->  }
->  
-> @@ -1259,6 +1262,14 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
->  	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
->  	int err;
->  
-> +	if (!IS_ERR(rockchip->vpcie0v9)) {
-> +		err = regulator_enable(rockchip->vpcie0v9);
-> +		if (err) {
-> +			dev_err(dev, "fail to enable vpcie0v9 regulator\n");
-> +			return err;
-> +		}
-> +	}
-> +
->  	clk_prepare_enable(rockchip->clk_pcie_pm);
->  	clk_prepare_enable(rockchip->hclk_pcie);
->  	clk_prepare_enable(rockchip->aclk_perf_pcie);
-> -- 
-> 1.9.1
-> 
-> 
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 7c48028ec64a..d56d8f1062ab 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_LAYERSCAPE=y
+ CONFIG_PCI_HISI=y
+ CONFIG_PCIE_QCOM=y
++CONFIG_PCIE_KIRIN=y
+ CONFIG_PCIE_ARMADA_8K=y
+ CONFIG_ARM64_VA_BITS_48=y
+ CONFIG_SCHED_MC=y
+-- 
+2.11.GIT
