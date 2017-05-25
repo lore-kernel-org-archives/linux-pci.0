@@ -1,172 +1,312 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43770 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751003AbdESQ1Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 May 2017 12:27:25 -0400
-Date: Fri, 19 May 2017 11:27:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-efi@vger.kernel.org, Ingo Molnar <mingo@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "H . Peter Anvin" <hpa@zytor.com>, leif.lindholm@linaro.org,
-        lorenzo.pieralisi@arm.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] efifb: Avoid reconfiguration of BAR that covers the
- framebuffer
-Message-ID: <20170519162716.GA684@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170404152744.26687-1-ard.biesheuvel@linaro.org>
- <20170404152744.26687-3-ard.biesheuvel@linaro.org>
+Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Thomas Gleixner <tglx@linutronix.de>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <8ee14bdc-a272-d483-bc2b-d1840aaebb24@arm.com>
+Date: Thu, 25 May 2017 09:37:30 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170404152744.26687-3-ard.biesheuvel@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-On Tue, Apr 04, 2017 at 04:27:44PM +0100, Ard Biesheuvel wrote:
-> On UEFI systems, the PCI subsystem is enumerated by the firmware,
-> and if a graphical framebuffer is exposed by a PCI device, its base
-> address and size are exposed to the OS via the Graphics Output
-> Protocol (GOP).
+On 20/04/17 15:28, Marc Gonzalez wrote:
+> The MSI controller in Tango supports 256 message-signaled interrupts,
+> and a single doorbell address.
 > 
-> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
-> scratch at boot. This may result in the GOP framebuffer address to
-> become stale, if the BAR covering the framebuffer is modified. This
-> will cause the framebuffer to become unresponsive, and may in some
-> cases result in unpredictable behavior if the range is reassigned to
-> another device.
-> 
-> So add a non-x86 quirk to the EFI fb driver to find the BAR associated
-> with the GOP base address, and claim the BAR resource so that the PCI
-> core will not move it.
-
-I know this has already been merged as 55d728a40d36 ("efi/fb: Avoid
-reconfiguration of BAR that covers the framebuffer"), and I'm not
-suggesting that we revert it, but I have some misgivings.
-
-One is the "#ifndef CONFIG_X86".  In principle, there is nothing arch-
-specific here.  I don't think it's a good idea to build in dependencies on
-things like "this arch preserves (or reprograms) PCI BARs".  The PCI core
-may reprogram all, some, or none of the PCI BARs, depending on what (if
-anything) firmware has done.
-
-Another is the use of pci_claim_resource() to express the idea that "this
-BAR can not be moved".  We have IORESOURCE_PCI_FIXED for that purpose, and
-previous versions of the patch used that.  I understand there was some
-problem with that, but I wish we could figure out and fix that problem
-instead of using a different mechanism.
-
-I'm not even completely sold on the idea that we need to prevent the BAR
-from being moved.  I'm not a UEFI expert, but if this requirement is in the
-spec, we should reference it.  If not, it should be sufficient to remember
-the boot-time BAR value, match the GOP base to *that*, and map it to
-whatever the current BAR value is.
-
-> Fixes: 9822504c1fa5 ("efifb: Enable the efi-framebuffer platform driver ...")
-> Cc: <stable@vger.kernel.org> # v4.7+
-> Cc: Matt Fleming <matt@codeblueprint.co.uk>
-> Cc: Peter Jones <pjones@redhat.com>
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
 > ---
->  drivers/video/fbdev/efifb.c | 66 ++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 65 insertions(+), 1 deletion(-)
+>  drivers/pci/host/pcie-tango.c | 232 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 232 insertions(+)
 > 
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index 8c4dc1e1f94f..758960b6aec9 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -10,6 +10,7 @@
->  #include <linux/efi.h>
->  #include <linux/errno.h>
->  #include <linux/fb.h>
-> +#include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/screen_info.h>
->  #include <video/vga.h>
-> @@ -143,6 +144,8 @@ static struct attribute *efifb_attrs[] = {
->  };
->  ATTRIBUTE_GROUPS(efifb);
->  
-> +static bool pci_dev_disabled;	/* FB base matches BAR of a disabled device */
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+> new file mode 100644
+> index 000000000000..ada8d35066ab
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-tango.c
+
+As Bjorn mentioned elsewhere, the ordering of the patch is backward.
+Please have the PCIe host controller driver in the first patch, then the
+MSI stuff. Otherwise, it is impossible to see how the various bits are
+wired.
+
+And please have a separate patch the the DT binding, which needs
+separate Acks from the DT folks.
+
+> @@ -0,0 +1,232 @@
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/pci-ecam.h>
+> +#include <linux/delay.h>
+> +#include <linux/msi.h>
 > +
->  static int efifb_probe(struct platform_device *dev)
->  {
->  	struct fb_info *info;
-> @@ -152,7 +155,7 @@ static int efifb_probe(struct platform_device *dev)
->  	unsigned int size_total;
->  	char *option = NULL;
->  
-> -	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> +	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_dev_disabled)
->  		return -ENODEV;
->  
->  	if (fb_get_options("efifb", &option))
-> @@ -360,3 +363,64 @@ static struct platform_driver efifb_driver = {
->  };
->  
->  builtin_platform_driver(efifb_driver);
+> +#define MSI_MAX 256
 > +
-> +#ifndef CONFIG_X86
+> +struct tango_pcie {
+> +	DECLARE_BITMAP(bitmap, MSI_MAX);
+> +	spinlock_t lock;
+> +	void __iomem *mux;
+> +	void __iomem *msi_status;
+> +	void __iomem *msi_enable;
+> +	phys_addr_t msi_doorbell;
+
+Init of these three fields should be in this patch.
+
+> +	struct irq_domain *irq_dom;
+> +	struct irq_domain *msi_dom;
+> +	int irq;
+> +};
 > +
-> +static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
+> +/*** MSI CONTROLLER SUPPORT ***/
 > +
-> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
+> +static void dispatch(struct tango_pcie *pcie, unsigned long status, int base)
 > +{
-> +	u16 word;
+> +	unsigned int pos, virq;
 > +
-> +	pci_bar_found = true;
-> +
-> +	pci_read_config_word(dev, PCI_COMMAND, &word);
-> +	if (!(word & PCI_COMMAND_MEMORY)) {
-> +		pci_dev_disabled = true;
-> +		dev_err(&dev->dev,
-> +			"BAR %d: assigned to efifb but device is disabled!\n",
-> +			idx);
-> +		return;
+> +	for_each_set_bit(pos, &status, 32) {
+> +		virq = irq_find_mapping(pcie->irq_dom, base + pos);
+> +		generic_handle_irq(virq);
 > +	}
-> +
-> +	if (pci_claim_resource(dev, idx)) {
-> +		pci_dev_disabled = true;
-> +		dev_err(&dev->dev,
-> +			"BAR %d: failed to claim resource for efifb!\n", idx);
-> +		return;
-> +	}
-> +
-> +	dev_info(&dev->dev, "BAR %d: assigned to efifb\n", idx);
 > +}
 > +
-> +static void efifb_fixup_resources(struct pci_dev *dev)
+> +static void tango_msi_isr(struct irq_desc *desc)
 > +{
-> +	u64 base = screen_info.lfb_base;
-> +	u64 size = screen_info.lfb_size;
-> +	int i;
+> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
+> +	unsigned int status, base, pos = 0;
 > +
-> +	if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> +		return;
+> +	chained_irq_enter(chip, desc);
 > +
-> +	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-> +		base |= (u64)screen_info.ext_lfb_base << 32;
-> +
-> +	if (!base)
-> +		return;
-> +
-> +	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-> +		struct resource *res = &dev->resource[i];
-> +
-> +		if (!(res->flags & IORESOURCE_MEM))
-> +			continue;
-> +
-> +		if (res->start <= base && res->end >= base + size - 1) {
-> +			claim_efifb_bar(dev, i);
-> +			break;
-> +		}
+> +	while ((pos = find_next_bit(pcie->bitmap, MSI_MAX, pos)) < MSI_MAX) {
+> +		base = round_down(pos, 32);
+> +		status = readl_relaxed(pcie->msi_status + base / 8);
+> +		dispatch(pcie, status, base);
+
+Just inline dispatch here.
+
+> +		pos = base + 32;
 > +	}
-> +}
-> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_BASE_CLASS_DISPLAY,
-> +			       16, efifb_fixup_resources);
 > +
-> +#endif
-> -- 
-> 2.9.3
+> +	chained_irq_exit(chip, desc);
+> +}
+> +
+> +static void tango_ack(struct irq_data *data)
+> +{
+> +	u32 bit = BIT(data->hwirq);
+
+How does this work when hwirq is >= 32 (from what I gather, it can range
+from 0 to 255...).
+
+> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
+> +
+> +	writel_relaxed(bit, pcie->msi_status);
+> +}
+> +
+> +static void update_msi_enable(struct irq_data *data, bool unmask)
+> +{
+> +	unsigned long flags;
+> +	u32 val, bit = BIT(data->hwirq % 32);
+> +	int byte_offset = (data->hwirq / 32) * 4;
+> +	struct tango_pcie *pcie = data->chip_data;
+> +
+> +	spin_lock_irqsave(&pcie->lock, flags);
+> +	val = readl_relaxed(pcie->msi_enable + byte_offset);
+
+As I already mentioned in one of the previous series, this is a fairly
+pointless MMIO access. You could maintain a SW version of the enable
+register, update that copy and write it.
+
+But that's only a performance optimization, and it won't affect the
+behaviour. Your call.
+
+> +	val = unmask ? val | bit : val & ~bit;
+> +	writel_relaxed(val, pcie->msi_enable + byte_offset);
+> +	spin_unlock_irqrestore(&pcie->lock, flags);
+> +}
+> +
+> +static void tango_mask(struct irq_data *data)
+> +{
+> +	update_msi_enable(data, false);
+> +}
+> +
+> +static void tango_unmask(struct irq_data *data)
+> +{
+> +	update_msi_enable(data, true);
+> +}
+> +
+> +static int tango_set_affinity(struct irq_data *data,
+> +		const struct cpumask *mask, bool force)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static void tango_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
+> +
+> +	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
+> +	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
+> +	msg->data = data->hwirq;
+> +}
+> +
+> +static struct irq_chip tango_chip = {
+> +	.irq_ack		= tango_ack,
+> +	.irq_mask		= tango_mask,
+> +	.irq_unmask		= tango_unmask,
+> +	.irq_set_affinity	= tango_set_affinity,
+> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+> +};
+> +
+> +static void msi_ack(struct irq_data *data)
+> +{
+> +	irq_chip_ack_parent(data);
+> +}
+> +
+> +static void msi_mask(struct irq_data *data)
+> +{
+> +	pci_msi_mask_irq(data);
+> +	irq_chip_mask_parent(data);
+> +}
+> +
+> +static void msi_unmask(struct irq_data *data)
+> +{
+> +	pci_msi_unmask_irq(data);
+> +	irq_chip_unmask_parent(data);
+> +}
+> +
+> +static struct irq_chip msi_chip = {
+> +	.name = "MSI",
+> +	.irq_ack = msi_ack,
+> +	.irq_mask = msi_mask,
+> +	.irq_unmask = msi_unmask,
+> +};
+> +
+> +static struct msi_domain_info msi_dom_info = {
+> +	.flags	= MSI_FLAG_PCI_MSIX
+> +		| MSI_FLAG_USE_DEF_DOM_OPS
+> +		| MSI_FLAG_USE_DEF_CHIP_OPS,
+> +	.chip	= &msi_chip,
+> +};
+> +
+> +static int find_free_msi(struct irq_domain *dom, unsigned int virq)
+> +{
+> +	unsigned int pos;
+> +	struct tango_pcie *pcie = dom->host_data;
+> +
+> +	pos = find_first_zero_bit(pcie->bitmap, MSI_MAX);
+> +	if (pos >= MSI_MAX)
+> +		return -ENOSPC;
+> +	__set_bit(pos, pcie->bitmap);
+> +
+> +	irq_domain_set_info(dom, virq, pos, &tango_chip, pcie,
+> +			handle_edge_irq, NULL, NULL);
+> +
+> +	return 0;
+> +}
+> +
+> +static int tango_irq_domain_alloc(struct irq_domain *dom,
+> +		unsigned int virq, unsigned int nr_irqs, void *args)
+> +{
+> +	int err;
+> +	unsigned long flags;
+> +	struct tango_pcie *pcie = dom->host_data;
+> +
+> +	spin_lock_irqsave(&pcie->lock, flags);
+> +	err = find_free_msi(dom, virq);
+
+Just inline find_free_msi here. it is not called from anywhere else, and
+seeing the locking close to the use of the bitmap is definitely better.
+
+> +	spin_unlock_irqrestore(&pcie->lock, flags);
+> +
+> +	return err;
+> +}
+> +
+> +static void tango_irq_domain_free(struct irq_domain *dom,
+> +		unsigned int virq, unsigned int nr_irqs)
+> +{
+> +	unsigned long flags;
+> +	struct irq_data *data = irq_domain_get_irq_data(dom, virq);
+> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
+> +
+> +	spin_lock_irqsave(&pcie->lock, flags);
+> +	__clear_bit(data->hwirq, pcie->bitmap);
+> +	spin_unlock_irqrestore(&pcie->lock, flags);
+> +}
+> +
+> +static const struct irq_domain_ops irq_dom_ops = {
+> +	.alloc	= tango_irq_domain_alloc,
+> +	.free	= tango_irq_domain_free,
+> +};
+> +
+> +static int tango_msi_remove(struct platform_device *pdev)
+> +{
+> +	struct tango_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+> +	irq_domain_remove(pcie->msi_dom);
+> +	irq_domain_remove(pcie->irq_dom);
+> +
+> +	return 0;
+> +}
+> +
+> +static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
+> +{
+> +	int i, virq;
+> +	struct irq_domain *msi_dom, *irq_dom;
+> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +
+> +	spin_lock_init(&pcie->lock);
+> +	for (i = 0; i < MSI_MAX / 32; ++i)
+> +		writel_relaxed(0, pcie->msi_enable + i * 4);
+> +
+> +	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pcie);
+> +	if (!irq_dom) {
+> +		pr_err("Failed to create IRQ domain\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
+> +	if (!msi_dom) {
+> +		pr_err("Failed to create MSI domain\n");
+> +		irq_domain_remove(irq_dom);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	virq = platform_get_irq(pdev, 1);
+> +	if (virq <= 0) {
+> +		pr_err("Failed to map IRQ\n");
+> +		irq_domain_remove(msi_dom);
+> +		irq_domain_remove(irq_dom);
+> +		return -ENXIO;
+> +	}
+
+Maybe start the probe with this. No need to start allocating data
+structures if the DT is wrong.
+
+> +
+> +	pcie->irq_dom = irq_dom;
+> +	pcie->msi_dom = msi_dom;
+> +	pcie->irq = virq;
+> +	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
+> +
+> +	return 0;
+> +}
 > 
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
