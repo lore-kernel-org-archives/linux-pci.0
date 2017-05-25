@@ -1,250 +1,436 @@
-Return-Path: <SRS0=Lhk4=5F=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=Lhk4=5F=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
-	<david.laight@aculab.com>, linux-pci <linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
-	<phuong_nguyen@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, Mason
-	<slash.tmp@free.fr>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
-Message-ID: <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
-Date: Wed, 31 May 2017 15:33:35 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
+ <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
+ <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>,
+ <lorenzo.pieralisi@arm.com>
+Subject: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+Date: Thu, 25 May 2017 12:37:26 +0100
+Message-ID: <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
-Content-Type: text/plain; charset=ISO-8859-15
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, minyard@acm.org, gabriele.paoloni@huawei.com,
+ benh@kernel.crashing.org, john.garry@huawei.com, linux-kernel@vger.kernel.org,
+ xuwei5@hisilicon.com, linuxarm@huawei.com, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, olof@lixom.net, brian.starkey@arm.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver is required to work around several hardware bugs
-in the PCIe controller.
+From: Gabriele <gabriele.paoloni@huawei.com>
 
-NB: Revision 1 does not support legacy interrupts, or IO space.
+On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access
+I/O with some special host-local I/O ports known on x86. As their I/O
+space are not memory mapped like PCI/PCIE MMIO host bridges, this patch is
+meant to support a new class of I/O host controllers where the local IO
+ports of the children devices are translated into the Indirect I/O address
+space.
+Through the handler attach callback, all the I/O translations are done
+before starting the enumeration on children devices and the translated
+addresses are replaced in the children resources.
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 ---
- drivers/pci/host/Kconfig      |   8 +++
- drivers/pci/host/Makefile     |   1 +
- drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++=
-++++++++++++++++++++++++
- include/linux/pci_ids.h       |   2 +
- 4 files changed, 175 insertions(+)
+ drivers/acpi/arm64/Makefile            |   1 +
+ drivers/acpi/arm64/acpi_indirect_pio.c | 301 +++++++++++++++++++++++++++++++++
+ drivers/acpi/internal.h                |   5 +
+ drivers/acpi/scan.c                    |   1 +
+ include/acpi/acpi_indirect_pio.h       |  24 +++
+ 5 files changed, 332 insertions(+)
+ create mode 100644 drivers/acpi/arm64/acpi_indirect_pio.c
+ create mode 100644 include/acpi/acpi_indirect_pio.h
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a827c3..5183d9095c3a 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -285,6 +285,14 @@ config PCIE_ROCKCHIP
- =09  There is 1 internal PCIe port available to support GEN2 with
- =09  4 slots.
-=20
-+config PCIE_TANGO
-+=09bool "Tango PCIe controller"
-+=09depends on ARCH_TANGO && PCI_MSI && OF
-+=09select PCI_HOST_COMMON
-+=09help
-+=09  Say Y here to enable PCIe controller support for Sigma Designs
-+=09  Tango systems, such as SMP8759 and later chips.
-+
- config VMD
- =09depends on PCI_MSI && X86_64
- =09tristate "Intel Volume Management Device Driver"
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 084cb4983645..fc7ea90196f3 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -32,4 +32,5 @@ obj-$(CONFIG_PCI_HOST_THUNDER_PEM) +=3D pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) +=3D pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) +=3D pcie-artpec6.o
- obj-$(CONFIG_PCIE_ROCKCHIP) +=3D pcie-rockchip.o
-+obj-$(CONFIG_PCIE_TANGO) +=3D pcie-tango.o
- obj-$(CONFIG_VMD) +=3D vmd.o
-diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+diff --git a/drivers/acpi/arm64/Makefile b/drivers/acpi/arm64/Makefile
+index 1017def..3944775 100644
+--- a/drivers/acpi/arm64/Makefile
++++ b/drivers/acpi/arm64/Makefile
+@@ -1,2 +1,3 @@
+ obj-$(CONFIG_ACPI_IORT) 	+= iort.o
+ obj-$(CONFIG_ACPI_GTDT) 	+= gtdt.o
++obj-$(CONFIG_INDIRECT_PIO) += acpi_indirect_pio.o
+diff --git a/drivers/acpi/arm64/acpi_indirect_pio.c b/drivers/acpi/arm64/acpi_indirect_pio.c
 new file mode 100644
-index 000000000000..67aaadcc1c5e
+index 0000000..7813f73
 --- /dev/null
-+++ b/drivers/pci/host/pcie-tango.c
-@@ -0,0 +1,164 @@
-+#include <linux/pci-ecam.h>
-+#include <linux/delay.h>
-+#include <linux/of.h>
-+
-+#define MSI_MAX 256
-+
-+#define SMP8759_MUX=09=090x48
-+#define SMP8759_TEST_OUT=090x74
-+
-+struct tango_pcie {
-+=09void __iomem *mux;
-+};
-+
-+/*** HOST BRIDGE SUPPORT ***/
-+
-+static int smp8759_config_read(struct pci_bus *bus,
-+=09=09unsigned int devfn, int where, int size, u32 *val)
-+{
-+=09int ret;
-+=09struct pci_config_window *cfg =3D bus->sysdata;
-+=09struct tango_pcie *pcie =3D dev_get_drvdata(cfg->parent);
-+
-+=09/*
-+=09 * QUIRK #1
-+=09 * Reads in configuration space outside devfn 0 return garbage.
-+=09 */
-+=09if (devfn !=3D 0)
-+=09=09return PCIBIOS_FUNC_NOT_SUPPORTED;
-+
-+=09/*
-+=09 * QUIRK #2
-+=09 * Unfortunately, config and mem spaces are muxed.
-+=09 * Linux does not support such a setting, since drivers are free
-+=09 * to access mem space directly, at any time.
-+=09 * Therefore, we can only PRAY that config and mem space accesses
-+=09 * NEVER occur concurrently.
-+=09 */
-+=09writel_relaxed(1, pcie->mux);
-+=09ret =3D pci_generic_config_read(bus, devfn, where, size, val);
-+=09writel_relaxed(0, pcie->mux);
-+
-+=09return ret;
-+}
-+
-+static int smp8759_config_write(struct pci_bus *bus,
-+=09=09unsigned int devfn, int where, int size, u32 val)
-+{
-+=09int ret;
-+=09struct pci_config_window *cfg =3D bus->sysdata;
-+=09struct tango_pcie *pcie =3D dev_get_drvdata(cfg->parent);
-+
-+=09writel_relaxed(1, pcie->mux);
-+=09ret =3D pci_generic_config_write(bus, devfn, where, size, val);
-+=09writel_relaxed(0, pcie->mux);
-+
-+=09return ret;
-+}
-+
-+static struct pci_ecam_ops smp8759_ecam_ops =3D {
-+=09.bus_shift=09=3D 20,
-+=09.pci_ops=09=3D {
-+=09=09.map_bus=09=3D pci_ecam_map_bus,
-+=09=09.read=09=09=3D smp8759_config_read,
-+=09=09.write=09=09=3D smp8759_config_write,
-+=09}
-+};
-+
-+static const struct of_device_id tango_pcie_ids[] =3D {
-+=09{ .compatible =3D "sigma,smp8759-pcie" },
-+=09{ /* sentinel */ },
-+};
-+
-+static int tango_check_pcie_link(void __iomem *test_out)
-+{
-+=09int i;
-+
-+=09writel_relaxed(16, test_out);
-+=09for (i =3D 0; i < 10; ++i) {
-+=09=09u32 ltssm_state =3D readl_relaxed(test_out) >> 8;
-+=09=09if ((ltssm_state & 0x1f) =3D=3D 0xf) /* L0 */
-+=09=09=09return 0;
-+=09=09usleep_range(3000, 4000);
-+=09}
-+
-+=09return -ENODEV;
-+}
-+
-+static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
-+{
-+=09pcie->mux=09=09=3D base + SMP8759_MUX;
-+
-+=09return tango_check_pcie_link(base + SMP8759_TEST_OUT);
-+}
-+
-+static int tango_pcie_probe(struct platform_device *pdev)
-+{
-+=09int ret =3D -EINVAL;
-+=09void __iomem *base;
-+=09struct resource *res;
-+=09struct tango_pcie *pcie;
-+=09struct device *dev =3D &pdev->dev;
-+
-+=09pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
-+=09pr_err("Tainting kernel... Use driver at your own risk\n");
-+=09add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-+
-+=09pcie =3D devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+=09if (!pcie)
-+=09=09return -ENOMEM;
-+
-+=09platform_set_drvdata(pdev, pcie);
-+
-+=09res =3D platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+=09base =3D devm_ioremap_resource(&pdev->dev, res);
-+=09if (IS_ERR(base))
-+=09=09return PTR_ERR(base);
-+
-+=09if (of_device_is_compatible(dev->of_node, "sigma,smp8759-pcie"))
-+=09=09ret =3D smp8759_init(pcie, base);
-+
-+=09if (ret)
-+=09=09return ret;
-+
-+=09return pci_host_common_probe(pdev, &smp8759_ecam_ops);
-+}
-+
-+static struct platform_driver tango_pcie_driver =3D {
-+=09.probe=09=3D tango_pcie_probe,
-+=09.driver=09=3D {
-+=09=09.name =3D KBUILD_MODNAME,
-+=09=09.of_match_table =3D tango_pcie_ids,
-+=09},
-+};
-+
-+builtin_platform_driver(tango_pcie_driver);
-+
++++ b/drivers/acpi/arm64/acpi_indirect_pio.c
+@@ -0,0 +1,301 @@
 +/*
-+ * QUIRK #3
-+ * The root complex advertizes the wrong device class.
-+ * Header Type 1 is for PCI-to-PCI bridges.
-+ */
-+static void tango_fixup_class(struct pci_dev *dev)
-+{
-+=09dev->class =3D PCI_CLASS_BRIDGE_PCI << 8;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x24, tango_fixup_class);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x28, tango_fixup_class);
-+
-+/*
-+ * QUIRK #4
-+ * The root complex exposes a "fake" BAR, which is used to filter
-+ * bus-to-system accesses. Only accesses within the range defined
-+ * by this BAR are forwarded to the host, others are ignored.
++ * ACPI support for indirect-PIO bus.
 + *
-+ * By default, the DMA framework expects an identity mapping,
-+ * and DRAM0 is mapped at 0x80000000.
++ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
++ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
 + */
-+static void tango_fixup_bar(struct pci_dev *dev)
-+{
-+=09dev->non_compliant_bars =3D true;
-+=09pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000000);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x24, tango_fixup_bar);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x28, tango_fixup_bar);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index f020ab4079d3..b577dbe46f8f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1369,6 +1369,8 @@
- #define PCI_DEVICE_ID_TTI_HPT374=090x0008
- #define PCI_DEVICE_ID_TTI_HPT372N=090x0009=09/* apparently a 372N variant?=
- */
-=20
-+#define PCI_VENDOR_ID_SIGMA=09=090x1105
 +
- #define PCI_VENDOR_ID_VIA=09=090x1106
- #define PCI_DEVICE_ID_VIA_8763_0=090x0198
- #define PCI_DEVICE_ID_VIA_8380_0=090x0204
---=20
-2.11.0
++#include <linux/acpi.h>
++#include <linux/platform_device.h>
++#include <linux/logic_pio.h>
++
++#include <acpi/acpi_indirect_pio.h>
++
++ACPI_MODULE_NAME("indirect PIO");
++
++#define INDIRECT_PIO_INFO(desc) ((unsigned long)&desc)
++
++static acpi_status acpi_count_logic_iores(struct acpi_resource *res,
++					   void *data)
++{
++	int *res_cnt = data;
++
++	if (!acpi_dev_filter_resource_type(res, IORESOURCE_IO))
++		(*res_cnt)++;
++
++	return AE_OK;
++}
++
++static acpi_status acpi_read_one_logicpiores(struct acpi_resource *res,
++		void *data)
++{
++	struct acpi_resource **resource = data;
++
++	if (!acpi_dev_filter_resource_type(res, IORESOURCE_IO)) {
++		memcpy((*resource), res, sizeof(struct acpi_resource));
++		(*resource)->length = sizeof(struct acpi_resource);
++		(*resource)->type = res->type;
++		(*resource)++;
++	}
++
++	return AE_OK;
++}
++
++static acpi_status
++acpi_build_logicpiores_template(struct acpi_device *adev,
++			struct acpi_buffer *buffer)
++{
++	acpi_handle handle = adev->handle;
++	struct acpi_resource *resource;
++	acpi_status status;
++	int res_cnt = 0;
++
++	status = acpi_walk_resources(handle, METHOD_NAME__CRS,
++				     acpi_count_logic_iores, &res_cnt);
++	if (ACPI_FAILURE(status)) {
++		dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
++		return -EINVAL;
++	}
++
++	if (!res_cnt) {
++		dev_err(&adev->dev, "no logic IO resources\n");
++		return -ENODEV;
++	}
++
++	buffer->length = sizeof(struct acpi_resource) * (res_cnt + 1);
++	buffer->pointer = kzalloc(buffer->length, GFP_KERNEL);
++	if (!buffer->pointer)
++		return -ENOMEM;
++
++	resource = (struct acpi_resource *)buffer->pointer;
++	status = acpi_walk_resources(handle, METHOD_NAME__CRS,
++				     acpi_read_one_logicpiores, &resource);
++	if (ACPI_FAILURE(status)) {
++		kfree(buffer->pointer);
++		dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
++		return -EINVAL;
++	}
++
++	resource->type = ACPI_RESOURCE_TYPE_END_TAG;
++	resource->length = sizeof(struct acpi_resource);
++
++	return 0;
++}
++
++static int acpi_translate_logicpiores(struct acpi_device *adev,
++		struct acpi_device *host, struct acpi_buffer *buffer)
++{
++	struct acpi_resource *resource = buffer->pointer;
++	unsigned long sys_port;
++	struct device *dev = &adev->dev;
++	union acpi_resource_data *trans_data = &resource->data;
++	resource_size_t bus_addr;
++	resource_size_t max_pio;
++	resource_size_t length;
++
++	switch (resource->type) {
++	case ACPI_RESOURCE_TYPE_ADDRESS16:
++		if (trans_data->address16.min_address_fixed !=
++				trans_data->address16.max_address_fixed) {
++			dev_warn(dev, "variable I/O resource is invalid!\n");
++			return -EINVAL;
++		}
++		bus_addr = trans_data->address16.address.minimum;
++		length = trans_data->address16.address.address_length;
++		max_pio = U16_MAX;
++		break;
++	case ACPI_RESOURCE_TYPE_ADDRESS32:
++		if (trans_data->address32.min_address_fixed !=
++				trans_data->address32.max_address_fixed) {
++			dev_warn(dev, "variable I/O resource is invalid!\n");
++			return -EINVAL;
++		}
++		bus_addr = trans_data->address32.address.minimum;
++		length = trans_data->address32.address.address_length;
++		max_pio = U32_MAX;
++		break;
++	case ACPI_RESOURCE_TYPE_ADDRESS64:
++		if (trans_data->address64.min_address_fixed !=
++				trans_data->address64.max_address_fixed) {
++			dev_warn(dev, "variable I/O resource is invalid!\n");
++			return -EINVAL;
++		}
++		bus_addr = trans_data->address64.address.minimum;
++		length = trans_data->address64.address.address_length;
++		max_pio = U64_MAX;
++		break;
++	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
++		if (trans_data->ext_address64.min_address_fixed !=
++				trans_data->ext_address64.max_address_fixed) {
++			dev_warn(dev, "variable I/O resource is invalid!\n");
++			return -EINVAL;
++		}
++		bus_addr = trans_data->ext_address64.address.minimum;
++		length = trans_data->ext_address64.address.address_length;
++		max_pio = U64_MAX;
++		break;
++	case ACPI_RESOURCE_TYPE_IO:
++		bus_addr = trans_data->io.minimum;
++		length = trans_data->io.address_length;
++		max_pio = U16_MAX;
++		break;
++	case ACPI_RESOURCE_TYPE_FIXED_IO:
++		bus_addr = trans_data->fixed_io.address;
++		length = trans_data->fixed_io.address_length;
++		max_pio = U16_MAX;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	sys_port = logic_pio_trans_hwaddr(&host->fwnode, bus_addr);
++	if (sys_port == -1) {
++		dev_err(dev, "translate bus-addr(0x%llx) fail!\n", bus_addr);
++		return -EFAULT;
++	}
++
++	/*
++	 * we need to check if the resource address can contain the
++	 * translated IO token
++	 */
++	if ((sys_port + length) > max_pio) {
++		dev_err(dev, "sys_port exceeds the max resource address\n");
++		return -ENOSPC;
++	}
++
++	switch (resource->type) {
++	case ACPI_RESOURCE_TYPE_ADDRESS16:
++		trans_data->address16.address.minimum = sys_port;
++		trans_data->address16.address.maximum = sys_port + length;
++		break;
++	case ACPI_RESOURCE_TYPE_ADDRESS32:
++		trans_data->address32.address.minimum = sys_port;
++		trans_data->address32.address.maximum = sys_port + length;
++		break;
++	case ACPI_RESOURCE_TYPE_ADDRESS64:
++		trans_data->address64.address.minimum = sys_port;
++		trans_data->address64.address.maximum = sys_port + length;
++		break;
++	case ACPI_RESOURCE_TYPE_EXTENDED_ADDRESS64:
++		trans_data->ext_address64.address.minimum = sys_port;
++		trans_data->ext_address64.address.maximum = sys_port + length;
++		break;
++	case ACPI_RESOURCE_TYPE_IO:
++		trans_data->io.minimum = sys_port;
++		trans_data->io.maximum = sys_port + length;
++		break;
++	case ACPI_RESOURCE_TYPE_FIXED_IO:
++		trans_data->fixed_io.address = sys_port;
++		break;
++	}
++	return 0;
++}
++
++/*
++ * update/set the current I/O resource of the designated device node.
++ * after this calling, the enumeration can be started as the I/O resource
++ * had been translated to logicial I/O from bus-local I/O.
++ *
++ * @adev: the device node to be updated the I/O resource;
++ * @host: the device node where 'adev' is attached, which can be not
++ *	the parent of 'adev';
++ *
++ * return 0 when successful, negative is for failure.
++ */
++int acpi_set_logic_pio_resource(struct device *child,
++		struct device *hostdev)
++{
++	struct acpi_device *adev;
++	struct acpi_device *host;
++	struct acpi_buffer buffer;
++	acpi_status status;
++	int ret;
++
++	if (!child || !hostdev)
++		return -EINVAL;
++
++	host = to_acpi_device(hostdev);
++	adev = to_acpi_device(child);
++
++	/* check the device state */
++	if (!adev->status.present) {
++		dev_info(child, "ACPI: device is not present!\n");
++		return 0;
++	}
++	/* whether the child had been enumerated? */
++	if (acpi_device_enumerated(adev)) {
++		dev_info(child, "ACPI: had been enumerated!\n");
++		return 0;
++	}
++
++	/* read the _CRS and convert as acpi_buffer */
++	status = acpi_build_logicpiores_template(adev, &buffer);
++	if (ACPI_FAILURE(status)) {
++		dev_warn(child, "Failure evaluating %s\n", METHOD_NAME__CRS);
++		return -ENODEV;
++	}
++
++	/* translate the I/O resources */
++	ret = acpi_translate_logicpiores(adev, host, &buffer);
++	if (ret) {
++		kfree(buffer.pointer);
++		dev_err(child, "Translate I/O range FAIL!\n");
++		return ret;
++	}
++
++	/* set current resource... */
++	status = acpi_set_current_resources(adev->handle, &buffer);
++	kfree(buffer.pointer);
++	if (ACPI_FAILURE(status)) {
++		dev_err(child, "Error evaluating _SRS (0x%x)\n", status);
++		ret = -EIO;
++	}
++
++	return ret;
++}
++
++/* All the host devices which apply indirect-PIO can be listed here. */
++static const struct acpi_device_id acpi_indirect_host_id[] = {
++	{""},
++};
++
++static int acpi_indirectpio_attach(struct acpi_device *adev,
++				const struct acpi_device_id *id)
++{
++	struct indirect_pio_device_desc *hostdata;
++	struct platform_device *pdev;
++	int ret;
++
++	hostdata = (struct indirect_pio_device_desc *)id->driver_data;
++	if (!hostdata || !hostdata->pre_setup)
++		return -EINVAL;
++
++	ret = hostdata->pre_setup(adev, hostdata->pdata);
++	if (!ret) {
++		pdev = acpi_create_platform_device(adev, NULL);
++		if (IS_ERR_OR_NULL(pdev)) {
++			dev_err(&adev->dev, "Create platform device for host FAIL!\n");
++			return -EFAULT;
++		}
++		acpi_device_set_enumerated(adev);
++		ret = 1;
++	}
++
++	return ret;
++}
++
++
++static struct acpi_scan_handler acpi_indirect_handler = {
++	.ids = acpi_indirect_host_id,
++	.attach = acpi_indirectpio_attach,
++};
++
++void __init acpi_indirectio_scan_init(void)
++{
++	acpi_scan_add_handler(&acpi_indirect_handler);
++}
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 66229ff..bf8aaf8 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -31,6 +31,11 @@ void acpi_processor_init(void);
+ void acpi_platform_init(void);
+ void acpi_pnp_init(void);
+ void acpi_int340x_thermal_init(void);
++#ifdef CONFIG_INDIRECT_PIO
++void acpi_indirectio_scan_init(void);
++#else
++static inline void acpi_indirectio_scan_init(void) {}
++#endif
+ #ifdef CONFIG_ARM_AMBA
+ void acpi_amba_init(void);
+ #else
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index e39ec7b..37dd23c 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -2035,6 +2035,7 @@ int __init acpi_scan_init(void)
+ 	acpi_int340x_thermal_init();
+ 	acpi_amba_init();
+ 	acpi_watchdog_init();
++	acpi_indirectio_scan_init();
+ 
+ 	acpi_scan_add_handler(&generic_device_handler);
+ 
+diff --git a/include/acpi/acpi_indirect_pio.h b/include/acpi/acpi_indirect_pio.h
+new file mode 100644
+index 0000000..efc5c43
+--- /dev/null
++++ b/include/acpi/acpi_indirect_pio.h
+@@ -0,0 +1,24 @@
++/*
++ * ACPI support for indirect-PIO bus.
++ *
++ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
++ * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
++ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef _ACPI_INDIRECT_PIO_H
++#define _ACPI_INDIRECT_PIO_H
++
++struct indirect_pio_device_desc {
++	void *pdata; /* device relevant info data */
++	int (*pre_setup)(struct acpi_device *adev, void *pdata);
++};
++
++int acpi_set_logic_pio_resource(struct device *child,
++		struct device *hostdev);
++
++#endif
+-- 
+2.7.4
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
