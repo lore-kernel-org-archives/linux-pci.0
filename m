@@ -1,93 +1,194 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58082 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755018AbdELK12 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 12 May 2017 06:27:28 -0400
-Date: Fri, 12 May 2017 11:28:25 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Timmy Li <lixiaoping3@huawei.com>
-Cc: bhelgaas@google.com, tn@semihalf.com, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] arm64: PCI: free all allocated memory in case of failure
-Message-ID: <20170512102825.GA10929@red-moon>
-References: <20170512095747.744688-1-lixiaoping3@huawei.com>
+Received: from mail-io0-f169.google.com ([209.85.223.169]:34333 "EHLO
+        mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1761417AbdEZJRE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 May 2017 05:17:04 -0400
+Received: by mail-io0-f169.google.com with SMTP id k91so6099764ioi.1
+        for <linux-pci@vger.kernel.org>; Fri, 26 May 2017 02:16:56 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170512095747.744688-1-lixiaoping3@huawei.com>
+In-Reply-To: <20170526060843.GA4446@wunner.de>
+References: <20170506090755.GB19740@wunner.de> <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
+ <20170510084143.GA16261@wunner.de> <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
+ <20170525123047.GA4172@wunner.de> <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
+ <20170525124445.GA4181@wunner.de> <CAKv+Gu-7dr=upMcs2SsE+7+LRA2q82=exDrtt6CMniiMjZU2YA@mail.gmail.com>
+ <20170525125650.GA4196@wunner.de> <CAKv+Gu_==Q5L+w2ihZ6u-=_AKZJun8D=sUWhgx6Pvzt-K99fTA@mail.gmail.com>
+ <20170526060843.GA4446@wunner.de>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Fri, 26 May 2017 11:16:55 +0200
+Message-ID: <CAKv+Gu_fbNSK+LuWmQGqLHtu3rF9BdYwNB+K-myNXS=X+goXkQ@mail.gmail.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 12, 2017 at 05:57:47PM +0800, Timmy Li wrote:
-> There are some memory allocations in pci_acpi_scan_root(). But
-> ri, root_ops and ri->cfg are not freed properly in failure cases,
-> which results in memory leaks. This patch fixes the potential
-> memory leaks.
-> 
-> Signed-off-by: Timmy Li <lixiaoping3@huawei.com>
-> ---
->  arch/arm64/kernel/pci.c | 22 ++++++++++++++--------
->  1 file changed, 14 insertions(+), 8 deletions(-)
-> 
-> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-> index 4f0e3eb..e7e88ce 100644
-> --- a/arch/arm64/kernel/pci.c
-> +++ b/arch/arm64/kernel/pci.c
-> @@ -188,25 +188,22 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  
->  	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
->  	if (!ri)
-> -		return NULL;
-> +		goto err_allocri;
->  
->  	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
->  	if (!root_ops)
-> -		return NULL;
-> +		goto err_allocops;
->  
->  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
-> -	if (!ri->cfg) {
-> -		kfree(ri);
-> -		kfree(root_ops);
-> -		return NULL;
-> -	}
-> +	if (!ri->cfg)
-> +		goto err_ecam;
->  
->  	root_ops->release_info = pci_acpi_generic_release_info;
+On 25 May 2017 at 23:08, Lukas Wunner <lukas@wunner.de> wrote:
+> On Thu, May 25, 2017 at 06:07:35AM -0700, Ard Biesheuvel wrote:
+>> On 25 May 2017 at 05:56, Lukas Wunner <lukas@wunner.de> wrote:
+>> > On Thu, May 25, 2017 at 05:47:59AM -0700, Ard Biesheuvel wrote:
+>> >> On 25 May 2017 at 05:44, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> > On Thu, May 25, 2017 at 05:36:01AM -0700, Ard Biesheuvel wrote:
+>> >> >> On 25 May 2017 at 05:30, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> > On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
+>> >> >> >> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> >> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
+>> >> >> >> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> >> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
+>> >> >> >> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
+>> >> >> >> >> >> > The CPER parser assumes that the class code is big endian, but at least
+>> >> >> >> >> >> > on this edk2-derived Intel Purley platform it's little endian:
+>> >> >> >> >> > [snip]
+>> >> >> >> >> >> > --- a/include/linux/cper.h
+>> >> >> >> >> >> > +++ b/include/linux/cper.h
+>> >> >> >> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
+>> >> >> >> >> >> >         struct {
+>> >> >> >> >> >> >                 __u16   vendor_id;
+>> >> >> >> >> >> >                 __u16   device_id;
+>> >> >> >> >> >> > -               __u8    class_code[3];
+>> >> >> >> >> >> > +               __u32   class_code:24;
+>> >> >> >> >> >>
+>> >> >> >> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
+>> >> >> >> >> >> order of p[] above?
+>> >> >> >> >> >
+>> >> >> >> >> > Hm, why would you like to avoid it?
+>> >> >> >> >>
+>> >> >> >> >> Because we shouldn't use bitfields in structs in code that should be
+>> >> >> >> >> portable across archs with different endiannesses.
+>> >> >> >> >
+>> >> >> >> > The CPER header is defined in the UEFI spec and UEFI mandates that the
+>> >> >> >> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
+>> >> >> >> >
+>> >> >> >>
+>> >> >> >> No it does not mandate that at all. It mandates how the core should be
+>> >> >> >> configured when running in UEFI, but the OS can do anything it likes.
+>> >> >> >>
+>> >> >> >> We are still interested in adding limited UEFI support to big endian
+>> >> >> >> arm64 in the future (i.e., access to a limited set of firmware tables
+>> >> >> >> but no runtime services), and I am not going to merge anything that
+>> >> >> >> moves us away from that goal.
+>> >> >> >>
+>> >> >> >> > So your argument seems moot to me.  Am I missing something?  Do you
+>> >> >> >> > have another argument?
+>> >> >> >> >
+>> >> >> >> > Moreover, the vendor_id and device_id fields are little endian as well
+>> >> >> >> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
+>> >> >> >> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
+>> >> >> >> >
+>> >> >> >>
+>> >> >> >> Indeed. I am aware we will need to add various endian-neutral
+>> >> >> >> accessors in the future.
+>> >> >> >>
+>> >> >> >> >> >  The class_code element isn't
+>> >> >> >> >> > referenced anywhere else in the kernel and this isn't a uapi header,
+>> >> >> >> >> > so the change would only impact out-of-tree drivers.  Not sure if
+>> >> >> >> >> > any exist which might be interested in CPER parsing.
+>> >> >> >> >> >
+>> >> >> >> >>
+>> >> >> >> >> The point is that the change in the struct definition is simply not
+>> >> >> >> >> necessary, given that inverting the order of p[] already achieves
+>> >> >> >> >> exactly what we want.
+>> >> >> >> >
+>> >> >> >> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
+>> >> >> >> > Please excuse my stubbornness.
+>> >> >> >> >
+>> >> >> >>
+>> >> >> >> Stubbornness alone is not going to convince me. What *could* convince
+>> >> >> >> me (although unlikely) is a quote from the C spec which explains why
+>> >> >> >> it is 100% legal to make assumptions about how bitfields are projected
+>> >> >> >> onto byte locations in memory.
+>> >> >> >
+>> >> >> > All structs in cper.h are declared "packed", so what you're asking for
+>> >> >> > isn't defined in the C spec but in the GCC documentation:
+>> >> >> >
+>> >> >> >    "The packed attribute specifies that a variable or structure field
+>> >> >> >     should have the smallest possible alignment -- one byte for a variable,
+>> >> >> >     and one bit for a field, unless you specify a larger value with the
+>> >> >> >     aligned attribute."
+>> >> >> >
+>> >> >> > So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
+>> >> >> > le16_to_cpu() etc both for the class_code changed by the patch as well as
+>> >> >> > all the other members of the struct not touched by the patch when adding
+>> >> >> > "endianness mixed mode" for aarch64.
+>> >> >>
+>> >> >> I'm not talking about the 'packed' attribute but about the fact that
+>> >> >> the C spec does not guarantee that bitfields are projected onto byte
+>> >> >> locations in memory in the way you expect.
+>> >> >
+>> >> > What relevance does that have as long as the header file uses a pragma
+>> >> > specific to gcc (or other compilers that are compatible to gcc with
+>> >> > respect to that pragma (such as clang)), and gcc guarantees the
+>> >> > correct layout regardless of endianness?
+>> >>
+>> >> The relevance is that we should not add GCC specific code because you
+>> >> think it looks prettier.
+>> >
+>> > The code already *is* gcc-specific.
+>> >
+>>
+>> The entire kernel is GCC specific. But that does not justify adding
+>> more GCC-isms throughout the code.
+>
+> How is the patch adding a GCC-ism?
+>
 
-You are missing this ^^^^^^^^^
+Because you rely on behavior which is not defined by the C spec.
 
->  	root_ops->prepare_resources = pci_acpi_root_prepare_resources;
->  	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
->  	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
->  	if (!bus)
+>
+>> >> And where does GCC guarantee the correct layout? Did you find an
+>> >> unambiguous GCC documentation reference that explains how bitfields
+>> >> are mapped onto byte locations?
+>> >
+>> > See the excerpt I quoted above.
+>> >
+>>
+>> 'packed' has nothing to do with it. This is about bitfields in structs.
+>
+> 'packed' has *everything* to do with it. :-)
+>
+> The struct contains a *single* bitfield surrounded by non-bitfields.
+> If there were multiple consecutive bitfields, then yes, things wouldn't
+> be as clear.
+>
+> The bitfield as well as all surrounding non-bitfields have a size which
+> is a multiple of full bytes.  And this is where the 'packed' attribute
+> comes into play, it guarantees that there's no padding as long as all
+> members of the struct are byte-aligned.
+>
 
-And how it works if (bus == NULL) here.
+No, it does not guarantee that at all. Observed behavior != guarantee.
+'Guarantee' implies that it is documented in a pertinent spec, and
+that we can file a bug with the GCC/Clang projects if the behavior
+changes at any point.
 
-Lorenzo
+Nobody is asking you to theorize and make inferences about how
+attribute X and behavior Y offer guarantee Z. All it takes is an
+unambiguous quote from the C spec that describes how the struct
+definition is mapped onto bits in memory. You have offered no such
+quote, for which I don't blame you because I am convinced that the C
+spec does not define this in sufficient detail.
 
-> -		return NULL;
-> +		goto err_rootcreate;
->  
->  	pci_bus_size_bridges(bus);
->  	pci_bus_assign_resources(bus);
-> @@ -215,6 +212,15 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->  		pcie_bus_configure_settings(child);
->  
->  	return bus;
-> +
-> +err_rootcreate:
-> +	pci_ecam_free(ri->cfg);
-> +err_ecam:
-> +	kfree(root_ops);
-> +err_allocops:
-> +	kfree(ri);
-> +err_allocri:
-> +	return NULL;
->  }
->  
->  void pcibios_add_bus(struct pci_bus *bus)
-> -- 
-> 1.9.1
-> 
-> 
+>
+>>
+>> >
+>> >> Or does 'guarantee' mean 'I tested it and it works'?
+>> >
+>> > I tested it with x86_64 (le) and ppc32 (be) and it works.
+>> > I don't have an aarch64 machine available here.
+>> >
+>>
+>> Good.
+>
+> Good to merge then?
+>
+
+No. For the last time, this patch will not be merged. The only
+approach that will be merged is keeping the char[3] array and
+inverting the order of the printk() arguments.
+
+-- 
+Ard.
