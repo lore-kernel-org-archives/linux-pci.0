@@ -1,110 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:6914 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751648AbdEZCAU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 22:00:20 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8 0/4]   add PCIe driver for Kirin PCIe
+Date: Fri, 26 May 2017 09:53:29 +0800
+Message-ID: <20170526015333.92482-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 4 May 2017 23:20:08 -0700
-Message-ID: <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
-        USB list <linux-usb@vger.kernel.org>,
-        alsa-devel@alsa-project.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 4, 2017 at 2:21 AM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
-> bytes. Instead we convert them to use uuid_le type. At the same time we
-> convert current users.
->
-> acpi_str_to_uuid() becomes useless after the conversion and it's safe to
-> get rid of it.
->
-> The conversion fixes a potential bug in int340x_thermal as well since
-> we have to use memcmp() on binary data.
->
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Amir Goldstein <amir73il@gmail.com>
-> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
-> Cc: Jani Nikula <jani.nikula@linux.intel.com>
-> Cc: Ben Skeggs <bskeggs@redhat.com>
-> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Adrian Hunter <adrian.hunter@intel.com>
-> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Zhang Rui <rui.zhang@intel.com>
-> Cc: Felipe Balbi <balbi@kernel.org>
-> Cc: Mathias Nyman <mathias.nyman@intel.com>
-> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> Cc: Liam Girdwood <lgirdwood@gmail.com>
-> Cc: Mark Brown <broonie@kernel.org>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-[..]
-> diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
-> index 0f7982a1caaf..bd3e45ede056 100644
-> --- a/drivers/acpi/nfit/core.c
-> +++ b/drivers/acpi/nfit/core.c
-> @@ -74,11 +74,11 @@ struct nfit_table_prev {
->         struct list_head flushes;
->  };
->
-> -static u8 nfit_uuid[NFIT_UUID_MAX][16];
-> +static uuid_le nfit_uuid[NFIT_UUID_MAX];
->
-> -const u8 *to_nfit_uuid(enum nfit_uuids id)
-> +const uuid_le *to_nfit_uuid(enum nfit_uuids id)
->  {
-> -       return nfit_uuid[id];
-> +       return &nfit_uuid[id];
->  }
->  EXPORT_SYMBOL(to_nfit_uuid);
->
-> @@ -207,7 +207,7 @@ int acpi_nfit_ctl(struct nvdimm_bus_descriptor *nd_desc, struct nvdimm *nvdimm,
->         u32 offset, fw_status = 0;
->         acpi_handle handle;
->         unsigned int func;
-> -       const u8 *uuid;
-> +       const uuid_le *uuid;
->         int rc, i;
->
->         func = cmd;
-> @@ -394,7 +394,7 @@ int nfit_spa_type(struct acpi_nfit_system_address *spa)
->         int i;
->
->         for (i = 0; i < NFIT_UUID_MAX; i++)
-> -               if (memcmp(to_nfit_uuid(i), spa->range_guid, 16) == 0)
-> +               if (!uuid_le_cmp_pp(to_nfit_uuid(i), (uuid_le *)spa->range_guid))
+Before Version Patches
+======================
+patch V7
+https://www.spinics.net/lists/linux-pci/msg61664.html
+patch V6
+https://www.spinics.net/lists/linux-pci/msg61610.html
 
-What is _cmp_pp? Why not _compare?
+patch V4
+https://www.spinics.net/lists/linux-pci/msg61406.html
 
-Other than that, looks ok to me.
+patch V3
+https://www.spinics.net/lists/linux-pci/msg61399.html
+
+
+Changes between V8 and V7
+=========================
+1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
+
+Changes between V7 and V6
+=========================
+1. add enumeration log Based on Hikey960 Board with these patches.
+2. fix issues as fellows:
+   (1) delete reduntant blankets in macro defination,
+   (2) add blank line in  kirin_pcie_clk_ctrl function.
+   (3) Fix compitable property in DT with the SoC name,
+       for example "hisilicon,kirin960-pcie".
+
+Changes between V6 and V4
+=========================
+1. seperate Document from .dtsi patch.
+2. fix issues according to review comments
+   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
+   patch post method and so on.
+
+Enumeration log
+===============
+These test logs come from patches running on Hikey960 Board
+(1) Connect with Atheros Communications WIFI
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
+	pci 0000:01:00.0: supports D1
+	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
+	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276	
+
+(2) Connect with Sandisk SSD
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [1b4b:1093] type 00 class 0x010802
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
+	pci 0000:01:00.0: reg 0x30: [mem 0xf6000000-0xf600ffff pref]
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:00:00.0: BAR 15: assigned [mem 0xf7100000-0xf71fffff pref]
+	pci 0000:01:00.0: BAR 6: assigned [mem 0xf7100000-0xf710ffff pref]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pci 0000:00:00.0:   bridge window [mem 0xf7100000-0xf71fffff pref]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276
+
+Patches list
+============
+Xiaowei Song (4):
+  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+  arm64: dts: hisi: add kirin pcie node
+  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+  defconfig: PCI: Enable  Kirin PCIe defconfig
+
+ .../devicetree/bindings/pci/kirin-pcie.txt         |  49 ++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
+ arch/arm64/configs/defconfig                       |   1 +
+ drivers/pci/dwc/Kconfig                            |  10 +
+ drivers/pci/dwc/Makefile                           |   1 +
+ drivers/pci/dwc/pcie-kirin.c                       | 513 +++++++++++++++++++++
+ 6 files changed, 605 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
+
+-- 
+2.11.GIT
