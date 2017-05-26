@@ -1,197 +1,176 @@
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org,
-	helgaas@kernel.org
-Subject: [PATCH v6 2/5] PCI: add resizeable BAR infrastructure v5
-Date: Tue,  9 May 2017 18:49:04 +0200
-Message-Id: <1494348547-1465-3-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 26 May 2017 15:57:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH v9 1/7] LIB: Introduce a generic PIO mapping method
+Message-ID: <20170526205744.GA21531@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-2-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1495712248-5232-2-git-send-email-gabriele.paoloni@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, minyard@acm.org,
+ arnd@arndb.de, rafael@kernel.org, linux-pci@vger.kernel.org,
+ catalin.marinas@arm.com, john.garry@huawei.com, will.deacon@arm.com,
+ linux-kernel@vger.kernel.org, xuwei5@hisilicon.com, linuxarm@huawei.com,
+ linux-acpi@vger.kernel.org, robh+dt@kernel.org,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, benh@kernel.crashing.org,
+ bhelgaas@google.com, frowand.list@gmail.com, brian.starkey@arm.com,
+ linux-arm-kernel@lists.infradead.org, olof@lixom.net
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Thu, May 25, 2017 at 12:37:22PM +0100, Gabriele Paoloni wrote:
+> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+> 
+> In 'commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
+> pci_pio_to_address()")' a new I/O space management was supported. With that
+> driver, the I/O ranges configured for PCI/PCIE hosts on some architectures
+> can be mapped to logical PIO, converted easily between CPU address and the
+> corresponding logicial PIO. Based on this, PCI I/O devices can be accessed
+> in a memory read/write way through the unified in/out accessors.
+> 
+> But on some archs/platforms, there are bus hosts which access I/O
+> peripherals with host-local I/O port addresses rather than memory
+> addresses after memory-mapped.
+> To support those devices, a more generic I/O mapping method is introduced
+> here. Through this patch, both the CPU addresses and the host-local port
+> can be mapped into the logical PIO space with different logical/fake PIOs.
+> After this, all the I/O accesses to either PCI MMIO devices or host-local
+> I/O peripherals can be unified into the existing I/O accessors defined in
+> asm-generic/io.h and be redirected to the right device-specific hooks
+> based on the input logical PIO.
+> 
+> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> ---
+>  include/asm-generic/io.h  |  50 +++++++++
+>  include/linux/logic_pio.h | 110 ++++++++++++++++++
+>  lib/Kconfig               |  26 +++++
+>  lib/Makefile              |   2 +
+>  lib/logic_pio.c           | 280 ++++++++++++++++++++++++++++++++++++++++++++++
+>  5 files changed, 468 insertions(+)
+>  create mode 100644 include/linux/logic_pio.h
+>  create mode 100644 lib/logic_pio.c
+> 
+> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> index 7ef015e..f7fbec3 100644
+> --- a/include/asm-generic/io.h
+> +++ b/include/asm-generic/io.h
+> ...  
 
-Just the defines and helper functions to read the possible sizes of a BAR and
-update it's size.
+>  #ifndef inb
+> +#ifdef CONFIG_INDIRECT_PIO
+> +#define inb logic_inb
+> +#else
+>  #define inb inb
+>  static inline u8 inb(unsigned long addr)
+>  {
+>  	return readb(PCI_IOBASE + addr);
+>  }
+> +#endif /* CONFIG_INDIRECT_PIO */
+>  #endif
+>  
+>  #ifndef inw
+> +#ifdef CONFIG_INDIRECT_PIO
+> +#define inw logic_inw
 
-See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf
-and PCIe r3.1, sec 7.22.
+Cosmetic: could these ifdefs all be collected in one place, e.g.,
 
-This is useful for hardware with large local storage (mostly GFX) which only
-expose 256MB BARs initially to be compatible with 32bit systems.
+  #ifdef CONFIG_INDIRECT_PIO
+  #define inb logic_inb
+  #define inw logic_inw
+  #define inl logic_inl
+  ...
+  #endif
 
-v2: provide read helper as well
-v3: improve function names, use unsigned values, add better comments.
-v4: move definition, improve commit message, s/bar/BAR/
-v5: split out helper to find ctrl reg pos, style fixes, comment fixes,
-    add pci_rbar_size_to_bytes as well
+to avoid cluttering every one of the default definitions?  Could the
+collection be in logic_pio.h itself, next to the extern declarations?
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/pci/pci.c             | 104 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |   8 ++++
- include/uapi/linux/pci_regs.h |  11 ++++-
- 3 files changed, 121 insertions(+), 2 deletions(-)
+> +#else
+>  #define inw inw
+>  static inline u16 inw(unsigned long addr)
+>  {
+>  	return readw(PCI_IOBASE + addr);
+>  }
+> +#endif /* CONFIG_INDIRECT_PIO */
+>  #endif
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ba34907..0cbf4a6 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2944,6 +2944,110 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- }
- 
- /**
-+ * pci_rbar_find_pos - find position of resize ctrl reg for BAR
-+ * @dev: PCI device
-+ * @bar: BAR to find
-+ *
-+ * Helper to find the postion of the ctrl register for a BAR.
-+ * Returns -ENOTSUPP of resizeable BARs are not supported at all.
-+ * Returns -ENOENT if not ctrl register for the BAR could be found.
-+ */
-+static int pci_rbar_find_pos(struct pci_dev *pdev, int bar)
-+{
-+	unsigned int pos, nbars;
-+	unsigned int i;
-+	u32 ctrl;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return -ENOTSUPP;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
-+
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx == bar)
-+			return pos;
-+	}
-+
-+	return -ENOENT;
-+}
-+
-+/**
-+ * pci_rbar_get_possible_sizes - get possible sizes for BAR
-+ * @dev: PCI device
-+ * @bar: BAR to query
-+ *
-+ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
-+ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
-+ */
-+u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
-+{
-+	u32 cap;
-+	int pos;
-+
-+	pos = pci_rbar_find_pos(pdev, bar);
-+	if (pos < 0)
-+		return 0;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
-+	return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
-+		PCI_REBAR_CTRL_SIZES_SHIFT;
-+}
-+
-+/**
-+ * pci_rbar_get_current_size - get the current size of a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ *
-+ * Read the size of a BAR from the resizeable BAR config.
-+ * Returns size if found or negative error code.
-+ */
-+int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
-+{
-+	u32 ctrl;
-+	int pos;
-+
-+	pos = pci_rbar_find_pos(pdev, bar);
-+	if (pos < 0)
-+		return pos;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
-+		PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+}
-+
-+/**
-+ * pci_rbar_set_size - set a new size for a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ * @size: new size as defined in the spec (0=1MB, 19=512GB)
-+ *
-+ * Set the new size of a BAR as defined in the spec.
-+ * Returns zero if resizing was successful, error code otherwise.
-+ */
-+int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
-+{
-+	u32 ctrl;
-+	int pos;
-+
-+	pos = pci_rbar_find_pos(pdev, bar);
-+	if (pos < 0)
-+		return pos;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
-+	ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+	pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-+	return 0;
-+}
-+
-+/**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 56ad106..a37fc9c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -360,4 +360,12 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
- }
- #endif
- 
-+u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
-+int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
-+int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
-+static inline u64 pci_rbar_size_to_bytes(int size)
-+{
-+	return 1ULL << (size + 20);
-+}
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e5a2e68..a75429e 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -932,9 +932,16 @@
- #define PCI_SATA_SIZEOF_LONG	16
- 
- /* Resizable BARs */
-+#define PCI_REBAR_CAP		4	/* capability register */
-+#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
-+#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
- #define PCI_REBAR_CTRL		8	/* control register */
--#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
--#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
-+#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for BAR index */
-+#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for BAR index */
-+#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # BARs */
-+#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # BARs */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for BAR size */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for BAR size */
- 
- /* Dynamic Power Allocation */
- #define PCI_DPA_CAP		4	/* capability register */
--- 
-2.7.4
+>  #ifndef insb_p
+> diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
+> new file mode 100644
+> index 0000000..8e4dc65
+> --- /dev/null
+> +++ b/include/linux/logic_pio.h
+> ...
+
+> +extern u8 logic_inb(unsigned long addr);
+
+I think you only build the definitions for these if
+CONFIG_INDIRECT_PIO, so the declarations could be under that #idef,
+too.
+
+In PCI code, I omit the "extern" from function declarations.  This
+isn't PCI code, and I don't know if there's a real consensus on this,
+but there is some precedent: 5bd085b5fbd8 ("x86: remove "extern" from
+function prototypes in <asm/proto.h>")
+
+> +#ifdef CONFIG_LOGIC_PIO
+> +extern struct logic_pio_hwaddr
+> +*find_io_range_by_fwnode(struct fwnode_handle *fwnode);
+
+If you have to split the line (this one would fit without the
+"extern"), the "*" goes with the type, e.g.,
+
+  struct logic_pio_hwaddr *
+  find_io_range_by_fwnode(struct fwnode_handle *fwnode);
+
+More occurrences below.
+
+> diff --git a/lib/logic_pio.c b/lib/logic_pio.c
+> new file mode 100644
+> index 0000000..4a960cd
+> --- /dev/null
+> +++ b/lib/logic_pio.c
+> ...
+
+> +#if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
+> +#define BUILD_LOGIC_PIO(bw, type)\
+> +type logic_in##bw(unsigned long addr)\
+> +{\
+> +	type ret = -1;\
+> +\
+> +	if (addr < MMIO_UPPER_LIMIT) {\
+> +		ret = read##bw(PCI_IOBASE + addr);\
+> +	} else {\
+> +		struct logic_pio_hwaddr *entry = find_io_range(addr);\
+> +\
+> +		if (entry && entry->ops)\
+> +			ret = entry->ops->pfin(entry->devpara,\
+> +					addr, sizeof(type));\
+> +		else\
+> +			WARN_ON_ONCE(1);\
+> +	}	\
+> +	return ret;\
+> +}	\
+
+I think these would be slightly easier to read if the line continuation
+backslashes were aligned at the right, as with
+ACPI_DECLARE_PROBE_ENTRY(), __atomic_op_acquire(), DECLARE_EWMA(),
+etc.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
