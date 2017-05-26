@@ -1,312 +1,125 @@
-Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=843H=47=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <8ee14bdc-a272-d483-bc2b-d1840aaebb24@arm.com>
-Date: Thu, 25 May 2017 09:37:30 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52670 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1948752AbdEZVk1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 May 2017 17:40:27 -0400
+Date: Fri, 26 May 2017 16:40:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-rockchip@lists.infradead.org,
+        Krishna Dhulipala <krishnad@fb.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Christoph Hellwig <hch@lst.de>, Wei Zhang <wzhang@fb.com>
+Subject: Re: [PATCH] PCI: Make error code types consistent in
+ pci_{read,write}_config_*
+Message-ID: <20170526214024.GC21531@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170523184359.GB115572@google.com>
+ <20170523193655.GA144183@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170523193655.GA144183@google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20/04/17 15:28, Marc Gonzalez wrote:
-> The MSI controller in Tango supports 256 message-signaled interrupts,
-> and a single doorbell address.
+On Tue, May 23, 2017 at 12:36:58PM -0700, Brian Norris wrote:
+> Callers normally treat the config space accessors as returning PCBIOS_*
+> error codes, not Linux error codes (or they don't look at them at all).
+> We have pcibios_err_to_errno(), in case the error code needs translated.
 > 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> Fixes: 4b1038834739 ("PCI: Don't attempt config access to disconnected devices")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+
+Applied with Keith's reviewed-by to for-linus for v4.12, thanks, Brian!
+
 > ---
->  drivers/pci/host/pcie-tango.c | 232 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 232 insertions(+)
+> + others, change subject
 > 
-> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-> new file mode 100644
-> index 000000000000..ada8d35066ab
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-tango.c
-
-As Bjorn mentioned elsewhere, the ordering of the patch is backward.
-Please have the PCIe host controller driver in the first patch, then the
-MSI stuff. Otherwise, it is impossible to see how the various bits are
-wired.
-
-And please have a separate patch the the DT binding, which needs
-separate Acks from the DT folks.
-
-> @@ -0,0 +1,232 @@
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/irqdomain.h>
-> +#include <linux/pci-ecam.h>
-> +#include <linux/delay.h>
-> +#include <linux/msi.h>
-> +
-> +#define MSI_MAX 256
-> +
-> +struct tango_pcie {
-> +	DECLARE_BITMAP(bitmap, MSI_MAX);
-> +	spinlock_t lock;
-> +	void __iomem *mux;
-> +	void __iomem *msi_status;
-> +	void __iomem *msi_enable;
-> +	phys_addr_t msi_doorbell;
-
-Init of these three fields should be in this patch.
-
-> +	struct irq_domain *irq_dom;
-> +	struct irq_domain *msi_dom;
-> +	int irq;
-> +};
-> +
-> +/*** MSI CONTROLLER SUPPORT ***/
-> +
-> +static void dispatch(struct tango_pcie *pcie, unsigned long status, int base)
-> +{
-> +	unsigned int pos, virq;
-> +
-> +	for_each_set_bit(pos, &status, 32) {
-> +		virq = irq_find_mapping(pcie->irq_dom, base + pos);
-> +		generic_handle_irq(virq);
-> +	}
-> +}
-> +
-> +static void tango_msi_isr(struct irq_desc *desc)
-> +{
-> +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
-> +	unsigned int status, base, pos = 0;
-> +
-> +	chained_irq_enter(chip, desc);
-> +
-> +	while ((pos = find_next_bit(pcie->bitmap, MSI_MAX, pos)) < MSI_MAX) {
-> +		base = round_down(pos, 32);
-> +		status = readl_relaxed(pcie->msi_status + base / 8);
-> +		dispatch(pcie, status, base);
-
-Just inline dispatch here.
-
-> +		pos = base + 32;
-> +	}
-> +
-> +	chained_irq_exit(chip, desc);
-> +}
-> +
-> +static void tango_ack(struct irq_data *data)
-> +{
-> +	u32 bit = BIT(data->hwirq);
-
-How does this work when hwirq is >= 32 (from what I gather, it can range
-from 0 to 255...).
-
-> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
-> +
-> +	writel_relaxed(bit, pcie->msi_status);
-> +}
-> +
-> +static void update_msi_enable(struct irq_data *data, bool unmask)
-> +{
-> +	unsigned long flags;
-> +	u32 val, bit = BIT(data->hwirq % 32);
-> +	int byte_offset = (data->hwirq / 32) * 4;
-> +	struct tango_pcie *pcie = data->chip_data;
-> +
-> +	spin_lock_irqsave(&pcie->lock, flags);
-> +	val = readl_relaxed(pcie->msi_enable + byte_offset);
-
-As I already mentioned in one of the previous series, this is a fairly
-pointless MMIO access. You could maintain a SW version of the enable
-register, update that copy and write it.
-
-But that's only a performance optimization, and it won't affect the
-behaviour. Your call.
-
-> +	val = unmask ? val | bit : val & ~bit;
-> +	writel_relaxed(val, pcie->msi_enable + byte_offset);
-> +	spin_unlock_irqrestore(&pcie->lock, flags);
-> +}
-> +
-> +static void tango_mask(struct irq_data *data)
-> +{
-> +	update_msi_enable(data, false);
-> +}
-> +
-> +static void tango_unmask(struct irq_data *data)
-> +{
-> +	update_msi_enable(data, true);
-> +}
-> +
-> +static int tango_set_affinity(struct irq_data *data,
-> +		const struct cpumask *mask, bool force)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +static void tango_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> +{
-> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
-> +
-> +	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
-> +	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
-> +	msg->data = data->hwirq;
-> +}
-> +
-> +static struct irq_chip tango_chip = {
-> +	.irq_ack		= tango_ack,
-> +	.irq_mask		= tango_mask,
-> +	.irq_unmask		= tango_unmask,
-> +	.irq_set_affinity	= tango_set_affinity,
-> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
-> +};
-> +
-> +static void msi_ack(struct irq_data *data)
-> +{
-> +	irq_chip_ack_parent(data);
-> +}
-> +
-> +static void msi_mask(struct irq_data *data)
-> +{
-> +	pci_msi_mask_irq(data);
-> +	irq_chip_mask_parent(data);
-> +}
-> +
-> +static void msi_unmask(struct irq_data *data)
-> +{
-> +	pci_msi_unmask_irq(data);
-> +	irq_chip_unmask_parent(data);
-> +}
-> +
-> +static struct irq_chip msi_chip = {
-> +	.name = "MSI",
-> +	.irq_ack = msi_ack,
-> +	.irq_mask = msi_mask,
-> +	.irq_unmask = msi_unmask,
-> +};
-> +
-> +static struct msi_domain_info msi_dom_info = {
-> +	.flags	= MSI_FLAG_PCI_MSIX
-> +		| MSI_FLAG_USE_DEF_DOM_OPS
-> +		| MSI_FLAG_USE_DEF_CHIP_OPS,
-> +	.chip	= &msi_chip,
-> +};
-> +
-> +static int find_free_msi(struct irq_domain *dom, unsigned int virq)
-> +{
-> +	unsigned int pos;
-> +	struct tango_pcie *pcie = dom->host_data;
-> +
-> +	pos = find_first_zero_bit(pcie->bitmap, MSI_MAX);
-> +	if (pos >= MSI_MAX)
-> +		return -ENOSPC;
-> +	__set_bit(pos, pcie->bitmap);
-> +
-> +	irq_domain_set_info(dom, virq, pos, &tango_chip, pcie,
-> +			handle_edge_irq, NULL, NULL);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tango_irq_domain_alloc(struct irq_domain *dom,
-> +		unsigned int virq, unsigned int nr_irqs, void *args)
-> +{
-> +	int err;
-> +	unsigned long flags;
-> +	struct tango_pcie *pcie = dom->host_data;
-> +
-> +	spin_lock_irqsave(&pcie->lock, flags);
-> +	err = find_free_msi(dom, virq);
-
-Just inline find_free_msi here. it is not called from anywhere else, and
-seeing the locking close to the use of the bitmap is definitely better.
-
-> +	spin_unlock_irqrestore(&pcie->lock, flags);
-> +
-> +	return err;
-> +}
-> +
-> +static void tango_irq_domain_free(struct irq_domain *dom,
-> +		unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	unsigned long flags;
-> +	struct irq_data *data = irq_domain_get_irq_data(dom, virq);
-> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
-> +
-> +	spin_lock_irqsave(&pcie->lock, flags);
-> +	__clear_bit(data->hwirq, pcie->bitmap);
-> +	spin_unlock_irqrestore(&pcie->lock, flags);
-> +}
-> +
-> +static const struct irq_domain_ops irq_dom_ops = {
-> +	.alloc	= tango_irq_domain_alloc,
-> +	.free	= tango_irq_domain_free,
-> +};
-> +
-> +static int tango_msi_remove(struct platform_device *pdev)
-> +{
-> +	struct tango_pcie *pcie = platform_get_drvdata(pdev);
-> +
-> +	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-> +	irq_domain_remove(pcie->msi_dom);
-> +	irq_domain_remove(pcie->irq_dom);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
-> +{
-> +	int i, virq;
-> +	struct irq_domain *msi_dom, *irq_dom;
-> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +
-> +	spin_lock_init(&pcie->lock);
-> +	for (i = 0; i < MSI_MAX / 32; ++i)
-> +		writel_relaxed(0, pcie->msi_enable + i * 4);
-> +
-> +	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pcie);
-> +	if (!irq_dom) {
-> +		pr_err("Failed to create IRQ domain\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
-> +	if (!msi_dom) {
-> +		pr_err("Failed to create MSI domain\n");
-> +		irq_domain_remove(irq_dom);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	virq = platform_get_irq(pdev, 1);
-> +	if (virq <= 0) {
-> +		pr_err("Failed to map IRQ\n");
-> +		irq_domain_remove(msi_dom);
-> +		irq_domain_remove(irq_dom);
-> +		return -ENXIO;
-> +	}
-
-Maybe start the probe with this. No need to start allocating data
-structures if the DT is wrong.
-
-> +
-> +	pcie->irq_dom = irq_dom;
-> +	pcie->msi_dom = msi_dom;
-> +	pcie->irq = virq;
-> +	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
-> +
-> +	return 0;
-> +}
+> On Tue, May 23, 2017 at 11:44:01AM -0700, Brian Norris wrote:
+> > But the high level code doesn't handle this
+> > consistently. See, e.g., pci_read_config_byte() which can return regular
+> > Linux error codes (like -ENODEV), except it also passes up the return
+> > code of pci_read_config_byte() (a PCIBIOS_* code) directly.
 > 
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> Apparently this is new (inconsistent) behavior in 4.12-rc1. Seems like
+> an oversight to me.
+> 
+> > So callers don't really know whether to treat the value from
+> > pci_read_config_<foo>() as a PCIBIOS_* code (which should be translated
+> > with pcibios_err_to_errno()) or as a standard Linux errno.
+> > 
+> > But then, there are relatively few callers (less than 10% of
+> > pci_read_config_<foo>(); even fewer for writes) that actually check the
+> > error codes...
+> > 
+> > Maybe the "fix" is to replace -ENODEV with PCIBIOS_DEVICE_NOT_FOUND for
+> > the inconsistent cases (pci_{read,write}_config_{byte,word,dword}()).
+> 
+> Fix implemented in the surrounding patch.
+> 
+>  drivers/pci/access.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 74cf5fffb1e1..c80e37a69305 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -896,7 +896,7 @@ int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+>  {
+>  	if (pci_dev_is_disconnected(dev)) {
+>  		*val = ~0;
+> -		return -ENODEV;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+>  	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
+>  }
+> @@ -906,7 +906,7 @@ int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+>  {
+>  	if (pci_dev_is_disconnected(dev)) {
+>  		*val = ~0;
+> -		return -ENODEV;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+>  	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
+>  }
+> @@ -917,7 +917,7 @@ int pci_read_config_dword(const struct pci_dev *dev, int where,
+>  {
+>  	if (pci_dev_is_disconnected(dev)) {
+>  		*val = ~0;
+> -		return -ENODEV;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	}
+>  	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
+>  }
+> @@ -926,7 +926,7 @@ EXPORT_SYMBOL(pci_read_config_dword);
+>  int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+>  {
+>  	if (pci_dev_is_disconnected(dev))
+> -		return -ENODEV;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_byte);
+> @@ -934,7 +934,7 @@ EXPORT_SYMBOL(pci_write_config_byte);
+>  int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+>  {
+>  	if (pci_dev_is_disconnected(dev))
+> -		return -ENODEV;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_word);
+> @@ -943,7 +943,7 @@ int pci_write_config_dword(const struct pci_dev *dev, int where,
+>  					 u32 val)
+>  {
+>  	if (pci_dev_is_disconnected(dev))
+> -		return -ENODEV;
+> +		return PCIBIOS_DEVICE_NOT_FOUND;
+>  	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_dword);
+> -- 
+> 2.13.0.219.gdb65acc882-goog
