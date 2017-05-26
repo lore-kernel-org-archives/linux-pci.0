@@ -1,79 +1,361 @@
-Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- Thomas Gleixner <tglx@linutronix.de>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>, Liviu Dudau <liviu.dudau@arm.com>,
- LKML <linux-kernel@vger.kernel.org>, David Laight <david.laight@aculab.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-References: <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
- <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
- <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
- <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
- <20170531173414.GB4496@bhelgaas-glaptop.roam.corp.google.com>
- <4885137f-7c1c-5742-4f66-f48c32ce7abb@free.fr>
- <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
- <20170531191258.GA18454@bhelgaas-glaptop.roam.corp.google.com>
- <74d6d867-313a-2304-9753-9739ad4703a8@free.fr>
- <20170531200424.GA23171@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <8bbdc8a4-98a5-ae13-ff0f-d644307986d5@free.fr>
-Date: Wed, 31 May 2017 23:55:37 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0042.outbound.protection.outlook.com ([104.47.33.42]:39862
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1758718AbdEZBw7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 25 May 2017 21:52:59 -0400
+From: "Cheng, Collins" <Collins.Cheng@amd.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+CC: Alexander Duyck <alexander.duyck@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>,
+        "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: RE: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
+ incapable platform
+Date: Fri, 26 May 2017 01:52:35 +0000
+Message-ID: <BN6PR12MB1249D0EA19770B6A5BFF7B05ECFC0@BN6PR12MB1249.namprd12.prod.outlook.com>
+References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170511212051.3b802325@t450s.home>
+        <BN6PR12MB12492048A370FDEB7C14C8E8ECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170511220113.2dfb6d3d@t450s.home>
+        <BN6PR12MB12496DDEE84348A22AEA8AACECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170512084304.3cf10653@t450s.home>
+        <BN6PR12MB1249DA8407F452C407A7E2F2ECE10@BN6PR12MB1249.namprd12.prod.outlook.com>
+        <20170515115332.0077753c@w520.home>
+        <CAKgT0Ud1ODumcWsKeA8cyPfsOiHwvfF9tWKiM6QxubPpVjuUpQ@mail.gmail.com>
+        <20170522094409.7e2968c2@w520.home>
+        <BN6PR12MB1249C0626CE2AF98B2CDBCD8ECF90@BN6PR12MB1249.namprd12.prod.outlook.com>
+ <20170523122013.6e2e4e59@w520.home>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20170531200424.GA23171@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/2017 22:04, Bjorn Helgaas wrote:
+Hi Alex W,
 
-> Cscope only sees 94 definitions of irq_set_affinity.  I know *I* could
-> never write a script faster than looking at them manually.
+I don't need the kernel patch anymore. However it looks the kernel could be=
+ improved to handle this more gracefully when PCI resource allocation fail.=
+ Do you have a plan to improve it in kernel PCI code?
 
-for F in $(find -name '*.c'); do
-  if grep -q pci_msi_create_irq_domain $F; then
-    grep 'irq_set_affinity\s*=' $F | cut -f2 -d= | tr -d ',;' | while read CALLBACK
-    do
-      Y=$(grep -A4 "$CALLBACK(struct" $F)
-      echo $Y | grep static
-    done
-  fi
-done
+-Collins Cheng
 
-static int ls_scfg_msi_set_affinity(struct irq_data *irq_data, const struct cpumask *mask, bool force) { return -EINVAL; }
-static int armada_370_xp_msi_set_affinity(struct irq_data *irq_data, const struct cpumask *mask, bool force) { return -EINVAL; }
-static int armada_xp_set_affinity(struct irq_data *d, const struct cpumask *mask_val, bool force) { irq_hw_number_t hwirq = irqd_to_hwirq(d);
-static int nwl_msi_set_affinity(struct irq_data *irq_data, const struct cpumask *mask, bool force) { return -EINVAL; }
-static int hv_set_affinity(struct irq_data *data, const struct cpumask *dest, bool force) { struct irq_data *parent = data->parent_data;
-static int xgene_msi_set_affinity(struct irq_data *irqdata, const struct cpumask *mask, bool force) { int target_cpu = cpumask_first(mask); int curr_cpu;
-static int vmd_irq_set_affinity(struct irq_data *data, const struct cpumask *dest, bool force) { return -EINVAL; }
-static int altera_msi_set_affinity(struct irq_data *irq_data, const struct cpumask *mask, bool force) { return -EINVAL; }
-static int advk_msi_set_affinity(struct irq_data *irq_data, const struct cpumask *mask, bool force) { return -EINVAL; }
-static int iproc_msi_irq_set_affinity(struct irq_data *data, const struct cpumask *mask, bool force) { struct iproc_msi *msi = irq_data_get_irq_chip_data(data);
 
-> While doing that, I noticed irq_chip_set_affinity_parent(), which is
-> used in 14 cases and appears similar to your patch.
+-----Original Message-----
+From: Cheng, Collins=20
+Sent: Wednesday, May 24, 2017 4:56 PM
+To: 'Alex Williamson' <alex.williamson@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>; Bjorn Helgaas <bhelgaas@go=
+ogle.com>; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Deucher=
+, Alexander <Alexander.Deucher@amd.com>; Zytaruk, Kelly <Kelly.Zytaruk@amd.=
+com>; Yinghai Lu <yinghai@kernel.org>
+Subject: RE: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV inc=
+apable platform
 
-Indeed. I suppose msi_domain_set_affinity() could look like below,
-if we don't mind changing EINVAL to ENOSYS. What do you think?
+Hi Alex W, Alex D,
 
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index ddc2f5427f75..d37d2ba790df 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -87,11 +87,10 @@ static inline void irq_chip_write_msi_msg(struct irq_data *data,
- int msi_domain_set_affinity(struct irq_data *irq_data,
-                            const struct cpumask *mask, bool force)
- {
--       struct irq_data *parent = irq_data->parent_data;
-        struct msi_msg msg;
-        int ret;
- 
--       ret = parent->chip->irq_set_affinity(parent, mask, force);
-+       ret = irq_chip_set_affinity_parent(irq_data, mask, force);
-        if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
-                BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
-                irq_chip_write_msi_msg(irq_data, &msg);
+I just tried two options, one is enable "Above 4G Decoding" in BIOS setup m=
+enu, the other is add "pci=3Drealloc=3Doff" in grub. Both can fix this issu=
+e. Please see the attached log files.
+
+Previously I thought "Above 4G Decoding" is enabled, but it is off when I l=
+ooked CMOS setup today.
+
+For now I think we have a solution. For the system that supports "Above 4G =
+Decoding", user should enable it when use a SR-IOV supported device. For th=
+e system that doesn't support "Above 4G Decoding", user needs to add "pci=
+=3Drealloc=3Doff" in grub.
+
+Potentially I think kernel still needs to find a way to avoid this issue ha=
+ppen, like keeps the resource as the BIOS assigned value if there is a fail=
+ure on device's resource reallocation.
+
+
+-Collins Cheng
+
+
+-----Original Message-----
+From: Alex Williamson [mailto:alex.williamson@redhat.com]=20
+Sent: Wednesday, May 24, 2017 2:20 AM
+To: Cheng, Collins <Collins.Cheng@amd.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>; Bjorn Helgaas <bhelgaas@go=
+ogle.com>; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Deucher=
+, Alexander <Alexander.Deucher@amd.com>; Zytaruk, Kelly <Kelly.Zytaruk@amd.=
+com>; Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV inc=
+apable platform
+
+On Tue, 23 May 2017 03:41:21 +0000
+"Cheng, Collins" <Collins.Cheng@amd.com> wrote:
+
+> Hi Alex,
+>=20
+> I owe you a dmesg log. Attachment are two log files. 1.txt is without "pc=
+i=3Dearlydump", 2.txt is with "pci=3Dearlydump". The platform is an ASUS Z1=
+70-A motherboard that doesn't support SR-IOV. The graphics card is AMD Fire=
+Pro S7150 card which enabled SR-IOV.=20
+>=20
+> You could find the error info like below in both logs. From the log, kern=
+el failed to reallocate resource for BAR0 which is PF's Frame Buffer BAR (2=
+56MB needed), but kernel reallocated resource for BAR9 which is for VF. You=
+ are right, the real bug that is something goes wrong with the reallocation=
+ leaving the PF without resources.
+>=20
+> [    0.992976] pci 0000:01:00.0: BAR 0: no space for [mem size 0x10000000=
+ 64bit pref]
+> [    0.992976] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x1000=
+0000 64bit pref]
+> [    0.992977] pci 0000:01:00.0: BAR 7: no space for [mem size 0x40000000=
+ 64bit pref]
+> [    0.992978] pci 0000:01:00.0: BAR 7: failed to assign [mem size 0x4000=
+0000 64bit pref]
+> [    0.992979] pci 0000:01:00.0: BAR 9: assigned [mem 0x88c00000-0x8abfff=
+ff 64bit pref]
+> [    0.992986] pci 0000:01:00.0: BAR 12: no space for [mem size 0x0200000=
+0]
+> [    0.992986] pci 0000:01:00.0: BAR 12: failed to assign [mem size 0x020=
+00000]
+> [    0.992988] pci 0000:01:00.0: BAR 2: assigned [mem 0x8ac00000-0x8adfff=
+ff 64bit pref]
+> [    0.992994] pci 0000:01:00.0: BAR 5: no space for [mem size 0x00040000=
+]
+> [    0.992995] pci 0000:01:00.0: BAR 5: failed to assign [mem size 0x0004=
+0000]
+> [    0.992996] pci 0000:01:00.0: BAR 6: no space for [mem size 0x00020000=
+ pref]
+> [    0.992997] pci 0000:01:00.0: BAR 6: failed to assign [mem size 0x0002=
+0000 pref]
+
+I've tried to extract more of the relevant resizing efforts below, perhaps =
+Yinghai or others can make more out of it.  In particular this system offer=
+s no 64-bit MMIO and we'll never manage to allocate the necessary SR-IOV re=
+sources without it.  AIUI, the PCI core won't try to use anything outside t=
+he ACPI _CRS data without the option pci=3Dnocrs.
+This might present a second alternative in addition to the pci=3Drealloc=3D=
+off, which is actually suggested by the kernel below.  So I think we have a=
+t least two potential workarounds in the code as it exists today, one leavi=
+ng SR-IOV disabled, the other (hopefully) enabling it using 64bit MMIO not =
+described by the system BIOS.
+Certainly an improvement would still be detecting the impossible reallocati=
+on problem without nocrs and abandoning the process and of course to revert=
+ the process before leaving more BARs unprogrammed than we started with.  T=
+hanks,
+
+Alex
+
+[    0.891319] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window=
+]
+[    0.891321] pci_bus 0000:00: root bus resource [io  0x0d00-0xffff window=
+]
+[    0.891322] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bfff=
+f window]
+[    0.891323] pci_bus 0000:00: root bus resource [mem 0x88800000-0xdffffff=
+f window]
+[    0.891324] pci_bus 0000:00: root bus resource [mem 0xfd000000-0xfe7ffff=
+f window]
+[    0.891325] pci_bus 0000:00: root bus resource [bus 00-fe]
+...
+[    0.896481] pci 0000:01:00.0: [1002:6929] type 00 class 0x030000
+[    0.896496] pci 0000:01:00.0: reg 0x10: [mem 0xc0000000-0xcfffffff 64bit=
+ pref]
+[    0.896506] pci 0000:01:00.0: reg 0x18: [mem 0xd0000000-0xd01fffff 64bit=
+ pref]
+[    0.896513] pci 0000:01:00.0: reg 0x20: [io  0xe000-0xe0ff]
+[    0.896519] pci 0000:01:00.0: reg 0x24: [mem 0xdfe00000-0xdfe3ffff]
+[    0.896526] pci 0000:01:00.0: reg 0x30: [mem 0xdfe40000-0xdfe5ffff pref]
+[    0.896590] pci 0000:01:00.0: supports D1 D2
+[    0.896590] pci 0000:01:00.0: PME# supported from D1 D2 D3hot D3cold
+[    0.896625] pci 0000:01:00.0: reg 0x354: [mem 0x00000000-0x07ffffff 64bi=
+t pref]
+[    0.896626] pci 0000:01:00.0: VF(n) BAR0 space: [mem 0x00000000-0x3fffff=
+ff 64bit pref] (contains BAR0 for 8 VFs)
+[    0.896634] pci 0000:01:00.0: reg 0x35c: [mem 0x00000000-0x003fffff 64bi=
+t pref]
+[    0.896635] pci 0000:01:00.0: VF(n) BAR2 space: [mem 0x00000000-0x01ffff=
+ff 64bit pref] (contains BAR2 for 8 VFs)
+[    0.896646] pci 0000:01:00.0: reg 0x368: [mem 0x00000000-0x003fffff]
+[    0.896647] pci 0000:01:00.0: VF(n) BAR5 space: [mem 0x00000000-0x01ffff=
+ff] (contains BAR5 for 8 VFs)
+[    0.896700] pci 0000:01:00.0: System wakeup disabled by ACPI
+[    0.906527] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.906544] pci 0000:00:1b.0:   bridge window [io  0xe000-0xefff]
+[    0.906546] pci 0000:00:1b.0:   bridge window [mem 0xdfe00000-0xdfefffff=
+]
+[    0.906549] pci 0000:00:1b.0:   bridge window [mem 0xc0000000-0xd01fffff=
+ 64bit pref]
+[    0.906550] pci 0000:00:1b.0: bridge has subordinate 01 but max busn 02
+...
+[    0.943584] vgaarb: setting as boot device: PCI:0000:01:00.0
+[    0.943585] vgaarb: device added: PCI:0000:01:00.0,decodes=3Dio+mem,owns=
+=3Dio+mem,locks=3Dnone
+[    0.943586] vgaarb: loaded
+[    0.943586] vgaarb: bridge control possible 0000:01:00.0
+...
+[    0.997491] pci 0000:01:00.0: BAR 7: no space for [mem size 0x40000000 6=
+4bit pref]
+[    0.997491] pci 0000:01:00.0: BAR 7: failed to assign [mem size 0x400000=
+00 64bit pref]
+[    0.997493] pci 0000:01:00.0: BAR 9: no space for [mem size 0x02000000 6=
+4bit pref]
+[    0.997493] pci 0000:01:00.0: BAR 9: failed to assign [mem size 0x020000=
+00 64bit pref]
+[    0.997495] pci 0000:01:00.0: BAR 12: no space for [mem size 0x02000000]
+[    0.997495] pci 0000:01:00.0: BAR 12: failed to assign [mem size 0x02000=
+000]
+[    0.997497] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.997498] pci 0000:00:1b.0:   bridge window [io  0xe000-0xefff]
+[    0.997501] pci 0000:00:1b.0:   bridge window [mem 0xdfe00000-0xdfefffff=
+]
+[    0.997502] pci 0000:00:1b.0:   bridge window [mem 0xc0000000-0xd01fffff=
+ 64bit pref]
+...
+[    0.997540] pci_bus 0000:00: No. 2 try to assign unassigned res
+[    0.997540] release child resource [mem 0xdfe00000-0xdfe3ffff]
+[    0.997540] release child resource [mem 0xdfe40000-0xdfe5ffff pref]
+[    0.997541] pci 0000:00:1b.0: resource 14 [mem 0xdfe00000-0xdfefffff] re=
+leased
+[    0.997542] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.997543] release child resource [mem 0xc0000000-0xcfffffff 64bit pref=
+]
+[    0.997544] release child resource [mem 0xd0000000-0xd01fffff 64bit pref=
+]
+[    0.997544] pci 0000:00:1b.0: resource 15 [mem 0xc0000000-0xd01fffff 64b=
+it pref] released
+[    0.997545] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.997576] pci 0000:00:1b.0: BAR 15: no space for [mem size 0x58000000 =
+64bit pref]
+[    0.997577] pci 0000:00:1b.0: BAR 15: failed to assign [mem size 0x58000=
+000 64bit pref]
+[    0.997578] pci 0000:00:1b.0: BAR 14: assigned [mem 0x88c00000-0x8adffff=
+f]
+[    0.997583] pci 0000:01:00.0: BAR 0: no space for [mem size 0x10000000 6=
+4bit pref]
+[    0.997583] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x100000=
+00 64bit pref]
+[    0.997585] pci 0000:01:00.0: BAR 7: no space for [mem size 0x40000000 6=
+4bit pref]
+[    0.997585] pci 0000:01:00.0: BAR 7: failed to assign [mem size 0x400000=
+00 64bit pref]
+[    0.997587] pci 0000:01:00.0: BAR 9: assigned [mem 0x88c00000-0x8abfffff=
+ 64bit pref]
+[    0.997593] pci 0000:01:00.0: BAR 12: no space for [mem size 0x02000000]
+[    0.997594] pci 0000:01:00.0: BAR 12: failed to assign [mem size 0x02000=
+000]
+[    0.997595] pci 0000:01:00.0: BAR 2: assigned [mem 0x8ac00000-0x8adfffff=
+ 64bit pref]
+[    0.997602] pci 0000:01:00.0: BAR 5: no space for [mem size 0x00040000]
+[    0.997602] pci 0000:01:00.0: BAR 5: failed to assign [mem size 0x000400=
+00]
+[    0.997603] pci 0000:01:00.0: BAR 6: no space for [mem size 0x00020000 p=
+ref]
+[    0.997604] pci 0000:01:00.0: BAR 6: failed to assign [mem size 0x000200=
+00 pref]
+[    0.997606] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.997607] pci 0000:00:1b.0:   bridge window [io  0xe000-0xefff]
+[    0.997609] pci 0000:00:1b.0:   bridge window [mem 0x88c00000-0x8adfffff=
+]
+...
+[    0.997647] pci_bus 0000:00: No. 3 try to assign unassigned res
+[    0.997648] release child resource [mem 0x88c00000-0x8abfffff 64bit pref=
+]
+[    0.997648] release child resource [mem 0x8ac00000-0x8adfffff 64bit pref=
+]
+[    0.997649] pci 0000:00:1b.0: resource 14 [mem 0x88c00000-0x8adfffff] re=
+leased
+[    0.997649] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.997651] release child resource [mem 0xdfd00000-0xdfd07fff 64bit]
+[    0.997651] pci 0000:00:1c.0: resource 14 [mem 0xdfd00000-0xdfdfffff] re=
+leased
+[    0.997652] pci 0000:00:1c.0: PCI bridge to [bus 02]
+[    0.997654] pci 0000:00:1d.0: resource 15 [mem 0x88a00000-0x88bfffff 64b=
+it pref] released
+[    0.997654] pci 0000:00:1d.0: PCI bridge to [bus 05]
+[    0.997664] pci 0000:00:1b.0: bridge window [mem 0x08000000-0x5fffffff 6=
+4bit pref] to [bus 01] add_size 48000000 add_align 8000000
+[    0.997666] pci 0000:00:1b.0: bridge window [mem 0x00100000-0x022fffff] =
+to [bus 01] add_size 2200000 add_align 400000
+[    0.997687] pci 0000:00:1d.0: bridge window [mem 0x00100000-0x002fffff 6=
+4bit pref] to [bus 05] add_size 200000 add_align 100000
+[    0.997692] pci 0000:00:1b.0: res[15]=3D[mem 0x08000000-0x5fffffff 64bit=
+ pref] res_to_dev_res add_size 48000000 min_align 8000000
+[    0.997693] pci 0000:00:1b.0: res[15]=3D[mem 0x08000000-0xa7ffffff 64bit=
+ pref] res_to_dev_res add_size 48000000 min_align 8000000
+[    0.997693] pci 0000:00:1b.0: res[14]=3D[mem 0x00100000-0x022fffff] res_=
+to_dev_res add_size 2200000 min_align 400000
+[    0.997694] pci 0000:00:1b.0: res[14]=3D[mem 0x00100000-0x044fffff] res_=
+to_dev_res add_size 2200000 min_align 400000
+[    0.997695] pci 0000:00:1d.0: res[15]=3D[mem 0x00100000-0x002fffff 64bit=
+ pref] res_to_dev_res add_size 200000 min_align 100000
+[    0.997696] pci 0000:00:1d.0: res[15]=3D[mem 0x00100000-0x004fffff 64bit=
+ pref] res_to_dev_res add_size 200000 min_align 100000
+[    0.997698] pci 0000:00:1b.0: BAR 15: no space for [mem size 0xa0000000 =
+64bit pref]
+[    0.997699] pci 0000:00:1b.0: BAR 15: failed to assign [mem size 0xa0000=
+000 64bit pref]
+[    0.997700] pci 0000:00:1b.0: BAR 14: assigned [mem 0x88c00000-0x8cfffff=
+f]
+[    0.997701] pci 0000:00:1c.0: BAR 14: assigned [mem 0x88a00000-0x88affff=
+f]
+[    0.997702] pci 0000:00:1d.0: BAR 15: assigned [mem 0x8d000000-0x8d3ffff=
+f 64bit pref]
+[    0.997705] pci 0000:00:1b.0: BAR 15: no space for [mem size 0x58000000 =
+64bit pref]
+[    0.997706] pci 0000:00:1b.0: BAR 15: failed to assign [mem size 0x58000=
+000 64bit pref]
+[    0.997707] pci 0000:00:1b.0: BAR 14: assigned [mem 0x88a00000-0x8abffff=
+f]
+[    0.997708] pci 0000:00:1c.0: BAR 14: assigned [mem 0x8ac00000-0x8acffff=
+f]
+[    0.997709] pci 0000:00:1d.0: BAR 15: assigned [mem 0x8ad00000-0x8aeffff=
+f 64bit pref]
+[    0.997711] pci 0000:00:1d.0: BAR 15: reassigned [mem 0x8ad00000-0x8b0ff=
+fff 64bit pref] (expanded by 0x200000)
+[    0.997713] pci 0000:00:1b.0: BAR 14: reassigned [mem 0x8b400000-0x8f7ff=
+fff] (expanded by 0x2200000)
+[    0.997719] pci 0000:01:00.0: res[7]=3D[mem size 0x00000000 64bit pref] =
+res_to_dev_res add_size 40000000 min_align 0
+[    0.997720] pci 0000:01:00.0: res[9]=3D[mem 0x00000000-0xfffffffffffffff=
+f 64bit pref] res_to_dev_res add_size 2000000 min_align 0
+[    0.997721] pci 0000:01:00.0: res[12]=3D[mem size 0x00000000] res_to_dev=
+_res add_size 2000000 min_align 0
+[    0.997722] pci 0000:01:00.0: BAR 0: no space for [mem size 0x10000000 6=
+4bit pref]
+[    0.997722] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x100000=
+00 64bit pref]
+[    0.997723] pci 0000:01:00.0: BAR 7: no space for [mem size 0x40000000 6=
+4bit pref]
+[    0.997724] pci 0000:01:00.0: BAR 7: failed to assign [mem size 0x400000=
+00 64bit pref]
+[    0.997725] pci 0000:01:00.0: BAR 9: assigned [mem 0x8b400000-0x8d3fffff=
+ 64bit pref]
+[    0.997731] pci 0000:01:00.0: BAR 12: assigned [mem 0x8d400000-0x8f3ffff=
+f]
+[    0.997734] pci 0000:01:00.0: BAR 2: assigned [mem 0x8f400000-0x8f5fffff=
+ 64bit pref]
+[    0.997740] pci 0000:01:00.0: BAR 5: assigned [mem 0x8f600000-0x8f63ffff=
+]
+[    0.997744] pci 0000:01:00.0: BAR 0: no space for [mem size 0x10000000 6=
+4bit pref]
+[    0.997745] pci 0000:01:00.0: BAR 0: failed to assign [mem size 0x100000=
+00 64bit pref]
+[    0.997746] pci 0000:01:00.0: BAR 2: assigned [mem 0x8b400000-0x8b5fffff=
+ 64bit pref]
+[    0.997753] pci 0000:01:00.0: BAR 5: assigned [mem 0x8b600000-0x8b63ffff=
+]
+[    0.997756] pci 0000:01:00.0: BAR 12: assigned [mem 0x8b800000-0x8d7ffff=
+f]
+[    0.997758] pci 0000:01:00.0: BAR 9: assigned [mem 0x8d800000-0x8f7fffff=
+ 64bit pref]
+[    0.997765] pci 0000:01:00.0: BAR 7: no space for [mem size 0x40000000 6=
+4bit pref]
+[    0.997765] pci 0000:01:00.0: BAR 7: failed to assign [mem size 0x400000=
+00 64bit pref]
+[    0.997767] pci 0000:00:1b.0: PCI bridge to [bus 01]
+[    0.997768] pci 0000:00:1b.0:   bridge window [io  0xe000-0xefff]
+[    0.997770] pci 0000:00:1b.0:   bridge window [mem 0x8b400000-0x8f7fffff=
+]
+...
+[    0.997818] pci_bus 0000:00: Automatically enabled pci realloc, if
+you have problem, try booting with pci=3Drealloc=3Doff
