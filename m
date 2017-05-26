@@ -1,20 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 10 May 2017 16:14:06 +0200
-From: Peter Senna Tschudin <peter.senna@collabora.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
- into host-only and core structures
-Message-ID: <20170510141406.GA24864@collabora.com>
-References: <20170508150224.GA7458@collabora.com>
- <CAOMZO5DjFxAus3B03Om0xoqxKuY2TkbcjCY1YEUK9s_R8C_DNA@mail.gmail.com>
- <20170509063439.GC9791@collabora.com>
- <CAOMZO5CXjb7LVT5ByP1RqgBPkkfRn7PcRPmW3hos=UNXGnok=A@mail.gmail.com>
- <20170510131722.GA29556@collabora.com>
- <CAOMZO5CwtT=Zz8+CrT2TA5W7YHFRnDKgthRyChvUpF+f_QsYcQ@mail.gmail.com>
- <1494423139.2322.60.camel@pengutronix.de>
+Date: Fri, 26 May 2017 16:20:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH v9 2/7] PCI: Apply the new generic I/O management on PCI
+ IO hosts
+Message-ID: <20170526212001.GB21531@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-3-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1494423139.2322.60.camel@pengutronix.de>
+In-Reply-To: <1495712248-5232-3-git-send-email-gabriele.paoloni@huawei.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -22,86 +17,120 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, Roy Zang <tie-fei.zang@freescale.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Kishon Vijay Abraham I <kishon@ti.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, Fabio Estevam <festevam@gmail.com>,
- Tim Harvey <tharvey@gateworks.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, minyard@acm.org,
+ arnd@arndb.de, rafael@kernel.org, linux-pci@vger.kernel.org,
+ catalin.marinas@arm.com, john.garry@huawei.com, will.deacon@arm.com,
+ linux-kernel@vger.kernel.org, xuwei5@hisilicon.com, linuxarm@huawei.com,
+ linux-acpi@vger.kernel.org, robh+dt@kernel.org,
+ "zhichang.yuan" <yuanzhichang@hisilicon.com>, benh@kernel.crashing.org,
+ bhelgaas@google.com, frowand.list@gmail.com, brian.starkey@arm.com,
+ linux-arm-kernel@lists.infradead.org, olof@lixom.net
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 10, 2017 at 03:32:19PM +0200, Lucas Stach wrote:
-> Am Mittwoch, den 10.05.2017, 10:27 -0300 schrieb Fabio Estevam:
-> > On Wed, May 10, 2017 at 10:17 AM, Peter Senna Tschudin
-> > <peter.senna@collabora.com> wrote:
-> > > On Tue, May 09, 2017 at 07:21:24AM -0300, Fabio Estevam wrote:
-> > >> Hi Peter,
-> > >>
-> > >> On Tue, May 9, 2017 at 3:34 AM, Peter Senna Tschudin
-> > >> <peter.senna@collabora.com> wrote:
-> > >>
-> > >> > Something that ocurred to me is that u-boot is initializing the PCI, and
-> > >> > the PCI networkd cards.  Ideally this should not affect anything, but
-> > >> > can this be related to the issue?
-> > >>
-> > >> Yes, in order to narrow things down: please boot 4.11 without PCI
-> > >> support in U-Boot.
-> > >
-> > > Yes, removing the PCI code from u-boot makes 4.11 to boot. But latest
-> > > next still hangs.
-> > 
-> > Ok, good. At least we see the same behaviour now.
-> > 
-> > We still need a fix for the mx6q hang on systems with PCI switch for
-> > linux/next or 4.12-rc1.
+On Thu, May 25, 2017 at 12:37:23PM +0100, Gabriele Paoloni wrote:
+> From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
 > 
-> I will take a look at this today.
+> After introducing the new generic I/O space management(LOGIC_IO), the
+> original PCI MMIO relevant helpers need to be updated based on the new
+> interfaces defined in LOGIC_IO.
+> This patch adapts the corresponding code to match the changes introduced
+> by LOGIC_IO.
+> 
+> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
 
-I'll be more than happy to help. Let me know if you need testing or any
-other thing.
+Not sure how you plan to merge this, but here's my ack:
 
-> 
-> > 
-> > >> The problem is that mx6q does not have a way to properly reset the PCI block.
-> > >>
-> > >> On the board I tested there is no PCI support in U-Boot.
-> > >>
-> > >> Maybe we need the following approach in U-Boot as Lucas did for Barebox:
-> > >> https://git.pengutronix.de/cgit/barebox/commit/?id=f1da98da2760c21487bbba8f7fb957c843a22896
-> > >
-> > > Maybe we do need, but the kernel is working on v4.10 for our use case,
-> > > and it is not working any longer on v4.11. What is the way to continue
-> > > from here?
-> > 
-> > There is no other way other than fixing U-Boot on this case.
-> 
-> You could also revert the change in the kernel if you are absolutely
-> sure that this won't cause issues on your system (you are not using the
-> internal watchdog etc.).
-> 
-> But for the long run and to make sure that _all_ use-cases work
-> properly, there is no way around fixing your bootloader to behave
-> correctly.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Thanks!
+If you split this as suggested below, add my ack to all three patches.
 
-> 
-> Regards,
-> Lucas
-> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..c9fe12b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+>...
+
+> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
+> +int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
+> +			resource_size_t	size)
+
+It's trivial and nit-picky, but I would do the __weak removal in its
+own patch.  It's obviously fine because there's only one
+implementation, but it's unrelated to the main point of this patch.
+
+I would split the signature change (fwnode addition) to a separate
+patch, too, just to make the actual change more obvious, especially
+since that's the only part that crosses subsystems (ACPI, PCI, OF).
+
+>  {
+> -	int err = 0;
+> -
+> +	int ret = 0;
+>  #ifdef PCI_IOBASE
+> -	struct io_range *range;
+> -	resource_size_t allocated_size = 0;
+> -
+> -	/* check if the range hasn't been previously recorded */
+> -	spin_lock(&io_range_lock);
+> -	list_for_each_entry(range, &io_range_list, list) {
+> -		if (addr >= range->start && addr + size <= range->start + size) {
+> -			/* range already registered, bail out */
+> -			goto end_register;
+> -		}
+> -		allocated_size += range->size;
+> -	}
+> -
+> -	/* range not registed yet, check for available space */
+> -	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
+> -		/* if it's too big check if 64K space can be reserved */
+> -		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
+> -			err = -E2BIG;
+> -			goto end_register;
+> -		}
+> -
+> -		size = SZ_64K;
+> -		pr_warn("Requested IO range too big, new size set to 64K\n");
+> -	}
+> +	struct logic_pio_hwaddr *range;
+>  
+> -	/* add the range to the list */
+> -	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+> -	if (!range) {
+> -		err = -ENOMEM;
+> -		goto end_register;
+> -	}
+> +	if (!size || addr + size < addr)
+> +		return -EINVAL;
+>  
+> -	range->start = addr;
+> +	range = kzalloc(sizeof(*range), GFP_KERNEL);
+> +	if (!range)
+> +		return -ENOMEM;
+
+Add a blank line here.
+
+> +	range->fwnode = fwnode;
+>  	range->size = size;
+> +	range->hw_start = addr;
+> +	range->flags = PIO_CPU_MMIO;
+>  
+> -	list_add_tail(&range->list, &io_range_list);
+> -
+> -end_register:
+> -	spin_unlock(&io_range_lock);
+> +	ret = logic_pio_register_range(range);
+> +	if (ret)
+> +		kfree(range);
+>  #endif
+>  
+> -	return err;
+> +	return ret;
+>  }
 
 _______________________________________________
 linux-arm-kernel mailing list
