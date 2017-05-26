@@ -1,80 +1,175 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46750 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751023AbdEZT1I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 May 2017 15:27:08 -0400
+Date: Fri, 26 May 2017 14:27:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Srinath Mannam <srinath.mannam@broadcom.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com
+Subject: Re: [RFC PATCH] pci: Concurrency issue in NVMe Init through PCIe
+ switch
+Message-ID: <20170526192703.GB8204@bhelgaas-glaptop.roam.corp.google.com>
+References: <1494256190-28993-1-git-send-email-srinath.mannam@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFGCpxwmuEKdc6FF=OmQz8tEipbcO+PjkwmywXLtY5=UxSeKvg@mail.gmail.com>
-References: <20170515062745.70082-1-songxiaowei@hisilicon.com>
- <201705151738.ls8RIrFp%fengguang.wu@intel.com>
- <CAFGCpxwmuEKdc6FF=OmQz8tEipbcO+PjkwmywXLtY5=UxSeKvg@mail.gmail.com>
-From: Guodong Xu <guodong.xu@linaro.org>
-Date: Mon, 15 May 2017 17:37:43 +0800
-Message-ID: <CAFGCpxwiBky85WPiusic_UOtMq2VtaG2XC0VG2Hrgz7jtBScUQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] arm64: dts: hi3660: add pcie node
-To: kbuild test robot <lkp@intel.com>, "xuwei (O)" <xuwei5@hisilicon.com>,
- Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- devicetree@vger.kernel.org, Duc Dang <dhdang@apm.com>,
- Arnd Bergmann <arnd@arndb.de>, Wangbinghui <wangbinghui@hisilicon.com>,
- jingoohan1@gmail.com, Suzhuangluan <suzhuangluan@hisilicon.com>,
- Niklas Cassel <niklas.cassel@axis.com>, linux-pci@vger.kernel.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Kishon <kishon@ti.com>, keith.busch@intel.com, kbuild-all@01.org,
- "liudongdong \(C\)" <liudongdong3@huawei.com>,
- Song Xiaowei <songxiaowei@hisilicon.com>, Bjorn Helgaas <bhelgaas@google.com>,
- tn@semihalf.com, "Chenfeng \(puck\)" <puck.chen@hisilicon.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1494256190-28993-1-git-send-email-srinath.mannam@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This PCIe node has dependencies on &crg_ctrl and &gpio11. However,
-both of them are not appearing in mainline kernel tree yet. Sorry
-about that. But I do have a plan to send all dts related changes to
-maillist within this week, no later than this Wed (17/May). Would it
-be possible you maintainers review this patch in parallel?
+Hi Srinath,
 
-+Device tree maintainers.
+Thanks for chasing this down!  It must have been a real hassle to find
+this.
 
--Guodong
+On Mon, May 08, 2017 at 08:39:50PM +0530, Srinath Mannam wrote:
+> We found a concurrency issue in NVMe Init when we initialize
+> multiple NVMe connected over PCIe switch.
+> 
+> Setup details:
+>  - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+>  - Two NVMe cards are connected to PCIe RC through bridge as shown
+>    in the below figure.
+> 
+>                    [RC]
+>                     |
+>                  [BRIDGE]
+>                     |
+>                -----------
+>               |           |
+>             [NVMe]      [NVMe]
+> 
+> Issue description:
+> After PCIe enumeration completed NVMe driver probe function called
+> for both the devices from two CPUS simultaneously.
+> From nvme_probe, pci_enable_device_mem called for both the EPs. This
+> function called pci_enable_bridge enable recursively until RC.
+> 
+> Inside pci_enable_bridge function, at two places concurrency issue is
+> observed.
+> 
+> Place 1:
+>   CPU 0:
+>     1. Done Atomic increment dev->enable_cnt
+>        in pci_enable_device_flags
+>     2. Inside pci_enable_resources
+>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>   CPU 1:
+>     1. Check pci_is_enabled in function pci_enable_bridge
+>        and it is true
+>     2. Check (!dev->is_busmaster) also true
+>     3. Gone into pci_set_master
+>     4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+>     5. Ready to set PCI_COMMAND_MASTER (0x4) in
+>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+> 
+> By the time of last point for both the CPUs are read value 0 and
+> ready to write 2 and 4.
+> After last point final value in PCI_COMMAND register is 4 instead of 6.
+> 
+> Place 2:
+>   CPU 0:
+>     1. Done Atomic increment dev->enable_cnt in
+>        pci_enable_device_flags
+>     2. Inside pci_enable_resources
+>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+>        pci_write_config_word(dev, PCI_COMMAND, cmd);
+>   CPU 1:
+>     1. Done Atomic increment dev->enable_cnt in function
+>        pci_enable_device_flag fail return 0 from there
+>     2. Gone into pci_set_master
+>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+>     4. Ready to set PCI_COMMAND_MASTER (0x4) in
+>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+> 
+> By the time of last point for both the CPUs are read value 0 and
+> ready to write 2 and 4.
+> After last point final value in PCI_COMMAND register is 4 instead of 6.
 
->
-> On Mon, May 15, 2017 at 5:18 PM, kbuild test robot <lkp@intel.com> wrote:
->>
->> Hi Song,
->>
->> [auto build test ERROR on pci/next]
->> [also build test ERROR on v4.12-rc1 next-20170515]
->> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->>
->> url:    https://github.com/0day-ci/linux/commits/Song-Xiaowei/arm64-dts-hi3660-add-pcie-node/20170515-144035
->> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
->> config: arm64-defconfig (attached as .config)
->> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
->> reproduce:
->>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->>         chmod +x ~/bin/make.cross
->>         # save the attached .config to linux build tree
->>         make.cross ARCH=arm64
->>
->> All errors (new ones prefixed by >>):
->>
->> >> Error: arch/arm64/boot/dts/hisilicon/hi3660.dtsi:180.24-25 syntax error
->>    FATAL ERROR: Unable to parse input tree
->>
->> ---
->> 0-DAY kernel test infrastructure                Open Source Technology Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
->
->
+Most places that write PCI_COMMAND do this sort of read/modify/write
+thing.  But in most of those places we only touch one device, and it's
+the device we own, e.g., the PCI core enumerating it or a driver.
+I don't think we really have a concurrency problem with those.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+But in this case, where a driver called pci_enable_device() for device
+A, and we're touching an upstream bridge B, we *do* have an issue.
+
+Since it's a concurrency issue, the obvious solution is a mutex.  I'm
+sure this patch solves it, but it's not obvious to me how it works and
+I'd be afraid of breaking it in the future.
+
+Would it work to add a mutex in the struct pci_host_bridge, then hold
+it while we enable upstream bridges, e.g., something like the
+following?
+
+  bridge = pci_upstream_bridge(dev);
+  if (bridge) {
+    struct mutex = &pci_find_host_bridge(dev)->mutex;
+
+    mutex_lock(mutex);
+    pci_enable_bridge(bridge);
+    mutex_unlock(mutex);
+  }
+
+Bjorn
+
+> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02..6c5744e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1345,21 +1345,39 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>  {
+>  	struct pci_dev *bridge;
+>  	int retval;
+> +	int err;
+> +	int i;
+> +	unsigned int bars = 0;
+> +	unsigned long flags = IORESOURCE_MEM | IORESOURCE_IO;
+>  
+>  	bridge = pci_upstream_bridge(dev);
+>  	if (bridge)
+>  		pci_enable_bridge(bridge);
+>  
+> -	if (pci_is_enabled(dev)) {
+> -		if (!dev->is_busmaster)
+> -			pci_set_master(dev);
+> +	if (dev->pm_cap) {
+> +		u16 pmcsr;
+> +
+> +		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+> +		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+> +	}
+> +
+> +	if (atomic_inc_return(&dev->enable_cnt) > 1)
+> +		return;		/* already enabled */
+> +
+> +	/* only skip sriov related */
+> +	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+> +		if (dev->resource[i].flags & flags)
+> +			bars |= (1 << i);
+> +	for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
+> +		if (dev->resource[i].flags & flags)
+> +			bars |= (1 << i);
+> +
+> +	err = do_pci_enable_device(dev, bars);
+> +	if (err < 0) {
+> +		atomic_dec(&dev->enable_cnt);
+>  		return;
+>  	}
+>  
+> -	retval = pci_enable_device(dev);
+> -	if (retval)
+> -		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+> -			retval);
+>  	pci_set_master(dev);
+>  }
+>  
+> -- 
+> 2.7.4
+> 
