@@ -1,60 +1,90 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        'Joerg Roedel' <jroedel@suse.de>
-Cc: 'David Woodhouse' <dwmw2@infradead.org>,
-        'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
- <1493893297.4904.71.camel@infradead.org>
- <BN6PR12MB1652A0F240C19F2CF3304300F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170524084450.GB12353@suse.de>
- <BN6PR12MB1652DBB703ED7B98F5C17FC5F7FE0@BN6PR12MB1652.namprd12.prod.outlook.com>
-From: Samuel Sieb <samuel@sieb.net>
-Message-ID: <12fe83a5-23ec-3a29-5ed6-ff02175f818a@sieb.net>
-Date: Thu, 25 May 2017 23:48:14 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:6911 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936220AbdEZB5K (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 21:57:10 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8 1/4] PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+Date: Fri, 26 May 2017 09:53:30 +0800
+Message-ID: <20170526015333.92482-2-songxiaowei@hisilicon.com>
+In-Reply-To: <20170526015333.92482-1-songxiaowei@hisilicon.com>
+References: <20170526015333.92482-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <BN6PR12MB1652DBB703ED7B98F5C17FC5F7FE0@BN6PR12MB1652.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/24/2017 05:56 AM, Deucher, Alexander wrote:
->> -----Original Message-----
->> From: Joerg Roedel [mailto:jroedel@suse.de]
->> Sent: Wednesday, May 24, 2017 4:45 AM
->> To: Deucher, Alexander
->> Cc: 'David Woodhouse'; 'Joerg Roedel'; Bjorn Helgaas; linux-
->> pci@vger.kernel.org; linux-kernel@vger.kernel.org; Daniel Drake; Samuel
->> Sieb
->> Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
->>
->> Hi Alexander,
->>
->> On Tue, May 23, 2017 at 07:54:12PM +0000, Deucher, Alexander wrote:
->>> I finally got an answer from the hw team and we validated ATS on
->>> stoney as well so in theory this patch shouldn’t actually be needed.
->>> I think we may actually be papering over some other issue.  The
->>> following patch seems to also fix this issue (and other issues):
->>> https://www.spinics.net/lists/stable/msg172631.html
->>
->> Yeah, but it still looks to me like that the hardware got into some
->> weird state with the storm of ATS invalidations sent to it.
->>
->> The Completion-Wait loop timeouts seen in the original bug report
->> indicate that the IOMMU is waiting for a response that never comes. And
->> this is probably the ATS flush completion response from the GPU, as
->> disabling ATS on the GPU makes the issue disappear.
-> 
-> Yeah, it's weird.  My ack on the patch still stands.  Just adding some additional data.
-> 
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+---
+ .../devicetree/bindings/pci/kirin-pcie.txt         | 49 ++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
 
-I just tested this patch without the previous ATS disabling patch (I 
-verified that ATS was enabled).  Doing a stress-test kernel build while 
-running a 3D graphical application caused no disk corruption.  That was 
-running for several hours.  If it's not the solution, it sure hides the 
-problem really well.
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+new file mode 100644
+index 000000000000..2dd0e7a368ad
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -0,0 +1,49 @@
++HiSilicon Kirin SoCs PCIe host DT description
++
++Kirin PCIe host controller is based on Designware PCI core.
++It shares common functions with PCIe Designware core driver
++and inherits common properties defined in
++Documentation/devicetree/bindings/pci/designware-pci.txt.
++
++Additional properties are described here:
++
++Required properties
++- compatible:
++	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
++- reg: Should contain rc_dbi, apb, phy, config registers location and length.
++- reg-names: Must include the following entries:
++  "dbi": controller configuration registers;
++  "apb": apb Ctrl register defined by Kirin;
++  "phy": apb PHY register defined by Kirin;
++  "config": PCIe configuration space registers.
++- reset-gpios: The gpio to generate PCIe perst assert and deassert signal.
++
++Optional properties:
++
++Example based on kirin960:
++
++        pcie@f4000000 {
++                        compatible = "hisilicon,kirin-pcie";
++                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
++                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
++                        reg-names = "dbi","apb","phy", "config";
++                        bus-range = <0x0  0x1>;
++                        #address-cells = <3>;
++                        #size-cells = <2>;
++                        device_type = "pci";
++                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf5000000 0x0 0x2000000>;
++                        num-lanes = <1>;
++                        #interrupt-cells = <1>;
++                        interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
++                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
++                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
++                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
++                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
++                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
++                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
++                        clock-names = "pcie_phy_ref", "pcie_aux",
++                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
++                        reset-gpios = <&gpio11 1 0 >;
++        };
+-- 
+2.11.GIT
