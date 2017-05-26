@@ -1,185 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:33501 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934001AbdEWHrG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 03:47:06 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3] PCI: use IDA to manage domain number if not getting it from DT
-Date: Tue, 23 May 2017 15:45:11 +0800
-Message-Id: <1495525511-202465-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:56848 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1948854AbdEZXr3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 May 2017 19:47:29 -0400
+Date: Fri, 26 May 2017 18:47:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
+Message-ID: <20170526234726.GD21531@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170522225023.14010-1-jakub.kicinski@netronome.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If not getting domain number from DT, the domain number will
-keep increasing once doing unbind/bind RC drivers. This could
-introduce pointless tree view of lspci as shows below:
+Hi Jakub,
 
--+-[0001:00]---00.0-[01]----00.0
-  \-[0000:00]-
+On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:
+> PCI core sets the driver pointer before calling ->probe() and only
+> clears it after ->remove().  This means driver's ->sriov_configure()
+> callback will happily race with probe() and remove(), most likely
+> leading to BUGs, since drivers don't expect this.
 
-The more test we do, the lengthier it would be. The more serious
-issue is that if attaching two hierarchies for two different domains
-belonging to two root bridges, so when doing unbind/bind test for one
-of them and keep the other, then the domain number would finally
-overflow and make the two hierarchies of devices share the some domain
-number but actually they shouldn't. So it looks like we need to invent
-a new indexing ID mechanism to manage domain number. This patch
-introduces idr to achieve our purpose.
+I guess you're referring to the pci_dev->driver pointer set by
+local_pci_probe(), and this is important because sriov_numvfs_store()
+checks that pointer, right?
 
-Cc: Brian Norris <briannorris@chromium.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+I was trying to make sure there weren't other similar problems elsewhere.
+But I don't see any other sysfs functions that use pci_dev->driver in that
+way, so I think this is the only one.
 
----
+I think this looks good.
 
-Changes in v3:
-- make ida_domain a system-wide property and check it in the code to
-combine with use_dt_domains. Also update the comment there.
+    pci_bus_add_devices
+      pci_bus_add_device
+        pci_create_sysfs_dev_files
+        device_attach
+          __device_attach
+            device_lock(dev)
+            __device_attach_driver
+              ...
+                local_pci_probe
+                  pci_dev->driver = pci_drv       <--- set
+                  pci_drv->probe()
+            device_unlock(dev)
 
-Changes in v2:
-- add a remove wrapper
-- rename use_dt_domains to ida_domain and set this bit
-in pci_get_new_domain_nr and test it in the remove wrapper.
+    sriov_numvfs_store
+  -   mutex_lock(&iov->dev->sriov->lock)
+  +   device_lock(&pdev->dev)
+      if (pdev->driver && pdev->driver->sriov_configure)  <--- test
+        pdev->driver->sriov_configure
+  -   mutex_unlock(&iov->dev->sriov->lock)
+  +   device_unlock(&pdev->dev)
 
- drivers/pci/pci.c    | 42 ++++++++++++++++++++++++++++--------------
- drivers/pci/remove.c |  2 ++
- include/linux/pci.h  |  8 ++++++--
- 3 files changed, 36 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5b..e5f5db0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/dmi.h>
-+#include <linux/idr.h>
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -5340,15 +5341,25 @@ static void pci_no_domains(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS
--static atomic_t __domain_nr = ATOMIC_INIT(-1);
-+DEFINE_IDA(__domain_nr);
- 
--int pci_get_new_domain_nr(void)
-+/* get domain number from IDA */
-+static bool ida_domain = true;
-+
-+int pci_get_new_domain_nr(struct pci_bus *bus)
-+{
-+	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
-+}
-+
-+void pci_put_old_domain_nr(struct pci_bus *bus)
- {
--	return atomic_inc_return(&__domain_nr);
-+	if (ida_domain)
-+		ida_simple_remove(&__domain_nr, bus->domain_nr);
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
--static int of_pci_bus_find_domain_nr(struct device *parent)
-+static int of_pci_bus_find_domain_nr(struct pci_bus *bus,
-+				     struct device *parent)
- {
- 	static int use_dt_domains = -1;
- 	int domain = -1;
-@@ -5361,19 +5372,21 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
- 	 * If DT domain property is valid (domain >= 0) and
- 	 * use_dt_domains != 0, the DT assignment is valid since this means
- 	 * we have not previously allocated a domain number by using
--	 * pci_get_new_domain_nr(); we should also update use_dt_domains to
--	 * 1, to indicate that we have just assigned a domain number from
--	 * DT.
-+	 * pci_get_new_domain_nr(), so we should set ida_domain to false to
-+	 * indicate that we don't allocate domain from idr; we should also
-+	 * update use_dt_domains to 1, to indicate that we have just assigned
-+	 * a domain number from DT.
- 	 *
- 	 * If DT domain property value is not valid (ie domain < 0), and we
- 	 * have not previously assigned a domain number from DT
--	 * (use_dt_domains != 1) we should assign a domain number by
--	 * using the:
-+	 * (use_dt_domains != 1 && ida_domain != false) we should assign a
-+	 * domain number by using the:
- 	 *
- 	 * pci_get_new_domain_nr()
- 	 *
--	 * API and update the use_dt_domains value to keep track of method we
--	 * are using to assign domain numbers (use_dt_domains = 0).
-+	 * API and update the use_dt_domains and ida_domain value to keep track
-+	 * of method we are using to assign domain numbers (use_dt_domains = 0
-+	 * and ida_domain = true).
- 	 *
- 	 * All other combinations imply we have a platform that is trying
- 	 * to mix domain numbers obtained from DT and pci_get_new_domain_nr(),
-@@ -5383,9 +5396,10 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
- 	 */
- 	if (domain >= 0 && use_dt_domains) {
- 		use_dt_domains = 1;
--	} else if (domain < 0 && use_dt_domains != 1) {
-+		ida_domain = false;
-+	} else if (domain < 0 && use_dt_domains != 1 && ida_domain != false) {
- 		use_dt_domains = 0;
--		domain = pci_get_new_domain_nr();
-+		domain = pci_get_new_domain_nr(bus);
- 	} else {
- 		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
- 			parent->of_node->full_name);
-@@ -5397,7 +5411,7 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
- 
- int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
- {
--	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
-+	return acpi_disabled ? of_pci_bus_find_domain_nr(bus, parent) :
- 			       acpi_pci_bus_find_domain_nr(bus);
- }
- #endif
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 73a03d3..1bbbb37 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	list_for_each_entry_safe(child, tmp,
- 				 &bus->devices, bus_list)
- 		pci_remove_bus_device(child);
-+
-+	pci_put_old_domain_nr(bus);
- 	pci_remove_bus(bus);
- 	host_bridge->bus = NULL;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..9296e31 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1445,13 +1445,17 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
-  * configuration space.
-  */
- #ifdef CONFIG_PCI_DOMAINS
-+extern struct ida __domain_nr;
- extern int pci_domains_supported;
--int pci_get_new_domain_nr(void);
-+int pci_get_new_domain_nr(struct pci_bus *bus);
-+void pci_put_old_domain_nr(struct pci_bus *bus);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-+static inline int pci_get_new_domain_nr(struct pci_bus *bus)
-+{ return -ENOSYS; }
-+static inline void pci_put_old_domain_nr(struct pci_bus *bus) { }
- #endif /* CONFIG_PCI_DOMAINS */
- 
- /*
--- 
-1.9.1
+> We could reorder pointer assignments, or try detecting races in all
+> drivers, but it seems simpler and cleaner to just hold the device lock
+> instead of special SR-IOV lock, since that lock is already supposed
+> to synchronize the driver callbacks.
+> 
+> Remove the iov lock completely, since we remove the last user.
+> 
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> ---
+>  drivers/pci/iov.c       | 4 ----
+>  drivers/pci/pci-sysfs.c | 5 ++---
+>  drivers/pci/pci.h       | 1 -
+>  3 files changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index d9dc7363ac77..120485d6f352 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -461,8 +461,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	else
+>  		iov->dev = dev;
+>  
+> -	mutex_init(&iov->lock);
+> -
+>  	dev->sriov = iov;
+>  	dev->is_physfn = 1;
+>  	rc = compute_max_vf_buses(dev);
+> @@ -491,8 +489,6 @@ static void sriov_release(struct pci_dev *dev)
+>  	if (dev != dev->sriov->dev)
+>  		pci_dev_put(dev->sriov->dev);
+>  
+> -	mutex_destroy(&dev->sriov->lock);
+> -
+>  	kfree(dev->sriov);
+>  	dev->sriov = NULL;
+>  }
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 31e99613a12e..7755559558df 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -472,7 +472,6 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  				  const char *buf, size_t count)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> -	struct pci_sriov *iov = pdev->sriov;
+>  	int ret;
+>  	u16 num_vfs;
+>  
+> @@ -483,7 +482,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>  		return -ERANGE;
+>  
+> -	mutex_lock(&iov->dev->sriov->lock);
+> +	device_lock(&pdev->dev);
+>  
+>  	if (num_vfs == pdev->sriov->num_VFs)
+>  		goto exit;
+> @@ -518,7 +517,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  			 num_vfs, ret);
+>  
+>  exit:
+> -	mutex_unlock(&iov->dev->sriov->lock);
+> +	device_unlock(&pdev->dev);
+>  
+>  	if (ret < 0)
+>  		return ret;
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index f8113e5b9812..93f4044b8f4b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -272,7 +272,6 @@ struct pci_sriov {
+>  	u16 driver_max_VFs;	/* max num VFs driver supports */
+>  	struct pci_dev *dev;	/* lowest numbered PF */
+>  	struct pci_dev *self;	/* this PF */
+> -	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+>  	bool drivers_autoprobe;	/* auto probing of VFs by driver */
+>  };
+> -- 
+> 2.11.0
+> 
