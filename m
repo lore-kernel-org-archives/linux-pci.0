@@ -1,536 +1,596 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43000 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752756AbdEHO4t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 8 May 2017 10:56:49 -0400
-Date: Mon, 8 May 2017 09:56:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Cyril Bur <cyrilbur@gmail.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [GIT PULL] PCI changes for v4.12
-Message-ID: <20170508145642.GA8466@bhelgaas-glaptop.roam.corp.google.com>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:6913 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S939570AbdEZB5V (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 21:57:21 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8 3/4] PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+Date: Fri, 26 May 2017 09:53:32 +0800
+Message-ID: <20170526015333.92482-4-songxiaowei@hisilicon.com>
+In-Reply-To: <20170526015333.92482-1-songxiaowei@hisilicon.com>
+References: <20170526015333.92482-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI changes:
-
-  - add framework for supporting PCIe devices in Endpoint mode (Kishon
-    Vijay Abraham I)
-
-  - use non-postable PCI config space mappings when possible (Lorenzo
-    Pieralisi)
-
-  - clean up and unify mmap of PCI BARs (David Woodhouse)
-
-  - export and unify Function Level Reset support (Christoph Hellwig)
-
-  - avoid FLR for Intel 82579 NICs (Sasha Neftin)
-
-  - add pci_request_irq() and pci_free_irq() helpers (Christoph Hellwig)
-
-  - short-circuit config access failures for disconnected devices (Keith
-    Busch)
-
-  - remove D3 sleep delay when possible (Adrian Hunter)
-  
-  - freeze PME scan before suspending devices (Lukas Wunner)
-
-  - stop disabling MSI/MSI-X in pci_device_shutdown() (Prarit Bhargava)
-
-  - disable boot interrupt quirk for ASUS M2N-LR (Stefan Assmann)
-
-  - add arch-specific alignment control to improve device passthrough by
-    avoiding multiple BARs in a page (Yongji Xie)
-
-  - add sysfs sriov_drivers_autoprobe to control VF driver binding (Bodong
-    Wang)
-
-  - allow slots below PCI-to-PCIe "reverse bridges" (Bjorn Helgaas)
-
-  - fix crashes when unbinding host controllers that don't support removal
-    (Brian Norris)
-
-  - add driver for MicroSemi Switchtec management interface (Logan
-    Gunthorpe)
-
-  - add driver for Faraday Technology FTPCI100 host bridge (Linus Walleij)
-
-  - add i.MX7D support (Andrey Smirnov)
-
-  - use generic MSI support for Aardvark (Thomas Petazzoni)
-
-  - make Rockchip driver modular (Brian Norris)
-
-  - advertise 128-byte Read Completion Boundary support for Rockchip (Shawn
-    Lin)
-
-  - advertise PCI_EXP_LNKSTA_SLC for Rockchip root port (Shawn Lin)
-
-  - convert atomic_t to refcount_t in HV driver (Elena Reshetova)
-
-  - add CPU IRQ affinity in HV driver (K. Y. Srinivasan)
-
-  - fix PCI bus removal in HV driver (Long Li)
-
-  - add support for ThunderX2 DMA alias topology (Jayachandran C)
-
-  - add ThunderX pass2.x 2nd node MCFG quirk (Tomasz Nowicki)
-
-  - add ITE 8893 bridge DMA alias quirk (Jarod Wilson)
-
-  - restrict Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices (Manish
-    Jaggi)
-
-
-You should see a few trivial merge conflicts:
-
-  - pci_enable_msix() was removed by Christoph Hellwig via David Miller;
-    conflicts with my change to make pci_msi_shutdown() and
-    pci_enable_msix() static
-
-  - CONFIG_PANEL removed from drivers/misc/Makefile by Andy Shevchenko via
-    Greg KH; conflicts with CONFIG_PCI_ENDPOINT_TEST addition by Kishon
-    Vijay Abraham I
-
-  - CONFIG_ASPEED_LPC_CTRL added to drivers/misc/Makefile by Cyril Bur via
-    Greg KH; conflicts with CONFIG_PCI_ENDPOINT_TEST addition by Kishon
-    Vijay Abraham I
-
-
-The following changes since commit 794a8604fe6e4a311373cde57a86ad4aab9d32b8:
-
-  PCI: dwc: Fix dw_pcie_ops NULL pointer dereference (2017-04-04 08:24:25 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.12-changes
-
-for you to fetch changes up to 3146c8f4de9b0858794a902f273aec13f168596e:
-
-  Merge branch 'pci/remove' into next (2017-04-28 10:38:13 -0500)
-
-----------------------------------------------------------------
-pci-v4.12-changes
-
-----------------------------------------------------------------
-Adrian Hunter (1):
-      PCI/PM: Don't sleep at all when d3_delay or d3cold_delay is zero
-
-Andrey Smirnov (4):
-      PCI: imx6: Add code to support i.MX7D
-      PCI: imx6: Allow probe deferral by reset GPIO
-      PCI: imx6: Do not wait for speed change on i.MX7
-      PCI: imx6: Do not switch speed if Gen2 is disabled
-
-Bjorn Helgaas (28):
-      PCI/MSI: Make pci_msi_shutdown() and pci_msix_shutdown() static
-      PCI/MSI: Use dev_printk() when possible
-      PCI: rockchip: Unindent rockchip_pcie_set_power_limit()
-      PCI: dwc: Unindent dw_handle_msi_irq() loop
-      PCI: Include PCI-to-PCIe bridges as "Downstream Ports"
-      PCI: Factor pci_reassigndev_resource_alignment()
-      PCI: Don't reassign resources that are already aligned
-      PCI/ACPI: Tidy up MCFG quirk whitespace
-      Merge branch 'pci/host-designware' into next
-      Merge branch 'pci/host-faraday' into next
-      Merge branch 'pci/host-hv' into next
-      Merge branch 'pci/host-imx6' into next
-      Merge branch 'pci/host-iproc' into next
-      Merge branch 'pci/host-mvebu' into next
-      Merge branch 'pci/host-rockchip' into next
-      Merge branch 'pci/host-thunder' into next
-      Merge branch 'pci/switchtec' into next
-      Merge branch 'pci/enumeration' into next
-      Merge branch 'pci/iommu' into next
-      Merge branch 'pci/ioremap' into next
-      Merge branch 'pci/irq' into next
-      Merge branch 'pci/misc' into next
-      Merge branch 'pci/msi' into next
-      Merge branch 'pci/pm' into next
-      Merge branch 'pci/resource' into next
-      Merge branch 'pci/resource-mmap' into next
-      Merge branch 'pci/virtualization' into next
-      Merge branch 'pci/remove' into next
-
-Bodong Wang (1):
-      PCI: Add sysfs sriov_drivers_autoprobe to control VF driver binding
-
-Brian Norris (7):
-      PCI: rockchip: Handle regulator_get_current_limit() failure correctly
-      PCI: rockchip: Make 'return 0' more obvious in probe()
-      PCI: Fix typo pci_cfg_access_lock() comment
-      PCI: rockchip: Add remove() support
-      PCI: Export pci_remap_iospace() and pci_unmap_iospace()
-      PCI: rockchip: Modularize
-      PCI: Don't allow unbinding host controllers that aren't prepared
-
-Christoph Hellwig (9):
-      genirq: Fix indentation in remove_irq()
-      genirq: Return the IRQ name from free_irq()
-      PCI/irq: Add pci_request_irq() and pci_free_irq() helpers
-      nvme/pci: Switch to pci_request_irq()
-      PCI: Export pcie_flr()
-      PCI: Call pcie_flr() from reset_intel_82599_sfp_virtfn()
-      PCI: Call pcie_flr() from reset_chelsio_generic_dev()
-      IB/hfi1: Use pcie_flr() instead of duplicating it
-      ixgbe: Use pcie_flr() instead of duplicating it
-
-Colin Ian King (1):
-      PCI: imx6: Fix spelling mistake: "contol" -> "control"
-
-Dan Carpenter (1):
-      PCI: dwc: Fix uninitialized variable in dw_handle_msi_irq()
-
-David Woodhouse (22):
-      PCI: Fix pci_mmap_fits() for HAVE_PCI_RESOURCE_TO_USER platforms
-      PCI: Fix another sanity check bug in /proc/pci mmap
-      PCI: Only allow WC mmap on prefetchable resources
-      xtensa/PCI: Do not mmap PCI BARs to userspace as write-through
-      PCI: Add arch_can_pci_mmap_wc() macro
-      PCI: Move multiple declarations of pci_mmap_page_range() to <linux/pci.h>
-      PCI: Add arch_can_pci_mmap_io() on architectures which can mmap() I/O space
-      PCI: Use BAR index in sysfs attr->private instead of resource pointer
-      PCI: Add BAR index argument to pci_mmap_page_range()
-      PCI: Add pci_mmap_resource_range() and use it for ARM64
-      ARM/PCI: Use generic pci_mmap_resource_range()
-      cris/PCI: Use generic pci_mmap_resource_range()
-      MIPS: PCI: Use generic pci_mmap_resource_range()
-      mn10300/PCI: Use generic pci_mmap_resource_range()
-      parisc: Use generic pci_mmap_resource_range()
-      sh/PCI: Use generic pci_mmap_resource_range()
-      unicore32/PCI: Use generic pci_mmap_resource_range()
-      x86/PCI: Use generic pci_mmap_resource_range()
-      PCI: Add I/O BAR support to generic pci_mmap_resource_range()
-      ia64: Remove redundant valid_mmap_phys_addr_range() from pci_mmap_page_range()
-      ia64: Remove redundant checks for WC in pci_mmap_page_range()
-      ia64: Use generic pci_mmap_resource_range()
-
-Elena Reshetova (1):
-      PCI: hv: Convert hv_pci_dev.refs from atomic_t to refcount_t
-
-Jarod Wilson (1):
-      PCI: Add bridge DMA alias quirk for ITE 8893 bridge
-
-Jayachandran C (2):
-      PCI: Add device flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
-      PCI: Avoid generating invalid ThunderX2 DMA aliases
-
-Jon Mason (1):
-      PCI: iproc: Add PCI_DOMAIN dependency to PCI Kconfig
-
-K. Y. Srinivasan (2):
-      PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >= 32 CPUs
-      PCI: hv: Allocate interrupt descriptors with GFP_ATOMIC
-
-Keerthy (1):
-      PCI: dwc: dra7xx: Push request_irq() call to the bottom of probe
-
-Keith Busch (5):
-      PCI: Export PCI device config accessors
-      PCI: Add device disconnected state
-      PCI: Don't attempt config access to disconnected devices
-      PCI/MSI: Skip disabling disconnected devices
-      PCI: Short-circuit pci_device_is_present() for disconnected devices
-
-Kishon Vijay Abraham I (29):
-      PCI: dwc: designware: Add new *ops* for CPU addr fixup
-      PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-      PCI: dwc: artpec6: Populate cpu_addr_fixup ops
-      PCI: dwc: all: Modify dbi accessors to take dbi_base as argument
-      PCI: dwc: all: Modify dbi accessors to access data of 4/2/1 bytes
-      PCI: dwc: designware: Move _unroll configurations to a separate function
-      PCI: endpoint: Add EP core layer to enable EP controller and EP functions
-      Documentation: PCI: Guide to use PCI Endpoint Core Layer
-      PCI: endpoint: Introduce configfs entry for configuring EP functions
-      Documentation: PCI: Guide to use PCI endpoint configfs
-      PCI: endpoint: Create configfs entry for EPC device and EPF driver
-      Documentation: PCI: Add specification for the *PCI test* function device
-      PCI: endpoint: functions: Add an EP function to test PCI
-      Documentation: PCI: Add binding documentation for pci-test endpoint function
-      PCI: dwc: designware: Add EP mode support
-      dt-bindings: PCI: Add DT bindings for PCI designware EP mode
-      PCI: dwc: dra7xx: Facilitate wrapper and MSI interrupts to be enabled independently
-      PCI: dwc: dra7xx: Add EP mode support
-      dt-bindings: PCI: dra7xx: Add DT bindings for PCI dra7xx EP mode
-      PCI: dwc: dra7xx: Workaround for errata id i870
-      dt-bindings: PCI: dra7xx: Add DT bindings to enable unaligned access
-      PCI: Add device IDs for DRA74x and DRA72x
-      misc: Add host side PCI driver for PCI test function device
-      Documentation: misc-devices: Add Documentation for pci-endpoint-test driver
-      tools: PCI: Add a userspace tool to test PCI endpoint
-      tools: PCI: Add sample test script to invoke pcitest
-      Documentation: PCI: Add userguide for PCI endpoint test function
-      MAINTAINERS: Add PCI Endpoint maintainer
-      ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to SW_WKUP
-
-Linus Walleij (2):
-      PCI: Add DT bindings for Faraday Technology PCI Host Bridge
-      PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver
-
-Logan Gunthorpe (4):
-      MicroSemi Switchtec management interface driver
-      switchtec: Add user interface documentation
-      switchtec: Add sysfs attributes to the Switchtec driver
-      switchtec: Add IOCTLs to the Switchtec driver
-
-Long Li (2):
-      PCI: hv: Properly handle PCI bus remove
-      PCI: hv: Lock PCI bus on device eject
-
-Lorenzo Pieralisi (21):
-      PCI: Remove __weak tag from pci_remap_iospace()
-      linux/io.h: Add pci_remap_cfgspace() interface
-      ARM64: Implement pci_remap_cfgspace() interface
-      ARM: Implement pci_remap_cfgspace() interface
-      devres: fix devm_ioremap_*() offset parameter kerneldoc description
-      PCI: Implement devm_pci_remap_cfgspace()
-      PCI: ECAM: Map config region with pci_remap_cfgspace()
-      PCI: xilinx: Update PCI config space remap function
-      PCI: xilinx-nwl: Update PCI config space remap function
-      PCI: spear13xx: Update PCI config space remap function
-      PCI: rockchip: Update PCI config space remap function
-      PCI: qcom: Update PCI config space remap function
-      PCI: iproc-platform: Update PCI config space remap function
-      PCI: designware: Update PCI config space remap function
-      PCI: armada8k: Update PCI config space remap function
-      PCI: xgene: Update PCI config space remap function
-      PCI: tegra: Update PCI config space remap function
-      PCI: hisi: Update PCI config space remap function
-      PCI: layerscape: Update PCI config space remap function
-      PCI: keystone-dw: Update PCI config space remap function
-      PCI: versatile: Update PCI config space remap function
-
-Lukas Wunner (1):
-      PCI: Freeze PME scan before suspending devices
-
-Manish Jaggi (1):
-      PCI: Apply Cavium ACS quirk only to CN81xx/CN83xx/CN88xx devices
-
-Marc Gonzalez (3):
-      PCI: Include pci.h for struct pci_ops definition
-      PCI: Improve __pci_read_base() robustness
-      PCI: Change pci_host_common_probe() visibility
-
-Matthias Kaehlcke (1):
-      PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
-
-Prarit Bhargava (1):
-      PCI/MSI: Stop disabling MSI/MSI-X in pci_device_shutdown()
-
-Russell King (1):
-      PCI: mvebu: Avoid changing the SCC bit in the Link Status register
-
-Sasha Neftin (1):
-      PCI: Avoid FLR for Intel 82579 NICs
-
-Shawn Lin (2):
-      PCI: rockchip: Advertise 128-byte Read Completion Boundary support
-      PCI: rockchip: Set PCI_EXP_LNKSTA_SLC in the Root Port
-
-Stefan Assmann (1):
-      PCI: Disable boot interrupt quirk for ASUS M2N-LR
-
-Thomas Petazzoni (3):
-      PCI: aardvark: Move to MSI handling using generic MSI support
-      PCI: mvebu: Remove useless MSI enabling code
-      of/pci: Remove unused MSI controller helpers
-
-Tomasz Nowicki (1):
-      PCI/ACPI: Add ThunderX pass2.x 2nd node MCFG quirk
-
-Yongji Xie (5):
-      PCI: Ignore requested alignment for IOV BARs
-      PCI: Fix calculation of bridge window's size and alignment
-      PCI: Add pcibios_default_alignment() for arch-specific alignment control
-      powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned
-      PCI: Don't resize resources when realigning all devices in system
-
- Documentation/ABI/testing/sysfs-bus-pci            |   22 +
- Documentation/ABI/testing/sysfs-class-switchtec    |   96 ++
- Documentation/PCI/00-INDEX                         |   10 +
- .../PCI/endpoint/function/binding/pci-test.txt     |   17 +
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt    |  105 ++
- Documentation/PCI/endpoint/pci-endpoint.txt        |  215 +++
- Documentation/PCI/endpoint/pci-test-function.txt   |   66 +
- Documentation/PCI/endpoint/pci-test-howto.txt      |  179 +++
- Documentation/PCI/pci-iov-howto.txt                |   12 +
- .../devicetree/bindings/pci/designware-pcie.txt    |   26 +-
- .../devicetree/bindings/pci/faraday,ftpci100.txt   |  129 ++
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   14 +-
- Documentation/devicetree/bindings/pci/ti-pci.txt   |   42 +-
- Documentation/driver-model/devres.txt              |    6 +-
- Documentation/filesystems/sysfs-pci.txt            |   15 +-
- Documentation/ioctl/ioctl-number.txt               |    1 +
- Documentation/misc-devices/pci-endpoint-test.txt   |   35 +
- Documentation/switchtec.txt                        |   80 +
- MAINTAINERS                                        |   20 +
- arch/arm/include/asm/io.h                          |   10 +
- arch/arm/include/asm/pci.h                         |    3 +-
- arch/arm/kernel/bios32.c                           |   19 -
- arch/arm/mach-omap2/clockdomains7xx_data.c         |    2 +-
- arch/arm/mm/ioremap.c                              |    7 +
- arch/arm/mm/nommu.c                                |   12 +
- arch/arm64/include/asm/io.h                        |   10 +
- arch/arm64/include/asm/pci.h                       |    2 +
- arch/cris/arch-v32/drivers/pci/bios.c              |   22 -
- arch/cris/include/asm/pci.h                        |    4 +-
- arch/ia64/include/asm/pci.h                        |    5 +-
- arch/ia64/pci/pci.c                                |   46 -
- arch/microblaze/include/asm/pci.h                  |    6 +-
- arch/microblaze/pci/pci-common.c                   |    2 +-
- arch/mips/include/asm/pci.h                        |    5 +-
- arch/mips/pci/pci.c                                |   24 -
- arch/mn10300/include/asm/pci.h                     |    4 +-
- arch/mn10300/unit-asb2305/pci-asb2305.c            |   23 -
- arch/parisc/include/asm/pci.h                      |    4 +-
- arch/parisc/kernel/pci.c                           |   28 -
- arch/powerpc/include/asm/machdep.h                 |    2 +
- arch/powerpc/include/asm/pci.h                     |    9 +-
- arch/powerpc/kernel/pci-common.c                   |   11 +-
- arch/powerpc/platforms/powernv/pci-ioda.c          |    7 +
- arch/sh/drivers/pci/pci.c                          |   21 -
- arch/sh/include/asm/pci.h                          |    4 +-
- arch/sparc/include/asm/pci_64.h                    |    5 +-
- arch/sparc/kernel/pci.c                            |    6 +-
- arch/unicore32/include/asm/pci.h                   |    3 +-
- arch/unicore32/kernel/pci.c                        |   23 -
- arch/x86/include/asm/pci.h                         |    7 +-
- arch/x86/pci/i386.c                                |   47 -
- arch/xtensa/include/asm/pci.h                      |    7 +-
- arch/xtensa/kernel/pci.c                           |   24 +-
- drivers/Makefile                                   |    2 +
- drivers/acpi/pci_mcfg.c                            |   14 +-
- drivers/infiniband/hw/hfi1/chip.c                  |    4 +-
- drivers/infiniband/hw/hfi1/hfi.h                   |    1 -
- drivers/infiniband/hw/hfi1/pcie.c                  |   30 -
- drivers/misc/Kconfig                               |    7 +
- drivers/misc/Makefile                              |    1 +
- drivers/misc/pci_endpoint_test.c                   |  534 +++++++
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c      |   16 +-
- drivers/nvme/host/pci.c                            |   30 +-
- drivers/of/of_pci.c                                |   45 -
- drivers/pci/Kconfig                                |    2 +
- drivers/pci/Makefile                               |    3 +-
- drivers/pci/access.c                               |   61 +-
- drivers/pci/dwc/Kconfig                            |   36 +-
- drivers/pci/dwc/Makefile                           |    5 +-
- drivers/pci/dwc/pci-dra7xx.c                       |  293 +++-
- drivers/pci/dwc/pci-exynos.c                       |   14 +-
- drivers/pci/dwc/pci-imx6.c                         |  199 ++-
- drivers/pci/dwc/pci-keystone-dw.c                  |    2 +-
- drivers/pci/dwc/pci-layerscape.c                   |    3 +-
- drivers/pci/dwc/pcie-armada8k.c                    |    3 +-
- drivers/pci/dwc/pcie-artpec6.c                     |   12 +-
- drivers/pci/dwc/pcie-designware-ep.c               |  342 +++++
- drivers/pci/dwc/pcie-designware-host.c             |   39 +-
- drivers/pci/dwc/pcie-designware-plat.c             |    1 +
- drivers/pci/dwc/pcie-designware.c                  |  258 +++-
- drivers/pci/dwc/pcie-designware.h                  |  135 +-
- drivers/pci/dwc/pcie-hisi.c                        |    9 +-
- drivers/pci/dwc/pcie-qcom.c                        |    2 +-
- drivers/pci/dwc/pcie-spear13xx.c                   |    3 +-
- drivers/pci/ecam.c                                 |    6 +-
- drivers/pci/endpoint/Kconfig                       |   31 +
- drivers/pci/endpoint/Makefile                      |    7 +
- drivers/pci/endpoint/functions/Kconfig             |   12 +
- drivers/pci/endpoint/functions/Makefile            |    5 +
- drivers/pci/endpoint/functions/pci-epf-test.c      |  510 +++++++
- drivers/pci/endpoint/pci-ep-cfs.c                  |  509 +++++++
- drivers/pci/endpoint/pci-epc-core.c                |  580 +++++++
- drivers/pci/endpoint/pci-epc-mem.c                 |  143 ++
- drivers/pci/endpoint/pci-epf-core.c                |  359 +++++
- drivers/pci/host/Kconfig                           |   10 +-
- drivers/pci/host/Makefile                          |    1 +
- drivers/pci/host/pci-aardvark.c                    |  173 +--
- drivers/pci/host/pci-ftpci100.c                    |  563 +++++++
- drivers/pci/host/pci-host-generic.c                |    1 +
- drivers/pci/host/pci-hyperv.c                      |   46 +-
- drivers/pci/host/pci-mvebu.c                       |   22 +-
- drivers/pci/host/pci-tegra.c                       |    4 +-
- drivers/pci/host/pci-thunder-ecam.c                |    1 +
- drivers/pci/host/pci-thunder-pem.c                 |    1 +
- drivers/pci/host/pci-versatile.c                   |    4 +-
- drivers/pci/host/pci-xgene.c                       |    5 +-
- drivers/pci/host/pcie-iproc-platform.c             |    3 +-
- drivers/pci/host/pcie-rockchip.c                   |   91 +-
- drivers/pci/host/pcie-xilinx-nwl.c                 |    2 +-
- drivers/pci/host/pcie-xilinx.c                     |    2 +-
- drivers/pci/hotplug/pciehp_pci.c                   |    6 +
- drivers/pci/iov.c                                  |    1 +
- drivers/pci/irq.c                                  |   61 +-
- drivers/pci/mmap.c                                 |   99 ++
- drivers/pci/msi.c                                  |   17 +-
- drivers/pci/pci-driver.c                           |   24 +-
- drivers/pci/pci-sysfs.c                            |  104 +-
- drivers/pci/pci.c                                  |  252 ++-
- drivers/pci/pci.h                                  |   19 +-
- drivers/pci/pcie/pcie-dpc.c                        |    5 +
- drivers/pci/probe.c                                |    4 +-
- drivers/pci/proc.c                                 |   41 +-
- drivers/pci/quirks.c                               |   82 +-
- drivers/pci/search.c                               |    4 +
- drivers/pci/setup-bus.c                            |    4 +-
- drivers/pci/setup-res.c                            |    2 +-
- drivers/pci/switch/Kconfig                         |   13 +
- drivers/pci/switch/Makefile                        |    1 +
- drivers/pci/switch/switchtec.c                     | 1600 ++++++++++++++++++++
- include/linux/interrupt.h                          |    2 +-
- include/linux/io.h                                 |   21 +
- include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |    4 +
- include/linux/mod_devicetable.h                    |   10 +
- include/linux/of_pci.h                             |   11 -
- include/linux/pci-ecam.h                           |    3 +-
- include/linux/pci-ep-cfs.h                         |   41 +
- include/linux/pci-epc.h                            |  144 ++
- include/linux/pci-epf.h                            |  162 ++
- include/linux/pci.h                                |   84 +-
- include/linux/pci_ids.h                            |    2 +
- include/uapi/linux/Kbuild                          |    1 +
- include/uapi/linux/pci_regs.h                      |    2 +-
- include/uapi/linux/pcitest.h                       |   19 +
- include/uapi/linux/switchtec_ioctl.h               |  132 ++
- kernel/irq/manage.c                                |   15 +-
- lib/devres.c                                       |    6 +-
- tools/pci/pcitest.c                                |  186 +++
- tools/pci/pcitest.sh                               |   56 +
- 148 files changed, 8937 insertions(+), 1004 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint.txt
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
- create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
- create mode 100644 Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
- create mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
- create mode 100644 Documentation/switchtec.txt
- create mode 100644 drivers/misc/pci_endpoint_test.c
- create mode 100644 drivers/pci/dwc/pcie-designware-ep.c
- create mode 100644 drivers/pci/endpoint/Kconfig
- create mode 100644 drivers/pci/endpoint/Makefile
- create mode 100644 drivers/pci/endpoint/functions/Kconfig
- create mode 100644 drivers/pci/endpoint/functions/Makefile
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
- create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
- create mode 100644 drivers/pci/endpoint/pci-epc-core.c
- create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
- create mode 100644 drivers/pci/endpoint/pci-epf-core.c
- create mode 100644 drivers/pci/host/pci-ftpci100.c
- create mode 100644 drivers/pci/mmap.c
- create mode 100644 drivers/pci/switch/Kconfig
- create mode 100644 drivers/pci/switch/Makefile
- create mode 100644 drivers/pci/switch/switchtec.c
- create mode 100644 include/linux/pci-ep-cfs.h
- create mode 100644 include/linux/pci-epc.h
- create mode 100644 include/linux/pci-epf.h
- create mode 100644 include/uapi/linux/pcitest.h
- create mode 100644 include/uapi/linux/switchtec_ioctl.h
- create mode 100644 tools/pci/pcitest.c
- create mode 100644 tools/pci/pcitest.sh
+Hisilicon PCIe Driver shares the common functions for PCIe dw-host
+
+The poweron functions is developed on hi3660 SoC,
+while Others Functions are common for Kirin series SoCs.
+
+Low power mode(L1 sub-state and Suspend/Resume), hotplug
+and MSI feature are not supported currently.
+
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+---
+ drivers/pci/dwc/Kconfig      |  10 +
+ drivers/pci/dwc/Makefile     |   1 +
+ drivers/pci/dwc/pcie-kirin.c | 513 +++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 524 insertions(+)
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
+
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index d2d2ba5b8a68..13e617b78430 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -130,4 +130,14 @@ config PCIE_ARTPEC6
+ 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+ 	  SoCs.  This PCIe controller uses the DesignWare core.
+ 
++config PCIE_KIRIN
++	depends on OF && ARM64
++	bool "HiSilicon Kirin series SoCs PCIe controllers"
++	depends on PCI
++	select PCIEPORTBUS
++	select PCIE_DW_HOST
++	help
++	  Say Y here if you want PCIe controller support on HiSilicon Kirin series SoCs
++	  kirin960 SoC
++
+ endmenu
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index a2df13c28798..4bd69bacd4ab 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+ obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
++obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+ 
+ # The following drivers are for devices that use the generic ACPI
+ # pci_root.c driver but don't support standard ECAM config access.
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+new file mode 100644
+index 000000000000..2fe3b226957b
+--- /dev/null
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -0,0 +1,513 @@
++/*
++ * PCIe host controller driver for Kirin Phone SoCs
++ *
++ * Copyright (C) 2017 Hilisicon Electronics Co., Ltd.
++ *		http://www.huawei.com
++ *
++ * Author: Xiaowei Song <songxiaowei@huawei.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <asm/compiler.h>
++#include <linux/compiler.h>
++#include <linux/clk.h>
++#include <linux/delay.h>
++#include <linux/err.h>
++#include <linux/gpio.h>
++#include <linux/interrupt.h>
++#include <linux/mfd/syscon.h>
++#include <linux/of_address.h>
++#include <linux/of_gpio.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/pci_regs.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/resource.h>
++#include <linux/types.h>
++#include "pcie-designware.h"
++
++#define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
++
++#define REF_CLK_FREQ 100000000
++
++/* PCIe ELBI registers */
++#define SOC_PCIECTRL_CTRL0_ADDR 0x000
++#define SOC_PCIECTRL_CTRL1_ADDR 0x004
++#define SOC_PCIEPHY_CTRL2_ADDR 0x008
++#define SOC_PCIEPHY_CTRL3_ADDR 0x00c
++#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
++
++#define PCIE_APP_LTSSM_ENABLE		0x01c
++#define PCIE_APB_PHY_CTRL0		0x0
++#define PCIE_APB_PHY_CTRL1		0x4
++#define PCIE_APB_PHY_STATUS0		0x400
++#define PCIE_LINKUP_ENABLE		(0x8020)
++#define PCIE_LTSSM_ENABLE_BIT	  (0x1 << 11)
++#define PIPE_CLK_STABLE		(0x1 << 19)
++#define PIPE_CLK_MAX_TRY_TIMES	10
++#define PHY_REF_PAD_BIT	(0x1 << 8)
++#define PHY_PWR_DOWN_BIT	(0x1 << 22)
++#define PHY_RST_ACK_BIT	(0x1 << 16)
++
++/* info lacated in sysctrl */
++#define SCTRL_PCIE_CMOS_OFFSET		0x60
++#define SCTRL_PCIE_CMOS_BIT		0x10
++#define SCTRL_PCIE_ISO_OFFSET		0x44
++#define SCTRL_PCIE_ISO_BIT		0x30
++#define SCTRL_PCIE_HPCLK_OFFSET		0x190
++#define SCTRL_PCIE_HPCLK_BIT		0x184000
++#define SCTRL_PCIE_OE_OFFSET		0x14a
++#define PCIE_DEBOUNCE_PARAM		0xF0F400
++#define PCIE_OE_BYPASS		(0x3 << 28)
++
++/* peri_crg ctrl */
++#define CRGCTRL_PCIE_ASSERT_OFFSET		0x88
++#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
++
++/* Time for delay */
++#define REF_2_PERST_MIN		20000
++#define REF_2_PERST_MAX		25000
++#define PERST_2_ACCESS_MIN	10000
++#define PERST_2_ACCESS_MAX	12000
++#define LINK_WAIT_MIN		900
++#define LINK_WAIT_MAX		1000
++#define PIPE_CLK_WAIT_MIN	550
++#define PIPE_CLK_WAIT_MAX	600
++
++struct kirin_pcie {
++	struct dw_pcie		*pci;
++	void __iomem		*apb_base;
++	void __iomem		*phy_base;
++	struct regmap *crgctrl;
++	struct regmap *sysctrl;
++	struct clk			*apb_sys_clk;
++	struct clk			*apb_phy_clk;
++	struct clk			*phy_ref_clk;
++	struct clk			*pcie_aclk;
++	struct clk			*pcie_aux_clk;
++	int                 gpio_id_reset;
++};
++
++static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
++		u32 val, u32 reg)
++{
++	writel(val, kirin_pcie->apb_base + reg);
++}
++
++static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie,
++		u32 reg)
++{
++	return readl(kirin_pcie->apb_base + reg);
++}
++
++/*Registers in PCIePHY*/
++static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
++		u32 val, u32 reg)
++{
++	writel(val, kirin_pcie->phy_base + reg);
++}
++
++static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie,
++		u32 reg)
++{
++	return readl(kirin_pcie->phy_base + reg);
++}
++
++static int32_t kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
++		struct platform_device *pdev)
++{
++	kirin_pcie->phy_ref_clk = devm_clk_get(&pdev->dev, "pcie_phy_ref");
++	if (IS_ERR(kirin_pcie->phy_ref_clk))
++		return PTR_ERR(kirin_pcie->phy_ref_clk);
++
++	kirin_pcie->pcie_aux_clk = devm_clk_get(&pdev->dev, "pcie_aux");
++	if (IS_ERR(kirin_pcie->pcie_aux_clk))
++		return PTR_ERR(kirin_pcie->pcie_aux_clk);
++
++	kirin_pcie->apb_phy_clk = devm_clk_get(&pdev->dev, "pcie_apb_phy");
++	if (IS_ERR(kirin_pcie->apb_phy_clk))
++		return PTR_ERR(kirin_pcie->apb_phy_clk);
++
++	kirin_pcie->apb_sys_clk = devm_clk_get(&pdev->dev, "pcie_apb_sys");
++	if (IS_ERR(kirin_pcie->apb_sys_clk))
++		return PTR_ERR(kirin_pcie->apb_sys_clk);
++
++	kirin_pcie->pcie_aclk = devm_clk_get(&pdev->dev, "pcie_aclk");
++	if (IS_ERR(kirin_pcie->pcie_aclk))
++		return PTR_ERR(kirin_pcie->pcie_aclk);
++
++	return 0;
++}
++
++static int32_t kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
++		struct platform_device *pdev)
++{
++	struct resource *apb;
++	struct resource *phy;
++	struct resource *dbi;
++
++	apb = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb");
++	kirin_pcie->apb_base = devm_ioremap_resource(&pdev->dev, apb);
++	if (IS_ERR(kirin_pcie->apb_base))
++		return PTR_ERR(kirin_pcie->apb_base);
++
++	phy = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
++	kirin_pcie->phy_base = devm_ioremap_resource(&pdev->dev, phy);
++	if (IS_ERR(kirin_pcie->phy_base))
++		return PTR_ERR(kirin_pcie->phy_base);
++
++	dbi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
++	kirin_pcie->pci->dbi_base = devm_ioremap_resource(&pdev->dev, dbi);
++	if (IS_ERR(kirin_pcie->pci->dbi_base))
++		return PTR_ERR(kirin_pcie->pci->dbi_base);
++
++	kirin_pcie->crgctrl =
++		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
++	if (IS_ERR(kirin_pcie->crgctrl))
++		return PTR_ERR(kirin_pcie->crgctrl);
++
++	kirin_pcie->sysctrl =
++		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
++	if (IS_ERR(kirin_pcie->sysctrl))
++		return PTR_ERR(kirin_pcie->sysctrl);
++
++	return 0;
++}
++
++static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
++{
++	u32 reg_val;
++	u32 time = PIPE_CLK_MAX_TRY_TIMES;
++
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
++	reg_val &= ~PHY_REF_PAD_BIT;
++	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
++
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL0);
++	reg_val &= ~PHY_PWR_DOWN_BIT;
++	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL0);
++	udelay(10);
++
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
++	reg_val &= ~PHY_RST_ACK_BIT;
++	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
++
++	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
++	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++	if (reg_val & PIPE_CLK_STABLE) {
++		dev_err(kirin_pcie->pci->dev, "PIPE clk is not stable\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
++{
++	u32 val;
++
++	regmap_read(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, &val);
++	val |= PCIE_DEBOUNCE_PARAM;
++	val &= ~PCIE_OE_BYPASS;
++	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
++}
++
++static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
++{
++	int ret = 0;
++
++	if (!enable)
++		goto close_clk;
++
++	ret = clk_set_rate(kirin_pcie->phy_ref_clk, REF_CLK_FREQ);
++	if (ret)
++		return ret;
++
++	ret = clk_prepare_enable(kirin_pcie->phy_ref_clk);
++	if (ret)
++		return ret;
++
++	ret = clk_prepare_enable(kirin_pcie->apb_sys_clk);
++	if (ret)
++		goto apb_sys_fail;
++
++	ret = clk_prepare_enable(kirin_pcie->apb_phy_clk);
++	if (ret)
++		goto apb_phy_fail;
++
++	ret = clk_prepare_enable(kirin_pcie->pcie_aclk);
++	if (ret)
++		goto aclk_fail;
++
++	ret = clk_prepare_enable(kirin_pcie->pcie_aux_clk);
++	if (ret)
++		goto aux_clk_fail;
++
++	return 0;
++
++close_clk:
++	clk_disable_unprepare(kirin_pcie->pcie_aux_clk);
++aux_clk_fail:
++	clk_disable_unprepare(kirin_pcie->pcie_aclk);
++aclk_fail:
++	clk_disable_unprepare(kirin_pcie->apb_phy_clk);
++apb_phy_fail:
++	clk_disable_unprepare(kirin_pcie->apb_sys_clk);
++apb_sys_fail:
++	clk_disable_unprepare(kirin_pcie->phy_ref_clk);
++
++	return ret;
++}
++
++static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
++{
++	int ret;
++
++	/* Power supply for Host */
++	regmap_write(kirin_pcie->sysctrl,
++		SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
++	udelay(100);
++	kirin_pcie_oe_enable(kirin_pcie);
++
++	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
++	if (ret)
++		return ret;
++
++	/* ISO disable, PCIeCtrl,PHY assert and clk gate clear */
++	regmap_write(kirin_pcie->sysctrl,
++		SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
++	regmap_write(kirin_pcie->crgctrl,
++		CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
++	regmap_write(kirin_pcie->sysctrl,
++		SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
++
++	ret = kirin_pcie_phy_init(kirin_pcie);
++	if (ret)
++		goto close_clk;
++
++	/* perst assert Endpoint */
++	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
++		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
++		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
++		if (ret)
++			goto close_clk;
++		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
++
++		return 0;
++	}
++
++close_clk:
++	kirin_pcie_clk_ctrl(kirin_pcie, false);
++	return ret;
++}
++
++static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
++		bool on)
++{
++	u32 val;
++
++	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
++	if (on)
++		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
++	else
++		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
++
++	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
++}
++
++static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
++		bool on)
++{
++	u32 val;
++
++	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
++	if (on)
++		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
++	else
++		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
++
++	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
++}
++
++static int kirin_pcie_rd_own_conf(struct pcie_port *pp,
++		int where, int size, u32 *val)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++	int ret;
++
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
++	ret = dw_pcie_read(pci->dbi_base + where, size, val);
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
++
++	return ret;
++}
++
++static int kirin_pcie_wr_own_conf(struct pcie_port *pp,
++		int where, int size, u32 val)
++{
++	int ret;
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
++	ret = dw_pcie_write(pci->dbi_base + where, size, val);
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
++
++	return ret;
++}
++
++static u32 kirin_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
++		u32 reg, size_t size)
++{
++	u32 ret;
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
++	dw_pcie_read(base + reg, size, &ret);
++	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
++
++	return ret;
++}
++
++static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
++		u32 reg, size_t size, u32 val)
++{
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
++	dw_pcie_write(base + reg, size, val);
++	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
++}
++
++static int kirin_pcie_link_up(struct dw_pcie *pci)
++{
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
++
++	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
++		return 1;
++
++	return 0;
++}
++
++static int kirin_pcie_establish_link(struct pcie_port *pp)
++{
++	int count = 0;
++
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
++
++	if (kirin_pcie_link_up(pci))
++		return 0;
++
++	dw_pcie_setup_rc(pp);
++
++	/* assert LTSSM enable */
++	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
++		PCIE_APP_LTSSM_ENABLE);
++
++	/* check if the link is up or not */
++	while (!kirin_pcie_link_up(pci)) {
++		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
++		count++;
++		if (count == 1000) {
++			dev_err(pci->dev, "Link Fail\n");
++			return -EINVAL;
++		}
++	}
++
++	return 0;
++}
++
++static void kirin_pcie_host_init(struct pcie_port *pp)
++{
++	kirin_pcie_establish_link(pp);
++}
++
++static struct dw_pcie_ops kirin_dw_pcie_ops = {
++	.read_dbi = kirin_pcie_read_dbi,
++	.write_dbi = kirin_pcie_write_dbi,
++	.link_up = kirin_pcie_link_up,
++};
++
++static struct dw_pcie_host_ops kirin_pcie_host_ops = {
++	.rd_own_conf = kirin_pcie_rd_own_conf,
++	.wr_own_conf = kirin_pcie_wr_own_conf,
++	.host_init = kirin_pcie_host_init,
++};
++
++static int __init kirin_add_pcie_port(struct dw_pcie *pci,
++			struct platform_device *pdev)
++{
++	pci->pp.ops = &kirin_pcie_host_ops;
++
++	return dw_pcie_host_init(&pci->pp);
++}
++
++static int kirin_pcie_probe(struct platform_device *pdev)
++{
++	struct kirin_pcie *kirin_pcie;
++	struct dw_pcie *pci;
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	if (!pdev->dev.of_node) {
++		dev_err(&pdev->dev, "NULL node\n");
++		return -EINVAL;
++	}
++
++	kirin_pcie = devm_kzalloc(&pdev->dev,
++			sizeof(struct kirin_pcie), GFP_KERNEL);
++	if (!kirin_pcie)
++		return -ENOMEM;
++
++	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
++	if (!pci)
++		return -ENOMEM;
++
++	pci->dev = dev;
++	pci->ops = &kirin_dw_pcie_ops;
++	kirin_pcie->pci = pci;
++
++	ret = kirin_pcie_get_clk(kirin_pcie, pdev);
++	if (ret)
++		return ret;
++
++	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
++	if (ret)
++		return ret;
++
++	kirin_pcie->gpio_id_reset = of_get_named_gpio(pdev->dev.of_node,
++			"reset-gpio", 0);
++	if (kirin_pcie->gpio_id_reset < 0)
++		return -ENODEV;
++
++	ret = kirin_pcie_power_on(kirin_pcie);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, kirin_pcie);
++
++	return kirin_add_pcie_port(pci, pdev);
++}
++
++static const struct of_device_id kirin_pcie_match[] = {
++	{ .compatible = "hisilicon,kirin960-pcie" },
++	{},
++};
++
++struct platform_driver kirin_pcie_driver = {
++	.probe			= kirin_pcie_probe,
++	.driver			= {
++		.name			= "kirin-pcie",
++		.of_match_table = kirin_pcie_match,
++		.suppress_bind_attrs = true,
++	},
++};
++
++builtin_platform_driver(kirin_pcie_driver);
+-- 
+2.11.GIT
