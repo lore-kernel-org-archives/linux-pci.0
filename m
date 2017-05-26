@@ -1,123 +1,231 @@
-Return-Path: <SRS0=aZCs=45=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=aZCs=45=redhat.com=alex.williamson@kernel.org>
-Date: Tue, 23 May 2017 16:15:24 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, David Daney
- <david.daney@cavium.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, Jon Masters <jcm@redhat.com>, Robert Richter
- <robert.richter@cavium.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 0/2] PCI: Workaround for bus reset on Cavium cn8xxx root
- ports
-Message-ID: <20170523161524.565357ea@w520.home>
-In-Reply-To: <14ebfcd3-3f04-4dde-629a-cb2fc3843e39@caviumnetworks.com>
-References: <20170516001736.4001-1-david.daney@cavium.com>
-	<20170523204750.GC15055@bhelgaas-glaptop.roam.corp.google.com>
-	<20170523150404.221b01c7@w520.home>
-	<14ebfcd3-3f04-4dde-629a-cb2fc3843e39@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:36170 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S944962AbdEZVFU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 May 2017 17:05:20 -0400
+Received: by mail-wr0-f177.google.com with SMTP id l50so7894557wrc.3
+        for <linux-pci@vger.kernel.org>; Fri, 26 May 2017 14:05:19 -0700 (PDT)
+Date: Fri, 26 May 2017 22:02:25 +0100
+From: Piotr Gregor <piotrgregor@rsyncme.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org
+Subject: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170526210222.GA22204@westernst>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 23 May 2017 14:22:01 -0700
-David Daney <ddaney@caviumnetworks.com> wrote:
+The test for INTx masking via config space command performed
+in pci_intx_mask_supported() should be performed before PCI device
+can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
+register which may collide with MSI/MSI-X interrupts.
 
-> On 05/23/2017 02:04 PM, Alex Williamson wrote:
-> > On Tue, 23 May 2017 15:47:50 -0500
-> > Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >   
-> >> On Mon, May 15, 2017 at 05:17:34PM -0700, David Daney wrote:  
-> >>> With the recent improvements in arm64 and vfio-pci, we are seeing
-> >>> failures like this (on cn8890 based systems):
-> >>>
-> >>> [  235.622361] Unhandled fault: synchronous external abort (0x96000210) at 0xfffffc00c1000100
-> >>> [  235.630625] Internal error: : 96000210 [#1] PREEMPT SMP
-> >>> .
-> >>> .
-> >>> .
-> >>> [  236.208820] [<fffffc0008411250>] pci_generic_config_read+0x38/0x9c
-> >>> [  236.214992] [<fffffc0008435ed4>] thunder_pem_config_read+0x54/0x1e8
-> >>> [  236.221250] [<fffffc0008411620>] pci_bus_read_config_dword+0x74/0xa0
-> >>> [  236.227596] [<fffffc000841853c>] pci_find_next_ext_capability.part.15+0x40/0xb8
-> >>> [  236.234896] [<fffffc0008419428>] pci_find_ext_capability+0x20/0x30
-> >>> [  236.241068] [<fffffc0008423e2c>] pci_restore_vc_state+0x34/0x88
-> >>> [  236.246979] [<fffffc000841af3c>] pci_restore_state.part.37+0x2c/0x1fc
-> >>> [  236.253410] [<fffffc000841b174>] pci_dev_restore+0x4c/0x50
-> >>> [  236.258887] [<fffffc000841b19c>] pci_bus_restore+0x24/0x4c
-> >>> [  236.264362] [<fffffc000841c2dc>] pci_try_reset_bus+0x7c/0xa0
-> >>> [  236.270021] [<fffffc00060a1ab0>] vfio_pci_ioctl+0xc34/0xc3c [vfio_pci]
-> >>> [  236.276547] [<fffffc0005eb0410>] vfio_device_fops_unl_ioctl+0x20/0x30 [vfio]
-> >>> [  236.283587] [<fffffc000824b314>] do_vfs_ioctl+0xac/0x744
-> >>> [  236.288890] [<fffffc000824ba30>] SyS_ioctl+0x84/0x98
-> >>> [  236.293846] [<fffffc0008082ca0>] __sys_trace_return+0x0/0x4
-> >>>
-> >>> These are caused by the inability of the PCIe root port and Intel
-> >>> e1000e to sucessfully do a bus reset.
-> >>>
-> >>> The proposed fix is to not do a bus reset on these systems.
-> >>>
-> >>> David Daney (2):
-> >>>    PCI: Allow PCI_DEV_FLAGS_NO_BUS_RESET to be used on bus device.
-> >>>    PCI: Avoid bus reset for Cavium cn8xxx root ports.
-> >>>
-> >>>   drivers/pci/pci.c    | 4 ++++
-> >>>   drivers/pci/quirks.c | 8 ++++++++
-> >>>   2 files changed, 12 insertions(+)  
-> >>
-> >> Applied with Eric's reviewed-by and typo fixes to pci/virtualization for
-> >> v4.13, thanks!  
-> > 
-> > Hmm, well let me again express my concerns that I'm really not sure how
-> > to support this since it removes our last opportunity to reset devices
-> > that may otherwise have no reset mechanism.  Certain classes of devices
-> > are entirely unsupportable for the code path indicated above without a
-> > bus reset.  If we have an endpoint device that goes bonkers at a bus
-> > reset, at least we know it's going to behave just as poorly no matter
-> > what the host platform.  This series allows endpoints that work
-> > perfectly well on one host to be handled differently on another.  
-> 
-> Yes that is correct.  We choose not to crash the system.  I'm not sure 
-> what you are suggesting as an alternative.
+This patch moves test performed in pci_intx_mask_supported() to
 
-It's a valid solution, but my concern is that it's not without
-consequences and I didn't get the impression that was fully recognized,
-so I wonder if there are better options.
+static void pci_test_intx_masking(struct pci_dev *dev)
 
-> If a PCI device doesn't work with vfio-pci in such a system, my 
-> suggestion would be not to use vfio-pci with the device in that system.
+defined in drivers/pci/probe.c.
 
-And I can use this as the official support statement from Cavium when
-that occurs?
+This function is called from pci_setup_device(). It skips the test
+if the device has been already marked to have broken INTx masking
+feature. Otherwise the test is executed and broken_intx_masking
+field of struct pci_dev is set accordingly. broken_intx_masking
+meaning is: if it is true then the test has been either skipped
+because the device has been already known to have broken INTx
+masking support, or the test's been done and it has detected INTx
+masking support to be broken.
+The test result can be queried at any time later from the pci_dev
+using same interface as before (though whith changed implementation)
+
+static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+{
+        /*
+         * INTx masking is supported if device has not been marked
+         * to have this feature broken and it has passed
+         * pci_test_intx_masking() test.
+         */
+        return !pdev->broken_intx_masking;
+}
+
+so current users of pci_intx_mask_supported: uio and vfio, keep
+their code unchanged.
+
+Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+---
+ drivers/pci/pci.c   | 42 +-----------------------------------------
+ drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h | 13 +++++++++++--
+ 3 files changed, 56 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b01bd5b..7c4e1aa 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
+ }
+ EXPORT_SYMBOL_GPL(pci_intx);
  
-> >  It
-> > certainly suggests something non-spec compliant about the root port
-> > implementation and I wish there was more analysis about exactly what
-> > that problem is since this is coming from the hardware vendor.  
-> 
-> There are two main possibilities here:
-> 
-> 1) Some (but not all) Intel e1000e and LSI HBA devices are non-spec 
-> compliant.
-> 
-> 2) Cavium root port is non-spec compliant.
-> 
-> If #1 turns out to be true, would you suggest blacklisting e1000e on all 
-> systems, including Intel based servers?
-
-Since we haven't heard anything to the contrary, I think we can also
-assume that AMD root ports are compatible.
+-/**
+- * pci_intx_mask_supported - probe for INTx masking support
+- * @dev: the PCI device to operate on
+- *
+- * Check if the device dev support INTx masking via the config space
+- * command word.
+- */
+-bool pci_intx_mask_supported(struct pci_dev *dev)
+-{
+-	bool mask_supported = false;
+-	u16 orig, new;
+-
+-	if (dev->broken_intx_masking)
+-		return false;
+-
+-	pci_cfg_access_lock(dev);
+-
+-	pci_read_config_word(dev, PCI_COMMAND, &orig);
+-	pci_write_config_word(dev, PCI_COMMAND,
+-			      orig ^ PCI_COMMAND_INTX_DISABLE);
+-	pci_read_config_word(dev, PCI_COMMAND, &new);
+-
+-	/*
+-	 * There's no way to protect against hardware bugs or detect them
+-	 * reliably, but as long as we know what the value should be, let's
+-	 * go ahead and check it.
+-	 */
+-	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+-		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+-			orig, new);
+-	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+-		mask_supported = true;
+-		pci_write_config_word(dev, PCI_COMMAND, orig);
+-	}
+-
+-	pci_cfg_access_unlock(dev);
+-	return mask_supported;
+-}
+-EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
+-
+ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+ {
+ 	struct pci_bus *bus = dev->bus;
+@@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+  * @dev: the PCI device to operate on
+  *
+  * Check if the device dev has its INTx line asserted, mask it and
+- * return true in that case. False is returned if not interrupt was
++ * return true in that case. False is returned if no interrupt was
+  * pending.
+  */
+ bool pci_check_and_mask_intx(struct pci_dev *dev)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950..ee6b55c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1330,6 +1330,48 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+ }
  
-> If #2 turns out to be true would you still object to the patch?
-
-My hope would be that such analysis would help us understand what's
-really happening and perhaps present a less drastic workaround.  Is the
-point at which we crash simply the first read from the device?  Is the
-link state shown as stable at this point?  Is there any chance that we
-have a timing issue and an additional delay could resolve it?  Is there
-some manipulation of the link state before or after the bus reset that
-produces different results?  If such options have been exhausted, then
-I guess I have no objection, or at least no better solution, and I'll
-keep an eye out for any fallout.  Thanks,
-
-Alex
+ /**
++ * pci_test_intx_masking - probe for INTx masking support
++ * @dev: the PCI device to operate on
++ *
++ * Check if the @dev supports INTx masking via the config space
++ * command word. Executed when PCI device is setup. Result is saved
++ * in broken_intx_masking field of struct pci_dev and can be checked
++ * with pci_intx_mask_supported at any time later, after the PCI device
++ * has been setup (this avoids testing of PCI_COMMAND_INTX_DISABLE
++ * register at runtime).
++ */
++static void pci_test_intx_masking(struct pci_dev *dev)
++{
++	u16 orig, toggle, new;
++
++	/*
++	 * If device doesn't support this feature though it could pass the test.
++	 */
++	if (dev->broken_intx_masking)
++		return;
++
++	pci_cfg_access_lock(dev);
++
++	/*
++	 * Perform the test.
++	 */
++	pci_read_config_word(dev, PCI_COMMAND, &orig);
++	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
++	pci_write_config_word(dev, PCI_COMMAND, toggle);
++	pci_read_config_word(dev, PCI_COMMAND, &new);
++
++	/*
++	 * Restore initial state.
++	 */
++	pci_write_config_word(dev, PCI_COMMAND, orig);
++
++	pci_cfg_access_unlock(dev);
++
++	if (new != toggle)
++		dev->broken_intx_masking = 1;
++}
++
++/**
+  * pci_setup_device - fill in class and map information of a device
+  * @dev: the device structure to fill
+  *
+@@ -1399,6 +1441,8 @@ int pci_setup_device(struct pci_dev *dev)
+ 		}
+ 	}
+ 
++	pci_test_intx_masking(dev);
++
+ 	switch (dev->hdr_type) {		    /* header type */
+ 	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
+ 		if (class == PCI_CLASS_BRIDGE_PCI)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33c2b0b..8a307fc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -366,7 +366,7 @@ struct pci_dev {
+ 	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+ 	unsigned int    __aer_firmware_first_valid:1;
+ 	unsigned int	__aer_firmware_first:1;
+-	unsigned int	broken_intx_masking:1;
++	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+ 	unsigned int	irq_managed:1;
+ 	unsigned int	has_secondary_link:1;
+@@ -1003,6 +1003,16 @@ int __must_check pci_reenable_device(struct pci_dev *);
+ int __must_check pcim_enable_device(struct pci_dev *pdev);
+ void pcim_pin_device(struct pci_dev *pdev);
+ 
++static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
++{
++	/*
++	 * INTx masking is supported if device has not been marked
++	 * to have this feature broken and it has passed
++	 * pci_test_intx_masking() test.
++	 */
++	return !pdev->broken_intx_masking;
++}
++
+ static inline int pci_is_enabled(struct pci_dev *pdev)
+ {
+ 	return (atomic_read(&pdev->enable_cnt) > 0);
+@@ -1026,7 +1036,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
+ int pci_try_set_mwi(struct pci_dev *dev);
+ void pci_clear_mwi(struct pci_dev *dev);
+ void pci_intx(struct pci_dev *dev, int enable);
+-bool pci_intx_mask_supported(struct pci_dev *dev);
+ bool pci_check_and_mask_intx(struct pci_dev *dev);
+ bool pci_check_and_unmask_intx(struct pci_dev *dev);
+ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+-- 
+2.1.4
