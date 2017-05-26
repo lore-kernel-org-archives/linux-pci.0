@@ -1,59 +1,237 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:58843 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753915AbdEDCZz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 May 2017 22:25:55 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/4] PCI: rockchip: rename rockchip_cfg_atu to rockchip_pcie_cfg_atu
-Date: Thu,  4 May 2017 10:24:48 +0800
-Message-Id: <1493864691-102523-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47008 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1948748AbdEZVbr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 26 May 2017 17:31:47 -0400
+Date: Fri, 26 May 2017 15:31:42 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Piotr Gregor <piotrgregor@rsyncme.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org
+Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170526153142.33388511@w520.home>
+In-Reply-To: <20170526210222.GA22204@westernst>
+References: <20170526210222.GA22204@westernst>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Rename it in order to keep the name consistent with other
-functions' in pcie-rockchip.
+On Fri, 26 May 2017 22:02:25 +0100
+Piotr Gregor <piotrgregor@rsyncme.org> wrote:
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+> The test for INTx masking via config space command performed
+> in pci_intx_mask_supported() should be performed before PCI device
+> can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
+> register which may collide with MSI/MSI-X interrupts.
+> 
+> This patch moves test performed in pci_intx_mask_supported() to
+> 
+> static void pci_test_intx_masking(struct pci_dev *dev)
+> 
+> defined in drivers/pci/probe.c.
+> 
+> This function is called from pci_setup_device(). It skips the test
+> if the device has been already marked to have broken INTx masking
+> feature. Otherwise the test is executed and broken_intx_masking
+> field of struct pci_dev is set accordingly. broken_intx_masking
+> meaning is: if it is true then the test has been either skipped
+> because the device has been already known to have broken INTx
+> masking support, or the test's been done and it has detected INTx
+> masking support to be broken.
+> The test result can be queried at any time later from the pci_dev
+> using same interface as before (though whith changed implementation)
+> 
+> static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+> {
+>         /*
+>          * INTx masking is supported if device has not been marked
+>          * to have this feature broken and it has passed
+>          * pci_test_intx_masking() test.
+>          */
+>         return !pdev->broken_intx_masking;
+> }
+> 
+> so current users of pci_intx_mask_supported: uio and vfio, keep
+> their code unchanged.
+> 
+> Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+> ---
+>  drivers/pci/pci.c   | 42 +-----------------------------------------
+>  drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h | 13 +++++++++++--
+>  3 files changed, 56 insertions(+), 43 deletions(-)
+ 
+Looks reasonable to me.
 
- drivers/pci/host/pcie-rockchip.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index c8ca796..ac08b4c 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1156,7 +1156,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
- 	return 0;
- }
- 
--static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
-+static int rockchip_pcie_cfg_atu(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
- 	int offset;
-@@ -1279,7 +1279,7 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
- 	if (err)
- 		return err;
- 
--	err = rockchip_cfg_atu(rockchip);
-+	err = rockchip_pcie_cfg_atu(rockchip);
- 	if (err)
- 		return err;
- 
-@@ -1396,7 +1396,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	err = rockchip_cfg_atu(rockchip);
-+	err = rockchip_pcie_cfg_atu(rockchip);
- 	if (err)
- 		goto err_free_res;
- 
--- 
-1.9.1
+
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..7c4e1aa 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_intx);
+>  
+> -/**
+> - * pci_intx_mask_supported - probe for INTx masking support
+> - * @dev: the PCI device to operate on
+> - *
+> - * Check if the device dev support INTx masking via the config space
+> - * command word.
+> - */
+> -bool pci_intx_mask_supported(struct pci_dev *dev)
+> -{
+> -	bool mask_supported = false;
+> -	u16 orig, new;
+> -
+> -	if (dev->broken_intx_masking)
+> -		return false;
+> -
+> -	pci_cfg_access_lock(dev);
+> -
+> -	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> -	pci_write_config_word(dev, PCI_COMMAND,
+> -			      orig ^ PCI_COMMAND_INTX_DISABLE);
+> -	pci_read_config_word(dev, PCI_COMMAND, &new);
+> -
+> -	/*
+> -	 * There's no way to protect against hardware bugs or detect them
+> -	 * reliably, but as long as we know what the value should be, let's
+> -	 * go ahead and check it.
+> -	 */
+> -	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+> -		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+> -			orig, new);
+> -	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+> -		mask_supported = true;
+> -		pci_write_config_word(dev, PCI_COMMAND, orig);
+> -	}
+> -
+> -	pci_cfg_access_unlock(dev);
+> -	return mask_supported;
+> -}
+> -EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
+> -
+>  static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>  {
+>  	struct pci_bus *bus = dev->bus;
+> @@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>   * @dev: the PCI device to operate on
+>   *
+>   * Check if the device dev has its INTx line asserted, mask it and
+> - * return true in that case. False is returned if not interrupt was
+> + * return true in that case. False is returned if no interrupt was
+>   * pending.
+>   */
+>  bool pci_check_and_mask_intx(struct pci_dev *dev)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 19c8950..ee6b55c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1330,6 +1330,48 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+>  }
+>  
+>  /**
+> + * pci_test_intx_masking - probe for INTx masking support
+> + * @dev: the PCI device to operate on
+> + *
+> + * Check if the @dev supports INTx masking via the config space
+> + * command word. Executed when PCI device is setup. Result is saved
+> + * in broken_intx_masking field of struct pci_dev and can be checked
+> + * with pci_intx_mask_supported at any time later, after the PCI device
+> + * has been setup (this avoids testing of PCI_COMMAND_INTX_DISABLE
+> + * register at runtime).
+> + */
+> +static void pci_test_intx_masking(struct pci_dev *dev)
+> +{
+> +	u16 orig, toggle, new;
+> +
+> +	/*
+> +	 * If device doesn't support this feature though it could pass the test.
+> +	 */
+> +	if (dev->broken_intx_masking)
+> +		return;
+> +
+> +	pci_cfg_access_lock(dev);
+> +
+> +	/*
+> +	 * Perform the test.
+> +	 */
+> +	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> +	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
+> +	pci_write_config_word(dev, PCI_COMMAND, toggle);
+> +	pci_read_config_word(dev, PCI_COMMAND, &new);
+> +
+> +	/*
+> +	 * Restore initial state.
+> +	 */
+> +	pci_write_config_word(dev, PCI_COMMAND, orig);
+> +
+> +	pci_cfg_access_unlock(dev);
+> +
+> +	if (new != toggle)
+> +		dev->broken_intx_masking = 1;
+> +}
+> +
+> +/**
+>   * pci_setup_device - fill in class and map information of a device
+>   * @dev: the device structure to fill
+>   *
+> @@ -1399,6 +1441,8 @@ int pci_setup_device(struct pci_dev *dev)
+>  		}
+>  	}
+>  
+> +	pci_test_intx_masking(dev);
+> +
+>  	switch (dev->hdr_type) {		    /* header type */
+>  	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
+>  		if (class == PCI_CLASS_BRIDGE_PCI)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33c2b0b..8a307fc 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -366,7 +366,7 @@ struct pci_dev {
+>  	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+>  	unsigned int    __aer_firmware_first_valid:1;
+>  	unsigned int	__aer_firmware_first:1;
+> -	unsigned int	broken_intx_masking:1;
+> +	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
+>  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+>  	unsigned int	irq_managed:1;
+>  	unsigned int	has_secondary_link:1;
+> @@ -1003,6 +1003,16 @@ int __must_check pci_reenable_device(struct pci_dev *);
+>  int __must_check pcim_enable_device(struct pci_dev *pdev);
+>  void pcim_pin_device(struct pci_dev *pdev);
+>  
+> +static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * INTx masking is supported if device has not been marked
+> +	 * to have this feature broken and it has passed
+> +	 * pci_test_intx_masking() test.
+> +	 */
+> +	return !pdev->broken_intx_masking;
+> +}
+> +
+>  static inline int pci_is_enabled(struct pci_dev *pdev)
+>  {
+>  	return (atomic_read(&pdev->enable_cnt) > 0);
+> @@ -1026,7 +1036,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
+>  int pci_try_set_mwi(struct pci_dev *dev);
+>  void pci_clear_mwi(struct pci_dev *dev);
+>  void pci_intx(struct pci_dev *dev, int enable);
+> -bool pci_intx_mask_supported(struct pci_dev *dev);
+>  bool pci_check_and_mask_intx(struct pci_dev *dev);
+>  bool pci_check_and_unmask_intx(struct pci_dev *dev);
+>  int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
