@@ -1,69 +1,188 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:35694 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760099AbdEYT6W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 15:58:22 -0400
-Received: by mail-wm0-f47.google.com with SMTP id b84so105439884wmh.0
-        for <linux-pci@vger.kernel.org>; Thu, 25 May 2017 12:58:21 -0700 (PDT)
+Return-Path: <SRS0=p0x5=5A=broadcom.com=ray.jui@kernel.org>
+Return-Path: <SRS0=p0x5=5A=broadcom.com=ray.jui@kernel.org>
+Subject: Re: [RFC/RFT PATCH 03/18] PCI: Introduce pci_scan_root_bus_bridge()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar
+ <tinamdar@apm.com>, Matthew Minter <matt@masarand.com>,
+ Rob Herring <robh@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Wenrui Li <wenrui.li@rock-chips.com>, Russell King <linux@armlinux.org.uk>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
+ Jon Mason <jonmason@broadcom.com>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-4-lorenzo.pieralisi@arm.com>
+ <CAK8P3a0HmrrYBP5em1s4VOY4Tb6=bwOrDDN6K8rPp8OEXtpMtA@mail.gmail.com>
+ <20170502171501.GA5545@red-moon>
+ <20170525205643.GA9474@bhelgaas-glaptop.roam.corp.google.com>
+ <20170526130748.GB27131@red-moon>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <2a204641-a1da-977e-180a-0be130106891@broadcom.com>
+Date: Fri, 26 May 2017 10:29:39 -0700
 MIME-Version: 1.0
-In-Reply-To: <201705251416.wWZWNQ8s%fengguang.wu@intel.com>
-References: <201705251416.wWZWNQ8s%fengguang.wu@intel.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 25 May 2017 14:58:00 -0500
-Message-ID: <CAErSpo5snPK3t7EKmCsrNOEgeCPK+hMX=PrUp3NwOUTkUDhSQg@mail.gmail.com>
-Subject: Re: [pci:pci/host-qcom 1/2] drivers/pci/dwc/pcie-qcom.c:587:27:
- error: 'struct qcom_pcie' has no member named 'pp'
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: John Crispin <john@phrozen.org>,
-        "kbuild-all@01.org" <kbuild-all@01.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170526130748.GB27131@red-moon>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-I think I fixed the problems below, but I'm a little confused as to
-why you didn't see them when you built this code.  So please
-double-check https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-qcom&id=a06cb1bf781789efb54c0f01a49e3011df9592ae
-and make sure I did it correctly.
 
-On Thu, May 25, 2017 at 1:53 AM, kbuild test robot
-<fengguang.wu@intel.com> wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-qcom
-> head:   ebacba9579462bdc009f4cfc1b605b3ca7a7a1d2
-> commit: c48a46bd07da450476175f9081e83db29441d9d3 [1/2] PCI: qcom: Add support for IPQ4019 PCIe controller
-> config: arm-allmodconfig (attached as .config)
-> compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> reproduce:
->         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout c48a46bd07da450476175f9081e83db29441d9d3
->         # save the attached .config to linux build tree
->         make.cross ARCH=arm
->
-> All errors (new ones prefixed by >>):
->
->    drivers/pci/dwc/pcie-qcom.c: In function 'qcom_pcie_get_resources_v3':
->>> drivers/pci/dwc/pcie-qcom.c:587:27: error: 'struct qcom_pcie' has no member named 'pp'
->      struct device *dev = pcie->pp.dev;
->                               ^~
->    drivers/pci/dwc/pcie-qcom.c: In function 'qcom_pcie_init_v3':
->    drivers/pci/dwc/pcie-qcom.c:673:27: error: 'struct qcom_pcie' has no member named 'pp'
->      struct device *dev = pcie->pp.dev;
->                               ^~
->
-> vim +587 drivers/pci/dwc/pcie-qcom.c
->
->    581          return 0;
->    582  }
->    583
->    584  static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
->    585  {
->    586          struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
->  > 587          struct device *dev = pcie->pp.dev;
->    588
->    589          res->aux_clk = devm_clk_get(dev, "aux");
->    590          if (IS_ERR(res->aux_clk))
->
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+
+On 5/26/17 6:07 AM, Lorenzo Pieralisi wrote:
+> On Thu, May 25, 2017 at 03:56:43PM -0500, Bjorn Helgaas wrote:
+>> [+cc Ray, Scott, Jon]
+>>
+>> On Tue, May 02, 2017 at 06:15:01PM +0100, Lorenzo Pieralisi wrote:
+>>> On Fri, Apr 28, 2017 at 02:28:38PM +0200, Arnd Bergmann wrote:
+>>>> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+>>>> <lorenzo.pieralisi@arm.com> wrote:
+>>>>> Current pci_scan_root_bus() interface is made up of two main
+>>>>> code paths:
+>>>>>
+>>>>> - pci_create_root_bus()
+>>>>> - pci_scan_child_bus()
+>>>>>
+>>>>> pci_create_root_bus() is a wrapper function that allows to create
+>>>>> a struct pci_host_bridge structure, initialize it with the passed
+>>>>> parameters and register it with the kernel.
+>>>>>
+>>>>> As the struct pci_host_bridge require additional struct members,
+>>>>> pci_create_root_bus() parameters list has grown in time, making
+>>>>> it unwieldy to add further parameters to it in case the struct
+>>>>> pci_host_bridge gains more members fields to augment its functionality.
+>>>>>
+>>>>> Since PCI core code provides functions to allocate struct
+>>>>> pci_host_bridge, instead of forcing the pci_create_root_bus() interface
+>>>>> to add new parameters to cater for new struct pci_host_bridge
+>>>>> functionality, it is more suitable to add an interface in PCI
+>>>>> core code to scan a PCI bus straight from a struct pci_host_bridge
+>>>>> created and customized by each specific PCI host controller driver.
+>>>>>
+>>>>> Add a pci_scan_root_bus_bridge() function to allow PCI host controller
+>>>>> drivers to create and initialize struct pci_host_bridge and scan
+>>>>> the resulting bus.
+>>>>>
+>>>>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>>>> Cc: Arnd Bergmann <arnd@arndb.de>
+>>>>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>>>>
+>>>> Good idea, yes. To avoid growing the number of interfaces too
+>>>> much, should we change the existing users of pci_register_host_bridge
+>>>> in host drivers over to this entry point, and make the other one
+>>>> local to probe.c then?
+>>>
+>>> Yes, the problem is that there are drivers (ie pcie-iproc.c) that
+>>> require the struct pci_bus (created by pci_register_host_bridge())
+>>> to fiddle with it to check link status and THEN scan the bus (so
+>>> the pci_register_host_bridge() call can't be embedded in the scan
+>>> interface - the driver requires struct pci_bus for pci_ops to work
+>>> before scanning the bus itself).
+>>
+>> I think code like iproc_pcie_check_link() that requires a struct
+>> pci_bus before we even scan the bus is lame.  I think the driver
+>> should be able to bring up the link before telling the PCI core about
+>> the bridge.  Aardvark uses a typical pattern:
+>>
+>>   advk_pcie_probe
+>>     advk_pcie_setup_hw
+>>       advk_pcie_wait_for_link
+>>     pci_scan_root_bus
+>>
+>> I would rather see iproc restructured along that line than add a
+>> callback.
+>>
+>> That would require replacing the pci_bus_read_config uses in
+>> iproc_pcie_check_link() with something different, maybe iproc-internal 
+>> accessors.  Slightly messy, but I think doable.
+> 
+> I agree with you, it probably requires some cfg space accessors copy
+> and paste though but that's doable. I can write the patch myself but
+> I can't test it so help is appreciated here.
+> 
+> Thanks,
+> Lorenzo
+> 
+
+I agree with Bjorn on the new proposed sequence that link check should
+be done before the standard root bus scan starts.
+
+Lorenzo, I'm getting quite busy and won't have time to re-write this in
+the near term. I appreciate that you offer to help to re-organize the
+code. Once you have a patch, I can help to test it on our platforms.
+
+Thanks,
+
+Ray
+
+>>> I will see how I can accommodate this change because you definitely
+>>> have a point.
+>>>
+>>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>>> index 7e4ffc4..c7a7f72 100644
+>>>>> --- a/drivers/pci/probe.c
+>>>>> +++ b/drivers/pci/probe.c
+>>>>> @@ -2412,6 +2412,44 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+>>>>>                         res, ret ? "can not be" : "is");
+>>>>>  }
+>>>>>
+>>>>> +int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
+>>>>> +{
+>>>>> +       struct resource_entry *window;
+>>>>> +       bool found = false;
+>>>>> +       struct pci_bus *b;
+>>>>> +       int max, bus, ret;
+>>>>> +
+>>>>> +       if (!bridge)
+>>>>> +               return -EINVAL;
+>>>>> +
+>>>>> +       resource_list_for_each_entry(window, &bridge->windows)
+>>>>> +               if (window->res->flags & IORESOURCE_BUS) {
+>>>>> +                       found = true;
+>>>>> +                       break;
+>>>>> +               }
+>>>>> +
+>>>>> +       ret = pci_register_host_bridge(bridge);
+>>>>> +       if (ret < 0)
+>>>>> +               return ret;
+>>>>> +
+>>>>> +       b = bridge->bus;
+>>>>> +       bus = bridge->busnr;
+>>>>> +
+>>>>> +       if (!found) {
+>>>>> +               dev_info(&b->dev,
+>>>>> +                "No busn resource found for root bus, will use [bus %02x-ff]\n",
+>>>>> +                       bus);
+>>>>> +               pci_bus_insert_busn_res(b, bus, 255);
+>>>>> +       }
+>>>>> +
+>>>>> +       max = pci_scan_child_bus(b);
+>>>>> +
+>>>>> +       if (!found)
+>>>>> +               pci_bus_update_busn_res_end(b, max);
+>>>>> +
+>>>>> +       return 0;
+>>>>> +}
+>>>>> +
+>>>>
+>>>> We probably want an EXPORT_SYMBOL() here as well.
+>>>
+>>> Yep, sure.
+>>>
+>>> Thanks for having a look !
+>>>
+>>> Lorenzo
+>>>
+>>> _______________________________________________
+>>> linux-arm-kernel mailing list
+>>> linux-arm-kernel@lists.infradead.org
+>>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
