@@ -1,75 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v3 0/1] ARM64/PCI: ACPI NUMA node set-up
-Date: Wed, 24 May 2017 18:22:18 +0100
-Message-Id: <20170524172219.5689-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Robert Richter <robert.richter@cavium.com>,
- Sinan Kaya <okaya@codeaurora.org>,
- Sergey Temerkhanov <s.temerkhanov@gmail.com>,
- Zhou Wang <wangzhou1@hisilicon.com>,
- Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:59421 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750820AbdEZKpg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 26 May 2017 06:45:36 -0400
+Date: Fri, 26 May 2017 12:45:55 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+Message-ID: <20170526104555.GB4744@wunner.de>
+References: <20170510084143.GA16261@wunner.de>
+ <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
+ <20170525123047.GA4172@wunner.de>
+ <CAKv+Gu_3vYKGOrzC8+Y3QwXOtV8Tbm8HC7nzQCdKVB1Qbdoriw@mail.gmail.com>
+ <20170525124445.GA4181@wunner.de>
+ <CAKv+Gu-7dr=upMcs2SsE+7+LRA2q82=exDrtt6CMniiMjZU2YA@mail.gmail.com>
+ <20170525125650.GA4196@wunner.de>
+ <CAKv+Gu_==Q5L+w2ihZ6u-=_AKZJun8D=sUWhgx6Pvzt-K99fTA@mail.gmail.com>
+ <20170526060843.GA4446@wunner.de>
+ <CAK8P3a0YthR69OFGzVqsPoGv3UEGFA9jnedubwQtZj-v0LzQQA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAK8P3a0YthR69OFGzVqsPoGv3UEGFA9jnedubwQtZj-v0LzQQA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series is v3 of a previous posting:
+On Fri, May 26, 2017 at 10:01:28AM +0200, Arnd Bergmann wrote:
+> On Fri, May 26, 2017 at 8:08 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Thu, May 25, 2017 at 06:07:35AM -0700, Ard Biesheuvel wrote:
+> >> On 25 May 2017 at 05:56, Lukas Wunner <lukas@wunner.de> wrote:
+> >> >> Or does 'guarantee' mean 'I tested it and it works'?
+> >> >
+> >> > I tested it with x86_64 (le) and ppc32 (be) and it works.
+> >> > I don't have an aarch64 machine available here.
+> >>
+> >> Good.
+> >
+> > Good to merge then?
+> 
+> Please remove the bit fields and find a way to do the patch without them.
+> We really don't want any bitfields in structures that are interpreted by
+> hardware:
 
-v2 -> v3
+This structure is not interpreted by hardware.
 
-- Dropped generic approach
-  # It was not consistent between ACPI and DT and not reusable on x86/IA64
-- Trimmed the series to one patch ARM64 specific, three-line patch fixes
-  the issue
-- Rebased against v4.12-rc2
-- Dropped RFC/RFT tag
+Thanks,
 
-v2: https://lkml.org/lkml/2017/5/15/433
-
-v1 -> v2:
-
-- Added missing call to acpi_pci_bus_find_numa_node()
-- Rebased against v4.12-rc1
-
-v1: https://lkml.org/lkml/2017/4/26/211
-
---- Original Cover Letter --
-
-On the ARM64 architecture, the arch specific PCI pcibus_to_node() callback
-can be triggered on struct pci_bus.sysdata structures that carry host
-bridge specific data through different structures layout (ie sysdata
-pointer points at different structs for different host bridges), therefore
-it is not possible to have a unified pcibus_to_node() implementation.
-
-Given that the device NUMA node is a property of the struct pci_bus (and
-its associated struct device), move the struct pci_bus node assignment to
-generic PCI code, where according to the platform firmware the NUMA node
-for the device backing the struct pci_bus is retrieved and propagated
-through the PCI bus hierarchy.
-
-Lorenzo Pieralisi (1):
-  ARM64/PCI: Set root bus NUMA node on ACPI systems
-
- arch/arm64/kernel/pci.c | 3 +++
- 1 file changed, 3 insertions(+)
-
--- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Lukas
