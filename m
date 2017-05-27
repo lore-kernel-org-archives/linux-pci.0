@@ -1,51 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34688 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934403AbdEVWA7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 22 May 2017 18:00:59 -0400
-Date: Mon, 22 May 2017 17:00:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Peter Robinson <pbrobinson@gmail.com>
-Cc: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: dwc: dra7xx: Depend on appropriate SoC or compile
- test
-Message-ID: <20170522220056.GF19733@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170515122617.20706-1-pbrobinson@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
+ geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org,
+ linux@armlinux.org.uk
+Subject: [PATCH v6 4/6] ARM: dma-mapping: Don't tear down third-party mappings
+Date: Sat, 27 May 2017 19:17:43 +0530
+Message-Id: <1495892865-9506-4-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
+References: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515122617.20706-1-pbrobinson@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 15, 2017 at 01:26:17PM +0100, Peter Robinson wrote:
-> The PCI controller attached to a SoC isn't much use if the core SoC isn't
-> enabled, unless of course it's compile testing, so add appropriate dependency.
-> 
-> Signed-off-by: Peter Robinson <pbrobinson@gmail.com>
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-Applied to pci/host-dra7xx for v4.13, thanks!
+arch_setup_dma_ops() is used in device probe code paths to create an
+IOMMU mapping and attach it to the device. The function assumes that the
+device is attached to a device-specific IOMMU instance (or at least a
+device-specific TLB in a shared IOMMU instance) and thus creates a
+separate mapping for every device.
 
-Kishon, let me know if you object.  I think I'll start speculatively
-applying simple patches without maintainer acks to try to streamline
-things, on the assumption that you'll speak up if you object.
+On several systems (Renesas R-Car Gen2 being one of them), that
+assumption is not true, and IOMMU mappings must be shared between
+multiple devices. In those cases the IOMMU driver knows better than the
+generic ARM dma-mapping layer and attaches mapping to devices manually
+with arm_iommu_attach_device(), which sets the DMA ops for the device.
 
-> ---
->  drivers/pci/dwc/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index b7e15526d676..d34b6dfbb351 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -16,6 +16,7 @@ config PCIE_DW_EP
->  
->  config PCI_DRA7XX
->  	bool "TI DRA7xx PCIe controller"
-> +	depends on SOC_DRA7XX || COMPILE_TEST
->  	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
->  	depends on OF && HAS_IOMEM && TI_PIPE3
->  	help
-> -- 
-> 2.13.0
-> 
+The arch_setup_dma_ops() function takes this into account and bails out
+immediately if the device already has DMA ops assigned. However, the
+corresponding arch_teardown_dma_ops() function, called from driver
+unbind code paths (including probe deferral), will tear the mapping down
+regardless of who created it. When the device is reprobed
+arch_setup_dma_ops() will be called again but won't perform any
+operation as the DMA ops will still be set.
+
+We need to reset the DMA ops in arch_teardown_dma_ops() to fix this.
+However, we can't do so unconditionally, as then a new mapping would be
+created by arch_setup_dma_ops() when the device is reprobed, regardless
+of whether the device needs to share a mapping or not. We must thus keep
+track of whether arch_setup_dma_ops() created the mapping, and only in
+that case tear it down in arch_teardown_dma_ops().
+
+Keep track of that information in the dev_archdata structure. As the
+structure is embedded in all instances of struct device let's not grow
+it, but turn the existing dma_coherent bool field into a bitfield that
+can be used for other purposes.
+
+Fixes: 09515ef5ddad ("of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices")
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ arch/arm/include/asm/device.h | 3 ++-
+ arch/arm/mm/dma-mapping.c     | 4 ++++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/include/asm/device.h b/arch/arm/include/asm/device.h
+index 36ec9c8..3234fe9 100644
+--- a/arch/arm/include/asm/device.h
++++ b/arch/arm/include/asm/device.h
+@@ -19,7 +19,8 @@ struct dev_archdata {
+ #ifdef CONFIG_XEN
+ 	const struct dma_map_ops *dev_dma_ops;
+ #endif
+-	bool dma_coherent;
++	unsigned int dma_coherent:1;
++	unsigned int dma_ops_setup:1;
+ };
+ 
+ struct omap_device;
+diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
+index c742dfd..b48998f 100644
+--- a/arch/arm/mm/dma-mapping.c
++++ b/arch/arm/mm/dma-mapping.c
+@@ -2430,9 +2430,13 @@ void arch_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
+ 		dev->dma_ops = xen_dma_ops;
+ 	}
+ #endif
++	dev->archdata.dma_ops_setup = true;
+ }
+ 
+ void arch_teardown_dma_ops(struct device *dev)
+ {
++	if (!dev->archdata.dma_ops_setup)
++		return;
++
+ 	arm_teardown_iommu_dma_ops(dev);
+ }
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
