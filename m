@@ -11,12 +11,13 @@ To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
  sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
  catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
  laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
- geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org
-Subject: [PATCH v5 2/5] iommu: of: Ignore all errors except EPROBE_DEFER
-Date: Tue, 23 May 2017 18:31:30 +0530
-Message-Id: <1495544493-14219-2-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
-References: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
+ geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org,
+ linux@armlinux.org.uk
+Subject: [PATCH v6 2/6] iommu: of: Ignore all errors except EPROBE_DEFER
+Date: Sat, 27 May 2017 19:17:41 +0530
+Message-Id: <1495892865-9506-2-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
+References: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -49,8 +50,6 @@ Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
 Tested-by: Magnus Damn <magnus.damn@gmail.com>
 Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
-[v5] Added the check in of_dma_configure
-
  drivers/iommu/of_iommu.c | 6 ++++++
  drivers/of/device.c      | 4 ++--
  2 files changed, 8 insertions(+), 2 deletions(-)
