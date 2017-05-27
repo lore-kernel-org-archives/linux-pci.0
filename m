@@ -1,40 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Song Xiaowei <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>
-CC: <puck.chen@hisilicon.com>, <songxiaowei@hisilicon.com>,
-        <guodong.xu@linaro.org>, <wangbinghui@hisilicon.com>,
-        <suzhuangluan@hisilicon.com>, <linux-kernel@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-Subject: [Patch v3 3/3] defconfig: PCI: Enable  Kirin PCIe defconfig
-Date: Thu, 18 May 2017 15:45:35 +0800
-Message-ID: <20170518074535.20635-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20170518074535.20635-1-songxiaowei@hisilicon.com>
-References: <20170518074535.20635-1-songxiaowei@hisilicon.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
+ geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org,
+ linux@armlinux.org.uk
+Subject: [PATCH v6 1/6] iommu: of: Fix check for returning EPROBE_DEFER
+Date: Sat, 27 May 2017 19:17:40 +0530
+Message-Id: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Song Xiaowei <songxiaowei@hisilicon.com>
+Now with IOMMU probe deferral, we return -EPROBE_DEFER
+for masters that are connected to an IOMMU which is not
+probed yet, but going to get probed, so that we can attach
+the correct dma_ops. So while trying to defer the probe of
+the master, check if the of_iommu node that it is connected
+to is marked in DT as 'status=disabled', then the IOMMU is never
+is going to get probed. So simply return NULL and let the master
+work without an IOMMU.
+
+Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Tested-by: Will Deacon <will.deacon@arm.com>
+Tested-by: Magnus Damn <magnus.damn@gmail.com>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
- arch/arm64/configs/defconfig | 1 +
+ drivers/iommu/of_iommu.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 7c48028ec64a..d56d8f1062ab 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
- CONFIG_PCI_LAYERSCAPE=y
- CONFIG_PCI_HISI=y
- CONFIG_PCIE_QCOM=y
-+CONFIG_PCIE_KIRIN=y
- CONFIG_PCIE_ARMADA_8K=y
- CONFIG_ARM64_VA_BITS_48=y
- CONFIG_SCHED_MC=y
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 9f44ee8..e6e9bec 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
+ 
+ 	ops = iommu_ops_from_fwnode(fwnode);
+ 	if ((ops && !ops->of_xlate) ||
++	    !of_device_is_available(iommu_spec->np) ||
+ 	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+ 		return NULL;
+ 
 -- 
-2.11.GIT
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
