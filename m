@@ -1,98 +1,37 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        Oza Pawandeep <oza.oza@broadcom.com>
-Subject: [PATCH v4 2/3] iommu/pci: reserve IOVA for PCI masters
-Date: Fri,  5 May 2017 19:17:19 +0530
-Message-Id: <1493992040-31222-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1493992040-31222-1-git-send-email-oza.oza@broadcom.com>
-References: <1493992040-31222-1-git-send-email-oza.oza@broadcom.com>
+From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+To: linux-renesas-soc@vger.kernel.org
+Cc: Wolfram Sang <wsa+renesas@sang-engineering.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/7] pci: use proper name for the R-Car SoC
+Date: Sun, 28 May 2017 11:30:48 +0200
+Message-Id: <20170528093051.11816-6-wsa+renesas@sang-engineering.com>
+In-Reply-To: <20170528093051.11816-1-wsa+renesas@sang-engineering.com>
+References: <20170528093051.11816-1-wsa+renesas@sang-engineering.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-this patch reserves the IOVA for PCI masters.
-ARM64 based SOCs may have scattered memory banks.
-such as iproc based SOC has
+It is 'R-Car', not 'RCar'. No code or binding changes, only descriptive text.
 
-<0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
-<0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
-<0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
-<0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
+Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+---
+I suggest this trivial patch should be picked individually per susbsystem.
 
-but incoming PCI transcation addressing capability is limited
-by host bridge, for example if max incoming window capability
-is 512 GB, then 0x00000090 and 0x000000a0 will fall beyond it.
+ Documentation/devicetree/bindings/pci/rcar-pci.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-to address this problem, iommu has to avoid allocating IOVA which
-are reserved. which inturn does not allocate IOVA if it falls into hole.
-
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 48d36ce..08764b0 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -27,6 +27,7 @@
- #include <linux/iova.h>
- #include <linux/irq.h>
- #include <linux/mm.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/scatterlist.h>
- #include <linux/vmalloc.h>
-@@ -171,8 +172,12 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
- 		struct iova_domain *iovad)
- {
- 	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
-+	struct device_node *np = bridge->dev.parent->of_node;
- 	struct resource_entry *window;
- 	unsigned long lo, hi;
-+	int ret;
-+	dma_addr_t tmp_dma_addr = 0, dma_addr;
-+	LIST_HEAD(res);
+diff --git a/Documentation/devicetree/bindings/pci/rcar-pci.txt b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+index 34712d6fd25376..bd27428dda619d 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-pci.txt
++++ b/Documentation/devicetree/bindings/pci/rcar-pci.txt
+@@ -1,4 +1,4 @@
+-* Renesas RCar PCIe interface
++* Renesas R-Car PCIe interface
  
- 	resource_list_for_each_entry(window, &bridge->windows) {
- 		if (resource_type(window->res) != IORESOURCE_MEM &&
-@@ -183,6 +188,36 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
- 		hi = iova_pfn(iovad, window->res->end - window->offset);
- 		reserve_iova(iovad, lo, hi);
- 	}
-+
-+	/* PCI inbound memory reservation. */
-+	ret = of_pci_get_dma_ranges(np, &res);
-+	if (!ret) {
-+		resource_list_for_each_entry(window, &res) {
-+			struct resource *res_dma = window->res;
-+
-+			dma_addr = res_dma->start - window->offset;
-+			if (tmp_dma_addr > dma_addr) {
-+				pr_warn("PCI: failed to reserve iovas; ranges should be sorted\n");
-+				return;
-+			}
-+			if (tmp_dma_addr != dma_addr) {
-+				lo = iova_pfn(iovad, tmp_dma_addr);
-+				hi = iova_pfn(iovad, dma_addr - 1);
-+				reserve_iova(iovad, lo, hi);
-+			}
-+			tmp_dma_addr = window->res->end - window->offset;
-+		}
-+		/*
-+		 * the last dma-range should honour based on the
-+		 * 32/64-bit dma addresses.
-+		 */
-+		if (tmp_dma_addr < DMA_BIT_MASK(sizeof(dma_addr_t) * 8)) {
-+			lo = iova_pfn(iovad, tmp_dma_addr);
-+			hi = iova_pfn(iovad,
-+				      DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1);
-+			reserve_iova(iovad, lo, hi);
-+		}
-+	}
- }
- 
- /**
+ Required properties:
+ compatible: "renesas,pcie-r8a7779" for the R8A7779 SoC;
 -- 
-1.9.1
+2.11.0
