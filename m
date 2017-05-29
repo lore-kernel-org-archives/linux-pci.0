@@ -1,129 +1,187 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 3 May 2017 11:34:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [RFC/RFT PATCH 00/18] PCI: ARM/ARM64: remove pci_fixup_irqs()
- usage
-Message-ID: <20170503103456.GC10800@red-moon>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170427200635.GA6563@ulmo.ba.sec>
+Return-Path: <SRS0=toz3=5D=broadcom.com=srinath.mannam@kernel.org>
+Return-Path: <SRS0=toz3=5D=broadcom.com=srinath.mannam@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170427200635.GA6563@ulmo.ba.sec>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170526192703.GB8204@bhelgaas-glaptop.roam.corp.google.com>
+References: <1494256190-28993-1-git-send-email-srinath.mannam@broadcom.com> <20170526192703.GB8204@bhelgaas-glaptop.roam.corp.google.com>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+Date: Mon, 29 May 2017 15:00:42 +0530
+Message-ID: <CABe79T5YCE7OXAF5rKWTA6fQkBfDvmW-bHqPA2O5mQZMzfa+tQ@mail.gmail.com>
+Subject: Re: [RFC PATCH] pci: Concurrency issue in NVMe Init through PCIe switch
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 27, 2017 at 10:06:35PM +0200, Thierry Reding wrote:
-> On Wed, Apr 26, 2017 at 12:17:51PM +0100, Lorenzo Pieralisi wrote:
-> > Current pci_fixup_irqs() usage on ARM/ARM64 host controller drivers is
-> > flawed in that pci_fixup_irqs() allocates IRQs for all PCI devices present
-> > in a system; those PCI devices possibly belong to different PCI bus trees
-> > (and possibly rooted at different host bridges) and may well be enabled
-> > (ie probed and bound to a driver) by the time pci_fixup_irqs() is called
-> > when probing a given host bridge driver.
-> > 
-> > Furthermore, current kernel code relying on pci_fixup_irqs() to
-> > assign legacy PCI IRQs to devices does not work at all for
-> > hotplugged devices in that the code carrying out the IRQ fixup
-> > is called at host bridge driver probe time, which just cannot take
-> > into account devices hotplugged after system has booted.
-> > 
-> > By leveraging Matthew Minter's patch series (and its purpose):
-> > 
-> > http://lkml.kernel.org/r/1445576642-29624-2-git-send-email-matt@masarand.com
-> > 
-> > this series[1] adds IRQs mapping and swizzling primitives to
-> > the struct pci_host_bridge which allows IRQs to be allocated for
-> > for a device at probe time with host bridge specific functions,
-> > fixing the aforementioned limitations.
-> > 
-> > Current series remove pci_fixup_irqs() usage on ARM/ARM64; removal
-> > can be extended to other architectures provided the IRQs map/swizzle
-> > functions are set-up properly in the respective host bridges
-> > set-up/probe paths.
-> > 
-> > Tested on kvmtool with PCI host generic.
-> 
-> I've tested this on Jetson TX1 (though I need a small patch specific to
-> Tegra on top to fix a preexisting issue) and things seem to be working
-> normally.
-> 
-> The output of "lspci -v" is identical before and after applying the
-> series (on top of next-20170427):
-> 
-> -sh-4.4# lspci -v
-> 00:01.0 PCI bridge: NVIDIA Corporation Device 0fae (rev a1) (prog-if 00 [Normal decode])
->         Flags: bus master, fast devsel, latency 0, IRQ 348
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         I/O behind bridge: 00001000-00001fff [size=4K]
->         Memory behind bridge: 13000000-130fffff [size=1M]
->         Prefetchable memory behind bridge: 0000000020000000-00000000200fffff [size=1M]
->         Capabilities: [40] Subsystem: NVIDIA Corporation Device 0000
->         Capabilities: [48] Power Management version 3
->         Capabilities: [50] MSI: Enable+ Count=1/2 Maskable- 64bit+
->         Capabilities: [60] HyperTransport: MSI Mapping Enable- Fixed-
->         Capabilities: [80] Express Root Port (Slot+), MSI 00
->         Capabilities: [100] #00
->         Capabilities: [140] L1 PM Substates
->         Kernel driver in use: pcieport
-> 
-> 01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 02)
->         Subsystem: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller
->         Flags: bus master, fast devsel, latency 0, IRQ 349
->         I/O ports at 1000 [size=256]
->         Memory at 13000000 (64-bit, non-prefetchable) [size=4K]
->         Memory at 20000000 (64-bit, prefetchable) [size=64K]
->         Capabilities: [40] Power Management version 3
->         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
->         Capabilities: [70] Express Endpoint, MSI 01
->         Capabilities: [b0] MSI-X: Enable- Count=2 Masked-
->         Capabilities: [d0] Vital Product Data
->         Capabilities: [100] Advanced Error Reporting
->         Capabilities: [140] Virtual Channel
->         Capabilities: [160] Device Serial Number 8d-08-00-00-68-4c-e0-00
->         Kernel driver in use: r8169
-> 
-> Note that the Realtek card is initialized by the r8169 driver and the
-> network card is used to boot over NFS.
-> 
-> My understanding is that this is what's expected, so:
-> 
-> Tested-by: Thierry Reding <treding@nvidia.com>
+Hi Bjorn,
 
-Hi Thierry,
+On Sat, May 27, 2017 at 12:57 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Hi Srinath,
+>
+> Thanks for chasing this down!  It must have been a real hassle to find
+> this.
+>
+> On Mon, May 08, 2017 at 08:39:50PM +0530, Srinath Mannam wrote:
+>> We found a concurrency issue in NVMe Init when we initialize
+>> multiple NVMe connected over PCIe switch.
+>>
+>> Setup details:
+>>  - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+>>  - Two NVMe cards are connected to PCIe RC through bridge as shown
+>>    in the below figure.
+>>
+>>                    [RC]
+>>                     |
+>>                  [BRIDGE]
+>>                     |
+>>                -----------
+>>               |           |
+>>             [NVMe]      [NVMe]
+>>
+>> Issue description:
+>> After PCIe enumeration completed NVMe driver probe function called
+>> for both the devices from two CPUS simultaneously.
+>> From nvme_probe, pci_enable_device_mem called for both the EPs. This
+>> function called pci_enable_bridge enable recursively until RC.
+>>
+>> Inside pci_enable_bridge function, at two places concurrency issue is
+>> observed.
+>>
+>> Place 1:
+>>   CPU 0:
+>>     1. Done Atomic increment dev->enable_cnt
+>>        in pci_enable_device_flags
+>>     2. Inside pci_enable_resources
+>>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+>>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>   CPU 1:
+>>     1. Check pci_is_enabled in function pci_enable_bridge
+>>        and it is true
+>>     2. Check (!dev->is_busmaster) also true
+>>     3. Gone into pci_set_master
+>>     4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+>>     5. Ready to set PCI_COMMAND_MASTER (0x4) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>
+>> By the time of last point for both the CPUs are read value 0 and
+>> ready to write 2 and 4.
+>> After last point final value in PCI_COMMAND register is 4 instead of 6.
+>>
+>> Place 2:
+>>   CPU 0:
+>>     1. Done Atomic increment dev->enable_cnt in
+>>        pci_enable_device_flags
+>>     2. Inside pci_enable_resources
+>>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+>>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd);
+>>   CPU 1:
+>>     1. Done Atomic increment dev->enable_cnt in function
+>>        pci_enable_device_flag fail return 0 from there
+>>     2. Gone into pci_set_master
+>>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+>>     4. Ready to set PCI_COMMAND_MASTER (0x4) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>
+>> By the time of last point for both the CPUs are read value 0 and
+>> ready to write 2 and 4.
+>> After last point final value in PCI_COMMAND register is 4 instead of 6.
+>
+> Most places that write PCI_COMMAND do this sort of read/modify/write
+> thing.  But in most of those places we only touch one device, and it's
+> the device we own, e.g., the PCI core enumerating it or a driver.
+> I don't think we really have a concurrency problem with those.
+>
+> But in this case, where a driver called pci_enable_device() for device
+> A, and we're touching an upstream bridge B, we *do* have an issue.
+>
+> Since it's a concurrency issue, the obvious solution is a mutex.  I'm
+> sure this patch solves it, but it's not obvious to me how it works and
+> I'd be afraid of breaking it in the future.
+>
+> Would it work to add a mutex in the struct pci_host_bridge, then hold
+> it while we enable upstream bridges, e.g., something like the
+> following?
+>
+>   bridge = pci_upstream_bridge(dev);
+>   if (bridge) {
+>     struct mutex = &pci_find_host_bridge(dev)->mutex;
+>
+>     mutex_lock(mutex);
+>     pci_enable_bridge(bridge);
+>     mutex_unlock(mutex);
+>   }
 
-thanks a lot, that's very appreciated, it is exactly what I need.
+Yes, your suggestion looks good to me. I will try on similar lines
+and send RFC V2.
 
-Please let me know if you have comments on the individual patches too.
+In the current patch we had tried to limit the changes to single function.
+With your suggestions the changes may spread across three files and
+more cleaner way.
 
-Thanks !
-Lorenzo
+Thank you,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Srinath.
+
+>
+> Bjorn
+>
+>> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 7904d02..6c5744e 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1345,21 +1345,39 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>>  {
+>>       struct pci_dev *bridge;
+>>       int retval;
+>> +     int err;
+>> +     int i;
+>> +     unsigned int bars = 0;
+>> +     unsigned long flags = IORESOURCE_MEM | IORESOURCE_IO;
+>>
+>>       bridge = pci_upstream_bridge(dev);
+>>       if (bridge)
+>>               pci_enable_bridge(bridge);
+>>
+>> -     if (pci_is_enabled(dev)) {
+>> -             if (!dev->is_busmaster)
+>> -                     pci_set_master(dev);
+>> +     if (dev->pm_cap) {
+>> +             u16 pmcsr;
+>> +
+>> +             pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+>> +             dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
+>> +     }
+>> +
+>> +     if (atomic_inc_return(&dev->enable_cnt) > 1)
+>> +             return;         /* already enabled */
+>> +
+>> +     /* only skip sriov related */
+>> +     for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+>> +             if (dev->resource[i].flags & flags)
+>> +                     bars |= (1 << i);
+>> +     for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
+>> +             if (dev->resource[i].flags & flags)
+>> +                     bars |= (1 << i);
+>> +
+>> +     err = do_pci_enable_device(dev, bars);
+>> +     if (err < 0) {
+>> +             atomic_dec(&dev->enable_cnt);
+>>               return;
+>>       }
+>>
+>> -     retval = pci_enable_device(dev);
+>> -     if (retval)
+>> -             dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+>> -                     retval);
+>>       pci_set_master(dev);
+>>  }
+>>
+>> --
+>> 2.7.4
+>>
