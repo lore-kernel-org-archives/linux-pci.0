@@ -1,90 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:6902 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937754AbdEYDCl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 23:02:41 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 1/4] PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-Date: Thu, 25 May 2017 11:02:01 +0800
-Message-ID: <20170525030204.126233-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20170525030204.126233-1-songxiaowei@hisilicon.com>
-References: <20170525030204.126233-1-songxiaowei@hisilicon.com>
+Received: from mx2.mpynet.fi ([82.197.21.85]:64451 "EHLO mx2.mpynet.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751129AbdE2JTM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 29 May 2017 05:19:12 -0400
+Date: Mon, 29 May 2017 12:19:09 +0300
+From: Rakesh Pandit <rakesh@tuxera.com>
+To: <linux-pci@vger.kernel.org>
+CC: <helgaas@kernel.org>, <linux-nvme@lists.infradead.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] PCI: ensure the PCI device is locked over ->reset_notify
+ calls
+Message-ID: <20170529091909.GA33654@dhcp-216.srv.tuxera.com>
+References: <20170523054202.7985-1-hch@lst.de>
+ <20170523054202.7985-2-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <20170523054202.7985-2-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- .../devicetree/bindings/pci/kirin-pcie.txt         | 49 ++++++++++++++++++++++
- 1 file changed, 49 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+Hi,
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-new file mode 100644
-index 000000000000..ba6f1bd191f5
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -0,0 +1,49 @@
-+HiSilicon Kirin SoCs PCIe host DT description
-+
-+Kirin PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver
-+and inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties
-+- compatible:
-+	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
-+- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "dbi": controller configuration registers;
-+  "apb": apb Ctrl register defined by Kirin;
-+  "phy": apb PHY register defined by Kirin;
-+  "config": PCIe configuration space registers.
-+- reset-gpio: The gpio to generate PCIe perst assert and deassert signal.
-+
-+Optional properties:
-+
-+Example based on kirin960:
-+
-+        pcie@f4000000 {
-+                        compatible = "hisilicon,kirin-pcie";
-+                        reg =  <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
-+                                 <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
-+                        reg-names = "dbi","apb","phy", "config";
-+                        bus-range = <0x0  0x1>;
-+                        #address-cells = <3>;
-+                        #size-cells = <2>;
-+                        device_type = "pci";
-+                        ranges = <0x02000000 0x0 0x00000000 0x0 0xf5000000 0x0 0x2000000>;
-+                        num-lanes = <1>;
-+                        #interrupt-cells = <1>;
-+                        interrupt-map-mask = <0xf800 0 0 7>;
-+			interrupt-map = <0x0 0 0 2 &gic 0 0 0  283 4>,
-+                                        <0x0 0 0 3 &gic 0 0 0  284 4>,
-+                                        <0x0 0 0 4 &gic 0 0 0  285 4>;
-+                        clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+                                <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+                                <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+                                <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+                        clock-names = "pcie_phy_ref", "pcie_aux",
-+                                "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
-+                        reset-gpio = <&gpio11 1 0 >;
-+        };
--- 
-2.11.GIT
+On Tue, May 23, 2017 at 07:42:02AM +0200, Christoph Hellwig wrote:
+> Without this ->notify_reset instance may race with ->remove calls,
+> which can be easily triggered in NVMe.
+>
+
+Any input on this sometime before next -rc release would be great ?
+
+> Reported-by: Rakesh Pandit <rakesh@tuxera.com>
+> Tested-by: Rakesh Pandit <rakesh@tuxera.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/pci.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5bba8e6..b61ad77dc322 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4275,11 +4275,13 @@ int pci_reset_function(struct pci_dev *dev)
+>  	if (rc)
+>  		return rc;
+>  
+> +	pci_dev_lock(dev);
+>  	pci_dev_save_and_disable(dev);
+>  
+> -	rc = pci_dev_reset(dev, 0);
+> +	rc = __pci_dev_reset(dev, 0);
+>  
+>  	pci_dev_restore(dev);
+> +	pci_dev_unlock(dev);
+>  
+>  	return rc;
+>  }
+> -- 
+> 2.11.0
+> 
