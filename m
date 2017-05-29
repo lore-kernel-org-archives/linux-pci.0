@@ -1,110 +1,106 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 23 May 2017 12:24:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
-Message-ID: <20170523172409.GD24431@bhelgaas-glaptop.roam.corp.google.com>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v6 3/6] ACPI/IORT: Ignore all errors except EPROBE_DEFER
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, lenb@kernel.org, catalin.marinas@arm.com,
+        arnd@arndb.de, linux-arch@vger.kernel.org,
+        laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
+        geert@linux-m68k.org, magnus.damm@gmail.com,
+        nwatters@codeaurora.org, linux@armlinux.org.uk
+References: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
+ <1495892865-9506-3-git-send-email-sricharan@codeaurora.org>
+ <1564836.5iBbgoacpH@aspire.rjw.lan>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <68bc9be5-22df-e7af-3fcd-182e935e681c@codeaurora.org>
+Date: Mon, 29 May 2017 10:36:42 +0530
 MIME-Version: 1.0
-In-Reply-To: <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Mason <slash.tmp@free.fr>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1564836.5iBbgoacpH@aspire.rjw.lan>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 04:31:25PM +0200, Marc Gonzalez wrote:
-> This driver is required to work around several hardware bugs in the
-> PCIe controller.
+Hi Rafael,
+
+On 5/28/2017 12:48 AM, Rafael J. Wysocki wrote:
+> On Saturday, May 27, 2017 07:17:42 PM Sricharan R wrote:
+>> While deferring the probe of IOMMU masters, xlate and
+>> add_device callbacks called from iort_iommu_configure
+>> can pass back error values like -ENODEV, which means
+>> the IOMMU cannot be connected with that master for real
+>> reasons. Before the IOMMU probe deferral, all such errors
+>> were ignored. Now all those errors are propagated back,
+>> killing the master's probe for such errors. Instead ignore
+>> all the errors except EPROBE_DEFER, which is the only one
+>> of concern and let the master work without IOMMU, thus
+>> restoring the old behavior. Also make explicit that
+>> acpi_dma_configure handles only -EPROBE_DEFER from
+>> iort_iommu_configure.
+>>
+>> Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>>  drivers/acpi/arm64/iort.c | 6 ++++++
+>>  drivers/acpi/scan.c       | 4 ++--
+>>  2 files changed, 8 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index c5fecf9..16e101f 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>>  	if (err)
+>>  		ops = ERR_PTR(err);
+>>  
+>> +	/* Ignore all other errors apart from EPROBE_DEFER */
+>> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
+>> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
+>> +		ops = NULL;
+>> +	}
+>> +
+>>  	return ops;
+>>  }
+>>  
+>> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+>> index e39ec7b..3a10d757 100644
+>> --- a/drivers/acpi/scan.c
+>> +++ b/drivers/acpi/scan.c
+>> @@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>>  	iort_set_dma_mask(dev);
+>>  
+>>  	iommu = iort_iommu_configure(dev);
+>> -	if (IS_ERR(iommu))
+>> -		return PTR_ERR(iommu);
+>> +	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
+>> +		return -EPROBE_DEFER;
+>>  
+>>  	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>>  	/*
+>>
 > 
-> NB: Revision 1 does not support legacy interrupts, or IO space.
+> ACK for the scan.c change and I'm assuming this to go in via ARM64.
 > 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> ---
->  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
->  drivers/pci/host/Kconfig                             |   8 ++
->  drivers/pci/host/Makefile                            |   1 +
->  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
->  include/linux/pci_ids.h                              |   2 +
->  5 files changed, 204 insertions(+)
-> ...
 
-> +static int smp8759_config_read(struct pci_bus *bus,
-> +		unsigned int devfn, int where, int size, u32 *val)
-> +{
-> +	int ret;
-> +	struct pci_config_window *cfg = bus->sysdata;
-> +	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
-> +
-> +	/*
-> +	 * QUIRK #1
-> +	 * Reads in configuration space outside devfn 0 return garbage.
-> +	 */
-> +	if (devfn != 0)
-> +		return PCIBIOS_FUNC_NOT_SUPPORTED;
-> +
-> +	/*
-> +	 * QUIRK #2
-> +	 * Unfortunately, config and mem spaces are muxed.
-> +	 * Linux does not support such a setting, since drivers are free
-> +	 * to access mem space directly, at any time.
-> +	 * Therefore, we can only PRAY that config and mem space accesses
-> +	 * NEVER occur concurrently.
-> +	 */
-> +	writel_relaxed(1, pcie->mux);
-> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
-> +	writel_relaxed(0, pcie->mux);
+Thanks for the ACK, should go through the IOMMU tree, since this fixes the IOMMU probe deferral
+that got merged through it.
 
-This is a major issue and possibly even a security problem.
-Unprivileged users can cause config accesses via lspci/setpci.
+Regards,
+ Sricharan
 
-I don't have a good suggestion for addressing it, but if you can't
-make this work reliably, you need at least a dev_err() in the probe
-function and probably a taint of the kernel (see add_taint()).
+> Thanks,
+> Rafael
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-> +	return ret;
-> +}
-> +
-> +static int smp8759_config_write(struct pci_bus *bus,
-> +		unsigned int devfn, int where, int size, u32 val)
-> +{
-> +	int ret;
-> +	struct pci_config_window *cfg = bus->sysdata;
-> +	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
-> +
-> +	writel_relaxed(1, pcie->mux);
-> +	ret = pci_generic_config_write(bus, devfn, where, size, val);
-> +	writel_relaxed(0, pcie->mux);
-> +
-> +	return ret;
-> +}
-> +
-> +static struct pci_ecam_ops smp8759_ecam_ops = {
-> +	.bus_shift	= 20,
-> +	.pci_ops	= {
-> +		.map_bus	= pci_ecam_map_bus,
-> +		.read		= smp8759_config_read,
-> +		.write		= smp8759_config_write,
-> +	}
-> +};
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
