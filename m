@@ -1,156 +1,238 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from twosheds.infradead.org ([90.155.92.209]:52308 "EHLO
-        twosheds.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938766AbdEXKif (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 06:38:35 -0400
-Message-ID: <1495622297.4858.19.camel@infradead.org>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-From: David Woodhouse <dwmw2@infradead.org>
-To: Joerg Roedel <jroedel@suse.de>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: 'Joerg Roedel' <joro@8bytes.org>,
+Received: from mx1.redhat.com ([209.132.183.28]:57866 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750838AbdE2AF1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 28 May 2017 20:05:27 -0400
+Date: Mon, 29 May 2017 03:05:22 +0300
+From: "Michael S. Tsirkin" <mst@redhat.com>
+To: Piotr Gregor <piotrgregor@rsyncme.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        Samuel Sieb <samuel@sieb.net>
-In-Reply-To: <20170524084450.GB12353@suse.de>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
-         <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
-         <1493893297.4904.71.camel@infradead.org>
-         <BN6PR12MB1652A0F240C19F2CF3304300F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
-         <20170524084450.GB12353@suse.de>
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-tHYydw94JsHs94hDrmOW"
-Date: Wed, 24 May 2017 11:38:17 +0100
-Mime-Version: 1.0
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org
+Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170529030459-mutt-send-email-mst@kernel.org>
+References: <20170526210222.GA22204@westernst>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170526210222.GA22204@westernst>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, May 26, 2017 at 10:02:25PM +0100, Piotr Gregor wrote:
+> The test for INTx masking via config space command performed
+> in pci_intx_mask_supported() should be performed before PCI device
+> can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
+> register which may collide with MSI/MSI-X interrupts.
+> 
+> This patch moves test performed in pci_intx_mask_supported() to
+> 
+> static void pci_test_intx_masking(struct pci_dev *dev)
+> 
+> defined in drivers/pci/probe.c.
+> 
+> This function is called from pci_setup_device(). It skips the test
+> if the device has been already marked to have broken INTx masking
+> feature. Otherwise the test is executed and broken_intx_masking
+> field of struct pci_dev is set accordingly. broken_intx_masking
+> meaning is: if it is true then the test has been either skipped
+> because the device has been already known to have broken INTx
+> masking support, or the test's been done and it has detected INTx
+> masking support to be broken.
+> The test result can be queried at any time later from the pci_dev
+> using same interface as before (though whith changed implementation)
+> 
+> static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+> {
+>         /*
+>          * INTx masking is supported if device has not been marked
+>          * to have this feature broken and it has passed
+>          * pci_test_intx_masking() test.
+>          */
+>         return !pdev->broken_intx_masking;
+> }
+> 
+> so current users of pci_intx_mask_supported: uio and vfio, keep
+> their code unchanged.
+> 
+> Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
 
---=-tHYydw94JsHs94hDrmOW
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Looks sane
 
-On Wed, 2017-05-24 at 10:44 +0200, Joerg Roedel wrote:
-> Hi Alexander,
->=20
-> On Tue, May 23, 2017 at 07:54:12PM +0000, Deucher, Alexander wrote:
-> >=20
-> > I finally got an answer from the hw team and we validated ATS on
-> > stoney as well so in theory this patch shouldn=E2=80=99t actually be ne=
-eded.
-> > I think we may actually be papering over some other issue.=C2=A0=C2=A0T=
-he
-> > following patch seems to also fix this issue (and other issues):
-> > https://www.spinics.net/lists/stable/msg172631.html
->
-> Yeah, but it still looks to me like that the hardware got into some
-> weird state with the storm of ATS invalidations sent to it.
->=20
-> The Completion-Wait loop timeouts seen in the original bug report
-> indicate that the IOMMU is waiting for a response that never comes. And
-> this is probably the ATS flush completion response from the GPU, as
-> disabling ATS on the GPU makes the issue disappear.
-
-The above patch doesn't actually fix any spec violation which could the
-GPU an *excuse*=C2=A0to crash and stop responding to invalidations, does it=
-?
-It just seems to reduce the invalidation load a little, and thus paper
-over the problem that the card tends to crash under load. Absent a more
-coherent explanation, it still seems like the correct answer is to
-blacklist these devices for ATS because they're broken.
---=-tHYydw94JsHs94hDrmOW
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
-ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
-EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
-UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
-MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
-bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
-PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
-bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
-uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
-LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
-QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
-UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
-UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
-MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
-BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
-HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
-LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
-mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
-nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
-4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
-yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
-+nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
-CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
-MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
-MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
-pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
-An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
-p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
-HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
-AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
-dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
-MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
-BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
-UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
-Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
-gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
-dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
-Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
-DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
-eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
-hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
-PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
-QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
-WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
-ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
-bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
-SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
-RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
-dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
-iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
-M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
-FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
-HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
-BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
-BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
-dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
-ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
-BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
-2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
-vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
-YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
-fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
-GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
-R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
-TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
-ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDUyNDEwMzgxN1owLwYJ
-KoZIhvcNAQkEMSIEIMupHxCGN8b+FQoQVcWIXmZuiB2FeY01Rzjyfj/tBr4BMIHBBgkrBgEEAYI3
-EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
-BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
-RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
-WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
-VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
-TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
-b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQCTWTIg2/2Jovfj3OR4UhC9HRYDnAqQml2s6G0V2MYgvNqq1qFhsCTRf/Yu4Kw3mujAbrCMaToD
-oRKAmRmBXvoh8wJ3Di+E0GkHRu7EYgOExVyoIX6cWwXhv75hWKq2ChRTZKJ2lsXA5KbRdC/Z1HJt
-I8AZtBoUzCuRbF80qhLaMZT2v8/82CurHv8ViD2X19xN0848vALZwpTUhvrwSNuUbALuU7oH76FA
-lVg+GlXSMKWBNmcCJjTJszcnF4ZNPNarUT7PbKg8idE7QsUXxpFtcN37Sv/lvwELHE6Xznx7dzi5
-c6cKq6T9c/TmzHQm4EuJLKIzLY0XqbloaCS5ZAPYAAAAAAAA
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
 
 
---=-tHYydw94JsHs94hDrmOW--
+> ---
+>  drivers/pci/pci.c   | 42 +-----------------------------------------
+>  drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h | 13 +++++++++++--
+>  3 files changed, 56 insertions(+), 43 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..7c4e1aa 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_intx);
+>  
+> -/**
+> - * pci_intx_mask_supported - probe for INTx masking support
+> - * @dev: the PCI device to operate on
+> - *
+> - * Check if the device dev support INTx masking via the config space
+> - * command word.
+> - */
+> -bool pci_intx_mask_supported(struct pci_dev *dev)
+> -{
+> -	bool mask_supported = false;
+> -	u16 orig, new;
+> -
+> -	if (dev->broken_intx_masking)
+> -		return false;
+> -
+> -	pci_cfg_access_lock(dev);
+> -
+> -	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> -	pci_write_config_word(dev, PCI_COMMAND,
+> -			      orig ^ PCI_COMMAND_INTX_DISABLE);
+> -	pci_read_config_word(dev, PCI_COMMAND, &new);
+> -
+> -	/*
+> -	 * There's no way to protect against hardware bugs or detect them
+> -	 * reliably, but as long as we know what the value should be, let's
+> -	 * go ahead and check it.
+> -	 */
+> -	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+> -		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+> -			orig, new);
+> -	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+> -		mask_supported = true;
+> -		pci_write_config_word(dev, PCI_COMMAND, orig);
+> -	}
+> -
+> -	pci_cfg_access_unlock(dev);
+> -	return mask_supported;
+> -}
+> -EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
+> -
+>  static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>  {
+>  	struct pci_bus *bus = dev->bus;
+> @@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>   * @dev: the PCI device to operate on
+>   *
+>   * Check if the device dev has its INTx line asserted, mask it and
+> - * return true in that case. False is returned if not interrupt was
+> + * return true in that case. False is returned if no interrupt was
+>   * pending.
+>   */
+>  bool pci_check_and_mask_intx(struct pci_dev *dev)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 19c8950..ee6b55c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1330,6 +1330,48 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+>  }
+>  
+>  /**
+> + * pci_test_intx_masking - probe for INTx masking support
+> + * @dev: the PCI device to operate on
+> + *
+> + * Check if the @dev supports INTx masking via the config space
+> + * command word. Executed when PCI device is setup. Result is saved
+> + * in broken_intx_masking field of struct pci_dev and can be checked
+> + * with pci_intx_mask_supported at any time later, after the PCI device
+> + * has been setup (this avoids testing of PCI_COMMAND_INTX_DISABLE
+> + * register at runtime).
+> + */
+> +static void pci_test_intx_masking(struct pci_dev *dev)
+> +{
+> +	u16 orig, toggle, new;
+> +
+> +	/*
+> +	 * If device doesn't support this feature though it could pass the test.
+> +	 */
+> +	if (dev->broken_intx_masking)
+> +		return;
+> +
+> +	pci_cfg_access_lock(dev);
+> +
+> +	/*
+> +	 * Perform the test.
+> +	 */
+> +	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> +	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
+> +	pci_write_config_word(dev, PCI_COMMAND, toggle);
+> +	pci_read_config_word(dev, PCI_COMMAND, &new);
+> +
+> +	/*
+> +	 * Restore initial state.
+> +	 */
+> +	pci_write_config_word(dev, PCI_COMMAND, orig);
+> +
+> +	pci_cfg_access_unlock(dev);
+> +
+> +	if (new != toggle)
+> +		dev->broken_intx_masking = 1;
+> +}
+> +
+> +/**
+>   * pci_setup_device - fill in class and map information of a device
+>   * @dev: the device structure to fill
+>   *
+> @@ -1399,6 +1441,8 @@ int pci_setup_device(struct pci_dev *dev)
+>  		}
+>  	}
+>  
+> +	pci_test_intx_masking(dev);
+> +
+>  	switch (dev->hdr_type) {		    /* header type */
+>  	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
+>  		if (class == PCI_CLASS_BRIDGE_PCI)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33c2b0b..8a307fc 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -366,7 +366,7 @@ struct pci_dev {
+>  	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+>  	unsigned int    __aer_firmware_first_valid:1;
+>  	unsigned int	__aer_firmware_first:1;
+> -	unsigned int	broken_intx_masking:1;
+> +	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
+>  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+>  	unsigned int	irq_managed:1;
+>  	unsigned int	has_secondary_link:1;
+> @@ -1003,6 +1003,16 @@ int __must_check pci_reenable_device(struct pci_dev *);
+>  int __must_check pcim_enable_device(struct pci_dev *pdev);
+>  void pcim_pin_device(struct pci_dev *pdev);
+>  
+> +static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * INTx masking is supported if device has not been marked
+> +	 * to have this feature broken and it has passed
+> +	 * pci_test_intx_masking() test.
+> +	 */
+> +	return !pdev->broken_intx_masking;
+> +}
+> +
+>  static inline int pci_is_enabled(struct pci_dev *pdev)
+>  {
+>  	return (atomic_read(&pdev->enable_cnt) > 0);
+> @@ -1026,7 +1036,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
+>  int pci_try_set_mwi(struct pci_dev *dev);
+>  void pci_clear_mwi(struct pci_dev *dev);
+>  void pci_intx(struct pci_dev *dev, int enable);
+> -bool pci_intx_mask_supported(struct pci_dev *dev);
+>  bool pci_check_and_mask_intx(struct pci_dev *dev);
+>  bool pci_check_and_unmask_intx(struct pci_dev *dev);
+>  int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+> -- 
+> 2.1.4
