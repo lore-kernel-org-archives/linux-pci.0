@@ -1,47 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6819 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S937754AbdEYDGE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 23:06:04 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 4/4] defconfig: PCI: Enable  Kirin PCIe defconfig
-Date: Thu, 25 May 2017 11:02:04 +0800
-Message-ID: <20170525030204.126233-5-songxiaowei@hisilicon.com>
-In-Reply-To: <20170525030204.126233-1-songxiaowei@hisilicon.com>
-References: <20170525030204.126233-1-songxiaowei@hisilicon.com>
+Received: from mail.kernel.org ([198.145.29.99]:37114 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750825AbdE3TpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 May 2017 15:45:08 -0400
+Date: Tue, 30 May 2017 14:45:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jork Loeser <jloeser@microsoft.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+        vkuznets@redhat.com, jasowang@redhat.com,
+        leann.ogasawara@canonical.com, marcelo.cerri@canonical.com,
+        sthemmin@microsoft.com
+Subject: Re: [PATCH-v2 0/5] Hyper-V vPCI: use vPCI protocol version 1.2
+Message-ID: <20170530194506.GA4664@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495658488-13199-1-git-send-email-jloeser@linuxonhyperv.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1495658488-13199-1-git-send-email-jloeser@linuxonhyperv.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+On Wed, May 24, 2017 at 01:41:23PM -0700, Jork Loeser wrote:
+> From: Jork Loeser <jloeser@microsoft.com>
+> 
+> Update the Hyper-V vPCI driver to use the Server-2016 version of the vPCI
+> protocol, fixing MSI creation and retargeting issues.
+> 
+> Changes since v1:
+> - reduced spew in protocol negotiation (Dan Carpenter)
+> - work-around work racing Hyper-V patch (Stephen Hemminger)
+> - formatting (Dan)
+> 
+> Jork Loeser (5):
+>   Hyper-V vPCI: Minor format and semantic fix
+>   Hyper-V vPCI: Use page allocation for hbus structure
+>   PCI-HyperV vPCI: Temporary own CPU-number-to-vCPU-number infra
+>   Hyper-V vPCI: Add vPCI version protocol negotiation
+>   Hyper-V vPCI: use vPCI protocol version 1.2
+> 
+>  arch/x86/include/uapi/asm/hyperv.h |   6 +
+>  drivers/pci/host/pci-hyperv.c      | 445 ++++++++++++++++++++++++++++++-------
+>  2 files changed, 370 insertions(+), 81 deletions(-)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 7c48028ec64a..d56d8f1062ab 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
- CONFIG_PCI_LAYERSCAPE=y
- CONFIG_PCI_HISI=y
- CONFIG_PCIE_QCOM=y
-+CONFIG_PCIE_KIRIN=y
- CONFIG_PCIE_ARMADA_8K=y
- CONFIG_ARM64_VA_BITS_48=y
- CONFIG_SCHED_MC=y
--- 
-2.11.GIT
+Waiting for a maintainer ack:
+
+  Hyper-V CORE AND DRIVERS
+  M:      "K. Y. Srinivasan" <kys@microsoft.com>
+  M:      Haiyang Zhang <haiyangz@microsoft.com>
+  M:      Stephen Hemminger <sthemmin@microsoft.com>
+  ...
+  F:      drivers/pci/host/pci-hyperv.c
