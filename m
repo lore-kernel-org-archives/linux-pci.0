@@ -1,151 +1,67 @@
-Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Marc Zyngier <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
- <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
- <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
-Date: Wed, 31 May 2017 16:18:44 +0200
-MIME-Version: 1.0
-In-Reply-To: <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:60696 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdE3Ldb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:31 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 6/8] pci: qcom SoC driver adapted to new irq API
+Date: Tue, 30 May 2017 12:32:51 +0100
+Message-Id: <5fa4cebbfaaf3e310a34ec40f065a41ea3ff4ce1.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/05/2017 12:22, Marc Zyngier wrote:
-> On 24/05/17 11:00, Robin Murphy wrote:
->> On 23/05/17 20:15, Mason wrote:
->>> On 23/05/2017 20:03, Robin Murphy wrote:
->>>> On 23/05/17 18:54, Mason wrote:
->>>>> On 23/05/2017 19:03, Bjorn Helgaas wrote:
->>>>>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
->>>>>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
->>>>>>>
->>>>>>>> +static int tango_set_affinity(struct irq_data *data,
->>>>>>>> +		const struct cpumask *mask, bool force)
->>>>>>>> +{
->>>>>>>> +	return -EINVAL;
->>>>>>>> +}
->>>>>>>> +
->>>>>>>> +static struct irq_chip tango_chip = {
->>>>>>>> +	.irq_ack		= tango_ack,
->>>>>>>> +	.irq_mask		= tango_mask,
->>>>>>>> +	.irq_unmask		= tango_unmask,
->>>>>>>> +	.irq_set_affinity	= tango_set_affinity,
->>>>>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
->>>>>>>> +};
->>>>>>>
->>>>>>> Hmmm... I'm wondering why .irq_set_affinity is required.
->>>>>>>
->>>>>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
->>>>>>> first calls __irq_can_set_affinity() to check whether
->>>>>>> desc->irq_data.chip->irq_set_affinity) exists.
->>>>>>>
->>>>>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
->>>>>>> which calls chip->irq_set_affinity(data, mask, force);
->>>>>>> = msi_domain_set_affinity()
->>>>>>> which calls parent->chip->irq_set_affinity() unconditionally.
->>>>>>>
->>>>>>> Would it make sense to test that the callback is implemented
->>>>>>> before calling it?
->>>>>>>
->>>>>>>
->>>>>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
->>>>>>
->>>>>> I'm not sure what you're asking.
->>>>>>
->>>>>> Is this a bug report for the v4 tango driver?
->>>>>
->>>>> No.
->>>>>
->>>>>> Or are you asking whether msi_domain_set_affinity() should be changed
->>>>>> to check whether parent->chip->irq_set_affinity is implemented?
->>>>>
->>>>> Yes. The way things are implemented now, drivers are forced
->>>>> to define an irq_set_affinity callback, even if it just returns
->>>>> an error, otherwise, the kernel crashes, because of the
->>>>> unconditional function pointer deref. 
->>>>>
->>>>>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
->>>>>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
->>>>>> generic msi irq domain support"), so if there's a problem here, it's most
->>>>>> likely in the tango code.
->>>>>
->>>>> The issue is having to define an "empty" function.
->>>>> (Unnecessary code bloat and maintenance.)
->>>>
->>>> AFAICS, only one driver (other than this one) implements a "do nothing"
->>>> set_affinity callback - everyone else who doesn't do anything hardware
->>>> specific just passes it along via irq_chip_set_affinity_parent().
->>>
->>> I counted 4. Where did I mess up?
->>>
->>> advk_msi_set_affinity
->>> altera_msi_set_affinity
->>> nwl_msi_set_affinity
->>> vmd_irq_set_affinity
->>> tango_set_affinity
->>
->> Fair point - I went through drivers/irqchip and the various
->> arch-specific instances and found ls_scfg_msi_set_affinity(), but
->> somehow skipped over drivers/pci. Anyway, I think the question stands of
->> why are these handful of drivers *not* using irq_chip_set_affinity_parent()?
-> 
-> Probably because they don't have a parent, in the hierarchical sense.
-> All they have is a chained interrupt (*puke*). Which implies that
-> changing the affinity of one MSI would affect all of them, completely
-> confusing unsuspecting userspace such as irqbalance.
-> 
->> As an outsider, it naively seems logical that the affinity of an MSI
->> which just gets translated to a wired interrupt should propagate through
->> to the affinity of that wired interrupt, but maybe there are reasons not
->> to; I really don't know.
-> 
-> See above. The main issue is that HW folks haven't understood the actual
-> use of MSIs, and persist in implementing them as an afterthought, based
-> on some cascading interrupt controller design.
-> 
-> Sad. So sad.
+This patch adapts Qcom SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-For the record, below is the patch I had in mind:
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-qcom.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 8a3e872798f3..edfc95575a37 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -91,9 +91,11 @@ int msi_domain_set_affinity(struct irq_data *irq_data,
- {
-        struct irq_data *parent = irq_data->parent_data;
-        struct msi_msg msg;
--       int ret;
-+       int ret = -EINVAL;
-+
-+       if (parent->chip->irq_set_affinity)
-+               ret = parent->chip->irq_set_affinity(parent, mask, force);
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 5bf23d4..4e1cc02 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -126,13 +126,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
  
--       ret = parent->chip->irq_set_affinity(parent, mask, force);
-        if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
-                BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
-                irq_chip_write_msi_msg(irq_data, &msg);
-
-
-
-Then, it would be safe to remove "do-nothing" .irq_set_affinity
-callbacks in drivers/pci/host
-
-Regards.
+-static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+@@ -724,14 +717,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       qcom_pcie_msi_irq_handler,
+-				       IRQF_SHARED, "qcom-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "cannot request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	ret = phy_init(pcie->phy);
+-- 
+2.9.3
