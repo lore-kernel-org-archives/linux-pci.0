@@ -1,81 +1,43 @@
-Return-Path: <SRS0=uLZ3=43=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=uLZ3=43=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lukas@wunner.de"
-	<lukas@wunner.de>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com"
-	<mika.westerberg@linux.intel.com>,
-        "liudongdong (C)"
-	<liudongdong3@huawei.com>
-Subject: RE: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
- interrupts for PCIe port services
-Date: Sun, 21 May 2017 15:00:46 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A45545@FRAEML521-MBX.china.huawei.com>
-References: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495103748-7876-2-git-send-email-gabriele.paoloni@huawei.com>
- <20170521083234.GA20658@infradead.org>
-In-Reply-To: <20170521083234.GA20658@infradead.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH 2/7] dt-bindings: PCI: Describe ATS property for root
+ complex nodes
+To: Joerg Roedel <joro@8bytes.org>
+References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+ <20170524180143.19855-3-jean-philippe.brucker@arm.com>
+ <20170530100153.GI2818@8bytes.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        iommu@lists.linux-foundation.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        will.deacon@arm.com, robin.murphy@arm.com, okaya@codeaurora.org,
+        sunil.kovvuri@gmail.com, thunder.leizhen@huawei.com,
+        tn@semihalf.com
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <035be7ba-e850-a5a9-08fa-802a04feb600@arm.com>
+Date: Tue, 30 May 2017 11:58:50 +0100
 MIME-Version: 1.0
+In-Reply-To: <20170530100153.GI2818@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph
+On 30/05/17 11:01, Joerg Roedel wrote:
+> On Wed, May 24, 2017 at 07:01:38PM +0100, Jean-Philippe Brucker wrote:
+>> +- ats-supported: if present, the root complex supports the Address
+>> +  Translation Service (ATS). It is able to interpret the AT field in PCIe
+>> +  Transaction Layer Packets, and forward Translation Completions or
+>> +  Invalidation Requests to endpoints.
+>> +
+>> +  Device drivers should not enable ATS in endpoints unless this property
+>> +  is present.
+> 
+> Device drivers should never enable ATS, this is the job of the IOMMU
+> driver. This should be clarified in the text.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: 21 May 2017 09:33
-> To: Gabriele Paoloni
-> Cc: bhelgaas@google.com; helgaas@kernel.org; Linuxarm; linux-
-> pci@vger.kernel.org; lukas@wunner.de; linux-kernel@vger.kernel.org;
-> mika.westerberg@linux.intel.com; hch@infradead.org; liudongdong (C)
-> Subject: Re: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
-> interrupts for PCIe port services
->=20
-> > +		 *
-> > +		 * pci_irq_vector() below is able to handle entry
-> diff erently
-> > +		 * depending on MSI vs MSI-x case
-> > +		 *
-> >  		 */
->=20
-> One more instance of this comment left :)
+Right, I will change this.
 
-I thought that in your previous review you meant to say that we should
-avoid 2 instances of the same comment (in this patchset I only have this=20
-instance as I have removed the same comment from patch 2/2...)
+Thanks,
+Jean
 
->=20
-> >  		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
-> >  		entry =3D (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
-> > @@ -100,7 +107,10 @@ static int pcie_port_enable_msix(struct pci_dev
-> *dev, int *irqs, int mask)
-> >  		 * MSI/MSI-X vectors assigned to the port is going to be
-> used
-> >  		 * for AER, where "For MSI-X, the value in this register
-> >  		 * indicates which MSI-X Table entry is used to generate
-> the
-> > -		 * interrupt message."
-> > +		 * interrupt message."  and "For MSI, the value
-> > +		 * in this field indicates the offset between the base
-> Message
-> > +		 * Data and the interrupt message that is generated."
-> > +		 *
-> >  		 */
->=20
-> And while this is getting a little too deep into nitpicking:  we
-> usually
-> don't add empty lines to the end of comments.
-
-Ok I can remove the extra line and send out patch v4...
-
-Many thanks
-Gab
