@@ -1,62 +1,54 @@
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "lukas@wunner.de"
-	<lukas@wunner.de>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "mika.westerberg@linux.intel.com"
-	<mika.westerberg@linux.intel.com>,
-        "liudongdong (C)"
-	<liudongdong3@huawei.com>
-Subject: RE: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
- interrupts for PCIe port services
-Date: Tue, 23 May 2017 14:25:21 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A5484A@FRAEML521-MBX.china.huawei.com>
-References: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495103748-7876-2-git-send-email-gabriele.paoloni@huawei.com>
- <20170521083234.GA20658@infradead.org>
- <EE11001F9E5DDD47B7634E2F8A612F2E40A45545@FRAEML521-MBX.china.huawei.com>
- <20170522174411.GA29861@infradead.org>
-In-Reply-To: <20170522174411.GA29861@infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:38666 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750911AbdE3LdE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:04 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 0/8] add new irq api to pcie-designware
+Date: Tue, 30 May 2017 12:32:45 +0100
+Message-Id: <cover.1496142978.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Christoph
+This patch series adds a new interrupt api to pcie-designware-host
+making it possible to use features like MSIX.
 
-> -----Original Message-----
-> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: 22 May 2017 18:44
-> To: Gabriele Paoloni
-> Cc: Christoph Hellwig; bhelgaas@google.com; helgaas@kernel.org;
-> Linuxarm; linux-pci@vger.kernel.org; lukas@wunner.de; linux-
-> kernel@vger.kernel.org; mika.westerberg@linux.intel.com; liudongdong
-> (C)
-> Subject: Re: [PATCH v3 1/2] PCI/portdrv: add support for different MSI
-> interrupts for PCIe port services
->=20
-> On Sun, May 21, 2017 at 03:00:46PM +0000, Gabriele Paoloni wrote:
-> >
-> > I thought that in your previous review you meant to say that we
-> should
-> > avoid 2 instances of the same comment (in this patchset I only have
-> this
-> > instance as I have removed the same comment from patch 2/2...)
->=20
-> No, there is no pointin the comment.  The whole point of pci_irq_vector
-> is to abstract away from how to get at the interrupt in detail.  There
-> is no need to comment on this at the callsite.  If you think the
-> existing documentation for the function is not good enough send a patch
-> to improve it there instead of commenting the callsites.
+The work consisted of adapting the pcie-designware-host and each SoC
+specific driver.
 
-Ok got it. I have just sent out v5 where this is fixed.
-Thanks
-Gab
+The update of pcie-designwar-host was broken into 2 patches
+to improve patch readability.
+
+Joao Pinto (8):
+  pci: adding new irq api to pci-designware
+  pci: exynos SoC driver adapted to new irq API
+  pci: imx6 SoC driver adapted to new irq API
+  pci: artpec6 SoC driver adapted to new irq API
+  pci: generic PCIe DW driver adapted to new irq API
+  pci: qcom SoC driver adapted to new irq API
+  pci: keystone SoC driver adapted to new irq API
+  pci: removing old irq api from pcie-designware
+
+ drivers/pci/dwc/pci-exynos.c           |  18 --
+ drivers/pci/dwc/pci-imx6.c             |  18 --
+ drivers/pci/dwc/pci-keystone-dw.c      |  97 +--------
+ drivers/pci/dwc/pci-keystone.c         |   1 +
+ drivers/pci/dwc/pci-keystone.h         |   4 +-
+ drivers/pci/dwc/pci-layerscape.c       |   4 +-
+ drivers/pci/dwc/pcie-artpec6.c         |  18 --
+ drivers/pci/dwc/pcie-designware-host.c | 374 ++++++++++++++++++---------------
+ drivers/pci/dwc/pcie-designware-plat.c |  15 --
+ drivers/pci/dwc/pcie-designware.h      |  18 +-
+ drivers/pci/dwc/pcie-qcom.c            |  15 --
+ 11 files changed, 233 insertions(+), 349 deletions(-)
+
+-- 
+2.9.3
