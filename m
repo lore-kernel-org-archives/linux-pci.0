@@ -1,92 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 24 May 2017 16:56:41 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52182 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751128AbdE3XHZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 30 May 2017 19:07:25 -0400
+Date: Tue, 30 May 2017 18:07:18 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Subject: Re: [PATCH v5 0/2] Add PCIe host driver support for Mediatek SoCs
-Message-ID: <20170524215641.GE2794@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
+Message-ID: <20170530230718.GG14896@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+ <20170526234726.GD21531@bhelgaas-glaptop.roam.corp.google.com>
+ <20170526165820.7ec488e3@cakuba.netronome.com>
 MIME-Version: 1.0
-In-Reply-To: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170526165820.7ec488e3@cakuba.netronome.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 21, 2017 at 11:42:23AM +0800, Ryder Lee wrote:
-> Hi,
+On Fri, May 26, 2017 at 04:58:20PM -0700, Jakub Kicinski wrote:
+> On Fri, 26 May 2017 18:47:26 -0500, Bjorn Helgaas wrote:
+> > On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:
+> > > PCI core sets the driver pointer before calling ->probe() and only
+> > > clears it after ->remove().  This means driver's ->sriov_configure()
+> > > callback will happily race with probe() and remove(), most likely
+> > > leading to BUGs, since drivers don't expect this.  
+> > 
+> > I guess you're referring to the pci_dev->driver pointer set by
+> > local_pci_probe(), and this is important because sriov_numvfs_store()
+> > checks that pointer, right?
 > 
-> This patch series add Mediatek Gen2 PCIe host controller driver and
-> dt-binding document. It can be found on MT7623 series SoCs.
-> 
-> This driver was validated using Broadcom Tigon3 and Intel(R) 82575/82576
-> gigabit ethernet card.
-> 
-> 
-> Changes since v5:
-> - rebase to Linux 4.12-rc1.
-> - remove redundant module.h header and MODULE macros.
-> 
-> Changes since v4:
-> - move the per-port registers to the parent node.
-> - use a valid compatible for hifsys controller.
-> - use the 'sysirq' instead of 'gic' as a correct 'interrupt-parent' of the
->   interrupt-map properties.
-> 
->   'sysirq' is an interrupt-controller that could help us to reverse GIC SPIs polarity
->   so that we could properly set irq type to level low without any extra properties.
->   It was a mistake to select wrong interrupt-parent on the previous versions.
->   Now, we could remove unnecessary interrupt properties entirely from binding.
-> 
-> Changes since v3:
-> - correct sub-nodes unit addresses.
-> 
-> Changes since v2:
-> - modify Kconfig to avoid kbuild test error on some architecture.
-> - change compatible string.
-> - revise binding document:
->   add missing interrupt-names.
->   remove the board dts example and drop 'status' properties.
->   remove unnecessary descriptions bout standard PCI bus binding.
-> 
-> Changes since v1:
-> - add .suppress_bind_attrs.
-> - remove unnecessary *_valid_device() pattern.
-> - remove PCI_PROBE_ONLY.
-> - use the regular readl() instead of readl_relaxed().
-> - add .map_bus() and change to use pci_generic_config_read/pci_generic_config_write.
-> - revise dt-binding document and move nonstandard properties to root node.
-> - change compatible string.
-> - use interrupt-map property and replace mtk_pcie_map_irq() with of_irq_parse_and_map_pci().
-> - use the new pci_register_host_bridge() method instead of pci_scan_root_bus()*
-> 
-> Ryder Lee (2):
->   PCI: mediatek: Add Mediatek PCIe host controller support
->   dt-bindings: pcie: Add documentation for Mediatek PCIe
-> 
->  .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 +++++
->  drivers/pci/host/Kconfig                           |  11 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-mediatek.c                   | 553 +++++++++++++++++++++
->  4 files changed, 695 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-mediatek.c
+> Yes, exactly.  I initially thought this is how the safety of sriov
+> callback may have been ensured, but since the order of
+> local_pci_probe() and the assignment is what it is, it can't.
 
-Applied to pci/host-mediatek for v4.13, thanks!
+Right.  I was hoping other subsystems would establish a convention
+about whether we set the ->driver pointer before or after calling the
+driver probe() method, but if there is one, I don't see it.
+local_pci_probe() and really_probe() set ->driver first, but
+pnp_device_probe() calls the probe() method first.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Can you expand on how you reproduce this problem?  The only real way I
+see to call ->sriov_configure() is via the sysfs entry point, and I
+would think user-space code would typically not touch that until after
+it knows the driver has claimed a device.  But I can certainly imagine
+targeted test code that could hit this problem.
+
+Bjorn
