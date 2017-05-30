@@ -1,28 +1,70 @@
-Return-Path: <SRS0=H9xx=45=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=H9xx=45=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1494866693-2850-1-git-send-email-logang@deltatee.com>
- <20170522215402.GE19733@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <6884cc80-9610-f60f-7dd9-c309b6895fb4@deltatee.com>
-Date: Mon, 22 May 2017 21:56:20 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170522215402.GE19733@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH 0/2] Fixes for Switchtec Driver
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:38688 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdE3LdW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:22 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 4/8] pci: artpec6 SoC driver adapted to new irq API
+Date: Tue, 30 May 2017 12:32:49 +0100
+Message-Id: <7dda980259170b5ab8d5c5c566f2e18b122c6910.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch adapts artpec6 SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-On 22/05/17 03:54 PM, Bjorn Helgaas wrote:
-> Since we merged the Switchtec driver during the v4.12 merge window, I
-> applied these to for-linus for v4.12, with the following changelogs to
-> correct a few typos:
-
-Great! Thanks Bjorn.
-
-Logan
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 82a04ac..d81789b 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -188,15 +188,6 @@ static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
+ 	.host_init = artpec6_pcie_host_init,
+ };
+ 
+-static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct artpec6_pcie *artpec6_pcie = arg;
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 				 struct platform_device *pdev)
+ {
+@@ -211,15 +202,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       artpec6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "artpec6-pcie-msi", artpec6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.9.3
