@@ -1,15 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 24 May 2017 12:16:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Subject: Re: [PATCH] PCI: imx6: fix downstream bus scanning
-Message-ID: <20170524171652.GA14714@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170510175752.6519-1-l.stach@pengutronix.de>
- <20170522221346.GG19733@bhelgaas-glaptop.roam.corp.google.com>
- <CAOMZO5BgyMq0pMvnCAzG+bH9E6xX1NvX2vRy-FsQ1ojmAodrWA@mail.gmail.com>
+Date: Tue, 30 May 2017 11:32:13 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Sricharan R <sricharan@codeaurora.org>
+Subject: Re: [PATCH v6 1/6] iommu: of: Fix check for returning EPROBE_DEFER
+Message-ID: <20170530093212.GD2818@8bytes.org>
+References: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5BgyMq0pMvnCAzG+bH9E6xX1NvX2vRy-FsQ1ojmAodrWA@mail.gmail.com>
+In-Reply-To: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,55 +15,46 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, Richard Zhu <hongxing.zhu@nxp.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Tim Harvey <tharvey@gateworks.com>, patchwork-lst@pengutronix.de,
- Peter Senna Tschudin <peter.senna@collabora.com>,
- Sascha Hauer <kernel@pengutronix.de>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ laurent.pinchart@ideasonboard.com, frowand.list@gmail.com,
+ m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ lorenzo.pieralisi@arm.com, tn@semihalf.com, magnus.damm@gmail.com,
+ linux@armlinux.org.uk, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
+ linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
+ robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ robin.murphy@arm.com, nwatters@codeaurora.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 23, 2017 at 07:11:26PM -0300, Fabio Estevam wrote:
-> Hi Bjorn,
+On Sat, May 27, 2017 at 07:17:40PM +0530, Sricharan R wrote:
+> Now with IOMMU probe deferral, we return -EPROBE_DEFER
+> for masters that are connected to an IOMMU which is not
+> probed yet, but going to get probed, so that we can attach
+> the correct dma_ops. So while trying to defer the probe of
+> the master, check if the of_iommu node that it is connected
+> to is marked in DT as 'status=disabled', then the IOMMU is never
+> is going to get probed. So simply return NULL and let the master
+> work without an IOMMU.
 > 
-> On Mon, May 22, 2017 at 7:13 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > Applied to for-linus for v4.12 with tested-by and acks from Fabio,
-> > Peter, and Richard.  I updated the subject line to:
-> >
-> >   PCI: imx6: Fix config read timeout handling
-> >
-> > because I don't think this change is specific to bus scanning and I
-> > wanted a hint that it's related to the config space mapping changes.
-> >
-> > In fact, I'd really like to include the specific commit that caused
-> > this problem so that if the original commit is backported, there's a
-> > hint that we should backport this one, too.  I *think* it might be
-> > cc7b0d495589, so I updated the changelog to this:
-> >
-> >   Commit cc7b0d495589 ("PCI: designware: Update PCI config space remap
-> >   function") made PCI configuration requests non-posted, which means we now
-> >   get a synchronous abort when the CFG space read to probe for downstream
-> >   devices times out.
-> >
-> >   Synchronous aborts need to be handled differently from the async aborts we
-> >   were getting before, in particular the PC needs to be advanced when
-> >   resolving the abort.  This is mostly a copy of what other PCI drivers do on
-> >   ARM to handle those aborts.
-> >
-> >   [bhelgaas: changelog, "Fixes"]
-> >   Fixes: cc7b0d495589 ("PCI: designware: Update PCI config space remap function")
-> >
-> > Please let me know if this is the wrong commit.
-> 
-> I just tested on a mx6q board and can confirm that this is the correct
-> offending commit, thanks.
+> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
+> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> Tested-by: Will Deacon <will.deacon@arm.com>
+> Tested-by: Magnus Damn <magnus.damn@gmail.com>
+> Acked-by: Will Deacon <will.deacon@arm.com>
+> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> ---
+>  drivers/iommu/of_iommu.c | 1 +
+>  1 file changed, 1 insertion(+)
 
-Thanks for checking this out, Fabio!
+Sorry for the confusion, I meant to apply this version of the patch-set
+instead of v5.
+
 
 _______________________________________________
 linux-arm-kernel mailing list
