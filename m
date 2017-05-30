@@ -1,82 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC,20/30] iommu/arm-smmu-v3: Enable PCI PASID in masters
-To: Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>
-References: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f18163da-30a6-a7d4-0a2c-bca4fc1b0fff@codeaurora.org>
-Date: Wed, 31 May 2017 10:10:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:60675 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdE3Ld0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:26 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 5/8] pci: generic PCIe DW driver adapted to new irq API
+Date: Tue, 30 May 2017 12:32:50 +0100
+Message-Id: <93c3b94dab6c17f97c4bd87a89e1f5dcdbc41018.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean-Philippe,
+This patch adapts the generic PCIe DW driver to use the new interrupt api
+available in pcie-designware.
 
-On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
-> Enable PASID for PCI devices that support it.
-> 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> ---
->  drivers/iommu/arm-smmu-v3.c | 66 ++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 63 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index 499dc1cd07eb..37fd061405e9 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -730,6 +730,8 @@ struct arm_smmu_master_data {
->  
->  	struct arm_smmu_stream		*streams;
->  	struct rb_root			contexts;
-> +
-> +	u32				avail_contexts;
->  };
->  
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-plat.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-I know that you are doing some code restructuring. As I was looking at the amdkfd
-driver, I realized that there is quite a bit of PASID, ATS and PRI work here that
-can be plumbed into the framework you are building. 
-
-https://github.com/torvalds/linux/tree/master/drivers/gpu/drm/amd/amdkfd
-
-I wanted to share this with if you were aware of this or not. Functions of interest
-are:
-
-amd_iommu_init_device
-amd_iommu_free_device
-amd_iommu_bind_pasid
-amd_iommu_set_invalid_ppr_cb
-amd_iommu_unbind_pasid
-amd_iommu_device_info
-
-Sinan
-
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 32091b3..3b9717b 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -28,13 +28,6 @@ struct dw_plat_pcie {
+ 	struct dw_pcie		*pci;
+ };
+ 
+-static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void dw_plat_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -64,14 +57,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 		pp->msi_irq = platform_get_irq(pdev, 0);
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					dw_plat_pcie_msi_irq_handler,
+-					IRQF_SHARED, "dw-plat-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI IRQ\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.3
