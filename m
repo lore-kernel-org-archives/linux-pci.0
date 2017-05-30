@@ -1,81 +1,135 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 23 May 2017 13:57:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: bhelgaas@google.com, jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        svarbanov@mm-sol.com, keith.busch@intel.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as
- IRQF_NO_THREAD
-Message-ID: <20170523185718.GC2637@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170420102718.3778-1-jszhang@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170420102718.3778-1-jszhang@marvell.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:36468 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750912AbdE3JId (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 05:08:33 -0400
+Received: by mail-pf0-f171.google.com with SMTP id m17so66695593pfg.3
+        for <linux-pci@vger.kernel.org>; Tue, 30 May 2017 02:08:33 -0700 (PDT)
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [RFC PATCH v2] pci: Concurrency issue in NVMe Init through PCIe switch
+Date: Tue, 30 May 2017 14:38:17 +0530
+Message-Id: <1496135297-19680-1-git-send-email-srinath.mannam@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 06:27:18PM +0800, Jisheng Zhang wrote:
-> Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
-> cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
-> IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
-> issue in pcie-designware-plat driver, then searched the code, I think
-> we should fix pcie-qcom and vmd as well.
-> 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+We found a concurrency issue in NVMe Init when we initialize
+multiple NVMe connected over PCIe switch.
 
-Applied with ack/reviewed-by from Jingoo and Keith to pci/host-designware
-for v4.13, thanks!
+Setup details:
+ - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+ - Two NVMe cards are connected to PCIe RC through bridge as shown
+   in the below figure.
 
-> ---
->  drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
->  drivers/pci/dwc/pcie-qcom.c            | 3 ++-
->  drivers/pci/host/vmd.c                 | 3 ++-
->  3 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> index f20d494922ab..0db1dafc82bb 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -67,7 +67,8 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
->  
->  		ret = devm_request_irq(dev, pp->msi_irq,
->  					dw_plat_pcie_msi_irq_handler,
-> -					IRQF_SHARED, "dw-plat-pcie-msi", pp);
-> +					IRQF_SHARED | IRQF_NO_THREAD,
-> +					"dw-plat-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(dev, "failed to request MSI IRQ\n");
->  			return ret;
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 67eb7f5926dd..a5570c58081e 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -727,7 +727,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
->  
->  		ret = devm_request_irq(dev, pp->msi_irq,
->  				       qcom_pcie_msi_irq_handler,
-> -				       IRQF_SHARED, "qcom-pcie-msi", pp);
-> +				       IRQF_SHARED | IRQF_NO_THREAD,
-> +				       "qcom-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(dev, "cannot request msi irq\n");
->  			return ret;
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index e27ad2a3bd33..784f63beb487 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -704,7 +704,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  
->  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
->  		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
-> -				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
-> +				       vmd_irq, IRQF_NO_THREAD,
-> +				       "vmd", &vmd->irqs[i]);
->  		if (err)
->  			return err;
->  	}
-> -- 
-> 2.11.0
-> 
+                   [RC]
+                    |
+                 [BRIDGE]
+                    |
+               -----------
+              |           |
+            [NVMe]      [NVMe]
+
+Issue description:
+After PCIe enumeration completed NVMe driver probe function called
+for both the devices from two CPUS simultaneously.
+>From nvme_probe, pci_enable_device_mem called for both the EPs. This
+function called pci_enable_bridge enable recursively until RC.
+
+Inside pci_enable_bridge function, at two places concurrency issue is
+observed.
+
+Place 1:
+  CPU 0:
+    1. Done Atomic increment dev->enable_cnt
+       in pci_enable_device_flags
+    2. Inside pci_enable_resources
+    3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+    4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
+  CPU 1:
+    1. Check pci_is_enabled in function pci_enable_bridge
+       and it is true
+    2. Check (!dev->is_busmaster) also true
+    3. Gone into pci_set_master
+    4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+    5. Ready to set PCI_COMMAND_MASTER (0x4) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
+
+By the time of last point for both the CPUs are read value 0 and
+ready to write 2 and 4.
+After last point final value in PCI_COMMAND register is 4 instead of 6.
+
+Place 2:
+  CPU 0:
+    1. Done Atomic increment dev->enable_cnt in
+       pci_enable_device_flags
+
+Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+---
+Changes since v1:
+ - Used mutex to syncronize pci_enable_bridge
+
+ drivers/pci/pci.c   | 4 ++++
+ drivers/pci/probe.c | 1 +
+ include/linux/pci.h | 1 +
+ 3 files changed, 6 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b01bd5b..5bff3e7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1347,7 +1347,9 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ {
+ 	struct pci_dev *bridge;
+ 	int retval;
++	struct mutex *lock = &dev->bridge_lock;
+ 
++	mutex_lock(lock);
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+@@ -1355,6 +1357,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 	if (pci_is_enabled(dev)) {
+ 		if (!dev->is_busmaster)
+ 			pci_set_master(dev);
++		mutex_unlock(lock);
+ 		return;
+ 	}
+ 
+@@ -1363,6 +1366,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+ 			retval);
+ 	pci_set_master(dev);
++	mutex_unlock(lock);
+ }
+ 
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950..1c25d1c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -880,6 +880,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	child->dev.parent = child->bridge;
+ 	pci_set_bus_of_node(child);
+ 	pci_set_bus_speed(child);
++	mutex_init(&bridge->bridge_lock);
+ 
+ 	/* Set up default resource pointers and names.. */
+ 	for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33c2b0b..7e88f41 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -266,6 +266,7 @@ struct pci_dev {
+ 	void		*sysdata;	/* hook for sys-specific extension */
+ 	struct proc_dir_entry *procent;	/* device entry in /proc/bus/pci */
+ 	struct pci_slot	*slot;		/* Physical slot this device is in */
++	struct mutex bridge_lock;
+ 
+ 	unsigned int	devfn;		/* encoded device & function index */
+ 	unsigned short	vendor;
+-- 
+2.7.4
