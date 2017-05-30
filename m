@@ -1,152 +1,231 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 23 May 2017 11:19:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Piotr Gregor <piotrgregor@rsyncme.org>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] pci: Handle the case when PCI_COMMAND register hasn't
- changed in INTx masking test
-Message-ID: <20170523161929.GA24431@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170510122959.4uupohiz3ukzm4c4@debian1.home>
- <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=BnMe=5E=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=BnMe=5E=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com"
+	<bhelgaas@google.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "lorenzo.pieralisi@arm.com"
+	<lorenzo.pieralisi@arm.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "benh@kernel.crashing.org"
+	<benh@kernel.crashing.org>,
+        John Garry <john.garry@huawei.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xuwei (O)"
+	<xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "zhichang.yuan"
+	<yuanzhichang@hisilicon.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>
+Subject: RE: [PATCH v9 1/7] LIB: Introduce a generic PIO mapping method
+Date: Tue, 30 May 2017 15:09:13 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A771E6@FRAEML521-MBX.china.huawei.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-2-git-send-email-gabriele.paoloni@huawei.com>
+ <20170526205744.GA21531@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170526205744.GA21531@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170522233820.GH19733@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Alex]
+Hi Bjorn
 
-On Mon, May 22, 2017 at 06:38:20PM -0500, Bjorn Helgaas wrote:
-> Hi Piotr,
-> 
-> On Wed, May 10, 2017 at 01:30:01PM +0100, Piotr Gregor wrote:
-> > The check for interrupt masking support is done by reading
-> > the PCI_COMMAND config word
-> > 
-> > 	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> > 
-> > then flipping the PCI_COMMAND_INTX_DISABLE bit and writing result back
-> > 
-> > 	pci_write_config_word(dev, PCI_COMMAND,
-> > 		orig ^ PCI_COMMAND_INTX_DISABLE);
-> > 
-> > The expected result is that following read of the PCI_COMMAND
-> > 
-> > 	pci_read_config_word(dev, PCI_COMMAND, &new);
-> > 
-> > returns PCI_COMMAND with only PCI_COMMAND_INTX_DISABLE bit changed.
-> > 
-> > There are two possible outcomes:
-> > 
-> > 	1.	Command is the same (hasn't changed)
-> > 	2.	Commmand has changed
-> > 
-> > And the second of them may be decoupled to:
-> > 
-> > 	2.1	Command changed only for PCI_COMMAND_INTX_DISABLE bit
-> > 		(hasn't changed for bits different than PCI_COMMAND_INTX_DISABLE)
-> > 	2.2	Command changed for bit(s) different than PCI_COMMAND_INTX_DISABLE bit
-> > 		(and maybe for PCI_COMMAND_INTX_DISABLE too)
-> > 
-> > The 2.1 is expected result and anything else is error.
-> > The 2.2 outcome is handled by pci_intx_mask_supported by printing
-> > appropriate message to the log, but outcome 1 is not handled.
-> > 
-> > Log the message about command not being changed at all.
-> > 
-> > Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: 26 May 2017 21:58
+> To: Gabriele Paoloni
+> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
+> arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
+> lorenzo.pieralisi@arm.com; mark.rutland@arm.com; minyard@acm.org;
+> benh@kernel.crashing.org; John Garry; linux-kernel@vger.kernel.org;
+> xuwei (O); Linuxarm; linux-acpi@vger.kernel.org; zhichang.yuan; linux-
+> pci@vger.kernel.org; olof@lixom.net; brian.starkey@arm.com
+> Subject: Re: [PATCH v9 1/7] LIB: Introduce a generic PIO mapping method
+>=20
+> On Thu, May 25, 2017 at 12:37:22PM +0100, Gabriele Paoloni wrote:
+> > From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+> >
+> > In 'commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
+> > pci_pio_to_address()")' a new I/O space management was supported.
+> With that
+> > driver, the I/O ranges configured for PCI/PCIE hosts on some
+> architectures
+> > can be mapped to logical PIO, converted easily between CPU address
+> and the
+> > corresponding logicial PIO. Based on this, PCI I/O devices can be
+> accessed
+> > in a memory read/write way through the unified in/out accessors.
+> >
+> > But on some archs/platforms, there are bus hosts which access I/O
+> > peripherals with host-local I/O port addresses rather than memory
+> > addresses after memory-mapped.
+> > To support those devices, a more generic I/O mapping method is
+> introduced
+> > here. Through this patch, both the CPU addresses and the host-local
+> port
+> > can be mapped into the logical PIO space with different logical/fake
+> PIOs.
+> > After this, all the I/O accesses to either PCI MMIO devices or host-
+> local
+> > I/O peripherals can be unified into the existing I/O accessors
+> defined in
+> > asm-generic/io.h and be redirected to the right device-specific hooks
+> > based on the input logical PIO.
+> >
+> > Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 > > ---
-> >  drivers/pci/pci.c | 14 ++++++++++++--
-> >  1 file changed, 12 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index b01bd5b..67a611e 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3712,7 +3712,7 @@ EXPORT_SYMBOL_GPL(pci_intx);
-> >   * pci_intx_mask_supported - probe for INTx masking support
-> >   * @dev: the PCI device to operate on
-> >   *
-> > - * Check if the device dev support INTx masking via the config space
-> > + * Check if the device dev supports INTx masking via the config space
-> >   * command word.
-> >   */
-> >  bool pci_intx_mask_supported(struct pci_dev *dev)
-> > @@ -3736,11 +3736,21 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
-> >  	 * go ahead and check it.
-> >  	 */
-> >  	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
-> > +		/*
-> > +		 * If anything else than PCI_COMMAND_INTX_DISABLE bit has
-> > +		 * changed (and maybe PCI_COMMAND_INTX_DISABLE too)
-> > +		 */
-> >  		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
-> >  			orig, new);
-> >  	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
-> > +		/*
-> > +		 * OK. Only PCI_COMMAND_INTX_DISABLE bit has changed
-> > +		 */
-> >  		mask_supported = true;
-> >  		pci_write_config_word(dev, PCI_COMMAND, orig);
-> > +	} else {
-> > +		dev_err(&dev->dev, "Command register hasn't changed when written from 0x%x to 0x%x: driver or hardware bug?\n",
-> > +			orig, new);
-> 
-> Bit 10 was a reserved bit in PCI r2.2 and was defined as
-> PCI_COMMAND_INTX_DISABLE in r2.3 of the spec, so I don't think we
-> should treat this as an error.
+> >  include/asm-generic/io.h  |  50 +++++++++
+> >  include/linux/logic_pio.h | 110 ++++++++++++++++++
+> >  lib/Kconfig               |  26 +++++
+> >  lib/Makefile              |   2 +
+> >  lib/logic_pio.c           | 280
+> ++++++++++++++++++++++++++++++++++++++++++++++
+> >  5 files changed, 468 insertions(+)
+> >  create mode 100644 include/linux/logic_pio.h
+> >  create mode 100644 lib/logic_pio.c
+> >
+> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > index 7ef015e..f7fbec3 100644
+> > --- a/include/asm-generic/io.h
+> > +++ b/include/asm-generic/io.h
+> > ...
+>=20
+> >  #ifndef inb
+> > +#ifdef CONFIG_INDIRECT_PIO
+> > +#define inb logic_inb
+> > +#else
+> >  #define inb inb
+> >  static inline u8 inb(unsigned long addr)
+> >  {
+> >  	return readb(PCI_IOBASE + addr);
+> >  }
+> > +#endif /* CONFIG_INDIRECT_PIO */
+> >  #endif
+> >
+> >  #ifndef inw
+> > +#ifdef CONFIG_INDIRECT_PIO
+> > +#define inw logic_inw
+>=20
+> Cosmetic: could these ifdefs all be collected in one place, e.g.,
+>=20
+>   #ifdef CONFIG_INDIRECT_PIO
+>   #define inb logic_inb
+>   #define inw logic_inw
+>   #define inl logic_inl
+>   ...
+>   #endif
+>=20
+> to avoid cluttering every one of the default definitions?  Could the
+> collection be in logic_pio.h itself, next to the extern declarations?
 
-If we make a change here, I think it should be simplified to look like
-this:
+Yes I think it should be doable. I will rework this in the next patchset
 
-  pci_cfg_access_lock(dev);
+>=20
+> > +#else
+> >  #define inw inw
+> >  static inline u16 inw(unsigned long addr)
+> >  {
+> >  	return readw(PCI_IOBASE + addr);
+> >  }
+> > +#endif /* CONFIG_INDIRECT_PIO */
+> >  #endif
+>=20
+> >  #ifndef insb_p
+> > diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
+> > new file mode 100644
+> > index 0000000..8e4dc65
+> > --- /dev/null
+> > +++ b/include/linux/logic_pio.h
+> > ...
+>=20
+> > +extern u8 logic_inb(unsigned long addr);
+>=20
+> I think you only build the definitions for these if
+> CONFIG_INDIRECT_PIO, so the declarations could be under that #idef,
+> too.
 
-  pci_read_config_word(dev, PCI_COMMAND, &orig);
-  toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
-  pci_write_config_word(dev, PCI_COMMAND, toggle);
-  pci_read_config_word(dev, PCI_COMMAND, &new);
-  pci_write_config_word(dev, PCI_COMMAND, orig);
+Yes agreed
 
-  pci_cfg_access_unlock(dev);
+>=20
+> In PCI code, I omit the "extern" from function declarations.  This
+> isn't PCI code, and I don't know if there's a real consensus on this,
+> but there is some precedent: 5bd085b5fbd8 ("x86: remove "extern" from
+> function prototypes in <asm/proto.h>")
+>=20
 
-  if (new == toggle)
-    return true;
+To be honest I have no clue...
 
-  return false;
+If you look at include/asm-generic/io.h we have extern declarations...
 
-I don't really see the value in cluttering the code to check for
-things that "can't happen."  There's an infinite amount of that sort
-of stuff.  If we know about possible issues, that's one thing, but
-this seems like just looking for trouble.
+BTW I can remove the extern and then let's see if somebody complains...
 
-It makes me a little nervous to have this interface that toggles
-PCI_COMMAND_INTX_DISABLE at run-time.  This could be called after a
-driver has set up interrupts, and I think there are some interactions
-between INTx and MSI/MSI-X that might cause unexpected things to
-happen if we toggle PCI_COMMAND_INTX_DISABLE.
 
-I'd rather have the core check it once during enumeration (before we
-give it to a driver and before any interrupts are configured) and save
-the result in struct pci_dev.
+> > +#ifdef CONFIG_LOGIC_PIO
+> > +extern struct logic_pio_hwaddr
+> > +*find_io_range_by_fwnode(struct fwnode_handle *fwnode);
+>=20
+> If you have to split the line (this one would fit without the
+> "extern"), the "*" goes with the type, e.g.,
+>=20
+>   struct logic_pio_hwaddr *
+>   find_io_range_by_fwnode(struct fwnode_handle *fwnode);
+>=20
+> More occurrences below.
 
-> >  	}
-> >  
-> >  	pci_cfg_access_unlock(dev);
-> > @@ -3798,7 +3808,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
-> >   * @dev: the PCI device to operate on
-> >   *
-> >   * Check if the device dev has its INTx line asserted, mask it and
-> > - * return true in that case. False is returned if not interrupt was
-> > + * return true in that case. False is returned if interrupt wasn't
-> >   * pending.
+Ok I will rework these
 
-We should definitely fix this typo.  Maybe "if no interrupt was
-pending"?
+>=20
+> > diff --git a/lib/logic_pio.c b/lib/logic_pio.c
+> > new file mode 100644
+> > index 0000000..4a960cd
+> > --- /dev/null
+> > +++ b/lib/logic_pio.c
+> > ...
+>=20
+> > +#if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
+> > +#define BUILD_LOGIC_PIO(bw, type)\
+> > +type logic_in##bw(unsigned long addr)\
+> > +{\
+> > +	type ret =3D -1;\
+> > +\
+> > +	if (addr < MMIO_UPPER_LIMIT) {\
+> > +		ret =3D read##bw(PCI_IOBASE + addr);\
+> > +	} else {\
+> > +		struct logic_pio_hwaddr *entry =3D find_io_range(addr);\
+> > +\
+> > +		if (entry && entry->ops)\
+> > +			ret =3D entry->ops->pfin(entry->devpara,\
+> > +					addr, sizeof(type));\
+> > +		else\
+> > +			WARN_ON_ONCE(1);\
+> > +	}	\
+> > +	return ret;\
+> > +}	\
+>=20
+> I think these would be slightly easier to read if the line continuation
+> backslashes were aligned at the right, as with
+> ACPI_DECLARE_PROBE_ENTRY(), __atomic_op_acquire(), DECLARE_EWMA(),
+> etc.
 
-> >   */
-> >  bool pci_check_and_mask_intx(struct pci_dev *dev)
-> > -- 
-> > 2.1.4
-> > 
+Ok agreed I will rework this too
+
+Many Thanks
+Gab
+
+>=20
+> Bjorn
