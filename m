@@ -1,235 +1,256 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.137]:60726 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753810AbdERF1S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 01:27:18 -0400
-Message-ID: <591D30A9.5030606@rock-chips.com>
-Date: Thu, 18 May 2017 13:27:05 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci@vger.kernel.org, robh@kernel.org, toshi.kani@hpe.com,
-        shawn.lin@rock-chips.com, briannorris@chromium.org,
-        linux-kernel@vger.kernel.org, dianders@chromium.org,
-        bhelgaas@google.com, dtor@chromium.org, devicetree@vger.kernel.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: Re: [PATCH v5] of/pci: Fix memory leak in of_pci_get_host_bridge_resources
-References: <1491359303-1385-1-git-send-email-jeffy.chen@rock-chips.com> <1491359303-1385-2-git-send-email-jeffy.chen@rock-chips.com> <20170517210841.GH31462@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170517210841.GH31462@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:60700 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdE3Ldm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:42 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 7/8] pci: keystone SoC driver adapted to new irq API
+Date: Tue, 30 May 2017 12:32:52 +0100
+Message-Id: <c52e4540f217ea69681c0f847ac8201a082fd08d.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+This patch adapts Keystone SoC specific driver to use the new interrupt
+api available in pcie-designware. A new callback was added to
+dw_pcie_host_ops to handle a specific Keystone function and msi_host_init
+callback is changed to simplify the access to pci data structure for
+keystone all SoC drivers that use the structure.
 
-On 05/18/2017 05:08 AM, Bjorn Helgaas wrote:
-> On Wed, Apr 05, 2017 at 10:28:22AM +0800, Jeffy Chen wrote:
->> Currently we only free the allocated resource struct when error.
->> This would cause memory leak after pci_free_resource_list.
->
-> I think I see the problem here.  The release path is this:
->
->    pci_release_host_bridge_dev
->      pci_free_resource_list
->        resource_list_free
-> 	list_for_each_entry_safe(entry, tmp, head, node)
-> 	  resource_list_destroy_entry
-> 	    resource_list_del
-> 	    resource_list_free_entry
-> 	      kfree(entry)
->
-> but that frees only the struct resource_entry, not the struct resource
-> pointed to by entry->res.  Is that right?
-right, that's the leak.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/dwc/pci-keystone-dw.c      | 97 +++-------------------------------
+ drivers/pci/dwc/pci-keystone.c         |  1 +
+ drivers/pci/dwc/pci-keystone.h         |  4 +-
+ drivers/pci/dwc/pci-layerscape.c       |  3 +-
+ drivers/pci/dwc/pcie-designware-host.c | 12 ++++-
+ drivers/pci/dwc/pcie-designware.h      |  3 +-
+ 6 files changed, 23 insertions(+), 97 deletions(-)
 
->
-> And this patch solves it for of_pci_get_host_bridge_resources() by
-> always making entry->res point to entry->__res, which is an element in
-> struct resource_entry, so it's sufficient to free the resource_entry.
->
-> The memory management here is pretty tangled.  I wonder if there's
-> some way to simplify it so it's easier to make sure everybody does it
-> correctly.  For example, could we remove the entry->res pointer
-> completely and force everybody to use entry->__res?
-i've tried something like this in 
-https://patchwork.kernel.org/patch/9638003/
-
-but it turns out there are a few codes trying to use shared 
-resources(entry->res pointer point to some common resources), for example:
-
-./arch/tile/kernel/pci.c:307: 
-pci_add_resource(&resources, &ioport_resource);
-./arch/tile/kernel/pci.c:308: 
-pci_add_resource(&resources, &iomem_resource);
-
-so i tried to use IORESOURCE_AUTO to handle non-common(private) resources.
-
-
-and i saw drivers/pnp/manager.c tried to handle something like this too, 
-by manually free resources marked as IORESOURCE_AUTO:
-static void pnp_clean_resource_table(struct pnp_dev *dev)
-{
-         struct pnp_resource *pnp_res, *tmp;
-
-         list_for_each_entry_safe(pnp_res, tmp, &dev->resources, list) {
-                 if (pnp_res->res.flags & IORESOURCE_AUTO)
-                         pnp_free_resource(pnp_res);
-         }
-}
-
-
->
->> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->> ---
->>
->> Changes in v5:
->> Fix some careless compile errors.
->>
->> Changes in v4:
->> Use IORESOURCE_AUTO to mark struct resources which could be copied.
->>
->> Changes in v3:
->> Add some comments.
->>
->> Changes in v2:
->> Don't change the resource_list_create_entry's behavior.
->>
->>   drivers/of/of_pci.c | 51 ++++++++++++++++++---------------------------------
->>   drivers/pci/bus.c   |  7 ++++++-
->>   2 files changed, 24 insertions(+), 34 deletions(-)
->>
->> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
->> index 0ee42c3..49233bf 100644
->> --- a/drivers/of/of_pci.c
->> +++ b/drivers/of/of_pci.c
->> @@ -189,9 +189,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->>   			unsigned char busno, unsigned char bus_max,
->>   			struct list_head *resources, resource_size_t *io_base)
->>   {
->> -	struct resource_entry *window;
->> -	struct resource *res;
->> -	struct resource *bus_range;
->> +	struct resource res;
->>   	struct of_pci_range range;
->>   	struct of_pci_range_parser parser;
->>   	char range_type[4];
->> @@ -200,24 +198,21 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->>   	if (io_base)
->>   		*io_base = (resource_size_t)OF_BAD_ADDR;
->>
->> -	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
->> -	if (!bus_range)
->> -		return -ENOMEM;
->> -
->>   	pr_info("host bridge %s ranges:\n", dev->full_name);
->>
->> -	err = of_pci_parse_bus_range(dev, bus_range);
->> +	err = of_pci_parse_bus_range(dev, &res);
->>   	if (err) {
->> -		bus_range->start = busno;
->> -		bus_range->end = bus_max;
->> -		bus_range->flags = IORESOURCE_BUS;
->> -		pr_info("  No bus range found for %s, using %pR\n",
->> -			dev->full_name, bus_range);
->> +		res.start = busno;
->> +		res.end = bus_max;
->> +		res.flags = IORESOURCE_BUS;
->> +		pr_info("  No bus range found for %s\n", dev->full_name);
->>   	} else {
->> -		if (bus_range->end > bus_range->start + bus_max)
->> -			bus_range->end = bus_range->start + bus_max;
->> +		if (res.end > res.start + bus_max)
->> +			res.end = res.start + bus_max;
->>   	}
->> -	pci_add_resource(resources, bus_range);
->> +
->> +	res.flags |= IORESOURCE_AUTO;
->> +	pci_add_resource(resources, &res);
->>
->>   	/* Check for ranges property */
->>   	err = of_pci_range_parser_init(&parser, dev);
->> @@ -244,24 +239,16 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->>   		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
->>   			continue;
->>
->> -		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
->> -		if (!res) {
->> -			err = -ENOMEM;
->> -			goto parse_failed;
->> -		}
->> -
->> -		err = of_pci_range_to_resource(&range, dev, res);
->> -		if (err) {
->> -			kfree(res);
->> +		err = of_pci_range_to_resource(&range, dev, &res);
->> +		if (err)
->>   			continue;
->> -		}
->>
->> -		if (resource_type(res) == IORESOURCE_IO) {
->> +		if (resource_type(&res) == IORESOURCE_IO) {
->>   			if (!io_base) {
->>   				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
->>   					dev->full_name);
->>   				err = -EINVAL;
->> -				goto conversion_failed;
->> +				goto parse_failed;
->>   			}
->>   			if (*io_base != (resource_size_t)OF_BAD_ADDR)
->>   				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
->> @@ -269,16 +256,14 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->>   			*io_base = range.cpu_addr;
->>   		}
->>
->> -		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
->> +		res.flags |= IORESOURCE_AUTO;
->> +		pci_add_resource_offset(resources, &res,
->> +					res.start - range.pci_addr);
->>   	}
->>
->>   	return 0;
->>
->> -conversion_failed:
->> -	kfree(res);
->>   parse_failed:
->> -	resource_list_for_each_entry(window, resources)
->> -		kfree(window->res);
->>   	pci_free_resource_list(resources);
->>   	return err;
->>   }
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index bc56cf1..3dbcb95 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -22,12 +22,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
->>   {
->>   	struct resource_entry *entry;
->>
->> -	entry = resource_list_create_entry(res, 0);
->> +	entry = resource_list_create_entry(NULL, 0);
->
-> If we make this change, there are no callers of
-> resource_list_create_entry() that supply a non-NULL "res", so
-> we could remove that argument completely.
->
->>   	if (!entry) {
->>   		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
->>   		return;
->>   	}
->>
->> +	if (res->flags & IORESOURCE_AUTO)
->> +		*entry->res = *res;
->> +	else
->> +		entry->res = res;
->> +
->>   	entry->offset = offset;
->>   	resource_list_add_tail(entry, resources);
->>   }
->> --
->> 2.1.4
->>
->>
->
->
->
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index 8bc626e..da1472e 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -124,19 +124,15 @@ void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
+ 	}
+ }
+ 
+-static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
++void ks_dw_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
+ {
+ 	u32 offset, reg_offset, bit_pos;
+ 	struct keystone_pcie *ks_pcie;
+-	struct msi_desc *msi;
+-	struct pcie_port *pp;
+ 	struct dw_pcie *pci;
+ 
+-	msi = irq_data_get_msi_desc(d);
+-	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+ 	pci = to_dw_pcie_from_pp(pp);
+ 	ks_pcie = to_keystone_pcie(pci);
+-	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
++	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
+ 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
+ 
+ 	ks_dw_app_writel(ks_pcie, MSI0_IRQ_STATUS + (reg_offset << 4),
+@@ -166,93 +162,12 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ 			 BIT(bit_pos));
+ }
+ 
+-static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
++int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip)
+ {
+-	struct keystone_pcie *ks_pcie;
+-	struct msi_desc *msi;
+-	struct pcie_port *pp;
+-	struct dw_pcie *pci;
+-	u32 offset;
+-
+-	msi = irq_data_get_msi_desc(d);
+-	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+-	pci = to_dw_pcie_from_pp(pp);
+-	ks_pcie = to_keystone_pcie(pci);
+-	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+-
+-	/* Mask the end point if PVM implemented */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		if (msi->msi_attrib.maskbit)
+-			pci_msi_mask_irq(d);
+-	}
+-
+-	ks_dw_pcie_msi_clear_irq(pp, offset);
+-}
+-
+-static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
+-{
+-	struct keystone_pcie *ks_pcie;
+-	struct msi_desc *msi;
+-	struct pcie_port *pp;
+-	struct dw_pcie *pci;
+-	u32 offset;
+-
+-	msi = irq_data_get_msi_desc(d);
+-	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
+-	pci = to_dw_pcie_from_pp(pp);
+-	ks_pcie = to_keystone_pcie(pci);
+-	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
+-
+-	/* Mask the end point if PVM implemented */
+-	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		if (msi->msi_attrib.maskbit)
+-			pci_msi_unmask_irq(d);
+-	}
+-
+-	ks_dw_pcie_msi_set_irq(pp, offset);
+-}
++	/* override number of vectors and sent them to Keystone Max MSI IRQs */
++	pci->pp.num_vectors = MAX_MSI_IRQS;
+ 
+-static struct irq_chip ks_dw_pcie_msi_irq_chip = {
+-	.name = "Keystone-PCIe-MSI-IRQ",
+-	.irq_ack = ks_dw_pcie_msi_irq_ack,
+-	.irq_mask = ks_dw_pcie_msi_irq_mask,
+-	.irq_unmask = ks_dw_pcie_msi_irq_unmask,
+-};
+-
+-static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+-			      irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
+-				 handle_level_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops ks_dw_pcie_msi_domain_ops = {
+-	.map = ks_dw_pcie_msi_map,
+-};
+-
+-int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+-	struct device *dev = pci->dev;
+-	int i;
+-
+-	pp->irq_domain = irq_domain_add_linear(ks_pcie->msi_intc_np,
+-					MAX_MSI_IRQS,
+-					&ks_dw_pcie_msi_domain_ops,
+-					chip);
+-	if (!pp->irq_domain) {
+-		dev_err(dev, "irq domain init failed\n");
+-		return -ENXIO;
+-	}
+-
+-	for (i = 0; i < MAX_MSI_IRQS; i++)
+-		irq_create_mapping(pp->irq_domain, i);
+-
+-	return 0;
++	return dw_pcie_allocate_domains(pci);
+ }
+ 
+ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index fcc9723..a59bd9b 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -299,6 +299,7 @@ static struct dw_pcie_host_ops keystone_pcie_host_ops = {
+ 	.msi_clear_irq = ks_dw_pcie_msi_clear_irq,
+ 	.get_msi_addr = ks_dw_pcie_get_msi_addr,
+ 	.msi_host_init = ks_dw_pcie_msi_host_init,
++	.msi_irq_ack = ks_dw_pcie_msi_irq_ack,
+ 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
+ };
+ 
+diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+index 74c5825..83179382 100644
+--- a/drivers/pci/dwc/pci-keystone.h
++++ b/drivers/pci/dwc/pci-keystone.h
+@@ -55,9 +55,9 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ 		unsigned int devfn, int where, int size, u32 *val);
+ void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie);
+ void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie);
++void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
+ void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
+-int ks_dw_pcie_msi_host_init(struct pcie_port *pp,
+-		struct msi_controller *chip);
++int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip);
+ int ks_dw_pcie_link_up(struct dw_pcie *pci);
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 27d638c..4fb491b 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -162,10 +162,9 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ }
+ 
+-static int ls_pcie_msi_host_init(struct pcie_port *pp,
++static int ls_pcie_msi_host_init(struct dw_pcie *pci,
+ 				 struct msi_controller *chip)
+ {
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct device *dev = pci->dev;
+ 	struct device_node *np = dev->of_node;
+ 	struct device_node *msi_node;
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 2db5331..c35dc9c 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -199,8 +199,18 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
+ 	spin_unlock_irqrestore(&pp->lock, flags);
+ }
+ 
++static void dw_pci_bottom_ack(struct irq_data *d)
++{
++	struct msi_desc *msi = irq_data_get_msi_desc(d);
++	struct pcie_port *pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
++
++	if (pp->ops->msi_irq_ack)
++		pp->ops->msi_irq_ack(d->irq, pp);
++}
++
+ static struct irq_chip dw_pci_msi_bottom_irq_chip = {
+ 	.name			= "DWPCI-MSI",
++	.irq_ack		= dw_pci_bottom_ack,
+ 	.irq_compose_msi_msg	= dw_pci_setup_msi_msg,
+ 	.irq_set_affinity	= dw_pci_msi_set_affinity,
+ 	.irq_mask		= dw_pci_bottom_mask,
+@@ -606,7 +616,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 							 dw_chained_msi_isr,
+ 							 pci);
+ 		} else {
+-			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
++			ret = pp->ops->msi_host_init(pci, &dw_pcie_msi_chip);
+ 			if (ret < 0)
+ 				goto error;
+ 		}
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 622ffcf..2ac99fa 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -140,7 +140,8 @@ struct dw_pcie_host_ops {
+ 	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
+ 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+-	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
++	int (*msi_host_init)(struct dw_pcie *pci, struct msi_controller *chip);
++	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
+ };
+ 
+ struct pcie_port {
+-- 
+2.9.3
