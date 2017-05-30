@@ -1,83 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0055.outbound.protection.outlook.com ([104.47.42.55]:43296
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966083AbdEWTyP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 15:54:15 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'David Woodhouse' <dwmw2@infradead.org>,
-        'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        Samuel Sieb <samuel@sieb.net>, Joerg Roedel <jroedel@suse.de>
-Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Date: Tue, 23 May 2017 19:54:12 +0000
-Message-ID: <BN6PR12MB1652A0F240C19F2CF3304300F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
-         <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
- <1493893297.4904.71.camel@infradead.org>
-In-Reply-To: <1493893297.4904.71.camel@infradead.org>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 30 May 2017 16:34:29 -0700
+From: Jakub Kicinski <kubakici@wp.pl>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
+Message-ID: <20170530163429.07977942@cakuba.lan>
+In-Reply-To: <20170530230718.GG14896@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+        <20170526234726.GD21531@bhelgaas-glaptop.roam.corp.google.com>
+        <20170526165820.7ec488e3@cakuba.netronome.com>
+        <20170530230718.GG14896@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYXZpZCBXb29kaG91c2UgW21h
-aWx0bzpkd213MkBpbmZyYWRlYWQub3JnXQ0KPiBTZW50OiBUaHVyc2RheSwgTWF5IDA0LCAyMDE3
-IDY6MjIgQU0NCj4gVG86IERldWNoZXIsIEFsZXhhbmRlcjsgJ0pvZXJnIFJvZWRlbCc7IEJqb3Ju
-IEhlbGdhYXMNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2
-Z2VyLmtlcm5lbC5vcmc7IERhbmllbCBEcmFrZTsNCj4gU2FtdWVsIFNpZWI7IEpvZXJnIFJvZWRl
-bA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWlyayBm
-b3IgQU1EIFN0b25leSBHUFVzDQo+IA0KPiBPbiBGcmksIDIwMTctMDQtMDcgYXQgMTY6NDYgKzAw
-MDAsIERldWNoZXIsIEFsZXhhbmRlciB3cm90ZToNCj4gPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogSm9lcmcgUm9lZGVsIFttYWlsdG86am9yb0A4Ynl0
-ZXMub3JnXQ0KPiA+ID4gU2VudDogRnJpZGF5LCBBcHJpbCAwNywgMjAxNyAxMDozMiBBTQ0KPiA+
-ID4gVG86IEJqb3JuIEhlbGdhYXMNCj4gPiA+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
-OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBEYW5pZWwNCj4gRHJha2U7DQo+ID4gPiBE
-ZXVjaGVyLCBBbGV4YW5kZXI7IFNhbXVlbCBTaWViOyBEYXZpZCBXb29kaG91c2U7IEpvZXJnIFJv
-ZWRlbA0KPiA+ID4gU3ViamVjdDogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWly
-ayBmb3IgQU1EIFN0b25leSBHUFVzDQo+ID4gPg0KPiA+ID4gRnJvbTogSm9lcmcgUm9lZGVsIDxq
-cm9lZGVsQHN1c2UuZGU+DQo+ID4gPg0KPiA+ID4gQVRTIGlzIGJyb2tlbiBvbiB0aGlzIGhhcmR3
-YXJlIGFuZCBjYXVzZXMgSU9NTVUgc3RhbGxzIGFuZA0KPiA+ID4gc3lzdGVtIGZhaWx1cmUuIERp
-c2FibGUgQVRTIG9uIHRoZXNlIGRldmljZXMgdG8gbWFrZSB0aGVtDQo+ID4gPiB1c2FibGUgYWdh
-aW4gd2l0aCBJT01NVSBlbmFibGVkLg0KPiA+ID4NCj4gPiA+IE5vdGUgdGhhdCB0aGUgY29tbWl0
-IGluIHRoZSBGaXhlcy10YWcgaXMgbm90IGJ1Z2d5LCBpdA0KPiA+ID4ganVzdCB1bmNvdmVycyB0
-aGUgcHJvYmxlbSBpbiB0aGUgaGFyZHdhcmUgYnkgaW5jcmVhc2luZw0KPiA+ID4gdGhlIEFUUy1m
-bHVzaCByYXRlLg0KPiA+ID4NCj4gPiA+IEZpeGVzOiBiMTUxNmExNDY1N2EgKCdpb21tdS9hbWQ6
-IEltcGxlbWVudCBmbHVzaCBxdWV1ZScpDQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBKb2VyZyBSb2Vk
-ZWwgPGpyb2VkZWxAc3VzZS5kZT4NCj4gPiBBY2tlZC1ieTogQWxleCBEZXVjaGVyIDxhbGV4YW5k
-ZXIuZGV1Y2hlckBhbWQuY29tPg0KPiANCj4gQWxleCwgYXJlIHlvdSBhYmxlIHRvIGNvbmZpcm0g
-dGhhdCBpdCBpcyAqb25seSogdGhlIGRldmljZSB3aXRoIFBDSSBJRA0KPiAweDk4ZTQgd2hpY2gg
-aGFzIHRoaXMgcHJvYmxlbSwgb3IgKG1vcmUgbGlrZWx5KSBjb21lIHVwIHdpdGggYW4NCj4gZXho
-YXVzdGl2ZSBsaXN0PyBUaGFua3MuDQo+IA0KPiBXZSdsbCB3YW50IHRoZSBzYW1lIGJsYWNrbGlz
-dCBpbiBYZW4gdG9vLCB3b24ndCB3ZT8NCg0KSSBmaW5hbGx5IGdvdCBhbiBhbnN3ZXIgZnJvbSB0
-aGUgaHcgdGVhbSBhbmQgd2UgdmFsaWRhdGVkIEFUUyBvbiBzdG9uZXkgYXMgd2VsbCBzbyBpbiB0
-aGVvcnkgdGhpcyBwYXRjaCBzaG91bGRu4oCZdCBhY3R1YWxseSBiZSBuZWVkZWQuICBJIHRoaW5r
-IHdlIG1heSBhY3R1YWxseSBiZSBwYXBlcmluZyBvdmVyIHNvbWUgb3RoZXIgaXNzdWUuICBUaGUg
-Zm9sbG93aW5nIHBhdGNoIHNlZW1zIHRvIGFsc28gZml4IHRoaXMgaXNzdWUgKGFuZCBvdGhlciBp
-c3N1ZXMpOg0KaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvc3RhYmxlL21zZzE3MjYzMS5o
-dG1sDQoNCkFsZXgNCg0KPiANCj4gPiA+DQo+ID4gPiAtLS0NCj4gPiA+IMKgZHJpdmVycy9wY2kv
-cXVpcmtzLmMgfCAxOSArKysrKysrKysrKysrKysrKysrDQo+ID4gPiDCoDEgZmlsZSBjaGFuZ2Vk
-LCAxOSBpbnNlcnRpb25zKCspDQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNp
-L3F1aXJrcy5jIGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiA+IGluZGV4IDY3MzY4MzYuLjdj
-YmUzMTYgMTAwNjQ0DQo+ID4gPiAtLS0gYS9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+ID4gKysr
-IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCj4gPiA+IEBAIC00NjM0LDMgKzQ2MzQsMjIgQEAgc3Rh
-dGljIHZvaWQgcXVpcmtfbm9fYWVyc2lkKHN0cnVjdCBwY2lfZGV2DQo+ICpwZGV2KQ0KPiA+ID4g
-wqBERUNMQVJFX1BDSV9GSVhVUF9FQVJMWShQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDIwMzEsDQo+
-ID4gPiBxdWlya19ub19hZXJzaWQpOw0KPiA+ID4gwqBERUNMQVJFX1BDSV9GSVhVUF9FQVJMWShQ
-Q0lfVkVORE9SX0lEX0lOVEVMLCAweDIwMzIsDQo+ID4gPiBxdWlya19ub19hZXJzaWQpOw0KPiA+
-ID4gwqBERUNMQVJFX1BDSV9GSVhVUF9FQVJMWShQQ0lfVkVORE9SX0lEX0lOVEVMLCAweDIwMzMs
-DQo+ID4gPiBxdWlya19ub19hZXJzaWQpOw0KPiA+ID4gKw0KPiA+ID4gKyNpZmRlZiBDT05GSUdf
-UENJX0FUUw0KPiA+ID4gKy8qDQo+ID4gPiArICogU29tZSBkZXZpY2VzIGhhdmUgYSBicm9rZW4g
-QVRTIGltcGxlbWVudGF0aW9uIGNhdXNpbmcgSU9NTVUNCj4gc3RhbGxzLg0KPiA+ID4gKyAqIERv
-bid0IHVzZSBBVFMgZm9yIHRob3NlIGRldmljZXMuDQo+ID4gPiArICovDQo+ID4gPiArc3RhdGlj
-IHZvaWQgcXVpcmtfZGlzYWJsZV9hdHMoc3RydWN0IHBjaV9kZXYgKnBkZXYpDQo+ID4gPiArew0K
-PiA+ID4gKwkvKg0KPiA+ID4gKwnCoCogU2V0IHBkZXYtPmF0c19jYXAgPSAwIHRvIG1ha2UgcGNp
-X2VuYWJsZV9hdHMoKSBiYWlsIG91dA0KPiA+ID4gKwnCoCogZWFybHkuDQo+ID4gPiArCcKgKi8N
-Cj4gPiA+ICsJZGV2X2luZm8oJnBkZXYtPmRldiwgIlFVSVJLOiBEaXNhYmxpbmcgQVRTIik7DQo+
-ID4gPiArCXBkZXYtPmF0c19jYXAgPSAwOw0KPiA+ID4gK30NCj4gPiA+ICsNCj4gPiA+ICsvKiBB
-TUQgU3RvbmV5IHBsYXRmb3JtIEdQVSAqLw0KPiA+ID4gK0RFQ0xBUkVfUENJX0ZJWFVQX0ZJTkFM
-KFBDSV9WRU5ET1JfSURfQVRJLCAweDk4ZTQsDQo+IHF1aXJrX2Rpc2FibGVfYXRzKTsNCj4gPiA+
-ICsjZW5kaWYgLyogQ09ORklHX1BDSV9BVFMgKi8NCj4gPiA+IC0tDQo+ID4gPiAxLjkuMQ0K
+On Tue, 30 May 2017 18:07:18 -0500, Bjorn Helgaas wrote:
+> On Fri, May 26, 2017 at 04:58:20PM -0700, Jakub Kicinski wrote:
+> > On Fri, 26 May 2017 18:47:26 -0500, Bjorn Helgaas wrote:  
+> > > On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:  
+> > > > PCI core sets the driver pointer before calling ->probe() and only
+> > > > clears it after ->remove().  This means driver's ->sriov_configure()
+> > > > callback will happily race with probe() and remove(), most likely
+> > > > leading to BUGs, since drivers don't expect this.    
+> > > 
+> > > I guess you're referring to the pci_dev->driver pointer set by
+> > > local_pci_probe(), and this is important because sriov_numvfs_store()
+> > > checks that pointer, right?  
+> > 
+> > Yes, exactly.  I initially thought this is how the safety of sriov
+> > callback may have been ensured, but since the order of
+> > local_pci_probe() and the assignment is what it is, it can't.  
+> 
+> Right.  I was hoping other subsystems would establish a convention
+> about whether we set the ->driver pointer before or after calling the
+> driver probe() method, but if there is one, I don't see it.
+> local_pci_probe() and really_probe() set ->driver first, but
+> pnp_device_probe() calls the probe() method first.
+
+I didn't dig into reordering the pointer setting, to be honest.  I
+thought establishing that driver callbacks should generally hold device
+lock, whenever possible, would be even better than pointer setting
+conventions.
+
+If we order the assignments better, wouldn't we still need appropriate
+memory barriers to rely on the order? (:
+
+> Can you expand on how you reproduce this problem?  The only real way I
+> see to call ->sriov_configure() is via the sysfs entry point, and I
+> would think user-space code would typically not touch that until after
+> it knows the driver has claimed a device.  But I can certainly imagine
+> targeted test code that could hit this problem.
+
+Correct.  It's not something that users should be triggering often in
+normal use.  I also found it by code inspection rather than by getting
+an oops.
+
+OTOH if the driver performs FW load or other time-consuming operations
+in ->probe() the time window when this can be triggered may be counted
+in seconds.
