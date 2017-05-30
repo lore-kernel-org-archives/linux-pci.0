@@ -1,106 +1,43 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 3/6] ACPI/IORT: Ignore all errors except EPROBE_DEFER
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, lenb@kernel.org, catalin.marinas@arm.com,
-        arnd@arndb.de, linux-arch@vger.kernel.org,
-        laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
-        geert@linux-m68k.org, magnus.damm@gmail.com,
-        nwatters@codeaurora.org, linux@armlinux.org.uk
-References: <1495892865-9506-1-git-send-email-sricharan@codeaurora.org>
- <1495892865-9506-3-git-send-email-sricharan@codeaurora.org>
- <1564836.5iBbgoacpH@aspire.rjw.lan>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <68bc9be5-22df-e7af-3fcd-182e935e681c@codeaurora.org>
-Date: Mon, 29 May 2017 10:36:42 +0530
+Subject: Re: [PATCH 6/7] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Joerg Roedel <joro@8bytes.org>
+References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+ <20170524180143.19855-7-jean-philippe.brucker@arm.com>
+ <20170530102831.GJ2818@8bytes.org>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        iommu@lists.linux-foundation.org, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com,
+        lorenzo.pieralisi@arm.com, hanjun.guo@linaro.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        will.deacon@arm.com, robin.murphy@arm.com, okaya@codeaurora.org,
+        sunil.kovvuri@gmail.com, thunder.leizhen@huawei.com,
+        tn@semihalf.com
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <e162ad57-0fab-b65c-49b1-d083fcbf61d7@arm.com>
+Date: Tue, 30 May 2017 11:58:41 +0100
 MIME-Version: 1.0
-In-Reply-To: <1564836.5iBbgoacpH@aspire.rjw.lan>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170530102831.GJ2818@8bytes.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
-
-On 5/28/2017 12:48 AM, Rafael J. Wysocki wrote:
-> On Saturday, May 27, 2017 07:17:42 PM Sricharan R wrote:
->> While deferring the probe of IOMMU masters, xlate and
->> add_device callbacks called from iort_iommu_configure
->> can pass back error values like -ENODEV, which means
->> the IOMMU cannot be connected with that master for real
->> reasons. Before the IOMMU probe deferral, all such errors
->> were ignored. Now all those errors are propagated back,
->> killing the master's probe for such errors. Instead ignore
->> all the errors except EPROBE_DEFER, which is the only one
->> of concern and let the master work without IOMMU, thus
->> restoring the old behavior. Also make explicit that
->> acpi_dma_configure handles only -EPROBE_DEFER from
->> iort_iommu_configure.
->>
->> Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>  drivers/acpi/arm64/iort.c | 6 ++++++
->>  drivers/acpi/scan.c       | 4 ++--
->>  2 files changed, 8 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->> index c5fecf9..16e101f 100644
->> --- a/drivers/acpi/arm64/iort.c
->> +++ b/drivers/acpi/arm64/iort.c
->> @@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
->>  	if (err)
->>  		ops = ERR_PTR(err);
->>  
->> +	/* Ignore all other errors apart from EPROBE_DEFER */
->> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
->> +		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
->> +		ops = NULL;
->> +	}
->> +
->>  	return ops;
->>  }
->>  
->> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
->> index e39ec7b..3a10d757 100644
->> --- a/drivers/acpi/scan.c
->> +++ b/drivers/acpi/scan.c
->> @@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
->>  	iort_set_dma_mask(dev);
->>  
->>  	iommu = iort_iommu_configure(dev);
->> -	if (IS_ERR(iommu))
->> -		return PTR_ERR(iommu);
->> +	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
->> +		return -EPROBE_DEFER;
->>  
->>  	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->>  	/*
->>
+On 30/05/17 11:28, Joerg Roedel wrote:
+> On Wed, May 24, 2017 at 07:01:42PM +0100, Jean-Philippe Brucker wrote:
+>> * TLB invalidation by range is batched and committed with a single sync.
+>>   Batching ATC invalidation is inconvenient, endpoints limit the number of
+>>   inflight invalidations. We'd have to count the number of invalidations
+>>   queued and send a sync periodically. In addition, I suspect we always
+>>   need a sync between TLB and ATC invalidation for the same page.
 > 
-> ACK for the scan.c change and I'm assuming this to go in via ARM64.
-> 
+> This sounds like the number of outstanding ATS invalidations is not
+> managed by the SMMU hardware, is that right?
 
-Thanks for the ACK, should go through the IOMMU tree, since this fixes the IOMMU probe deferral
-that got merged through it.
+Yes, the hardware doesn't know about ATS queue depth, it simply forwards
+invalidations to the root complex. Doing a sync on the SMMU command queue
+waits for all completions of outstanding ATS invalidations, but it is up
+to the driver to limit ATS invalidations according to queue depth.
 
-Regards,
- Sricharan
+Thanks,
+Jean
 
-> Thanks,
-> Rafael
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
