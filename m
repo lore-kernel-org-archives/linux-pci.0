@@ -1,117 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:6901 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S941370AbdEYDCi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 23:02:38 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 0/4]  add PCIe driver for Kirin PCIe
-Date: Thu, 25 May 2017 11:02:00 +0800
-Message-ID: <20170525030204.126233-1-songxiaowei@hisilicon.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1495471182-12490-3-git-send-email-oza.oza@broadcom.com>
+References: <1495471182-12490-1-git-send-email-oza.oza@broadcom.com>
+ <1495471182-12490-3-git-send-email-oza.oza@broadcom.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 30 May 2017 17:42:46 -0500
+Message-ID: <CAErSpo6MJbNEyGQC4MwFb6kPoOf1p=mxk-SHAz-+HuDFbvRkmw@mail.gmail.com>
+Subject: Re: [PATCH v7 2/3] PCI: Add support for PCI inbound windows resources
+To: Oza Pawandeep <oza.oza@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Oza Pawandeep <oza.pawandeep@gmail.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "open list:INTEL IOMMU \(VT-d\)" <iommu@lists.linux-foundation.org>,
+ bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before Version Patches
-======================
-patch V6
-https://www.spinics.net/lists/linux-pci/msg61610.html
+On Mon, May 22, 2017 at 11:39 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+> This patch adds support for inbound memory window
+> for PCI RC drivers.
+>
+> It defines new function pci_create_root_bus2 which
+> takes inbound resources as an argument and fills in the
+> memory resource to PCI internal host bridge structure
+> as inbound_windows.
+>
+> Legacy RC driver could continue to use pci_create_root_bus,
+> but any RC driver who wants to reseve IOVAS for their
+> inbound memory holes, should use new API pci_create_root_bus2.
+>
+> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> ...
 
-patch V4
-https://www.spinics.net/lists/linux-pci/msg61406.html
+> +struct pci_bus *pci_create_root_bus2(struct device *parent, int bus,
+> +               struct pci_ops *ops, void *sysdata, struct list_head *resources,
+> +               struct list_head *in_res)
+> +{
+> +       return pci_create_root_bus_msi(parent, bus, ops, sysdata,
+> +                                      resources, in_res, NULL);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_create_root_bus2);
 
-patch V3
-https://www.spinics.net/lists/linux-pci/msg61399.html
+Based on your response to Lorenzo's "[RFC/RFT PATCH 03/18] PCI:
+Introduce pci_scan_root_bus_bridge()", I'm hoping you can avoid adding
+yet another variant of pci_create_root_bus().
 
-Changes between V7 and V6
-=========================
-1. add enumeration log Based on Hikey960 Board with these patches.
-2. fix issues as fellows:
-   (1) delete reduntant blankets in macro defination,
-   (2) add blank line in  kirin_pcie_clk_ctrl function.
-   (3) Fix compitable property in DT with the SoC name,
-       for example "hisilicon,kirin960-pcie".
+So I think I can wait for that to settle out and look for a v8?
 
+Bjorn
 
-Enumeration log
-===============
-These test logs come from patches running on Hikey960 Board
-(1) Connect with Atheros Communications WIFI
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
-	pci 0000:01:00.0: supports D1
-	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
-	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276	
-
-(2) Connect with Sandisk SSD
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [1b4b:1093] type 00 class 0x010802
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
-	pci 0000:01:00.0: reg 0x30: [mem 0xf6000000-0xf600ffff pref]
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:00:00.0: BAR 15: assigned [mem 0xf7100000-0xf71fffff pref]
-	pci 0000:01:00.0: BAR 6: assigned [mem 0xf7100000-0xf710ffff pref]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pci 0000:00:00.0:   bridge window [mem 0xf7100000-0xf71fffff pref]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276
-
-Patches list
-============
-
-Xiaowei Song (4):
-  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-  arm64: dts: hisi: add kirin pcie node
-  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-  defconfig: PCI: Enable  Kirin PCIe defconfig
-
- .../devicetree/bindings/pci/kirin-pcie.txt         |  49 ++
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
- arch/arm64/configs/defconfig                       |   1 +
- drivers/pci/dwc/Kconfig                            |  10 +
- drivers/pci/dwc/Makefile                           |   1 +
- drivers/pci/dwc/pcie-kirin.c                       | 513 +++++++++++++++++++++
- 6 files changed, 605 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
- create mode 100644 drivers/pci/dwc/pcie-kirin.c
-
--- 
-2.11.GIT
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
