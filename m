@@ -1,20 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56824 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750735AbdETNVd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 20 May 2017 09:21:33 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: PCI irq affinity fix for 4.12
-Date: Sat, 20 May 2017 15:21:28 +0200
-Message-Id: <20170520132129.16430-1-hch@lst.de>
+Received: from youngberry.canonical.com ([91.189.89.112]:44546 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750862AbdEaFdr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 01:33:47 -0400
+From: Colin King <colin.king@canonical.com>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: qcom: ix spelling mistake: "asser" -> "assert"
+Date: Wed, 31 May 2017 06:33:43 +0100
+Message-Id: <20170531053343.17613-1-colin.king@canonical.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: Colin Ian King <colin.king@canonical.com>
 
-Steve found a case where the !CONFIG_PCI_MSI stub for pci_alloc_irq_vectors
-did the wrong thing when used with the newly converted xhci driver.  While
-the PCI code has been wrong since day 1 the fact that a newly converted
-drivers triggers it makes it a regression in this cycle.
+Trivial fix to spelling mistake in dev_err message
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/pci/dwc/pcie-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 289cda1b4897..fbc79a5274c6 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -695,7 +695,7 @@ static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
+ 
+ 	ret = reset_control_assert(res->axi_s_reset);
+ 	if (ret) {
+-		dev_err(dev, "cannot asser axi slave reset\n");
++		dev_err(dev, "cannot assert axi slave reset\n");
+ 		return ret;
+ 	}
+ 
+-- 
+2.11.0
