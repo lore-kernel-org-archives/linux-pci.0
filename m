@@ -1,141 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 15 May 2017 15:22:39 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-Message-ID: <20170515142238.GD3605@arm.com>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1486136933-20328-8-git-send-email-sricharan@codeaurora.org>
- <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
- <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
- <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>, Magnus Damm <magnus.damm@gmail.com>,
- okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
- Robin Murphy <robin.murphy@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:53319 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751107AbdEaMvA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 08:51:00 -0400
+Message-ID: <1496235029.30073.22.camel@pengutronix.de>
+Subject: Re: [PATCH 1/8] pci: adding new irq api to pci-designware
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, marc.zyngier@arm.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org
+Date: Wed, 31 May 2017 14:50:29 +0200
+In-Reply-To: <62787214-b4d2-5a6b-99a5-df406140cf86@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+         <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
+         <1496234001.30073.19.camel@pengutronix.de>
+         <62787214-b4d2-5a6b-99a5-df406140cf86@synopsys.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sricharan,
-
-On Wed, May 03, 2017 at 03:54:59PM +0530, Sricharan R wrote:
-> On 5/3/2017 3:24 PM, Robin Murphy wrote:
-> > On 02/05/17 19:35, Geert Uytterhoeven wrote:
-> >> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R <sricharan@codeaurora.org> wrote:
-> >>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> >>>
-> >>> Failures to look up an IOMMU when parsing the DT iommus property need to
-> >>> be handled separately from the .of_xlate() failures to support deferred
-> >>> probing.
-> >>>
-> >>> The lack of a registered IOMMU can be caused by the lack of a driver for
-> >>> the IOMMU, the IOMMU device probe not having been performed yet, having
-> >>> been deferred, or having failed.
-> >>>
-> >>> The first case occurs when the device tree describes the bus master and
-> >>> IOMMU topology correctly but no device driver exists for the IOMMU yet
-> >>> or the device driver has not been compiled in. Return NULL, the caller
-> >>> will configure the device without an IOMMU.
-> >>>
-> >>> The second and third cases are handled by deferring the probe of the bus
-> >>> master device which will eventually get reprobed after the IOMMU.
-> >>>
-> >>> The last case is currently handled by deferring the probe of the bus
-> >>> master device as well. A mechanism to either configure the bus master
-> >>> device without an IOMMU or to fail the bus master device probe depending
-> >>> on whether the IOMMU is optional or mandatory would be a good
-> >>> enhancement.
-> >>>
-> >>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> >>> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
-> >>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+Am Mittwoch, den 31.05.2017, 13:46 +0100 schrieb Joao Pinto:
+> Hi Lucas,
+> 
+> Às 1:33 PM de 5/31/2017, Lucas Stach escreveu:
+> > Am Dienstag, den 30.05.2017, 12:32 +0100 schrieb Joao Pinto:
+> >> This patch adds the new interrupt api to pcie-designware, keeping the old
+> >> one. Although the old API is still available, pcie-designware initiates
+> >> with the new one.
 > >>
-> >> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
-> >> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
-> >> properties in DT now fail to probe.
+> >> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> >> ---
+> > [...]
+> >> @@ -378,17 +593,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
+> >>  
+> >>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> >>  		if (!pp->ops->msi_host_init) {
+> >> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+> >> -						MAX_MSI_IRQS, &msi_domain_ops,
+> >> -						&dw_pcie_msi_chip);
+> >> -			if (!pp->irq_domain) {
+> >> -				dev_err(dev, "irq domain init failed\n");
+> >> -				ret = -ENXIO;
+> >> +			ret = of_property_read_u32(np, "num-vectors",
+> >> +						   &pp->num_vectors);
+> >> +			if (ret)
+> >> +				pp->num_vectors = 1;
 > > 
-> > How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
-> > registered then they should merely defer until we reach the point of
-> > giving up and ignoring the IOMMU. Is it just that you have no other
-> > late-probing drivers or post-init module loads to kick the deferred
-> > queue after that point? I did try to find a way to explicitly kick it
-> > from a suitably late initcall, but there didn't seem to be any obvious
-> > public interface - anyone have any suggestions?
-> > 
-> > I think that's more of a general problem with the probe deferral
-> > mechanism itself (I've seen the same thing happen with some of the
-> > CoreSight stuff on Juno due to the number of inter-component
-> > dependencies) rather than any specific fault of this series.
+> > This adds a DT property without documentation. That's a strong no-go.
 > > 
 > 
-> I was thinking of an additional check like below to avoid the
-> situation ?
+> yep, indeed I forgot to merge this into the patch tree. Going to check this in
+> the next patch version.
 > 
-> From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
-> From: Sricharan R <sricharan@codeaurora.org>
-> Date: Wed, 3 May 2017 13:16:59 +0530
-> Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
+> > Why do you even need this property? The number of vectors available can
+> > be inferred from the compatible, so there is no need to push this into
+> > the DT. A fallback of only 1 vector if the property doesn't exist is
+> > also pretty limiting. The old implementation allowed for at least 32
+> > vectors, with most of the core implementations probably allowing much
+> > more in hardware.
 > 
-> While returning EPROBE_DEFER for iommu masters
-> take in to account of iommu nodes that could be
-> marked in DT as 'status=disabled', in which case
-> simply return NULL and let the master's probe
-> continue rather than deferring.
-> 
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> ---
->  drivers/iommu/of_iommu.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index 9f44ee8..e6e9bec 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
-> 
->         ops = iommu_ops_from_fwnode(fwnode);
->         if ((ops && !ops->of_xlate) ||
-> +           !of_device_is_available(iommu_spec->np) ||
->             (!ops && !of_iommu_driver_present(iommu_spec->np)))
->                 return NULL;
+> The hardware supports up to 256, but the current driver is set for a maximum of
+> 32. I suggest we remove MAX_MSI_IRQS and MAX_MSI_CTRLS, and calculate the
+> maximum number of controllers according to the num_vectors value: Ctrls =
+> num_vectors / 32, removing the hardcoded limitation from the driver.
+> What do you think?
 
-Without this patch, v4.12-rc1 hangs on my Juno waiting to mount the root
-filesystem. The problem is that the USB controller is behind an SMMU which
-is marked as 'status = "disabled"' in the devicetree. Whilst there was a
-separate thread with Ard about exactly what this means in terms of the DMA
-ops used by upstream devices, your patch above fixes the regression and
-I think should go in regardless. The DMA ops issue will likely require
-an additional DT binding anyway, to advertise the behaviour of the
-IOMMU when it is disabled.
+If you can confirm that all hardware implementations of the DWC PCIe
+core support 256 vectors, I don't see a reason to ever expose less than
+this. I guess the current limit of 32 hasn't been raised out of fear
+that some hardware implementations might not support the full range of
+256 vectors.
 
-Tested-by: Will Deacon <will.deacon@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
+You are in a much better position to validate this than I am. I fully
+support removing artificial limits from the driver implementation.
 
-Could you resend it as a proper patch, please?
-
-Will
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+Lucas
