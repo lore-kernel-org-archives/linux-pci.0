@@ -1,45 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:39219 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932071AbdEKMUW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 08:20:22 -0400
-Date: Thu, 11 May 2017 14:20:13 +0200
-From: Greg KH <greg@kroah.com>
-To: Juergen Gross <jgross@suse.com>
-Cc: stable@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Julien Grall <julien.grall@arm.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ross Lagerwall <ross.lagerwall@citrix.com>,
-        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
-        KarimAllah Ahmed <karahmed@amazon.de>
-Subject: Re: [stable-4.9: PATCH] xen: revert commit 72a9b186292
-Message-ID: <20170511122013.GA31947@kroah.com>
-References: <20170508051156.20947-1-jgross@suse.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:44554 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750916AbdEaFeQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 01:34:16 -0400
+From: Colin King <colin.king@canonical.com>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH][V2] PCI: qcom: fix spelling mistake: "asser" -> "assert"
+Date: Wed, 31 May 2017 06:34:14 +0100
+Message-Id: <20170531053414.17673-1-colin.king@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170508051156.20947-1-jgross@suse.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 08, 2017 at 07:11:56AM +0200, Juergen Gross wrote:
-> Revert commit 72a9b186292 ("xen: Remove event channel notification
-> through Xen PCI platform device") as the original analysis was wrong
-> that all the removed code isn't in use any more.
-> 
-> It is still necessary for old Xen versions (< 4.0) and for being able
-> to run the Linux kernel as dom0 in a nested Xen environment.
-> 
-> This is a backport of upstream commit 84d582d236dc1f9085e741affc72e9ba061a67c2
+From: Colin Ian King <colin.king@canonical.com>
 
-Now applied, thanks.
+Trivial fix to spelling mistake in dev_err message
 
-greg k-h
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/pci/dwc/pcie-qcom.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 289cda1b4897..fbc79a5274c6 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -695,7 +695,7 @@ static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
+ 
+ 	ret = reset_control_assert(res->axi_s_reset);
+ 	if (ret) {
+-		dev_err(dev, "cannot asser axi slave reset\n");
++		dev_err(dev, "cannot assert axi slave reset\n");
+ 		return ret;
+ 	}
+ 
+-- 
+2.11.0
