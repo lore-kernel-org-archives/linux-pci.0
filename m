@@ -1,50 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from a2nlsmtp01-02.prod.iad2.secureserver.net ([198.71.225.36]:46348
-        "EHLO a2nlsmtp01-02.prod.iad2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031752AbdEXUkY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 16:40:24 -0400
-From: Haiyang Zhang <haiyangz@exchange.microsoft.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: haiyangz@microsoft.com, kys@microsoft.com, sthemmin@microsoft.com,
-        olaf@aepfle.de, vkuznets@redhat.com,
-        driverdev-devel@linuxdriverproject.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
-Date: Wed, 24 May 2017 13:39:15 -0700
-Message-Id: <1495658355-13103-1-git-send-email-haiyangz@exchange.microsoft.com>
-Reply-To: haiyangz@microsoft.com
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6841 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750938AbdEaHB4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 03:01:56 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 0/4]   add PCIe driver for Kirin PCIe
+Date: Wed, 31 May 2017 15:01:05 +0800
+Message-ID: <20170531070109.81569-1-songxiaowei@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Haiyang Zhang <haiyangz@microsoft.com>
+Before Version Patches
+======================
+patch V8
+http://www.spinics.net/lists/linux-pci/msg61715.html
+patch V7
+https://www.spinics.net/lists/linux-pci/msg61664.html
+patch V6
+https://www.spinics.net/lists/linux-pci/msg61610.html
 
-This patch uses the lower 16 bits of the serial number as PCI
-domain, otherwise some drivers may not be able to handle it.
+patch V4
+https://www.spinics.net/lists/linux-pci/msg61406.html
 
-Besides Nvidia drivers, we also found X.org, and DPDK handle
-only 16 bit PCI domain.
+patch V3
+https://www.spinics.net/lists/linux-pci/msg61399.html
 
-Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Changes between V8 and V7
+=========================
+1. Fix the indent issues in Documentation, dtsi file and macro defination.
+2. Replace pdev->dev with dev in kirin_pcie_get_resource and 
+   kirin_pcie_get_clk functions.
+3. Put variables "pci" and "kirin_pcie" to be initialized at first
+   in kirin_pcie_wr_own_config, kirin_pcie_read_dbi and other functions.
+4. Add space before blankets in "Low power mode(L1 ".
+5. Short the Makefile sentence to lower than 80 characters
+   and delete reduntant words.
+6. Use word 'located' instead of the wrong one 'lacated'.
+7. Fix the problem of return value type.
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 8493638..51a815d 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1335,9 +1335,11 @@ static void put_pcichild(struct hv_pci_dev *hpdev,
- 	 * can have shorter names than based on the bus instance UUID.
- 	 * Only the first device serial number is used for domain, so the
- 	 * domain number will not change after the first device is added.
-+	 * The lower 16 bits of the serial number is used, otherwise some
-+	 * drivers may not be able to handle it.
- 	 */
- 	if (list_empty(&hbus->children))
--		hbus->sysdata.domain = desc->ser;
-+		hbus->sysdata.domain = desc->ser & 0xFFFF;
- 	list_add_tail(&hpdev->list_entry, &hbus->children);
- 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
- 	return hpdev;
+Changes between V8 and V7
+=========================
+1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
+
+Changes between V7 and V6
+=========================
+1. add enumeration log Based on Hikey960 Board with these patches.
+2. fix issues as fellows:
+   (1) delete reduntant blankets in macro defination,
+   (2) add blank line in  kirin_pcie_clk_ctrl function.
+   (3) Fix compitable property in DT with the SoC name,
+       for example "hisilicon,kirin960-pcie".
+
+Changes between V6 and V4
+=========================
+1. seperate Document from .dtsi patch.
+2. fix issues according to review comments
+   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
+   patch post method and so on.
+
+Enumeration log
+===============
+These test logs come from patches running on Hikey960 Board
+(1) Connect with Atheros Communications WIFI
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
+	pci 0000:01:00.0: supports D1
+	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
+	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276	
+
+(2) Connect with Sandisk SSD
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [1b4b:1093] type 00 class 0x010802
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf6003fff 64bit]
+	pci 0000:01:00.0: reg 0x30: [mem 0xf6000000-0xf600ffff pref]
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:00:00.0: BAR 15: assigned [mem 0xf7100000-0xf71fffff pref]
+	pci 0000:01:00.0: BAR 6: assigned [mem 0xf7100000-0xf710ffff pref]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf7003fff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pci 0000:00:00.0:   bridge window [mem 0xf7100000-0xf71fffff pref]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276
+
+Patches list
+============
+Xiaowei Song (4):
+  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+  arm64: dts: hisi: add kirin pcie node
+  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+  ARM64: defconfig: Enable  Kirin PCIe
+
+ .../devicetree/bindings/pci/kirin-pcie.txt         |  50 ++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          |  31 ++
+ arch/arm64/configs/defconfig                       |   1 +
+ drivers/pci/dwc/Kconfig                            |  10 +
+ drivers/pci/dwc/Makefile                           |   1 +
+ drivers/pci/dwc/pcie-kirin.c                       | 514 +++++++++++++++++++++
+ 6 files changed, 607 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
+
 -- 
-1.7.1
+2.11.GIT
