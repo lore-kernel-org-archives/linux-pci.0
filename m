@@ -1,43 +1,82 @@
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 0/2] Tango PCIe controller support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <20170523171758.GC24431@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <cb5d08d6-bbbe-486f-b721-2eeeb410ab5e@free.fr>
-Date: Tue, 23 May 2017 20:07:53 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC,20/30] iommu/arm-smmu-v3: Enable PCI PASID in masters
+To: Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>
+References: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f18163da-30a6-a7d4-0a2c-bca4fc1b0fff@codeaurora.org>
+Date: Wed, 31 May 2017 10:10:07 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170523171758.GC24431@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/05/2017 19:17, Bjorn Helgaas wrote:
->
-> On Thu, Apr 20, 2017 at 04:24:39PM +0200, Marc Gonzalez wrote:
->
->> This patch was split in two, to ease review of two orthogonal
->> parts (MSI controller and host bridge). NB: the patch is
->> just split in two where host bridge support starts.
+Hi Jean-Philippe,
+
+On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
+> Enable PASID for PCI devices that support it.
 > 
-> The split is backwards.  The first patch should add basic host bridge
-> support that is functional, though lacking MSI support.  The second should
-> add the MSI support.
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+> ---
+>  drivers/iommu/arm-smmu-v3.c | 66 ++++++++++++++++++++++++++++++++++++++++++---
+>  1 file changed, 63 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+> index 499dc1cd07eb..37fd061405e9 100644
+> --- a/drivers/iommu/arm-smmu-v3.c
+> +++ b/drivers/iommu/arm-smmu-v3.c
+> @@ -730,6 +730,8 @@ struct arm_smmu_master_data {
+>  
+>  	struct arm_smmu_stream		*streams;
+>  	struct rb_root			contexts;
+> +
+> +	u32				avail_contexts;
+>  };
+>  
 
-OK, I'll invert the patches.
+I know that you are doing some code restructuring. As I was looking at the amdkfd
+driver, I realized that there is quite a bit of PASID, ATS and PRI work here that
+can be plumbed into the framework you are building. 
 
-Note: the bridge does not support legacy interrupts.
-Without MSI support, EPs can't interrupt the host.
-Is that still considered functional?
+https://github.com/torvalds/linux/tree/master/drivers/gpu/drm/amd/amdkfd
 
-Regards.
+I wanted to share this with if you were aware of this or not. Functions of interest
+are:
+
+amd_iommu_init_device
+amd_iommu_free_device
+amd_iommu_bind_pasid
+amd_iommu_set_invalid_ppr_cb
+amd_iommu_unbind_pasid
+amd_iommu_device_info
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
