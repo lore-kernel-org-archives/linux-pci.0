@@ -1,104 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36734 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751401AbdEPFWp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2017 01:22:45 -0400
-Received: by mail-wm0-f47.google.com with SMTP id u65so107985600wmu.1
-        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 22:22:40 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        Oza Pawandeep <oza.oza@broadcom.com>
-Subject: [PATCH v6 2/3] iommu/pci: reserve IOVA for PCI masters
-Date: Tue, 16 May 2017 10:52:06 +0530
-Message-Id: <1494912127-12890-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
-References: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Robin Murphy <robin.murphy@arm.com>
+To: bhelgaas@google.com
+Cc: marc.zyngier@arm.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI/MSI: Improve MSI alias detection
+Date: Wed, 31 May 2017 18:52:28 +0100
+Message-Id: <20170531175230.16529-2-robin.murphy@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-this patch reserves the IOVA for PCI masters.
-ARM64 based SOCs may have scattered memory banks.
-such as iproc based SOC has
+Currently, we consider all DMA aliases when calculating MSI requester
+IDs. This turns out to be the wrong thing to do in the face of pure DMA
+quirks like those of Marvell SATA cards, where we can end up configuring
+the MSI doorbell to expect the phantom function alias, such that it then
+goes on to happily ignore actual MSI writes coming from the card on the
+real RID.
 
-<0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
-<0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
-<0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
-<0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
+Improve the alias walk to only account for the topological aliases that
+matter, based on the logic from the Intel IRQ remapping code.
 
-but incoming PCI transcation addressing capability is limited
-by host bridge, for example if max incoming window capability
-is 512 GB, then 0x00000090 and 0x000000a0 will fall beyond it.
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/pci/msi.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
 
-to address this problem, iommu has to avoid allocating IOVA which
-are reserved. which inturn does not allocate IOVA if it falls into hole.
-
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-
-diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-index 48d36ce..08764b0 100644
---- a/drivers/iommu/dma-iommu.c
-+++ b/drivers/iommu/dma-iommu.c
-@@ -27,6 +27,7 @@
- #include <linux/iova.h>
- #include <linux/irq.h>
- #include <linux/mm.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/scatterlist.h>
- #include <linux/vmalloc.h>
-@@ -171,8 +172,12 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
- 		struct iova_domain *iovad)
- {
- 	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
-+	struct device_node *np = bridge->dev.parent->of_node;
- 	struct resource_entry *window;
- 	unsigned long lo, hi;
-+	int ret;
-+	dma_addr_t tmp_dma_addr = 0, dma_addr;
-+	LIST_HEAD(res);
- 
- 	resource_list_for_each_entry(window, &bridge->windows) {
- 		if (resource_type(window->res) != IORESOURCE_MEM &&
-@@ -183,6 +188,36 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
- 		hi = iova_pfn(iovad, window->res->end - window->offset);
- 		reserve_iova(iovad, lo, hi);
- 	}
-+
-+	/* PCI inbound memory reservation. */
-+	ret = of_pci_get_dma_ranges(np, &res);
-+	if (!ret) {
-+		resource_list_for_each_entry(window, &res) {
-+			struct resource *res_dma = window->res;
-+
-+			dma_addr = res_dma->start - window->offset;
-+			if (tmp_dma_addr > dma_addr) {
-+				pr_warn("PCI: failed to reserve iovas; ranges should be sorted\n");
-+				return;
-+			}
-+			if (tmp_dma_addr != dma_addr) {
-+				lo = iova_pfn(iovad, tmp_dma_addr);
-+				hi = iova_pfn(iovad, dma_addr - 1);
-+				reserve_iova(iovad, lo, hi);
-+			}
-+			tmp_dma_addr = window->res->end - window->offset;
-+		}
-+		/*
-+		 * the last dma-range should honour based on the
-+		 * 32/64-bit dma addresses.
-+		 */
-+		if (tmp_dma_addr < DMA_BIT_MASK(sizeof(dma_addr_t) * 8)) {
-+			lo = iova_pfn(iovad, tmp_dma_addr);
-+			hi = iova_pfn(iovad,
-+				      DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1);
-+			reserve_iova(iovad, lo, hi);
-+		}
-+	}
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ba44fdfda66b..7b34c434970e 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1468,13 +1468,21 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
  }
+ EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
  
++/*
++ * If the alias device/RID is on a different bus, it's a topological alias
++ * we should care about; otherwise, it's a DMA quirk and we don't.
++ */
+ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	u32 *pa = data;
++	u8 bus = PCI_BUS_NUM(*pa);
++
++	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
++		*pa = alias;
+ 
+-	*pa = alias;
+ 	return 0;
+ }
++
  /**
+  * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+  * @domain:	The interrupt domain
+@@ -1488,7 +1496,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ {
+ 	struct device_node *of_node;
+-	u32 rid = 0;
++	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+ 
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 
+@@ -1504,14 +1512,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+  * @pdev:	The PCI device
+  *
+  * Use the firmware data to find a device-specific MSI domain
+- * (i.e. not one that is ste as a default).
++ * (i.e. not one that is set as a default).
+  *
+- * Returns: The coresponding MSI domain or NULL if none has been found.
++ * Returns: The corresponding MSI domain or NULL if none has been found.
+  */
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+ {
+ 	struct irq_domain *dom;
+-	u32 rid = 0;
++	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+ 
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
 -- 
-1.9.1
+2.12.2.dirty
