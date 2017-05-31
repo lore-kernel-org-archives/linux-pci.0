@@ -1,45 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:59724 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751607AbdEQM70 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 May 2017 08:59:26 -0400
-Date: Wed, 17 May 2017 14:59:23 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Ashok Raj <ashok.raj@intel.com>
-Cc: linux-kernel@vger.kernel.org, CQ Tang <cq.tang@intel.com>,
-        linux-pci@vger.kernel.org,
-        Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>,
-        iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 2/2] iommu/vt-d: Helper function to query if a pasid has
- any active users
-Message-ID: <20170517125923.GE11068@8bytes.org>
-References: <1494441543-8216-1-git-send-email-ashok.raj@intel.com>
- <1494441543-8216-2-git-send-email-ashok.raj@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 31 May 2017 14:12:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
+Message-ID: <20170531191258.GA18454@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
+ <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
+ <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
+ <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
+ <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
+ <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
+ <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
+ <20170531173414.GB4496@bhelgaas-glaptop.roam.corp.google.com>
+ <4885137f-7c1c-5742-4f66-f48c32ce7abb@free.fr>
+ <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1494441543-8216-2-git-send-email-ashok.raj@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
+ David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 10, 2017 at 11:39:03AM -0700, Ashok Raj wrote:
-> From: CQ Tang <cq.tang@intel.com>
+On Wed, May 31, 2017 at 02:00:37PM -0500, Bjorn Helgaas wrote:
+> On Wed, May 31, 2017 at 08:49:04PM +0200, Mason wrote:
+> > On 31/05/2017 19:34, Bjorn Helgaas wrote:
+> > ...
 > 
-> A driver would need to know if there are any active references to a
-> a PASID before cleaning up its resources. This function helps check
-> if there are any active users of a PASID before it can perform any
-> recovery on that device.
+> > > This would be more an IRQ patch than a PCI patch, but if I were
+> > > reviewing it, I would look for assurance that *all* the no-op
+> > > .irq_set_affinity callbacks were cleaned up, not just those in
+> > > drivers/pci/host.
+> > 
+> > Are you saying the patch is *wrong* if not all "do-nothing"
+> > callbacks are cleaned up?
 > 
-> To: Joerg Roedel <joro@8bytes.org>
-> To: linux-kernel@vger.kernel.org
-> To: David Woodhouse <dwmw2@infradead.org>
-> Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>
-> Cc: iommu@lists.linux-foundation.org
+> I'm saying that (1) this probably wouldn't be applied via the PCI
+> tree, and (2) if it *were* applied via PCI, I would ask that all the
+> no-op callbacks were cleaned up at the same time.
 > 
-> Signed-off-by: CQ Tang <cq.tang@intel.com>
-> Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-> ---
->  drivers/iommu/intel-svm.c | 30 ++++++++++++++++++++++++++++++
->  include/linux/intel-svm.h | 20 ++++++++++++++++++++
->  2 files changed, 50 insertions(+)
+> Huh, that sounds a lot like what I wrote above.  Was I unclear?
 
-Applied, thanks.
+I'm afraid this sounded snarky, which isn't my intention.  It seems
+like there's a useful patch here, and I didn't want to see it get
+ignored for lack of following the usual process.  If this is all
+obvious to you, my apologies and please ignore my suggestion.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
