@@ -1,57 +1,57 @@
-Return-Path: <SRS0=t3s2=45=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=t3s2=45=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH] pci: dwc: dra7xx: Depend on appropriate SoC or compile
- test
-To: Bjorn Helgaas <helgaas@kernel.org>, Peter Robinson <pbrobinson@gmail.com>
-References: <20170515122617.20706-1-pbrobinson@gmail.com>
- <20170522220056.GF19733@bhelgaas-glaptop.roam.corp.google.com>
-CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <b287ce77-505c-a51d-ae73-664e6bd30797@ti.com>
-Date: Tue, 23 May 2017 12:11:19 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 31 May 2017 12:17:48 -0500
+From: Rob Herring <robh@kernel.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH 2/7] dt-bindings: PCI: Describe ATS property for root
+ complex nodes
+Message-ID: <20170531171748.rcrwpkgqgx7lin23@rob-hp-laptop>
+References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+ <20170524180143.19855-3-jean-philippe.brucker@arm.com>
+ <20170530100153.GI2818@8bytes.org>
+ <035be7ba-e850-a5a9-08fa-802a04feb600@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170522220056.GF19733@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <035be7ba-e850-a5a9-08fa-802a04feb600@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ thunder.leizhen@huawei.com, rjw@rjwysocki.net, will.deacon@arm.com,
+ okaya@codeaurora.org, linux-acpi@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ bhelgaas@google.com, tn@semihalf.com, sunil.kovvuri@gmail.com,
+ robin.murphy@arm.com, linux-arm-kernel@lists.infradead.org, lenb@kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Tuesday 23 May 2017 03:30 AM, Bjorn Helgaas wrote:
-> On Mon, May 15, 2017 at 01:26:17PM +0100, Peter Robinson wrote:
->> The PCI controller attached to a SoC isn't much use if the core SoC isn't
->> enabled, unless of course it's compile testing, so add appropriate dependency.
->>
->> Signed-off-by: Peter Robinson <pbrobinson@gmail.com>
+On Tue, May 30, 2017 at 11:58:50AM +0100, Jean-Philippe Brucker wrote:
+> On 30/05/17 11:01, Joerg Roedel wrote:
+> > On Wed, May 24, 2017 at 07:01:38PM +0100, Jean-Philippe Brucker wrote:
+> >> +- ats-supported: if present, the root complex supports the Address
+> >> +  Translation Service (ATS). It is able to interpret the AT field in PCIe
+> >> +  Transaction Layer Packets, and forward Translation Completions or
+> >> +  Invalidation Requests to endpoints.
+> >> +
+> >> +  Device drivers should not enable ATS in endpoints unless this property
+> >> +  is present.
+> > 
+> > Device drivers should never enable ATS, this is the job of the IOMMU
+> > driver. This should be clarified in the text.
 > 
-> Applied to pci/host-dra7xx for v4.13, thanks!
-> 
-> Kishon, let me know if you object.  I think I'll start speculatively
-> applying simple patches without maintainer acks to try to streamline
-> things, on the assumption that you'll speak up if you object.
+> Right, I will change this.
 
-Sorry for not giving my Ack earlier.
+Driver details should not be in DT to begin with.
 
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Rob
 
--Kishon
-> 
->> ---
->>  drivers/pci/dwc/Kconfig | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
->> index b7e15526d676..d34b6dfbb351 100644
->> --- a/drivers/pci/dwc/Kconfig
->> +++ b/drivers/pci/dwc/Kconfig
->> @@ -16,6 +16,7 @@ config PCIE_DW_EP
->>  
->>  config PCI_DRA7XX
->>  	bool "TI DRA7xx PCIe controller"
->> +	depends on SOC_DRA7XX || COMPILE_TEST
->>  	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
->>  	depends on OF && HAS_IOMEM && TI_PIPE3
->>  	help
->> -- 
->> 2.13.0
->>
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
