@@ -1,53 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0040.outbound.protection.outlook.com ([104.47.37.40]:12544
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753508AbdEZL6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 26 May 2017 07:58:03 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>
-CC: 'David Woodhouse' <dwmw2@infradead.org>,
-        'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Samuel Sieb" <samuel@sieb.net>
-Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Date: Fri, 26 May 2017 11:57:59 +0000
-Message-ID: <BN6PR12MB16525FC9DD12723017F143EDF7FC0@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
- <1493893297.4904.71.camel@infradead.org>
- <BN6PR12MB1652A0F240C19F2CF3304300F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170524084450.GB12353@suse.de>
-In-Reply-To: <20170524084450.GB12353@suse.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga01-in.huawei.com ([45.249.212.187]:7282 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751042AbdEaHBm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 03:01:42 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 4/4] ARM64: defconfig: Enable  Kirin PCIe
+Date: Wed, 31 May 2017 15:01:09 +0800
+Message-ID: <20170531070109.81569-5-songxiaowei@hisilicon.com>
+In-Reply-To: <20170531070109.81569-1-songxiaowei@hisilicon.com>
+References: <20170531070109.81569-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2VyZyBSb2VkZWwgW21haWx0
-bzpqcm9lZGVsQHN1c2UuZGVdDQo+IFNlbnQ6IFdlZG5lc2RheSwgTWF5IDI0LCAyMDE3IDQ6NDUg
-QU0NCj4gVG86IERldWNoZXIsIEFsZXhhbmRlcg0KPiBDYzogJ0RhdmlkIFdvb2Rob3VzZSc7ICdK
-b2VyZyBSb2VkZWwnOyBCam9ybiBIZWxnYWFzOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9y
-ZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgRGFuaWVsIERyYWtlOyBTYW11ZWwNCj4g
-U2llYg0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWly
-ayBmb3IgQU1EIFN0b25leSBHUFVzDQo+IA0KPiBIaSBBbGV4YW5kZXIsDQo+IA0KPiBPbiBUdWUs
-IE1heSAyMywgMjAxNyBhdCAwNzo1NDoxMlBNICswMDAwLCBEZXVjaGVyLCBBbGV4YW5kZXIgd3Jv
-dGU6DQo+ID4gSSBmaW5hbGx5IGdvdCBhbiBhbnN3ZXIgZnJvbSB0aGUgaHcgdGVhbSBhbmQgd2Ug
-dmFsaWRhdGVkIEFUUyBvbg0KPiA+IHN0b25leSBhcyB3ZWxsIHNvIGluIHRoZW9yeSB0aGlzIHBh
-dGNoIHNob3VsZG7igJl0IGFjdHVhbGx5IGJlIG5lZWRlZC4NCj4gPiBJIHRoaW5rIHdlIG1heSBh
-Y3R1YWxseSBiZSBwYXBlcmluZyBvdmVyIHNvbWUgb3RoZXIgaXNzdWUuICBUaGUNCj4gPiBmb2xs
-b3dpbmcgcGF0Y2ggc2VlbXMgdG8gYWxzbyBmaXggdGhpcyBpc3N1ZSAoYW5kIG90aGVyIGlzc3Vl
-cyk6DQo+ID4gaHR0cHM6Ly93d3cuc3Bpbmljcy5uZXQvbGlzdHMvc3RhYmxlL21zZzE3MjYzMS5o
-dG1sDQo+IA0KPiBZZWFoLCBidXQgaXQgc3RpbGwgbG9va3MgdG8gbWUgbGlrZSB0aGF0IHRoZSBo
-YXJkd2FyZSBnb3QgaW50byBzb21lDQo+IHdlaXJkIHN0YXRlIHdpdGggdGhlIHN0b3JtIG9mIEFU
-UyBpbnZhbGlkYXRpb25zIHNlbnQgdG8gaXQuDQo+IA0KPiBUaGUgQ29tcGxldGlvbi1XYWl0IGxv
-b3AgdGltZW91dHMgc2VlbiBpbiB0aGUgb3JpZ2luYWwgYnVnIHJlcG9ydA0KPiBpbmRpY2F0ZSB0
-aGF0IHRoZSBJT01NVSBpcyB3YWl0aW5nIGZvciBhIHJlc3BvbnNlIHRoYXQgbmV2ZXIgY29tZXMu
-IEFuZA0KPiB0aGlzIGlzIHByb2JhYmx5IHRoZSBBVFMgZmx1c2ggY29tcGxldGlvbiByZXNwb25z
-ZSBmcm9tIHRoZSBHUFUsIGFzDQo+IGRpc2FibGluZyBBVFMgb24gdGhlIEdQVSBtYWtlcyB0aGUg
-aXNzdWUgZGlzYXBwZWFyLg0KDQpGV0lXLCB0aGUgR1BVIGRyaXZlciBkb2VzIG5vdCBhY3R1YWxs
-eSB1c2UgQVRTIGF0IHRoZSBtb21lbnQgc28gSSBkb24ndCB0aGluayB3ZSBzaG91bGQgc2VlIGFu
-eSBBVFMgdHJhbnNhY3Rpb25zLg0KDQpBbGV4DQoNCg==
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+---
+ arch/arm64/configs/defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 7c48028ec64a..d56d8f1062ab 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
+ CONFIG_PCI_LAYERSCAPE=y
+ CONFIG_PCI_HISI=y
+ CONFIG_PCIE_QCOM=y
++CONFIG_PCIE_KIRIN=y
+ CONFIG_PCIE_ARMADA_8K=y
+ CONFIG_ARM64_VA_BITS_48=y
+ CONFIG_SCHED_MC=y
+-- 
+2.11.GIT
