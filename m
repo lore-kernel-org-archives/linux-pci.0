@@ -1,61 +1,151 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
-        geert@linux-m68k.org, magnus.damm@gmail.com
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V4 3/4] ACPI/IORT: Ignore all errors except EPROBE_DEFER
-Date: Thu, 18 May 2017 20:24:16 +0530
-Message-Id: <1495119257-26724-3-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
-References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
+To: Marc Zyngier <marc.zyngier@arm.com>, Robin Murphy <robin.murphy@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
+ <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
+ <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
+ <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
+ <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
+ <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
+ <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
+ <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
+ <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
+Date: Wed, 31 May 2017 16:18:44 +0200
+MIME-Version: 1.0
+In-Reply-To: <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-While deferring the probe of IOMMU masters, xlate and
-add_device callbacks called from iort_iommu_configure
-can pass back error values like -ENODEV, which means
-the IOMMU cannot be connected with that master for real
-reasons. Before the IOMMU probe deferral, all such errors
-were ignored. Now all those errors are propagated back,
-killing the master's probe for such errors. Instead ignore
-all the errors except EPROBE_DEFER, which is the only one
-of concern and let the master work without IOMMU, thus
-restoring the old behavior.
+On 24/05/2017 12:22, Marc Zyngier wrote:
+> On 24/05/17 11:00, Robin Murphy wrote:
+>> On 23/05/17 20:15, Mason wrote:
+>>> On 23/05/2017 20:03, Robin Murphy wrote:
+>>>> On 23/05/17 18:54, Mason wrote:
+>>>>> On 23/05/2017 19:03, Bjorn Helgaas wrote:
+>>>>>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
+>>>>>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
+>>>>>>>
+>>>>>>>> +static int tango_set_affinity(struct irq_data *data,
+>>>>>>>> +		const struct cpumask *mask, bool force)
+>>>>>>>> +{
+>>>>>>>> +	return -EINVAL;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +static struct irq_chip tango_chip = {
+>>>>>>>> +	.irq_ack		= tango_ack,
+>>>>>>>> +	.irq_mask		= tango_mask,
+>>>>>>>> +	.irq_unmask		= tango_unmask,
+>>>>>>>> +	.irq_set_affinity	= tango_set_affinity,
+>>>>>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+>>>>>>>> +};
+>>>>>>>
+>>>>>>> Hmmm... I'm wondering why .irq_set_affinity is required.
+>>>>>>>
+>>>>>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
+>>>>>>> first calls __irq_can_set_affinity() to check whether
+>>>>>>> desc->irq_data.chip->irq_set_affinity) exists.
+>>>>>>>
+>>>>>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
+>>>>>>> which calls chip->irq_set_affinity(data, mask, force);
+>>>>>>> = msi_domain_set_affinity()
+>>>>>>> which calls parent->chip->irq_set_affinity() unconditionally.
+>>>>>>>
+>>>>>>> Would it make sense to test that the callback is implemented
+>>>>>>> before calling it?
+>>>>>>>
+>>>>>>>
+>>>>>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+>>>>>>
+>>>>>> I'm not sure what you're asking.
+>>>>>>
+>>>>>> Is this a bug report for the v4 tango driver?
+>>>>>
+>>>>> No.
+>>>>>
+>>>>>> Or are you asking whether msi_domain_set_affinity() should be changed
+>>>>>> to check whether parent->chip->irq_set_affinity is implemented?
+>>>>>
+>>>>> Yes. The way things are implemented now, drivers are forced
+>>>>> to define an irq_set_affinity callback, even if it just returns
+>>>>> an error, otherwise, the kernel crashes, because of the
+>>>>> unconditional function pointer deref. 
+>>>>>
+>>>>>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
+>>>>>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
+>>>>>> generic msi irq domain support"), so if there's a problem here, it's most
+>>>>>> likely in the tango code.
+>>>>>
+>>>>> The issue is having to define an "empty" function.
+>>>>> (Unnecessary code bloat and maintenance.)
+>>>>
+>>>> AFAICS, only one driver (other than this one) implements a "do nothing"
+>>>> set_affinity callback - everyone else who doesn't do anything hardware
+>>>> specific just passes it along via irq_chip_set_affinity_parent().
+>>>
+>>> I counted 4. Where did I mess up?
+>>>
+>>> advk_msi_set_affinity
+>>> altera_msi_set_affinity
+>>> nwl_msi_set_affinity
+>>> vmd_irq_set_affinity
+>>> tango_set_affinity
+>>
+>> Fair point - I went through drivers/irqchip and the various
+>> arch-specific instances and found ls_scfg_msi_set_affinity(), but
+>> somehow skipped over drivers/pci. Anyway, I think the question stands of
+>> why are these handful of drivers *not* using irq_chip_set_affinity_parent()?
+> 
+> Probably because they don't have a parent, in the hierarchical sense.
+> All they have is a chained interrupt (*puke*). Which implies that
+> changing the affinity of one MSI would affect all of them, completely
+> confusing unsuspecting userspace such as irqbalance.
+> 
+>> As an outsider, it naively seems logical that the affinity of an MSI
+>> which just gets translated to a wired interrupt should propagate through
+>> to the affinity of that wired interrupt, but maybe there are reasons not
+>> to; I really don't know.
+> 
+> See above. The main issue is that HW folks haven't understood the actual
+> use of MSIs, and persist in implementing them as an afterthought, based
+> on some cascading interrupt controller design.
+> 
+> Sad. So sad.
 
-Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
-[V4] Added this patch newly.
+For the record, below is the patch I had in mind:
 
- drivers/acpi/arm64/iort.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index c5fecf9..16e101f 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- 	if (err)
- 		ops = ERR_PTR(err);
- 
-+	/* Ignore all other errors apart from EPROBE_DEFER */
-+	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
-+		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
-+		ops = NULL;
-+	}
+diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
+index 8a3e872798f3..edfc95575a37 100644
+--- a/kernel/irq/msi.c
++++ b/kernel/irq/msi.c
+@@ -91,9 +91,11 @@ int msi_domain_set_affinity(struct irq_data *irq_data,
+ {
+        struct irq_data *parent = irq_data->parent_data;
+        struct msi_msg msg;
+-       int ret;
++       int ret = -EINVAL;
 +
- 	return ops;
- }
++       if (parent->chip->irq_set_affinity)
++               ret = parent->chip->irq_set_affinity(parent, mask, force);
  
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+-       ret = parent->chip->irq_set_affinity(parent, mask, force);
+        if (ret >= 0 && ret != IRQ_SET_MASK_OK_DONE) {
+                BUG_ON(irq_chip_compose_msi_msg(irq_data, &msg));
+                irq_chip_write_msi_msg(irq_data, &msg);
+
+
+
+Then, it would be safe to remove "do-nothing" .irq_set_affinity
+callbacks in drivers/pci/host
+
+Regards.
