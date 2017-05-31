@@ -1,49 +1,78 @@
-Return-Path: <SRS0=FWh+=4R=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=FWh+=4R=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6839 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750946AbdEaHBj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 03:01:39 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
+        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
+        <niklas.cassel@axis.com>, <dhdang@apm.com>,
+        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
+        <catalin.marinas@arm.com>, <will.deacon@arm.com>
+CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
+        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v9 2/4] arm64: dts: hisi: add kirin pcie node
+Date: Wed, 31 May 2017 15:01:07 +0800
+Message-ID: <20170531070109.81569-3-songxiaowei@hisilicon.com>
+In-Reply-To: <20170531070109.81569-1-songxiaowei@hisilicon.com>
+References: <20170531070109.81569-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de> <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 11 May 2017 15:00:24 +0300
-Message-ID: <CAHp75VdyC8oqLYRZHk3e4rvw+=9SW7LNn7vT9_VoisNuN5p91A@mail.gmail.com>
-Subject: Re: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access v2
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 9, 2017 at 7:49 PM, Christian K=C3=B6nig <deathsimple@vodafone.=
-de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Try to resize BAR0 to let CPU access all of VRAM.
+Add PCIe node for hi3660, and add binding documentation.
 
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *a=
-dev)
->                 }
->                 adev->mc.vram_width =3D numchan * chansize;
->         }
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
-24ULL;
->         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
-1024ULL;
->
+Cc: Guodong Xu <guodong.xu@linaro.org>
+Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
-> +
-
-Looks to me like a candidate to be a helper. (3x occurrences)
-
---=20
-With Best Regards,
-Andy Shevchenko
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 3983086bd67b..e8feb2fb4d53 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -156,5 +156,36 @@
+ 			clock-names = "uartclk", "apb_pclk";
+ 			status = "disabled";
+ 		};
++
++		pcie@f4000000 {
++			compatible = "hisilicon,kirin960-pcie";
++			reg = <0x0 0xf4000000 0x0 0x1000>,
++			      <0x0 0xff3fe000 0x0 0x1000>,
++			      <0x0 0xf3f20000 0x0 0x40000>,
++			      <0x0 0xF5000000 0x0 0x2000>;
++			reg-names = "dbi", "apb", "phy", "config";
++			bus-range = <0x0  0x1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges = <0x02000000 0x0 0x00000000 0x0
++				  0xf6000000 0x0 0x2000000>;
++			num-lanes = <1>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0xf800 0 0 7>;
++			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
++					<0x0 0 0 2 &gic 0 0 0  283 4>,
++					<0x0 0 0 3 &gic 0 0 0  284 4>,
++					<0x0 0 0 4 &gic 0 0 0  285 4>;
++			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
++				 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
++				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
++				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
++				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
++			clock-names = "pcie_phy_ref", "pcie_aux",
++				      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
++			reset-gpios = <&gpio11 1 0 >;
++			status = "ok";
++		};
+ 	};
+ };
+-- 
+2.11.GIT
