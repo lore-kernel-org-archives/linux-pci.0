@@ -1,68 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:59981 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755463AbdELQ4y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 12:56:54 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:49101 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751011AbdEaMdm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 08:33:42 -0400
+Message-ID: <1496234001.30073.19.camel@pengutronix.de>
+Subject: Re: [PATCH 1/8] pci: adding new irq api to pci-designware
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, marc.zyngier@arm.com, m-karicheri2@ti.com,
         thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
         mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [RFC 5/8] pci: generic PCIe DW driver adapted to new irq API
-Date: Fri, 12 May 2017 17:56:14 +0100
-Message-Id: <9e3a4a8bf18460d255a0988f7f690b8aa82320cd.1494606911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
-References: <cover.1494606911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
-References: <cover.1494606911.git.jpinto@synopsys.com>
+        hongxing.zhu@nxp.com, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org
+Date: Wed, 31 May 2017 14:33:21 +0200
+In-Reply-To: <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+         <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts the generic PCIe DW driver to use the new interrupt api
-available in pcie-designware.
+Am Dienstag, den 30.05.2017, 12:32 +0100 schrieb Joao Pinto:
+> This patch adds the new interrupt api to pcie-designware, keeping the old
+> one. Although the old API is still available, pcie-designware initiates
+> with the new one.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> ---
+[...]
+> @@ -378,17 +593,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>  		if (!pp->ops->msi_host_init) {
+> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+> -						MAX_MSI_IRQS, &msi_domain_ops,
+> -						&dw_pcie_msi_chip);
+> -			if (!pp->irq_domain) {
+> -				dev_err(dev, "irq domain init failed\n");
+> -				ret = -ENXIO;
+> +			ret = of_property_read_u32(np, "num-vectors",
+> +						   &pp->num_vectors);
+> +			if (ret)
+> +				pp->num_vectors = 1;
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-plat.c | 15 ---------------
- 1 file changed, 15 deletions(-)
+This adds a DT property without documentation. That's a strong no-go.
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 32091b3..3b9717b 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -28,13 +28,6 @@ struct dw_plat_pcie {
- 	struct dw_pcie		*pci;
- };
- 
--static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void dw_plat_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -64,14 +57,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 		pp->msi_irq = platform_get_irq(pdev, 0);
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--					dw_plat_pcie_msi_irq_handler,
--					IRQF_SHARED, "dw-plat-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "failed to request MSI IRQ\n");
--			return ret;
--		}
- 	}
- 
- 	pp->root_bus_nr = -1;
--- 
-2.9.3
+Why do you even need this property? The number of vectors available can
+be inferred from the compatible, so there is no need to push this into
+the DT. A fallback of only 1 vector if the property doesn't exist is
+also pretty limiting. The old implementation allowed for at least 32
+vectors, with most of the core implementations probably allowing much
+more in hardware.
+
+Regards,
+Lucas
