@@ -1,261 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42408 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbdE3U6K (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 16:58:10 -0400
-Date: Tue, 30 May 2017 15:58:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ashok Raj <ashok.raj@intel.com>
-Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Joerg Roedel <joro@8bytes.org>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, CQ Tang <cq.tang@intel.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        iommu@lists.linux-foundation.org
-Subject: Re: [PATCH 2/2] PCI: Save properties required to handle FLR for
- replay purposes.
-Message-ID: <20170530205808.GA14896@bhelgaas-glaptop.roam.corp.google.com>
-References: <1496161549-167468-1-git-send-email-ashok.raj@intel.com>
- <1496161549-167468-3-git-send-email-ashok.raj@intel.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:34190 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751011AbdEaMyt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 08:54:49 -0400
+Subject: Re: [PATCH 1/8] pci: adding new irq api to pci-designware
+To: Lucas Stach <l.stach@pengutronix.de>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <cover.1496142978.git.jpinto@synopsys.com>
+ <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
+ <1496234001.30073.19.camel@pengutronix.de>
+ <62787214-b4d2-5a6b-99a5-df406140cf86@synopsys.com>
+ <1496235029.30073.22.camel@pengutronix.de>
+CC: <bhelgaas@google.com>, <marc.zyngier@arm.com>,
+        <m-karicheri2@ti.com>, <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
+        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <c082deff-1bc5-5607-cce0-ae041222f6e3@synopsys.com>
+Date: Wed, 31 May 2017 13:54:43 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496161549-167468-3-git-send-email-ashok.raj@intel.com>
+In-Reply-To: <1496235029.30073.22.camel@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 30, 2017 at 09:25:49AM -0700, Ashok Raj wrote:
-> From: CQ Tang <cq.tang@intel.com>
+Às 1:50 PM de 5/31/2017, Lucas Stach escreveu:
+> Am Mittwoch, den 31.05.2017, 13:46 +0100 schrieb Joao Pinto:
+>> Hi Lucas,
+>>
+>> Às 1:33 PM de 5/31/2017, Lucas Stach escreveu:
+>>> Am Dienstag, den 30.05.2017, 12:32 +0100 schrieb Joao Pinto:
+>>>> This patch adds the new interrupt api to pcie-designware, keeping the old
+>>>> one. Although the old API is still available, pcie-designware initiates
+>>>> with the new one.
+>>>>
+>>>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>>>> ---
+>>> [...]
+>>>> @@ -378,17 +593,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>>>>  
+>>>>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+>>>>  		if (!pp->ops->msi_host_init) {
+>>>> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+>>>> -						MAX_MSI_IRQS, &msi_domain_ops,
+>>>> -						&dw_pcie_msi_chip);
+>>>> -			if (!pp->irq_domain) {
+>>>> -				dev_err(dev, "irq domain init failed\n");
+>>>> -				ret = -ENXIO;
+>>>> +			ret = of_property_read_u32(np, "num-vectors",
+>>>> +						   &pp->num_vectors);
+>>>> +			if (ret)
+>>>> +				pp->num_vectors = 1;
+>>>
+>>> This adds a DT property without documentation. That's a strong no-go.
+>>>
+>>
+>> yep, indeed I forgot to merge this into the patch tree. Going to check this in
+>> the next patch version.
+>>
+>>> Why do you even need this property? The number of vectors available can
+>>> be inferred from the compatible, so there is no need to push this into
+>>> the DT. A fallback of only 1 vector if the property doesn't exist is
+>>> also pretty limiting. The old implementation allowed for at least 32
+>>> vectors, with most of the core implementations probably allowing much
+>>> more in hardware.
+>>
+>> The hardware supports up to 256, but the current driver is set for a maximum of
+>> 32. I suggest we remove MAX_MSI_IRQS and MAX_MSI_CTRLS, and calculate the
+>> maximum number of controllers according to the num_vectors value: Ctrls =
+>> num_vectors / 32, removing the hardcoded limitation from the driver.
+>> What do you think?
 > 
-> Requires: https://patchwork.kernel.org/patch/9593891
+> If you can confirm that all hardware implementations of the DWC PCIe
+> core support 256 vectors, I don't see a reason to ever expose less than
+> this. I guess the current limit of 32 hasn't been raised out of fear
+> that some hardware implementations might not support the full range of
+> 256 vectors.
 > 
-> 
-> After a FLR, pci-states need to be restored. This patch saves PASID features
-> and PRI reqs cached.
-> 
-> To: Bjorn Helgaas <bhelgaas@google.com>
-> To: Joerg Roedel <joro@8bytes.org>
-> To: linux-pci@vger.kernel.org
-> To: linux-kernel@vger.kernel.org
-> Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>
-> Cc: David Woodhouse <dwmw2@infradead.org>
-> Cc: iommu@lists.linux-foundation.org
-> 
-> Signed-off-by: CQ Tang <cq.tang@intel.com>
-> Signed-off-by: Ashok Raj <ashok.raj@intel.com>
-> ---
->  drivers/pci/ats.c       | 65 +++++++++++++++++++++++++++++++++++++------------
->  drivers/pci/pci.c       |  3 +++
->  include/linux/pci-ats.h | 10 ++++++++
->  include/linux/pci.h     |  6 +++++
->  4 files changed, 69 insertions(+), 15 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index 2126497..a769955 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -160,17 +160,16 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
->  	if (!pos)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
->  	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-> -	if ((control & PCI_PRI_CTRL_ENABLE) ||
-> -	    !(status & PCI_PRI_STATUS_STOPPED))
-> +	if (!(status & PCI_PRI_STATUS_STOPPED))
->  		return -EBUSY;
->  
->  	pci_read_config_dword(pdev, pos + PCI_PRI_MAX_REQ, &max_requests);
->  	reqs = min(max_requests, reqs);
-> +	pdev->pri_reqs_alloc = reqs;
->  	pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
->  
-> -	control |= PCI_PRI_CTRL_ENABLE;
-> +	control = PCI_PRI_CTRL_ENABLE;
->  	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
->  
->  	pdev->pri_enabled = 1;
-> @@ -206,6 +205,29 @@ void pci_disable_pri(struct pci_dev *pdev)
->  EXPORT_SYMBOL_GPL(pci_disable_pri);
->  
->  /**
-> + * pci_restore_pri_state - Restore PRI
-> + * @pdev: PCI device structure
-> + *
-> + */
-> +void pci_restore_pri_state(struct pci_dev *pdev)
-> +{
-> +   u16 control = PCI_PRI_CTRL_ENABLE;
-> +   u32 reqs = pdev->pri_reqs_alloc;
-> +   int pos;
-> +
-> +   pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-> +   if (!pos)
-> +       return;
-> +
-> +   if (!pdev->pri_enabled)
-> +       return;
+> You are in a much better position to validate this than I am. I fully
+> support removing artificial limits from the driver implementation.
 
-I propose swapping the order of these tests, so that if PRI is not
-enabled, we don't have to search for the capability.  Similarly for
-PASID below.
+The IP design supports up to 256, but each client can make its own
+configuration. I will try to get some info from the CAEs.
+By setting num_vectors = 32 by default, we will be performing the same limit as
+before, so there will be no impact. Synopsys IP users that now that their
+implementation supports more than 32, they can update their Device Trees. I find
+this way simpler and safer. What do you think?
 
-I made these changes and re-indented these functions on my branch.  No
-action required unless you object to these changes.
-
-> +
-> +   pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
-> +   pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_restore_pri_state);
-> +
-> +/**
->   * pci_reset_pri - Resets device's PRI state
->   * @pdev: PCI device structure
->   *
-> @@ -224,12 +246,7 @@ int pci_reset_pri(struct pci_dev *pdev)
->  	if (!pos)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
-> -	if (control & PCI_PRI_CTRL_ENABLE)
-> -		return -EBUSY;
-> -
-> -	control |= PCI_PRI_CTRL_RESET;
-> -
-> +	control = PCI_PRI_CTRL_RESET;
->  	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
->  
->  	return 0;
-> @@ -259,12 +276,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
->  	if (!pos)
->  		return -EINVAL;
->  
-> -	pci_read_config_word(pdev, pos + PCI_PASID_CTRL, &control);
->  	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
-> -
-> -	if (control & PCI_PASID_CTRL_ENABLE)
-> -		return -EINVAL;
-> -
->  	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
->  
->  	/* User wants to enable anything unsupported? */
-> @@ -272,6 +284,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
->  		return -EINVAL;
->  
->  	control = PCI_PASID_CTRL_ENABLE | features;
-> +	pdev->pasid_features = features;
->  
->  	pci_write_config_word(pdev, pos + PCI_PASID_CTRL, control);
->  
-> @@ -305,6 +318,28 @@ void pci_disable_pasid(struct pci_dev *pdev)
->  EXPORT_SYMBOL_GPL(pci_disable_pasid);
->  
->  /**
-> + * pci_restore_pasid_state - Restore PASID capabilities.
-> + * @pdev: PCI device structure
-> + *
-> + */
-> +void pci_restore_pasid_state(struct pci_dev *pdev)
-> +{
-> +   u16 control;
-> +   int pos;
-> +
-> +   pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PASID);
-> +   if (!pos)
-> +       return;
-> +
-> +   if (!pdev->pasid_enabled)
-> +       return;
-> +
-> +   control = PCI_PASID_CTRL_ENABLE | pdev->pasid_features;
-> +   pci_write_config_word(pdev, pos + PCI_PASID_CTRL, control);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_restore_pasid_state);
-> +
-> +/**
->   * pci_pasid_features - Check which PASID features are supported
->   * @pdev: PCI device structure
->   *
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7904d02..c9a6510 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -28,6 +28,7 @@
->  #include <linux/pm_runtime.h>
->  #include <linux/pci_hotplug.h>
->  #include <linux/vmalloc.h>
-> +#include <linux/pci-ats.h>
->  #include <asm/setup.h>
->  #include <asm/dma.h>
->  #include <linux/aer.h>
-> @@ -1171,6 +1172,8 @@ void pci_restore_state(struct pci_dev *dev)
->  
->  	/* PCI Express register must be restored first */
->  	pci_restore_pcie_state(dev);
-> +	pci_restore_pasid_state(dev);
-> +	pci_restore_pri_state(dev);
->  	pci_restore_ats_state(dev);
->  	pci_restore_vc_state(dev);
->  
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 57e0b82..782fb8e 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -7,6 +7,7 @@
->  
->  int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
->  void pci_disable_pri(struct pci_dev *pdev);
-> +void pci_restore_pri_state(struct pci_dev *pdev);
->  int pci_reset_pri(struct pci_dev *pdev);
->  
->  #else /* CONFIG_PCI_PRI */
-> @@ -20,6 +21,10 @@ static inline void pci_disable_pri(struct pci_dev *pdev)
->  {
->  }
->  
-> +static inline void pci_restore_pri_state(struct pci_dev *pdev)
-> +{
-> +}
-> +
->  static inline int pci_reset_pri(struct pci_dev *pdev)
->  {
->  	return -ENODEV;
-> @@ -31,6 +36,7 @@ static inline int pci_reset_pri(struct pci_dev *pdev)
->  
->  int pci_enable_pasid(struct pci_dev *pdev, int features);
->  void pci_disable_pasid(struct pci_dev *pdev);
-> +void pci_restore_pasid_state(struct pci_dev *pdev);
->  int pci_pasid_features(struct pci_dev *pdev);
->  int pci_max_pasids(struct pci_dev *pdev);
->  
-> @@ -45,6 +51,10 @@ static inline void pci_disable_pasid(struct pci_dev *pdev)
->  {
->  }
->  
-> +static inline void pci_restore_pasid_state(struct pci_dev *pdev)
-> +{
-> +}
-> +
->  static inline int pci_pasid_features(struct pci_dev *pdev)
->  {
->  	return -EINVAL;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index bee980e..1ddb8e0 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -395,6 +395,12 @@ struct pci_dev {
->  	u8		ats_stu;	/* ATS Smallest Translation Unit */
->  	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
->  #endif
-> +#ifdef CONFIG_PCI_PRI
-> +	u32		pri_reqs_alloc; /* Number of PRI requests allocated */
-> +#endif
-> +#ifdef CONFIG_PCI_PASID
-> +	u16		pasid_features;
-> +#endif
->  	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
->  	size_t romlen; /* Length of ROM if it's not from the BAR */
->  	char *driver_override; /* Driver name to force a match */
-> -- 
-> 2.7.4
+> 
+> Regards,
+> Lucas
 > 
