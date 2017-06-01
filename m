@@ -1,37 +1,30 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52838 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752792AbdF0X0R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jun 2017 19:26:17 -0400
-Date: Tue, 27 Jun 2017 18:26:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/2] Switchtec Changes for v4.13
-Message-ID: <20170627232615.GL17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170615201224.5371-1-logang@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170615201224.5371-1-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: helgaas@kernel.org
+Cc: rakesh@tuxera.com,
+	linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: avoid null pointer rereference during FLR V2
+Date: Thu,  1 Jun 2017 13:10:36 +0200
+Message-Id: <20170601111039.8913-1-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 15, 2017 at 02:12:22PM -0600, Logan Gunthorpe wrote:
-> Hi Bjorn,
-> 
-> Can you please queue up these two minor changes for v4.13?
-> 
-> Thanks,
-> 
-> Logan
-> 
-> Logan Gunthorpe (2):
->   switchtec: running status flag to fw partition info ioctl
->   switchtec: add device ids for additional switchtec products
-> 
->  drivers/pci/switch/switchtec.c       | 40 ++++++++++++++++++++++++++++++++++--
->  include/uapi/linux/switchtec_ioctl.h |  3 +++
->  2 files changed, 41 insertions(+), 2 deletions(-)
+Hi all,
 
-Applied to pci/switchtec for v4.13, thanks!
+Rakesh reported a bug where a FLR can trivially crash his system.
+The reason for that is that NVMe unbinds the driver from the PCI device
+on an unrecoverable error, and that races with the reset_notify method.
+
+This is fairly easily fixable by taking the device lock for a slightly
+longer period.  Note that the other PCI error handling methods actually
+have the same issue, but with them not taking the lock yet and me having
+no good way to reproducibly call them I'm a little reluctant to touch
+them, but it would be great if we could fix those issues as well.
+
+Patches 2 and 3 are cleanups in the same area and not 4.12 material,
+but given that they depend on the first one I thought I'd send them
+along.
+
+Changes since V1:
+ - lock over all calls to ->reset_notify
