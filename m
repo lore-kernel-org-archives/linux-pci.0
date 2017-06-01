@@ -1,22 +1,22 @@
-Return-Path: <SRS0=3oYL=5M=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=3oYL=5M=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=Oisb=5G=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=Oisb=5G=linaro.org=ard.biesheuvel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170606100228.GA20126@red-moon>
-References: <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170518174612.GA31373@red-moon>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
+ <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
  <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
  <20170518154708.GA30182@red-moon> <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
- <20170518174612.GA31373@red-moon> <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
- <20170601161511.GB19003@red-moon> <CAKv+Gu9FyLuQk3hkauoRzGME1FxHPgusWQe0v8eSJaKfaX7LMA@mail.gmail.com>
- <20170606085936.GB20085@red-moon> <CAKv+Gu-jVGvEJY7YBxSQHu+0jtnDHG7_6Gdpac8ca4PbPggw3Q@mail.gmail.com>
- <20170606100228.GA20126@red-moon>
+ <20170518174612.GA31373@red-moon>
 From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 7 Jun 2017 13:45:19 +0000
-Message-ID: <CAKv+Gu9EffaBNW=8mM-xd+bFvWetds7LTsX1cc81Q=X1hwk39Q@mail.gmail.com>
+Date: Thu, 1 Jun 2017 15:04:09 +0000
+Message-ID: <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
 Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR configuration
  to be preserved
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
 	linux-pci <linux-pci@vger.kernel.org>, Graeme Gregory <graeme.gregory@linaro.org>,
 	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
 	Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
@@ -24,58 +24,85 @@ Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
 Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6 June 2017 at 10:02, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> On Tue, Jun 06, 2017 at 09:14:26AM +0000, Ard Biesheuvel wrote:
->
-> [...]
->
->> > Do you want me to create a branch out of these patches (inclusive of
->> > another patch to fix this bus reallocation policy discrepancy) for
->> > ARM64 folks to test ? Let me know, thanks !
+On 18 May 2017 at 18:46, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
+>> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+>> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
+>> >
+>> > [...]
+>> >
+>> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
+>> >> >> allocation under the control of the firmware, which completely removes
+>> >> >> the burden of having to reason about a policy in the kernel. That
+>> >> >> leaves the question which will be the default, but that is of minor
+>> >> >> importance IMO.
+>> >> >
+>> >> > I agree; we should try to follow the spec unless we have a good reason
+>> >> > not to, which argues for honoring the _DSM, so I think it's worth a
+>> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
+>> >> > kernel (because we don't know the effect of reassigning something the
+>> >> > firmware told us not to touch).
+>> >> >
+>> >>
+>> >> I'd like to hear Lorenzo's view on this first, but I can certainly
+>> >> respin my _DSM patch to take pci=realloc into account, and move the
+>> >> handling to generic code as well.
+>> >
+>> > I agree with both of you on _DSM implementation and interpretation.
+>> >
+>> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
+>> > are going to trigger regressions, that's certain (ie we can then boot
+>> > with pci=realloc - still, we are breaking systems), that's the reason
+>> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
+>> > ACPI testing before queuing it (either I can set-up a testing branch
+>> > or we ask Bjorn to do it - as you guys prefer - as long as we have
+>> > a branch for people to test patch(2) on ARM64 ACPI systems).
+>> >
+>> > You still need to assign resources that could not be claimed though
+>> > so patch(2) still needs updating:
+>> >
+>> > PCI FW spec 3.1 - 4.6.5
+>> >
+>> > "...However, the operating system is free to configure the devices in this
+>> > hierarchy that have not been configured by the firmware."
+>> >
+>> > Which in kernel-speak it means that you have to assign resources that
+>> > could not be claimed.
 >> >
 >>
->> Hi Lorenzo,
->>
->> Bjorn has already picked up #1, which is now in -next. I will get back
->> to this topic today or tomorrow, so let me respin (including the bus
->> range fix) first, ok?
+>> Right. AFAICT this is the part that is typically handled by
+>> pcibios_resource_survey() et al, whose default __weak implementations
+>> are empty functions. Shall I override those for arm64 to host this
+>> logic?
 >
-> Of course, I just want to help you make progress on this, I think
-> we need help for testing them on ARM64 systems to see how to proceed.
+> I think it makes sense yes unless Bjorn spots something wrong with that
+> but you should also call it in ARM64 pci_acpi_scan_root() since it is
+> not called by PCI core on non-hot-added bridges, I reckon you figured
+> that out already though.
 >
 
-OK, so I am hitting another issue. While it is quite simple to do this
+Another data point for this discussion: currently, when booting arm64
+via DT, we set PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS (unless
+PCI_PROBE_ONLY is requested), which forces not only resource
+allocations but also the bus numbering to be reconfigured from
+scratch.
 
-"""
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index c7e3e6387a49..9a529c6369ac 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -203,6 +203,9 @@
-                return NULL;
-        }
+On arm64/ACPI, we never set those flags, which will cause
+pci_scan_bridge() to preserve the secondary and subordinate bridge
+numbers if they are non-zero. This actually prevents log messages like
 
-+       /* ignore bus ranges assigned by the firmware */
-+       pci_add_flags(PCI_REASSIGN_ALL_BUS);
-+
-        root_ops->release_info = pci_acpi_generic_release_info;
-        root_ops->prepare_resources = pci_acpi_root_prepare_resources;
-        root_ops->pci_ops = &ri->cfg->ops->pci_ops;
-"""
+pci_bus 0000:02: busn_res: can not insert [bus 02-ff] under [bus
+00-7f] (conflicts with (null) [bus 00-7f])
 
-and get the ACPI code to behave in the same way as the DT code,
-including the resulting quirks, i.e.
+which I see on AMD Seattle as well as QEMU when booting via DT (and I
+suspect on any DT PCI root whose bus range != {0x0 0xff>). However, it
+also means that we already have different behavior between ACPI and DT
+boot on arm64, which makes it ambiguous what the behavior should be if
+_DSM indicates that the configuration should not be preserved. IOW,
+'reconfigure everything' currently means different things between DT
+and ACPI boot.
 
-pci_bus 0000:01: busn_res: can not insert [bus 01-ff] under [bus
-00-0f] (conflicts with (null) [bus 00-0f])
+Thoughts?
 
-there are two problems when we want to refine this to take _DSM #5 into account.
-
-1) PCI_REASSIGN_ALL_BUS is a global flag, while _DSM is per PCI root
-2) setting the flag conditionally on whether _DSM #5 allows it is
-difficult to achieve, given that the flag needs to be set before
-acpi_pci_root_create(), at which point we cannot access the _DSM yet
-
-So I can send out the above as a separate patch, but right now, I am
-not entirely sure how to proceed with conditionally preserving the
-firmware configuration.
+-- 
+Ard.
