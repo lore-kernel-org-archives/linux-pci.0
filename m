@@ -1,73 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:45947 "EHLO
-        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752813AbdEHQow (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2017 12:44:52 -0400
-Date: Mon, 8 May 2017 18:44:40 +0200
-From: Peter Senna Tschudin <peter.senna@collabora.com>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
- into host-only and core structures
-Message-ID: <20170508164440.GB12665@collabora.com>
-References: <20170508150224.GA7458@collabora.com>
- <1494261248.2322.21.camel@pengutronix.de>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:34909 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751001AbdFAF2D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 01:28:03 -0400
+Received: by mail-qt0-f176.google.com with SMTP id w1so1390864qtg.2
+        for <linux-pci@vger.kernel.org>; Wed, 31 May 2017 22:28:03 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH 0/2] PCI: iproc: SOC specific fixes.
+Date: Thu,  1 Jun 2017 10:57:49 +0530
+Message-Id: <1496294871-5836-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1494261248.2322.21.camel@pengutronix.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 08, 2017 at 06:34:08PM +0200, Lucas Stach wrote:
-> Am Montag, den 08.05.2017, 17:02 +0200 schrieb Peter Senna Tschudin:
-> > Hello Kishon,
-> > 
-> > Our iMX6 hardware (imx6q-b850v3.dts) is not booting with latest
-> > linux-next and I could bisect until:
-> > 
-> > commit 442ec4c04d1235f8c664a74004dae54a7a574d18
-> > Author: Kishon Vijay Abraham I <kishon@ti.com>
-> > Date:   Wed Feb 15 18:48:14 2017 +0530
-> > 
-> >     PCI: dwc: all: Split struct pcie_port into host-only and core structures
-> > 
-> > Which seem to be causing our issues. Our device (imx6q-b850v3.dts) boots
-> > fine with 4.10, and also boots if we disable pcie with:
-> 
-> Are you sure about this bisect? It seems more likely that the secondary
-> bus scanning goes wrong. It seems Lorenzo Pieralisi's cfg space
-> non-posting patches landed in next, so the root cause of this might just
-> be the driver hooking the wrong fault code now.
-> 
-> Async and synchronous aborts are different fault codes on ARM. Can you
-> see of removing the "16 +" in hook_fault_code() in
-> drivers/pci/dwc/pci-imx6.c fixes this issue?
+PCI: iproc: Retry request when CRS returned from EP
 
-changing it to:
+Above patch adds support for CRS in PCI RC driver,
+otherwise if not handled at lower level, the user
+space PMD (poll mode drivers) can timeout.
 
-hook_fault_code(6, imx6q_pcie_abort_handler, SIGBUS, 0,
-		"imprecise external abort");
+PCI: iproc: add device shutdown for PCI RC
 
-made no difference, problem persists...
+This fixes the issue where certian PCI endpoints are
+not getting detected on Stingray SOC after reboot.
 
-> 
-> Regards,
-> Lucas
-> 
+Oza Pawandeep (2):
+  PCI: iproc: Retry request when CRS returned from EP
+  PCI: iproc: add device shutdown for PCI RC
+
+ drivers/pci/host/pcie-iproc-platform.c |   8 +++
+ drivers/pci/host/pcie-iproc.c          | 125 ++++++++++++++++++++++++++++-----
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 115 insertions(+), 19 deletions(-)
+
+-- 
+1.9.1
