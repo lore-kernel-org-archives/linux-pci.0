@@ -1,62 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: songxiaowei <songxiaowei@hisilicon.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        Duc Dang <dhdang@apm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
-        Guodong Xu <guodong.xu@linaro.org>,
-        Wangbinghui <wangbinghui@hisilicon.com>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggMS8yXSBQQ0k6IGR3Yzoga2lyaW46IGFkZCBQQ0ll?=
- =?utf-8?Q?_Driver_for_HiSilicon_Kirin_SoC?=
-Date: Thu, 18 May 2017 01:50:09 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C541161E84@DGGEMA505-MBS.china.huawei.com>
-References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
- <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
-In-Reply-To: <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:33536 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751176AbdFAF2I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 01:28:08 -0400
+Received: by mail-qk0-f172.google.com with SMTP id y201so28471169qka.0
+        for <linux-pci@vger.kernel.org>; Wed, 31 May 2017 22:28:07 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH 1/2] PCI: iproc: Retry request when CRS returned from EP
+Date: Thu,  1 Jun 2017 10:57:50 +0530
+Message-Id: <1496294871-5836-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1496294871-5836-1-git-send-email-oza.oza@broadcom.com>
+References: <1496294871-5836-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQXJuZCwNCg0KDQpPbiBGcmksIE1heSAxMiwgMjAxNyBhdCAzOjUxIEFNLCBTb25nIFhpYW93
-ZWkgPHNvbmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+IHdyb3RlOg0KPiBGcm9tOiBzb25neGlhb3dl
-aSA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCg0KTG9va3MgZ29vZCBvdmVyYWxsLCBqdXN0
-IGEgZmV3IGRldGFpbHM6DQoNClBsZWFzZSBmaXggeW91ciB+Ly5naXRjb25maWcgdG8gY29udGFp
-biB0aGUgc2FtZSByZWFsIG5hbWUgKCJTb25nIFhpYW93ZWkiDQppbnN0ZWFkIG9mICJzb25neGlh
-b3dlaSIpIHRoYXQgeW91IHVzZSBmb3Igc2VuZGluZyB0aGUgZW1haWxzLg0KDQpbWGlhb3dlaSBT
-b25nXSAgSSdsbCBmaXggdGhpcyBpc3N1ZSBhbmQgdXBkYXRlIHRoZSBwYXRjaC4NCg0KPiArDQo+
-ICtzdGF0aWMgaW50IGtpcmluX3BjaWVfcGh5X2luaXQoc3RydWN0IGtpcmluX3BjaWUgKmtpcmlu
-X3BjaWUpIHsNCi4uLg0KPiArICAgICAgIHJlZ192YWwgPSBraXJpbl9hcGJfcGh5X3JlYWRsKGtp
-cmluX3BjaWUsIDB4NDAwKTsNCj4gKyAgICAgICB3aGlsZSAocmVnX3ZhbCAmIHBpcGVfY2xrX3N0
-YWJsZSkgew0KPiArICAgICAgICAgICAgICAgdWRlbGF5KDEwMCk7DQo+ICsgICAgICAgICAgICAg
-ICBpZiAodGltZSA9PSAwKSB7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgIGRldl9lcnIoa2ly
-aW5fcGNpZS0+cGNpLT5kZXYsICJQSVBFIGNsayBpcyBub3Qgc3RhYmxlXG4iKTsNCj4gKyAgICAg
-ICAgICAgICAgICAgICAgICAgcmV0dXJuIC1FSU5WQUw7DQo+ICsgICAgICAgICAgICAgICB9DQo+
-ICsgICAgICAgICAgICAgICB0aW1lLS07DQo+ICsgICAgICAgICAgICAgICByZWdfdmFsID0ga2ly
-aW5fYXBiX3BoeV9yZWFkbChraXJpbl9wY2llLCAweDQwMCk7DQo+ICsgICAgICAgfQ0KDQpJZiB0
-aGlzIGlzIG5vdCBjYWxsZWQgd2l0aCBpbnRlcnJ1cHRzIGRpc2FibGVkLCBwbGVhc2UgdXNlIGEg
-c2xlZXBpbmcgZnVuY3Rpb24gKGUuZy4gbXNsZWVwKDEpKSBhcyB0aGUgZGVsYXkgYW5kIGNvbXBh
-cmUgYWdhaW5zdCBrdGltZV9iZWZvcmUoKSB0byBzZWUgaG93IG11Y2ggdG90YWwgdGltZSBoYXMg
-ZXhwaXJlZCB3aGVuIHdhaXRpbmcgZm9yIGEgdGltZW91dCwgaW5zdGVhZCBvZiB1c2luZyBhIGNv
-dW50ZXIuDQoNCltYaWFvd2VpIFNvbmddIFRoaXMgaXNzdWUgd2FzIGZpeGVkIGluIHRoZSBwYXRj
-aCBzZW50IGF0IDIwMTctNS0xNSwgYW5kIEknbGwgc2VuZCBpdCBhZ2Fpbi4NCg0KPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uaCANCj4gYi9kcml2ZXJzL3BjaS9kd2Mv
-cGNpZS1raXJpbi5oIG5ldyBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IA0KPiAwMDAwMDAwMDAwMDAu
-LmFkOWEzYjQyNzI5OA0KPiAtLS0gL2Rldi9udWxsDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9w
-Y2llLWtpcmluLmgNCj4gQEAgLTAsMCArMSw3OSBAQA0KPiArLyoNCj4gKyAqIFBDSWUgaG9zdCBj
-b250cm9sbGVyIGRyaXZlciBmb3IgS2lyaW4gOTYwIFNvQ3MNCj4gKyAqDQo+ICsgKiBDb3B5cmln
-aHQgKEMpIDIwMTUgSHVhd2VpIEVsZWN0cm9uaWNzIENvLiwgTHRkLg0KPiArICogICAgICAgICAg
-ICAgaHR0cDovL3d3dy5odWF3ZWkuY29tDQo+ICsgKg0KPiArICogQXV0aG9yOiBYaWFvd2VpIFNv
-bmcgPHNvbmd4aWFvd2VpQGh1YXdlaS5jb20+DQoNClRoZSBoZWFkZXIgaXMgb25seSB1c2VkIGlu
-IG9uZSAuYyBmaWxlLCBzbyBqdXN0IHJlbW92ZSBpdCBhbmQgYWRkIHRoZSBjb250ZW50cyB0byB0
-aGF0IGZpbGUuDQoNCltzb25neGlhb3dlaV0gSW4gbmV3IHBhdGNoIHRoZSBoZWFkZXIgZmlsZSB3
-YXMgZGVsZXRlZCwNCg0KDQpUaGFua3MgYSBsb3QuDQoNCkJlc3QgcmVnYXJkLA0KWGlhb3dlaS4N
-Cg==
+For Configuration Requests only, following reset
+it is possible for a device to terminate the request
+but indicate that it is temporarily unable to process
+the Request, but will be able to process the Request
+in the future – in this case, the Configuration Request
+Retry Status 10 (CRS) Completion Status is used
+
+SPDK user space NVMe driver reinitializes NVMe which
+causes reset, while doing this some configuration requests
+get NAKed by Endpoint (NVMe).
+Current iproc PCI driver is agnostic about it.
+PAXB will forward the NAKed response in stipulated AXI code.
+
+NVMe spec defines this timeout in 500 ms units, and this
+only happens if controller has been in reset, or with new firmware,
+or in abrupt shutdown case.
+Meanwhile config access could result into retry.
+
+This patch fixes the problem, and attempts to read again in case
+of PAXB forwarding the NAK.
+
+It implements iproc_pcie_config_read which gets called for Stingray.
+Otherwise it falls back to PCI generic APIs.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 0f39bd2..05a3647 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -68,6 +68,9 @@
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
++#define CFG_RETRY_STATUS             0xffff0001
++#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
++
+ /* derive the enum index of the outbound/inbound mapping registers */
+ #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+ 
+@@ -448,6 +451,47 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+ 	}
+ }
+ 
++static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++{
++	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
++	unsigned int ret;
++
++	do {
++		ret = readl(cfg_data_p);
++		if (ret == CFG_RETRY_STATUS)
++			udelay(1);
++		else
++			return PCIBIOS_SUCCESSFUL;
++	} while (timeout--);
++
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
++					       unsigned int busno,
++					       unsigned int slot,
++					       unsigned int fn,
++					       int where)
++{
++	u16 offset;
++	u32 val;
++
++	/* EP device access */
++	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
++		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
++		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
++		(where & CFG_ADDR_REG_NUM_MASK) |
++		(1 & CFG_ADDR_CFG_TYPE_MASK);
++
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++
++	return (pcie->base + offset);
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -499,13 +543,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	unsigned int slot = PCI_SLOT(devfn);
++	unsigned int fn = PCI_FUNC(devfn);
++	unsigned int busno = bus->number;
++	void __iomem *cfg_data_p;
++	int ret;
++
++	/* root complex access. */
++	if (busno == 0)
++		return pci_generic_config_read32(bus, devfn, where, size, val);
++
++	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
++
++	if (!cfg_data_p)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	ret = iproc_pcie_cfg_retry(cfg_data_p);
++	if (ret)
++		return ret;
++
++	*val = readl(cfg_data_p);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+ 	int ret;
++	struct iproc_pcie *pcie = iproc_data(bus);
+ 
+ 	iproc_pcie_apb_err_disable(bus, true);
+-	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	if (pcie->type == IPROC_PCIE_PAXB_V2)
++		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
++	else
++		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	iproc_pcie_apb_err_disable(bus, false);
+ 
+ 	return ret;
+-- 
+1.9.1
