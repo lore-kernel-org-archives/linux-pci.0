@@ -1,45 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.139]:34794 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752074AbdF3KJF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jun 2017 06:09:05 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz
-Cc: rajatja@google.com, briannorris@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: [PCIUTILS PATCH v2] lspci: Fix wrong read size for RootSta
-Date: Fri, 30 Jun 2017 18:09:00 +0800
-Message-Id: <1498817340-24918-1-git-send-email-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: helgaas@kernel.org
+Cc: rakesh@tuxera.com,
+	linux-pci@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Subject: [PATCH 1/3] PCI: ensure the PCI device is locked over ->reset_notify calls
+Date: Thu,  1 Jun 2017 13:10:37 +0200
+Message-Id: <20170601111039.8913-2-hch@lst.de>
+In-Reply-To: <20170601111039.8913-1-hch@lst.de>
+References: <20170601111039.8913-1-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-We are reading wrong size(word) for this cap, since:
+Without this ->notify_reset instance may race with ->remove calls,
+which can be easily triggered in NVMe.
 
-RootSta has:
-PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
-PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
-
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Reported-by: Rakesh Pandit <rakesh@tuxera.com>
+Tested-by: Rakesh Pandit <rakesh@tuxera.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
+ drivers/pci/pci.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-Changes in v2:
-Sorry, DevCtl2/LnkCtl2 are correct, remove wrong modifies for them...
-
- ls-caps.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/ls-caps.c b/ls-caps.c
-index 0ca46fb..d4aebc8 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -879,7 +879,7 @@ static void cap_express_root(struct device *d, int where)
-   printf("\t\tRootCap: CRSVisible%c\n",
- 	FLAG(w, PCI_EXP_RTCAP_CRSVIS));
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 563901cd9c06..92f7e5ae2e5e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4276,11 +4276,13 @@ int pci_reset_function(struct pci_dev *dev)
+ 	if (rc)
+ 		return rc;
  
--  w = get_conf_word(d, where + PCI_EXP_RTSTA);
-+  w = get_conf_long(d, where + PCI_EXP_RTSTA);
-   printf("\t\tRootSta: PME ReqID %04x, PMEStatus%c PMEPending%c\n",
- 	w & PCI_EXP_RTSTA_PME_REQID,
- 	FLAG(w, PCI_EXP_RTSTA_PME_STATUS),
++	pci_dev_lock(dev);
+ 	pci_dev_save_and_disable(dev);
+ 
+-	rc = pci_dev_reset(dev, 0);
++	rc = __pci_dev_reset(dev, 0);
+ 
+ 	pci_dev_restore(dev);
++	pci_dev_unlock(dev);
+ 
+ 	return rc;
+ }
+@@ -4300,16 +4302,14 @@ int pci_try_reset_function(struct pci_dev *dev)
+ 	if (rc)
+ 		return rc;
+ 
+-	pci_dev_save_and_disable(dev);
++	if (pci_dev_trylock(dev))
++		return -EAGAIN;
+ 
+-	if (pci_dev_trylock(dev)) {
+-		rc = __pci_dev_reset(dev, 0);
+-		pci_dev_unlock(dev);
+-	} else
+-		rc = -EAGAIN;
++	pci_dev_save_and_disable(dev);
++	rc = __pci_dev_reset(dev, 0);
++	pci_dev_unlock(dev);
+ 
+ 	pci_dev_restore(dev);
+-
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(pci_try_reset_function);
+@@ -4459,7 +4459,9 @@ static void pci_bus_save_and_disable(struct pci_bus *bus)
+ 	struct pci_dev *dev;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pci_dev_lock(dev);
+ 		pci_dev_save_and_disable(dev);
++		pci_dev_unlock(dev);
+ 		if (dev->subordinate)
+ 			pci_bus_save_and_disable(dev->subordinate);
+ 	}
+@@ -4474,7 +4476,9 @@ static void pci_bus_restore(struct pci_bus *bus)
+ 	struct pci_dev *dev;
+ 
+ 	list_for_each_entry(dev, &bus->devices, bus_list) {
++		pci_dev_lock(dev);
+ 		pci_dev_restore(dev);
++		pci_dev_unlock(dev);
+ 		if (dev->subordinate)
+ 			pci_bus_restore(dev->subordinate);
+ 	}
 -- 
-2.1.4
+2.11.0
