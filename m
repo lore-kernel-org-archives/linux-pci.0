@@ -1,67 +1,171 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.134]:56318 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751751AbdF3KFu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jun 2017 06:05:50 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-pci@vger.kernel.org, mj@ucw.cz
-Cc: rajatja@google.com, briannorris@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: [PCIUTILS PATCH] lspci: Fix wrong read size for RootSta/DevCtl2/LnkCtl2
-Date: Fri, 30 Jun 2017 18:05:40 +0800
-Message-Id: <1498817140-24614-1-git-send-email-jeffy.chen@rock-chips.com>
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:36557 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751170AbdFASLd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 14:11:33 -0400
+Received: by mail-qt0-f182.google.com with SMTP id f55so42691836qta.3
+        for <linux-pci@vger.kernel.org>; Thu, 01 Jun 2017 11:11:32 -0700 (PDT)
+Subject: Re: [PATCH 2/2] PCI: iproc: add device shutdown for PCI RC
+To: Oza Pawandeep <oza.oza@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+References: <1496294871-5836-1-git-send-email-oza.oza@broadcom.com>
+ <1496294871-5836-3-git-send-email-oza.oza@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <397e2b1a-c62f-2df2-5eca-8e240ac65df5@broadcom.com>
+Date: Thu, 1 Jun 2017 11:11:24 -0700
+MIME-Version: 1.0
+In-Reply-To: <1496294871-5836-3-git-send-email-oza.oza@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are reading wrong size(word) for these caps, since:
+Hi Oza,
 
-RootSta has:
-PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
-PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
+On 5/31/17 10:27 PM, Oza Pawandeep wrote:
+> PERST# must be asserted around ~500ms before
+> the reboot is applied.
+> 
+> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
+> LCPLL clock and PERST both goes off simultaneously.
+> This will cause certain Endpoints Intel NVMe not get detected, upon
+> next boot sequence.
+> 
+> This happens because; Endpoint is expecting the clock for some amount of
+> time after PERST is asserted, which is not happening in our case
+> (Compare to Intel X86 boards, will have clocks running).
+> this cause NVMe to behave in undefined way.
+> 
+> Essentially clock will remain alive for 500ms with PERST# = 0
+> before reboot.
+> 
+> This patch adds platform shutdown where it should be
+> called in device_shutdown while reboot command is issued.
+> 
+> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+> followed by RC shutdown is called, which issues safe PERST
+> assertion.
+> 
+> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> 
+> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+> index 90d2bdd..9512960 100644
+> --- a/drivers/pci/host/pcie-iproc-platform.c
+> +++ b/drivers/pci/host/pcie-iproc-platform.c
+> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>  	return iproc_pcie_remove(pcie);
+>  }
+>  
+> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+> +{
+> +	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +	iproc_pcie_shutdown(pcie);
+> +}
+> +
+>  static struct platform_driver iproc_pcie_pltfm_driver = {
+>  	.driver = {
+>  		.name = "iproc-pcie",
+> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>  	},
+>  	.probe = iproc_pcie_pltfm_probe,
+>  	.remove = iproc_pcie_pltfm_remove,
+> +	.shutdown = iproc_pcie_pltfm_shutdown,
+>  };
+>  module_platform_driver(iproc_pcie_pltfm_driver);
+>  
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 05a3647..e9afc63 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -608,31 +608,38 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+>  	.write = iproc_pcie_config_write32,
+>  };
+>  
+> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+>  {
+>  	u32 val;
+>  
+>  	/*
+> -	 * PAXC and the internal emulated endpoint device downstream should not
+> -	 * be reset.  If firmware has been loaded on the endpoint device at an
+> -	 * earlier boot stage, reset here causes issues.
+> +	 * The internal emulated endpoints (such as PAXC) device downstream
+> +	 * should not be reset. If firmware has been loaded on the endpoint
+> +	 * device at an earlier boot stage, reset here causes issues.
+>  	 */
+>  	if (pcie->ep_is_internal)
+>  		return;
+>  
+> -	/*
+> -	 * Select perst_b signal as reset source. Put the device into reset,
+> -	 * and then bring it out of reset
+> -	 */
+> -	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> -	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> -		~RC_PCIE_RST_OUTPUT;
+> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> -	udelay(250);
+> -
+> -	val |= RC_PCIE_RST_OUTPUT;
+> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> -	msleep(100);
+> +	if (assert) {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> +		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> +			~RC_PCIE_RST_OUTPUT;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> +		udelay(250);
+> +	} else {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> +		val |= RC_PCIE_RST_OUTPUT;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> +		msleep(100);
+> +	}
+> +}
+> +
+> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+> +{
+> +	iproc_pcie_perst_ctrl(pcie, true);
+> +	msleep(500);
+> +
+> +	return 0;
+>  }
 
-DevCtl2 has:
-PCI_EXP_DEV2_OBFF(x)           (((x) >> 13) & 3) /* OBFF enabled */
+Please export the symbol here to fix the build issue detected by kbuild
+test when the iProc PCIe platform driver is compiled as a kernel module.
 
-LnkCtl2 has:
-PCI_EXP_LNKCTL2_MARGIN(x)      (((x) >> 7) & 7) /* Transmit Margin */
-PCI_EXP_LNKCTL2_COM_DEEMPHASIS(x) (((x) >> 12) & 0xf) /* Compliance De-emphasis */
-
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
-
- ls-caps.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/ls-caps.c b/ls-caps.c
-index 0ca46fb..e0493c7 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -879,7 +879,7 @@ static void cap_express_root(struct device *d, int where)
-   printf("\t\tRootCap: CRSVisible%c\n",
- 	FLAG(w, PCI_EXP_RTCAP_CRSVIS));
- 
--  w = get_conf_word(d, where + PCI_EXP_RTSTA);
-+  w = get_conf_long(d, where + PCI_EXP_RTSTA);
-   printf("\t\tRootSta: PME ReqID %04x, PMEStatus%c PMEPending%c\n",
- 	w & PCI_EXP_RTSTA_PME_REQID,
- 	FLAG(w, PCI_EXP_RTSTA_PME_STATUS),
-@@ -1021,7 +1021,7 @@ static void cap_express_dev2(struct device *d, int where, int type)
-        printf("\n");
-     }
- 
--  w = get_conf_word(d, where + PCI_EXP_DEVCTL2);
-+  w = get_conf_long(d, where + PCI_EXP_DEVCTL2);
-   printf("\t\tDevCtl2: Completion Timeout: %s, TimeoutDis%c, LTR%c, OBFF %s",
- 	cap_express_dev2_timeout_value(PCI_EXP_DEV2_TIMEOUT_VALUE(w)),
- 	FLAG(w, PCI_EXP_DEV2_TIMEOUT_DIS),
-@@ -1101,7 +1101,7 @@ static void cap_express_link2(struct device *d, int where, int type)
- 
-   if (!((type == PCI_EXP_TYPE_ENDPOINT || type == PCI_EXP_TYPE_LEG_END) &&
- 	(d->dev->dev != 0 || d->dev->func != 0))) {
--    w = get_conf_word(d, where + PCI_EXP_LNKCTL2);
-+    w = get_conf_long(d, where + PCI_EXP_LNKCTL2);
-     printf("\t\tLnkCtl2: Target Link Speed: %s, EnterCompliance%c SpeedDis%c",
- 	cap_express_link2_speed(PCI_EXP_LNKCTL2_SPEED(w)),
- 	FLAG(w, PCI_EXP_LNKCTL2_CMPLNC),
--- 
-2.1.4
+>  
+>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+> @@ -1310,7 +1317,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  		goto err_exit_phy;
+>  	}
+>  
+> -	iproc_pcie_reset(pcie);
+> +	iproc_pcie_perst_ctrl(pcie, true);
+> +	iproc_pcie_perst_ctrl(pcie, false);
+>  
+>  	if (pcie->need_ob_cfg) {
+>  		ret = iproc_pcie_map_ranges(pcie, res);
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index 0bbe2ea..a6b55ce 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -110,6 +110,7 @@ struct iproc_pcie {
+>  
+>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>  int iproc_pcie_remove(struct iproc_pcie *pcie);
+> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+>  
+>  #ifdef CONFIG_PCIE_IPROC_MSI
+>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+> 
