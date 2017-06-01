@@ -1,40 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:51761 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:53906 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751941AbdF2Sh7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:37:59 -0400
-To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170629032648.3073-1-logang@deltatee.com>
- <20170629032648.3073-13-logang@deltatee.com>
- <000201d2f103$2f3d2d20$8db78760$@dell.com>
-Cc: 'Jon Mason' <jdmason@kudzu.us>,
-        'Dave Jiang' <dave.jiang@intel.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
-        'Stephen Bates' <sbates@raithlin.com>,
-        'Serge Semin' <fancer.lancer@gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <9a280b29-4e1b-cf4a-54c2-25a522834879@deltatee.com>
-Date: Thu, 29 Jun 2017 12:37:46 -0600
+        id S1751078AbdFAQuo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Jun 2017 12:50:44 -0400
+Date: Thu, 1 Jun 2017 11:50:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@gmail.com>
+Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: How to trace down if PCIe link went into L1 state
+Message-ID: <20170601165025.GA12257@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAHKzcENL1px=zS8QspSX3WZ_z1PWjWBEcNBKTb00cfVushd9XQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <000201d2f103$2f3d2d20$8db78760$@dell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH 12/16] switchtec_ntb: add link management
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAHKzcENL1px=zS8QspSX3WZ_z1PWjWBEcNBKTb00cfVushd9XQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2017 12:11 PM, Allen Hubbe wrote:
+[+cc linux-pm]
 
-> Should we only set self_partition?  I think each peer should be able to set preferred speed, and negotiate down.  As written here, the last peer to set the speed overrides the setting on the peer, and even that is not atomic if they race.
+On Wed, May 31, 2017 at 11:00:16PM +0200, Waldemar Rymarkiewicz wrote:
+> Hi,
+> 
+> I am not really familiar with pci subsystem but I need to check if the
+> pcie link went into L1 state after suspend.
+> 
+> I use a wifi card with M2 connector with pcie interface. I suspend the
+> system and would like to verify if the link state went really into
+> L1/L2 as I see quite a big current on the power lines when it's in a
+> suspend.
 
-This function isn't actually setting the link speed. (Though I can 
-understand the confusion from the name.) It's just reporting the slowest 
-speed on the link between the peers for the link_is_up function. (Each 
-port will have negotiated it's own speed).
+If I understand correctly, no Linux code is executing while the system
+is suspended, so I think you would need a hardware analyzer to verify
+the link state directly.
 
-I don't think switchtec has the ability to actually change the port 
-speed or width. (Seeing they are negotiated on boot).
+Per sec 5.3.2 of the PCIe spec r3.1, the power management state of a
+link is determined by the D-state of its downstream component, and the
+config write to PMCSR to change the D-state is what starts the
+transition of the downstream component to D1, D2, etc., and transition
+of the link to L1, L2, etc.  So you may be able to instrument the
+kernel to log those writes and infer that the link *should* be in
+L1/L2.  Of course, you're suspending the system, so you're probably
+going to suspend your console device, too.  I don't know what
+techniques people use to debug things in this area, other than using a
+serial console.
 
-Logan
+Maybe the wifi card is a wakeup device and that prevents it from
+sleeping as deeply as you expect?
+
+Bjorn
