@@ -1,44 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH 2/7] dt-bindings: PCI: Describe ATS property for root
- complex nodes
-To: Rob Herring <robh@kernel.org>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, thunder.leizhen@huawei.com,
-        rjw@rjwysocki.net, will.deacon@arm.com, okaya@codeaurora.org,
-        linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
-        sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
-        sunil.kovvuri@gmail.com, linux-arm-kernel@lists.infradead.org,
-        lenb@kernel.org
-References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
- <20170524180143.19855-3-jean-philippe.brucker@arm.com>
- <20170531172320.3u6bdctv44aqighy@rob-hp-laptop>
- <cd63a2dc-8259-482d-19e9-9db60be866f7@arm.com>
- <20170605172025.qgnocl5ytexnklue@rob-hp-laptop>
- <65aea93f-d516-f045-f216-3f56e96bdeb6@arm.com>
-Message-ID: <1754b317-767e-7afd-5608-6ef6ea80a162@arm.com>
-Date: Tue, 20 Jun 2017 12:38:26 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from esa7.dell-outbound.iphmx.com ([68.232.153.96]:5895 "EHLO
+        esa7.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750952AbdFANjz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 09:39:55 -0400
+From: <Narendra.K@dell.com>
+Cc: <Jordan.Hargrave@dell.com>, <Shyam.Iyer@dell.com>,
+        <bhelgaas@google.com>, <Narendra.K@dell.com>
+To: <jdelvare@suse.de>, <x86@kernel.org>, <linux-pci@vger.kernel.org>
+Subject: RE: dmi type 0xB1 record - unknown flag
+Date: Thu, 1 Jun 2017 13:28:31 +0000
+Message-ID: <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+References: <20170601143826.5f980444@endymion>
+In-Reply-To: <20170601143826.5f980444@endymion>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <65aea93f-d516-f045-f216-3f56e96bdeb6@arm.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/06/2017 12:11 PM, Jean-Philippe Brucker wrote:
-> On 05/06/17 18:20, Rob Herring wrote:
->> pci-host-{e,}cam-generic is a special case. I'm okay with having a 
->> property for that I suppose. We should not require this property though 
->> and allow for it to be implied by the SoC specific compatible as well.
-> 
-> The property isn't useful for host-generic since a host like Qemu can
-> easily disable ATS in the IOMMU. It would only be here for consistency.
-> Changing IOMMU registers wouldn't be as simple for a firmware running on
-> real hardware.
+> -----Original Message-----
+> From: Jean Delvare [mailto:jdelvare@suse.de]
+> Sent: Thursday, June 1, 2017 6:08 PM
+> To: x86@kernel.org; linux-pci@vger.kernel.org
+> Cc: K, Narendra <Narendra_K@Dell.com>; Hargrave, Jordan
+> <Jordan_Hargrave@Dell.com>; Iyer, Shyam <Shyam_Iyer@Dell.com>; Bjorn
+> Helgaas <bhelgaas@google.com>
+> Subject: dmi type 0xB1 record - unknown flag
+>=20
+> Hi all,
+>=20
 
-Sorry I was mistaken here. AMD Seattle hardware, for instance, implements
-a pure host-ecam-generic. So it's not exclusively used by Qemu. A quick
-search in the kernel also brings up alpine and thunder2. So I guess I'll
-move ats-supported documentation to host-generic-pci.txt.
+Hi Jean,
 
-Thanks,
-Jean
+> I see the following message in my kernel log:
+>=20
+> dmi type 0xB1 record - unknown flag
+>=20
+> This is on a Dell Optiplex 9020 workstation. I see the message comes
+> from:
+>=20
+> static void __init read_dmi_type_b1(const struct dmi_header *dm,
+>                                     void *private_data) {
+> 	(...)
+>         switch (((*(u32 *)d) >> 9) & 0x03) {
+>         case 0x00:
+>                 printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n")=
+;
+>                 break;
+>=20
+> What is the value of this message? Is there anything which needs to be do=
+ne
+> to properly support such systems?
+
+This function was added to avoid adding systems to the 'pciprobe_dmi_table'=
+ and set breadth first sorting in a generic way.
+
+This flag is a hint to indicate the sort method to be used. The value 0x01 =
+indicates that PCI breadth first sort be used.
+' find_sort_method' function checks if smbios_type_b1_flag is set to 1 and =
+if yes, calls 'set_bf_sort '. This function sets ' pci_bf_sort' to 'pci_dmi=
+_bf'.
+
+The value 0x00 is not a valid value. When the flag is 0x00, the sort method=
+ will be the default that is decided by the kernel.
+
+There is no additional handling required for such a system.
+
+With regards,
+Narendra K
