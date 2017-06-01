@@ -1,103 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 2 Jun 2017 12:49:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC/RFT PATCH 08/18] PCI: designware: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-Message-ID: <20170602114956.GA20004@red-moon>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
- <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:55478 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751097AbdFARAH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 1 Jun 2017 13:00:07 -0400
+Date: Thu, 1 Jun 2017 11:59:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Narendra.K@dell.com
+Cc: jdelvare@suse.de, x86@kernel.org, linux-pci@vger.kernel.org,
+        Jordan.Hargrave@dell.com, Shyam.Iyer@dell.com, bhelgaas@google.com
+Subject: Re: dmi type 0xB1 record - unknown flag
+Message-ID: <20170601165959.GB12257@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170601143826.5f980444@endymion>
+ <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 28, 2017 at 03:13:04PM +0200, Arnd Bergmann wrote:
-> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > The introduction of pci_scan_root_bus_bridge() provides a PCI core
-> > API to scan a PCI root bus backed by an already initialized
-> > struct pci_host_bridge object, which simplifies the bus scan
-> > interface and makes the PCI scan root bus interface easier to
-> > generalize as members are added to the struct pci_host_bridge().
-> >
-> > Convert PCI designware host code to pci_scan_root_bus_bridge() to
-> > improve the PCI root bus scanning interface.
-> >
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Jingoo Han <jingoohan1@gmail.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-> > ---
-> >  drivers/pci/dwc/pcie-designware-host.c | 36 +++++++++++++++++++++-------------
-> >  1 file changed, 22 insertions(+), 14 deletions(-)
-> >
-> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> > index 5ba3349..e43c21a 100644
-> > --- a/drivers/pci/dwc/pcie-designware-host.c
-> > +++ b/drivers/pci/dwc/pcie-designware-host.c
-> > @@ -294,16 +294,21 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >                 dev_err(dev, "missing *config* reg space\n");
-> >         }
-> >
-> > -       ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
-> > +       bridge = pci_alloc_host_bridge(0);
-> > +       if (!bridge)
-> > +               return  -ENOMEM;
-> > +
+On Thu, Jun 01, 2017 at 01:28:31PM +0000, Narendra.K@dell.com wrote:
+> > -----Original Message-----
+> > From: Jean Delvare [mailto:jdelvare@suse.de]
+> > Sent: Thursday, June 1, 2017 6:08 PM
+> > To: x86@kernel.org; linux-pci@vger.kernel.org
+> > Cc: K, Narendra <Narendra_K@Dell.com>; Hargrave, Jordan
+> > <Jordan_Hargrave@Dell.com>; Iyer, Shyam <Shyam_Iyer@Dell.com>; Bjorn
+> > Helgaas <bhelgaas@google.com>
+> > Subject: dmi type 0xB1 record - unknown flag
+> > 
+> > Hi all,
+> > 
 > 
-> I think here we warn to have the pci_alloc_host_bridge() called in the
-> individual
-> drivers, to have them allocate the dw_pcie structure as part of the host
-> bridge allocation, before calling hisi_add_pcie_port().
+> Hi Jean,
+> 
+> > I see the following message in my kernel log:
+> > 
+> > dmi type 0xB1 record - unknown flag
+> > 
+> > This is on a Dell Optiplex 9020 workstation. I see the message comes
+> > from:
+> > 
+> > static void __init read_dmi_type_b1(const struct dmi_header *dm,
+> >                                     void *private_data) {
+> > 	(...)
+> >         switch (((*(u32 *)d) >> 9) & 0x03) {
+> >         case 0x00:
+> >                 printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
+> >                 break;
+> > 
+> > What is the value of this message? Is there anything which needs
+> > to be done to properly support such systems?
+> 
+> This function was added to avoid adding systems to the
+> 'pciprobe_dmi_table' and set breadth first sorting in a generic way.
+> 
+> This flag is a hint to indicate the sort method to be used. The
+> value 0x01 indicates that PCI breadth first sort be used.  '
+> find_sort_method' function checks if smbios_type_b1_flag is set to 1
+> and if yes, calls 'set_bf_sort '. This function sets ' pci_bf_sort'
+> to 'pci_dmi_bf'.
+> 
+> The value 0x00 is not a valid value. When the flag is 0x00, the sort
+> method will be the default that is decided by the kernel.
+> 
+> There is no additional handling required for such a system.
 
-I am almost done refactoring this series and this is the last review to
-address. What you suggest above makes sense but:
+That was added by 6e8af08dfa40 ("PCI: enable pci=bfsort by default on
+future Dell systems").
 
-1) it means patching ALL dw_pcie_host_init() callers and allocate the
-   host bridge there, not sure it simplifies, certainly it complicates
-   the error handling path (given that the host bridge memory is
-   probably the only memory that is allocated with kzalloc instead of
-   devm interface so it needs unwinding)
-2) I noticed that allocating the host bridge in the caller complicates
-   error handling, in particular code in the mainline (ie tegra and
-   ftpci100) using pci_alloc_host_bridge() needs already patching since it
-   may leak memory if PCI host bridge drivers probing fails.
+The fact that BIOS supplied a B1 record with an unknown value (0)
+looks like a Dell BIOS defect, which is ironic, considering that Dell
+added this thing in the first place.
 
-I can implement (1) and (2) but I wanted to ask first to understand if
-that's the direction we want to take.
+I think we should remove the message, since it is alarming to users
+and they can't do anything about it anyway.
 
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
