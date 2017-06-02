@@ -1,79 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:48918 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751602AbdF2D1A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 23:27:00 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:38 -0600
-Message-Id: <20170629032648.3073-7-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
-References: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 06/16] ntb: add check and comment for link up to mw_count and mw_get_align
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20170602135619.GA10491@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
+ <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
+ <20170602114956.GA20004@red-moon>
+ <CAK8P3a0DRFxz_yjCeFZJ8Zukuy8gi9hPbWEfp29TaF2TMjrnTQ@mail.gmail.com>
+ <20170602135619.GA10491@red-moon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 2 Jun 2017 16:44:26 +0200
+Message-ID: <CAK8P3a3Qf_DDU09XVXBm+Y3d+n5He-2cnqqYTtg6_yiKE07jkw@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 08/18] PCI: designware: Convert PCI scan API to
+ pci_scan_root_bus_bridge()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a comment and a check to the ntb_mw_get_align and
-ntb_mw_count functions so that they always fail if the function is
-called before the link is up.
+On Fri, Jun 2, 2017 at 3:56 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, Jun 02, 2017 at 03:12:48PM +0200, Arnd Bergmann wrote:
+>> > I am almost done refactoring this series and this is the last review to
+>> > address. What you suggest above makes sense but:
+>> >
+>> > 1) it means patching ALL dw_pcie_host_init() callers and allocate the
+>> >    host bridge there, not sure it simplifies, certainly it complicates
+>> >    the error handling path (given that the host bridge memory is
+>> >    probably the only memory that is allocated with kzalloc instead of
+>> >    devm interface so it needs unwinding)
+>> >
+>> > 2) I noticed that allocating the host bridge in the caller complicates
+>> >    error handling, in particular code in the mainline (ie tegra and
+>> >    ftpci100) using pci_alloc_host_bridge() needs already patching since it
+>> >    may leak memory if PCI host bridge drivers probing fails.
+>> >
+>> > I can implement (1) and (2) but I wanted to ask first to understand if
+>> > that's the direction we want to take.
+>>
+>> Good question. Maybe we should add a devm_pci_alloc_host_bridge()
+>> instead? Would that solve these problems without creating bigger ones?
+>
+> It would be yet another PCI core call (ie unfortunately we still need
+> pci_alloc_host_bridge() for bridges with no parent device eg bios32) but
+> I think that's the only option we have if we do not want to clutter the
+> host bridges error paths with host bridge free calls.
+>
+> Implementing it should be relatively simple by reshuffling functions.
+>
+> Thoughts ?
 
-This is to prevent accidental mis-use in clients that are testing
-on hardware that this doesn't matter for.
+I think adding this one would be fairly harmless because it has a clear
+purpose and can easily be mixed with the rest of the API.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- include/linux/ntb.h | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+In one of the earlier drafts, we discussed just letting the user call an
+initialization function to set the members and otherwise using kmalloc()
+themselves. We decided on this one to save an extra function call in
+each driver, but in retrospect, it would have saved us the discussion
+now.
 
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 609e232c00da..de4f800c82b6 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -730,12 +730,16 @@ static inline int ntb_link_disable(struct ntb_dev *ntb)
-  * Hardware and topology may support a different number of memory windows.
-  * Moreover different peer devices can support different number of memory
-  * windows. Simply speaking this method returns the number of possible inbound
-- * memory windows to share with specified peer device.
-+ * memory windows to share with specified peer device. Note: this must only be
-+ * called when the link is up.
-  *
-  * Return: the number of memory windows.
-  */
- static inline int ntb_mw_count(struct ntb_dev *ntb, int pidx)
- {
-+	if (!(ntb_link_is_up(ntb, NULL, NULL) & (1 << pidx)))
-+		return 0;
-+
- 	return ntb->ops->mw_count(ntb, pidx);
- }
- 
-@@ -751,7 +755,7 @@ static inline int ntb_mw_count(struct ntb_dev *ntb, int pidx)
-  * Get the alignments of an inbound memory window with specified index.
-  * NULL may be given for any output parameter if the value is not needed.
-  * The alignment and size parameters may be used for allocation of proper
-- * shared memory.
-+ * shared memory. Note: this must only be called when the link is up.
-  *
-  * Return: Zero on success, otherwise a negative error number.
-  */
-@@ -760,6 +764,9 @@ static inline int ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int widx,
- 				   resource_size_t *size_align,
- 				   resource_size_t *size_max)
- {
-+	if (!(ntb_link_is_up(ntb, NULL, NULL) & (1 << pidx)))
-+		return -ENOTCONN;
-+
- 	return ntb->ops->mw_get_align(ntb, pidx, widx, addr_align, size_align,
- 				      size_max);
- }
--- 
-2.11.0
+If we end up adding a devm_pci_alloc_host_bridge (or maybe
+pcim_alloc_host_bridge), we also need to decide what part of the
+cleanup would happen during the unwinding, besides the kfree().
+
+        Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
