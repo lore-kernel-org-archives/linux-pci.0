@@ -1,32 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:23021 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750725AbdFHRSf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 13:18:35 -0400
-Date: Thu, 8 Jun 2017 10:18:33 -0700
-From: Jesse Brandeburg <jesse.brandeburg@intel.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        Stefan Assmann <sassmann@redhat.com>,
-        <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Add Intel XXV710 to broken INTx masking quirk
-Message-ID: <20170608101833.0000163f@intel.com>
-In-Reply-To: <20170607190027.22611.92564.stgit@gimli.home>
-References: <20170607190027.22611.92564.stgit@gimli.home>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:39160 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdFBSyy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 14:54:54 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v4 0/4] PCI: xilinx: Fixes, optimisation & MIPS support
+Date: Fri, 2 Jun 2017 11:54:15 -0700
+Message-ID: <20170602185420.22281-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 7 Jun 2017 13:00:48 -0600
-Alex Williamson <alex.williamson@redhat.com> wrote:
+This series fixes an issue found using INTx interrupts with the Xilinx
+AXI PCIe Host Bridge IP on the Imagination Technologies MIPS Boston
+development board, performs a couple of optimisations to interrupt
+handling & allows the driver to be used on MIPS systems.
 
-> Just like the other XL710 and X710 variants, the XXV710 device IDs
-> appear to have the same hardware bug, the status register doesn't
-> report pending interrupts resulting in "irq xx: nobody cared..."
-> errors from the spurious interrupt handler when we try to use it
-> with device assignment.
+Applies atop v4.12-rc3.
 
-Thanks for doing this Alex,
+Paul Burton (4):
+  PCI: xilinx: Fix INTX irq dispatch
+  PCI: xilinx: Unify INTx & MSI interrupt decode
+  PCI: xilinx: Don't enable config completion interrupts
+  PCI: xilinx: Allow build on MIPS platforms
 
-Acked-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
+ drivers/pci/host/Kconfig       |  2 +-
+ drivers/pci/host/pcie-xilinx.c | 57 +++++++++++++++---------------------------
+ 2 files changed, 21 insertions(+), 38 deletions(-)
+
+-- 
+2.13.0
