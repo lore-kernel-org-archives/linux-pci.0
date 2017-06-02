@@ -1,93 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:35172 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751736AbdFUI5i (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2017 04:57:38 -0400
-Received: by mail-lf0-f52.google.com with SMTP id p189so89917618lfe.2
-        for <linux-pci@vger.kernel.org>; Wed, 21 Jun 2017 01:57:37 -0700 (PDT)
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH v2] pci: ftpci100: Make clocks compulsory
-Date: Wed, 21 Jun 2017 10:57:30 +0200
-Message-Id: <20170621085730.28804-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Heiko Stuebner <heiko@sntech.de>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: Re: [PATCH] PCI: rockchip: Handle return value of clk_prepare_enable
+Date: Fri, 02 Jun 2017 10:34:57 +0200
+Message-ID: <2443470.gYk0NTnP8h@phil>
+In-Reply-To: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
+References: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ wenrui.li@rock-chips.com, linux-kernel@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes a regression on the FTPCI100 PCI driver.
+Am Donnerstag, 1. Juni 2017, 15:51:45 CEST schrieb Arvind Yadav:
+> clk_prepare_enable() can fail here and we must check its return value.
+> 
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-When the clock controller was augmented to probe clocks
-from the platform device except to the most basic clocks
-pertaining to timers, clocks may return an error pointer
-containing -EPROBE_DEFER.
+looks good, but you may want to include 
+Bjorn Helgaas <bhelgaas@google.com>
 
-This hit the PCI driver which would try to continue
-without the clocks, but the actual clocks appeared later,
-so we did not pick them up properly, and in the end of
-the boot, these clocks get gated off if no users register,
-so the PCI host became numbed off and silently nonworking.
+who is the maintainer of the pci subsystem and would be the one
+to apply your patch.
 
-The clocks for this PCI bus are defined properly for all
-platforms implementing it, so we should make them compulsory
-before new users arrive so we have our resources under
-control.
+Aynway, the patch itself looks good to me
+Reviewed-by: Heiko Stuebner <heiko@sntech.de>
 
-This makes the driver bail out of probe with any error
-code from the clock, including -EPROBE_DEFER so that we
-again have a clean boot.
+Cheers
+Heiko
 
-Fixes: cea186ac1e45 ("pci: ftpci100: Add clock handling")
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
----
-ChangeLog v1->v2:
-- Inadvertedly managed to switch PTR_ERR() for ERR_PTR()
-  in the code, and the compile screamed.
----
- drivers/pci/host/pci-ftpci100.c | 28 ++++++++++++----------------
- 1 file changed, 12 insertions(+), 16 deletions(-)
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 34 ++++++++++++++++++++++++++++------
+>  1 file changed, 28 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 0e020b6..0a248cd 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1259,24 +1259,46 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+>  	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>  	int err;
+>  
+> -	clk_prepare_enable(rockchip->clk_pcie_pm);
+> -	clk_prepare_enable(rockchip->hclk_pcie);
+> -	clk_prepare_enable(rockchip->aclk_perf_pcie);
+> -	clk_prepare_enable(rockchip->aclk_pcie);
+> +	err = clk_prepare_enable(rockchip->clk_pcie_pm);
+> +	if (err)
+> +		goto err_pcie_pm;
+> +
+> +	err = clk_prepare_enable(rockchip->hclk_pcie);
+> +	if (err)
+> +		goto err_hclk_pcie;
+> +
+> +	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
+> +	if (err)
+> +		goto err_aclk_perf_pcie;
+> +
+> +	err = clk_prepare_enable(rockchip->aclk_pcie);
+> +	if (err)
+> +		goto err_aclk_pcie;
+>  
+>  	err = rockchip_pcie_init_port(rockchip);
+>  	if (err)
+> -		return err;
+> +		goto err_pcie_resume;
+>  
+>  	err = rockchip_cfg_atu(rockchip);
+>  	if (err)
+> -		return err;
+> +		goto err_pcie_resume;
+>  
+>  	/* Need this to enter L1 again */
+>  	rockchip_pcie_update_txcredit_mui(rockchip);
+>  	rockchip_pcie_enable_interrupts(rockchip);
+>  
+>  	return 0;
+> +
+> +err_pcie_resume:
+> +	clk_disable_unprepare(rockchip->aclk_pcie);
+> +err_aclk_pcie:
+> +	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+> +err_aclk_perf_pcie:
+> +	clk_disable_unprepare(rockchip->hclk_pcie);
+> +err_hclk_pcie:
+> +	clk_disable_unprepare(rockchip->clk_pcie_pm);
+> +err_pcie_pm:
+> +	return err;
+>  }
+>  
+>  static int rockchip_pcie_probe(struct platform_device *pdev)
+> 
 
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index d3bf153a2ab2..db31ab21884e 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -463,24 +463,20 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 
- 	/* Retrieve and enable optional clocks */
- 	clk = devm_clk_get(dev, "PCLK");
--	if (IS_ERR(clk)) {
--		dev_err(dev, "no PCLK available\n");
--	} else {
--		ret = clk_prepare_enable(clk);
--		if (ret) {
--			dev_err(dev, "could not prepare PCLK\n");
--			return ret;
--		}
-+	if (IS_ERR(clk))
-+		return PTR_ERR(clk);
-+	ret = clk_prepare_enable(clk);
-+	if (ret) {
-+		dev_err(dev, "could not prepare PCLK\n");
-+		return ret;
- 	}
- 	p->bus_clk = devm_clk_get(dev, "PCICLK");
--	if (IS_ERR(p->bus_clk)) {
--		dev_err(dev, "no PCICLK available\n");
--	} else {
--		ret = clk_prepare_enable(p->bus_clk);
--		if (ret) {
--			dev_err(dev, "could not prepare PCICLK\n");
--			return ret;
--		}
-+	if (IS_ERR(p->bus_clk))
-+		return PTR_ERR(clk);
-+	ret = clk_prepare_enable(p->bus_clk);
-+	if (ret) {
-+		dev_err(dev, "could not prepare PCICLK\n");
-+		return ret;
- 	}
- 
- 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--- 
-2.9.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
