@@ -1,174 +1,174 @@
-Return-Path: <SRS0=sViI=5T=ginzinger.com=Stefan.Schoefegger@kernel.org>
-Return-Path: <SRS0=sViI=5T=ginzinger.com=Stefan.Schoefegger@kernel.org>
-From: =?iso-8859-1?Q?Sch=F6fegger_Stefan?= <Stefan.Schoefegger@ginzinger.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from pegasos-out.vodafone.de ([80.84.1.38]:44664 "EHLO
+        pegasos-out.vodafone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751185AbdFBJc2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 05:32:28 -0400
+Subject: Re: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access v2
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Richard Zhu
-	<hongxing.zhu@nxp.com>, Arnd Bergmann <arnd@arndb.de>, open list
-	<linux-kernel@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"moderated list:PCI DRIVER FOR IMX6" <linux-arm-kernel@lists.infradead.org>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
-Date: Wed, 14 Jun 2017 05:52:58 +0000
-Message-ID: <1923573.HjpiSnITgW@en-pc05>
-References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <2668097.SlerkO2uVy@en-pc05>
- <20170613135847.GA7128@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170613135847.GA7128@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Cc: linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        Alex Deucher <alexander.deucher@amd.com>,
+        David Airlie <airlied@linux.ie>, amd-gfx@lists.freedesktop.org,
+        dri-devel@lists.freedesktop.org
+References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
+ <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
+ <20170601201430.GC12257@bhelgaas-glaptop.roam.corp.google.com>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
+Message-ID: <72e061a5-9684-06e2-3021-80de8ca97bd7@vodafone.de>
+Date: Fri, 2 Jun 2017 11:32:21 +0200
 MIME-Version: 1.0
+In-Reply-To: <20170601201430.GC12257@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 13, 2017 8:58:47 AM CEST Bjorn Helgaas wrote:
-> On Tue, Jun 13, 2017 at 05:43:14AM +0000, Sch=F6fegger Stefan wrote:
-> > On Monday, June 12, 2017 6:49:24 PM CEST Bjorn Helgaas wrote:
-> > > On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
-> > > > Link speed must not be limited to gen1 during link test for complia=
-nce
-> > > > tests
-> > > >=20
-> > > > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com=
+Hi Bjorn,
+
+sorry for not responding earlier and thanks for picking this thread up 
+again.
+
+Am 01.06.2017 um 22:14 schrieb Bjorn Helgaas:
+> [+cc ADMGPU, DRM folks]
 >
-> > > > ---
-> > > >=20
-> > > > Changes since v1:
-> > > >  - pci-imx6.c moved to dwc directory
-> > > > =20
-> > > >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
-> > > >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
-> > > >  2 files changed, 22 insertions(+), 9 deletions(-)
-> > > >=20
-> > > > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> > > > index b7e15526d676..b6e9ced5a45d 100644
-> > > > --- a/drivers/pci/dwc/Kconfig
-> > > > +++ b/drivers/pci/dwc/Kconfig
-> > > > @@ -77,6 +77,16 @@ config PCI_IMX6
-> > > >=20
-> > > >  	select PCIEPORTBUS
-> > > >  	select PCIE_DW_HOST
-> > > >=20
-> > > > +config PCI_IMX6_COMPLIANCE_TEST
-> > > > +	bool "Enable pcie compliance tests on imx6"
-> > > > +	depends on PCI_IMX6
-> > > > +	default n
-> > > > +	help
-> > > > +	  Enables support for pcie compliance test on FSL iMX SoCs.
-> > > > +	  The link speed wouldn't be limited to gen1 when enabled.
-> > > > +	  Enable only during compliance tests, otherwise
-> > > > +	  link detection will fail on some peripherals.
-> > >=20
-> > > I'm puzzled about why we would want to merge this patch.  It looks
-> > > like we're trying to game the system to make the device pass
-> > > compliance testing when it isn't really compliant.  Is this config
-> > > option useful to users, or is it only useful during internal
-> > > development of iMX SoCs?
-> >=20
-> > It's not for passing compliance tests, it is necessary to do the
-> > compliance
-> > tests. Without this patch only gen 1 speed is possible to test. Also i.=
-mx6
-> > is not fully gen2 compliant (withour external clk) we should have the
-> > option to do gen2 tests. Switching from gen1 to gen2 is done with a
-> > 100MHz (1ms) clk pulse on the receiver. Without this patch link speed i=
-s
-> > forced to gen1 afterwards.
->=20
-> I don't understand the purpose of this yet, so maybe all we need is a
-> better description.
+> On Tue, May 09, 2017 at 06:49:07PM +0200, Christian König wrote:
+>> [SNIP]
+>> +/**
+>> + * amdgpu_resize_bar0 - try to resize BAR0
+>> + *
+>> + * @adev: amdgpu_device pointer
+>> + *
+>> + * Try to resize BAR0 to make all VRAM CPU accessible.
+>> + */
+>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
+>> +{
+>> +	u64 space_needed = roundup_pow_of_two(adev->mc.real_vram_size);
+>> +	u32 rbar_size = order_base_2(((space_needed >> 20) | 1)) -1;
+>> +	u16 cmd;
+>> +	int r;
+>> +
+>> +	/* Free the doorbell mapping, it most likely needs to move as well */
+>> +	amdgpu_doorbell_fini(adev);
+>> +	pci_release_resource(adev->pdev, 2);
+>> +
+>> +	/* Disable memory decoding while we change the BAR addresses and size */
+>> +	pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
+>> +	pci_write_config_word(adev->pdev, PCI_COMMAND,
+>> +			      cmd & ~PCI_COMMAND_MEMORY);
+>> +
+>> +	r = pci_resize_resource(adev->pdev, 0, rbar_size);
+>> +	if (r == -ENOSPC)
+>> +		DRM_INFO("Not enough PCI address space for a large BAR.");
+>> +	else if (r && r != -ENOTSUPP)
+>> +		DRM_ERROR("Problem resizing BAR0 (%d).", r);
+>> +
+>> +	pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
+>> +
+>> +	/* When the doorbell BAR isn't available we have no chance of
+>> +	 * using the device.
+>> +	 */
+>> +	BUG_ON(amdgpu_doorbell_init(adev));
+> This amdgpu_doorbell_fini()/amdgpu_doorbell_init() thing doesn't look
+> right.  amdgpu_device_init() only calls amdgpu_doorbell_init() for
+> "adev->asic_type >= CHIP_BONAIRE", but we call it unconditionally
+> here.
+>
+> This is the call graph:
+>
+>    amdgpu_device_init
+>      adev->rmmio_base = pci_resource_start(adev->pdev, 5)   # 2 for < BONAIRE
+>      adev->rmmio = ioremap(adev->rmmio_base, ...)
+>      DRM_INFO("register mmio base: 0x%08X\n", (uint32_t)adev->rmmio_base)
+>      if (adev->asic_type >= CHIP_BONAIRE) {
+>        amdgpu_doorbell_init
+> 	adev->doorbell.base = pci_resource_start(adev->pdev, 2)
+> 	adev->doorbell.ptr = ioremap(adev->doorbell.base, ...)
+>      }
+>      amdgpu_init
+>        gmc_v7_0_sw_init              # gmc_v7_0_ip_funcs.sw_init
+> 	gmc_v7_0_mc_init
+>    +         amdgpu_resize_bar0
+>    +           amdgpu_doorbell_fini
+>    +           pci_release_resource(adev->pdev, 2)
+>    +           pci_resize_resource(adev->pdev, 0, size)
+>    +           amdgpu_doorbell_init
+> 	  adev->mc.aper_base = pci_resource_start(adev->pdev, 0)
+>
+> If "asic_type < CHIP_BONAIRE", we ioremapped BAR 2 in
+> amdgpu_device_init(), then we released the resource here and never
+> updated the ioremap.
 
-This patch enabled compliance tests for pcie gen2 published by pci-sig.=20
-(Signal level, signal timing, jitter and rise/fall times on tx lines). Spec=
-ial=20
-hardware is needed to do this tests (compliance load board, oszilloscope wi=
-th=20
-about 10GHz bandwith). The pcie phy switches in a complinace test state whe=
-re=20
-the phy outputs a special test pattern (without having a real link to a=20
-device). The bitrate and de-emphasis must be switched. The driver (without=
-=20
-this patches) does not allow to switch to gen2 because it falls back to gen=
-1.=20
-It is impossible to generate the gen2 test pattern.
-The patch now removes the forced gen1 start to allow generating gen2 test=20
-pattern. gen1 / gen2 switch is done through signals generated on the=20
-compliance load board (which triggers switching in the phy).
->=20
-> "It's not for passing compliance testing, it is necessary to do the
-> compliance tests" doesn't make sense to me -- it seems
-> self-contradictory.
->=20
-> The Kconfig text says "enable only for testing because it makes link
-> detection fail."  To me that means this option is not useful for
-> users.  We need some justification for why it should be in the
-> mainline kernel, where users and distros may enable it.
+The first hardware with a resizeable BAR I could find is a Tonga, and 
+that is even a generation later than Bonaire.
 
-It use useless for users and distros. Only board designer want this option.=
- If=20
-this is not a reason for applying it's ok for me.
->=20
-> If you can only support gen2 in certain board configurations, maybe
-> you should add a config option that can always be enabled for those
-> boards.
->=20
-> > Yes it is only useful for board setup, it is comparable to
-> > CONFIG_USB_EHSET_TEST_FIXTURE for usb (ok, this is more general and not
-> > host specific).
->=20
-> USB_EHSET_TEST_FIXTURE (added by 1353aa53851e ("usb: misc: EHSET Test
-> Fixture device driver for host compliance")) looks like just another
-> driver in the sense that it's always safe to enable it and it doesn't
-> hurt anything if you enable it without having the hardware.
->=20
-> This patch doesn't seem comparable to USB_EHSET_TEST_FIXTURE because
-> this new option apparently breaks link detection in some cases.
+So we are never going to call this code on earlier hardware generations.
 
-This depends on the point of view (Black box vs. white box) :-) Both are fo=
-r=20
-doing compliance tests on signal level. But I think we don't need to discus=
-s=20
-this further.
->=20
-> > > >  config PCIE_SPEAR13XX
-> > > > =20
-> > > >  	bool "STMicroelectronics SPEAr PCIe controller"
-> > > >  	depends on PCI
-> > > >=20
-> > > > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.=
-c
-> > > > index 19a289b8cc94..b0fbe52e25b0 100644
-> > > > --- a/drivers/pci/dwc/pci-imx6.c
-> > > > +++ b/drivers/pci/dwc/pci-imx6.c
-> > > > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct
-> > > > imx6_pcie
-> > > > *imx6_pcie)>
-> > > >=20
-> > > >  	u32 tmp;
-> > > >  	int ret;
-> > > >=20
-> > > > -	/*
-> > > > -	 * Force Gen1 operation when starting the link.  In case the link=
- is
-> > > > -	 * started in Gen2 mode, there is a possibility the devices on th=
-e
-> > > > -	 * bus will not be detected at all.  This happens with PCIe
-> > > > switches.
-> > > > -	 */
-> > > > -	tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > > > -	tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > > > -	tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > > > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > > > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
-> > > > +		/*
-> > > > +		 * Force Gen1 operation when starting the link.  In case the
-> > > > +		 * link is started in Gen2 mode, there is a possibility the
-> > > > +		 * devices on the bus will not be detected at all.  This
-> > > > +		 * happens with PCIe switches.
-> > > > +		 */
-> > > > +		tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > > > +		tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > > > +		tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > > > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > > > +	}
-> > > >=20
-> > > >  	/* Start LTSSM. */
-> > > >  	if (imx6_pcie->variant =3D=3D IMX7D)
+But I think I will just move the asic_type check into the function to be 
+absolute sure.
+
+>  From the PCI core perspective, it would be much cleaner to do the BAR
+> resize before the driver calls pci_enable_device().  If that could be
+> done, there would be no need for this sort of shutdown/reinit stuff
+> and we wouldn't have to worry about issues like these.  The amdgpu
+> init path is pretty complicated, so I don't know whether this is
+> possible.
+
+I completely agree on this and it is actually the approach I tried first.
+
+There are just two problems with this approach:
+1. When the amdgpu driver is loaded there can already be the VGA 
+console, Vesa or EFI driver active for the device and displaying the 
+splash screen.
+
+When we resize and most likely relocate the BAR while those drivers are 
+active it will certainly cause problems.
+
+What amdgpu does before trying to resize the BAR is kicking out other 
+driver and making sure it has exclusive access to the hardware.
+
+2. Without taking a look at the registers you don't know how much memory 
+there actually is on the board.
+
+We could always resize it to the maximum supported, but that would mean 
+we could easily waste 128GB of address space while the hardware only has 
+8GB of VRAM.
+
+That would not necessarily hurt us when we have enough address space, 
+but at least kind of sucks.
+
+> I would also like to simplify the driver usage model and get the
+> PCI_COMMAND_MEMORY twiddling into the PCI core instead of the driver.
+> Ideally, the driver would do something like this:
+>
+>    pci_resize_resource(adev->pdev, 0, rbar_size);
+>    pci_enable_device(adev->pdev);
+>
+> And the PCI core would be something along these lines:
+>
+>    int pci_resize_resource(dev, bar, size)
+>    {
+>      if (pci_is_enabled(dev))
+>        return -EBUSY;
+>
+>      pci_disable_decoding(dev);          # turn off MEM, IO decoding
+>      pci_release_resources(dev);         # (all of them)
+>      err = pci_resize_bar(dev, bar, size);     # change BAR size (only)
+>      if (err)
+>        return err;
+>
+>      pci_assign_resources(dev);          # reassign all "dev" resources
+>      return 0;
+>    }
+
+I already tried the approach with releasing all resources, but it didn't 
+worked so well.
+
+When resizing fails because we don't have enough address space then we 
+at least want to get back to a working config.
+
+Releasing everything makes that rather tricky, since I would then need 
+to keep a backup of the old config and try to restore it.
+
+Additional to that I'm not sure if releasing the register BAR and 
+relocating it works with amdgpu.
+
+Regards,
+Christian.
