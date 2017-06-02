@@ -1,53 +1,108 @@
-Return-Path: <SRS0=yVtC=5T=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=yVtC=5T=deltatee.com=logang@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
- <20170613043416.GB14217@kroah.com> <20170613043518.GA14621@kroah.com>
- <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
- <20170613163508.GA31961@kroah.com>
- <f848a5fb-096c-a025-cc3b-314cc3899f9e@deltatee.com>
- <20170614050049.GA11630@kroah.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- kernel test robot <fengguang.wu@intel.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
- linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
- Arnd Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>,
- David Airlie <airlied@linux.ie>, David Herrmann <dh.herrmann@gmail.com>,
- Daniel Vetter <daniel.vetter@ffwll.ch>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <541d1104-6139-c902-ec91-943ec1e8a881@deltatee.com>
-Date: Tue, 13 Jun 2017 23:55:37 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:46837 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751147AbdFBFvK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Jun 2017 01:51:10 -0400
+Date: Fri, 2 Jun 2017 13:51:38 +0800
+From: Chen Yu <yu.c.chen@intel.com>
+To: "Rafael J. Wysocki" <rafael@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Len Brown <len.brown@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Rui Zhang <rui.zhang@intel.com>,
+        Ying Huang <ying.huang@intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI / PM: Restore the status of PCI devices across
+ hibernation
+Message-ID: <20170602055138.GA32161@yu-desktop-1.sh.intel.com>
+References: <1495702147-31427-1-git-send-email-yu.c.chen@intel.com>
+ <CAJZ5v0hNXJ0+bQdM5v0i0YeMkE7mBWJn5et_okt_qrMytS4ymQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170614050049.GA11630@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable to
- handle kernel NULL pointer dereference at 00000000000000a8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJZ5v0hNXJ0+bQdM5v0i0YeMkE7mBWJn5et_okt_qrMytS4ymQ@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jun 02, 2017 at 01:22:28AM +0200, Rafael J. Wysocki wrote:
+> On Thu, May 25, 2017 at 10:49 AM, Chen Yu <yu.c.chen@intel.com> wrote:
+> > Currently we saw a lot of "No irq handler" errors during hibernation,
+> > which caused the system hang finally:
+> >
+> > [  710.141581] ata4.00: qc timeout (cmd 0xec)
+> > [  710.147135] ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> > [  710.154593] ata4.00: revalidation failed (errno=-5)
+> > [  710.468124] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> > [  710.477746] do_IRQ: 31.151 No irq handler for vector
+> >
+> > According to above logs, there is an interrupt triggered and it is
+> > dispatched to CPU31 with a vector number 151, but there is no handler
+> > for it, thus this irq will not get acked and caused irq flood which kill
+> > the system. To be more specific, the 31.151 is an interrupt from the ahci
+> > host controller.
+> >
+> > After some investigation, the reason why this issue is triggered is
+> > because the thaw_noirq() function does not restore the MSI/MSIX settings
+> > across hibernation.
+> >
+> > The scenario is illustrated below:
+> >
+> > 1. Before the hibernation starts, the irq 34 is the handler for the ahci device,
+> >    which is binded on cpu31.
+> > 2. Hibernation starts, the ahci device is put into low power state.
+> > 3. All the nonboot CPUs are put offline, so the irq 34 has to be migrated to
+> >    the last alive one - CPU0.
+> > 4. After the snapshot has been created, all the nonboot CPUs are brought up again,
+> >    the CPU affinity for IRQ 34 remains to be 0.
+> > 5. ahci device are put into D0.
+> > 6. The snapshot is written to the disk.
+> >
+> > The issue is triggered in step 6, in theory the ahci interrupt should be
+> > delivered to CPU0, however the actually result is that this interrupt is
+> > delivered to the original CPU31 instead, which cause the "No irq handler" issue.
+> >
+> > Ying Huang has has provided a clue that, in step 3 it is possible that the writing
+> > to the register might not take effect as the PCI devices have been put suspended.
+> > Actually it is true:
+> > In step 3, the irq 34 affinity is supposed to be modified from 31 to 0,
+> > but actually it did not. In __pci_write_msi_msg(), if the device is already
+> > in low power state, the low level msi message entry will not be updated
+> > but cached. So in theory during the device restore process, the cached msi
+> > modification information should be written back to the hardware, and this
+> > is what pci_restore_msi_state() do during normal suspend-resume.
+> > But this is not the case for hibernation, pci_restore_msi_state() is not
+> > invoked currently, to be more specific, pci_restore_state() is not invoked
+> > in pci_pm_thaw_noirq(), although pci_save_state() has saved the necessary
+> > pci cached information in pci_pm_freeze_noirq().
+> >
+> > This patch tries to restore the pci status for the device during hibernation,
+> > otherwise the status might be lost across hibernation(for example, the MSI/MSIX
+> > message settings), which might cause problems during hibernation.
+> >
+> > Suggested-by: Ying Huang <ying.huang@intel.com>
+> > Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Len Brown <len.brown@intel.com>
+> > Cc: Dan Williams <dan.j.williams@intel.com>
+> > Cc: Rui Zhang <rui.zhang@intel.com>
+> > Cc: Ying Huang <ying.huang@intel.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: linux-pm@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+> 
+> Thanks for the detailed description of what's going on!
+> 
+> The fix is correct IMO, so
+> 
+> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>
+Thanks for the review!
+Please also help add a tag for stable:
+Cc: stable <stable@vger.kernel.org>
 
-
-On 13/06/17 11:00 PM, Greg Kroah-Hartman wrote:
-> No, don't modify any drivers, do this in the core chardev code.
-
-Ok, well then maybe I misunderstood what you originally asked for
-because I don't see how you can change a fixed allocation to a dynamic
-one without touching the driver code which needs to know the major that
-was assigned in the end.
-
-> At quick glance, looks good to me, care to clean it up and make it behind
-> a config option?
-
-Sure. However, is a config option really necessary here? As is, the
-extended dynamic region will only be used if there are too many chardev
-majors and it shouldn't have _any_ effect on users that have a small
-number. So it seems like not selecting that option is just telling the
-kernel to be broken for no obvious trade-off.
-
-Logan
+thanks,
+Yu
