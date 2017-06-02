@@ -1,61 +1,163 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v2 0/5] PM: Unify the handling of device wakeup settings
-Date: Sat, 24 Jun 2017 01:50:55 +0200
-Message-ID: <2524735.NRzn8A9HAf@aspire.rjw.lan>
-In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34487 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751215AbdFBQAp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 12:00:45 -0400
+Received: by mail-pf0-f181.google.com with SMTP id 9so51599643pfj.1
+        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2017 09:00:39 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v2 2/2] PCI: iproc: add device shutdown for PCI RC
+Date: Fri,  2 Jun 2017 21:30:16 +0530
+Message-Id: <1496419216-9987-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1496419216-9987-1-git-send-email-oza.oza@broadcom.com>
+References: <1496419216-9987-1-git-send-email-oza.oza@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, June 19, 2017 11:31:58 PM Rafael J. Wysocki wrote:
-> Hi All,
-> 
-> The handling of device wakeup settings, especially in the ACPI core and the PCI
-> bus type, depends on whether it is about system wakeup from sleep states or
-> remote wakeup in the working state (runtime).  However, that distinction is
-> mostly based on the ACPI concept of "wakeup" and "runtime" GPEs, which is
-> somewhat artificial, because the underlying hardware mechanism is basically
-> the same in both cases.
-> 
-> Moreover, suspend-to-idle is now supported as a sleep state and wakeup from it
-> is based on exactly the same hardware capabilities as the working-state
-> (runtime) remote wakeup.
-> 
-> The following patch series removes that distinction and unifies the handling of
-> device wakeup settings between system sleep and runtime.  It also fixes one
-> issue related to wakeup signaling through PCI bridges.
-> 
-> [1/6]: Get rid of the "runtime wakeup" concept from the ACPI core.
-> [2/6]: Unify device wakeup settings code paths in the ACPI core.
-> [3-4/6]: Unify device wakeup settings code paths in the PCI bus type code.
-> [5/6]: Fix wakeup-related issue with bridges in the PCI bus type code.
-> [6/6]: Get rid of the "runtime wakeup" concept from the driver core.
-> 
-> The series is based on current linux-next and will be made available for
-> testing in the linux-pm.git tree in a couple of days.
+PERST# must be asserted around ~500ms before
+the reboot is applied.
 
-Here's a v2 with tentatively added Reviewed-by tags from Mika.
+During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
+LCPLL clock and PERST both goes off simultaneously.
+This will cause certain Endpoints Intel NVMe not get detected, upon
+next boot sequence.
 
-I've dropped patch [5/6] from the previous iteration as it didn't really belong
-here and the issue it attempted to fix is rather theoretical.  I'm going to
-take a different approach there.
+This happens because; Endpoint is expecting the clock for some amount of
+time after PERST is asserted, which is not happening in our case
+(Compare to Intel X86 boards, will have clocks running).
+this cause NVMe to behave in undefined way.
 
-Apart from this, the function previously called acpi_pm_device_wakeup() has
-a different name now: acpi_pm_set_device_wakeup(), to possibly avoid
-confusion about its purpose.
+Essentially clock will remain alive for 500ms with PERST# = 0
+before reboot.
 
-Also the changelog of patch [3/5] has been modified slightly.
+This patch adds platform shutdown where it should be
+called in device_shutdown while reboot command is issued.
 
-Thanks,
-Rafael
+So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+followed by RC shutdown is called, which issues safe PERST
+assertion.
 
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 90d2bdd..9512960 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	return iproc_pcie_remove(pcie);
+ }
+ 
++static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
++{
++	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
++
++	iproc_pcie_shutdown(pcie);
++}
++
+ static struct platform_driver iproc_pcie_pltfm_driver = {
+ 	.driver = {
+ 		.name = "iproc-pcie",
+@@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	},
+ 	.probe = iproc_pcie_pltfm_probe,
+ 	.remove = iproc_pcie_pltfm_remove,
++	.shutdown = iproc_pcie_pltfm_shutdown,
+ };
+ module_platform_driver(iproc_pcie_pltfm_driver);
+ 
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 05a3647..bb61376 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+ 	.write = iproc_pcie_config_write32,
+ };
+ 
+-static void iproc_pcie_reset(struct iproc_pcie *pcie)
++static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+ {
+ 	u32 val;
+ 
+ 	/*
+-	 * PAXC and the internal emulated endpoint device downstream should not
+-	 * be reset.  If firmware has been loaded on the endpoint device at an
+-	 * earlier boot stage, reset here causes issues.
++	 * The internal emulated endpoints (such as PAXC) device downstream
++	 * should not be reset. If firmware has been loaded on the endpoint
++	 * device at an earlier boot stage, reset here causes issues.
+ 	 */
+ 	if (pcie->ep_is_internal)
+ 		return;
+ 
+-	/*
+-	 * Select perst_b signal as reset source. Put the device into reset,
+-	 * and then bring it out of reset
+-	 */
+-	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+-	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+-		~RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	udelay(250);
+-
+-	val |= RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	msleep(100);
++	if (assert) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
++			~RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(250);
++	} else {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val |= RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		msleep(100);
++	}
++}
++
++int iproc_pcie_shutdown(struct iproc_pcie *pcie)
++{
++	iproc_pcie_perst_ctrl(pcie, true);
++	msleep(500);
++
++	return 0;
+ }
++EXPORT_SYMBOL(iproc_pcie_shutdown);
+ 
+ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ {
+@@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
+-	iproc_pcie_reset(pcie);
++	iproc_pcie_perst_ctrl(pcie, true);
++	iproc_pcie_perst_ctrl(pcie, false);
+ 
+ 	if (pcie->need_ob_cfg) {
+ 		ret = iproc_pcie_map_ranges(pcie, res);
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 0bbe2ea..a6b55ce 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -110,6 +110,7 @@ struct iproc_pcie {
+ 
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+ int iproc_pcie_remove(struct iproc_pcie *pcie);
++int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+ 
+ #ifdef CONFIG_PCIE_IPROC_MSI
+ int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+-- 
+1.9.1
