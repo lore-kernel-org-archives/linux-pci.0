@@ -1,119 +1,128 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.ginzinger.com ([31.193.165.229]:18298 "EHLO
-        mail.ginzinger.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbdFMFnR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jun 2017 01:43:17 -0400
-From: =?iso-8859-1?Q?Sch=F6fegger_Stefan?=
-        <Stefan.Schoefegger@ginzinger.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Richard Zhu <hongxing.zhu@nxp.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        open list <linux-kernel@vger.kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "moderated list:PCI DRIVER FOR IMX6"
-        <linux-arm-kernel@lists.infradead.org>,
-        Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
-Date: Tue, 13 Jun 2017 05:43:14 +0000
-Message-ID: <2668097.SlerkO2uVy@en-pc05>
-References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <1496835374-13053-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from mailapp01.imgtec.com ([195.59.15.196]:44680 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdFBSzd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 14:55:33 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v4 2/4] PCI: xilinx: Unify INTx & MSI interrupt decode
+Date: Fri, 2 Jun 2017 11:54:17 -0700
+Message-ID: <20170602185420.22281-3-paul.burton@imgtec.com>
+In-Reply-To: <20170602185420.22281-1-paul.burton@imgtec.com>
+References: <20170602185420.22281-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, June 12, 2017 6:49:24 PM CEST Bjorn Helgaas wrote:
-> On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
-> > Link speed must not be limited to gen1 during link test for compliance
-> > tests
-> > 
-> > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-> > ---
-> > 
-> > Changes since v1:
-> >  - pci-imx6.c moved to dwc directory
-> >  
-> >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
-> >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
-> >  2 files changed, 22 insertions(+), 9 deletions(-)
-> > 
-> > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> > index b7e15526d676..b6e9ced5a45d 100644
-> > --- a/drivers/pci/dwc/Kconfig
-> > +++ b/drivers/pci/dwc/Kconfig
-> > @@ -77,6 +77,16 @@ config PCI_IMX6
-> > 
-> >  	select PCIEPORTBUS
-> >  	select PCIE_DW_HOST
-> > 
-> > +config PCI_IMX6_COMPLIANCE_TEST
-> > +	bool "Enable pcie compliance tests on imx6"
-> > +	depends on PCI_IMX6
-> > +	default n
-> > +	help
-> > +	  Enables support for pcie compliance test on FSL iMX SoCs.
-> > +	  The link speed wouldn't be limited to gen1 when enabled.
-> > +	  Enable only during compliance tests, otherwise
-> > +	  link detection will fail on some peripherals.
-> 
-> I'm puzzled about why we would want to merge this patch.  It looks
-> like we're trying to game the system to make the device pass
-> compliance testing when it isn't really compliant.  Is this config
-> option useful to users, or is it only useful during internal
-> development of iMX SoCs?
+The INTx & MSI interrupt decode paths duplicated a fair bit of common
+functionality. They also strictly handled interrupts in order of INTx
+then MSI, so if both types of interrupt were to be asserted
+simultaneously and the MSI interrupt were first in the FIFO then the
+INTx code would read it & ignore it before the MSI code then had to read
+it again, wasting the original FIFO read.
 
-It's not for passing compliance tests, it is necessary to do the compliance 
-tests. Without this patch only gen 1 speed is possible to test. Also i.mx6 is 
-not fully gen2 compliant (withour external clk) we should have the option to 
-do gen2 tests. Switching from gen1 to gen2 is done with a 100MHz (1ms) clk 
-pulse on the receiver. Without this patch link speed is forced to gen1 
-afterwards.
-Yes it is only useful for board setup, it is comparable to 
-CONFIG_USB_EHSET_TEST_FIXTURE for usb (ok, this is more general and not host 
-specific).
+Unify the INTx & MSI decode in order to reduce that duplication & allow
+a single FIFO read to be performed for each interrupt regardless of its
+type.
 
-> 
-> >  config PCIE_SPEAR13XX
-> >  
-> >  	bool "STMicroelectronics SPEAr PCIe controller"
-> >  	depends on PCI
-> > 
-> > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> > index 19a289b8cc94..b0fbe52e25b0 100644
-> > --- a/drivers/pci/dwc/pci-imx6.c
-> > +++ b/drivers/pci/dwc/pci-imx6.c
-> > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct imx6_pcie
-> > *imx6_pcie)> 
-> >  	u32 tmp;
-> >  	int ret;
-> > 
-> > -	/*
-> > -	 * Force Gen1 operation when starting the link.  In case the link is
-> > -	 * started in Gen2 mode, there is a possibility the devices on the
-> > -	 * bus will not be detected at all.  This happens with PCIe switches.
-> > -	 */
-> > -	tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
-> > +		/*
-> > +		 * Force Gen1 operation when starting the link.  In case the
-> > +		 * link is started in Gen2 mode, there is a possibility the
-> > +		 * devices on the bus will not be detected at all.  This
-> > +		 * happens with PCIe switches.
-> > +		 */
-> > +		tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > +	}
-> > 
-> >  	/* Start LTSSM. */
-> >  	if (imx6_pcie->variant == IMX7D)
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+---
+
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-xilinx.c | 48 +++++++++++++-----------------------------
+ 1 file changed, 15 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 6be2e5ee44f1..0c0ecc463f6b 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -384,7 +384,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ {
+ 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
+ 	struct device *dev = port->dev;
+-	u32 val, mask, status, msi_data;
++	u32 val, mask, status;
+ 
+ 	/* Read interrupt decode and mask registers */
+ 	val = pcie_read(port, XILINX_PCIE_REG_IDR);
+@@ -424,8 +424,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		xilinx_pcie_clear_err_interrupts(port);
+ 	}
+ 
+-	if (status & XILINX_PCIE_INTR_INTX) {
+-		/* INTx interrupt received */
++	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
+ 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
+ 
+ 		/* Check whether interrupt valid */
+@@ -434,41 +433,24 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 			goto error;
+ 		}
+ 
+-		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
+-			/* Clear interrupt FIFO register 1 */
+-			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+-				   XILINX_PCIE_REG_RPIFR1);
+-
+-			/* Handle INTx Interrupt */
++		/* Decode the IRQ number */
++		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
++			val = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
++				XILINX_PCIE_RPIFR2_MSG_DATA;
++		} else {
+ 			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+ 				XILINX_PCIE_RPIFR1_INTR_SHIFT;
+-			generic_handle_irq(irq_find_mapping(port->leg_domain,
+-							    val));
++			val = irq_find_mapping(port->leg_domain, val);
+ 		}
+-	}
+ 
+-	if (status & XILINX_PCIE_INTR_MSI) {
+-		/* MSI Interrupt */
+-		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
++		/* Clear interrupt FIFO register 1 */
++		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
++			   XILINX_PCIE_REG_RPIFR1);
+ 
+-		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+-			dev_warn(dev, "RP Intr FIFO1 read error\n");
+-			goto error;
+-		}
+-
+-		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
+-			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
+-				   XILINX_PCIE_RPIFR2_MSG_DATA;
+-
+-			/* Clear interrupt FIFO register 1 */
+-			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+-				   XILINX_PCIE_REG_RPIFR1);
+-
+-			if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-				/* Handle MSI Interrupt */
+-				generic_handle_irq(msi_data);
+-			}
+-		}
++		/* Handle the interrupt */
++		if (IS_ENABLED(CONFIG_PCI_MSI) ||
++		    !(val & XILINX_PCIE_RPIFR1_MSI_INTR))
++			generic_handle_irq(val);
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+-- 
+2.13.0
