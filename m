@@ -1,179 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:30472 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754001AbdFSKAR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:00:17 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 1/3] PCI: mediatek: modify controller powerup logic
-Date: Mon, 19 Jun 2017 17:59:58 +0800
-Message-ID: <1497866400-41844-2-git-send-email-ryder.lee@mediatek.com>
-In-Reply-To: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
-References: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:63931 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751007AbdFBSzN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 14:55:13 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v4 1/4] PCI: xilinx: Fix INTX irq dispatch
+Date: Fri, 2 Jun 2017 11:54:16 -0700
+Message-ID: <20170602185420.22281-2-paul.burton@imgtec.com>
+In-Reply-To: <20170602185420.22281-1-paul.burton@imgtec.com>
+References: <20170602185420.22281-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The current powerup logic may lead to unbalanced pm_runtime_enable() if
-the earlier probe failed due to -EPROBE_DEFER. Hence we do a little flow
-adjustment to avoid that:
+The IRQ domain for INTX interrupts has 4 entries, numbered 0 to 3. This
+matches what the hardware reports from the interrupt FIFO exactly, but
+xilinx_pcie_intr_handler was adding 1 to that value to convert to the
+range 1 to 4. Stop adding 1, such that all of INTA through to INTD fall
+within the range of the IRQ domain.
 
-Parse standard PCI resources firstly, then check properties for each port,
-power on controller finally.
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: linux-pci@vger.kernel.org
 
-Also, this patch removes unused registers and renames funtions properly.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 51 +++++++++++++++++-----------------------
- 1 file changed, 21 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 3baafa8..165d82d 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -34,8 +34,6 @@
+Changes in v4: None
+
+Changes in v3:
+- Split out from Boston patchset.
+
+Changes in v2:
+- Add Fixes tag.
+
+ drivers/pci/host/pcie-xilinx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 2fe2df51f9f8..6be2e5ee44f1 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -440,8 +440,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 				   XILINX_PCIE_REG_RPIFR1);
  
- /* PCIe per port registers */
- #define PCIE_BAR0_SETUP		0x10
--#define PCIE_BAR1_SETUP		0x14
--#define PCIE_BAR0_MEM_BASE	0x18
- #define PCIE_CLASS		0x34
- #define PCIE_LINK_STATUS	0x50
- 
-@@ -224,7 +222,7 @@ static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
- 	msleep(100);
- }
- 
--static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
-+static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- {
- 	struct device *dev = port->pcie->dev;
- 	int err;
-@@ -249,7 +247,7 @@ static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- 	/* if link up, then setup root port configuration space */
- 	if (mtk_pcie_link_is_up(port)) {
- 		mtk_pcie_configure_rc(port);
--		return 0;
-+		return;
- 	}
- 
- 	dev_info(dev, "Port%d link down\n", port->index);
-@@ -257,13 +255,13 @@ static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- 	phy_power_off(port->phy);
- err_phy_on:
- 	clk_disable_unprepare(port->sys_ck);
--	mtk_pcie_port_free(port);
- err_sys_clk:
--	return err;
-+	mtk_pcie_port_free(port);
-+
-+	return;
- }
- 
- static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
--				struct mtk_pcie_port **p,
- 				struct device_node *node,
- 				int index)
- {
-@@ -274,12 +272,10 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
- 	char name[10];
- 	int err;
- 
--	*p = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
--	if (!*p)
-+	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
-+	if (!port)
- 		return -ENOMEM;
- 
--	port = *p;
--
- 	err = of_property_read_u32(node, "num-lanes", &port->lane);
- 	if (err) {
- 		dev_err(dev, "missing num-lanes property\n");
-@@ -323,7 +319,7 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
- 	return 0;
- }
- 
--static int mtk_pcie_handle_shared_resource(struct mtk_pcie *pcie)
-+static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
-@@ -366,20 +362,16 @@ static int mtk_pcie_handle_shared_resource(struct mtk_pcie *pcie)
- 	return err;
- }
- 
--static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
-+static int mtk_pcie_setup(struct mtk_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct device_node *node = dev->of_node, *child;
- 	struct of_pci_range_parser parser;
- 	struct of_pci_range range;
- 	struct resource res;
-+	struct mtk_pcie_port *port, *tmp;
- 	int err;
- 
--	/* parse shared resources */
--	err = mtk_pcie_handle_shared_resource(pcie);
--	if (err)
--		return err;
--
- 	if (of_pci_range_parser_init(&parser, node)) {
- 		dev_err(dev, "missing \"ranges\" property\n");
- 		return -EINVAL;
-@@ -423,8 +415,7 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
- 		pcie->busn.flags = IORESOURCE_BUS;
- 	}
- 
--	for_each_child_of_node(node, child) {
--		struct mtk_pcie_port *port;
-+	for_each_available_child_of_node(node, child) {
- 		int index;
- 
- 		err = of_pci_get_devfn(child);
-@@ -435,19 +426,19 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
- 
- 		index = PCI_SLOT(err);
- 
--		if (!of_device_is_available(child))
--			continue;
--
--		err = mtk_pcie_parse_ports(pcie, &port, child, index);
--		if (err)
--			return err;
--
--		/* enable each port, and then check link status */
--		err = mtk_pcie_enable_ports(port);
-+		err = mtk_pcie_parse_ports(pcie, child, index);
- 		if (err)
- 			return err;
- 	}
- 
-+	err = mtk_pcie_subsys_powerup(pcie);
-+	if (err)
-+		return err;
-+
-+	/* enable each port, and then check link status */
-+	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
-+		mtk_pcie_enable_ports(port);
-+
- 	return 0;
- }
- 
-@@ -516,7 +507,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	platform_set_drvdata(pdev, pcie);
- 	INIT_LIST_HEAD(&pcie->ports);
- 
--	err = mtk_pcie_parse_and_add_res(pcie);
-+	err = mtk_pcie_setup(pcie);
- 	if (err)
- 		return err;
- 
+ 			/* Handle INTx Interrupt */
+-			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+-				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
++			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
++				XILINX_PCIE_RPIFR1_INTR_SHIFT;
+ 			generic_handle_irq(irq_find_mapping(port->leg_domain,
+ 							    val));
+ 		}
 -- 
-1.9.1
+2.13.0
