@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
- catalin.marinas@arm.com, will.deacon@arm.com, wangkefeng.wang@huawei.com,
- xuejiancheng@hisilicon.com, peter.griffin@linaro.org,
- puck.chen@hisilicon.com, lee.jones@linaro.org, ulf.hansson@linaro.org,
- bhelgaas@google.com, arnd@arndb.de
-Subject: [PATCH v3 00/21] arm64: dts: hi3660: add device nodes
-Date: Wed, 14 Jun 2017 16:23:17 +0800
-Message-Id: <20170614082338.15673-1-guodong.xu@linaro.org>
+MIME-Version: 1.0
+In-Reply-To: <20170602114956.GA20004@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
+ <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
+ <20170602114956.GA20004@red-moon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 2 Jun 2017 15:12:48 +0200
+Message-ID: <CAK8P3a0DRFxz_yjCeFZJ8Zukuy8gi9hPbWEfp29TaF2TMjrnTQ@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 08/18] PCI: designware: Convert PCI scan API to
+ pci_scan_root_bus_bridge()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,101 +19,90 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Guodong Xu <guodong.xu@linaro.org>,
- linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset adds various devices nodes for hi3660 and hikey960.
+On Fri, Jun 2, 2017 at 1:49 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, Apr 28, 2017 at 03:13:04PM +0200, Arnd Bergmann wrote:
+>> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>> > The introduction of pci_scan_root_bus_bridge() provides a PCI core
+>> > API to scan a PCI root bus backed by an already initialized
+>> > struct pci_host_bridge object, which simplifies the bus scan
+>> > interface and makes the PCI scan root bus interface easier to
+>> > generalize as members are added to the struct pci_host_bridge().
+>> >
+>> > Convert PCI designware host code to pci_scan_root_bus_bridge() to
+>> > improve the PCI root bus scanning interface.
+>> >
+>> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> > Cc: Jingoo Han <jingoohan1@gmail.com>
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+>> > ---
+>> >  drivers/pci/dwc/pcie-designware-host.c | 36 +++++++++++++++++++++-------------
+>> >  1 file changed, 22 insertions(+), 14 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+>> > index 5ba3349..e43c21a 100644
+>> > --- a/drivers/pci/dwc/pcie-designware-host.c
+>> > +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> > @@ -294,16 +294,21 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>> >                 dev_err(dev, "missing *config* reg space\n");
+>> >         }
+>> >
+>> > -       ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+>> > +       bridge = pci_alloc_host_bridge(0);
+>> > +       if (!bridge)
+>> > +               return  -ENOMEM;
+>> > +
+>>
+>> I think here we warn to have the pci_alloc_host_bridge() called in the
+>> individual
+>> drivers, to have them allocate the dw_pcie structure as part of the host
+>> bridge allocation, before calling hisi_add_pcie_port().
+>
+> I am almost done refactoring this series and this is the last review to
+> address. What you suggest above makes sense but:
+>
+> 1) it means patching ALL dw_pcie_host_init() callers and allocate the
+>    host bridge there, not sure it simplifies, certainly it complicates
+>    the error handling path (given that the host bridge memory is
+>    probably the only memory that is allocated with kzalloc instead of
+>    devm interface so it needs unwinding)
+>
+> 2) I noticed that allocating the host bridge in the caller complicates
+>    error handling, in particular code in the mainline (ie tegra and
+>    ftpci100) using pci_alloc_host_bridge() needs already patching since it
+>    may leak memory if PCI host bridge drivers probing fails.
+>
+> I can implement (1) and (2) but I wanted to ask first to understand if
+> that's the direction we want to take.
 
-HiKey960 is one of 96boards. For details information about it, please
-refer to [1].
+Good question. Maybe we should add a devm_pci_alloc_host_bridge()
+instead? Would that solve these problems without creating bigger ones?
 
-In v3,
-* nothing is changed for patches already exists in v2.
-* added 9 more dts patches. Most of them already were reviewed with their
-    corresponding driver patchset. For purpose of easy integration for
-    platform maintainer, I copied them here, including threads [2], [3],
-    and [4].
-* four patches, this is the first time they are sent out for review.
-v3-0014-arm64-dts-hi3660-enable-idle-states.patch
-v3-0019-dt-bindings-mmc-dw_mmc-k3-add-document-of-hi3660-.patch
-v3-0020-arm64-dts-hi3660-add-sd-sdio-device-nodes.patch
-v3-0021-arm64-dts-hi3660-hikey960-add-nodes-for-WiFi.patch
-    mmc driver is under review in [5].
-
-In v2, incorporated review comments from Rob Herring <robh@kernel.org>
-* uart4: max-speed should be in slave device bluetooth node
-* LEDs:	- bt_active triggered by 'hci0-power'
-	- move out of SoC level
-* pinctrl: update dts to use #pinctrl-cells
-* uart: add pinctrl information into uart nodes; add label strings.
-* chosen: update stdout-path. serial6 is used.
-* i2c: add label strings. change reg address to lower case.
-* remove unnecessary status="ok"
-* gpio-keys: move out of SoC level.
-
-[1] https://github.com/96boards/documentation/tree/master/ConsumerEdition/HiKey960
-[2] sp804 timer: https://www.spinics.net/lists/kernel/msg2513025.html
-[3] PCIe: https://www.spinics.net/lists/kernel/msg2520677.html
-[4] mfd and regulator: https://www.spinics.net/lists/arm-kernel/msg586147.html
-[5] mmc: https://patchwork.kernel.org/patch/9783273/
-
-Chen Feng (2):
-  arm64: dts: hi3660: Add uarts nodes
-  arm64: dts: hi3660: Add pl031 rtc node
-
-Chen Jun (1):
-  arm64: dts: hi3660: add power key dts node
-
-Guodong Xu (7):
-  dt-bindings: arm: hisilicon: add bindings for HiKey960 board
-  arm64: dts: hisilicon: update compatible string for hikey960
-  arm64: dts: hikey960: add WL1837 Bluetooth device node
-  arm64: dts: hikey960: add LED nodes
-  dt-bindings: mfd: hi6421: Add hi6421v530 compatible string
-  dt-bindings: mmc: dw_mmc-k3: add document of hi3660 mmc
-  arm64: dts: hi3660-hikey960: add nodes for WiFi
-
-Leo Yan (2):
-  arm64: dts: hi3660: add sp804 timer node
-  arm64: dts: hi3660: enable idle states
-
-Li Wei (1):
-  arm64: dts: hi3660: add sd/sdio device nodes
-
-Wang Xiaoyin (4):
-  arm64: dts: hikey960: pinctrl: add more pinmux and pinconfig
-  arm64: dts: hi3660: add gpio dtsi file for Hisilicon Hi3660 SOC
-  arm64: dts: hi3660: add spi device nodes
-  arm64: dts: hikey960: add device node for pmic and regulators
-
-Xiaowei Song (2):
-  dt-bindings: PCI: hisi: Add document for PCIe of Kirin SoCs
-  arm64: dts: hisi: add kirin pcie node
-
-Zhangfei Gao (2):
-  arm64: dts: hi3660: add resources for clock and reset
-  arm64: dts: Add I2C nodes for Hi3660
-
- .../bindings/arm/hisilicon/hisilicon.txt           |   4 +
- Documentation/devicetree/bindings/mfd/hi6421.txt   |   4 +-
- .../devicetree/bindings/mmc/k3-dw-mshc.txt         |   1 +
- .../devicetree/bindings/pci/kirin-pcie.txt         |  50 ++
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts  | 217 +++++-
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 765 +++++++++++++++++++-
- .../arm64/boot/dts/hisilicon/hikey960-pinctrl.dtsi | 778 +++++++++++++++++++--
- 7 files changed, 1744 insertions(+), 75 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
-
--- 
-2.10.2
-
+        Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
