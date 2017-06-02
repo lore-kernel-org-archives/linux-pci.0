@@ -1,258 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:59665 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752009AbdFEQUn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:43 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 7/9] pci: keystone SoC driver adapted to new irq API
-Date: Mon,  5 Jun 2017 17:19:54 +0100
-Message-Id: <f238f4c4dc5cd1ba01c534447b8a73209f945440.1496677911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
+Received: from mx2.suse.de ([195.135.220.15]:50476 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750813AbdFBONO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 2 Jun 2017 10:13:14 -0400
+Date: Fri, 2 Jun 2017 16:13:11 +0200
+From: Jean Delvare <jdelvare@suse.de>
+To: <Narendra.K@dell.com>
+Cc: <x86@kernel.org>, <linux-pci@vger.kernel.org>,
+        <Jordan.Hargrave@dell.com>, <Shyam.Iyer@dell.com>,
+        <bhelgaas@google.com>
+Subject: Re: dmi type 0xB1 record - unknown flag
+Message-ID: <20170602161311.27eab72d@endymion>
+In-Reply-To: <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+References: <20170601143826.5f980444@endymion>
+ <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts Keystone SoC specific driver to use the new interrupt api
-available in pcie-designware. A new callback was added to dw_pcie_host_ops
-to handle a specific Keystone function and msi_host_init callback is changed
-to simplify the access to pci data structure for keystone all SoC drivers
-that use the structure.
+Hi Narendra,
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Thanks for your answer.
+
+On Thu, 1 Jun 2017 13:28:31 +0000, Narendra.K@dell.com wrote:
+> > -----Original Message-----
+> > From: Jean Delvare [mailto:jdelvare@suse.de]
+> > I see the following message in my kernel log:
+> > 
+> > dmi type 0xB1 record - unknown flag
+> > 
+> > This is on a Dell Optiplex 9020 workstation. I see the message comes
+> > from:
+> > 
+> > static void __init read_dmi_type_b1(const struct dmi_header *dm,
+> >                                     void *private_data) {
+> > 	(...)
+> >         switch (((*(u32 *)d) >> 9) & 0x03) {
+> >         case 0x00:
+> >                 printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
+> >                 break;
+> > 
+> > What is the value of this message? Is there anything which needs to be done
+> > to properly support such systems?  
+> 
+> This function was added to avoid adding systems to the 'pciprobe_dmi_table' and set breadth first sorting in a generic way.
+> 
+> This flag is a hint to indicate the sort method to be used. The value 0x01 indicates that PCI breadth first sort be used.
+> ' find_sort_method' function checks if smbios_type_b1_flag is set to 1 and if yes, calls 'set_bf_sort '. This function sets ' pci_bf_sort' to 'pci_dmi_bf'.
+
+I can read the code, thank you ;-)
+
+> The value 0x00 is not a valid value. When the flag is 0x00, the sort method will be the default that is decided by the kernel.
+
+How can it be invalid? I have DMI dumps of several Dell systems with a
+type 0xB1 DMI structure, with value 0x00 for these bits. If Dell ships
+such systems, then this is valid by definition.
+
+> There is no additional handling required for such a system.
+
+I don't understand the complexity of the code. There are 4 possible
+values for these bits, the code treats all of them differently:
+* 0x01, you set smbios_type_b1_flag to 1 and this later triggers a call
+  to set_bf_sort().
+* 0x02, you set smbios_type_b1_flag to 2 but this has no effect.
+* 0x00, you print a rather cryptic info message which serves no purpose.
+* 0x03, you do nothing.
+
+On top of that, I can't see the value of the intermediate variable
+smbios_type_b1_flag. The only situations where it would make a
+difference is if multiple type 0xB1 structures with conflicting
+information were present; but I don't think this is supposed to happen
+in the first place.
+
+Lastly I'm not sure why you continue processing the list of DMI
+matches, when smbios_type_b1_flag == 1, and stop processing it if not.
+This seems needlessly inconsistent.
+
+I think the whole thing can be simplified like this:
+
+From: Jean Delvare <jdelvare@suse.de>
+Subject: x86/PCI: Simplify Dell DMI B1 quirk
+
+No need for such convoluted code, when all we need is to call one
+function in one specific case.
+
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
 ---
-Change v1->v2:
-- Removed hardcoded num_vectors configuration (now it is done in the core
-driver by default)
+ arch/x86/pci/common.c |   27 +++++----------------------
+ 1 file changed, 5 insertions(+), 22 deletions(-)
 
- drivers/pci/dwc/pci-keystone-dw.c      | 96 ++--------------------------------
- drivers/pci/dwc/pci-keystone.c         |  1 +
- drivers/pci/dwc/pci-keystone.h         |  4 +-
- drivers/pci/dwc/pci-layerscape.c       |  3 +-
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++-
- drivers/pci/dwc/pcie-designware.h      |  3 +-
- 6 files changed, 21 insertions(+), 98 deletions(-)
+--- linux-4.11.orig/arch/x86/pci/common.c	2017-05-01 04:47:48.000000000 +0200
++++ linux-4.11/arch/x86/pci/common.c	2017-06-02 16:04:05.737889598 +0200
+@@ -24,7 +24,6 @@ unsigned int pci_probe = PCI_PROBE_BIOS
+ 
+ unsigned int pci_early_dump_regs;
+ static int pci_bf_sort;
+-static int smbios_type_b1_flag;
+ int pci_routeirq;
+ int noioapicquirk;
+ #ifdef CONFIG_X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+@@ -197,34 +196,18 @@ static int __init set_bf_sort(const stru
+ static void __init read_dmi_type_b1(const struct dmi_header *dm,
+ 				    void *private_data)
+ {
+-	u8 *d = (u8 *)dm + 4;
++	u8 *data = (u8 *)dm + 4;
+ 
+ 	if (dm->type != 0xB1)
+ 		return;
+-	switch (((*(u32 *)d) >> 9) & 0x03) {
+-	case 0x00:
+-		printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
+-		break;
+-	case 0x01: /* set pci=bfsort */
+-		smbios_type_b1_flag = 1;
+-		break;
+-	case 0x02: /* do not set pci=bfsort */
+-		smbios_type_b1_flag = 2;
+-		break;
+-	default:
+-		break;
+-	}
++	if ((((*(u32 *)data) >> 9) & 0x03) == 0x01)
++		set_bf_sort((const struct dmi_system_id *)private_data);
+ }
+ 
+ static int __init find_sort_method(const struct dmi_system_id *d)
+ {
+-	dmi_walk(read_dmi_type_b1, NULL);
+-
+-	if (smbios_type_b1_flag == 1) {
+-		set_bf_sort(d);
+-		return 0;
+-	}
+-	return -1;
++	dmi_walk(read_dmi_type_b1, (void *)d);
++	return 0;
+ }
+ 
+ /*
 
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index 8bc626e..1b7314d 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -124,19 +124,15 @@ void ks_dw_pcie_handle_msi_irq(struct keystone_pcie *ks_pcie, int offset)
- 	}
- }
- 
--static void ks_dw_pcie_msi_irq_ack(struct irq_data *d)
-+void ks_dw_pcie_msi_irq_ack(int irq, struct pcie_port *pp)
- {
- 	u32 offset, reg_offset, bit_pos;
- 	struct keystone_pcie *ks_pcie;
--	struct msi_desc *msi;
--	struct pcie_port *pp;
- 	struct dw_pcie *pci;
- 
--	msi = irq_data_get_msi_desc(d);
--	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
- 	pci = to_dw_pcie_from_pp(pp);
- 	ks_pcie = to_keystone_pcie(pci);
--	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
-+	offset = irq - irq_linear_revmap(pp->irq_domain, 0);
- 	update_reg_offset_bit_pos(offset, &reg_offset, &bit_pos);
- 
- 	ks_dw_app_writel(ks_pcie, MSI0_IRQ_STATUS + (reg_offset << 4),
-@@ -166,93 +162,9 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- 			 BIT(bit_pos));
- }
- 
--static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
-+int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip)
- {
--	struct keystone_pcie *ks_pcie;
--	struct msi_desc *msi;
--	struct pcie_port *pp;
--	struct dw_pcie *pci;
--	u32 offset;
--
--	msi = irq_data_get_msi_desc(d);
--	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
--	pci = to_dw_pcie_from_pp(pp);
--	ks_pcie = to_keystone_pcie(pci);
--	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
--
--	/* Mask the end point if PVM implemented */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		if (msi->msi_attrib.maskbit)
--			pci_msi_mask_irq(d);
--	}
--
--	ks_dw_pcie_msi_clear_irq(pp, offset);
--}
--
--static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
--{
--	struct keystone_pcie *ks_pcie;
--	struct msi_desc *msi;
--	struct pcie_port *pp;
--	struct dw_pcie *pci;
--	u32 offset;
--
--	msi = irq_data_get_msi_desc(d);
--	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
--	pci = to_dw_pcie_from_pp(pp);
--	ks_pcie = to_keystone_pcie(pci);
--	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
--
--	/* Mask the end point if PVM implemented */
--	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		if (msi->msi_attrib.maskbit)
--			pci_msi_unmask_irq(d);
--	}
--
--	ks_dw_pcie_msi_set_irq(pp, offset);
--}
--
--static struct irq_chip ks_dw_pcie_msi_irq_chip = {
--	.name = "Keystone-PCIe-MSI-IRQ",
--	.irq_ack = ks_dw_pcie_msi_irq_ack,
--	.irq_mask = ks_dw_pcie_msi_irq_mask,
--	.irq_unmask = ks_dw_pcie_msi_irq_unmask,
--};
--
--static int ks_dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
--			      irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &ks_dw_pcie_msi_irq_chip,
--				 handle_level_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops ks_dw_pcie_msi_domain_ops = {
--	.map = ks_dw_pcie_msi_map,
--};
--
--int ks_dw_pcie_msi_host_init(struct pcie_port *pp, struct msi_controller *chip)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
--	struct device *dev = pci->dev;
--	int i;
--
--	pp->irq_domain = irq_domain_add_linear(ks_pcie->msi_intc_np,
--					MAX_MSI_IRQS,
--					&ks_dw_pcie_msi_domain_ops,
--					chip);
--	if (!pp->irq_domain) {
--		dev_err(dev, "irq domain init failed\n");
--		return -ENXIO;
--	}
--
--	for (i = 0; i < MAX_MSI_IRQS; i++)
--		irq_create_mapping(pp->irq_domain, i);
--
--	return 0;
-+	return dw_pcie_allocate_domains(pci);
- }
- 
- void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-index fcc9723..a59bd9b 100644
---- a/drivers/pci/dwc/pci-keystone.c
-+++ b/drivers/pci/dwc/pci-keystone.c
-@@ -299,6 +299,7 @@ static struct dw_pcie_host_ops keystone_pcie_host_ops = {
- 	.msi_clear_irq = ks_dw_pcie_msi_clear_irq,
- 	.get_msi_addr = ks_dw_pcie_get_msi_addr,
- 	.msi_host_init = ks_dw_pcie_msi_host_init,
-+	.msi_irq_ack = ks_dw_pcie_msi_irq_ack,
- 	.scan_bus = ks_dw_pcie_v3_65_scan_bus,
- };
- 
-diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
-index 74c5825..83179382 100644
---- a/drivers/pci/dwc/pci-keystone.h
-+++ b/drivers/pci/dwc/pci-keystone.h
-@@ -55,9 +55,9 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 		unsigned int devfn, int where, int size, u32 *val);
- void ks_dw_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie);
- void ks_dw_pcie_initiate_link_train(struct keystone_pcie *ks_pcie);
-+void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
- void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
--int ks_dw_pcie_msi_host_init(struct pcie_port *pp,
--		struct msi_controller *chip);
-+int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip);
- int ks_dw_pcie_link_up(struct dw_pcie *pci);
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 27d638c..4fb491b 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -162,10 +162,9 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- }
- 
--static int ls_pcie_msi_host_init(struct pcie_port *pp,
-+static int ls_pcie_msi_host_init(struct dw_pcie *pci,
- 				 struct msi_controller *chip)
- {
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct device *dev = pci->dev;
- 	struct device_node *np = dev->of_node;
- 	struct device_node *msi_node;
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index b203754..feeee6a 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -199,8 +199,18 @@ static void dw_pci_bottom_unmask(struct irq_data *data)
- 	spin_unlock_irqrestore(&pp->lock, flags);
- }
- 
-+static void dw_pci_bottom_ack(struct irq_data *d)
-+{
-+	struct msi_desc *msi = irq_data_get_msi_desc(d);
-+	struct pcie_port *pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
-+
-+	if (pp->ops->msi_irq_ack)
-+		pp->ops->msi_irq_ack(d->irq, pp);
-+}
-+
- static struct irq_chip dw_pci_msi_bottom_irq_chip = {
- 	.name			= "DWPCI-MSI",
-+	.irq_ack		= dw_pci_bottom_ack,
- 	.irq_compose_msi_msg	= dw_pci_setup_msi_msg,
- 	.irq_set_affinity	= dw_pci_msi_set_affinity,
- 	.irq_mask		= dw_pci_bottom_mask,
-@@ -619,7 +629,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 							 dw_chained_msi_isr,
- 							 pci);
- 		} else {
--			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
-+			ret = pp->ops->msi_host_init(pci, &dw_pcie_msi_chip);
- 			if (ret < 0)
- 				goto error;
- 		}
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 9838d6d..7385b4e 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -142,7 +142,8 @@ struct dw_pcie_host_ops {
- 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	void (*set_num_vectors)(struct pcie_port *pp);
--	int (*msi_host_init)(struct pcie_port *pp, struct msi_controller *chip);
-+	int (*msi_host_init)(struct dw_pcie *pci, struct msi_controller *chip);
-+	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
- };
- 
- struct pcie_port {
+What do you think?
+
+Thanks,
 -- 
-2.9.3
+Jean Delvare
+SUSE L3 Support
