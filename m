@@ -1,14 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jisheng Zhang'" <jszhang@marvell.com>,
-	<bhelgaas@google.com>
-References: <20170605085346.3732-1-jszhang@marvell.com>
-In-Reply-To: <20170605085346.3732-1-jszhang@marvell.com>
-Subject: Re: [PATCH] PCI: dwc: Constify dw_pcie_host_ops structures
-Date: Mon, 5 Jun 2017 18:30:54 -0400
-Message-ID: <000001d2de4b$65f2f360$31d8da20$@gmail.com>
+Subject: Re: [PATCH] PCI: rockchip: Handle return value of clk_prepare_enable
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+References: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <f8e91d5f-77ea-6836-87b4-53b99544074d@rock-chips.com>
+Date: Fri, 2 Jun 2017 15:28:51 +0800
 MIME-Version: 1.0
+In-Reply-To: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,225 +15,51 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@axis.com,
- jesper.nilsson@axis.com, Joao.Pinto@synopsys.com, pratyush.anand@gmail.com,
- krzk@kernel.org, kishon@ti.com, javier@osg.samsung.com, kgene@kernel.org,
- niklas.cassel@axis.com, hongxing.zhu@nxp.com, linux-arm-msm@vger.kernel.org,
- linux-samsung-soc@vger.kernel.org, m-karicheri2@ti.com,
- mingkai.hu@freescale.com, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, thomas.petazzoni@free-electrons.com,
- tie-fei.zang@freescale.com, linux-kernel@vger.kernel.org, svarbanov@mm-sol.com,
- minghuan.Lian@freescale.com, linuxppc-dev@lists.ozlabs.org,
- l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
+Cc: heiko@sntech.de, linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="gbk"; Format="flowed"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, June 5, 2017 4:54 AM, Jisheng Zhang wrote:
-> 
-> The dw_pcie_host_ops structures are never modified. Constify these
-> structures such that these can be write-protected.
-> 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/dwc/pci-dra7xx.c           | 2 +-
->  drivers/pci/dwc/pci-exynos.c           | 2 +-
->  drivers/pci/dwc/pci-imx6.c             | 2 +-
->  drivers/pci/dwc/pci-keystone.c         | 2 +-
->  drivers/pci/dwc/pci-layerscape.c       | 6 +++---
->  drivers/pci/dwc/pcie-armada8k.c        | 2 +-
->  drivers/pci/dwc/pcie-artpec6.c         | 2 +-
->  drivers/pci/dwc/pcie-designware-plat.c | 2 +-
->  drivers/pci/dwc/pcie-designware.h      | 2 +-
->  drivers/pci/dwc/pcie-qcom.c            | 2 +-
->  drivers/pci/dwc/pcie-spear13xx.c       | 2 +-
->  11 files changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 8decf46cf525..e4166032b3c6 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -208,7 +208,7 @@ static void dra7xx_pcie_host_init(struct pcie_port
-*pp)
->  	dra7xx_pcie_enable_interrupts(dra7xx);
->  }
-> 
-> -static struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
->  	.host_init = dra7xx_pcie_host_init,
->  };
-> 
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 546082ad5a3f..c78c06552590 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -590,7 +590,7 @@ static void exynos_pcie_host_init(struct pcie_port
-*pp)
->  	exynos_pcie_enable_interrupts(ep);
->  }
-> 
-> -static struct dw_pcie_host_ops exynos_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops exynos_pcie_host_ops = {
->  	.rd_own_conf = exynos_pcie_rd_own_conf,
->  	.wr_own_conf = exynos_pcie_wr_own_conf,
->  	.host_init = exynos_pcie_host_init,
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> index a98cba55c7f0..fb4816088a7a 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -602,7 +602,7 @@ static int imx6_pcie_link_up(struct dw_pcie *pci)
->  			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
->  }
-> 
-> -static struct dw_pcie_host_ops imx6_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
->  	.host_init = imx6_pcie_host_init,
->  };
-> 
-> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-
-> keystone.c
-> index fcc9723bad6e..4783cec1f78d 100644
-> --- a/drivers/pci/dwc/pci-keystone.c
-> +++ b/drivers/pci/dwc/pci-keystone.c
-> @@ -291,7 +291,7 @@ static void __init ks_pcie_host_init(struct pcie_port
-> *pp)
->  			"Asynchronous external abort");
->  }
-> 
-> -static struct dw_pcie_host_ops keystone_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops keystone_pcie_host_ops = {
->  	.rd_other_conf = ks_dw_pcie_rd_other_conf,
->  	.wr_other_conf = ks_dw_pcie_wr_other_conf,
->  	.host_init = ks_pcie_host_init,
-> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-
-> layerscape.c
-> index 27d638c4e134..fd861289ad8b 100644
-> --- a/drivers/pci/dwc/pci-layerscape.c
-> +++ b/drivers/pci/dwc/pci-layerscape.c
-> @@ -39,7 +39,7 @@ struct ls_pcie_drvdata {
->  	u32 lut_offset;
->  	u32 ltssm_shift;
->  	u32 lut_dbg;
-> -	struct dw_pcie_host_ops *ops;
-> +	const struct dw_pcie_host_ops *ops;
->  	const struct dw_pcie_ops *dw_pcie_ops;
->  };
-> 
-> @@ -185,12 +185,12 @@ static int ls_pcie_msi_host_init(struct pcie_port
-> *pp,
->  	return 0;
->  }
-> 
-> -static struct dw_pcie_host_ops ls1021_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops ls1021_pcie_host_ops = {
->  	.host_init = ls1021_pcie_host_init,
->  	.msi_host_init = ls_pcie_msi_host_init,
->  };
-> 
-> -static struct dw_pcie_host_ops ls_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops ls_pcie_host_ops = {
->  	.host_init = ls_pcie_host_init,
->  	.msi_host_init = ls_pcie_msi_host_init,
->  };
-> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-
-> armada8k.c
-> index 495b023042b3..ea8f34af6a85 100644
-> --- a/drivers/pci/dwc/pcie-armada8k.c
-> +++ b/drivers/pci/dwc/pcie-armada8k.c
-> @@ -160,7 +160,7 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq,
-> void *arg)
->  	return IRQ_HANDLED;
->  }
-> 
-> -static struct dw_pcie_host_ops armada8k_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops armada8k_pcie_host_ops = {
->  	.host_init = armada8k_pcie_host_init,
->  };
-> 
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-
-> artpec6.c
-> index 82a04acc42fd..01c6f7823672 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -184,7 +184,7 @@ static void artpec6_pcie_host_init(struct pcie_port
-> *pp)
->  	artpec6_pcie_enable_interrupts(artpec6_pcie);
->  }
-> 
-> -static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
->  	.host_init = artpec6_pcie_host_init,
->  };
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c
-> b/drivers/pci/dwc/pcie-designware-plat.c
-> index a9865d91b43c..091b4e7ad059 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -46,7 +46,7 @@ static void dw_plat_pcie_host_init(struct pcie_port *pp)
->  		dw_pcie_msi_init(pp);
->  }
-> 
-> -static struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->  	.host_init = dw_plat_pcie_host_init,
->  };
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-
-> designware.h
-> index c6a840575796..b4d2a89f8e58 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -162,7 +162,7 @@ struct pcie_port {
->  	struct resource		*mem;
->  	struct resource		*busn;
->  	int			irq;
-> -	struct dw_pcie_host_ops	*ops;
-> +	const struct dw_pcie_host_ops *ops;
->  	int			msi_irq;
->  	struct irq_domain	*irq_domain;
->  	unsigned long		msi_data;
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 96ee527c1ed2..39e8c0095715 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -634,7 +634,7 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp,
-> int where, int size,
->  	return dw_pcie_read(pci->dbi_base + where, size, val);
->  }
-> 
-> -static struct dw_pcie_host_ops qcom_pcie_dw_ops = {
-> +static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
->  	.host_init = qcom_pcie_host_init,
->  	.rd_own_conf = qcom_pcie_rd_own_conf,
->  };
-> diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-
-> spear13xx.c
-> index 8ff36b3dbbdf..80897291e0fb 100644
-> --- a/drivers/pci/dwc/pcie-spear13xx.c
-> +++ b/drivers/pci/dwc/pcie-spear13xx.c
-> @@ -186,7 +186,7 @@ static void spear13xx_pcie_host_init(struct pcie_port
-> *pp)
->  	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
->  }
-> 
-> -static struct dw_pcie_host_ops spear13xx_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops spear13xx_pcie_host_ops = {
->  	.host_init = spear13xx_pcie_host_init,
->  };
-> 
-> --
-> 2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGksCgrU2iAyMDE3LzYvMSAxODoyMSwgQXJ2aW5kIFlhZGF2INC0tcA6Cj4gY2xrX3ByZXBhcmVf
+ZW5hYmxlKCkgY2FuIGZhaWwgaGVyZSBhbmQgd2UgbXVzdCBjaGVjayBpdHMgcmV0dXJuIHZhbHVl
+Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFydmluZCBZYWRhdiA8YXJ2aW5kLnlhZGF2LmNzQGdtYWls
+LmNvbT4KCkFja2VkLWJ5OiBTaGF3biBMaW4gPHNoYXduLmxpbkByb2NrLWNoaXBzLmNvbT4KCj4g
+LS0tCj4gICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtcm9ja2NoaXAuYyB8IDM0ICsrKysrKysrKysr
+KysrKysrKysrKysrKysrKystLS0tLS0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAyOCBpbnNlcnRpb25z
+KCspLCA2IGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3Bj
+aWUtcm9ja2NoaXAuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jCj4gaW5kZXgg
+MGUwMjBiNi4uMGEyNDhjZCAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtcm9j
+a2NoaXAuYwo+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jCj4gQEAgLTEy
+NTksMjQgKzEyNTksNDYgQEAgc3RhdGljIGludCBfX21heWJlX3VudXNlZCByb2NrY2hpcF9wY2ll
+X3Jlc3VtZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gICAJc3RydWN0IHJvY2tjaGlwX3Bj
+aWUgKnJvY2tjaGlwID0gZGV2X2dldF9kcnZkYXRhKGRldik7Cj4gICAJaW50IGVycjsKPiAgIAo+
+IC0JY2xrX3ByZXBhcmVfZW5hYmxlKHJvY2tjaGlwLT5jbGtfcGNpZV9wbSk7Cj4gLQljbGtfcHJl
+cGFyZV9lbmFibGUocm9ja2NoaXAtPmhjbGtfcGNpZSk7Cj4gLQljbGtfcHJlcGFyZV9lbmFibGUo
+cm9ja2NoaXAtPmFjbGtfcGVyZl9wY2llKTsKPiAtCWNsa19wcmVwYXJlX2VuYWJsZShyb2NrY2hp
+cC0+YWNsa19wY2llKTsKPiArCWVyciA9IGNsa19wcmVwYXJlX2VuYWJsZShyb2NrY2hpcC0+Y2xr
+X3BjaWVfcG0pOwo+ICsJaWYgKGVycikKPiArCQlnb3RvIGVycl9wY2llX3BtOwo+ICsKPiArCWVy
+ciA9IGNsa19wcmVwYXJlX2VuYWJsZShyb2NrY2hpcC0+aGNsa19wY2llKTsKPiArCWlmIChlcnIp
+Cj4gKwkJZ290byBlcnJfaGNsa19wY2llOwo+ICsKPiArCWVyciA9IGNsa19wcmVwYXJlX2VuYWJs
+ZShyb2NrY2hpcC0+YWNsa19wZXJmX3BjaWUpOwo+ICsJaWYgKGVycikKPiArCQlnb3RvIGVycl9h
+Y2xrX3BlcmZfcGNpZTsKPiArCj4gKwllcnIgPSBjbGtfcHJlcGFyZV9lbmFibGUocm9ja2NoaXAt
+PmFjbGtfcGNpZSk7Cj4gKwlpZiAoZXJyKQo+ICsJCWdvdG8gZXJyX2FjbGtfcGNpZTsKPiAgIAo+
+ICAgCWVyciA9IHJvY2tjaGlwX3BjaWVfaW5pdF9wb3J0KHJvY2tjaGlwKTsKPiAgIAlpZiAoZXJy
+KQo+IC0JCXJldHVybiBlcnI7Cj4gKwkJZ290byBlcnJfcGNpZV9yZXN1bWU7Cj4gICAKPiAgIAll
+cnIgPSByb2NrY2hpcF9jZmdfYXR1KHJvY2tjaGlwKTsKPiAgIAlpZiAoZXJyKQo+IC0JCXJldHVy
+biBlcnI7Cj4gKwkJZ290byBlcnJfcGNpZV9yZXN1bWU7Cj4gICAKPiAgIAkvKiBOZWVkIHRoaXMg
+dG8gZW50ZXIgTDEgYWdhaW4gKi8KPiAgIAlyb2NrY2hpcF9wY2llX3VwZGF0ZV90eGNyZWRpdF9t
+dWkocm9ja2NoaXApOwo+ICAgCXJvY2tjaGlwX3BjaWVfZW5hYmxlX2ludGVycnVwdHMocm9ja2No
+aXApOwo+ICAgCj4gICAJcmV0dXJuIDA7Cj4gKwo+ICtlcnJfcGNpZV9yZXN1bWU6Cj4gKwljbGtf
+ZGlzYWJsZV91bnByZXBhcmUocm9ja2NoaXAtPmFjbGtfcGNpZSk7Cj4gK2Vycl9hY2xrX3BjaWU6
+Cj4gKwljbGtfZGlzYWJsZV91bnByZXBhcmUocm9ja2NoaXAtPmFjbGtfcGVyZl9wY2llKTsKPiAr
+ZXJyX2FjbGtfcGVyZl9wY2llOgo+ICsJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKHJvY2tjaGlwLT5o
+Y2xrX3BjaWUpOwo+ICtlcnJfaGNsa19wY2llOgo+ICsJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKHJv
+Y2tjaGlwLT5jbGtfcGNpZV9wbSk7Cj4gK2Vycl9wY2llX3BtOgo+ICsJcmV0dXJuIGVycjsKPiAg
+IH0KPiAgIAo+ICAgc3RhdGljIGludCByb2NrY2hpcF9wY2llX3Byb2JlKHN0cnVjdCBwbGF0Zm9y
+bV9kZXZpY2UgKnBkZXYpCj4gCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5l
+bEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4v
+bGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
