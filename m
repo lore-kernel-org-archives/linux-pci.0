@@ -1,98 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-References: <20170612155700.GA31930@red-moon>
- <20170613084831.GP3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
- <20170613200339.GX3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
- <20170616083313.GY3187@lahna.fi.intel.com>
- <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
- <808a7db0-7844-b263-0216-1fe943ac819a@huawei.com>
- <20170630090515.GU629@lahna.fi.intel.com>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <b2bc9134-9944-bd6a-2daf-8f1a1ff49a62@huawei.com>
-Date: Fri, 30 Jun 2017 10:28:36 +0100
+Return-Path: <SRS0=g5Yv=5I=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=g5Yv=5I=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v2 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Sat, 3 Jun 2017 12:04:04 +0800
+Message-ID: <1496462647-7632-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170630090515.GU629@lahna.fi.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, "minyard@acm.org" <minyard@acm.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "olof@lixom.net" <olof@lixom.net>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/06/2017 10:05, Mika Westerberg wrote:
-> On Thu, Jun 29, 2017 at 05:16:15PM +0100, John Garry wrote:
->> On 16/06/2017 12:24, Rafael J. Wysocki wrote:
->>>>>>>>>
->>>>>>>>> It causes acpi_default_enumeration() to be called but it should be fine
->>>>>>>>> as we are dealing with platform device anyway.
->>>>>>>
->>>>>>> I do not quite understand how declaring such MFD cell above would make sure
->>>>>>> that the LPC probe is called before the IPMI device is enumerated...
->>>>>
->>>>> In fact it may be that it is not sufficient in this case because the
->>>>> ACPI core might enumerate child devices before the LPC driver even gets
->>>>> a chance to probe so you would need to add also scan handler to the
->>>>> child devices and mark them already enumerated or something like that.
->>> Or extend the special I2C/SPI handling to them.
->>>
->>
->> For this, is it possible to just configure the ACPI table so we spoof that
->> the LPC slave (IPI0001), is an i2c/spi slave? Could we just add a resource
->> of type ACPI_RESOURCE_TYPE_SERIAL_BUS, and common serial bus type i2c/spi to
->> solve this?
->
-> But is the device connected to a I2C or SPI bus? If not, then it does
-> not make much sense to declare it as I2C or SPI slave. Instead it should
-> be platform device which is the type we use when there is no explicit
-> bus specified in ACPI.
->
+Some devices have problems with Transaction Layer Packets with the Relaxed
+Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+devices with Relaxed Ordering issues, and a use of this new flag by the
+cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+Ports.
 
-No, it's not a SPI nor an I2C bus. I actually would say that my idea is 
-generally wrong, as the ACPI definition is not a real reflection of the 
-bus/slave.
+It's been years since I've submitted kernel.org patches, I appolgise for the
+almost certain submission errors.
 
-However, Rafael did suggest extending special I2C/SPI handling to them. 
-In this case, I don't see how the LPC slave can be identified like an 
-I2C or SPI slave is.
+v2: Alexander point out that the v1 was only a part of the whole solution,
+    some platform which has some issues could use the new flag to indicate
+    that it is not safe to enable relaxed ordering attribute, then we need
+    to clear the relaxed ordering enable bits in the PCI configuration when
+    initializing the device. So add a new second patch to modify the PCI
+    initialization code to clear the relaxed ordering enable bit in the
+    event that the root complex doesn't want relaxed ordering enabled.
 
-Thanks,
-John
+    The third patch was base on the v1's second patch and only be changed
+    to query the relaxed ordering enable bit in the PCI configuration space
+    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
+    set.
 
-> .
->
+    This version didn't plan to drop the defines for Intel Drivers to use the
+    new checking way to enable relaxed ordering because it is not the hardest
+    part of the moment, we could fix it in next patchset when this patches
+    reach the goal.  
 
+Casey Leedom (2):
+  PCI: Add new PCIe Fabric End Node flag,
+    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
 
+Ding Tianhong (1):
+  PCI: Enable PCIe Relaxed Ordering if supported
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
+ drivers/pci/pci.c                               | 42 +++++++++++++++++++++++++
+ drivers/pci/probe.c                             | 11 +++++++
+ drivers/pci/quirks.c                            | 38 ++++++++++++++++++++++
+ include/linux/pci.h                             |  5 +++
+ 7 files changed, 117 insertions(+), 2 deletions(-)
+
+-- 
+1.9.0
