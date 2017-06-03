@@ -1,174 +1,104 @@
-Return-Path: <SRS0=uHYp=5I=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=uHYp=5I=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=g5Yv=5I=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=g5Yv=5I=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v2 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Sat, 3 Jun 2017 12:04:05 +0800
+Message-ID: <1496462647-7632-2-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1496462647-7632-1-git-send-email-dingtianhong@huawei.com>
+References: <1496462647-7632-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1496462647-7632-3-git-send-email-dingtianhong@huawei.com>
-References: <1496462647-7632-1-git-send-email-dingtianhong@huawei.com> <1496462647-7632-3-git-send-email-dingtianhong@huawei.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Sat, 3 Jun 2017 11:19:15 -0700
-Message-ID: <CAKgT0UfKPLy7=swnZYiYOrLS8znhjxeXNZv=+CK5XS3Z1fkMbw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Ding Tianhong <dingtianhong@huawei.com>
-Cc: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
-	Ganesh Goudar <ganeshgr@chelsio.com>, Asit K Mallick <asit.k.mallick@intel.com>,
-	Patrick J Cramer <patrick.j.cramer@intel.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Bob Shaw <Bob.Shaw@amd.com>,
-	h <l.stach@pengutronix.de>, Amir Ancel <amira@mellanox.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>, David Laight <David.Laight@aculab.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
-	linux-arm-kernel@lists.infradead.org, Netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 2, 2017 at 9:04 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
-> The PCIe Device Control Register use the bit 4 to indicate that
-> whether the device is permitted to enable relaxed ordering or not.
-> But relaxed ordering is not safe for some platform which could only
-> use strong write ordering, so devices are allowed (but not required)
-> to enable relaxed ordering bit by default.
->
-> If a platform support relaxed ordering but does not enable it by
-> default, enable it in the PCIe configuration. This allows some device
-> to send TLPs with the relaxed ordering attributes set, which may
-> improve the performance.
->
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> ---
->  drivers/pci/pci.c   | 42 ++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/probe.c | 11 +++++++++++
->  include/linux/pci.h |  3 +++
->  3 files changed, 56 insertions(+)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b01bd5b..f57a374 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4878,6 +4878,48 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->  EXPORT_SYMBOL(pcie_set_mps);
->
->  /**
-> + * pcie_set_relaxed_ordering - set PCI Express relexed ordering bit
-> + * @dev: PCI device to query
-> + *
-> + * If possible sets relaxed ordering
-> + */
-> +int pcie_set_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +       return pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
-> +}
-> +EXPORT_SYMBOL(pcie_set_relaxed_ordering);
-> +
-> +/**
-> + * pcie_clear_relaxed_ordering - clear PCI Express relexed ordering bit
-> + * @dev: PCI device to query
-> + *
-> + * If possible clear relaxed ordering
-> + */
-> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +       return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
-> +}
-> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
-> +
-> +/**
-> + * pcie_get_relaxed_ordering - check PCI Express relexed ordering bit
-> + * @dev: PCI device to query
-> + *
-> + * Returns true if relaxed ordering is been set
-> + */
-> +int pcie_get_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +       u16 v;
-> +
-> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-> +
-> +       return (v & PCI_EXP_DEVCTL_RELAX_EN) >> 4;
-> +}
-> +EXPORT_SYMBOL(pcie_get_relaxed_ordering);
-> +
-> +/**
-> + * pcie_set_mps - set PCI Express maximum payload size
-> +/**
->   * pcie_get_minimum_link - determine minimum link settings of a PCI device
->   * @dev: PCI device to query
->   * @speed: storage for minimum speed
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 19c8950..aeb22b5 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1701,6 +1701,16 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
->                                          PCI_EXP_DEVCTL_EXT_TAG);
->  }
->
-> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +       int ret;
-> +
-> +       if (dev && (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING))
+From: Casey Leedom <leedom@chelsio.com>
 
-So there is a minor issue here. The problem is this is only trying to
-modify relaxed ordering for the device itself. That isn't what we
-want. What we want is to modify it on all of the upstream port
-interfaces where there is something the path to the root complex that
-has an issue. So if the root complex has to set the
-NO_RELAXED_ORDERING flag on a root port, all of the interfaces below
-it that would be pushing traffic toward it should not have the relaxed
-ordering bit set.
+The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
+Ordering Attribute should not be used on Transaction Layer Packets destined
+for the PCIe End Node so flagged.  Initially flagged this way are Intel
+E5-26xx Root Complex Ports which suffer from a Flow Control Credit
+Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
+don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
 
-Also I am pretty sure this is a PCIe capability, not a PCI capability.
-You probably need to make sure you code is making this distinction
-which I don't know if it currently is. If you need an example of the
-kind of checks I am suggesting just take a look at
-pcie_configure_mps(). It is verifying the function is PCIe before
-attempting to make any updates. In your case you will probably also
-need to make sure there is a bus for you to walk up the chain of.
-Otherwise this shouldn't apply.
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |  2 ++
+ 2 files changed, 40 insertions(+)
 
-
-> +               pcie_set_relaxed_ordering(dev);
-> +       else
-> +               pcie_clear_relaxed_ordering(dev);
-> +}
-
-Also I am not a fan of the way this is handled currently. If you don't
-have relaxed ordering set then you don't need to do anything else, if
-you do have it set but there is no bus to walk up you shouldn't change
-it, and if there is a bus to walk up and you find that the root
-complex on that bus has the NO_RELAXED_ORDERING set you should clear
-it. Right now this code seems to be enabling relaxed ordering if the
-NO_RELAXED_ORDERING flag is set.
-
-> +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->         struct hotplug_params hpp;
-> @@ -1708,6 +1718,7 @@ static void pci_configure_device(struct pci_dev *dev)
->
->         pci_configure_mps(dev);
->         pci_configure_extended_tags(dev);
-> +       pci_configure_relaxed_ordering(dev);
->
->         memset(&hpp, 0, sizeof(hpp));
->         ret = pci_get_hp_params(dev, &hpp);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e1e8428..84bd6af 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1105,6 +1105,9 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->  void pci_pme_wakeup_bus(struct pci_bus *bus);
->  void pci_d3cold_enable(struct pci_dev *dev);
->  void pci_d3cold_disable(struct pci_dev *dev);
-> +int pcie_set_relaxed_ordering(struct pci_dev *dev);
-> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
-> +int pcie_get_relaxed_ordering(struct pci_dev *dev);
->
->  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->                                   bool enable)
-> --
-> 1.9.0
->
->
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 085fb78..58bdd23 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3999,6 +3999,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
+ 			      quirk_tw686x_class);
+ 
+ /*
++ * Some devices have problems with Transaction Layer Packets with the Relaxed
++ * Ordering Attribute set.  Such devices should mark themselves and other
++ * Device Drivers should check before sending TLPs with RO set.
++ */
++static void quirk_relaxedordering_disable(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
++}
++
++/*
++ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
++ * cause performance problems with Upstream Transaction Layer Packets with
++ * Relaxed Ordering set.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
++ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
++ * where Upstream Transaction Layer Packets with the Relaxed Ordering
++ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
++ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
++ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
++ * November 10, 2010).  As a result, on this platform we can't use Relaxed
++ * Ordering for Upstream TLPs.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
+  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+  * values for the Attribute as were supplied in the header of the
+  * corresponding Request, except as explicitly allowed when IDO is used."
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33c2b0b..e1e8428 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -183,6 +183,8 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
+ 	/* Do not use FLR even if device advertises PCI_AF_CAP */
+ 	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
++	/* Don't use Relaxed Ordering for TLPs directed at this device */
++	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
+ };
+ 
+ enum pci_irq_reroute_variant {
+-- 
+1.9.0
