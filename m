@@ -1,139 +1,187 @@
-Return-Path: <SRS0=n20i=6C=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=n20i=6C=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Kai-Heng Feng <kai.heng.feng@canonical.com>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org, USB list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v2] PCI / PM: Avoid using device_may_wakeup() for runtime PM
-Date: Fri, 30 Jun 2017 00:37 +0200
-Message-ID: <2254362.EY9ByagAJb@aspire.rjw.lan>
-In-Reply-To: <2677722.OnHOCzR3UZ@aspire.rjw.lan>
-References: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org> <2883450.A8OIi7Gmb8@aspire.rjw.lan> <2677722.OnHOCzR3UZ@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:21087 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751077AbdFDAEO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 3 Jun 2017 20:04:14 -0400
+Date: Sun, 4 Jun 2017 08:03:22 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: kbuild-all@01.org, bhelgaas@google.com, kishon@ti.com,
+        jingoohan1@gmail.com, arnd@arndb.de, tn@semihalf.com,
+        keith.busch@intel.com, niklas.cassel@axis.com, dhdang@apm.com,
+        liudongdong3@huawei.com, gabriele.paoloni@huawei.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, chenyao11@huawei.com, puck.chen@hisilicon.com,
+        songxiaowei@hisilicon.com, guodong.xu@linaro.org,
+        wangbinghui@hisilicon.com, suzhuangluan@hisilicon.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v9 2/4] arm64: dts: hisi: add kirin pcie node
+Message-ID: <201706040735.pu1PIspV%fengguang.wu@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/mixed; boundary="vtzGhvizbBRQ85DL"
+In-Reply-To: <20170531070109.81569-3-songxiaowei@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, June 23, 2017 02:58:11 PM Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> pci_target_state() calls device_may_wakeup() which checks whether
-> or not the device may wake up the system from sleep states, but
-> pci_target_state() is used for runtime PM too.
-> 
-> Since runtime PM is expected to always enable remote wakeup if
-> possible, modify pci_target_state() to take additional argument
-> indicating whether or not it should look for a state from which
-> the device can signal wakeup and pass either the return value
-> of device_can_wakeup(), or "false" (if the device itself is not
-> wakeup-capable) to it from the code related to runtime PM.
-> 
-> While at it, fix the comment in pci_dev_run_wake() which is not
-> about sleep states.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> ---
-> 
-> -> v2:
-> 
-> Passing "true" as the second argument to pci_target_state() for runtime PM
-> might trigger suboptimal state choices to be made, so pass the return value
-> of device_can_wakeup() to it instead and pass "false" to it in pci_dev_run_wake(),
-> because that assumes device_can_wakeup() to return "false" already.
 
-This was sent a week ago without any response so far.
+--vtzGhvizbBRQ85DL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Any concerns?
+Hi Xiaowei,
 
-> ---
->  drivers/pci/pci.c |   22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -1982,12 +1982,13 @@ EXPORT_SYMBOL(pci_wake_from_d3);
->  /**
->   * pci_target_state - find an appropriate low power state for a given PCI dev
->   * @dev: PCI device
-> + * @wakeup: Whether or not wakeup functionality will be enabled for the device.
->   *
->   * Use underlying platform code to find a supported low power state for @dev.
->   * If the platform can't manage @dev, return the deepest state from which it
->   * can generate wake events, based on any available PME info.
->   */
-> -static pci_power_t pci_target_state(struct pci_dev *dev)
-> +static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
->  {
->  	pci_power_t target_state = PCI_D3hot;
->  
-> @@ -2024,7 +2025,7 @@ static pci_power_t pci_target_state(stru
->  	if (dev->current_state == PCI_D3cold)
->  		target_state = PCI_D3cold;
->  
-> -	if (device_may_wakeup(&dev->dev)) {
-> +	if (wakeup) {
->  		/*
->  		 * Find the deepest state from which the device can generate
->  		 * wake-up events, make it the target state and enable device
-> @@ -2050,13 +2051,14 @@ static pci_power_t pci_target_state(stru
->   */
->  int pci_prepare_to_sleep(struct pci_dev *dev)
->  {
-> -	pci_power_t target_state = pci_target_state(dev);
-> +	bool wakeup = device_may_wakeup(&dev->dev);
-> +	pci_power_t target_state = pci_target_state(dev, wakeup);
->  	int error;
->  
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> -	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
-> +	pci_enable_wake(dev, target_state, wakeup);
->  
->  	error = pci_set_power_state(dev, target_state);
->  
-> @@ -2089,9 +2091,10 @@ EXPORT_SYMBOL(pci_back_from_sleep);
->   */
->  int pci_finish_runtime_suspend(struct pci_dev *dev)
->  {
-> -	pci_power_t target_state = pci_target_state(dev);
-> +	pci_power_t target_state;
->  	int error;
->  
-> +	target_state = pci_target_state(dev, device_can_wakeup(&dev->dev));
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> @@ -2127,8 +2130,8 @@ bool pci_dev_run_wake(struct pci_dev *de
->  	if (!dev->pme_support)
->  		return false;
->  
-> -	/* PME-capable in principle, but not from the intended sleep state */
-> -	if (!pci_pme_capable(dev, pci_target_state(dev)))
-> +	/* PME-capable in principle, but not from the target power state */
-> +	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
->  		return false;
->  
->  	while (bus->parent) {
-> @@ -2163,9 +2166,10 @@ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
->  bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
->  {
->  	struct device *dev = &pci_dev->dev;
-> +	bool wakeup = device_may_wakeup(dev);
->  
->  	if (!pm_runtime_suspended(dev)
-> -	    || pci_target_state(pci_dev) != pci_dev->current_state
-> +	    || pci_target_state(pci_dev, wakeup) != pci_dev->current_state
->  	    || platform_pci_need_resume(pci_dev)
->  	    || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
->  		return false;
-> @@ -2183,7 +2187,7 @@ bool pci_dev_keep_suspended(struct pci_d
->  	spin_lock_irq(&dev->power.lock);
->  
->  	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold &&
-> -	    !device_may_wakeup(dev))
-> +	    !wakeup)
->  		__pci_pme_active(pci_dev, false);
->  
->  	spin_unlock_irq(&dev->power.lock);
-> 
+[auto build test ERROR on pci/next]
+[also build test ERROR on v4.12-rc3 next-20170602]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Xiaowei-Song/add-PCIe-driver-for-Kirin-PCIe/20170531-182118
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+config: arm64-allnoconfig (attached as .config)
+compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+reproduce:
+        wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # save the attached .config to linux build tree
+        make.cross ARCH=arm64 
+
+All errors (new ones prefixed by >>):
+
+>> Error: arch/arm64/boot/dts/hisilicon/hi3660.dtsi:180.24-25 syntax error
+>> FATAL ERROR: Unable to parse input tree
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+
+--vtzGhvizbBRQ85DL
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
+
+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
+kqbwf2yiT/pvXgAA
+
+--vtzGhvizbBRQ85DL--
