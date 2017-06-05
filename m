@@ -1,63 +1,70 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
-Message-ID: <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
-Date: Wed, 7 Jun 2017 10:19:49 +0200
-MIME-Version: 1.0
-In-Reply-To: <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Mason <slash.tmp@free.fr>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:54283 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751422AbdFEQUi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:38 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 6/9] pci: qcom SoC driver adapted to new irq API
+Date: Mon,  5 Jun 2017 17:19:53 +0100
+Message-Id: <5c1db0324bedd6d20dab5ee6d56c577bf7184859.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/2017 15:33, Marc Gonzalez wrote:
+This patch adapts Qcom SoC specific driver to use the new interrupt
+api available in pcie-designware.
 
-> +static int tango_pcie_probe(struct platform_device *pdev)
-> +{
-> +	int ret = -EINVAL;
-> +	void __iomem *base;
-> +	struct resource *res;
-> +	struct tango_pcie *pcie;
-> +	struct device *dev = &pdev->dev;
-> +
-> +	pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
-> +	pr_err("Tainting kernel... Use driver at your own risk\n");
-> +	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
 
-Hello Bjorn,
+ drivers/pci/dwc/pcie-qcom.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
 
-In v4, your only comment was
-"[muxing config and mem spaces] is a major issue and possibly even
-a security problem [which requires at least an error message and a
-kernel taint].
-
-Were there any other issues with the host bridge support?
-Or is the HW quirk/bug too severe to mainline the driver?
-(I would hate having to discard all that work though.)
-
-Regards.
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 289cda1..c9d24a4 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -145,13 +145,6 @@ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
+ 
+-static irqreturn_t qcom_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+@@ -1029,14 +1022,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       qcom_pcie_msi_irq_handler,
+-				       IRQF_SHARED, "qcom-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "cannot request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	ret = phy_init(pcie->phy);
+-- 
+2.9.3
