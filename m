@@ -1,254 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v2 4/5] PCI / PM: Simplify device wakeup settings code
-Date: Sat, 24 Jun 2017 01:57:35 +0200
-Message-ID: <1822244.KrTDatnU8u@aspire.rjw.lan>
-In-Reply-To: <2524735.NRzn8A9HAf@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan> <2524735.NRzn8A9HAf@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH] PCI: mediatek: fix error handling in
+ mtk_pcie_parse_and_add_res()
+Date: Mon, 5 Jun 2017 14:27:58 +0800
+Message-ID: <1496644078-27122-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Ryder Lee <ryder.lee@mediatek.com>,
+ linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The 'linkup' variable would always increment by one whether the link
+status is true or not. Therefore, this patch fixes the return value in
+mtk_pcie_parse_and_add_res() and removes unnecessary 'linkup' variable.
 
-After previous changes it is not necessary to distinguish between
-device wakeup for run time and device wakeup from system sleep states
-any more, so rework the PCI device wakeup settings code accordingly.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
+ drivers/pci/host/pcie-mediatek.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
--> v2: No changes.
-
----
- drivers/pci/pci-acpi.c   |    3 +--
- drivers/pci/pci-driver.c |    2 +-
- drivers/pci/pci-mid.c    |   10 ++--------
- drivers/pci/pci.c        |   36 ++++++++++--------------------------
- drivers/pci/pci.h        |    9 ++-------
- include/linux/pci.h      |    9 +--------
- 6 files changed, 17 insertions(+), 52 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -615,8 +615,7 @@ static const struct pci_platform_pm_ops
- 	.set_state = acpi_pci_set_power_state,
- 	.get_state = acpi_pci_get_power_state,
- 	.choose_state = acpi_pci_choose_state,
--	.sleep_wake = acpi_pci_wakeup,
--	.run_wake = acpi_pci_wakeup,
-+	.set_wakeup = acpi_pci_wakeup,
- 	.need_resume = acpi_pci_need_resume,
- };
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 8ec8fa8..3baafa8 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -373,7 +373,7 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
+ 	struct of_pci_range_parser parser;
+ 	struct of_pci_range range;
+ 	struct resource res;
+-	int err, linkup = 0;
++	int err;
  
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -574,8 +574,7 @@ static const struct pci_platform_pm_ops
- int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
- {
- 	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
--	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
--	    !ops->need_resume)
-+	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
- 		return -EINVAL;
- 	pci_platform_pm = ops;
- 	return 0;
-@@ -603,16 +602,10 @@ static inline pci_power_t platform_pci_c
- 			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
- }
+ 	/* parse shared resources */
+ 	err = mtk_pcie_handle_shared_resource(pcie);
+@@ -444,11 +444,11 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
  
--static inline int platform_pci_sleep_wake(struct pci_dev *dev, bool enable)
-+static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
- {
- 	return pci_platform_pm ?
--			pci_platform_pm->sleep_wake(dev, enable) : -ENODEV;
--}
--
--static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable)
--{
--	return pci_platform_pm ?
--			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
-+			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
- }
- 
- static inline bool platform_pci_need_resume(struct pci_dev *dev)
-@@ -1889,10 +1882,9 @@ void pci_pme_active(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_pme_active);
- 
- /**
-- * __pci_enable_wake - enable PCI device as wakeup event source
-+ * pci_enable_wake - enable PCI device as wakeup event source
-  * @dev: PCI device affected
-  * @state: PCI state from which device will issue wakeup events
-- * @runtime: True if the events are to be generated at run time
-  * @enable: True to enable event generation; false to disable
-  *
-  * This enables the device as a wakeup event source, or disables it.
-@@ -1908,14 +1900,10 @@ EXPORT_SYMBOL(pci_pme_active);
-  * Error code depending on the platform is returned if both the platform and
-  * the native mechanism fail to enable the generation of wake-up events
-  */
--int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--		      bool runtime, bool enable)
-+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
- {
- 	int ret = 0;
- 
--	if (enable && !runtime && !device_may_wakeup(&dev->dev))
--		return -EINVAL;
--
- 	/*
- 	 * Don't do the same thing twice in a row for one device, but restore
- 	 * PME Enable in case it has been updated by config space restoration.
-@@ -1938,24 +1926,20 @@ int __pci_enable_wake(struct pci_dev *de
- 			pci_pme_active(dev, true);
- 		else
- 			ret = 1;
--		error = runtime ? platform_pci_run_wake(dev, true) :
--					platform_pci_sleep_wake(dev, true);
-+		error = platform_pci_set_wakeup(dev, true);
- 		if (ret)
- 			ret = error;
- 		if (!ret)
- 			dev->wakeup_prepared = true;
- 	} else {
--		if (runtime)
--			platform_pci_run_wake(dev, false);
--		else
--			platform_pci_sleep_wake(dev, false);
-+		platform_pci_set_wakeup(dev, false);
- 		pci_pme_active(dev, false);
- 		dev->wakeup_prepared = false;
+ 		/* enable each port, and then check link status */
+ 		err = mtk_pcie_enable_ports(port);
+-		if (!err)
+-			linkup++;
++		if (err)
++			return err;
  	}
  
- 	return ret;
- }
--EXPORT_SYMBOL(__pci_enable_wake);
-+EXPORT_SYMBOL(pci_enable_wake);
- 
- /**
-  * pci_wake_from_d3 - enable/disable device to wake up from D3_hot or D3_cold
-@@ -2097,12 +2081,12 @@ int pci_finish_runtime_suspend(struct pc
- 
- 	dev->runtime_d3cold = target_state == PCI_D3cold;
- 
--	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
-+	pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
- 
- 	error = pci_set_power_state(dev, target_state);
- 
- 	if (error) {
--		__pci_enable_wake(dev, target_state, true, false);
-+		pci_enable_wake(dev, target_state, false);
- 		dev->runtime_d3cold = false;
- 	}
- 
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -1097,8 +1097,7 @@ int pci_set_power_state(struct pci_dev *
- pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
- bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
- void pci_pme_active(struct pci_dev *dev, bool enable);
--int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--		      bool runtime, bool enable);
-+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
- int pci_wake_from_d3(struct pci_dev *dev, bool enable);
- int pci_prepare_to_sleep(struct pci_dev *dev);
- int pci_back_from_sleep(struct pci_dev *dev);
-@@ -1108,12 +1107,6 @@ void pci_pme_wakeup_bus(struct pci_bus *
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
- 
--static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--				  bool enable)
--{
--	return __pci_enable_wake(dev, state, false, enable);
--}
--
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
- void pci_restore_vc_state(struct pci_dev *dev);
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -47,11 +47,7 @@ int pci_probe_reset_function(struct pci_
-  *                platform; to be used during system-wide transitions from a
-  *                sleeping state to the working state and vice versa
-  *
-- * @sleep_wake: enables/disables the system wake up capability of given device
-- *
-- * @run_wake: enables/disables the platform to generate run-time wake-up events
-- *		for given device (the device's wake-up capability has to be
-- *		enabled by @sleep_wake for this feature to work)
-+ * @set_wakeup: enables/disables wakeup capability for the device
-  *
-  * @need_resume: returns 'true' if the given device (which is currently
-  *		suspended) needs to be resumed to be configured for system
-@@ -65,8 +61,7 @@ struct pci_platform_pm_ops {
- 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
- 	pci_power_t (*get_state)(struct pci_dev *dev);
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
--	int (*sleep_wake)(struct pci_dev *dev, bool enable);
--	int (*run_wake)(struct pci_dev *dev, bool enable);
-+	int (*set_wakeup)(struct pci_dev *dev, bool enable);
- 	bool (*need_resume)(struct pci_dev *dev);
- };
- 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1216,7 +1216,7 @@ static int pci_pm_runtime_resume(struct
- 
- 	pci_restore_standard_config(pci_dev);
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
--	__pci_enable_wake(pci_dev, PCI_D0, true, false);
-+	pci_enable_wake(pci_dev, PCI_D0, false);
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
- 
- 	rc = pm->runtime_resume(dev);
-Index: linux-pm/drivers/pci/pci-mid.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-mid.c
-+++ linux-pm/drivers/pci/pci-mid.c
-@@ -39,12 +39,7 @@ static pci_power_t mid_pci_choose_state(
- 	return PCI_D3hot;
+-	return !linkup;
++	return 0;
  }
  
--static int mid_pci_sleep_wake(struct pci_dev *dev, bool enable)
--{
--	return 0;
--}
--
--static int mid_pci_run_wake(struct pci_dev *dev, bool enable)
-+static int mid_pci_wakeup(struct pci_dev *dev, bool enable)
- {
- 	return 0;
- }
-@@ -59,8 +54,7 @@ static const struct pci_platform_pm_ops
- 	.set_state	= mid_pci_set_power_state,
- 	.get_state	= mid_pci_get_power_state,
- 	.choose_state	= mid_pci_choose_state,
--	.sleep_wake	= mid_pci_sleep_wake,
--	.run_wake	= mid_pci_run_wake,
-+	.set_wakeup	= mid_pci_wakeup,
- 	.need_resume	= mid_pci_need_resume,
- };
- 
+ static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
+-- 
+1.9.1
 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
