@@ -1,53 +1,70 @@
-Return-Path: <SRS0=xPYE=6C=mediatek.com=ryder.lee@kernel.org>
-Return-Path: <SRS0=xPYE=6C=mediatek.com=ryder.lee@kernel.org>
-Message-ID: <1498701623.32475.9.camel@mtkswgap22>
-Subject: Re: [PATCH v5 1/2] PCI: mediatek: Add Mediatek PCIe host controller
- support
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, <devicetree@vger.kernel.org>, Red Hung
-	<red.hung@mediatek.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-arm-kernel@lists.infradead.org>
-Date: Thu, 29 Jun 2017 10:00:23 +0800
-In-Reply-To: <20170628195325.GR17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
-	 <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
-	 <20170628195325.GR17844@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:59653 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751474AbdFEQU3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:29 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 5/9] pci: generic PCIe DW driver adapted to new irq API
+Date: Mon,  5 Jun 2017 17:19:52 +0100
+Message-Id: <b3f369f5275bf25044b374b5f0c8834916e8ebed.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-06-28 at 14:53 -0500, Bjorn Helgaas wrote:
-> On Sun, May 21, 2017 at 11:42:24AM +0800, Ryder Lee wrote:
-> > Add support for the Mediatek PCIe Gen2 controller which can
-> > be found on MT7623 series SoCs.
-> > 
-> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> > ---
-> >  drivers/pci/host/Kconfig         |  11 +
-> >  drivers/pci/host/Makefile        |   1 +
-> >  drivers/pci/host/pcie-mediatek.c | 553 +++++++++++++++++++++++++++++++++++++++
-> >  3 files changed, 565 insertions(+)
-> >  create mode 100644 drivers/pci/host/pcie-mediatek.c
-> >...
-> 
-> > +static int mtk_pcie_register_host(struct pci_host_bridge *host)
-> > +{
-> > +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
-> > +	struct pci_bus *child;
-> > +	int err;
-> > +
-> > +	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
-> 
-> Do you really need the PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS
-> flags?  I'd like to get rid of them because we should automatically
-> assign resources if the firmware hasn't done it.
-> 
-> Bjorn
+This patch adapts the generic PCIe DW driver to use the new interrupt api
+available in pcie-designware.
 
-You're right! These flags are not needed and should be removed.
-Thanks for catching that.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
 
-Ryder
+ drivers/pci/dwc/pcie-designware-plat.c | 15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 32091b3..3b9717b 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -28,13 +28,6 @@ struct dw_plat_pcie {
+ 	struct dw_pcie		*pci;
+ };
+ 
+-static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct pcie_port *pp = arg;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void dw_plat_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -64,14 +57,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 		pp->msi_irq = platform_get_irq(pdev, 0);
+ 		if (pp->msi_irq < 0)
+ 			return pp->msi_irq;
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					dw_plat_pcie_msi_irq_handler,
+-					IRQF_SHARED, "dw-plat-pcie-msi", pp);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI IRQ\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.9.3
