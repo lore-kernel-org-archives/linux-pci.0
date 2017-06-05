@@ -1,66 +1,83 @@
-Return-Path: <SRS0=YWk+=5Z=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=YWk+=5Z=broadcom.com=oza.oza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0040.outbound.protection.outlook.com ([104.47.34.40]:26986
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751262AbdFEFrV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 5 Jun 2017 01:47:21 -0400
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Paul Burton <paul.burton@imgtec.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: RE: [PATCH v4 1/4] PCI: xilinx: Fix INTX irq dispatch
+Date: Mon, 5 Jun 2017 05:47:13 +0000
+Message-ID: <8520D5D51A55D047800579B0941471982646ABC2@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <20170602185420.22281-1-paul.burton@imgtec.com>
+ <20170602185420.22281-2-paul.burton@imgtec.com>
+In-Reply-To: <20170602185420.22281-2-paul.burton@imgtec.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20170619223907.GD554@bhelgaas-glaptop.roam.corp.google.com>
-References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
- <1497153938-26074-2-git-send-email-oza.oza@broadcom.com> <20170612233039.GC4379@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPchnNBnKmeXvhcWTM0Kzdb4b9mvTKXJsHe4KzJ=kk8M=Q@mail.gmail.com> <20170619223907.GD554@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Tue, 20 Jun 2017 18:14:35 +0530
-Message-ID: <CAMSpPPfTA+DWxzZNxL94O-rHQQvp4DOsfMwtNXtLzi2=tHBSOw@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] PCI: iproc: Retry request when CRS returned from EP
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 20, 2017 at 4:09 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Jun 13, 2017 at 09:58:22AM +0530, Oza Oza wrote:
->> On Tue, Jun 13, 2017 at 5:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrot=
-e:
->> > Please wrap your changelogs to use 75 columns.  "git log" indents the
->> > changelog by four spaces, so if your text is 75 wide, it will still
->> > fit without wrapping.
->> >
->> > On Sun, Jun 11, 2017 at 09:35:37AM +0530, Oza Pawandeep wrote:
->> >> For Configuration Requests only, following reset
->> >> it is possible for a device to terminate the request
->> >> but indicate that it is temporarily unable to process
->> >> the Request, but will be able to process the Request
->> >> in the future =E2=80=93 in this case, the Configuration Request
->> >> Retry Status 10 (CRS) Completion Status is used
->> >
->> > How does this relate to the CRS support we already have in the core,
->> > e.g., pci_bus_read_dev_vendor_id()?  It looks like your root complex
->> > already returns 0xffff0001 (CFG_RETRY_STATUS) in some cases.
->> >
->> > Also, per spec (PCIe r3.1, sec 2.3.2), CRS Software Visibility only
->> > affects config reads of the Vendor ID, but you call
->> > iproc_pcie_cfg_retry() for all config offsets.
->>
->> Yes, as per Spec, CRS Software Visibility only affects config read of
->> the Vendor ID.
->> For config write or any other config read the Root must automatically
->> re-issue configuration
->> request again as a new request, and our PCIe RC fails to do so.
->
-> OK, if this is a workaround for a hardware defect, let's make that
-> explicit in the changelog (and probably a comment in the code, too).
->
-> I'm actually not sure the spec *requires* the CRS retries to be done
-> directly in hardware, so it's conceivable the hardware could be
-> working as designed.  But a comment would go a long way toward making
-> this understandable by differentiating it from the generic CRS
-> handling in the core.
->
-> Bjorn
-
-Sure, I will update the commit message and also will add explicit
-comment in the code.
+> The IRQ domain for INTX interrupts has 4 entries, numbered 0 to 3. This m=
+atches
+> what the hardware reports from the interrupt FIFO exactly, but
+> xilinx_pcie_intr_handler was adding 1 to that value to convert to the ran=
+ge 1 to
+> 4. Stop adding 1, such that all of INTA through to INTD fall within the r=
+ange of
+> the IRQ domain.
+>=20
+Paul, this change is not required.
+hwirq for legacy domain is being assigned by kernel PCIe subsystem based on=
+ PCI_INTERRUPT_PIN, which as per
+protocol starts from 1 and not zero, due to this 1 is being added.
 
 Regards,
-Oza.
+Bharat
+
+> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+> Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP dri=
+ver")
+> Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Michal Simek <michal.simek@xilinx.com>
+> Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+> Cc: linux-pci@vger.kernel.org
+>=20
+> ---
+>=20
+> Changes in v4: None
+>=20
+> Changes in v3:
+> - Split out from Boston patchset.
+>=20
+> Changes in v2:
+> - Add Fixes tag.
+>=20
+>  drivers/pci/host/pcie-xilinx.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilin=
+x.c index
+> 2fe2df51f9f8..6be2e5ee44f1 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -440,8 +440,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, =
+void
+> *data)
+>  				   XILINX_PCIE_REG_RPIFR1);
+>=20
+>  			/* Handle INTx Interrupt */
+> -			val =3D ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+> -				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
+> +			val =3D (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+> +				XILINX_PCIE_RPIFR1_INTR_SHIFT;
+>  			generic_handle_irq(irq_find_mapping(port-
+> >leg_domain,
+>  							    val));
+>  		}
+> --
+> 2.13.0
