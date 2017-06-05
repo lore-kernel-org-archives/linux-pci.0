@@ -1,102 +1,315 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from esa2.dell-outbound.iphmx.com ([68.232.149.220]:19953 "EHLO
-        esa2.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753351AbdF2SM1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jun 2017 14:12:27 -0400
-From: "Allen Hubbe" <Allen.Hubbe@dell.com>
-To: "'Logan Gunthorpe'" <logang@deltatee.com>,
-        <linux-ntb@googlegroups.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Cc: "'Jon Mason'" <jdmason@kudzu.us>,
-        "'Dave Jiang'" <dave.jiang@intel.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
-        "'Kurt Schwemmer'" <kurt.schwemmer@microsemi.com>,
-        "'Stephen Bates'" <sbates@raithlin.com>,
-        "'Serge Semin'" <fancer.lancer@gmail.com>
-References: <20170629032648.3073-1-logang@deltatee.com> <20170629032648.3073-7-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-7-logang@deltatee.com>
-Subject: RE: [PATCH 06/16] ntb: add check and comment for link up to mw_count and mw_get_align
-Date: Thu, 29 Jun 2017 14:11:56 -0400
-Message-ID: <000301d2f103$3310ca60$99325f20$@dell.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:59685 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751613AbdFEQUx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:53 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 8/9] pci: removing old irq api from pcie-designware
+Date: Mon,  5 Jun 2017 17:19:55 +0100
+Message-Id: <72a68cf02a7021f8d9a9052ab93e13d501a6ab71.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Logan Gunthorpe
-> This patch adds a comment and a check to the ntb_mw_get_align and
-> ntb_mw_count functions so that they always fail if the function is
-> called before the link is up.
->=20
-> This is to prevent accidental mis-use in clients that are testing
-> on hardware that this doesn't matter for.
->=20
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+This patch removes the old interrupt API.
 
-Nak.  This breaks a work around for stability issues on some hardware.  =
-I am ok with changing the comment to say, this is only supported when =
-called after link up.  I would still like to allow these to be called at =
-any time.  Specific hardware drivers like Switchtec may return an error. =
- Upstream drivers, of course, should call these after link up: patch =
-5/16 part of this set looks good.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
 
-> ---
->  include/linux/ntb.h | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
->=20
-> diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-> index 609e232c00da..de4f800c82b6 100644
-> --- a/include/linux/ntb.h
-> +++ b/include/linux/ntb.h
-> @@ -730,12 +730,16 @@ static inline int ntb_link_disable(struct =
-ntb_dev *ntb)
->   * Hardware and topology may support a different number of memory =
-windows.
->   * Moreover different peer devices can support different number of =
-memory
->   * windows. Simply speaking this method returns the number of =
-possible inbound
-> - * memory windows to share with specified peer device.
-> + * memory windows to share with specified peer device. Note: this =
-must only be
-> + * called when the link is up.
->   *
->   * Return: the number of memory windows.
->   */
->  static inline int ntb_mw_count(struct ntb_dev *ntb, int pidx)
->  {
-> +	if (!(ntb_link_is_up(ntb, NULL, NULL) & (1 << pidx)))
-> +		return 0;
-> +
->  	return ntb->ops->mw_count(ntb, pidx);
->  }
->=20
-> @@ -751,7 +755,7 @@ static inline int ntb_mw_count(struct ntb_dev =
-*ntb, int pidx)
->   * Get the alignments of an inbound memory window with specified =
-index.
->   * NULL may be given for any output parameter if the value is not =
-needed.
->   * The alignment and size parameters may be used for allocation of =
-proper
-> - * shared memory.
-> + * shared memory. Note: this must only be called when the link is up.
->   *
->   * Return: Zero on success, otherwise a negative error number.
->   */
-> @@ -760,6 +764,9 @@ static inline int ntb_mw_get_align(struct ntb_dev =
-*ntb, int pidx, int widx,
->  				   resource_size_t *size_align,
->  				   resource_size_t *size_max)
->  {
-> +	if (!(ntb_link_is_up(ntb, NULL, NULL) & (1 << pidx)))
-> +		return -ENOTCONN;
-> +
->  	return ntb->ops->mw_get_align(ntb, pidx, widx, addr_align, =
-size_align,
->  				      size_max);
->  }
-> --
-> 2.11.0
+ drivers/pci/dwc/pci-keystone-dw.c      |   2 +-
+ drivers/pci/dwc/pci-keystone.h         |   2 +-
+ drivers/pci/dwc/pci-layerscape.c       |   3 +-
+ drivers/pci/dwc/pcie-designware-host.c | 192 +--------------------------------
+ drivers/pci/dwc/pcie-designware.h      |   2 +-
+ 5 files changed, 6 insertions(+), 195 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index 1b7314d..776f8a2 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -162,7 +162,7 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+ 			 BIT(bit_pos));
+ }
+ 
+-int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip)
++int ks_dw_pcie_msi_host_init(struct dw_pcie *pci)
+ {
+ 	return dw_pcie_allocate_domains(pci);
+ }
+diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+index 83179382..89119271 100644
+--- a/drivers/pci/dwc/pci-keystone.h
++++ b/drivers/pci/dwc/pci-keystone.h
+@@ -59,5 +59,5 @@ void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
+ void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
+ void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
+-int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip);
++int ks_dw_pcie_msi_host_init(struct dw_pcie *pci);
+ int ks_dw_pcie_link_up(struct dw_pcie *pci);
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 4fb491b..231ea75 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -162,8 +162,7 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ }
+ 
+-static int ls_pcie_msi_host_init(struct dw_pcie *pci,
+-				 struct msi_controller *chip)
++static int ls_pcie_msi_host_init(struct dw_pcie *pci)
+ {
+ 	struct device *dev = pci->dev;
+ 	struct device_node *np = dev->of_node;
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index feeee6a..6c771cc 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -46,14 +46,6 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	return dw_pcie_write(pci->dbi_base + where, size, val);
+ }
+ 
+-static struct irq_chip dw_msi_irq_chip = {
+-	.name = "PCI-MSI",
+-	.irq_enable = pci_msi_unmask_irq,
+-	.irq_disable = pci_msi_mask_irq,
+-	.irq_mask = pci_msi_mask_irq,
+-	.irq_unmask = pci_msi_unmask_irq,
+-};
+-
+ static void dw_msi_mask_irq(struct irq_data *d)
+ {
+ 	pci_msi_mask_irq(d);
+@@ -315,186 +307,6 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+ 			    upper_32_bits(msi_target));
+ }
+ 
+-static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+-{
+-	unsigned int res, bit, ctrl;
+-
+-	ctrl = irq / 32;
+-	res = ctrl * 12;
+-	bit = irq % 32;
+-	pp->irq_status[ctrl] &= ~(1 << bit);
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+-			    pp->irq_status[ctrl]);
+-}
+-
+-static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
+-			    unsigned int nvec, unsigned int pos)
+-{
+-	unsigned int i;
+-
+-	for (i = 0; i < nvec; i++) {
+-		irq_set_msi_desc_off(irq_base, i, NULL);
+-		/* Disable corresponding interrupt on MSI controller */
+-		if (pp->ops->msi_clear_irq)
+-			pp->ops->msi_clear_irq(pp, pos + i);
+-		else
+-			dw_pcie_msi_clear_irq(pp, pos + i);
+-	}
+-
+-	bitmap_release_region(pp->msi_irq_in_use, pos, order_base_2(nvec));
+-}
+-
+-static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+-{
+-	unsigned int res, bit, ctrl;
+-
+-	ctrl = irq / 32;
+-	res = ctrl * 12;
+-	bit = irq % 32;
+-	pp->irq_status[ctrl] |= 1 << bit;
+-	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
+-			    pp->irq_status[ctrl]);
+-}
+-
+-static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+-{
+-	int irq, pos0, i;
+-	struct pcie_port *pp;
+-
+-	pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
+-	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+-				       order_base_2(no_irqs));
+-	if (pos0 < 0)
+-		goto no_valid_irq;
+-
+-	irq = irq_find_mapping(pp->irq_domain, pos0);
+-	if (!irq)
+-		goto no_valid_irq;
+-
+-	/*
+-	 * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
+-	 * descs so there is no need to allocate descs here. We can therefore
+-	 * assume that if irq_find_mapping above returns non-zero, then the
+-	 * descs are also successfully allocated.
+-	 */
+-
+-	for (i = 0; i < no_irqs; i++) {
+-		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
+-			clear_irq_range(pp, irq, i, pos0);
+-			goto no_valid_irq;
+-		}
+-		/*Enable corresponding interrupt in MSI interrupt controller */
+-		if (pp->ops->msi_set_irq)
+-			pp->ops->msi_set_irq(pp, pos0 + i);
+-		else
+-			dw_pcie_msi_set_irq(pp, pos0 + i);
+-	}
+-
+-	*pos = pos0;
+-	desc->nvec_used = no_irqs;
+-	desc->msi_attrib.multiple = order_base_2(no_irqs);
+-
+-	return irq;
+-
+-no_valid_irq:
+-	*pos = pos0;
+-	return -ENOSPC;
+-}
+-
+-static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+-{
+-	struct msi_msg msg;
+-	u64 msi_target;
+-
+-	if (pp->ops->get_msi_addr)
+-		msi_target = pp->ops->get_msi_addr(pp);
+-	else
+-		msi_target = virt_to_phys((void *)pp->msi_data);
+-
+-	msg.address_lo = (u32)(msi_target & 0xffffffff);
+-	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+-
+-	if (pp->ops->get_msi_data)
+-		msg.data = pp->ops->get_msi_data(pp, pos);
+-	else
+-		msg.data = pos;
+-
+-	pci_write_msi_msg(irq, &msg);
+-}
+-
+-static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+-			    struct msi_desc *desc)
+-{
+-	int irq, pos;
+-	struct pcie_port *pp = pdev->bus->sysdata;
+-
+-	if (desc->msi_attrib.is_msix)
+-		return -EINVAL;
+-
+-	irq = assign_irq(1, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+-
+-	dw_msi_setup_msg(pp, irq, pos);
+-
+-	return 0;
+-}
+-
+-static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
+-			     int nvec, int type)
+-{
+-#ifdef CONFIG_PCI_MSI
+-	int irq, pos;
+-	struct msi_desc *desc;
+-	struct pcie_port *pp = pdev->bus->sysdata;
+-
+-	/* MSI-X interrupts are not supported */
+-	if (type == PCI_CAP_ID_MSIX)
+-		return -EINVAL;
+-
+-	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+-	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+-
+-	irq = assign_irq(nvec, desc, &pos);
+-	if (irq < 0)
+-		return irq;
+-
+-	dw_msi_setup_msg(pp, irq, pos);
+-
+-	return 0;
+-#else
+-	return -EINVAL;
+-#endif
+-}
+-
+-static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+-{
+-	struct irq_data *data = irq_get_irq_data(irq);
+-	struct msi_desc *msi = irq_data_get_msi_desc(data);
+-	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(msi);
+-
+-	clear_irq_range(pp, irq, 1, data->hwirq);
+-}
+-
+-static struct msi_controller dw_pcie_msi_chip = {
+-	.setup_irq = dw_msi_setup_irq,
+-	.setup_irqs = dw_msi_setup_irqs,
+-	.teardown_irq = dw_msi_teardown_irq,
+-};
+-
+-static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+-			   irq_hw_number_t hwirq)
+-{
+-	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+-	irq_set_chip_data(irq, domain->host_data);
+-
+-	return 0;
+-}
+-
+-static const struct irq_domain_ops msi_domain_ops = {
+-	.map = dw_pcie_msi_map,
+-};
+-
+ int dw_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+@@ -504,7 +316,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	struct resource_entry *win, *tmp;
+ 	struct pci_bus *bus, *child;
+ 	struct resource *cfg_res;
+-	int i, ret;
++	int ret;
+ 
+ 	LIST_HEAD(res);
+ 
+@@ -629,7 +441,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 							 dw_chained_msi_isr,
+ 							 pci);
+ 		} else {
+-			ret = pp->ops->msi_host_init(pci, &dw_pcie_msi_chip);
++			ret = pp->ops->msi_host_init(pci);
+ 			if (ret < 0)
+ 				goto error;
+ 		}
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 7385b4e..f95c086 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -142,7 +142,7 @@ struct dw_pcie_host_ops {
+ 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
+ 	void (*scan_bus)(struct pcie_port *pp);
+ 	void (*set_num_vectors)(struct pcie_port *pp);
+-	int (*msi_host_init)(struct dw_pcie *pci, struct msi_controller *chip);
++	int (*msi_host_init)(struct dw_pcie *pci);
+ 	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
+ };
+ 
+-- 
+2.9.3
