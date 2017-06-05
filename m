@@ -1,65 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:49002 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751782AbdF2D1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 23:27:05 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:34 -0600
-Message-Id: <20170629032648.3073-3-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
-References: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 02/16] switchtec: export class symbol for use in upper layer driver
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:59624 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751907AbdFEQUM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:12 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 0/9] add new irq api to pcie-designware
+Date: Mon,  5 Jun 2017 17:19:47 +0100
+Message-Id: <cover.1496677911.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We export the class pointer symbol and add an extern define in the
-switchtec header file.
+This patch series adds the new interrupt api to pcie-designware
+make it possible to use features like MSIX.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/pci/switch/switchtec.c | 4 +++-
- include/linux/switchtec.h      | 2 ++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+The work consisted of adapting the pcie-designware-host and each SoC
+specific driver.
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index a27b2bacad5a..fc139ee3fa73 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -33,9 +33,11 @@ module_param(max_devices, int, 0644);
- MODULE_PARM_DESC(max_devices, "max number of switchtec device instances");
- 
- static dev_t switchtec_devt;
--static struct class *switchtec_class;
- static DEFINE_IDA(switchtec_minor_ida);
- 
-+struct class *switchtec_class;
-+EXPORT_SYMBOL_GPL(switchtec_class);
-+
- enum mrpc_state {
- 	MRPC_IDLE = 0,
- 	MRPC_QUEUED,
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 508cda78a430..24e598ebbcf7 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -267,4 +267,6 @@ static inline struct switchtec_dev *to_stdev(struct device *dev)
- 	return container_of(dev, struct switchtec_dev, dev);
- }
- 
-+extern struct class *switchtec_class;
-+
- #endif
+The patch set was made against the Bjorn' next branch.
+
+Joao Pinto (9):
+  pci: adding new irq api to pci-designware
+  pci: exynos SoC driver adapted to new irq API
+  pci: imx6 SoC driver adapted to new irq API
+  pci: artpec6 SoC driver adapted to new irq API
+  pci: generic PCIe DW driver adapted to new irq API
+  pci: qcom SoC driver adapted to new irq API
+  pci: keystone SoC driver adapted to new irq API
+  pci: removing old irq api from pcie-designware
+  pci: remove limitation of the number of the available IRQs
+
+ drivers/pci/dwc/pci-exynos.c           |  18 --
+ drivers/pci/dwc/pci-imx6.c             |  18 --
+ drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+ drivers/pci/dwc/pci-keystone.c         |   1 +
+ drivers/pci/dwc/pci-keystone.h         |   4 +-
+ drivers/pci/dwc/pci-layerscape.c       |   4 +-
+ drivers/pci/dwc/pcie-artpec6.c         |  18 --
+ drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+ drivers/pci/dwc/pcie-designware-plat.c |  15 --
+ drivers/pci/dwc/pcie-designware.h      |  30 ++-
+ drivers/pci/dwc/pcie-qcom.c            |  15 --
+ 11 files changed, 255 insertions(+), 359 deletions(-)
+
 -- 
-2.11.0
+2.9.3
