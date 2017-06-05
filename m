@@ -1,77 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <201706261344.OUjMGlsQ%fengguang.wu@intel.com>
-References: <20170623220857.28774-2-palmer@dabbelt.com>
- <201706261344.OUjMGlsQ%fengguang.wu@intel.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 26 Jun 2017 09:26:20 +0200
-Message-ID: <CAMuHMdXSrfbSX2de2q35Hj6vQwi+sr23M1LEg82JL+FyLq4OJw@mail.gmail.com>
-Subject: Re: [PATCH] pci: Add and use PCI_GENERIC_SETUP Kconfig entry
-To: kbuild test robot <lkp@intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux MIPS Mailing List <linux-mips@linux-mips.org>,
- Rich Felker <dalias@libc.org>, Linux-sh list <linux-sh@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- sparclinux <sparclinux@vger.kernel.org>, Guan Xuetao <gxt@mprc.pku.edu.cn>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Russell King <linux@armlinux.org.uk>, Christoph Hellwig <hch@infradead.org>,
- linux-pci <linux-pci@vger.kernel.org>, Matt Turner <mattst88@gmail.com>,
- arcml <linux-snps-arc@lists.infradead.org>, cmetcalf@mellanox.com,
- linux-m68k <linux-m68k@lists.linux-m68k.org>,
- Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Al Viro <viro@zeniv.linux.org.uk>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Richard Henderson <rth@twiddle.net>, Vineet Gupta <vgupta@synopsys.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Ralf Baechle <ralf@linux-mips.org>, Palmer Dabbelt <palmer@dabbelt.com>,
- "kbuild-all@01.org" <kbuild-all@01.org>, alpha <linux-alpha@vger.kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:54258 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751542AbdFEQU5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:57 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
+        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
+        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
+        l.stach@pengutronix.de, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 2/9] pci: exynos SoC driver adapted to new irq API
+Date: Mon,  5 Jun 2017 17:19:49 +0100
+Message-Id: <811cc9a1a582bfeb15eb0f2d3582f55e6bbcdf91.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 26, 2017 at 7:39 AM, kbuild test robot <lkp@intel.com> wrote:
-> [auto build test WARNING on linus/master]
-> [also build test WARNING on v4.12-rc6]
-> [cannot apply to next-20170623]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Palmer-Dabbelt/pci-Add-and-use-PCI_GENERIC_SETUP-Kconfig-entry/20170626-043558
-> config: m68k-allnoconfig (attached as .config)
-> compiler: m68k-linux-gcc (GCC) 4.9.0
-> reproduce:
->         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=m68k
->
-> All warnings (new ones prefixed by >>):
->
-> warning: (M68K) selects PCI_GENERIC_SETUP which has unmet direct dependencies (MMU)
+This patch adapts Exynos SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-I can't seem to find this dependency of PCI_GENERIC_SETUP on MMU?
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+Change v1->v2:
+- Nothing changed, just to follow the patch set version.
 
-Gr{oetje,eeting}s,
+ drivers/pci/dwc/pci-exynos.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 546082a..e49c39a 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -490,15 +490,6 @@ static irqreturn_t exynos_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static irqreturn_t exynos_pcie_msi_irq_handler(int irq, void *arg)
+-{
+-	struct exynos_pcie *ep = arg;
+-	struct dw_pcie *pci = ep->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static void exynos_pcie_msi_init(struct exynos_pcie *ep)
+ {
+ 	struct dw_pcie *pci = ep->pci;
+@@ -622,15 +613,6 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+ 			dev_err(dev, "failed to get msi irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-					exynos_pcie_msi_irq_handler,
+-					IRQF_SHARED | IRQF_NO_THREAD,
+-					"exynos-pcie", ep);
+-		if (ret) {
+-			dev_err(dev, "failed to request msi irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.9.3
