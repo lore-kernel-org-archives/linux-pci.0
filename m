@@ -1,39 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35692 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754621AbdFXCBz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jun 2017 22:01:55 -0400
-Received: by mail-pf0-f195.google.com with SMTP id s66so9728543pfs.2
-        for <linux-pci@vger.kernel.org>; Fri, 23 Jun 2017 19:01:55 -0700 (PDT)
-From: Palmer Dabbelt <palmer@dabbelt.com>
-To: linux-pci@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-To: bhelgaas@google.com
-To: hch@infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-snps-arc@lists.infradead.org
-Cc: linux-cris-kernel@axis.com
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-s390@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Cc: sparclinux@vger.kernel.org
-Subject: pci: Add generic pcibios_{fixup_bus,align_resource}
-Date: Fri, 23 Jun 2017 18:50:41 -0700
-Message-Id: <20170624015044.16746-1-palmer@dabbelt.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=6U8f=5L=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=6U8f=5L=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 6 Jun 2017 11:02:28 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Graeme Gregory <graeme.gregory@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Leif Lindholm <leif.lindholm@linaro.org>,
+	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
+ configuration to be preserved
+Message-ID: <20170606100228.GA20126@red-moon>
+References: <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
+ <20170518154708.GA30182@red-moon>
+ <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
+ <20170518174612.GA31373@red-moon>
+ <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
+ <20170601161511.GB19003@red-moon>
+ <CAKv+Gu9FyLuQk3hkauoRzGME1FxHPgusWQe0v8eSJaKfaX7LMA@mail.gmail.com>
+ <20170606085936.GB20085@red-moon>
+ <CAKv+Gu-jVGvEJY7YBxSQHu+0jtnDHG7_6Gdpac8ca4PbPggw3Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu-jVGvEJY7YBxSQHu+0jtnDHG7_6Gdpac8ca4PbPggw3Q@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-While upstreaming the RISC-V port, it was pointed out that multiple
-architectures have copied the mostly empty versions of at least one of these
-functions.  This defines weakly bound versions of the common functions and
-removes the now obselete functions from other ports.
+On Tue, Jun 06, 2017 at 09:14:26AM +0000, Ard Biesheuvel wrote:
 
-This has been split out from the RISC-V submission so we can decouple all these
-generic changes from our port review process.  There's some discussion on an
-earlier version of the patch here
+[...]
 
-  https://lkml.org/lkml/2017/6/6/998
+> > Do you want me to create a branch out of these patches (inclusive of
+> > another patch to fix this bus reallocation policy discrepancy) for
+> > ARM64 folks to test ? Let me know, thanks !
+> >
+> 
+> Hi Lorenzo,
+> 
+> Bjorn has already picked up #1, which is now in -next. I will get back
+> to this topic today or tomorrow, so let me respin (including the bus
+> range fix) first, ok?
 
-but I'm afraid a lot of this is really out of my wheelhouse (and I'm pretty
-slammed trying to get the RISC-V port in better shape), so I'm afraid I'm not
-going to be able to perform the full cleanup suggested.
+Of course, I just want to help you make progress on this, I think
+we need help for testing them on ARM64 systems to see how to proceed.
+
+Thanks !
+Lorenzo
