@@ -1,46 +1,60 @@
-Return-Path: <sfr@canb.auug.org.au>
-Date: Thu, 29 Jun 2017 07:55:37 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, bjorn@helgaas.com, Ryder Lee
- <ryder.lee@mediatek.com>, Andrew Morton <akpm@linux-foundation.org>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [RESEND PATCH] critical patch to fix pci-tree build bot failure
-Message-ID: <20170629075537.0aec88ee@canb.auug.org.au>
-In-Reply-To: <20170628204316.GU17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
-	<CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
-	<20170628081026.5a211391@canb.auug.org.au>
-	<20170628204316.GU17844@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54840 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751465AbdFFVOp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 6 Jun 2017 17:14:45 -0400
+Date: Tue, 6 Jun 2017 16:14:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: rakesh@tuxera.com, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: ensure the PCI device is locked over
+ ->reset_notify calls
+Message-ID: <20170606211443.GB12672@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170601111039.8913-1-hch@lst.de>
+ <20170601111039.8913-2-hch@lst.de>
+ <20170606053142.GA25064@bhelgaas-glaptop.roam.corp.google.com>
+ <20170606104836.GB24297@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170606104836.GB24297@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Wed, 28 Jun 2017 15:43:17 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote:
->
-> On Wed, Jun 28, 2017 at 08:10:26AM +1000, Stephen Rothwell wrote:
-> > Hi Bjorn,
-> > 
-> > On Tue, 27 Jun 2017 08:20:44 -0500 Bjorn Helgaas <bjorn.helgaas@gmail.com> wrote:  
-> > >
-> > > On Tue, Jun 27, 2017 at 4:24 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:  
-> > > > Hi Stephen and Andrew,
-> > > >
-> > > > Could you help to apply this patch? Seems Bjorn didn't response it these days.    
-> > > 
-> > > I'm not dead, but I was on vacation most of last week.  I'll resolve this today.  
-> > 
-> > Should I just add this patch to linux-next today (if you don't get
-> > around to it in the next hour or so)?  
+On Tue, Jun 06, 2017 at 12:48:36PM +0200, Christoph Hellwig wrote:
+> On Tue, Jun 06, 2017 at 12:31:42AM -0500, Bjorn Helgaas wrote:
+> > OK, sorry to be dense; it's taking me a long time to work out the
+> > details here.  It feels like there should be a general principle to
+> > help figure out where we need locking, and it would be really awesome
+> > if we could include that in the changelog.  But it's not obvious to me
+> > what that principle would be.
 > 
-> Just FYI, this should be fixed in my -next branch now, so you shouldn't
-> need to add the patch yourself, Stephen.
+> The principle is very simple: every method in struct device_driver
+> or structures derived from it like struct pci_driver MUST provide
+> exclusion vs ->remove.  Usuaull by using device_lock().
+> 
+> If we don't provide such an exclusion the method call can race with
+> a removal in one form or another.
 
-Excellent, thanks.
+So I guess the method here is
+dev->driver->err_handler->reset_notify(), and the PCI core should be
+holding device_lock() while calling it?  That makes sense to me;
+thanks a lot for articulating that!
 
--- 
-Cheers,
-Stephen Rothwell
+1) The current patch protects the err_handler->reset_notify() uses by
+adding or expanding device_lock regions in the paths that lead to
+pci_reset_notify().  Could we simplify it by doing the locking
+directly in pci_reset_notify()?  Then it would be easy to verify the
+locking, and we would be less likely to add new callers without the
+proper locking.
+
+2) Stating the rule explicitly helps look for other problems, and I
+think we have a similar problem in all the pcie_portdrv_err_handler
+methods.  These are all called in the AER do_recovery() path, and the
+functions there, e.g., report_error_detected() do hold device_lock().
+But pcie_portdrv_error_detected() propagates this to all the children,
+and we *don't* hold the lock for the children.
+
+Bjorn
