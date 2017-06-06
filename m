@@ -1,73 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46232 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753605AbdF0Vbt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jun 2017 17:31:49 -0400
-Date: Tue, 27 Jun 2017 16:31:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Andi Kleen <ak@linux.intel.com>,
-        LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Peter Anvin <hpa@zytor.com>, Borislav Petkov <bp@alien8.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Stephane Eranian <eranian@google.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [patch 7/7] x86/pci/mmcfg: Switch to ECAM config mode if possible
-Message-ID: <20170627213146.GF764@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170316215002.726697858@linutronix.de>
- <20170316215057.452220163@linutronix.de>
- <20170317002656.GO32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703170709300.3701@nanos>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1703170709300.3701@nanos>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAAsHzqttOoWOCAEmYaWjWmH4a--o0FXCRKfFC9S-+3KGiZVuHQ@mail.gmail.com>
+References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
+ <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
+ <CAAsHzquFJE7X0MQyZCP4+UW_E+WK2ORe1EK6yxiq-ev81i1-xg@mail.gmail.com>
+ <20170505165119.GA8614@red-moon>
+ <CAAsHzqttOoWOCAEmYaWjWmH4a--o0FXCRKfFC9S-+3KGiZVuHQ@mail.gmail.com>
+From: Khuong Dinh <kdinh@apm.com>
+Date: Tue, 6 Jun 2017 09:44:15 -0700
+Message-ID: <CAAsHzqvnGWkG_KN6m_+HzGFaNOHU-m2FocTxy3pyM7Hhd9rz7w@mail.gmail.com>
+Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
+ boot for X-Gene v1
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: rjw@rjwysocki.net, Duc Dang <dhdang@apm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ msalter@redhat.com, patches@apm.com, linux-kernel@vger.kernel.org,
+ jcm@redhat.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-On Fri, Mar 17, 2017 at 07:15:21AM +0100, Thomas Gleixner wrote:
-> On Thu, 16 Mar 2017, Andi Kleen wrote:
-> 
-> > > +	/*
-> > > +	 * The pointer to root_pci_ops has been handed in to ACPI already
-> > > +	 * and is already set in the busses.
-> > > +	 *
-> > > +	 * Switch the functions over to ECAM for all config space accesses.
-> > > +	 */
-> > > +	pci_root_ops.read = pci_ecam_read;
-> > > +	pci_root_ops.write = pci_ecam_write;
-> > > +	pr_info("PCI: Switch to ECAM configuration mode\n");
-> > 
-> > That patch is fine, but it's generally called MMCONFIG (don't know
-> > where this ECAM term comes from).
-> 
-> ECAM is the official name for the memory mapped configuration mechanism
-> according to the PCI express specification.
-> 
-> > So please use MMCONFIG or MCFG everywhere, not ECAM.
-> 
-> While I prefer using names which match specifications, I let Bjorn decide
-> on that one.
-
-I've definitely seen "MMCONFIG" used many places, especially
-internally.  I've been trying to use names that correspond to the
-public specs in an arch-independent way, so here's my thinking:
-
-"MCFG" is the ACPI table name and appears in the PCI Firmware spec.
-The x86-specific MCFG parser is called arch/x86/pci/mmconfig-shared.c,
-but we named the arch-independent parser drivers/acpi/pci_mcfg.c.
-
-"MMCONFIG" appears only in an implementation note in the PCI Firmware
-spec r3.2, sec 4.1.4.  The x86 ECAM/MMCONFIG/MCFG code is in
-arch/x86/pci/mmconfig*.  I wouldn't name it that way today because I
-don't see "MMCONFIG" used much in public specs, but it doesn't seem
-worth changing to me.
-
-The PCIe spec doesn't mention MCFG or MMCONFIG, but it uses "ECAM" many
-times, so that's what we used for the arch-independent code in
-drivers/pci/ecam.c.
-
-Bottom line, I'm fine with the names in this patch as-is.
-
-Bjorn
+SGkgTG9yZW56bywKCk9uIFR1ZSwgTWF5IDksIDIwMTcgYXQgMzo1NSBQTSwgS2h1b25nIERpbmgg
+PGtkaW5oQGFwbS5jb20+IHdyb3RlOgo+IEhpIExvcmVuem8sCj4KPiBPbiBGcmksIE1heSA1LCAy
+MDE3IGF0IDk6NTEgQU0sIExvcmVuem8gUGllcmFsaXNpCj4gPGxvcmVuem8ucGllcmFsaXNpQGFy
+bS5jb20+IHdyb3RlOgo+PiBPbiBUaHUsIE1heSAwNCwgMjAxNyBhdCAwNTozNjowNlBNIC0wNzAw
+LCBLaHVvbmcgRGluaCB3cm90ZToKPj4+IEhpIE1hcmMsCj4+PiBUaGVyZSdzIG5vIGV4cGxpY2l0
+IGRlcGVuZGVuY3kgYmV0d2VlbiBwY2llIGRyaXZlciBhbmQgbXNpCj4+PiBjb250cm9sbGVyLiAg
+VGhlIGN1cnJlbnQgc29sdXRpb24gdGhhdCB3ZSBkaWQgaXMgcmVseWluZyBvbiB0aGUKPj4+IG5v
+ZGUgb3JkZXJpbmcgaW4gQklPUy4gIEFDUEkgNS4wIGludHJvZHVjZWQgX0RFUCBtZXRob2QgdG8g
+YXNzaWduIGEKPj4+IGhpZ2hlciBwcmlvcml0eSBpbiBzdGFydCBvcmRlcmluZy4gIFRoaXMgbWV0
+aG9kIGNvdWxkIGJlIGFwcGxpZWQgaW4KPj4+IGNhc2Ugb2YgbXNpIGFuZCBwY2llIGFyZSB0aGUg
+c2FtZSBsZXZlbCBvZiBzdWJzeXNfaW5pdCAoaW4gQUNQSQo+Pj4gYm9vdCkuICBIb3dldmVyLCBQ
+Q0llIGRyaXZlciBoYXMgbm90IHN1cHBvcnRlZCBmb3IgdGhpcyBkZXBlbmRlbmN5Cj4+PiBjaGVj
+ayB5ZXQuICBIb3cgZG8geW91IHRoaW5rIGFib3V0IHRoaXMgc29sdXRpb24uCj4+Cj4+IEZpcnN0
+IG9mZiwgeW91IGNhbid0IHBvc3QgZW1haWxzIHdpdGggY29uZmlkZW50aWFsaXR5IG5vdGljZXMg
+b24KPj4gbWFpbGluZyBsaXN0cyBzbyByZW1vdmUgaXQgZnJvbSBub3cgb253YXJkcy4KPgo+IEZp
+eGVkCj4KPj4gU2Vjb25kbHksIEkgY29tbWVudGVkIG9uIHRoaXMgYmVmb3JlLCBzbyB5b3Uga25v
+dyB3aGF0IG15IG9waW5pb24gaXMuCj4KPiBJIGdvdCB5b3VyIG9waW5pb24uIEknbGwgaW1wbGVt
+ZW50IGFzIHlvdXIgc3VnZ2VzdGlvbi4KPgoKICBSZWdhcmRpbmcgdG8geW91ciBwcmV2aW91cyBz
+dWdnZXN0aW9uIHRvIGFkZCBhIGhvb2sgd2Fsa2luZyB0aGUgQUNQSQpuYW1lc3BhY2UgYmVmb3Jl
+IGFjcGlfYnVzX3NjYW4oKSBpbiBhY3BpX3NjYW5faW5pdCgpIHRvIG1ha2UgTVNJCmNvbnRyb2xs
+ZXJzIG11c3QgYmUgcHJvYmVkIGJlZm9yZSBQQ0kuCiAgSSBoYXZlIGEgY29uY2VybiB0aGF0IHRo
+ZSBNU0kgbmFtZXNwYWNlIOKAnCBfU0IuTVNJWOKAnSBpcyBub3QgYSB1bmlxdWUKbmFtZSBhbmQg
+aG93IGNhbiB3ZSB3YWxrIHRoZSBBQ1BJIG5hbWVzcGFjZSBhbmQgdXNlIHRoaXMgbmFtZSB0byBt
+YWtlCk1TSSBwcm9iZWQgYmVmb3JlIFBDSS4KICBNYXkgeW91IGhhdmUgbGl0dGxlIGJpdCBtb3Jl
+IGluZm9ybWF0aW9uIGZvciB0aGlzIG9yIGRvIHlvdSBoYXZlCmFub3RoZXIgc3VnZ2VzdGlvbiBm
+b3IgdGhpcz8KCiAgIFRoZXJl4oCZcyBhbm90aGVyIHNvbHV0aW9uIHdoaWNoIG1ha2VzIHRoaXMg
+c2ltcGxlciBhbmQgSeKAmWQgbGlrZSB0bwphc2sgeW91ciBvcGluaW9uIGFib3V0IHRoaXMuCiAg
+IFRoZSBzb2x1dGlvbiBpcyB0byBtYWtlIGFuIGhpZXJhcmNoeSBiZXR3ZWVuIE1TSSBhbmQgUENJ
+IG5vZGVzICBhcyBiZWxvdzoKRGV2aWNlKFxfU0IuTVNJWCkgewogICBEZXZpY2UoXF9TQi5QQ0kw
+KQogICBEZXZpY2UoXF9TQi5QQ0kxKQogICDigKbigKYKfQogIEluIG90aGVyIHdvcmQsIE1TSVgg
+bm9kZSBpcyBhIHBhcmVudCBub2RlIG9mIFBDSSBub2RlcyBpbiBBQ1BJIHRhYmxlLgogIEluIHRo
+aXMgc2Vuc2UsIHRoZXJl4oCZcyBhbiBleHBsaWNpdCBkZXBlbmRlbmN5IGJldHdlZW4gTVNJIGFu
+ZCBQQ0ksCk1TSSBjb250cm9sbGVyIG11c3QgYmUgcHJvYmVkIGJlZm9yZSBQQ0kgYW5kIGl0IHdp
+bGwgZ3VhcmFudGVlIG5vdApicmVha2luZyBuZXh0IGtlcm5lbCByZWxlYXNlcy4KICBIb3cgZG8g
+eW91IHRoaW5rIGFib3V0IHRoaXMgc29sdXRpb24uCgogSSBhbHNvIHRyaWVkIHRvIHVzZSBfREVQ
+IG1ldGhvZCB0byBkZXNjcmliZSB0aGUgZGVwZW5kZW5jeSBvZiBQQ0llCm5vZGVzLCBidXQgaXQg
+bG9va3MgdGhhdCBpdCBkb2VzIG5vdCB3b3JrIGFzIFBDSSBhbmQgTVNJIGFyZSBoYW5kZWQgYnkK
+IGFjcGlfYnVzX3NjYW4gYW5kIHN0aWxsIGhhdmluZyBpc3N1ZSB3aGVuIHdlIHJlLXByb2JlIFBD
+SS4KClRoYW5rcywKS2h1b25nIERpbmgKCj4+IEZpbmFsbHksIHBsZWFzZSBleGVjdXRlIHRoaXMg
+Y29tbWFuZCBvbiB0aGUgdm1saW51eCB0aGF0ICJ3b3JrcyIKPj4gZm9yIHlvdToKPj4KPj4gbm0g
+dm1saW51eCB8IGdyZXAgLUUgJ19faW5pdGNhbGxfKHhnZW5lX3BjaWVfbXNpX2luaXR8YWNwaV9p
+bml0KScKPgo+ICQgbm0gdm1saW51eCB8IGdyZXAgLUUgJ19faW5pdGNhbGxfKHhnZW5lX3BjaWVf
+bXNpX2luaXR8YWNwaV9pbml0KScKPiBmZmZmMDAwMDA4ZGFiMmQ4IHQgX19pbml0Y2FsbF9hY3Bp
+X2luaXQ0Cj4gZmZmZjAwMDAwOGRhYjJjOCB0IF9faW5pdGNhbGxfeGdlbmVfcGNpZV9tc2lfaW5p
+dDQKPgo+IEJlc3QgcmVnYXJkcywKPiBLaHVvbmcgRGluaAo+Cj4+IEV2ZW4gYnkgb3JkZXJpbmcg
+ZGV2aWNlcyBpbiB0aGUgQUNQSSB0YWJsZXMgKHRoYXQgSSBhYmhvcikgSSBzdGlsbCBkbwo+PiBu
+b3QgdW5kZXJzdGFuZCBob3cgdGhpcyB3b3JrcyAoSSBtZWFuIHdpdGhvdXQgcmVseWluZyBvbiBr
+ZXJuZWwgbGluawo+PiBvcmRlciB0byBlbnN1cmUgdGhhdCB0aGUgTVNJIGRyaXZlciBpcyBwcm9i
+ZWQgYmVmb3JlIFBDSSBkZXZpY2VzIGFyZQo+PiBlbnVtZXJhdGVkIGluIGFjcGlfaW5pdCgpKS4K
+Pj4KPj4gVGhhbmtzLAo+PiBMb3JlbnpvCj4+Cj4+PiBCZXN0IHJlZ2FyZHMsCj4+PiBLaHVvbmcK
+Pj4+Cj4+PiBPbiBGcmksIEFwciAyOCwgMjAxNyBhdCAyOjI3IEFNLCBNYXJjIFp5bmdpZXIgPG1h
+cmMuenluZ2llckBhcm0uY29tPiB3cm90ZToKPj4+ID4gT24gMjgvMDQvMTcgMDE6NTQsIEtodW9u
+ZyBEaW5oIHdyb3RlOgo+Pj4gPj4gRnJvbTogS2h1b25nIERpbmggPGtkaW5oQGFwbS5jb20+Cj4+
+PiA+Pgo+Pj4gPj4gVGhpcyBwYXRjaCBtYWtlcyBwY2kteGdlbmUtbXNpIGRyaXZlciBBQ1BJLWF3
+YXJlIGFuZCBwcm92aWRlcwo+Pj4gPj4gTVNJIGNhcGFiaWxpdHkgZm9yIFgtR2VuZSB2MSBQQ0ll
+IGNvbnRyb2xsZXJzIGluIEFDUEkgYm9vdCBtb2RlLgo+Pj4gPj4KPj4+ID4+IFNpZ25lZC1vZmYt
+Ynk6IEtodW9uZyBEaW5oIDxrZGluaEBhcG0uY29tPgo+Pj4gPj4gU2lnbmVkLW9mZi1ieTogRHVj
+IERhbmcgPGRoZGFuZ0BhcG0uY29tPgo+Pj4gPj4gQWNrZWQtYnk6IE1hcmMgWnluZ2llciA8bWFy
+Yy56eW5naWVyQGFybS5jb20+Cj4+PiA+PiAtLS0KPj4+ID4+IHYyOgo+Pj4gPj4gIC0gVmVyaWZ5
+IHdpdGggQklPUyB2ZXJzaW9uIDMuMDYuMjUgYW5kIDMuMDcuMDkKPj4+ID4+IHYxOgo+Pj4gPj4g
+IC0gSW5pdGlhbCB2ZXJzaW9uCj4+PiA+PiAtLS0KPj4+ID4+ICBkcml2ZXJzL3BjaS9ob3N0L3Bj
+aS14Z2VuZS1tc2kuYyB8ICAgMzUgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0K
+Pj4+ID4+ICAxIGZpbGVzIGNoYW5nZWQsIDMyIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0p
+Cj4+PiA+Pgo+Pj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLXhnZW5lLW1z
+aS5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2kteGdlbmUtbXNpLmMKPj4+ID4+IGluZGV4IGYxYjYz
+M2IuLjAwYWFhM2QgMTAwNjQ0Cj4+PiA+PiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS14Z2Vu
+ZS1tc2kuYwo+Pj4gPj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2kteGdlbmUtbXNpLmMKPj4+
+ID4+IEBAIC0yNCw2ICsyNCw3IEBACj4+PiA+PiAgI2luY2x1ZGUgPGxpbnV4L3BjaS5oPgo+Pj4g
+Pj4gICNpbmNsdWRlIDxsaW51eC9wbGF0Zm9ybV9kZXZpY2UuaD4KPj4+ID4+ICAjaW5jbHVkZSA8
+bGludXgvb2ZfcGNpLmg+Cj4+PiA+PiArI2luY2x1ZGUgPGxpbnV4L2FjcGkuaD4KPj4+ID4+Cj4+
+PiA+PiAgI2RlZmluZSBNU0lfSVIwICAgICAgICAgICAgICAgICAgICAgIDB4MDAwMDAwCj4+PiA+
+PiAgI2RlZmluZSBNU0lfSU5UMCAgICAgICAgICAgICAweDgwMDAwMAo+Pj4gPj4gQEAgLTM5LDcg
+KzQwLDcgQEAgc3RydWN0IHhnZW5lX21zaV9ncm91cCB7Cj4+PiA+PiAgfTsKPj4+ID4+Cj4+PiA+
+PiAgc3RydWN0IHhnZW5lX21zaSB7Cj4+PiA+PiAtICAgICBzdHJ1Y3QgZGV2aWNlX25vZGUgICAg
+ICAqbm9kZTsKPj4+ID4+ICsgICAgIHN0cnVjdCBmd25vZGVfaGFuZGxlICAgICpmd25vZGU7Cj4+
+PiA+PiAgICAgICBzdHJ1Y3QgaXJxX2RvbWFpbiAgICAgICAqaW5uZXJfZG9tYWluOwo+Pj4gPj4g
+ICAgICAgc3RydWN0IGlycV9kb21haW4gICAgICAgKm1zaV9kb21haW47Cj4+PiA+PiAgICAgICB1
+NjQgICAgICAgICAgICAgICAgICAgICBtc2lfYWRkcjsKPj4+ID4+IEBAIC0yNDksNiArMjUwLDEz
+IEBAIHN0YXRpYyB2b2lkIHhnZW5lX2lycV9kb21haW5fZnJlZShzdHJ1Y3QgaXJxX2RvbWFpbiAq
+ZG9tYWluLAo+Pj4gPj4gICAgICAgLmZyZWUgICA9IHhnZW5lX2lycV9kb21haW5fZnJlZSwKPj4+
+ID4+ICB9Owo+Pj4gPj4KPj4+ID4+ICsjaWZkZWYgQ09ORklHX0FDUEkKPj4+ID4+ICtzdGF0aWMg
+c3RydWN0IGZ3bm9kZV9oYW5kbGUgKnhnZW5lX21zaV9nZXRfZndub2RlKHN0cnVjdCBkZXZpY2Ug
+KmRldikKPj4+ID4+ICt7Cj4+PiA+PiArICAgICByZXR1cm4geGdlbmVfbXNpX2N0cmwuZndub2Rl
+Owo+Pj4gPj4gK30KPj4+ID4+ICsjZW5kaWYKPj4+ID4+ICsKPj4+ID4+ICBzdGF0aWMgaW50IHhn
+ZW5lX2FsbG9jYXRlX2RvbWFpbnMoc3RydWN0IHhnZW5lX21zaSAqbXNpKQo+Pj4gPj4gIHsKPj4+
+ID4+ICAgICAgIG1zaS0+aW5uZXJfZG9tYWluID0gaXJxX2RvbWFpbl9hZGRfbGluZWFyKE5VTEws
+IE5SX01TSV9WRUMsCj4+PiA+PiBAQCAtMjU2LDcgKzI2NCw3IEBAIHN0YXRpYyBpbnQgeGdlbmVf
+YWxsb2NhdGVfZG9tYWlucyhzdHJ1Y3QgeGdlbmVfbXNpICptc2kpCj4+PiA+PiAgICAgICBpZiAo
+IW1zaS0+aW5uZXJfZG9tYWluKQo+Pj4gPj4gICAgICAgICAgICAgICByZXR1cm4gLUVOT01FTTsK
+Pj4+ID4+Cj4+PiA+PiAtICAgICBtc2ktPm1zaV9kb21haW4gPSBwY2lfbXNpX2NyZWF0ZV9pcnFf
+ZG9tYWluKG9mX25vZGVfdG9fZndub2RlKG1zaS0+bm9kZSksCj4+PiA+PiArICAgICBtc2ktPm1z
+aV9kb21haW4gPSBwY2lfbXNpX2NyZWF0ZV9pcnFfZG9tYWluKG1zaS0+Zndub2RlLAo+Pj4gPj4g
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAmeGdlbmVf
+bXNpX2RvbWFpbl9pbmZvLAo+Pj4gPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICBtc2ktPmlubmVyX2RvbWFpbik7Cj4+PiA+Pgo+Pj4gPj4gQEAgLTI2
+NSw2ICsyNzMsOSBAQCBzdGF0aWMgaW50IHhnZW5lX2FsbG9jYXRlX2RvbWFpbnMoc3RydWN0IHhn
+ZW5lX21zaSAqbXNpKQo+Pj4gPj4gICAgICAgICAgICAgICByZXR1cm4gLUVOT01FTTsKPj4+ID4+
+ICAgICAgIH0KPj4+ID4+Cj4+PiA+PiArI2lmZGVmIENPTkZJR19BQ1BJCj4+PiA+PiArICAgICBw
+Y2lfbXNpX3JlZ2lzdGVyX2Z3bm9kZV9wcm92aWRlcigmeGdlbmVfbXNpX2dldF9md25vZGUpOwo+
+Pj4gPj4gKyNlbmRpZgo+Pj4gPj4gICAgICAgcmV0dXJuIDA7Cj4+PiA+PiAgfQo+Pj4gPj4KPj4+
+ID4+IEBAIC00NDksNiArNDYwLDEzIEBAIHN0YXRpYyBpbnQgeGdlbmVfbXNpX2h3aXJxX2ZyZWUo
+dW5zaWduZWQgaW50IGNwdSkKPj4+ID4+ICAgICAgIHt9LAo+Pj4gPj4gIH07Cj4+PiA+Pgo+Pj4g
+Pj4gKyNpZmRlZiBDT05GSUdfQUNQSQo+Pj4gPj4gK3N0YXRpYyBjb25zdCBzdHJ1Y3QgYWNwaV9k
+ZXZpY2VfaWQgeGdlbmVfbXNpX2FjcGlfaWRzW10gPSB7Cj4+PiA+PiArICAgICB7IkFQTUMwRDBF
+IiwgMH0sCj4+PiA+PiArICAgICB7IH0sCj4+PiA+PiArfTsKPj4+ID4+ICsjZW5kaWYKPj4+ID4+
+ICsKPj4+ID4+ICBzdGF0aWMgaW50IHhnZW5lX21zaV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2
+aWNlICpwZGV2KQo+Pj4gPj4gIHsKPj4+ID4+ICAgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzOwo+
+Pj4gPj4gQEAgLTQ2OSw3ICs0ODcsMTcgQEAgc3RhdGljIGludCB4Z2VuZV9tc2lfcHJvYmUoc3Ry
+dWN0IHBsYXRmb3JtX2RldmljZSAqcGRldikKPj4+ID4+ICAgICAgICAgICAgICAgZ290byBlcnJv
+cjsKPj4+ID4+ICAgICAgIH0KPj4+ID4+ICAgICAgIHhnZW5lX21zaS0+bXNpX2FkZHIgPSByZXMt
+PnN0YXJ0Owo+Pj4gPj4gLSAgICAgeGdlbmVfbXNpLT5ub2RlID0gcGRldi0+ZGV2Lm9mX25vZGU7
+Cj4+PiA+PiArCj4+PiA+PiArICAgICB4Z2VuZV9tc2ktPmZ3bm9kZSA9IG9mX25vZGVfdG9fZndu
+b2RlKHBkZXYtPmRldi5vZl9ub2RlKTsKPj4+ID4+ICsgICAgIGlmICgheGdlbmVfbXNpLT5md25v
+ZGUpIHsKPj4+ID4+ICsgICAgICAgICAgICAgeGdlbmVfbXNpLT5md25vZGUgPSBpcnFfZG9tYWlu
+X2FsbG9jX2Z3bm9kZShOVUxMKTsKPj4+ID4KPj4+ID4gUGxlYXNlIHByb3ZpZGUgc29tZXRoaW5n
+IG90aGVyIHRoYW4gTlVMTCwgc3VjaCBhcyB0aGUgYmFzZSBhZGRyZXNzIGlmCj4+PiA+IHRoZSBk
+ZXZpY2UuIFRoYXQncyBxdWl0ZSB1c2VmdWwgZm9yIGRlYnVnZ2luZy4KPj4+ID4KPj4+ID4+ICsg
+ICAgICAgICAgICAgaWYgKCF4Z2VuZV9tc2ktPmZ3bm9kZSkgewo+Pj4gPj4gKyAgICAgICAgICAg
+ICAgICAgICAgIGRldl9lcnIoJnBkZXYtPmRldiwgIkZhaWxlZCB0byBjcmVhdGUgZndub2RlXG4i
+KTsKPj4+ID4+ICsgICAgICAgICAgICAgICAgICAgICByYyA9IEVOT01FTTsKPj4+ID4+ICsgICAg
+ICAgICAgICAgICAgICAgICBnb3RvIGVycm9yOwo+Pj4gPj4gKyAgICAgICAgICAgICB9Cj4+PiA+
+PiArICAgICB9Cj4+PiA+PiArCj4+PiA+PiAgICAgICB4Z2VuZV9tc2ktPm51bV9jcHVzID0gbnVt
+X3Bvc3NpYmxlX2NwdXMoKTsKPj4+ID4+Cj4+PiA+PiAgICAgICByYyA9IHhnZW5lX21zaV9pbml0
+X2FsbG9jYXRvcih4Z2VuZV9tc2kpOwo+Pj4gPj4gQEAgLTU0MCw2ICs1NjgsNyBAQCBzdGF0aWMg
+aW50IHhnZW5lX21zaV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+Pj4gPj4g
+ICAgICAgLmRyaXZlciA9IHsKPj4+ID4+ICAgICAgICAgICAgICAgLm5hbWUgPSAieGdlbmUtbXNp
+IiwKPj4+ID4+ICAgICAgICAgICAgICAgLm9mX21hdGNoX3RhYmxlID0geGdlbmVfbXNpX21hdGNo
+X3RhYmxlLAo+Pj4gPj4gKyAgICAgICAgICAgICAuYWNwaV9tYXRjaF90YWJsZSA9IEFDUElfUFRS
+KHhnZW5lX21zaV9hY3BpX2lkcyksCj4+PiA+PiAgICAgICB9LAo+Pj4gPj4gICAgICAgLnByb2Jl
+ID0geGdlbmVfbXNpX3Byb2JlLAo+Pj4gPj4gICAgICAgLnJlbW92ZSA9IHhnZW5lX21zaV9yZW1v
+dmUsCj4+PiA+Pgo+Pj4gPgo+Pj4gPiBUaGUgY29kZSBpcyB0cml2aWFsLCBidXQgcmVsaWVzIG9u
+IHRoZSBNU0kgY29udHJvbGxlciB0byBwcm9iZSBiZWZvcmUKPj4+ID4gdGhlIFBDSSBidXMuIFdo
+YXQgZW5mb3JjZXMgdGhpcz8gSG93IGlzIGl0IG1ha2luZyBzdXJlIHRoYXQgdGhpcyBpcyBub3QK
+Pj4+ID4gZ29pbmcgdG8gYnJlYWsgaW4gdGhlIG5leHQga2VybmVsIHJlbGVhc2U/IEFzIGZhciBh
+cyBJIGNhbiB0ZWxsLCB0aGVyZQo+Pj4gPiBpcyBubyBleHBsaWNpdCBkZXBlbmRlbmN5IGJldHdl
+ZW4gdGhlIHR3bywgbWFraW5nIGl0IHRoZSB3aG9sZSB0aGluZwo+Pj4gPiBleHRyZW1lbHkgZnJh
+Z2lsZS4KPj4+ID4KPj4+ID4gVGhhbmtzLAo+Pj4gPgo+Pj4gPiAgICAgICAgIE0uCj4+PiA+IC0t
+Cj4+PiA+IEphenogaXMgbm90IGRlYWQuIEl0IGp1c3Qgc21lbGxzIGZ1bm55Li4uCj4+Pgo+Pj4g
+LS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4
+LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFk
+Lm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFy
+bS1rZXJuZWwK
