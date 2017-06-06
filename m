@@ -1,106 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36431 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751827AbdFHPsG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jun 2017 11:48:06 -0400
-Received: by mail-wm0-f47.google.com with SMTP id 7so140696741wmo.1
-        for <linux-pci@vger.kernel.org>; Thu, 08 Jun 2017 08:48:05 -0700 (PDT)
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:33695 "EHLO
+        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751484AbdFFLUF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2017 07:20:05 -0400
+Received: by mail-yw0-f178.google.com with SMTP id 63so53580763ywr.0
+        for <linux-pci@vger.kernel.org>; Tue, 06 Jun 2017 04:20:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAJ+vNU2iPDRELO7Ce8=ZRNqVtYMO1d3YF-HE7PoBho0Am1mZhg@mail.gmail.com>
-References: <20170426181502.770-1-l.stach@pengutronix.de> <CAJ+vNU0AEZtc+DaYSV7S1LtXCncVh9nV4hG7BtYxJE=m6-80EA@mail.gmail.com>
- <1493282584.13947.6.camel@pengutronix.de> <CAJ+vNU3tHG2c0XJhs3qD0xS4BP==fWEwP6Y78+4WpUmn-KksBg@mail.gmail.com>
- <CAJ+vNU0pcivE53grF6n939gXC0E6-HN4fFJ7Pm9hq3nV1YYSUQ@mail.gmail.com>
- <1494490587.15454.9.camel@pengutronix.de> <CAJ+vNU2iPDRELO7Ce8=ZRNqVtYMO1d3YF-HE7PoBho0Am1mZhg@mail.gmail.com>
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Thu, 8 Jun 2017 08:48:04 -0700
-Message-ID: <CAJ+vNU2HDyfsyxFAJCncnTiFqpBZmumvWbUxoJEwhV1vrvyZ1g@mail.gmail.com>
-Subject: Re: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple devices
- are attached
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
+In-Reply-To: <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
+References: <20170531070109.81569-3-songxiaowei@hisilicon.com>
+ <201706040735.pu1PIspV%fengguang.wu@intel.com> <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
+From: Guodong Xu <guodong.xu@linaro.org>
+Date: Tue, 6 Jun 2017 19:19:53 +0800
+Message-ID: <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
+Subject: Re: [PATCH v9 2/4] arm64: dts: hisi: add kirin pcie node
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: kbuild test robot <lkp@intel.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>, kbuild-all@01.org,
+        Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
         Jingoo Han <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        patchwork-lst@pengutronix.de
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Duc Dang <dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, chenyao11@huawei.com,
+        Chen Feng <puck.chen@hisilicon.com>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 11, 2017 at 7:08 AM, Tim Harvey <tharvey@gateworks.com> wrote:
-> On Thu, May 11, 2017 at 1:16 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->> Hi Tim,
->>
->> Am Mittwoch, den 10.05.2017, 14:44 -0700 schrieb Tim Harvey:
->>> On Thu, Apr 27, 2017 at 8:32 AM, Tim Harvey <tharvey@gateworks.com> wrote:
->>> > On Thu, Apr 27, 2017 at 1:43 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->>> >> Am Mittwoch, den 26.04.2017, 14:11 -0700 schrieb Tim Harvey:
->>> >>> On Wed, Apr 26, 2017 at 11:15 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
->>> >>> > The DWC host does not support legacy PCI IRQs and MSIs at the same time,
->>> >>> > so we need to fall back to using only legacy IRQs if there is a chance
->>> >>> > that multiple devices with differing MSI capabilities are connected to
->>> >>> > the host. The only configuration where MSIs can be safely used is when
->>> >>> > the device below the host bridge is not a bridge, i.e. the only device
->>> >>> > connected to this host.
->>> >>> >
->>> >>> > By disallowing MSI allocation when multiple devices might be attached
->>> >>> > we get those configurations in a working state. The only configurations
->>> >>> > that depend on MSIs being available, that I am aware of, are some
->>> >>> > embedded devices with a PCIe attached FPGA, that is incapable of
->>> >>> > generating PCI legacy IRQs. Those are kept working by allowing MSIs
->>> >>> > when only a single device is attached to the host.
->>> >>> >
->>> >>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
->>> >>> > ---
->> [...]
->>> Lucas,
->>>
->>> Are you not able to repeat my findings?
->>
->> Yes, I see what's going on.
->>
->>> Since Linux 4.8 IMX PCIe is completely broken for PCIe devices that do
->>> not support MSI interrupts (and there are a whole lot of 802.11n
->>> radios that fall into this category) as you can no longer disable MSI
->>> because the IMX PCIe driver depends on it.
->>>
->>> It seems like your patch is the right approach but something must
->>> still be getting set that causes the legacy interrupts to not fire.
->>
->> The issue here are the port-services, which are using MSI when
->> available, which might conflict with the device requirements, even if
->> only a single device is attached.
->>
->> Probably we need to disable MSI on all systems, unless we know that we
->> absolutely need them (EP devices, which don't support legacy IRQs). I'll
->> send a patch to do this, but other issues have been higher priority
->> again.
->>
->> Regards,
->> Lucas
->>
->
-> Lucas,
->
-> Thanks, this fix is something that's beyond my experience or I would
-> be glad to do it. The PCIe driver has been changing very rapidly in
-> recent kernel versions and there is no single patch that can be
-> reverted to 'fix' this long-standing issue. I'm really surprised
-> others haven't chimed in with reports of it being broken as its been
-> an issue since 4.8.
->
-> Is it worth removing the 'depends on PCI_MSI_IRQ_DOMAIN' from
-> PCIE_DW_HOST and PCI_IMX6 and defaulting MSI off until your proposed
-> fix is ready and working? That is precisely what I have to do on 4.8+
-> kernels to get them working for our IMX6 users using ath9k radios
-> (making distro's like Ubuntu a problem as they run a fairly standard
-> 4.8 kernel).
->
-> Tim
+Hi, Arnd
 
-Lucas,
+On Tue, Jun 6, 2017 at 5:23 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Sun, Jun 4, 2017 at 2:03 AM, kbuild test robot <lkp@intel.com> wrote:
+>> Hi Xiaowei,
+>>
+>> [auto build test ERROR on pci/next]
+>> [also build test ERROR on v4.12-rc3 next-20170602]
+>> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>>
+>> url:    https://github.com/0day-ci/linux/commits/Xiaowei-Song/add-PCIe-driver-for-Kirin-PCIe/20170531-182118
+>> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+>> config: arm64-allnoconfig (attached as .config)
+>> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+>> reproduce:
+>>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>>         chmod +x ~/bin/make.cross
+>>         # save the attached .config to linux build tree
+>>         make.cross ARCH=arm64
+>>
+>> All errors (new ones prefixed by >>):
+>>
+>>>> Error: arch/arm64/boot/dts/hisilicon/hi3660.dtsi:180.24-25 syntax error
+>>>> FATAL ERROR: Unable to parse input tree
+>
+> We keep getting the build errors for patch submissions. Obviously the patch is
+> still broken and can't be merged as-is. What is the plan for merging the series?
+>
 
-Any cycles to put together another attempt to allow legacy IRQ's on IMX6?
+This dts patch can be applied to dts series [1]. For upstream review
+purpose, hi3660-hikey960 dts patches, which don't have a related
+driver changes, are sent in [1]. Other patches, which need driver
+changes, like this one, are sent together with driver.
 
-Thanks,
+Patchset [1] is now at its v2 review. Rob Herring already gave his ACK
+for some of them in v1. Hopefully I can get more ACK for remaining
+ones, and make them ready for v4.13 merging window.
 
-Tim
+[1], http://www.spinics.net/lists/devicetree/msg178303.html
+
+-Guodong
+
+> The other patches all seem fine IIRC.
+>
+>        Arnd
