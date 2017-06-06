@@ -1,177 +1,314 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33046 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751722AbdF3Cjg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jun 2017 22:39:36 -0400
-Date: Thu, 29 Jun 2017 21:39:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH][RFC v3] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20170630023931.GW17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1471595425-1752-1-git-send-email-yu.c.chen@intel.com>
- <20170629191926.GV17844@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=ejJQ=5L=gmail.com=alexdeucher@kernel.org>
+Return-Path: <SRS0=ejJQ=5L=gmail.com=alexdeucher@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170629191926.GV17844@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <779a883a-265a-ae04-b0cd-8cb3599f0dc0@vodafone.de>
+References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
+ <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
+ <20170601201430.GC12257@bhelgaas-glaptop.roam.corp.google.com>
+ <72e061a5-9684-06e2-3021-80de8ca97bd7@vodafone.de> <20170602202631.GA1452@bhelgaas-glaptop.roam.corp.google.com>
+ <779a883a-265a-ae04-b0cd-8cb3599f0dc0@vodafone.de>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Tue, 6 Jun 2017 09:53:34 -0400
+Message-ID: <CADnq5_POq7LpSDLBQxPaggnH2b9FzmndwKTe2xsiJtHcPdujyQ@mail.gmail.com>
+Subject: Re: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access v2
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, David Airlie <airlied@linux.ie>,
+	Linux PCI <linux-pci@vger.kernel.org>,
+	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
+	amd-gfx list <amd-gfx@lists.freedesktop.org>, Alex Deucher <alexander.deucher@amd.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 02:19:26PM -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 19, 2016 at 04:30:25PM +0800, Chen Yu wrote:
-> > People reported that they can not do a poweroff nor a
-> > suspend to ram on their Mac Pro 11. After some investigations
-> > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
-> > mm windows to ([mem 0x7fa00000-0x7fbfffff] and
-> > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-> > io resource 0x1804 becomes unaccessible immediately, where the
-> > ACPI Sleep register is located, as a result neither poweroff(S5)
-> > nor suspend to ram(S3) works.
-> > 
-> > As suggested by Bjorn, further testing shows that, there is an
-> > unreported device may be (using) conflict with above aperture,
-> > which brings unpredictable result such as the failure of accessing
-> > the io port, which blocks the poweroff(S5). Besides if we reassign
-> > the memory aperture to the other place, the poweroff works again.
-> > 
-> > As we do not find any resource declared in _CRS which contain above
-> > memory aperture, and Mac OS does not use this pci bridge neither, we
-> > choose a simple workaround to clear the hotplug flag(suggested by
-> > Yinghai Lu), thus do not allocate any resource for this pci bridge,
-> > and thereby no conflict anymore.
-> > 
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Rafael J. Wysocki <rafael@kernel.org>
-> > Cc: Lukas Wunner <lukas@wunner.de>
-> > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> > ---
-> >  drivers/pci/quirks.c | 20 ++++++++++++++++++++
-> >  1 file changed, 20 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 37ff015..04bbdba 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -2776,6 +2776,26 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
-> >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-> >  
-> >  /*
-> > + * Apple: Avoid programming the memory/io aperture of 00:1c.0
-> > + *
-> > + * BIOS does not declare any resource for 00:1c.0, but with
-> > + * hotplug flag set, thus the OS allocates:
-> > + * [mem 0x7fa00000 - 0x7fbfffff]
-> > + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
-> > + * which is conflict with an unreported device, which
-> > + * causes unpredictable result such as accessing io port.
-> > + * So clear the hotplug flag to work around it.
-> > + */
-> > +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-> > +{
-> > +	if (dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-> > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
-> > +		dev->is_hotplug_bridge = 0;
-> > +}
-> > +
-> > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-> > +
-> > +/*
-> >   * This is a quirk for the Ricoh MMC controller found as a part of
-> 
-> I give up.  We're not making any progress on this.  I propose the
-> following patch for v4.13.  This is slightly modified to:
-> 
->   - move to arch/x86/pci/fixups.c, since I think this is specific to
->     x86
-> 
->   - only clear dev->is_hotplug_bridge for the 00:1c.0 bridge, since
->     these systems contain other bridges where I think we *do* want to
->     support hotplug, e.g., the Thunderbolt bridge at 09:00.0 (from
->     https://bugzilla.kernel.org/attachment.cgi?id=210611)
-> 
->   - log a note in dmesg about what we're doing
-> 
-> commit f7bf6baa11b84534d0b7f5ceee06e3349948c853
-> Author: Chen Yu <yu.c.chen@intel.com>
-> Date:   Fri Aug 19 16:30:25 2016 +0800
-> 
->     PCI: Work around poweroff & suspend-to-RAM issue on Macbook Pro 11
->     
->     Neither soft poweroff (transition to ACPI power state S5) nor
->     suspend-to-RAM (transition to state S3) works on the Macbook Pro 11,4 and
->     11,5.
->     
->     The problem is related to assigning the [mem 0x7fa00000-0x7fbfffff] space
->     to the 00:1c.0 Root Port.  This port isn't connected to anything, but it
->     advertises hotplug support in its PCIe Capability.  Initially it has no
->     windows assigned, and if Linux leaves it that way, poweroff and
->     suspend-to-RAM work fine.
->     
->     Since the port supports hotplug, Linux assigns windows for future hot-added
->     devices.  We currently assign [mem 0x7fa00000-0x7fbfffff] for the memory
->     window, and poweroff and suspend-to-RAM don't work after this assignment.
->     
->     Linux does a soft poweroff (transition to S5) by writing to PM1_CNT at
->     [io 0x1804].  The theory about why this doesn't work is:
->     
->       - The write to PM1_CNT causes an SMI.
->       - The BIOS SMI handler depends on something in [mem 0x7fa00000-0x7fbfffff].
->       - When Linux assigns [mem 0x7fa00000-0x7fbfffff] to the 00:1c.0 Port, it
->         covers up whatever the SMI handler uses, so the SMI handler no longer
->         works correctly.
->     
->     Mark the 00:1c.0 bridge as not supporting hotplug, so we don't assign the
->     [mem 0x7fa00000-0x7fbfffff] space to it.
->     
->     Note that we don't know what the real conflict is, so other use of this
->     memory range by another device may cause similar problems.
->     
->     Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
->     Signed-off-by: Chen Yu <yu.c.chen@intel.com>
->     [bhelgaas: limit to device 00:1c.0, add printk, changelog, comment]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Cc: Rafael J. Wysocki <rafael@kernel.org>
->     Cc: Lukas Wunner <lukas@wunner.de>
-> 
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 6d52b94f4bb9..e6b3bf9ecf81 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -571,3 +571,29 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-> +
-> +/*
-> + * Apple: Avoid programming the memory/io apertures of 00:1c.0
-> + *
-> + * The BIOS does not assign any windows to the 00:1c.0 Root Port, but the
-> + * port advertises hotplug support in the PCIe Capability, so Linux assigns
-> + *
-> + *   [mem 0x7fa00000 - 0x7fbfffff]
-> + *
-> + * This assignment somehow causes a conflict with I/O port 0x1804, which is
-> + * used for soft poweroff and suspend-to-RAM.  Clear the hotplug flag to
-> + * keep Linux from assigning the window above.
-> + *
-> + * N.B. We don't know what the conflict is, so other use of this memory
-> + * range by another device may cause similar problems.
-> + */
-> +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-> +{
-> +	if ((dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-> +	     dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5")) &&
-> +	    dev->bus->number == 0 && dev->devfn == PCI_DEVFN(0x1c, 0)) {
-> +		dev_info(&dev->dev, "treating as non-hotplug bridge to work around poweroff issue\n");
-> +		dev->is_hotplug_bridge = 0;
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+On Tue, Jun 6, 2017 at 7:51 AM, Christian K=C3=B6nig <deathsimple@vodafone.=
+de> wrote:
+> Am 02.06.2017 um 22:26 schrieb Bjorn Helgaas:
+>>
+>> On Fri, Jun 02, 2017 at 11:32:21AM +0200, Christian K=C3=B6nig wrote:
+>>>
+>>> Hi Bjorn,
+>>>
+>>> sorry for not responding earlier and thanks for picking this thread
+>>> up again.
+>>>
+>>> Am 01.06.2017 um 22:14 schrieb Bjorn Helgaas:
+>>>>
+>>>> [+cc ADMGPU, DRM folks]
+>>>>
+>>>> On Tue, May 09, 2017 at 06:49:07PM +0200, Christian K=C3=B6nig wrote:
+>>>>>
+>>>>> [SNIP]
+>>>>> +/**
+>>>>> + * amdgpu_resize_bar0 - try to resize BAR0
+>>>>> + *
+>>>>> + * @adev: amdgpu_device pointer
+>>>>> + *
+>>>>> + * Try to resize BAR0 to make all VRAM CPU accessible.
+>>>>> + */
+>>>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
+>>>>> +{
+>>>>> +       u64 space_needed =3D roundup_pow_of_two(adev->mc.real_vram_si=
+ze);
+>>>>> +       u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) -1=
+;
+>>>>> +       u16 cmd;
+>>>>> +       int r;
+>>>>> +
+>>>>> +       /* Free the doorbell mapping, it most likely needs to move as
+>>>>> well */
+>>>>> +       amdgpu_doorbell_fini(adev);
+>>>>> +       pci_release_resource(adev->pdev, 2);
+>>>>> +
+>>>>> +       /* Disable memory decoding while we change the BAR addresses
+>>>>> and size */
+>>>>> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
+>>>>> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
+>>>>> +                             cmd & ~PCI_COMMAND_MEMORY);
+>>>>> +
+>>>>> +       r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
+>>>>> +       if (r =3D=3D -ENOSPC)
+>>>>> +               DRM_INFO("Not enough PCI address space for a large
+>>>>> BAR.");
+>>>>> +       else if (r && r !=3D -ENOTSUPP)
+>>>>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
+>>>>> +
+>>>>> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
+>>>>> +
+>>>>> +       /* When the doorbell BAR isn't available we have no chance of
+>>>>> +        * using the device.
+>>>>> +        */
+>>>>> +       BUG_ON(amdgpu_doorbell_init(adev));
+>>>>
+>>>> This amdgpu_doorbell_fini()/amdgpu_doorbell_init() thing doesn't look
+>>>> right.  amdgpu_device_init() only calls amdgpu_doorbell_init() for
+>>>> "adev->asic_type >=3D CHIP_BONAIRE", but we call it unconditionally
+>>>> here.
+>>>>
+>>>> This is the call graph:
+>>>>
+>>>>    amdgpu_device_init
+>>>>      adev->rmmio_base =3D pci_resource_start(adev->pdev, 5)   # 2 for =
+<
+>>>> BONAIRE
+>>>>      adev->rmmio =3D ioremap(adev->rmmio_base, ...)
+>>>>      DRM_INFO("register mmio base: 0x%08X\n",
+>>>> (uint32_t)adev->rmmio_base)
+>>>>      if (adev->asic_type >=3D CHIP_BONAIRE) {
+>>>>        amdgpu_doorbell_init
+>>>>         adev->doorbell.base =3D pci_resource_start(adev->pdev, 2)
+>>>>         adev->doorbell.ptr =3D ioremap(adev->doorbell.base, ...)
+>>>>      }
+>>>>      amdgpu_init
+>>>>        gmc_v7_0_sw_init              # gmc_v7_0_ip_funcs.sw_init
+>>>>         gmc_v7_0_mc_init
+>>>>    +         amdgpu_resize_bar0
+>>>>    +           amdgpu_doorbell_fini
+>>>>    +           pci_release_resource(adev->pdev, 2)
+>>>>    +           pci_resize_resource(adev->pdev, 0, size)
+>>>>    +           amdgpu_doorbell_init
+>>>>           adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0)
+>>>>
+>>>> If "asic_type < CHIP_BONAIRE", we ioremapped BAR 2 in
+>>>> amdgpu_device_init(), then we released the resource here and never
+>>>> updated the ioremap.
+>>>
+>>> The first hardware with a resizeable BAR I could find is a Tonga,
+>>> and that is even a generation later than Bonaire.
+>>>
+>>> So we are never going to call this code on earlier hardware generations=
+.
+>>
+>> The problem with that is that it's impossible for a code reader to
+>> verify that.  So adding a check is ugly but I think makes it more
+>> readable.
+>
+>
+> Good point. I will just move the check into the function itself, that sho=
+uld
+> handle all such cases.
+>
+>>>>  From the PCI core perspective, it would be much cleaner to do the BAR
+>>>> resize before the driver calls pci_enable_device().  If that could be
+>>>> done, there would be no need for this sort of shutdown/reinit stuff
+>>>> and we wouldn't have to worry about issues like these.  The amdgpu
+>>>> init path is pretty complicated, so I don't know whether this is
+>>>> possible.
+>>>
+>>> I completely agree on this and it is actually the approach I tried firs=
+t.
+>>>
+>>> There are just two problems with this approach:
+>>> 1. When the amdgpu driver is loaded there can already be the VGA
+>>> console, Vesa or EFI driver active for the device and displaying the
+>>> splash screen.
+>>>
+>>> When we resize and most likely relocate the BAR while those drivers
+>>> are active it will certainly cause problems.
+>>>
+>>> What amdgpu does before trying to resize the BAR is kicking out
+>>> other driver and making sure it has exclusive access to the
+>>> hardware.
+>>
+>> I don't understand the problem here yet.  If you need to enable the
+>> device, then disable it, resize, and re-enable it, that's fine.
+>
+>
+> The issue is we never enable the device ourself in amdgpu, except for som=
+e
+> rare cases during resume.
+>
+> In most of the cases we have to handle this is the primary display device
+> which is enabled by either the BIOS, VGA console, VesaFB or EFIFB. Amdgpu
+> just kicks out whatever driver was responsible for the device previously =
+and
+> takes over.
+>
+> I could of course do the disable/resize/reenable dance, but I would rathe=
+r
+> want to avoid that.
+>
+> The hardware is most likely already displaying a boot splash and we want =
+to
+> transit to the desktop without any flickering (at least that's the long t=
+erm
+> goal). Completely disabling the device to do this doesn't sounds like a g=
+ood
+> idea if we want that.
+>
+>> The important thing I'm looking for is that the resize happens before
+>> a pci_enable_device(), because pci_enable_device() is the sync point
+>> where the PCI core enables resources and makes them available to the
+>> driver.  Drivers know that they can't look at the resources before
+>> that point.  There's a little bit of text about this in [1].
+>
+>
+> Yeah, I understand that. But wouldn't it be sufficient to just disable
+> memory decoding during the resize?
+>
+> I can easily guarantee that the CPU isn't accessing the BAR during the ti=
+me
+> (we need to do this for changing the memory clocks as well), but I have a
+> bad gut feeling completely turning of the device while we are still
+> displaying stuff.
+>
+>>> 2. Without taking a look at the registers you don't know how much
+>>> memory there actually is on the board.
+>>>
+>>> We could always resize it to the maximum supported, but that would
+>>> mean we could easily waste 128GB of address space while the hardware
+>>> only has 8GB of VRAM.
+>>>
+>>> That would not necessarily hurt us when we have enough address
+>>> space, but at least kind of sucks.
+>>
+>> Enable, read regs, disable, kick out other drivers, resize, enable.
+>> Does that solve this problem?
+>
+>
+> Yeah, that sounds like it should do it. I will try and take a look if tha=
+t
+> works or not.
+>
+>
+>>>> I would also like to simplify the driver usage model and get the
+>>>> PCI_COMMAND_MEMORY twiddling into the PCI core instead of the driver.
+>>>> Ideally, the driver would do something like this:
+>>>>
+>>>>    pci_resize_resource(adev->pdev, 0, rbar_size);
+>>>>    pci_enable_device(adev->pdev);
+>>>>
+>>>> And the PCI core would be something along these lines:
+>>>>
+>>>>    int pci_resize_resource(dev, bar, size)
+>>>>    {
+>>>>      if (pci_is_enabled(dev))
+>>>>        return -EBUSY;
+>>>>
+>>>>      pci_disable_decoding(dev);          # turn off MEM, IO decoding
+>>>>      pci_release_resources(dev);         # (all of them)
+>>>>      err =3D pci_resize_bar(dev, bar, size);     # change BAR size (on=
+ly)
+>>>>      if (err)
+>>>>        return err;
+>>>>
+>>>>      pci_assign_resources(dev);          # reassign all "dev" resource=
+s
+>>>>      return 0;
+>>>>    }
+>>>
+>>> I already tried the approach with releasing all resources, but it
+>>> didn't worked so well.
+>>>
+>>> When resizing fails because we don't have enough address space then
+>>> we at least want to get back to a working config.
+>>>
+>>> Releasing everything makes that rather tricky, since I would then
+>>> need to keep a backup of the old config and try to restore it.
+>>
+>> If resizing fails because of lack of address space, I would expect the
+>> PCI core to at least restore to the previous state.  If it doesn't, I
+>> think that would be a defect.
+>
+>
+> I completely agree, but this is unfortunately what happens.
+>
+> The allocation and alignment functions in the PCI core sometimes doesn't
+> seem to be able to restore the old config.
+>
+> I mean just try pci=3Drealloc. The core sometimes doesn't seem to be able=
+ to
+> come up with a valid config with that.
+>
+>> Having the driver specify the BARs it thinks might cause issues feels
+>> like a crutch.
+>
+> Why? The driver just releases what is necessary to move the BAR.
+>
+>>
+>>> Additional to that I'm not sure if releasing the register BAR and
+>>> relocating it works with amdgpu.
+>>
+>> If the BAR can't be relocated, that sounds like a hardware defect.  If
+>> that's really the case, you could mark it IORESOURCE_PCI_FIXED so we
+>> don't move it.  Or if it's an amdgpu defect, e.g., if amdgpu doesn't
+>> re-read the resource addresses after pci_enable_device(), you should
+>> fix amdgpu.
+>
+>
+> No, the issue is not the hardware but rather the fact that the I/O BAR mi=
+ght
+> be used by more than one driver in the system.
+>
+> We also have an alsa audio driver using this to program it's DMA for HDMI=
+/DP
+> audio and there is also the kicked out driver which might should take ove=
+r
+> again if amdgpu ever unloads.
 
-This patch stinks, sorry.  I'll try again tomorrow.  The problem is
-the address space, not the device, so we should be able to do better
-than this.
+I think you'll only see this on chips with ACP (Carrizo and Stoney)
+and I think the soc alsa driver gets loaded via a hotplug call from
+amdgpu when it detects ACP so as long as we do the resize before
+probing ACP we should be fine.  On RV, ACP moves to it's own pci
+device and the HDA audio on other devices is exposed via it's own pci
+device.
+
+Alex
+
+
+>
+> I need to double check how those two work.
+>
+> Regards,
+> Christian.
+>
+>
+>>
+>> [1]
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/=
+Documentation/PCI/pci.txt#n255
+>
+>
+>
+> _______________________________________________
+> amd-gfx mailing list
+> amd-gfx@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/amd-gfx
