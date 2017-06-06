@@ -1,97 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:33179 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932104AbdFNI0E (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:26:04 -0400
-Received: by mail-pg0-f50.google.com with SMTP id f185so72606030pgc.0
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:25:59 -0700 (PDT)
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
-        peter.griffin@linaro.org, puck.chen@hisilicon.com,
-        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
-        arnd@arndb.de
-Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
-        Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>,
-        Guodong Xu <guodong.xu@linaro.org>
-Subject: [PATCH v3 18/21] arm64: dts: hikey960: add device node for pmic and regulators
-Date: Wed, 14 Jun 2017 16:23:35 +0800
-Message-Id: <20170614082338.15673-19-guodong.xu@linaro.org>
-In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Received: from esa4.dell-outbound.iphmx.com ([68.232.149.214]:58769 "EHLO
+        esa4.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751055AbdFFIDD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2017 04:03:03 -0400
+From: <Narendra.K@dell.com>
+Cc: <x86@kernel.org>, <linux-pci@vger.kernel.org>,
+        <Jordan.Hargrave@dell.com>, <Shyam.Iyer@dell.com>,
+        <bhelgaas@google.com>, <Narendra.K@dell.com>
+To: <jdelvare@suse.de>
+Subject: RE: dmi type 0xB1 record - unknown flag
+Date: Tue, 6 Jun 2017 08:02:40 +0000
+Message-ID: <1d8d53bdb9e94e7d8ec89a79e99d4cdd@BLRX13MDC105.AMER.DELL.COM>
+References: <20170601143826.5f980444@endymion>
+ <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+ <20170602161311.27eab72d@endymion>
+In-Reply-To: <20170602161311.27eab72d@endymion>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
+> -----Original Message-----
+> From: Jean Delvare [mailto:jdelvare@suse.de]
+> Sent: Friday, June 2, 2017 7:43 PM
+> To: K, Narendra <Narendra_K@Dell.com>
+> Cc: x86@kernel.org; linux-pci@vger.kernel.org; Hargrave, Jordan
+> <Jordan_Hargrave@Dell.com>; Iyer, Shyam <Shyam_Iyer@Dell.com>;
+> bhelgaas@google.com
+> Subject: Re: dmi type 0xB1 record - unknown flag
 
-add device node for hi6421 pmic core and hi6421v530
-voltage regulator,include LDO(1,3,9,11,15,16)
+[...]
+> > The value 0x00 is not a valid value. When the flag is 0x00, the sort me=
+thod
+> will be the default that is decided by the kernel.
+>=20
+> How can it be invalid? I have DMI dumps of several Dell systems with a ty=
+pe
+> 0xB1 DMI structure, with value 0x00 for these bits. If Dell ships such sy=
+stems,
+> then this is valid by definition.
+>=20
+> > There is no additional handling required for such a system.
+>=20
+> I don't understand the complexity of the code. There are 4 possible value=
+s
+> for these bits, the code treats all of them differently:
+> * 0x01, you set smbios_type_b1_flag to 1 and this later triggers a call
+>   to set_bf_sort().
+> * 0x02, you set smbios_type_b1_flag to 2 but this has no effect.
+> * 0x00, you print a rather cryptic info message which serves no purpose.
+> * 0x03, you do nothing.
+>=20
+> On top of that, I can't see the value of the intermediate variable
+> smbios_type_b1_flag. The only situations where it would make a difference
+> is if multiple type 0xB1 structures with conflicting information were pre=
+sent;
+> but I don't think this is supposed to happen in the first place.
+>=20
+> Lastly I'm not sure why you continue processing the list of DMI matches,
+> when smbios_type_b1_flag =3D=3D 1, and stop processing it if not.
+> This seems needlessly inconsistent.
+>=20
+> I think the whole thing can be simplified like this:
+>=20
+> From: Jean Delvare <jdelvare@suse.de>
+> Subject: x86/PCI: Simplify Dell DMI B1 quirk
+>=20
+> No need for such convoluted code, when all we need is to call one functio=
+n in
+> one specific case.
+>=20
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> ---
+>  arch/x86/pci/common.c |   27 +++++----------------------
+>  1 file changed, 5 insertions(+), 22 deletions(-)
+>=20
+> --- linux-4.11.orig/arch/x86/pci/common.c	2017-05-01
+> 04:47:48.000000000 +0200
+> +++ linux-4.11/arch/x86/pci/common.c	2017-06-02 16:04:05.737889598 +0200
+> @@ -24,7 +24,6 @@ unsigned int pci_probe =3D PCI_PROBE_BIOS
+>=20
+>  unsigned int pci_early_dump_regs;
+>  static int pci_bf_sort;
+> -static int smbios_type_b1_flag;
+>  int pci_routeirq;
+>  int noioapicquirk;
+>  #ifdef CONFIG_X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+> @@ -197,34 +196,18 @@ static int __init set_bf_sort(const stru  static vo=
+id
+> __init read_dmi_type_b1(const struct dmi_header *dm,
+>  				    void *private_data)
+>  {
+> -	u8 *d =3D (u8 *)dm + 4;
+> +	u8 *data =3D (u8 *)dm + 4;
+>=20
+>  	if (dm->type !=3D 0xB1)
+>  		return;
+> -	switch (((*(u32 *)d) >> 9) & 0x03) {
+> -	case 0x00:
+> -		printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
+> -		break;
+> -	case 0x01: /* set pci=3Dbfsort */
+> -		smbios_type_b1_flag =3D 1;
+> -		break;
+> -	case 0x02: /* do not set pci=3Dbfsort */
+> -		smbios_type_b1_flag =3D 2;
+> -		break;
+> -	default:
+> -		break;
+> -	}
+> +	if ((((*(u32 *)data) >> 9) & 0x03) =3D=3D 0x01)
+> +		set_bf_sort((const struct dmi_system_id *)private_data);
+>  }
+>=20
+>  static int __init find_sort_method(const struct dmi_system_id *d)  {
+> -	dmi_walk(read_dmi_type_b1, NULL);
+> -
+> -	if (smbios_type_b1_flag =3D=3D 1) {
+> -		set_bf_sort(d);
+> -		return 0;
+> -	}
+> -	return -1;
+> +	dmi_walk(read_dmi_type_b1, (void *)d);
+> +	return 0;
+>  }
+>=20
+>  /*
+>=20
+> What do you think?
 
-Signed-off-by: Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
----
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 46 +++++++++++++++++++++++
- 1 file changed, 46 insertions(+)
+Hi Jean,
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-index ca448f0..e579333 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-@@ -97,6 +97,52 @@
- 			default-state = "off";
- 		};
- 	};
-+
-+	pmic: pmic@fff34000 {
-+		compatible = "hisilicon,hi6421v530-pmic";
-+		reg = <0x0 0xfff34000 0x0 0x1000>;
-+		interrupt-controller;
-+		#interrupt-cells = <2>;
-+
-+		regulators {
-+			ldo3: LDO3 { /* HDMI */
-+				regulator-name = "VOUT3_1V85";
-+				regulator-min-microvolt = <1800000>;
-+				regulator-max-microvolt = <2200000>;
-+				regulator-enable-ramp-delay = <120>;
-+			};
-+
-+			ldo9: LDO9 { /* SDCARD I/O */
-+				regulator-name = "VOUT9_1V8_2V95";
-+				regulator-min-microvolt = <1750000>;
-+				regulator-max-microvolt = <3300000>;
-+				regulator-enable-ramp-delay = <240>;
-+			};
-+
-+			ldo11: LDO11 { /* Low Speed Connector */
-+				regulator-name = "VOUT11_1V8_2V95";
-+				regulator-min-microvolt = <1750000>;
-+				regulator-max-microvolt = <3300000>;
-+				regulator-enable-ramp-delay = <240>;
-+			};
-+
-+			ldo15: LDO15 { /* UFS VCC */
-+				regulator-name = "VOUT15_3V0";
-+				regulator-min-microvolt = <1750000>;
-+				regulator-max-microvolt = <3000000>;
-+				regulator-boot-on;
-+				regulator-always-on;
-+				regulator-enable-ramp-delay = <120>;
-+			};
-+
-+			ldo16: LDO16 { /* SD VDD */
-+				regulator-name = "VOUT16_2V95";
-+				regulator-min-microvolt = <1750000>;
-+				regulator-max-microvolt = <3000000>;
-+				regulator-enable-ramp-delay = <360>;
-+			};
-+		};
-+	};
- };
- 
- &i2c0 {
--- 
-2.10.2
+Thank you for reviewing and providing feedback. We will look into this and =
+provide feedback.
+
+With regards,
+Narendra K
