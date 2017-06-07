@@ -1,65 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: rockchip: Handle return value of clk_prepare_enable
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-References: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <f8e91d5f-77ea-6836-87b4-53b99544074d@rock-chips.com>
-Date: Fri, 2 Jun 2017 15:28:51 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f68.google.com ([209.85.214.68]:34311 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751666AbdFGHS2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2017 03:18:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: heiko@sntech.de, linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- linux-kernel@vger.kernel.org, linux-rockchip@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="gbk"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170606230007.19101-3-palmer@dabbelt.com>
+References: <20170523004107.536-1-palmer@dabbelt.com> <20170606230007.19101-1-palmer@dabbelt.com>
+ <20170606230007.19101-3-palmer@dabbelt.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 7 Jun 2017 09:18:26 +0200
+Message-ID: <CAMuHMdULk48qf5s9VeqzSCKTSpcY5zdZoTzq_DR0TSbsP+dbNQ@mail.gmail.com>
+Subject: Re: [PATCH 02/17] pcie-xilinx: add missing 5th legacy interrupt
+To: Palmer Dabbelt <palmer@dabbelt.com>
+Cc: Linux-Arch <linux-arch@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
+        albert@sifive.com, patches@groups.riscv.org,
+        "Wesley W. Terpstra" <wesley@sifive.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Soren Brinkmann <soren.brinkmann@xilinx.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksCgrU2iAyMDE3LzYvMSAxODoyMSwgQXJ2aW5kIFlhZGF2INC0tcA6Cj4gY2xrX3ByZXBhcmVf
-ZW5hYmxlKCkgY2FuIGZhaWwgaGVyZSBhbmQgd2UgbXVzdCBjaGVjayBpdHMgcmV0dXJuIHZhbHVl
-Lgo+IAo+IFNpZ25lZC1vZmYtYnk6IEFydmluZCBZYWRhdiA8YXJ2aW5kLnlhZGF2LmNzQGdtYWls
-LmNvbT4KCkFja2VkLWJ5OiBTaGF3biBMaW4gPHNoYXduLmxpbkByb2NrLWNoaXBzLmNvbT4KCj4g
-LS0tCj4gICBkcml2ZXJzL3BjaS9ob3N0L3BjaWUtcm9ja2NoaXAuYyB8IDM0ICsrKysrKysrKysr
-KysrKysrKysrKysrKysrKystLS0tLS0KPiAgIDEgZmlsZSBjaGFuZ2VkLCAyOCBpbnNlcnRpb25z
-KCspLCA2IGRlbGV0aW9ucygtKQo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3Bj
-aWUtcm9ja2NoaXAuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jCj4gaW5kZXgg
-MGUwMjBiNi4uMGEyNDhjZCAxMDA2NDQKPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUtcm9j
-a2NoaXAuYwo+ICsrKyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNpZS1yb2NrY2hpcC5jCj4gQEAgLTEy
-NTksMjQgKzEyNTksNDYgQEAgc3RhdGljIGludCBfX21heWJlX3VudXNlZCByb2NrY2hpcF9wY2ll
-X3Jlc3VtZV9ub2lycShzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gICAJc3RydWN0IHJvY2tjaGlwX3Bj
-aWUgKnJvY2tjaGlwID0gZGV2X2dldF9kcnZkYXRhKGRldik7Cj4gICAJaW50IGVycjsKPiAgIAo+
-IC0JY2xrX3ByZXBhcmVfZW5hYmxlKHJvY2tjaGlwLT5jbGtfcGNpZV9wbSk7Cj4gLQljbGtfcHJl
-cGFyZV9lbmFibGUocm9ja2NoaXAtPmhjbGtfcGNpZSk7Cj4gLQljbGtfcHJlcGFyZV9lbmFibGUo
-cm9ja2NoaXAtPmFjbGtfcGVyZl9wY2llKTsKPiAtCWNsa19wcmVwYXJlX2VuYWJsZShyb2NrY2hp
-cC0+YWNsa19wY2llKTsKPiArCWVyciA9IGNsa19wcmVwYXJlX2VuYWJsZShyb2NrY2hpcC0+Y2xr
-X3BjaWVfcG0pOwo+ICsJaWYgKGVycikKPiArCQlnb3RvIGVycl9wY2llX3BtOwo+ICsKPiArCWVy
-ciA9IGNsa19wcmVwYXJlX2VuYWJsZShyb2NrY2hpcC0+aGNsa19wY2llKTsKPiArCWlmIChlcnIp
-Cj4gKwkJZ290byBlcnJfaGNsa19wY2llOwo+ICsKPiArCWVyciA9IGNsa19wcmVwYXJlX2VuYWJs
-ZShyb2NrY2hpcC0+YWNsa19wZXJmX3BjaWUpOwo+ICsJaWYgKGVycikKPiArCQlnb3RvIGVycl9h
-Y2xrX3BlcmZfcGNpZTsKPiArCj4gKwllcnIgPSBjbGtfcHJlcGFyZV9lbmFibGUocm9ja2NoaXAt
-PmFjbGtfcGNpZSk7Cj4gKwlpZiAoZXJyKQo+ICsJCWdvdG8gZXJyX2FjbGtfcGNpZTsKPiAgIAo+
-ICAgCWVyciA9IHJvY2tjaGlwX3BjaWVfaW5pdF9wb3J0KHJvY2tjaGlwKTsKPiAgIAlpZiAoZXJy
-KQo+IC0JCXJldHVybiBlcnI7Cj4gKwkJZ290byBlcnJfcGNpZV9yZXN1bWU7Cj4gICAKPiAgIAll
-cnIgPSByb2NrY2hpcF9jZmdfYXR1KHJvY2tjaGlwKTsKPiAgIAlpZiAoZXJyKQo+IC0JCXJldHVy
-biBlcnI7Cj4gKwkJZ290byBlcnJfcGNpZV9yZXN1bWU7Cj4gICAKPiAgIAkvKiBOZWVkIHRoaXMg
-dG8gZW50ZXIgTDEgYWdhaW4gKi8KPiAgIAlyb2NrY2hpcF9wY2llX3VwZGF0ZV90eGNyZWRpdF9t
-dWkocm9ja2NoaXApOwo+ICAgCXJvY2tjaGlwX3BjaWVfZW5hYmxlX2ludGVycnVwdHMocm9ja2No
-aXApOwo+ICAgCj4gICAJcmV0dXJuIDA7Cj4gKwo+ICtlcnJfcGNpZV9yZXN1bWU6Cj4gKwljbGtf
-ZGlzYWJsZV91bnByZXBhcmUocm9ja2NoaXAtPmFjbGtfcGNpZSk7Cj4gK2Vycl9hY2xrX3BjaWU6
-Cj4gKwljbGtfZGlzYWJsZV91bnByZXBhcmUocm9ja2NoaXAtPmFjbGtfcGVyZl9wY2llKTsKPiAr
-ZXJyX2FjbGtfcGVyZl9wY2llOgo+ICsJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKHJvY2tjaGlwLT5o
-Y2xrX3BjaWUpOwo+ICtlcnJfaGNsa19wY2llOgo+ICsJY2xrX2Rpc2FibGVfdW5wcmVwYXJlKHJv
-Y2tjaGlwLT5jbGtfcGNpZV9wbSk7Cj4gK2Vycl9wY2llX3BtOgo+ICsJcmV0dXJuIGVycjsKPiAg
-IH0KPiAgIAo+ICAgc3RhdGljIGludCByb2NrY2hpcF9wY2llX3Byb2JlKHN0cnVjdCBwbGF0Zm9y
-bV9kZXZpY2UgKnBkZXYpCj4gCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5l
-bEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4v
-bGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+CC pci folks
+
+On Wed, Jun 7, 2017 at 12:59 AM, Palmer Dabbelt <palmer@dabbelt.com> wrote:
+> From: "Wesley W. Terpstra" <wesley@sifive.com>
+>
+> These are numbered from 1.
+>
+> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+> ---
+>  drivers/pci/host/pcie-xilinx.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+> index 2fe2df51f9f8..8804145d399a 100644
+> --- a/drivers/pci/host/pcie-xilinx.c
+> +++ b/drivers/pci/host/pcie-xilinx.c
+> @@ -443,7 +443,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+>                         val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+>                                 XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
+>                         generic_handle_irq(irq_find_mapping(port->leg_domain,
+> -                                                           val));
+> +                                                           val + 1));
+>                 }
+>         }
+>
+> @@ -524,7 +524,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
+>                 return -ENODEV;
+>         }
+>
+> -       port->leg_domain = irq_domain_add_linear(pcie_intc_node, 4,
+> +       port->leg_domain = irq_domain_add_linear(pcie_intc_node, 5,
+>                                                  &intx_domain_ops,
+>                                                  port);
+>         if (!port->leg_domain) {
+> --
+> 2.13.0
