@@ -1,108 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46837 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751147AbdFBFvK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Jun 2017 01:51:10 -0400
-Date: Fri, 2 Jun 2017 13:51:38 +0800
-From: Chen Yu <yu.c.chen@intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-        Len Brown <len.brown@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Rui Zhang <rui.zhang@intel.com>,
-        Ying Huang <ying.huang@intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI / PM: Restore the status of PCI devices across
- hibernation
-Message-ID: <20170602055138.GA32161@yu-desktop-1.sh.intel.com>
-References: <1495702147-31427-1-git-send-email-yu.c.chen@intel.com>
- <CAJZ5v0hNXJ0+bQdM5v0i0YeMkE7mBWJn5et_okt_qrMytS4ymQ@mail.gmail.com>
+Return-Path: <SRS0=9c7N=5M=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=9c7N=5M=gmail.com=alexander.duyck@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0hNXJ0+bQdM5v0i0YeMkE7mBWJn5et_okt_qrMytS4ymQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1496826968-10152-4-git-send-email-dingtianhong@huawei.com>
+References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com> <1496826968-10152-4-git-send-email-dingtianhong@huawei.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 7 Jun 2017 16:24:36 -0700
+Message-ID: <CAKgT0UeN7BK94wgU=LiD9CAo0ihrFgv2bZLFrTtr_+bgSbswxQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+ flag
+To: Ding Tianhong <dingtianhong@huawei.com>
+Cc: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
+	Ganesh Goudar <ganeshgr@chelsio.com>, Asit K Mallick <asit.k.mallick@intel.com>,
+	Patrick J Cramer <patrick.j.cramer@intel.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Bob Shaw <Bob.Shaw@amd.com>,
+	h <l.stach@pengutronix.de>, Amir Ancel <amira@mellanox.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>, David Laight <David.Laight@aculab.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
+	linux-arm-kernel@lists.infradead.org, Netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 02, 2017 at 01:22:28AM +0200, Rafael J. Wysocki wrote:
-> On Thu, May 25, 2017 at 10:49 AM, Chen Yu <yu.c.chen@intel.com> wrote:
-> > Currently we saw a lot of "No irq handler" errors during hibernation,
-> > which caused the system hang finally:
-> >
-> > [  710.141581] ata4.00: qc timeout (cmd 0xec)
-> > [  710.147135] ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> > [  710.154593] ata4.00: revalidation failed (errno=-5)
-> > [  710.468124] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> > [  710.477746] do_IRQ: 31.151 No irq handler for vector
-> >
-> > According to above logs, there is an interrupt triggered and it is
-> > dispatched to CPU31 with a vector number 151, but there is no handler
-> > for it, thus this irq will not get acked and caused irq flood which kill
-> > the system. To be more specific, the 31.151 is an interrupt from the ahci
-> > host controller.
-> >
-> > After some investigation, the reason why this issue is triggered is
-> > because the thaw_noirq() function does not restore the MSI/MSIX settings
-> > across hibernation.
-> >
-> > The scenario is illustrated below:
-> >
-> > 1. Before the hibernation starts, the irq 34 is the handler for the ahci device,
-> >    which is binded on cpu31.
-> > 2. Hibernation starts, the ahci device is put into low power state.
-> > 3. All the nonboot CPUs are put offline, so the irq 34 has to be migrated to
-> >    the last alive one - CPU0.
-> > 4. After the snapshot has been created, all the nonboot CPUs are brought up again,
-> >    the CPU affinity for IRQ 34 remains to be 0.
-> > 5. ahci device are put into D0.
-> > 6. The snapshot is written to the disk.
-> >
-> > The issue is triggered in step 6, in theory the ahci interrupt should be
-> > delivered to CPU0, however the actually result is that this interrupt is
-> > delivered to the original CPU31 instead, which cause the "No irq handler" issue.
-> >
-> > Ying Huang has has provided a clue that, in step 3 it is possible that the writing
-> > to the register might not take effect as the PCI devices have been put suspended.
-> > Actually it is true:
-> > In step 3, the irq 34 affinity is supposed to be modified from 31 to 0,
-> > but actually it did not. In __pci_write_msi_msg(), if the device is already
-> > in low power state, the low level msi message entry will not be updated
-> > but cached. So in theory during the device restore process, the cached msi
-> > modification information should be written back to the hardware, and this
-> > is what pci_restore_msi_state() do during normal suspend-resume.
-> > But this is not the case for hibernation, pci_restore_msi_state() is not
-> > invoked currently, to be more specific, pci_restore_state() is not invoked
-> > in pci_pm_thaw_noirq(), although pci_save_state() has saved the necessary
-> > pci cached information in pci_pm_freeze_noirq().
-> >
-> > This patch tries to restore the pci status for the device during hibernation,
-> > otherwise the status might be lost across hibernation(for example, the MSI/MSIX
-> > message settings), which might cause problems during hibernation.
-> >
-> > Suggested-by: Ying Huang <ying.huang@intel.com>
-> > Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Len Brown <len.brown@intel.com>
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > Cc: Rui Zhang <rui.zhang@intel.com>
-> > Cc: Ying Huang <ying.huang@intel.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: linux-pm@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> 
-> Thanks for the detailed description of what's going on!
-> 
-> The fix is correct IMO, so
-> 
-> Reviewed-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Jun 7, 2017 at 2:16 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+> From: Casey Leedom <leedom@chelsio.com>
 >
-Thanks for the review!
-Please also help add a tag for stable:
-Cc: stable <stable@vger.kernel.org>
+> cxgb4 Ethernet driver now queries Root Complex Port to determine if it can
+> send TLPs to it with the Relaxed Ordering Attribute set.
+>
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
 
-thanks,
-Yu
+So I am pretty sure this patch doesn't work with patch 2. We need to
+update it so that it doesn't check the root complex but instead checks
+itself to see if it is allowed to use relaxed ordering.
+
+What we need here is the ability to detect if relaxed ordering is
+disabled, and if so take the steps needed to enable peer to peer
+relaxed ordering without enabling relaxed ordering to the root
+complex. Do I have that right Casey?
+
+> ---
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+>  3 files changed, 21 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> index e88c180..478f25a 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
+>         USING_SOFT_PARAMS  = (1 << 6),
+>         MASTER_PF          = (1 << 7),
+>         FW_OFLD_CONN       = (1 << 9),
+> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
+>  };
+>
+>  enum {
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> index 38a5c67..fbfe341 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> @@ -4628,6 +4628,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  #ifdef CONFIG_PCI_IOV
+>         u32 v, port_vec;
+>  #endif
+> +       struct pci_dev *root;
+>
+>         printk_once(KERN_INFO "%s - version %s\n", DRV_DESC, DRV_VERSION);
+>
+> @@ -4726,6 +4727,22 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>         adapter->msg_enable = DFLT_MSG_ENABLE;
+>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+>
+> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
+> +        * Ingress Packet Data to Free List Buffers in order to allow for
+> +        * chipset performance optimizations between the Root Complex and
+> +        * Memory Controllers.  (Messages to the associated Ingress Queue
+> +        * notifying new Packet Placement in the Free Lists Buffers will be
+> +        * send without the Relaxed Ordering Attribute thus guaranteing that
+> +        * all preceding PCIe Transaction Layer Packets will be processed
+> +        * first.)  But some Root Complexes have various issues with Upstream
+> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
+> +        * So we check our Root Complex to see if it's flaged with advice
+> +        * against using Relaxed Ordering.
+> +        */
+> +       root = pci_find_pcie_root_port(adapter->pdev);
+> +       if (pcie_get_relaxed_ordering(root))
+> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+> +
+>         spin_lock_init(&adapter->stats_lock);
+>         spin_lock_init(&adapter->tid_release_lock);
+>         spin_lock_init(&adapter->win0_lock);
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> index f05f0d4..ac229a3 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>         struct fw_iq_cmd c;
+>         struct sge *s = &adap->sge;
+>         struct port_info *pi = netdev_priv(dev);
+> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+>
+>         /* Size needs to be multiple of 16, including status entry. */
+>         iq->size = roundup(iq->size, 16);
+> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>
+>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+> -                                            FW_IQ_CMD_FL0FETCHRO_F |
+> -                                            FW_IQ_CMD_FL0DATARO_F |
+> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
+> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
+>                                              FW_IQ_CMD_FL0PADEN_F);
+>                 if (cong >= 0)
+>                         c.iqns_to_fl0congen |=
+> --
+> 1.9.0
+>
+>
