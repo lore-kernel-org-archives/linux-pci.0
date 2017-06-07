@@ -1,220 +1,200 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4/6] PCI / PM: Simplify device wakeup settings code
-Date: Mon, 19 Jun 2017 23:35:34 +0200
-Message-ID: <6082855.gb7lhtNroi@aspire.rjw.lan>
-In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan>
+Return-Path: <SRS0=PezK=5M=huawei.com=john.garry@kernel.org>
+Return-Path: <SRS0=PezK=5M=huawei.com=john.garry@kernel.org>
+Subject: Re: [PATCH v3 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: Ding Tianhong <dingtianhong@huawei.com>, <leedom@chelsio.com>,
+        <ashok.raj@intel.com>, <helgaas@kernel.org>, <werner@chelsio.com>,
+        <ganeshgr@chelsio.com>, <asit.k.mallick@intel.com>,
+        <patrick.j.cramer@intel.com>, <Suravee.Suthikulpanit@amd.com>,
+        <Bob.Shaw@amd.com>, <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
+ <1496826968-10152-3-git-send-email-dingtianhong@huawei.com>
+CC: Linuxarm <linuxarm@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <a4b98567-286a-1fba-e935-f9ba50f1178d@huawei.com>
+Date: Wed, 7 Jun 2017 18:55:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1496826968-10152-3-git-send-email-dingtianhong@huawei.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On 07/06/2017 10:16, Ding Tianhong wrote:
 
-After previous changes it is not necessary to distinguish between
-device wakeup for run time and device wakeup from system sleep states
-any more, so rework the PCI device wakeup settings code accordingly.
+Hi Ding,
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/pci/pci-acpi.c   |    3 +--
- drivers/pci/pci-driver.c |    2 +-
- drivers/pci/pci.c        |   36 ++++++++++--------------------------
- drivers/pci/pci.h        |    9 ++-------
- include/linux/pci.h      |    9 +--------
- 5 files changed, 15 insertions(+), 44 deletions(-)
+A few general style comments:
 
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -616,8 +616,7 @@ static const struct pci_platform_pm_ops
- 	.set_state = acpi_pci_set_power_state,
- 	.get_state = acpi_pci_get_power_state,
- 	.choose_state = acpi_pci_choose_state,
--	.sleep_wake = acpi_pci_wakeup,
--	.run_wake = acpi_pci_wakeup,
-+	.set_wakeup = acpi_pci_wakeup,
- 	.need_resume = acpi_pci_need_resume,
- };
- 
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -574,8 +574,7 @@ static const struct pci_platform_pm_ops
- int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
- {
- 	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
--	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
--	    !ops->need_resume)
-+	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
- 		return -EINVAL;
- 	pci_platform_pm = ops;
- 	return 0;
-@@ -603,16 +602,10 @@ static inline pci_power_t platform_pci_c
- 			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
- }
- 
--static inline int platform_pci_sleep_wake(struct pci_dev *dev, bool enable)
-+static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
- {
- 	return pci_platform_pm ?
--			pci_platform_pm->sleep_wake(dev, enable) : -ENODEV;
--}
--
--static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable)
--{
--	return pci_platform_pm ?
--			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
-+			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
- }
- 
- static inline bool platform_pci_need_resume(struct pci_dev *dev)
-@@ -1889,10 +1882,9 @@ void pci_pme_active(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_pme_active);
- 
- /**
-- * __pci_enable_wake - enable PCI device as wakeup event source
-+ * pci_enable_wake - enable PCI device as wakeup event source
-  * @dev: PCI device affected
-  * @state: PCI state from which device will issue wakeup events
-- * @runtime: True if the events are to be generated at run time
-  * @enable: True to enable event generation; false to disable
-  *
-  * This enables the device as a wakeup event source, or disables it.
-@@ -1908,14 +1900,10 @@ EXPORT_SYMBOL(pci_pme_active);
-  * Error code depending on the platform is returned if both the platform and
-  * the native mechanism fail to enable the generation of wake-up events
-  */
--int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--		      bool runtime, bool enable)
-+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
- {
- 	int ret = 0;
- 
--	if (enable && !runtime && !device_may_wakeup(&dev->dev))
--		return -EINVAL;
--
- 	/*
- 	 * Don't do the same thing twice in a row for one device, but restore
- 	 * PME Enable in case it has been updated by config space restoration.
-@@ -1938,24 +1926,20 @@ int __pci_enable_wake(struct pci_dev *de
- 			pci_pme_active(dev, true);
- 		else
- 			ret = 1;
--		error = runtime ? platform_pci_run_wake(dev, true) :
--					platform_pci_sleep_wake(dev, true);
-+		error = platform_pci_set_wakeup(dev, true);
- 		if (ret)
- 			ret = error;
- 		if (!ret)
- 			dev->wakeup_prepared = true;
- 	} else {
--		if (runtime)
--			platform_pci_run_wake(dev, false);
--		else
--			platform_pci_sleep_wake(dev, false);
-+		platform_pci_set_wakeup(dev, false);
- 		pci_pme_active(dev, false);
- 		dev->wakeup_prepared = false;
- 	}
- 
- 	return ret;
- }
--EXPORT_SYMBOL(__pci_enable_wake);
-+EXPORT_SYMBOL(pci_enable_wake);
- 
- /**
-  * pci_wake_from_d3 - enable/disable device to wake up from D3_hot or D3_cold
-@@ -2097,12 +2081,12 @@ int pci_finish_runtime_suspend(struct pc
- 
- 	dev->runtime_d3cold = target_state == PCI_D3cold;
- 
--	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
-+	pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
- 
- 	error = pci_set_power_state(dev, target_state);
- 
- 	if (error) {
--		__pci_enable_wake(dev, target_state, true, false);
-+		pci_enable_wake(dev, target_state, false);
- 		dev->runtime_d3cold = false;
- 	}
- 
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -1097,8 +1097,7 @@ int pci_set_power_state(struct pci_dev *
- pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
- bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
- void pci_pme_active(struct pci_dev *dev, bool enable);
--int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--		      bool runtime, bool enable);
-+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
- int pci_wake_from_d3(struct pci_dev *dev, bool enable);
- int pci_prepare_to_sleep(struct pci_dev *dev);
- int pci_back_from_sleep(struct pci_dev *dev);
-@@ -1108,12 +1107,6 @@ void pci_pme_wakeup_bus(struct pci_bus *
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
- 
--static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--				  bool enable)
--{
--	return __pci_enable_wake(dev, state, false, enable);
--}
--
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
- void pci_restore_vc_state(struct pci_dev *dev);
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -47,11 +47,7 @@ int pci_probe_reset_function(struct pci_
-  *                platform; to be used during system-wide transitions from a
-  *                sleeping state to the working state and vice versa
-  *
-- * @sleep_wake: enables/disables the system wake up capability of given device
-- *
-- * @run_wake: enables/disables the platform to generate run-time wake-up events
-- *		for given device (the device's wake-up capability has to be
-- *		enabled by @sleep_wake for this feature to work)
-+ * @set_wakeup: enables/disables wakeup capability for the device
-  *
-  * @need_resume: returns 'true' if the given device (which is currently
-  *		suspended) needs to be resumed to be configured for system
-@@ -65,8 +61,7 @@ struct pci_platform_pm_ops {
- 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
- 	pci_power_t (*get_state)(struct pci_dev *dev);
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
--	int (*sleep_wake)(struct pci_dev *dev, bool enable);
--	int (*run_wake)(struct pci_dev *dev, bool enable);
-+	int (*set_wakeup)(struct pci_dev *dev, bool enable);
- 	bool (*need_resume)(struct pci_dev *dev);
- };
- 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1216,7 +1216,7 @@ static int pci_pm_runtime_resume(struct
- 
- 	pci_restore_standard_config(pci_dev);
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
--	__pci_enable_wake(pci_dev, PCI_D0, true, false);
-+	pci_enable_wake(pci_dev, PCI_D0, false);
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
- 
- 	rc = pm->runtime_resume(dev);
+> The PCIe Device Control Register use the bit 4 to indicate that
+> whether the device is permitted to enable relaxed ordering or not.
+> But relaxed ordering is not safe for some platform which could only
+> use strong write ordering, so devices are allowed (but not required)
+> to enable relaxed ordering bit by default.
+>
+> If a PCIe device didn't enable the relaxed ordering attribute default,
+> we should not do anything in the PCIe configuration, otherwise we
+> should check if any of the devices above us do not support relaxed
+> ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+> the result if we get a return that indicate that the relaxed ordering
+> is not supported we should update our device to disable relaxed ordering
+> in configuration space. If the device above us doesn't exist or isn't
+> the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+> because we are probably running in a guest.
 
+A guest machine/environment
+
+>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> ---
+>  drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+>  drivers/pci/probe.c | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  2 ++
+>  3 files changed, 74 insertions(+)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..3d42b38 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4878,6 +4878,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>  EXPORT_SYMBOL(pcie_set_mps);
+>
+>  /**
+> + * pcie_clear_relaxed_ordering - clear PCI Express relexed ordering bit
+> + * @dev: PCI device to query
+> + *
+> + * If possible clear relaxed ordering
+> + */
+> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
+> +{
+> +	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+> +					  PCI_EXP_DEVCTL_RELAX_EN);
+> +}
+> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
+> +
+> +/**
+> + * pcie_get_relaxed_ordering - check PCI Express relexed ordering bit
+
+s/relexed/relaxed/
+
+Check what on relaxed ordering bit?
+
+And the function name is inconsistent with this discription.
+
+> + * @dev: PCI device to query
+> + *
+> + * Returns true if relaxed ordering is been set
+
+If you want to return true/false, then use !!, below in the function
+
+> + */
+> +int pcie_get_relaxed_ordering(struct pci_dev *dev)
+> +{
+> +	u16 v;
+> +
+> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
+> +
+> +	return (v & PCI_EXP_DEVCTL_RELAX_EN) >> 4;
+> +}
+> +EXPORT_SYMBOL(pcie_get_relaxed_ordering);
+> +
+> +/**
+>   * pcie_get_minimum_link - determine minimum link settings of a PCI device
+>   * @dev: PCI device to query
+>   * @speed: storage for minimum speed
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 19c8950..0c94c80 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1701,6 +1701,48 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+>  					 PCI_EXP_DEVCTL_EXT_TAG);
+>  }
+>
+> +/**
+> + * pci_dev_disable_relaxed_ordering - check if the PCI device
+> + * should disable the relaxed ordering attribute.
+
+I think that we need a more accurate description. I know some people 
+think a function which just "checks" is vague.
+
+> + * @dev: PCI device
+> + *
+> + * Return true if any of the PCI devices above us do not support
+> + * relaxed ordering.
+> + */
+> +static int pci_dev_disable_relaxed_ordering(struct pci_dev *dev)
+
+The function name implies an action - disabling - but this function does 
+nothing except return a value
+
+> +{
+> +	int ro_disabled = 0;
+> +
+> +	while(dev) {
+
+Did you run checkpatch?
+
+> +		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
+> +			ro_disabled = 1;
+
+just return true, and return false at the bottom, so you can do away 
+with ro_disabled (which is not a bool)
+
+> +			break;
+> +		}
+> +		dev = dev->bus->self;
+> +	}
+> +
+> +	return ro_disabled;
+> +}
+> +
+> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+> +{
+> +	struct pci_dev *bridge = pci_upstream_bridge(dev);
+> +	int origin_ero;
+
+You don't need this variable
+
+> +
+> +	if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+> +		return;
+> +
+> +	origin_ero = pcie_get_relaxed_ordering(dev);
+> +	/* If the releaxed ordering enable bit is not set, do nothing. */
+> +	if (!origin_ero)
+> +		return;
+> +
+> +	if (pci_dev_disable_relaxed_ordering(dev)) {
+> +		pcie_clear_relaxed_ordering(dev);
+> +		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
+> +	}
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	struct hotplug_params hpp;
+> @@ -1708,6 +1750,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>
+>  	pci_configure_mps(dev);
+>  	pci_configure_extended_tags(dev);
+> +	pci_configure_relaxed_ordering(dev);
+>
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret = pci_get_hp_params(dev, &hpp);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e1e8428..299d2f3 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1105,6 +1105,8 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>  void pci_d3cold_enable(struct pci_dev *dev);
+>  void pci_d3cold_disable(struct pci_dev *dev);
+> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
+> +int pcie_get_relaxed_ordering(struct pci_dev *dev);
+>
+>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>  				  bool enable)
+>
