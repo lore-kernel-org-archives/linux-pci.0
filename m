@@ -1,42 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:33170 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753101AbdFPOKY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Jun 2017 10:10:24 -0400
-To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170615203729.9009-1-logang@deltatee.com>
- <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
-Cc: 'Jon Mason' <jdmason@kudzu.us>,
-        'Dave Jiang' <dave.jiang@intel.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
-        'Stephen Bates' <sbates@raithlin.com>,
-        'Serge Semin' <fancer.lancer@gmail.com>,
-        Sergey.Semin@t-platforms.ru
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
-Date: Fri, 16 Jun 2017 08:09:55 -0600
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:36359 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751072AbdFGVXe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2017 17:23:34 -0400
+Date: Wed, 7 Jun 2017 16:23:22 -0500
+From: Rob Herring <robh@kernel.org>
+To: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: bhelgaas@google.com, kishon@ti.com, jingoohan1@gmail.com,
+        arnd@arndb.de, tn@semihalf.com, keith.busch@intel.com,
+        niklas.cassel@axis.com, dhdang@apm.com, liudongdong3@huawei.com,
+        gabriele.paoloni@huawei.com, mark.rutland@arm.com,
+        catalin.marinas@arm.com, will.deacon@arm.com, chenyao11@huawei.com,
+        puck.chen@hisilicon.com, guodong.xu@linaro.org,
+        wangbinghui@hisilicon.com, suzhuangluan@hisilicon.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v9 1/4] PCI: hisi: Add DT binding for PCIe of Kirin SoC
+ series
+Message-ID: <20170607212322.4g747asgew6hoax5@rob-hp-laptop>
+References: <20170531070109.81569-1-songxiaowei@hisilicon.com>
+ <20170531070109.81569-2-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170531070109.81569-2-songxiaowei@hisilicon.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, May 31, 2017 at 03:01:06PM +0800, Xiaowei Song wrote:
+> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+> ---
+>  .../devicetree/bindings/pci/kirin-pcie.txt         | 50 ++++++++++++++++++++++
+>  1 file changed, 50 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
 
-
-On 16/06/17 07:53 AM, Allen Hubbe wrote:
-> See what is staged in https://github.com/jonmason/ntb.git ntb-next, with the addition of multi-peer support by Serge.  It would be good at this stage to understand whether the api changes there would also support the Switchtec driver, and what if anything must change, or be planned to change, to support the Switchtec driver.
-
-Ah, yes I had seen that patchset some time ago but I wasn't aware of
-it's status or that it was queued up in ntb-next. I think it will be no
-problem to reconcile with the switchtec driver and I'll rebase onto
-ntb-next for the next posting of the patch set. However, I *may* save
-full multi-host switchtec support for a follow up submission. My initial
-impression is the new API will support the switchtec hardware well.
-
-Thanks,
-
-Logan
+Acked-by: Rob Herring <robh@kernel.org>
