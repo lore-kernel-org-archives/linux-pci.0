@@ -1,268 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:48929 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751701AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 23:27:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:43 -0600
-Message-Id: <20170629032648.3073-12-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
-References: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 11/16] switchtec_ntb: add skeleton ntb driver
+Received: from szxga01-in.huawei.com ([45.249.212.187]:7759 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751495AbdFGIzK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 7 Jun 2017 04:55:10 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>
+Subject: RE: [Question] eDPC and DPC settings in BIOS or Kernel?
+Date: Wed, 7 Jun 2017 08:54:57 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A92D32@FRAEML521-MBX.china.huawei.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E40A3657B@FRAEML521-MBX.china.huawei.com>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40A3657B@FRAEML521-MBX.china.huawei.com>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch simply adds a skeleton NTB driver which will be filled
-out in subsequent patches.
+Hello
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 148 +++++++++++++++++++++++++++++++++++-
- include/linux/ntb.h                 |   3 +
- 2 files changed, 150 insertions(+), 1 deletion(-)
+Any feedback on this?
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 4f48b34ce0b5..0587b2380bcc 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -18,6 +18,7 @@
- #include <linux/delay.h>
- #include <linux/kthread.h>
- #include <linux/interrupt.h>
-+#include <linux/ntb.h>
- 
- MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
- MODULE_VERSION("0.1");
-@@ -73,6 +74,7 @@ struct shared_mw {
- #define LUT_SIZE SZ_64K
- 
- struct switchtec_ntb {
-+	struct ntb_dev ntb;
- 	struct switchtec_dev *stdev;
- 
- 	int self_partition;
-@@ -159,10 +161,148 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 	return -EIO;
- }
- 
-+static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
-+				      int widx, resource_size_t *addr_align,
-+				      resource_size_t *size_align,
-+				      resource_size_t *size_max)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
-+				      dma_addr_t addr, resource_size_t size)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
-+					  phys_addr_t *base,
-+					  resource_size_t *size)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
-+				    enum ntb_speed *speed,
-+				    enum ntb_width *width)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
-+				     enum ntb_speed max_speed,
-+				     enum ntb_width max_width)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
-+					 int sidx, u32 val)
-+{
-+	return 0;
-+}
-+
-+static const struct ntb_dev_ops switchtec_ntb_ops = {
-+	.mw_count		= switchtec_ntb_mw_count,
-+	.mw_get_align		= switchtec_ntb_mw_get_align,
-+	.mw_set_trans		= switchtec_ntb_mw_set_trans,
-+	.peer_mw_count		= switchtec_ntb_peer_mw_count,
-+	.peer_mw_get_addr	= switchtec_ntb_peer_mw_get_addr,
-+	.link_is_up		= switchtec_ntb_link_is_up,
-+	.link_enable		= switchtec_ntb_link_enable,
-+	.link_disable		= switchtec_ntb_link_disable,
-+	.db_valid_mask		= switchtec_ntb_db_valid_mask,
-+	.db_vector_count	= switchtec_ntb_db_vector_count,
-+	.db_vector_mask		= switchtec_ntb_db_vector_mask,
-+	.db_read		= switchtec_ntb_db_read,
-+	.db_clear		= switchtec_ntb_db_clear,
-+	.db_set_mask		= switchtec_ntb_db_set_mask,
-+	.db_clear_mask		= switchtec_ntb_db_clear_mask,
-+	.peer_db_set		= switchtec_ntb_peer_db_set,
-+	.spad_count		= switchtec_ntb_spad_count,
-+	.spad_read		= switchtec_ntb_spad_read,
-+	.spad_write		= switchtec_ntb_spad_write,
-+	.peer_spad_write	= switchtec_ntb_peer_spad_write,
-+};
-+
- static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
- {
- 	u64 part_map;
- 
-+	sndev->ntb.pdev = sndev->stdev->pdev;
-+	sndev->ntb.topo = NTB_TOPO_SWITCH;
-+	sndev->ntb.ops = &switchtec_ntb_ops;
-+
- 	sndev->self_partition = sndev->stdev->partition;
- 
- 	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-@@ -495,7 +635,6 @@ static int switchtec_ntb_add(struct device *dev,
- 		return -ENOMEM;
- 
- 	sndev->stdev = stdev;
--
- 	switchtec_ntb_init_sndev(sndev);
- 	switchtec_ntb_init_mw(sndev);
- 	switchtec_ntb_init_db(sndev);
-@@ -515,11 +654,17 @@ static int switchtec_ntb_add(struct device *dev,
- 
- 	switchtec_ntb_init_mw(sndev);
- 
-+	rc = ntb_register_device(&sndev->ntb);
-+	if (rc)
-+		goto deinit_and_exit;
-+
- 	stdev->sndev = sndev;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
- 
-+deinit_and_exit:
-+	switchtec_ntb_deinit_db_msg_irq(sndev);
- deinit_shared_and_exit:
- 	switchtec_ntb_deinit_shared_mw(sndev);
- free_and_exit:
-@@ -538,6 +683,7 @@ void switchtec_ntb_remove(struct device *dev,
- 		return;
- 
- 	stdev->sndev = NULL;
-+	ntb_unregister_device(&sndev->ntb);
- 	switchtec_ntb_deinit_db_msg_irq(sndev);
- 	switchtec_ntb_deinit_shared_mw(sndev);
- 	kfree(sndev);
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index de4f800c82b6..bf3dd2d2a821 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -70,6 +70,7 @@ struct pci_dev;
-  * @NTB_TOPO_SEC:	On secondary side of remote ntb.
-  * @NTB_TOPO_B2B_USD:	On primary side of local ntb upstream of remote ntb.
-  * @NTB_TOPO_B2B_DSD:	On primary side of local ntb downstream of remote ntb.
-+ * @NTB_TOPO_SWITCH:	Connected via a switch which supports ntb.
-  */
- enum ntb_topo {
- 	NTB_TOPO_NONE = -1,
-@@ -77,6 +78,7 @@ enum ntb_topo {
- 	NTB_TOPO_SEC,
- 	NTB_TOPO_B2B_USD,
- 	NTB_TOPO_B2B_DSD,
-+	NTB_TOPO_SWITCH,
- };
- 
- static inline int ntb_topo_is_b2b(enum ntb_topo topo)
-@@ -97,6 +99,7 @@ static inline char *ntb_topo_string(enum ntb_topo topo)
- 	case NTB_TOPO_SEC:	return "NTB_TOPO_SEC";
- 	case NTB_TOPO_B2B_USD:	return "NTB_TOPO_B2B_USD";
- 	case NTB_TOPO_B2B_DSD:	return "NTB_TOPO_B2B_DSD";
-+	case NTB_TOPO_SWITCH:	return "NTB_TOPO_SWITCH";
- 	}
- 	return "NTB_TOPO_INVALID";
- }
--- 
-2.11.0
+Thanks
+Gab
+
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Gabriele Paoloni
+> Sent: 18 May 2017 11:02
+> To: Keith Busch
+> Cc: linux-pci@vger.kernel.org; Linuxarm; liudongdong (C)
+> Subject: [Question] eDPC and DPC settings in BIOS or Kernel?
+> 
+> Hi Keith and all
+> 
+> We are currently working on extending the current DPC driver
+> In Linux with eDPC features.
+> 
+> While working on it we are wondering on whether "RP PIO Mask Register"
+> and "RP PIO Severity Register" should be set in BIOS or Kernel.
+> 
+> If we look at the current DPC driver we see that DPC is enabled in
+> kernel and "DPC Trigger Enable" is set to 10b where instead the PCIe
+> specs says that "DPC is disabled by default".
+> 
+> Consistently for "RP PIO Severity Register" and "RP PIO Mask Register"
+> we see that their bits defaults to 0b and 1b respectively (i.e. by
+> defaults all RP PIO events are masked and treated as Advisory Non-
+> Fatal).
+> 
+> So we have some questions:
+> 1) Why the current "DPC Trigger Enable" is enabled in Kernel rather
+> than
+>    BIOS? (enabling it in BIOS seems more scalable to fit different
+> systems'
+>    scenarios)
+> 
+> 2) Do you have any advice on where to enable and unmask RP PIO events?
+> 
+> Many thanks
+> Gab
