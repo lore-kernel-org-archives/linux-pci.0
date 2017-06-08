@@ -1,168 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:34450 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750813AbdFBQAa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 12:00:30 -0400
-Received: by mail-pf0-f174.google.com with SMTP id 9so51597872pfj.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2017 09:00:30 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v2 1/2] PCI: iproc: Retry request when CRS returned from EP
-Date: Fri,  2 Jun 2017 21:30:15 +0530
-Message-Id: <1496419216-9987-2-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1496419216-9987-1-git-send-email-oza.oza@broadcom.com>
-References: <1496419216-9987-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>
+Subject: [PATCH 2/6] USB / PCI / PM: Allow the PCI core to do the resume cleanup
+Date: Thu, 08 Jun 2017 02:02:49 +0200
+Message-ID: <1565826.hIbT8kZpDn@aspire.rjw.lan>
+In-Reply-To: <8918199.uo13RZ8hZk@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For Configuration Requests only, following reset
-it is possible for a device to terminate the request
-but indicate that it is temporarily unable to process
-the Request, but will be able to process the Request
-in the future – in this case, the Configuration Request
-Retry Status 10 (CRS) Completion Status is used
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-SPDK user space NVMe driver reinitializes NVMe which
-causes reset, while doing this some configuration requests
-get NAKed by Endpoint (NVMe).
-Current iproc PCI driver is agnostic about it.
-PAXB will forward the NAKed response in stipulated AXI code.
+hcd_pci_resume_noirq() used as a universal _resume_noirq handler for
+PCI USB controllers calls pci_back_from_sleep() which is unnecessary
+and may become problematic.
 
-NVMe spec defines this timeout in 500 ms units, and this
-only happens if controller has been in reset, or with new firmware,
-or in abrupt shutdown case.
-Meanwhile config access could result into retry.
+It is unnecessary, because the PCI bus type carries out post-suspend
+cleanup of all PCI devices during resume and that covers all things
+done by the pci_back_from_sleep().  There is no reason why USB cannot
+follow all of the other PCI devices in that respect.
 
-This patch fixes the problem, and attempts to read again in case
-of PAXB forwarding the NAK.
+It will become problematic after subsequent changes that make it
+possible to go back to sleep again after executing dpm_resume_noirq()
+if no valid system wakeup events have been detected at that point.
+Namely, calling pci_back_from_sleep() at the _resume_noirq stage
+will cause the wakeup status of the devices in question to be cleared
+and if any of them has triggered system wakeup, that event may be
+missed then.
 
-It implements iproc_pcie_config_read which gets called for Stingray.
-Otherwise it falls back to PCI generic APIs.
+For the above reasons, drop the pci_back_from_sleep() invocation
+from hcd_pci_resume_noirq().
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/usb/core/hcd-pci.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 0f39bd2..05a3647 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -68,6 +68,9 @@
- #define APB_ERR_EN_SHIFT             0
- #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+Index: linux-pm/drivers/usb/core/hcd-pci.c
+===================================================================
+--- linux-pm.orig/drivers/usb/core/hcd-pci.c
++++ linux-pm/drivers/usb/core/hcd-pci.c
+@@ -584,12 +584,7 @@ static int hcd_pci_suspend_noirq(struct
  
-+#define CFG_RETRY_STATUS             0xffff0001
-+#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
-+
- /* derive the enum index of the outbound/inbound mapping registers */
- #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
- 
-@@ -448,6 +451,47 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
- 	}
- }
- 
-+static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-+{
-+	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
-+	unsigned int ret;
-+
-+	do {
-+		ret = readl(cfg_data_p);
-+		if (ret == CFG_RETRY_STATUS)
-+			udelay(1);
-+		else
-+			return PCIBIOS_SUCCESSFUL;
-+	} while (timeout--);
-+
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
-+					       unsigned int busno,
-+					       unsigned int slot,
-+					       unsigned int fn,
-+					       int where)
-+{
-+	u16 offset;
-+	u32 val;
-+
-+	/* EP device access */
-+	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
-+		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
-+		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
-+		(where & CFG_ADDR_REG_NUM_MASK) |
-+		(1 & CFG_ADDR_CFG_TYPE_MASK);
-+
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
-+	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
-+
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return NULL;
-+
-+	return (pcie->base + offset);
-+}
-+
- /**
-  * Note access to the configuration registers are protected at the higher layer
-  * by 'pci_lock' in drivers/pci/access.c
-@@ -499,13 +543,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 		return (pcie->base + offset);
- }
- 
-+static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	struct iproc_pcie *pcie = iproc_data(bus);
-+	unsigned int slot = PCI_SLOT(devfn);
-+	unsigned int fn = PCI_FUNC(devfn);
-+	unsigned int busno = bus->number;
-+	void __iomem *cfg_data_p;
-+	int ret;
-+
-+	/* root complex access. */
-+	if (busno == 0)
-+		return pci_generic_config_read32(bus, devfn, where, size, val);
-+
-+	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
-+
-+	if (!cfg_data_p)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	ret = iproc_pcie_cfg_retry(cfg_data_p);
-+	if (ret)
-+		return ret;
-+
-+	*val = readl(cfg_data_p);
-+
-+	if (size <= 2)
-+		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
- 				    int where, int size, u32 *val)
+ static int hcd_pci_resume_noirq(struct device *dev)
  {
- 	int ret;
-+	struct iproc_pcie *pcie = iproc_data(bus);
+-	struct pci_dev		*pci_dev = to_pci_dev(dev);
+-
+-	powermac_set_asic(pci_dev, 1);
+-
+-	/* Go back to D0 and disable remote wakeup */
+-	pci_back_from_sleep(pci_dev);
++	powermac_set_asic(to_pci_dev(dev), 1);
+ 	return 0;
+ }
  
- 	iproc_pcie_apb_err_disable(bus, true);
--	ret = pci_generic_config_read32(bus, devfn, where, size, val);
-+	if (pcie->type == IPROC_PCIE_PAXB_V2)
-+		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
-+	else
-+		ret = pci_generic_config_read32(bus, devfn, where, size, val);
- 	iproc_pcie_apb_err_disable(bus, false);
- 
- 	return ret;
--- 
-1.9.1
+
