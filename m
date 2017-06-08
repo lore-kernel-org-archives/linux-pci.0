@@ -1,62 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37628 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750803AbdFORMM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 13:12:12 -0400
-Date: Thu, 15 Jun 2017 12:12:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joerg Roedel <jroedel@suse.de>
-Cc: Lukas Wunner <lukas@wunner.de>, Joerg Roedel <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        Samuel Sieb <samuel@sieb.net>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Message-ID: <20170615171210.GA12735@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <20170408074107.GA3585@wunner.de>
- <20170420121142.GI5077@suse.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH 2/6] USB / PCI / PM: Allow the PCI core to do the resume cleanup
+Date: Fri, 09 Jun 2017 01:01:45 +0200
+Message-ID: <4103609.n9yJNxPNSu@aspire.rjw.lan>
+In-Reply-To: <Pine.LNX.4.44L0.1706081124310.1949-100000@iolanthe.rowland.org>
+References: <Pine.LNX.4.44L0.1706081124310.1949-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170420121142.GI5077@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 02:11:42PM +0200, Joerg Roedel wrote:
-> On Sat, Apr 08, 2017 at 09:41:07AM +0200, Lukas Wunner wrote:
-> > On Fri, Apr 07, 2017 at 04:32:18PM +0200, Joerg Roedel wrote:
-> > > From: Joerg Roedel <jroedel@suse.de>
-> > > 
-> > > ATS is broken on this hardware and causes IOMMU stalls and
-> > > system failure. Disable ATS on these devices to make them
-> > > usable again with IOMMU enabled.
-> > 
-> > AMD Stoney Ridge is an x86 CPU + GPU combo and this quirk pertains
-> > to the GPU, right?
-> > 
-> > In that case the quirk should go to arch/x86.  Paul Menzel (+cc)
-> > has just complained on linux-pci@ that final fixups are taking half
-> > a second, and I think that could be reduced if more efforts were
-> > spent to move arch-specific quirks out of the catch-all in
-> > drivers/pci/quirks.c.
+On Thursday, June 08, 2017 11:24:55 AM Alan Stern wrote:
+> On Thu, 8 Jun 2017, Rafael J. Wysocki wrote:
 > 
-> The affected hardware here might be x86-only, but ATS is not. If a
-> broken ATS-capable plug-in card appears, we need this in generic code
-> anyway.
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > hcd_pci_resume_noirq() used as a universal _resume_noirq handler for
+> > PCI USB controllers calls pci_back_from_sleep() which is unnecessary
+> > and may become problematic.
+> > 
+> > It is unnecessary, because the PCI bus type carries out post-suspend
+> > cleanup of all PCI devices during resume and that covers all things
+> > done by the pci_back_from_sleep().  There is no reason why USB cannot
+> > follow all of the other PCI devices in that respect.
+> > 
+> > It will become problematic after subsequent changes that make it
+> > possible to go back to sleep again after executing dpm_resume_noirq()
+> > if no valid system wakeup events have been detected at that point.
+> > Namely, calling pci_back_from_sleep() at the _resume_noirq stage
+> > will cause the wakeup status of the devices in question to be cleared
+> > and if any of them has triggered system wakeup, that event may be
+> > missed then.
+> > 
+> > For the above reasons, drop the pci_back_from_sleep() invocation
+> > from hcd_pci_resume_noirq().
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/usb/core/hcd-pci.c |    7 +------
+> >  1 file changed, 1 insertion(+), 6 deletions(-)
+> > 
+> > Index: linux-pm/drivers/usb/core/hcd-pci.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/usb/core/hcd-pci.c
+> > +++ linux-pm/drivers/usb/core/hcd-pci.c
+> > @@ -584,12 +584,7 @@ static int hcd_pci_suspend_noirq(struct
+> >  
+> >  static int hcd_pci_resume_noirq(struct device *dev)
+> >  {
+> > -	struct pci_dev		*pci_dev = to_pci_dev(dev);
+> > -
+> > -	powermac_set_asic(pci_dev, 1);
+> > -
+> > -	/* Go back to D0 and disable remote wakeup */
+> > -	pci_back_from_sleep(pci_dev);
+> > +	powermac_set_asic(to_pci_dev(dev), 1);
+> >  	return 0;
+> >  }
+> 
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
-It could go in either arch/x86/pci/fixup.c or drivers/pci/quirks.c.
+Thanks!
 
-It's not clear to me exactly what the hardware defect is or where it
-is.  If it's in the CPU or in a GPU that can only be found on x86, I
-think arch/x86/pci/fixup.c is the appropriate place.
-
-If it's in a GPU that could be found on other arches,
-drivers/pci/quirks.c would be the appropriate place.
-
-I don't personally think the possibility of a plugin card with broken
-ATS is a real reason to put this quirk in drivers/pci/quirks.c.  It's
-a trivial patch and easy to copy or move later if we need to.
-
-Bjorn
