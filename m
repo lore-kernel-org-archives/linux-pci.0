@@ -1,154 +1,74 @@
-Return-Path: <SRS0=7S1B=5Y=hisilicon.com=songxiaowei@kernel.org>
-Return-Path: <SRS0=7S1B=5Y=hisilicon.com=songxiaowei@kernel.org>
-From: songxiaowei <songxiaowei@hisilicon.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Guodong Xu <guodong.xu@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
-        "kbuild test robot" <lkp@intel.com>,
-        "kbuild-all@01.org" <kbuild-all@01.org>,
-        "Bjorn Helgaas" <bhelgaas@google.com>, Kishon <kishon@ti.com>,
-        Jingoo Han
-	<jingoohan1@gmail.com>, Tomasz Nowicki <tn@semihalf.com>,
-        Keith Busch
-	<keith.busch@intel.com>,
-        Niklas Cassel <niklas.cassel@axis.com>, Duc Dang
-	<dhdang@apm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "Gabriele
- Paoloni" <gabriele.paoloni@huawei.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        "Mark Rutland" <mark.rutland@arm.com>,
-        Catalin Marinas
-	<catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        "chenyao (F)"
-	<chenyao11@huawei.com>,
-        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
-        Wangbinghui <wangbinghui@hisilicon.com>,
-        Suzhuangluan
-	<suzhuangluan@hisilicon.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Linux Kernel
- Mailing List <linux-kernel@vger.kernel.org>
-Subject: =?gb2312?B?tPC4tDogtPC4tDogW1BBVENIIHY5IDIvNF0gYXJtNjQ6IGR0czogaGlzaTog?=
- =?gb2312?Q?add_kirin_pcie_node?=
-Date: Mon, 19 Jun 2017 01:02:53 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54117BB07@DGGEMA505-MBX.china.huawei.com>
-References: <20170531070109.81569-3-songxiaowei@hisilicon.com>
- <201706040735.pu1PIspV%fengguang.wu@intel.com>
- <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
- <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
- <20170616211106.GF11129@bhelgaas-glaptop.roam.corp.google.com>
- <99B4C6BADD9E3241B25E52B02BA737C5411788ED@DGGEMA505-MBX.china.huawei.com>
- <20170617133931.GJ11129@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170617133931.GJ11129@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <20170608081228.GA26932@infradead.org>
+References: <20170523004107.536-1-palmer@dabbelt.com> <20170606230007.19101-1-palmer@dabbelt.com>
+ <20170606230007.19101-7-palmer@dabbelt.com> <CAMuHMdUiuqB3vPYkAJfP5+qotcH=o1gJnH8Mosr9VSKxAQGJMQ@mail.gmail.com>
+ <20170608081228.GA26932@infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 8 Jun 2017 10:35:29 +0200
+Message-ID: <CAK8P3a1Q=LoAPU_6X_z1=4Yp-Q=TCYpVz3R2MOv_UikX-tPDQg@mail.gmail.com>
+Subject: Re: [PATCH 06/17] pci: Add generic pcibios_{fixup_bus,align_resource}
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Olof Johansson <olof@lixom.net>, albert@sifive.com,
+        patches@groups.riscv.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rIHlvdSBzbyBtdWNoLCBhbmQgSSdsbCBmaXggdGhlc2UgaXNzdWVz
-IGFzIHNvb24gYXMgcG9zc2libGUuDQoNCkJlc3Qgd2lzaGVzLA0KDQpYaWFvd2VpLg0KDQotLS0t
-LdPKvP7Urbz+LS0tLS0NCreivP7IyzogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmhlbGdhYXNAa2Vy
-bmVsLm9yZ10gDQq3osvNyrG85DogMjAxN8TqNtTCMTfI1SAyMTo0MA0KytW8/sjLOiBzb25neGlh
-b3dlaQ0Ks63LzTogR3VvZG9uZyBYdTsgQXJuZCBCZXJnbWFubjsga2J1aWxkIHRlc3Qgcm9ib3Q7
-IGtidWlsZC1hbGxAMDEub3JnOyBCam9ybiBIZWxnYWFzOyBLaXNob247IEppbmdvbyBIYW47IFRv
-bWFzeiBOb3dpY2tpOyBLZWl0aCBCdXNjaDsgTmlrbGFzIENhc3NlbDsgRHVjIERhbmc7IGxpdWRv
-bmdkb25nIChDKTsgR2FicmllbGUgUGFvbG9uaTsgUm9iIEhlcnJpbmc7IE1hcmsgUnV0bGFuZDsg
-Q2F0YWxpbiBNYXJpbmFzOyBXaWxsIERlYWNvbjsgY2hlbnlhbyAoRik7IENoZW5mZW5nIChwdWNr
-KTsgV2FuZ2JpbmdodWk7IFN1emh1YW5nbHVhbjsgbGludXgtcGNpOyBkZXZpY2V0cmVlQHZnZXIu
-a2VybmVsLm9yZzsgTGludXggS2VybmVsIE1haWxpbmcgTGlzdA0K1vfM4jogUmU6ILTwuLQ6IFtQ
-QVRDSCB2OSAyLzRdIGFybTY0OiBkdHM6IGhpc2k6IGFkZCBraXJpbiBwY2llIG5vZGUNCg0KT24g
-U2F0LCBKdW4gMTcsIDIwMTcgYXQgMDg6MzM6MDhBTSArMDAwMCwgc29uZ3hpYW93ZWkgd3JvdGU6
-DQo+IEhpIEJqb3JuLA0KPiANCj4gVGhlcmUgYXJlIHNlcnZhbCBjb21tZW50cyBJIGNhbiBub3Qg
-dW5kZXJzdGFuZCwgcGxlYXNlIGhlbHAgbWUgdG8gZ2l2ZSBtb3JlIGRldGFpbHMuDQoNClN1cmUu
-ICBCVFcsIGZvciBzb21lIHJlYXNvbiB5b3VyIHJlc3BvbnNlIGlzIGFsbCBkb3VibGUtc3BhY2Vk
-LCB3aGljaCBtYWtlcyBpdCBhIGxpdHRsZSBoYXJkIHRvIHJlYWQuICBBbHNvLCBpdCBpbmNsdWRl
-cyBIVE1MIGFuZCBhbiBpbWFnZSwgd2hpY2ggbWVhbnMgdGhlIG1haWxpbmcgbGlzdCBwcm9iYWJs
-eSByZWplY3RlZCBpdDoNCmh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
-bCN0YWJvbw0KDQo+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
-Z3MvcGNpL2tpcmluLXBjaWUudHh0IA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
-aW5ncy9wY2kva2lyaW4tcGNpZS50eHQNCj4gDQo+IGluZGV4IDY4ZmZhMGZiY2Q3My4uMjAzNTdk
-ODQwYWYxIDEwMDY0NA0KPiANCj4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3BjaS9raXJpbi1wY2llLnR4dA0KPiANCj4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0
-cmVlL2JpbmRpbmdzL3BjaS9raXJpbi1wY2llLnR4dA0KPiANCj4gQEAgLTI0LDggKzI0LDggQEAg
-RXhhbXBsZSBiYXNlZCBvbiBraXJpbjk2MDoNCj4gDQo+ICAgICAgICAgcGNpZUBmNDAwMDAwMCB7
-DQo+IA0KPiAgICAgICAgICAgICAgICAgY29tcGF0aWJsZSA9ICJoaXNpbGljb24sa2lyaW4tcGNp
-ZSI7DQo+IA0KPiAtICAgICAgICAgICAgICAgICByZWcgPSA8MHgwIDB4ZjQwMDAwMDAgMHgwIDB4
-MTAwMD4sIDwweDAgMHhmZjNmZTAwMCAweDAgMHgxMDAwPiwNCj4gDQo+IC0gICAgICAgICAgICAg
-ICAgICAgICAgIDwweDAgMHhmM2YyMDAwMCAweDAgMHg0MDAwMD4sIDwweDAgMHhGNDAwMDAwMCAw
-IDB4MjAwMD47DQo+IA0KPiArICAgICAgICAgICAgICAgIHJlZyA9IDwweDAgMHhmNDAwMDAwMCAw
-eDAgIDB4MTAwMD4sIDwweDAgMHhmZjNmZTAwMCANCj4gKyAweDAgMHgxMDAwPiwNCj4gDQo+ICsg
-ICAgICAgICAgICAgICAgICAgICAgPDB4MCAweGYzZjIwMDAwIDB4MCAweDQwMDAwPiwgPDB4MCAw
-eGY0MDAwMDAwIA0KPiArIDB4MCAweDIwMDA+Ow0KPiANCj4gW3Nvbmd4aWFvd2VpXSBUaGUgZGlm
-ZmVyZW5jZSBpcyBhZGQgb25lIG1vcmUgc3BhY2UgYmV0d2VlbiAiMHgwIiBhbmQgIjB4MTAwMCIg
-aW4gdGhlIGZpcnN0IGVsZW1lbnQuDQo+IA0KPiAgICAgICAgICAgICAgQnV0LCBJIGNhbid0IGdl
-dCB5b3VyIG1pbmQuDQoNCkl0IGNoYW5nZXMgZnJvbSB0aGlzOg0KDQogICAgICAgIHJlZyA9IDww
-eDAgMHhmNDAwMDAwMCAweDAgMHgxMDAwPiwgPDB4MCAweGZmM2ZlMDAwIDB4MCAweDEwMDA+LA0K
-ICAgICAgICAgICAgICA8MHgwIDB4ZjNmMjAwMDAgMHgwIDB4NDAwMDA+LCA8MHgwIDB4RjQwMDAw
-MDAgMCAweDIwMDA+Ow0KDQp0byB0aGlzOg0KDQogICAgICAgIHJlZyA9IDwweDAgMHhmNDAwMDAw
-MCAweDAgIDB4MTAwMD4sIDwweDAgMHhmZjNmZTAwMCAweDAgMHgxMDAwPiwNCiAgICAgICAgICAg
-ICAgPDB4MCAweGYzZjIwMDAwIDB4MCAweDQwMDAwPiwgPDB4MCAweGY0MDAwMDAwIDB4MCAweDIw
-MDA+Ow0KDQpUaGUgZXh0cmEgc3BhY2UgbWFrZXMgdGhlIGVsZW1lbnRzIGFsaWduIHZlcnRpY2Fs
-bHkuICBDb2x1bW5zIG9mIG51bWJlcnMgYXJlIGNvbnZlbnRpb25hbGx5IHJpZ2h0LWFsaWduZWQs
-IHdoaWNoIG1ha2VzIGl0IGVhc2llciB0byBjb21wYXJlIHRoZWlyIHNpemVzLg0KDQpUaGlzIGh1
-bmsgYWxzbyBjaGFuZ2VkIDB4RjQwMDAwMDAgdG8gMHhmNDAwMDAwMCBpbiB0aGUgc2Vjb25kIGxp
-bmUsIHNvIGhleCBjb25zdGFudHMgdXNlIGxvd2VyLWNhc2UgY29uc2lzdGVudGx5Lg0KDQo+IC0t
-LSBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvaGlzaWxpY29uL2hpMzY2MC5kdHNpDQo+IA0KPiArKysg
-Yi9hcmNoL2FybTY0L2Jvb3QvZHRzL2hpc2lsaWNvbi9oaTM2NjAuZHRzaQ0KPiANCj4gQEAgLTE1
-OSwxMiArMTU5LDEyIEBADQo+IA0KPiAgICAgICAgICAgICAgICAgIHBjaWVAZjQwMDAwMDAgew0K
-PiANCj4gICAgICAgICAgICAgICAgICAgICAgICAgICBjb21wYXRpYmxlID0gImhpc2lsaWNvbixr
-aXJpbjk2MC1wY2llIjsNCj4gDQo+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICByZWcgPSA8
-MHgwIDB4ZjQwMDAwMDAgMHgwIDB4MTAwMD4sDQo+IA0KPiAtICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgPDB4MCAweGZmM2ZlMDAwIDB4MCAweDEwMDA+LA0KPiANCj4gKyAgICAgICAg
-ICAgICAgICAgICAgICAgICAgcmVnID0gPDB4MCAweGY0MDAwMDAwIDB4MCAgMHgxMDAwPiwNCj4g
-DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwweDAgMHhmZjNmZTAwMCAweDAg
-IDB4MTAwMD4sDQo+IA0KPiBbc29uZ3hpYW93ZWldIENhbiB5b3VyIHRlbGwgd2h5IHVzaW5nIHR3
-byBzcGFjZXM/IFJlZyBpcyBsaXN0ZWQgYXMgPGFkZHJfaGkgYWRkcl9sbyBzaXplX2hpIHNpemVf
-bG8+Lg0KDQpBZ2FpbiwganVzdCB0byBtYWtlIHRoZSBzaXplcyByaWdodC1hbGlnbmVkIHNvIGl0
-J3MgZWFzaWVyIHRvIGNvbXBhcmUgdGhlIHNpemVzLg0KDQpZb3UgY2FuIGlnbm9yZSB0aGlzIG9u
-ZSBpZiB5b3Ugd2FudC4gIFRoZXJlIGFyZSBsb3RzIG9mIGV4YW1wbGVzIGluIHRoZSB0cmVlIHRo
-YXQgZG9uJ3QgYWxpZ24gdGhlc2UuICBJIGp1c3QgdGhpbmsgaXQgbG9va3Mgc2xvcHB5IHdoZW4g
-dGhpbmdzIGFyZSBhbG1vc3QgYnV0IG5vdCBxdWl0ZSBhbGlnbmVkLg0KDQo+IC0gICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICA8MHgwIDB4RjUwMDAwMDAgMHgwIDB4MjAwMD47DQo+ICsg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwweDAgMHhmNTAwMDAwMCAweDAgIDB4MjAw
-MD47DQoNCkFub3RoZXIgY2FzZSBvZiBtYWtpbmcgaGV4IGNvbnN0YW50cyBjb25zaXN0ZW50bHkg
-bG93ZXItY2FzZS4NCg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4u
-YyANCj4gYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jIGluZGV4IGY2M2U2NTQ4ZWZhZS4u
-NDE1MjBkZDFkNWU1IDEwMDY0NA0KPiANCj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2ly
-aW4uYw0KPiANCj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uYw0KPiANCj4gQEAg
-LTM1LDggKzM1LDggQEANCj4gDQo+ICNkZWZpbmUgUkVGX0NMS19GUkVRICAgICAgICAgICAgICAg
-ICAgICAxMDAwMDAwMDANCj4gDQo+ICAvKiBQQ0llIEVMQkkgcmVnaXN0ZXJzICovDQo+IA0KPiAt
-I2RlZmluZSBTT0NfUENJRUNUUkxfQ1RSTDBfQUREUiAgIDB4MDAwDQo+IA0KPiAtI2RlZmluZSBT
-T0NfUENJRUNUUkxfQ1RSTDFfQUREUiAgIDB4MDA0DQo+IA0KPiArI2RlZmluZSBTT0NfUENJRUNU
-UkxfQ1RSTDBfQUREUiAgICAgICAgICAgIDB4MDAwDQo+IA0KPiArI2RlZmluZSBTT0NfUENJRUNU
-UkxfQ1RSTDFfQUREUiAgICAgICAgICAgIDB4MDA0DQo+IA0KPiAjZGVmaW5lIFNPQ19QQ0lFUEhZ
-X0NUUkwyX0FERFIgICAgICAgICAgICAgMHgwMDgNCj4gDQo+ICNkZWZpbmUgU09DX1BDSUVQSFlf
-Q1RSTDNfQUREUiAgICAgICAgICAgICAweDAwYw0KPiAuLi4gDQo+IFtzb25neGlhb3dlaV0gVGhl
-IHNwYWNlIG9mIHRoZSBuYW1lIG9mIHRoZXNlIG1hY3JvIGRlZmluaXRpb24gYW5kDQo+IA0KPiB0
-aGUgdmFsdWUgYXJlIHJlYWxseSBkaWZmZXJlbnQgZnJvbSAxIHRvIDMgVGFiLCBidXQgaXQgc2Vl
-bSBsaWtlcyBhcyBiZWxsb3cgb3BlbmVkIGJ5IHZpbS4NCj4gDQo+IFtjaWQ6aW1hZ2UwMDEucG5n
-QDAxRDJFNzg2LjE0ODgzMzcwXQ0KDQpUaGUgaW1hZ2Ugc2hvd3MgdGhpczoNCg0KICArI2RlZmlu
-ZSBSRUZfQ0xLX0ZSRVEgICAgICAgICAgICAgICAgICAgMTAwMDAwMDAwDQogICsNCiAgKy8qIFBD
-SWUgRUxCSSByZWdpc3RlcnMgKi8NCiAgKyNkZWZpbmUgU09DX1BDSUVDVFJMX0NUUkwwX0FERFIg
-ICAgICAgIDB4MDAwDQogICsjZGVmaW5lIFNPQ19QQ0lFQ1RSTF9DVFJMMV9BRERSICAgICAgICAw
-eDAwNA0KICArI2RlZmluZSBTT0NfUENJRVBIWV9DVFJMMl9BRERSICAgICAgICAgMHgwMDgNCiAg
-KyNkZWZpbmUgU09DX1BDSUVQSFlfQ1RSTDNfQUREUiAgICAgICAgIDB4MDBjDQoNClNvIHRoaW5n
-cyBhcmUgbmljZWx5IGFsaWduZWQgaW4gdGhlICpwYXRjaCouICBCdXQgd2UgZG9uJ3QgY2FyZSBh
-Ym91dCBhbGlnbm1lbnQgaW4gdGhlIHBhdGNoLiAgV2hhdCB3ZSB3YW50IGlzIGFsaWdubWVudCBp
-biB0aGUgKmZpbGUqLCB3aGljaCBlbmRzIHVwIGxvb2tpbmcgbGlrZSB0aGlzIHdpdGggeW91ciBv
-cmlnaW5hbCBwYXRjaDoNCg0KICAjZGVmaW5lIFJFRl9DTEtfRlJFUSAgICAgICAgICAgICAgICAg
-ICAgMTAwMDAwMDAwDQoNCiAgLyogUENJZSBFTEJJIHJlZ2lzdGVycyAqLw0KICAjZGVmaW5lIFNP
-Q19QQ0lFQ1RSTF9DVFJMMF9BRERSIDB4MDAwDQogICNkZWZpbmUgU09DX1BDSUVDVFJMX0NUUkwx
-X0FERFIgMHgwMDQNCiAgI2RlZmluZSBTT0NfUENJRVBIWV9DVFJMMl9BRERSICAgICAgICAgIDB4
-MDA4DQogICNkZWZpbmUgU09DX1BDSUVQSFlfQ1RSTDNfQUREUiAgICAgICAgICAweDAwYw0KDQpN
-eSBpbmNyZW1lbnRhbCBkaWZmIHByb2JhYmx5IG1ha2VzIHRoZSBwYXRjaCBsb29rIHVnbHksIGJ1
-dCB0aGUgcmVzdWx0aW5nIGZpbGUgbG9va3MgbmljZXIuDQoNCj4gIHN0cnVjdCBraXJpbl9wY2ll
-IHsNCj4gDQo+IC0gICAgICAgIHN0cnVjdCBkd19wY2llICAgICAgICAgICAgICAgICAgICpwY2k7
-DQo+IA0KPiAtICAgICAgICB2b2lkIF9faW9tZW0gICAgICAgICAgICphcGJfYmFzZTsNCj4gLi4u
-DQo+ICsgICAgICAgc3RydWN0IGR3X3BjaWUgICAgICAgICAgKnBjaTsNCj4gDQo+ICsgICAgICAg
-dm9pZCBfX2lvbWVtICAqYXBiX2Jhc2U7DQo+IC4uLg0KPiBbc29uZ3hpYW93ZWldIGl0IHNlZW1z
-IHRoZSB2YXJpYWJsZXMgbGlzdCBpbiB0aGUgc2FtZSBjb2xvdW1uIHdpdGggdmltLg0KDQpZZXMs
-IHRoZXNlIHZhcmlhYmxlcyB3ZXJlIGFsaWduZWQgaW4geW91ciBvcmlnaW5hbCBwYXRjaDsgaXQn
-cyBqdXN0IHRoYXQgdGhleSB1c2VkIHR3byBvciB0aHJlZSB0YWJzLCB3aGVuIG9uZSBvciB0d28g
-d2FzIHN1ZmZpY2llbnQuICBTbyB0aGVyZSdzIGV4dHJhIHNlcGFyYXRpb24uICBOb3QgYSBiaWcg
-ZGVhbC4NCg0KQmpvcm4NCg==
+On Thu, Jun 8, 2017 at 10:12 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Jun 07, 2017 at 09:19:49AM +0200, Geert Uytterhoeven wrote:
+>> CC pci folks
+>
+> Ok, replying with pci folks in Cc then :)
+>
+> Weak symbols have (rightly) gotten a bad reputation, so maybe
+> we should approach this without them.
+
+Agreed, I would almost never recommend using a __weak symbol,
+but they are already widely used in the PCI subsystem, so I suggested
+using them here for consistency.
+
+We have a struct pci_host_bridge now, and we should eventually
+move most of the 38 pci specific weak  per-architecture symbols
+into per-host driver callbacks, but that I think that would be too much
+to ask for when adding an architecture port.
+
+> It seems we have a large number of emptry pcibios_fixup_bus calls
+> alreayd, so I think we should simply have the architectures
+> that do define it define a Kconfig or header symbol and not call
+> it at all otherwise.
+
+I would argue that most of them should not be per-architecture
+in the first place, the current state is mostly an artifact of the
+times when each architecture had just one PCI implementation.
+
+The ones that have multiple implementations (arm, powerpc, ...)
+tend to actually override the weak functions with their own
+per-host multiplexers again.
+
+> For the ones that exist as lot just seem to call pci_read_bridge_bases
+> and/or pcibios_fixup_device_resources in one form or another,
+> and I wonder why we even need the arch indirection for that.
+>
+> Similarly for pcibios_align_resource: a lot of architetures seem
+> to have a noop, and the once that don't mostly seem copy and
+> paste code, so we should again have a symbol for architectures
+> to opt into it, and we probably should have a generic helper
+> for the VGA window mirroring code instead of duplicating it multiple
+> times.
+
+I now remember that we already have a host_bridge->align_resource
+callback pointer, so the generic function should definitely try
+to use that.
+
+We could just use the version from arch/mips/pci/pci-generic.c
+and remove that in the process. I'm not sure about why mips calls
+pci_read_bridge_bases() in pcibios_fixup_bus() though, or whether
+this make sense to put in the generic version.
+
+       Arnd
