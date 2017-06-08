@@ -1,55 +1,79 @@
-Return-Path: <SRS0=52KJ=5T=linaro.org=linus.walleij@kernel.org>
-Return-Path: <SRS0=52KJ=5T=linaro.org=linus.walleij@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170613043416.GB14217@kroah.com>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
- <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
- <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com> <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com> <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com> <20170613043416.GB14217@kroah.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Wed, 14 Jun 2017 11:59:29 +0200
-Message-ID: <CACRpkdZyup+dH6Yp747yLyaC8DSbA8bEnk37gJKnmnjBvjn=-A@mail.gmail.com>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable to
- handle kernel NULL pointer dereference at 00000000000000a8
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	kernel test robot <fengguang.wu@intel.com>, Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, wfg@linux.intel.com,
-	Alan Cox <alan@linux.intel.com>, Arnd Bergmann <arnd@arndb.de>, David Airlie <airlied@linux.ie>,
-	David Herrmann <dh.herrmann@gmail.com>, Daniel Vetter <daniel.vetter@ffwll.ch>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:51226 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751591AbdFHOO4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:14:56 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 30/42] PCI: tegra: Drop pci_fixup_irqs()
+Date: Thu,  8 Jun 2017 15:13:30 +0100
+Message-Id: <20170608141342.2018-31-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 6:34 AM, Greg Kroah-Hartman
-<gregkh@linuxfoundation.org> wrote:
+Since, through struct pci_host_bridge.map/swizzle_irq hooks, IRQs
+are now allocated in the pci_assign_irq() callback automatically,
+PCI host bridge drivers can stop relying on pci_fixup_irqs()
+for IRQ allocation
 
-> Ah, that makes sense.  Well, someone can always work on expanding the
-> range of dynamic char major numbers if they are running out of them on a
-> real system, I'll gladly take patches for that :)
+Drop pci_fixup_irqs() usage from PCI tegra host bridge driver.
 
-I started to take a stab at it at one point and incorporated some feedback
-from Torvalds etc, it's here:
-https://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-gpio.git/commit/?h=chrdev-warn&id=65e5b1e9eb3f777ab7535b74b490e882eeec79d7
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+---
+ drivers/pci/host/pci-tegra.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-It tries to use all "holes" in the chardev major map to shun in a bit
-more devices when we run out of the high dynamic major range.
-
-Making them all dynamic seemed dangerous because I was afraid
-of userspace ABI breakage because of old userlands with
-static mknod:s.
-
-I lost interest when it turned out that the zeroday QEMU stuff was
-generating random machines that have no counterpart in the real
-world, and then the exercise seemed a bit academic.
-
-The last failures were due to (AFAICT) some relationship between
-major and minor numbers that I didn't untangle.
-
-If there is interest I could try to revive it.
-
-Yours,
-Linus Walleij
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index 0383418..0dadb81 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -2284,6 +2284,8 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	host->busnr = pcie->busn.start;
+ 	host->dev.parent = &pdev->dev;
+ 	host->ops = &tegra_pcie_ops;
++	host->map_irq = tegra_pcie_map_irq;
++	host->swizzle_irq = pci_common_swizzle;
+ 
+ 	err = pci_scan_root_bus_bridge(host);
+ 	if (err < 0) {
+@@ -2291,7 +2293,6 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 		goto disable_msi;
+ 	}
+ 
+-	pci_fixup_irqs(pci_common_swizzle, tegra_pcie_map_irq);
+ 	pci_bus_size_bridges(host->bus);
+ 	pci_bus_assign_resources(host->bus);
+ 
+-- 
+2.10.0
