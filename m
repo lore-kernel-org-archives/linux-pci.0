@@ -1,113 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:61055 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752719AbdFLVET (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 17:04:19 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
+Received: from foss.arm.com ([217.140.101.70]:50160 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751769AbdFHONP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:13:15 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH v2 4/8] ACPI / PM: Clean up device wakeup enable/disable code
-Date: Mon, 12 Jun 2017 22:51:07 +0200
-Message-ID: <21723904.gpIm5LkHCV@aspire.rjw.lan>
-In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 09/42] PCI: Introduce pci_scan_root_bus_bridge()
+Date: Thu,  8 Jun 2017 15:13:09 +0100
+Message-Id: <20170608141342.2018-10-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Current pci_scan_root_bus() interface is made up of two main
+code paths:
 
-The wakeup.flags.enabled flag in struct acpi_device is not used
-consistently, as there is no reason why it should only apply
-to the enabling/disabling of the wakeup GPE, so put the invocation
-of acpi_enable_wakeup_device_power() under it too.
+- pci_create_root_bus()
+- pci_scan_child_bus()
 
-Moreover, it is not necessary to call
-acpi_enable_wakeup_devices() and acpi_disable_wakeup_devices() for
-suspend-to-idle, so don't do that.
+pci_create_root_bus() is a wrapper function that allows to create
+a struct pci_host_bridge structure, initialize it with the passed
+parameters and register it with the kernel.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+As the struct pci_host_bridge require additional struct members,
+pci_create_root_bus() parameters list has grown in time, making
+it unwieldy to add further parameters to it in case the struct
+pci_host_bridge gains more members fields to augment its functionality.
+
+Since PCI core code provides functions to allocate struct
+pci_host_bridge, instead of forcing the pci_create_root_bus() interface
+to add new parameters to cater for new struct pci_host_bridge
+functionality, it is more suitable to add an interface in PCI
+core code to scan a PCI bus straight from a struct pci_host_bridge
+created and customized by each specific PCI host controller driver.
+
+Add a pci_scan_root_bus_bridge() function to allow PCI host controller
+drivers to create and initialize struct pci_host_bridge and scan
+the resulting bus.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/device_pm.c |   19 ++++++++-----------
- drivers/acpi/sleep.c     |    4 ++--
- 2 files changed, 10 insertions(+), 13 deletions(-)
+ drivers/pci/probe.c | 39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  1 +
+ 2 files changed, 40 insertions(+)
 
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -688,26 +688,23 @@ static int acpi_device_wakeup(struct acp
- 		acpi_status res;
- 		int error;
- 
-+		if (adev->wakeup.flags.enabled)
-+			return 0;
-+
- 		error = acpi_enable_wakeup_device_power(adev, target_state);
- 		if (error)
- 			return error;
- 
--		if (adev->wakeup.flags.enabled)
--			return 0;
--
- 		res = acpi_enable_gpe(wakeup->gpe_device, wakeup->gpe_number);
--		if (ACPI_SUCCESS(res)) {
--			adev->wakeup.flags.enabled = 1;
--		} else {
-+		if (ACPI_FAILURE(res)) {
- 			acpi_disable_wakeup_device_power(adev);
- 			return -EIO;
- 		}
--	} else {
--		if (adev->wakeup.flags.enabled) {
--			acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
--			adev->wakeup.flags.enabled = 0;
--		}
-+		adev->wakeup.flags.enabled = 1;
-+	} else if (adev->wakeup.flags.enabled) {
-+		acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
- 		acpi_disable_wakeup_device_power(adev);
-+		adev->wakeup.flags.enabled = 0;
- 	}
- 	return 0;
- }
-Index: linux-pm/drivers/acpi/sleep.c
-===================================================================
---- linux-pm.orig/drivers/acpi/sleep.c
-+++ linux-pm/drivers/acpi/sleep.c
-@@ -658,19 +658,19 @@ static int acpi_freeze_begin(void)
- 
- static int acpi_freeze_prepare(void)
- {
--	acpi_enable_wakeup_devices(ACPI_STATE_S0);
- 	acpi_enable_all_wakeup_gpes();
- 	acpi_os_wait_events_complete();
- 	if (acpi_sci_irq_valid())
- 		enable_irq_wake(acpi_sci_irq);
-+
- 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e3f6965..690f0b3 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2426,6 +2426,45 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+ 			res, ret ? "can not be" : "is");
  }
  
- static void acpi_freeze_restore(void)
- {
--	acpi_disable_wakeup_devices(ACPI_STATE_S0);
- 	if (acpi_sci_irq_valid())
- 		disable_irq_wake(acpi_sci_irq);
++int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
++{
++	struct resource_entry *window;
++	bool found = false;
++	struct pci_bus *b;
++	int max, bus, ret;
 +
- 	acpi_enable_all_runtime_gpes();
- }
- 
++	if (!bridge)
++		return -EINVAL;
++
++	resource_list_for_each_entry(window, &bridge->windows)
++		if (window->res->flags & IORESOURCE_BUS) {
++			found = true;
++			break;
++		}
++
++	ret = pci_register_host_bridge(bridge);
++	if (ret < 0)
++		return ret;
++
++	b = bridge->bus;
++	bus = bridge->busnr;
++
++	if (!found) {
++		dev_info(&b->dev,
++		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
++			bus);
++		pci_bus_insert_busn_res(b, bus, 255);
++	}
++
++	max = pci_scan_child_bus(b);
++
++	if (!found)
++		pci_bus_update_busn_res_end(b, max);
++
++	return 0;
++}
++EXPORT_SYMBOL(pci_scan_root_bus_bridge);
++
+ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
+ 		struct pci_ops *ops, void *sysdata,
+ 		struct list_head *resources, struct msi_controller *msi)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b21308e..72940cc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -862,6 +862,7 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
++int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
+ struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
+ 				int busnr);
+ void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
+-- 
+2.10.0
