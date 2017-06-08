@@ -1,170 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Allen Hubbe" <Allen.Hubbe@dell.com>
-To: "'Logan Gunthorpe'" <logang@deltatee.com>,
-        <linux-ntb@googlegroups.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Cc: "'Jon Mason'" <jdmason@kudzu.us>,
-        "'Dave Jiang'" <dave.jiang@intel.com>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
-        "'Kurt Schwemmer'" <kurt.schwemmer@microsemi.com>,
-        "'Stephen Bates'" <sbates@raithlin.com>,
-        "'Serge Semin'" <fancer.lancer@gmail.com>
-References: <20170629032648.3073-1-logang@deltatee.com> <20170629032648.3073-6-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-6-logang@deltatee.com>
-Subject: RE: [PATCH 05/16] ntb: ensure ntb_mw_get_align is only called when the link is up
-Date: Thu, 29 Jun 2017 14:11:47 -0400
-Message-ID: <000101d2f103$2c8d0140$85a703c0$@dell.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [RFT PATCH v2 07/42] drivers: pci: host: ftpci100: Fix host bridge
+ memory leakage
+Date: Thu,  8 Jun 2017 15:13:07 +0100
+Message-Id: <20170608141342.2018-8-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Roy Zang <tie-fei.zang@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Logan Gunthorpe
-> With switchtec hardware it's impossible to get the alignment parameters
-> for a peer's memory window until the peer's driver has configured it's
-> windows. Strictly speaking, the link doesn't have to be up for this,
-> but the link being up is the only way the client can tell that
-> the otherside has been configured.
-> 
-> This patch converts ntb_transport and ntb_perf to use this function after
-> the link goes up. This simplifies these clients slightly because they
-> no longer have to store the alignment parameters. It also tweaks
-> ntb_tool so that peer_mw_trans will print zero if it is run before
-> the link goes up.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+When probing the PCI host controller driver, if an error condition
+is trigger the probe function code does not free memory allocated
+for the struct pci_host_bridge resulting in memory leakage.
 
-Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
+Move the struct pci_host_bridge allocation over to the respective
+devm interface to fix the issue.
 
-> ---
->  drivers/ntb/ntb_transport.c | 20 ++++++++++----------
->  drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
->  drivers/ntb/test/ntb_tool.c |  6 +++---
->  3 files changed, 22 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-> index b29558ddfe95..7ed745aaa213 100644
-> --- a/drivers/ntb/ntb_transport.c
-> +++ b/drivers/ntb/ntb_transport.c
-> @@ -191,8 +191,6 @@ struct ntb_transport_qp {
->  struct ntb_transport_mw {
->  	phys_addr_t phys_addr;
->  	resource_size_t phys_size;
-> -	resource_size_t xlat_align;
-> -	resource_size_t xlat_align_size;
->  	void __iomem *vbase;
->  	size_t xlat_size;
->  	size_t buff_size;
-> @@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
->  	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
->  	struct pci_dev *pdev = nt->ndev->pdev;
->  	size_t xlat_size, buff_size;
-> +	resource_size_t xlat_align;
-> +	resource_size_t xlat_align_size;
->  	int rc;
-> 
->  	if (!size)
->  		return -EINVAL;
-> 
-> -	xlat_size = round_up(size, mw->xlat_align_size);
-> -	buff_size = round_up(size, mw->xlat_align);
-> +	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
-> +			      &xlat_align_size, NULL);
-> +	if (rc)
-> +		return rc;
-> +
-> +	xlat_size = round_up(size, xlat_align_size);
-> +	buff_size = round_up(size, xlat_align);
-> 
->  	/* No need to re-setup */
->  	if (mw->xlat_size == xlat_size)
-> @@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
->  	 * is a requirement of the hardware. It is recommended to setup CMA
->  	 * for BAR sizes equal or greater than 4MB.
->  	 */
-> -	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
-> +	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
->  		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
->  			&mw->dma_addr);
->  		ntb_free_mw(nt, num_mw);
-> @@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
->  	for (i = 0; i < mw_count; i++) {
->  		mw = &nt->mw_vec[i];
-> 
-> -		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
-> -				      &mw->xlat_align_size, NULL);
-> -		if (rc)
-> -			goto err1;
-> -
->  		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
->  					  &mw->phys_size);
->  		if (rc)
-> diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
-> index 759f772fa00c..427112cf101a 100644
-> --- a/drivers/ntb/test/ntb_perf.c
-> +++ b/drivers/ntb/test/ntb_perf.c
-> @@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
->  struct perf_mw {
->  	phys_addr_t	phys_addr;
->  	resource_size_t	phys_size;
-> -	resource_size_t	xlat_align;
-> -	resource_size_t	xlat_align_size;
->  	void __iomem	*vbase;
->  	size_t		xlat_size;
->  	size_t		buf_size;
-> @@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
->  {
->  	struct perf_mw *mw = &perf->mw;
->  	size_t xlat_size, buf_size;
-> +	resource_size_t	xlat_align;
-> +	resource_size_t	xlat_align_size;
->  	int rc;
-> 
->  	if (!size)
->  		return -EINVAL;
-> 
-> -	xlat_size = round_up(size, mw->xlat_align_size);
-> -	buf_size = round_up(size, mw->xlat_align);
-> +	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
-> +			      &xlat_align_size, NULL);
-> +	if (rc)
-> +		return rc;
-> +
-> +	xlat_size = round_up(size, xlat_align_size);
-> +	buf_size = round_up(size, xlat_align);
-> 
->  	if (mw->xlat_size == xlat_size)
->  		return 0;
-> @@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
-> 
->  	mw = &perf->mw;
-> 
-> -	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
-> -			      &mw->xlat_align_size, NULL);
-> -	if (rc)
-> -		return rc;
-> -
->  	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
->  	if (rc)
->  		return rc;
-> diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-> index a69815c45ce6..91526a986caa 100644
-> --- a/drivers/ntb/test/ntb_tool.c
-> +++ b/drivers/ntb/test/ntb_tool.c
-> @@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
-> 
->  	phys_addr_t base;
->  	resource_size_t mw_size;
-> -	resource_size_t align_addr;
-> -	resource_size_t align_size;
-> -	resource_size_t max_size;
-> +	resource_size_t align_addr = 0;
-> +	resource_size_t align_size = 0;
-> +	resource_size_t max_size = 0;
-> 
->  	buf_size = min_t(size_t, size, 512);
-> 
-> --
-> 2.11.0
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-ftpci100.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 1c1fd60..89cbb1f 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -441,7 +441,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
+ 	u32 val;
+ 	LIST_HEAD(res);
+ 
+-	host = pci_alloc_host_bridge(sizeof(*p));
++	host = devm_pci_alloc_host_bridge(dev, sizeof(*p));
+ 	if (!host)
+ 		return -ENOMEM;
+ 
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
