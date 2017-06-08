@@ -1,72 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37089 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751882AbdFQQjr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 17 Jun 2017 12:39:47 -0400
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20170615203729.9009-1-logang@deltatee.com>
- <20170615203729.9009-7-logang@deltatee.com> <20170617051658.GG6040@kroah.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <5294be8f-5547-0cd8-2e1d-a9bbfe06dc6f@deltatee.com>
-Date: Sat, 17 Jun 2017 10:39:35 -0600
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>
+Subject: [PATCH 4/6] ACPI / PM: Clean up device wakeup enable/disable code
+Date: Thu, 08 Jun 2017 02:04:21 +0200
+Message-ID: <1592199.UEskShOjr9@aspire.rjw.lan>
+In-Reply-To: <8918199.uo13RZ8hZk@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170617051658.GG6040@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC PATCH 06/13] switchtec_ntb: initialize hardware for memory
- windows
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+The wakeup.flags.enabled flag in struct acpi_device is not used
+consistently, as there is no reason why it should only apply
+to the enabling/disabling of the wakeup GPE, so put the invocation
+of acpi_enable_wakeup_device_power() under it too.
 
-On 16/06/17 11:16 PM, Greg Kroah-Hartman wrote:
->> +#ifndef ioread64
->> +#ifdef readq
->> +#define ioread64 readq
->> +#else
->> +#define ioread64 _ioread64
->> +static inline u64 _ioread64(void __iomem *mmio)
->> +{
->> +	u64 low, high;
->> +
->> +	low = ioread32(mmio);
->> +	high = ioread32(mmio + sizeof(u32));
->> +	return low | (high << 32);
->> +}
->> +#endif
->> +#endif
-> 
-> Really?  Don't we have ioread64 in generic code for all arches?  If not,
-> that should be fixed, don't hide this in a random driver please.  Or
-> just restrict your driver to only building on those arches that does
-> provide this api.
+Moreover, it is not necessary to call
+acpi_enable_wakeup_devices() and acpi_disable_wakeup_devices() for
+suspend-to-idle, so don't do that.
 
-Yes, I know these are _very_ ugly. Unfortunately, the other ntb drivers
-each have the exact same thing. ioread64 is not provided universally at
-this time and I did spend a bit of time digging and things are a bit
-messy so I wasn't at all sure of the correct solution.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/device_pm.c |   19 ++++++++-----------
+ drivers/acpi/sleep.c     |    4 ++--
+ 2 files changed, 10 insertions(+), 13 deletions(-)
 
-For starters, ioread64 is only defined on 64 bit machines. They are
-surrounded by ifdef CONFIG_64BIT and it's not clear to me if the above
-wrapper (around two ioread32s) would be acceptable universally.
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -688,26 +688,23 @@ static int acpi_device_wakeup(struct acp
+ 		acpi_status res;
+ 		int error;
+ 
++		if (adev->wakeup.flags.enabled)
++			return 0;
++
+ 		error = acpi_enable_wakeup_device_power(adev, target_state);
+ 		if (error)
+ 			return error;
+ 
+-		if (adev->wakeup.flags.enabled)
+-			return 0;
+-
+ 		res = acpi_enable_gpe(wakeup->gpe_device, wakeup->gpe_number);
+-		if (ACPI_SUCCESS(res)) {
+-			adev->wakeup.flags.enabled = 1;
+-		} else {
++		if (ACPI_FAILURE(res)) {
+ 			acpi_disable_wakeup_device_power(adev);
+ 			return -EIO;
+ 		}
+-	} else {
+-		if (adev->wakeup.flags.enabled) {
+-			acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
+-			adev->wakeup.flags.enabled = 0;
+-		}
++		adev->wakeup.flags.enabled = 1;
++	} else if (adev->wakeup.flags.enabled) {
++		acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
+ 		acpi_disable_wakeup_device_power(adev);
++		adev->wakeup.flags.enabled = 0;
+ 	}
+ 	return 0;
+ }
+Index: linux-pm/drivers/acpi/sleep.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/sleep.c
++++ linux-pm/drivers/acpi/sleep.c
+@@ -658,19 +658,19 @@ static int acpi_freeze_begin(void)
+ 
+ static int acpi_freeze_prepare(void)
+ {
+-	acpi_enable_wakeup_devices(ACPI_STATE_S0);
+ 	acpi_enable_all_wakeup_gpes();
+ 	acpi_os_wait_events_complete();
+ 	if (acpi_sci_irq_valid())
+ 		enable_irq_wake(acpi_sci_irq);
++
+ 	return 0;
+ }
+ 
+ static void acpi_freeze_restore(void)
+ {
+-	acpi_disable_wakeup_devices(ACPI_STATE_S0);
+ 	if (acpi_sci_irq_valid())
+ 		disable_irq_wake(acpi_sci_irq);
++
+ 	acpi_enable_all_runtime_gpes();
+ }
+ 
 
-Second, the x86_64 version doesn't even compile. This is because the
-arch doesn't provide any ioread64 implementation anywhere and the macro
-in io.h isn't used because CONFIG_GENERIC_IOMAP is defined.
-
-The only arch where I _think_ ioread64 would work is powerpc or any that
-define CONFIG_64BIT and not CONFIG_GENERIC_IOMAP.
-
-If you have any guidance on this I'd be happy to try and make a patch or
-two for it.
-
-Thanks,
-
-Logan
