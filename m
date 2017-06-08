@@ -1,76 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1498555299.1745.2.camel@mtkswgap22>
-Subject: Re: next-20170626 build: 1 failures 1 warnings (next-20170626)
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 27 Jun 2017 17:21:39 +0800
-In-Reply-To: <CAK8P3a31MDiyhvDhyfRG0EZFG7VfUpsy1J-=cJePHefvtWfadQ@mail.gmail.com>
-References: <E1dPPgG-0002pe-3A@optimist>
- <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
- <1498481507.6075.10.camel@mtkswgap22>
- <CAK8P3a31MDiyhvDhyfRG0EZFG7VfUpsy1J-=cJePHefvtWfadQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46710 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750914AbdFHNGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 09:06:10 -0400
+Date: Thu, 8 Jun 2017 07:06:09 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: kvm@vger.kernel.org, Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Stefan Assmann <sassmann@redhat.com>,
+        linux-kernel@vger.kernel.org,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] vfio/pci: Add Intel XXV710 to hidden INTx devices
+Message-ID: <20170608070609.435a7187@t450s.home>
+In-Reply-To: <20170608080017.GA12580@infradead.org>
+References: <20170607190132.22711.46831.stgit@gimli.home>
+        <20170608080017.GA12580@infradead.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Stephen Rothwell <sfr@canb.auug.org.au>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Mark Brown <broonie@kernel.org>,
- Linux-Next Mailing List <linux-next@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- linaro-kernel@lists.linaro.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-06-27 at 09:36 +0200, Arnd Bergmann wrote:
-> On Mon, Jun 26, 2017 at 2:51 PM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> > On Mon, 2017-06-26 at 12:56 +0100, Mark Brown wrote:
-> >> On Mon, Jun 26, 2017 at 09:47:36AM +0100, Build bot for Mark Brown wrote:
-> >>
-> >> This build failure is still present in -next:
-> >>
-> >> >     arm-allmodconfig
-> >> > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-> >>
-> >> and we're at -rc7 now.
-> >
-> > Hi Mark,
-> >
-> > This is due to we are in different branch but merge together...
-> >
-> > Anyway, I could send a critical patch, but I need Bjorn help to apply to
-> > -next. Seems he didn't response these days.
-> >
-> > Not sure how could I send it?
+[+linux-pci]
+
+On Thu, 8 Jun 2017 01:00:17 -0700
+Christoph Hellwig <hch@infradead.org> wrote:
+
+> On Wed, Jun 07, 2017 at 01:01:46PM -0600, Alex Williamson wrote:
+> > XXV710 has the same broken INTx behavior as the rest of the X/XL710
+> > series, the interrupt status register is not wired to report pending
+> > INTx interrupts, thus we never associate the interrupt to the device.
+> > Extend the device IDs to include these so that we hide that the
+> > device supports INTx at all to the user.  
 > 
-> It's really something that Bjorn needs to fix by applying your patch,
-> but if he's currently not able to do that for some reason, a possible
-> workaround would be for either Stephen Rothwell to apply your fixup
-> on linux-next, or Andrew Morton to add it to his mmotm tree, either
-> way it will be part of linux-next and on top of the pci-next tree,
-> until Bjorn applies it.
-> 
-> Please re-send your patch to both of them, with Bjorn on Cc.
-> 
->         Arnd
+> Is vfio really the right place for the list?  Shouldn't this be
+> keyed off the core PCI quirk for these devices?
 
+I sent a separate patch to add these devices to the regular broken INTx
+quirk in pci-core:
 
-Okay, Thanks for your suggestion!
+http://www.spinics.net/lists/linux-pci/msg61971.html
 
-Ryder
+We don't currently have a device flag to specify that INTx is broken in
+this particular way that vfio can work around, nor do I really know how
+other drivers might make use of this info.  If I'm wrong, then
+certainly let's make a common way to do this, but this patch is just a
+trivial extension to an existing mechanism.  Thanks,
 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Alex
