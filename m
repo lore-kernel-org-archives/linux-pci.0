@@ -1,83 +1,165 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:13793 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752413AbdFLVSo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 17:18:44 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <593F0533.4010106@ti.com>
-Date: Mon, 12 Jun 2017 17:18:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from foss.arm.com ([217.140.101.70]:51008 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751484AbdFHOOh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:14:37 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Matthew Minter <matt@masarand.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 26/42] PCI: Add pci_assign_irq() function and have pci_fixup_irqs() use it
+Date: Thu,  8 Jun 2017 15:13:26 +0100
+Message-Id: <20170608141342.2018-27-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Joao,
+From: Matthew Minter <matt@masarand.com>
 
-On 06/05/2017 12:19 PM, Joao Pinto wrote:
-> This patch series adds the new interrupt api to pcie-designware
-> make it possible to use features like MSIX.
-> 
-> The work consisted of adapting the pcie-designware-host and each SoC
-> specific driver.
-> 
-> The patch set was made against the Bjorn' next branch.
-> 
-> Joao Pinto (9):
->   pci: adding new irq api to pci-designware
->   pci: exynos SoC driver adapted to new irq API
->   pci: imx6 SoC driver adapted to new irq API
->   pci: artpec6 SoC driver adapted to new irq API
->   pci: generic PCIe DW driver adapted to new irq API
->   pci: qcom SoC driver adapted to new irq API
->   pci: keystone SoC driver adapted to new irq API
->   pci: removing old irq api from pcie-designware
->   pci: remove limitation of the number of the available IRQs
-> 
->  drivers/pci/dwc/pci-exynos.c           |  18 --
->  drivers/pci/dwc/pci-imx6.c             |  18 --
->  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->  drivers/pci/dwc/pci-keystone.c         |   1 +
->  drivers/pci/dwc/pci-keystone.h         |   4 +-
->  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->  drivers/pci/dwc/pcie-qcom.c            |  15 --
->  11 files changed, 255 insertions(+), 359 deletions(-)
-> 
+Here we delete the static pdev_fixup_irq() function which is currently
+what pci_fixup_irqs() uses to actually assign the irqs and replace it
+with the pci_assign_irq() function which changes the interface and
+makes use of the new function pointers stored in the host bridge
+structure.
 
-I gave this a try today and it failed. Logs at
-http://pastebin.ubuntu.com/24843963/
+Eventually this will allow pci_fixup_irqs() to be removed entirely
+and the new deferred assignment code path will call pci_assign_irq
+directly. However to ensure current users continue to work a
+new implementation of pci_fixup_irqs() is introduced which simply
+wraps the functionality of pci_assign_irq().
 
-The first part of the log is with your patch series.
-The second part is before applying the patch. You will see
-that there is qc timeout log that shows the issue
+Signed-off-by: Matthew Minter <matt@masarand.com>
+[lorenzo.pieralisi@arm.com: reworked comments/log]
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/pci/setup-irq.c | 45 +++++++++++++++++++++++++++++++++++----------
+ include/linux/pci.h     |  1 +
+ 2 files changed, 36 insertions(+), 10 deletions(-)
 
-[   12.791852] ata2.00: qc timeout (cmd 0xec)
-[   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
-[   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[   23.511852] ata2.00: qc timeout (cmd 0xec)
-[   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-[   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-
-Is there any DT change I need to make for this? I didn't have a
-chance to review your patch w.r.t Keystone. But I see you have change
-the MSI IRq handling.
-
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 95c225b..5eeee79 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -15,6 +15,7 @@
+ #include <linux/errno.h>
+ #include <linux/ioport.h>
+ #include <linux/cache.h>
++#include "pci.h"
+ 
+ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+ {
+@@ -22,12 +23,17 @@ void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+ 	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+ 
+-static void pdev_fixup_irq(struct pci_dev *dev,
+-			   u8 (*swizzle)(struct pci_dev *, u8 *),
+-			   int (*map_irq)(const struct pci_dev *, u8, u8))
++void pci_assign_irq(struct pci_dev *dev)
+ {
+-	u8 pin, slot;
++	u8 pin;
++	u8 slot = -1;
+ 	int irq = 0;
++	struct pci_host_bridge *hbrg = pci_find_host_bridge(dev->bus);
++
++	if (!(hbrg->map_irq)) {
++		dev_dbg(&dev->dev, "runtime irq mapping not provided by arch\n");
++		return;
++	}
+ 
+ 	/* If this device is not on the primary bus, we need to figure out
+ 	   which interrupt pin it will come in on.   We know which slot it
+@@ -40,17 +46,22 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+ 	if (pin > 4)
+ 		pin = 1;
+ 
+-	if (pin != 0) {
++	if (pin) {
+ 		/* Follow the chain of bridges, swizzling as we go.  */
+-		slot = (*swizzle)(dev, &pin);
++		if (hbrg->swizzle_irq)
++			slot = (*(hbrg->swizzle_irq))(dev, &pin);
+ 
+-		irq = (*map_irq)(dev, slot, pin);
++		/*
++		 * If a swizzling function is not used map_irq must
++		 * ignore slot
++		 */
++		irq = (*(hbrg->map_irq))(dev, slot, pin);
+ 		if (irq == -1)
+ 			irq = 0;
+ 	}
+ 	dev->irq = irq;
+ 
+-	dev_dbg(&dev->dev, "fixup irq: got %d\n", dev->irq);
++	dev_dbg(&dev->dev, "assign irq: got %d\n", dev->irq);
+ 
+ 	/* Always tell the device, so the driver knows what is
+ 	   the real IRQ to use; the device does not use it. */
+@@ -60,9 +71,23 @@ static void pdev_fixup_irq(struct pci_dev *dev,
+ void pci_fixup_irqs(u8 (*swizzle)(struct pci_dev *, u8 *),
+ 		    int (*map_irq)(const struct pci_dev *, u8, u8))
+ {
++	/*
++	 * Implement pci_fixup_irqs() through pci_assign_irq().
++	 * This code should be remove eventually, it is a wrapper
++	 * around pci_assign_irq() interface to keep current
++	 * pci_fixup_irqs() behaviour unchanged on architecture
++	 * code still relying on its interface.
++	 */
+ 	struct pci_dev *dev = NULL;
++	struct pci_host_bridge *hbrg = NULL;
+ 
+-	for_each_pci_dev(dev)
+-		pdev_fixup_irq(dev, swizzle, map_irq);
++	for_each_pci_dev(dev) {
++		hbrg = pci_find_host_bridge(dev->bus);
++		hbrg->swizzle_irq = swizzle;
++		hbrg->map_irq = map_irq;
++		pci_assign_irq(dev);
++		hbrg->swizzle_irq = NULL;
++		hbrg->map_irq = NULL;
++	}
+ }
+ EXPORT_SYMBOL_GPL(pci_fixup_irqs);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 72b4796..23baddc 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1152,6 +1152,7 @@ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+ 		    int (*)(const struct pci_dev *, u8, u8));
++void pci_assign_irq(struct pci_dev *dev);
+ struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res);
+ #define HAVE_PCI_REQ_REGIONS	2
+ int __must_check pci_request_regions(struct pci_dev *, const char *);
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+2.10.0
