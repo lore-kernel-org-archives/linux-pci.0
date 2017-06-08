@@ -1,129 +1,216 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:34463 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752373AbdFQT6h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jun 2017 15:58:37 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
+Received: from foss.arm.com ([217.140.101.70]:51170 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751526AbdFHOOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:14:52 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jason Cooper <jason@lakedaemon.net>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>, Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
         Michal Simek <michal.simek@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v5 2/4] PCI: xilinx: Unify INTx & MSI interrupt decode
-Date: Sat, 17 Jun 2017 12:57:39 -0700
-Message-ID: <20170617195741.12757-3-paul.burton@imgtec.com>
-In-Reply-To: <20170617195741.12757-1-paul.burton@imgtec.com>
-References: <20170617195741.12757-1-paul.burton@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for bios32 host controllers
+Date: Thu,  8 Jun 2017 15:13:29 +0100
+Message-Id: <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The INTx & MSI interrupt decode paths duplicated a fair bit of common
-functionality. They also strictly handled interrupts in order of INTx
-then MSI, so if both types of interrupt were to be asserted
-simultaneously and the MSI interrupt were first in the FIFO then the
-INTx code would read it & ignore it before the MSI code then had to read
-it again, wasting the original FIFO read.
+Legacy PCI host controllers (ie host controllers that set-up the PCI bus
+through the ARM pci_common_init() API) are currently relying on
+pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
+in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
+given system some of which may well be enabled by the time
+pci_fixup_irqs() is called (ie a system with multiple host controllers).
+With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
+possible to assign IRQs for all devices originating from a PCI host
+bridge at probe time; this is implemented through pci_assign_irq() that
+relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
+given device.
 
-Unify the INTx & MSI decode in order to reduce that duplication & allow
-a single FIFO read to be performed for each interrupt regardless of its
-type.
+The benefits this brings are twofold:
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+- the IRQ for a device is assigned once at probe time
+- the IRQ assignment works also for hotplugged devices
+
+Remove pci_fixup_irqs() call from bios32 code and rely on
+pci_assign_irq() to carry out the IRQ mapping at device probe
+time.
+
+The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
+set-up in the struct pci_host_bridge created in the bios32
+pcibios_init_hw() function and mach-* code paths (for PCI mach
+implementations that require a specific struct hw_pci.(*scan) function
+callback).
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Andrew Lunn <andrew@lunn.ch>
 ---
+ arch/arm/kernel/bios32.c    |  4 ++--
+ arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
+ arch/arm/mach-iop13xx/pci.c |  2 ++
+ arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
+ 4 files changed, 29 insertions(+), 23 deletions(-)
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/host/pcie-xilinx.c | 48 +++++++++++++-----------------------------
- 1 file changed, 15 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 94c71fb91648..5436657d142d 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -384,7 +384,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 4c7621a..da201a2 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -494,6 +494,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 				bridge->busnr = sys->busnr;
+ 				bridge->ops = hw->ops;
+ 				bridge->msi = hw->msi_ctrl;
++				bridge->map_irq = pcibios_map_irq;
++				bridge->swizzle_irq = pcibios_swizzle;
+ 				bridge->align_resource =
+ 						hw->align_resource;
+ 
+@@ -530,8 +532,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 	if (hw->postinit)
+ 		hw->postinit();
+ 
+-	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+-
+ 	list_for_each_entry(sys, &head, node) {
+ 		struct pci_bus *bus = sys->bus;
+ 
+diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
+index dfb62f3..8d54a67 100644
+--- a/arch/arm/mach-dove/pcie.c
++++ b/arch/arm/mach-dove/pcie.c
+@@ -152,6 +152,14 @@ static void rc_pci_fixup(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL, PCI_ANY_ID, rc_pci_fixup);
+ 
++static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	struct pci_sys_data *sys = dev->sysdata;
++	struct pcie_port *pp = sys->private_data;
++
++	return pp->index ? IRQ_DOVE_PCIE1 : IRQ_DOVE_PCIE0;
++}
++
+ static int __init
+ dove_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
  {
- 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
- 	struct device *dev = port->dev;
--	u32 val, mask, status, msi_data;
-+	u32 val, mask, status;
+@@ -167,18 +175,12 @@ dove_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 	bridge->sysdata = sys;
+ 	bridge->busnr = sys->busnr;
+ 	bridge->ops = &pcie_ops;
++	bridge->map_irq = dove_pcie_map_irq;
++	bridge->swizzle_irq = pci_common_swizzle;
  
- 	/* Read interrupt decode and mask registers */
- 	val = pcie_read(port, XILINX_PCIE_REG_IDR);
-@@ -424,8 +424,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 		xilinx_pcie_clear_err_interrupts(port);
- 	}
+ 	return pci_scan_root_bus_bridge(bridge);
+ }
  
--	if (status & XILINX_PCIE_INTR_INTX) {
--		/* INTx interrupt received */
-+	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
- 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
- 
- 		/* Check whether interrupt valid */
-@@ -434,41 +433,24 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 			goto error;
- 		}
- 
--		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
+-static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+-{
+-	struct pci_sys_data *sys = dev->sysdata;
+-	struct pcie_port *pp = sys->private_data;
 -
--			/* Handle INTx Interrupt */
-+		/* Decode the IRQ number */
-+		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
-+			val = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
-+				XILINX_PCIE_RPIFR2_MSG_DATA;
-+		} else {
- 			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
- 				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
--			generic_handle_irq(irq_find_mapping(port->leg_domain,
--							    val));
-+			val = irq_find_mapping(port->leg_domain, val);
- 		}
--	}
- 
--	if (status & XILINX_PCIE_INTR_MSI) {
--		/* MSI Interrupt */
--		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
-+		/* Clear interrupt FIFO register 1 */
-+		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
-+			   XILINX_PCIE_REG_RPIFR1);
- 
--		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
--			dev_warn(dev, "RP Intr FIFO1 read error\n");
--			goto error;
--		}
+-	return pp->index ? IRQ_DOVE_PCIE1 : IRQ_DOVE_PCIE0;
+-}
 -
--		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
--			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
--				   XILINX_PCIE_RPIFR2_MSG_DATA;
--
--			/* Clear interrupt FIFO register 1 */
--			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
--				   XILINX_PCIE_REG_RPIFR1);
--
--			if (IS_ENABLED(CONFIG_PCI_MSI)) {
--				/* Handle MSI Interrupt */
--				generic_handle_irq(msi_data);
--			}
--		}
-+		/* Handle the interrupt */
-+		if (IS_ENABLED(CONFIG_PCI_MSI) ||
-+		    !(val & XILINX_PCIE_RPIFR1_MSI_INTR))
-+			generic_handle_irq(val);
- 	}
+ static struct hw_pci dove_pci __initdata = {
+ 	.nr_controllers	= 2,
+ 	.setup		= dove_pcie_setup,
+diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
+index 4babf15..b97879b 100644
+--- a/arch/arm/mach-iop13xx/pci.c
++++ b/arch/arm/mach-iop13xx/pci.c
+@@ -532,6 +532,7 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 	bridge->dev.parent = NULL;
+ 	bridge->sysdata = sys;
+ 	bridge->busnr = sys->busnr;
++	bridge->swizzle_irq = pci_common_swizzle;
  
- 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+ 	switch (which_atu) {
+ 	case IOP13XX_INIT_ATU_ATUX:
+@@ -547,6 +548,7 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 		break;
+ 	case IOP13XX_INIT_ATU_ATUE:
+ 		bridge->ops = &iop13xx_atue_ops;
++		bridge->map_irq = iop13xx_pcie_map_irq;
+ 		ret = pci_scan_root_bus_bridge(bridge);
+ 		if (!ret)
+ 			pci_bus_atue = bridge->bus;
+diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
+index 76951bf..0f1c343 100644
+--- a/arch/arm/mach-orion5x/pci.c
++++ b/arch/arm/mach-orion5x/pci.c
+@@ -555,6 +555,19 @@ int __init orion5x_pci_sys_setup(int nr, struct pci_sys_data *sys)
+ 	return 0;
+ }
+ 
++int __init orion5x_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++{
++	int bus = dev->bus->number;
++
++	/*
++	 * PCIe endpoint?
++	 */
++	if (orion5x_pci_disabled || bus < orion5x_pci_local_bus_nr())
++		return IRQ_ORION5X_PCIE0_INT;
++
++	return -1;
++}
++
+ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
+ {
+ 	struct pci_sys_data *sys = pci_host_bridge_priv(bridge);
+@@ -563,6 +576,8 @@ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 	bridge->dev.parent = NULL;
+ 	bridge->sysdata = sys;
+ 	bridge->busnr = sys->busnr;
++	bridge->map_irq = orion5x_pci_map_irq;
++	bridge->swizzle_irq = pci_common_swizzle;
+ 
+ 	if (nr == 0) {
+ 		bridge->ops = &pcie_ops;
+@@ -577,16 +592,3 @@ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 	BUG();
+ 	return -ENODEV;
+ }
+-
+-int __init orion5x_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+-{
+-	int bus = dev->bus->number;
+-
+-	/*
+-	 * PCIe endpoint?
+-	 */
+-	if (orion5x_pci_disabled || bus < orion5x_pci_local_bus_nr())
+-		return IRQ_ORION5X_PCIE0_INT;
+-
+-	return -1;
+-}
 -- 
-2.13.1
+2.10.0
