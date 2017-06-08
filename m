@@ -1,49 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:47506 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752218AbdFZNec (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 09:34:32 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-CC: Mark Brown <broonie@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] critical patch to fix build bot failed
-Date: Mon, 26 Jun 2017 21:34:00 +0800
-Message-ID: <1498484041-6181-1-git-send-email-ryder.lee@mediatek.com>
+Received: from mga06.intel.com ([134.134.136.31]:23021 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750725AbdFHRSf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 13:18:35 -0400
+Date: Thu, 8 Jun 2017 10:18:33 -0700
+From: Jesse Brandeburg <jesse.brandeburg@intel.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        Stefan Assmann <sassmann@redhat.com>,
+        <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Add Intel XXV710 to broken INTx masking quirk
+Message-ID: <20170608101833.0000163f@intel.com>
+In-Reply-To: <20170607190027.22611.92564.stgit@gimli.home>
+References: <20170607190027.22611.92564.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Wed, 7 Jun 2017 13:00:48 -0600
+Alex Williamson <alex.williamson@redhat.com> wrote:
 
-This is a critical patch (based on pcie -next branch) to fix build bot failure:
+> Just like the other XL710 and X710 variants, the XXV710 device IDs
+> appear to have the same hardware bug, the status register doesn't
+> report pending interrupts resulting in "irq xx: nobody cared..."
+> errors from the spurious interrupt handler when we try to use it
+> with device assignment.
 
-This build failure is still present in -next:
+Thanks for doing this Alex,
 
-> 	arm-allmodconfig
-> ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-
-and we're at -rc7 now.
-
-
-This is because host/pci-mediatek is a separate branch in pci-tree but we (Lorenzo's patches) merge together.
-Seems Bjorn didn't response these days, so I need someone help to apply this patch to -next.
-
-Hi Arnd and Mark,
-
-Do you have better idea to handle this situation? I'm really not sure how to fix it in proper ways.
-Thanks a lot.
-
-Ryder
-
-Ryder Lee (1):
-  PCI: mediatek: change to use pci_scan_root_bus_bridge()
-
- drivers/pci/host/pcie-mediatek.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
--- 
-1.9.1
+Acked-by: Jesse Brandeburg <jesse.brandeburg@intel.com>
