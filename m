@@ -1,70 +1,144 @@
-Return-Path: <SRS0=0XkI=5T=wp.pl=kubakici@kernel.org>
-Return-Path: <SRS0=0XkI=5T=wp.pl=kubakici@kernel.org>
-Date: Tue, 13 Jun 2017 21:57:13 -0700
-From: Jakub Kicinski <kubakici@wp.pl>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Emil Tantilov <emil.s.tantilov@intel.com>,
- Alexander Duyck <alexander.h.duyck@intel.com>, oss-drivers@netronome.com
-Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
-Message-ID: <20170613215713.42af408e@cakuba.netronome.com>
-In-Reply-To: <20170530163429.07977942@cakuba.lan>
-References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
-	<20170526234726.GD21531@bhelgaas-glaptop.roam.corp.google.com>
-	<20170526165820.7ec488e3@cakuba.netronome.com>
-	<20170530230718.GG14896@bhelgaas-glaptop.roam.corp.google.com>
-	<20170530163429.07977942@cakuba.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Quentin Schulz <quentin.schulz@free-electrons.com>
+To: hongxing.zhu@nxp.com, l.stach@pengutronix.de, bhelgaas@google.com,
+ robh+dt@kernel.org, mark.rutland@arm.com
+Subject: [PATCH] PCI: imx6: add regulator support
+Date: Thu,  8 Jun 2017 10:07:42 +0200
+Message-Id: <20170608080742.3910-1-quentin.schulz@free-electrons.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: thomas.petazzoni@free-electrons.com, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Quentin Schulz <quentin.schulz@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 30 May 2017 16:34:29 -0700, Jakub Kicinski wrote:
-> On Tue, 30 May 2017 18:07:18 -0500, Bjorn Helgaas wrote:
-> > On Fri, May 26, 2017 at 04:58:20PM -0700, Jakub Kicinski wrote:  
-> > > On Fri, 26 May 2017 18:47:26 -0500, Bjorn Helgaas wrote:    
-> > > > On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:    
-> > > > > PCI core sets the driver pointer before calling ->probe() and only
-> > > > > clears it after ->remove().  This means driver's ->sriov_configure()
-> > > > > callback will happily race with probe() and remove(), most likely
-> > > > > leading to BUGs, since drivers don't expect this.      
-> > > > 
-> > > > I guess you're referring to the pci_dev->driver pointer set by
-> > > > local_pci_probe(), and this is important because sriov_numvfs_store()
-> > > > checks that pointer, right?    
-> > > 
-> > > Yes, exactly.  I initially thought this is how the safety of sriov
-> > > callback may have been ensured, but since the order of
-> > > local_pci_probe() and the assignment is what it is, it can't.    
-> > 
-> > Right.  I was hoping other subsystems would establish a convention
-> > about whether we set the ->driver pointer before or after calling the
-> > driver probe() method, but if there is one, I don't see it.
-> > local_pci_probe() and really_probe() set ->driver first, but
-> > pnp_device_probe() calls the probe() method first.  
-> 
-> I didn't dig into reordering the pointer setting, to be honest.  I
-> thought establishing that driver callbacks should generally hold device
-> lock, whenever possible, would be even better than pointer setting
-> conventions.
-> 
-> If we order the assignments better, wouldn't we still need appropriate
-> memory barriers to rely on the order? (:
-> 
-> > Can you expand on how you reproduce this problem?  The only real way I
-> > see to call ->sriov_configure() is via the sysfs entry point, and I
-> > would think user-space code would typically not touch that until after
-> > it knows the driver has claimed a device.  But I can certainly imagine
-> > targeted test code that could hit this problem.  
-> 
-> Correct.  It's not something that users should be triggering often in
-> normal use.  I also found it by code inspection rather than by getting
-> an oops.
-> 
-> OTOH if the driver performs FW load or other time-consuming operations
-> in ->probe() the time window when this can be triggered may be counted
-> in seconds.
+Some boards might require to control a regulator to power the PCIe port.
 
-Hi Bjorn, 
+This adds support for an optional regulator defined in Device Tree
+linked in the PCIe controller under `vpcie-supply`. If present, the
+regulator will be disabled and then enabled as part of the PCIe host
+initialization process and will be disabled when shutting down.
 
-is this patch still considered for 4.13, or should I change it somehow?
+Signed-off-by: Quentin Schulz <quentin.schulz@free-electrons.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 +++
+ drivers/pci/dwc/pci-imx6.c                         | 34 +++++++++++++++++++++-
+ 2 files changed, 37 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index e3d5680875b1..cf92d3ba5a26 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -33,6 +33,10 @@ Optional properties:
+ - reset-gpio-active-high: If present then the reset sequence using the GPIO
+   specified in the "reset-gpio" property is reversed (H=reset state,
+   L=operation state).
++- vpcie-supply: Should specify the regulator in charge of PCIe port power.
++  The regulator will be enabled when initializing the PCIe host and
++  disabled either as part of the init process or when shutting down the
++  host.
+ 
+ Additional required properties for imx6sx-pcie:
+ - clock names: Must include the following additional entries:
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index 19a289b8cc94..f9b7500c9aff 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -24,6 +24,7 @@
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/regmap.h>
++#include <linux/regulator/consumer.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
+@@ -59,6 +60,7 @@ struct imx6_pcie {
+ 	u32			tx_swing_full;
+ 	u32			tx_swing_low;
+ 	int			link_gen;
++	struct regulator	*vpcie;
+ };
+ 
+ /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
+@@ -310,6 +312,13 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+ 		break;
+ 	}
++
++	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
++		int ret = regulator_disable(imx6_pcie->vpcie);
++
++		if (ret)
++			pr_err("failed to disable vpcie regulator: %d\n", ret);
++	}
+ }
+ 
+ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+@@ -376,10 +385,19 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	struct device *dev = pci->dev;
+ 	int ret;
+ 
++	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
++		ret = regulator_enable(imx6_pcie->vpcie);
++		if (ret) {
++			dev_err(dev, "failed to enable vpcie regulator: %d\n",
++				ret);
++			return;
++		}
++	}
++
+ 	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
+ 	if (ret) {
+ 		dev_err(dev, "unable to enable pcie_phy clock\n");
+-		return;
++		goto err_pcie_phy;
+ 	}
+ 
+ 	ret = clk_prepare_enable(imx6_pcie->pcie_bus);
+@@ -439,6 +457,13 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	clk_disable_unprepare(imx6_pcie->pcie_bus);
+ err_pcie_bus:
+ 	clk_disable_unprepare(imx6_pcie->pcie_phy);
++err_pcie_phy:
++	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
++		ret = regulator_disable(imx6_pcie->vpcie);
++		if (ret)
++			dev_err(dev, "failed to disable vpcie regulator: %d\n",
++				ret);
++	}
+ }
+ 
+ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+@@ -802,6 +827,13 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		imx6_pcie->link_gen = 1;
+ 
++	imx6_pcie->vpcie = devm_regulator_get_optional(&pdev->dev, "vpcie");
++	if (IS_ERR(imx6_pcie->vpcie)) {
++		if (PTR_ERR(imx6_pcie->vpcie) == -EPROBE_DEFER)
++			return -EPROBE_DEFER;
++		imx6_pcie->vpcie = NULL;
++	}
++
+ 	platform_set_drvdata(pdev, imx6_pcie);
+ 
+ 	ret = imx6_add_pcie_port(imx6_pcie, pdev);
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
