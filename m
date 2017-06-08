@@ -1,95 +1,185 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <20170602135619.GA10491@red-moon>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
- <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
- <20170602114956.GA20004@red-moon>
- <CAK8P3a0DRFxz_yjCeFZJ8Zukuy8gi9hPbWEfp29TaF2TMjrnTQ@mail.gmail.com>
- <20170602135619.GA10491@red-moon>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 2 Jun 2017 16:44:26 +0200
-Message-ID: <CAK8P3a3Qf_DDU09XVXBm+Y3d+n5He-2cnqqYTtg6_yiKE07jkw@mail.gmail.com>
-Subject: Re: [RFC/RFT PATCH 08/18] PCI: designware: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:50466 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751450AbdFHONp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:13:45 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 15/42] PCI: iproc: Convert PCI scan API to pci_scan_root_bus_bridge()
+Date: Thu,  8 Jun 2017 15:13:15 +0100
+Message-Id: <20170608141342.2018-16-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 2, 2017 at 3:56 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> On Fri, Jun 02, 2017 at 03:12:48PM +0200, Arnd Bergmann wrote:
->> > I am almost done refactoring this series and this is the last review to
->> > address. What you suggest above makes sense but:
->> >
->> > 1) it means patching ALL dw_pcie_host_init() callers and allocate the
->> >    host bridge there, not sure it simplifies, certainly it complicates
->> >    the error handling path (given that the host bridge memory is
->> >    probably the only memory that is allocated with kzalloc instead of
->> >    devm interface so it needs unwinding)
->> >
->> > 2) I noticed that allocating the host bridge in the caller complicates
->> >    error handling, in particular code in the mainline (ie tegra and
->> >    ftpci100) using pci_alloc_host_bridge() needs already patching since it
->> >    may leak memory if PCI host bridge drivers probing fails.
->> >
->> > I can implement (1) and (2) but I wanted to ask first to understand if
->> > that's the direction we want to take.
->>
->> Good question. Maybe we should add a devm_pci_alloc_host_bridge()
->> instead? Would that solve these problems without creating bigger ones?
->
-> It would be yet another PCI core call (ie unfortunately we still need
-> pci_alloc_host_bridge() for bridges with no parent device eg bios32) but
-> I think that's the only option we have if we do not want to clutter the
-> host bridges error paths with host bridge free calls.
->
-> Implementing it should be relatively simple by reshuffling functions.
->
-> Thoughts ?
+The introduction of pci_scan_root_bus_bridge() provides a PCI core
+API to scan a PCI root bus backed by an already initialized
+struct pci_host_bridge object, which simplifies the bus scan
+interface and makes the PCI scan root bus interface easier to
+generalize as members are added to the struct pci_host_bridge.
 
-I think adding this one would be fairly harmless because it has a clear
-purpose and can easily be mixed with the rest of the API.
+Convert PCI iproc host code to pci_scan_root_bus_bridge() to
+improve the PCI root bus scanning interface.
 
-In one of the earlier drafts, we discussed just letting the user call an
-initialization function to set the members and otherwise using kmalloc()
-themselves. We decided on this one to save an extra function call in
-each driver, but in retrospect, it would have saved us the discussion
-now.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Scott Branden <sbranden@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ray Jui <rjui@broadcom.com>
+Cc: Jon Mason <jonmason@broadcom.com>
+---
+ drivers/pci/host/pcie-iproc-bcma.c     |  7 +++++--
+ drivers/pci/host/pcie-iproc-platform.c |  7 +++++--
+ drivers/pci/host/pcie-iproc.c          | 38 ++++++++++++++++++----------------
+ 3 files changed, 30 insertions(+), 22 deletions(-)
 
-If we end up adding a devm_pci_alloc_host_bridge (or maybe
-pcim_alloc_host_bridge), we also need to decide what part of the
-cleanup would happen during the unwinding, besides the kfree().
-
-        Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
+index 384c27e..f03d5e3 100644
+--- a/drivers/pci/host/pcie-iproc-bcma.c
++++ b/drivers/pci/host/pcie-iproc-bcma.c
+@@ -45,12 +45,15 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
+ 	struct device *dev = &bdev->dev;
+ 	struct iproc_pcie *pcie;
+ 	LIST_HEAD(resources);
++	struct pci_host_bridge *bridge;
+ 	int ret;
+ 
+-	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+-	if (!pcie)
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
++	if (!bridge)
+ 		return -ENOMEM;
+ 
++	pcie = pci_host_bridge_priv(bridge);
++
+ 	pcie->dev = dev;
+ 
+ 	pcie->type = IPROC_PCIE_PAXB_BCMA;
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 90d2bdd..2253119 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -52,12 +52,15 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 	struct resource reg;
+ 	resource_size_t iobase = 0;
+ 	LIST_HEAD(resources);
++	struct pci_host_bridge *bridge;
+ 	int ret;
+ 
+-	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+-	if (!pcie)
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*pcie));
++	if (!bridge)
+ 		return -ENOMEM;
+ 
++	pcie = pci_host_bridge_priv(bridge);
++
+ 	pcie->dev = dev;
+ 	pcie->type = (enum iproc_pcie_type) of_device_get_match_data(dev);
+ 
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index e48b8e2..55a3665 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -1259,7 +1259,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	struct device *dev;
+ 	int ret;
+ 	void *sysdata;
+-	struct pci_bus *bus, *child;
++	struct pci_bus *child;
++	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+ 
+ 	dev = pcie->dev;
+ 
+@@ -1306,18 +1307,10 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	sysdata = pcie;
+ #endif
+ 
+-	bus = pci_create_root_bus(dev, 0, &iproc_pcie_ops, sysdata, res);
+-	if (!bus) {
+-		dev_err(dev, "unable to create PCI root bus\n");
+-		ret = -ENOMEM;
+-		goto err_power_off_phy;
+-	}
+-	pcie->root_bus = bus;
+-
+ 	ret = iproc_pcie_check_link(pcie);
+ 	if (ret) {
+ 		dev_err(dev, "no PCIe EP device detected\n");
+-		goto err_rm_root_bus;
++		goto err_power_off_phy;
+ 	}
+ 
+ 	iproc_pcie_enable(pcie);
+@@ -1326,23 +1319,32 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		if (iproc_pcie_msi_enable(pcie))
+ 			dev_info(dev, "not using iProc MSI\n");
+ 
+-	pci_scan_child_bus(bus);
+-	pci_assign_unassigned_bus_resources(bus);
++	list_splice_init(res, &host->windows);
++	host->busnr = 0;
++	host->dev.parent = dev;
++	host->ops = &iproc_pcie_ops;
++	host->sysdata = sysdata;
++
++	ret = pci_scan_root_bus_bridge(host);
++	if (ret < 0) {
++		dev_err(dev, "failed to scan host: %d\n", ret);
++		goto err_power_off_phy;
++	}
+ 
+ 	if (pcie->map_irq)
+ 		pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+ 
+-	list_for_each_entry(child, &bus->children, node)
++	pci_assign_unassigned_bus_resources(host->bus);
++
++	pcie->root_bus = host->bus;
++
++	list_for_each_entry(child, &host->bus->children, node)
+ 		pcie_bus_configure_settings(child);
+ 
+-	pci_bus_add_devices(bus);
++	pci_bus_add_devices(host->bus);
+ 
+ 	return 0;
+ 
+-err_rm_root_bus:
+-	pci_stop_root_bus(bus);
+-	pci_remove_root_bus(bus);
+-
+ err_power_off_phy:
+ 	phy_power_off(pcie->phy);
+ err_exit_phy:
+-- 
+2.10.0
