@@ -1,155 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47454 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751887AbdF3NYh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 30 Jun 2017 09:24:37 -0400
-Date: Fri, 30 Jun 2017 08:24:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>
-Subject: Re: [PATCH][RFC v3] PCI: Workaround to enable poweroff on Mac Pro 11
-Message-ID: <20170630132433.GX17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1471595425-1752-1-git-send-email-yu.c.chen@intel.com>
- <20170629191926.GV17844@bhelgaas-glaptop.roam.corp.google.com>
- <20170630023931.GW17844@bhelgaas-glaptop.roam.corp.google.com>
- <20170630030646.GA27468@yu-desktop-1.sh.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
+Date: Thu,  8 Jun 2017 15:13:00 +0100
+Message-Id: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Roy Zang <tie-fei.zang@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170630030646.GA27468@yu-desktop-1.sh.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 30, 2017 at 11:06:46AM +0800, Chen Yu wrote:
-> Hi Bjorn,
-> On Thu, Jun 29, 2017 at 09:39:31PM -0500, Bjorn Helgaas wrote:
-> > On Thu, Jun 29, 2017 at 02:19:26PM -0500, Bjorn Helgaas wrote:
-> > > On Fri, Aug 19, 2016 at 04:30:25PM +0800, Chen Yu wrote:
-> > > > People reported that they can not do a poweroff nor a
-> > > > suspend to ram on their Mac Pro 11. After some investigations
-> > > > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
-> > > > mm windows to ([mem 0x7fa00000-0x7fbfffff] and
-> > > > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
-> > > > io resource 0x1804 becomes unaccessible immediately, where the
-> > > > ACPI Sleep register is located, as a result neither poweroff(S5)
-> > > > nor suspend to ram(S3) works.
-> > > > 
-> > > > As suggested by Bjorn, further testing shows that, there is an
-> > > > unreported device may be (using) conflict with above aperture,
-> > > > which brings unpredictable result such as the failure of accessing
-> > > > the io port, which blocks the poweroff(S5). Besides if we reassign
-> > > > the memory aperture to the other place, the poweroff works again.
-> > > > 
-> > > > As we do not find any resource declared in _CRS which contain above
-> > > > memory aperture, and Mac OS does not use this pci bridge neither, we
-> > > > choose a simple workaround to clear the hotplug flag(suggested by
-> > > > Yinghai Lu), thus do not allocate any resource for this pci bridge,
-> > > > and thereby no conflict anymore.
-> > > > 
-> > > > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Cc: Rafael J. Wysocki <rafael@kernel.org>
-> > > > Cc: Lukas Wunner <lukas@wunner.de>
-> > > > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> > > > ---
-> > > >  drivers/pci/quirks.c | 20 ++++++++++++++++++++
-> > > >  1 file changed, 20 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > > > index 37ff015..04bbdba 100644
-> > > > --- a/drivers/pci/quirks.c
-> > > > +++ b/drivers/pci/quirks.c
-> > > > @@ -2776,6 +2776,26 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
-> > > >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
-> > > >  
-> > > >  /*
-> > > > + * Apple: Avoid programming the memory/io aperture of 00:1c.0
-> > > > + *
-> > > > + * BIOS does not declare any resource for 00:1c.0, but with
-> > > > + * hotplug flag set, thus the OS allocates:
-> > > > + * [mem 0x7fa00000 - 0x7fbfffff]
-> > > > + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
-> > > > + * which is conflict with an unreported device, which
-> > > > + * causes unpredictable result such as accessing io port.
-> > > > + * So clear the hotplug flag to work around it.
-> > > > + */
-> > > > +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
-> > > > +{
-> > > > +	if (dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
-> > > > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
-> > > > +		dev->is_hotplug_bridge = 0;
-> > > > +}
-> > > > +
-> > > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-> > > > +
-> > > > +/*
-> > > >   * This is a quirk for the Ricoh MMC controller found as a part of
-> > > 
-> > > I give up.  We're not making any progress on this.  I propose the
-> > > following patch for v4.13.  This is slightly modified to:
-> > > 
-> > >   - move to arch/x86/pci/fixups.c, since I think this is specific to
-> > >     x86
-> > > 
-> > >   - only clear dev->is_hotplug_bridge for the 00:1c.0 bridge, since
-> > >     these systems contain other bridges where I think we *do* want to
-> > >     support hotplug, e.g., the Thunderbolt bridge at 09:00.0 (from
-> > >     https://bugzilla.kernel.org/attachment.cgi?id=210611)
-> > > 
-> > >   - log a note in dmesg about what we're doing
-> > > 
-> > > commit f7bf6baa11b84534d0b7f5ceee06e3349948c853
-> > > Author: Chen Yu <yu.c.chen@intel.com>
-> > > Date:   Fri Aug 19 16:30:25 2016 +0800
-> > > 
-> > >     PCI: Work around poweroff & suspend-to-RAM issue on Macbook Pro 11
-> > >     
-> > >     Neither soft poweroff (transition to ACPI power state S5) nor
-> > >     suspend-to-RAM (transition to state S3) works on the Macbook Pro 11,4 and
-> > >     11,5.
-> > >     
-> > >     The problem is related to assigning the [mem 0x7fa00000-0x7fbfffff] space
-> > >     to the 00:1c.0 Root Port.  This port isn't connected to anything, but it
-> > >     advertises hotplug support in its PCIe Capability.  Initially it has no
-> > >     windows assigned, and if Linux leaves it that way, poweroff and
-> > >     suspend-to-RAM work fine.
-> > >     
-> > >     Since the port supports hotplug, Linux assigns windows for future hot-added
-> > >     devices.  We currently assign [mem 0x7fa00000-0x7fbfffff] for the memory
-> > >     window, and poweroff and suspend-to-RAM don't work after this assignment.
-> > >     
-> > >     Linux does a soft poweroff (transition to S5) by writing to PM1_CNT at
-> > >     [io 0x1804].  The theory about why this doesn't work is:
-> > >     
-> > >       - The write to PM1_CNT causes an SMI.
-> > >       - The BIOS SMI handler depends on something in [mem 0x7fa00000-0x7fbfffff].
-> > >       - When Linux assigns [mem 0x7fa00000-0x7fbfffff] to the 00:1c.0 Port, it
-> > >         covers up whatever the SMI handler uses, so the SMI handler no longer
-> > >         works correctly.
-> > >     
-> > >     Mark the 00:1c.0 bridge as not supporting hotplug, so we don't assign the
-> > >     [mem 0x7fa00000-0x7fbfffff] space to it.
-> > >     
-> > >     Note that we don't know what the real conflict is, so other use of this
-> > >     memory range by another device may cause similar problems.
-> > >     
-> > >     Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-> > >     Signed-off-by: Chen Yu <yu.c.chen@intel.com>
-> > >     [bhelgaas: limit to device 00:1c.0, add printk, changelog, comment]
-> > >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> > >     Cc: Rafael J. Wysocki <rafael@kernel.org>
-> > >     Cc: Lukas Wunner <lukas@wunner.de>
-> > > 
-> > 
-> > This patch stinks, sorry.  I'll try again tomorrow.  The problem is
-> > the address space, not the device, so we should be able to do better
-> > than this.
-> It is a quite old bug and thanks for taking care of this :-). Do you mean
-> reserve the [mem 0x7fa00000-0x7fbfffff] thus no one could allocate this region?
+v1 -> v2
 
-Yes, exactly.  That seems like a more robust solution.  I can't
-remember if we've tried that before or not.  Likely we could narrow
-that down to a smaller region; I can't remember if we've done that,
-either.
+- Split pci_fixup_irqs() removal in several patches
+- Embedded pci_register_host_bridge() in pci_scan_root_bus_bridge()
+- Refactored iproc, faraday and xilinx-nwl host bridges in preparation
+  for irq fixup removal
+- Converted all DT PCI host bridge drivers to pci_scan_root_bus_bridge()
+- Dropped RFC tag
+- Added devm_pci_alloc_host_bridge() interface
+- Rebased against v4.12-rc3
+
+v1: http://marc.info/?l=linux-pci&m=149320545522205&w=2
+
+Current pci_fixup_irqs() usage on ARM/ARM64 host controller drivers is
+flawed in that pci_fixup_irqs() allocates IRQs for all PCI devices present
+in a system; those PCI devices possibly belong to different PCI bus trees
+(and possibly rooted at different host bridges) and may well be enabled
+(ie probed and bound to a driver) by the time pci_fixup_irqs() is called
+when probing a given host bridge driver.
+
+Furthermore, current kernel code relying on pci_fixup_irqs() to
+assign legacy PCI IRQs to devices does not work at all for
+hotplugged devices in that the code carrying out the IRQ fixup
+is called at host bridge driver probe time, which just cannot take
+into account devices hotplugged after system has booted.
+
+By leveraging Matthew Minter's patch series (and its purpose):
+
+http://lkml.kernel.org/r/1445576642-29624-2-git-send-email-matt@masarand.com
+
+this series[1] adds IRQs mapping and swizzling primitives to
+the struct pci_host_bridge which allows IRQs to be allocated for
+for a device at probe time with host bridge specific functions,
+fixing the aforementioned limitations.
+
+Current series remove pci_fixup_irqs() usage on ARM/ARM64; removal
+can be extended to other architectures provided the IRQs map/swizzle
+functions are set-up properly in the respective host bridges
+set-up/probe paths.
+
+Tested on kvmtool with PCI host generic.
+
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal-v2
+
+Lorenzo Pieralisi (37):
+  PCI: xilinx-nwl: Remove nwl_pcie_enable_msi() unused bus parameter
+  drivers: pci: host: iproc: Convert link check to raw PCI config
+    accessors
+  drivers: pci: host: ftpci100: convert IRQ masking to raw PCI config
+    accessors
+  PCI: Initialize bridge release function at bridge allocation
+  PCI: Add pci_free_host_bridge interface
+  PCI: Add devm_pci_alloc_host_bridge() interface
+  drivers: pci: host: ftpci100: Fix host bridge memory leakage
+  drivers: pci: host: tegra: Fix host bridge memory leakage
+  PCI: Introduce pci_scan_root_bus_bridge()
+  PCI: Make pci_register_host_bridge() PCI core internal
+  ARM: PCI: bios32: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: designware: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: aardvark: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: rcar: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: iproc: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: versatile: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: altera: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: xilinx: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: xgene: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: host-common: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: rockchip: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: xilinx-nwl: Convert PCI scan API to pci_scan_root_bus_bridge()
+  PCI: Remove pci_scan_root_bus_msi()
+  ARM: PCI: Remove pci_fixup_irqs() call for bios32 host controllers
+  PCI: tegra: Drop pci_fixup_irqs()
+  PCI: xilinx: Drop pci_fixup_irqs()
+  PCI: rcar: Drop pci_fixup_irqs()
+  PCI: iproc: Drop pci_fixup_irqs()
+  PCI: designware-host: Drop pci_fixup_irqs()
+  PCI: ftpci100: Drop pci_fixup_irqs()
+  PCI: host-common: Drop pci_fixup_irqs()
+  PCI: versatile: Drop pci_fixup_irqs()
+  PCI: altera: Drop pci_fixup_irqs()
+  PCI: xgene: Move to struct pci_host_bridge IRQ mapping functions
+  PCI: rockchip: Move to struct pci_host_bridge IRQ mapping functions
+  PCI: xilinx-nwl: Move to struct pci_host_bridge IRQ mapping functions
+  ARM64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()
+
+Matthew Minter (5):
+  PCI: Build setup-irq.o on all arches
+  PCI: Add IRQ mapping function pointers to pci_host_bridge struct
+  PCI: Add pci_assign_irq() function and have pci_fixup_irqs() use it
+  OF/PCI: Update of_irq_parse_and_map_pci() comment
+  PCI: Add a call to pci_assign_irq() in pci_device_probe()
+
+ Documentation/driver-model/devres.txt  |   1 +
+ arch/arm/include/asm/mach/pci.h        |   3 +-
+ arch/arm/kernel/bios32.c               |  43 +++++++----
+ arch/arm/mach-dove/pcie.c              |  33 +++++---
+ arch/arm/mach-iop13xx/pci.c            |  31 +++++---
+ arch/arm/mach-iop13xx/pci.h            |   3 +-
+ arch/arm/mach-mv78xx0/pcie.c           |   8 +-
+ arch/arm/mach-orion5x/common.h         |   3 +-
+ arch/arm/mach-orion5x/pci.c            |  39 ++++++----
+ arch/arm64/kernel/pci.c                |  10 +--
+ drivers/of/of_pci_irq.c                |   3 +-
+ drivers/pci/Makefile                   |  17 +----
+ drivers/pci/dwc/pcie-designware-host.c |  43 ++++++-----
+ drivers/pci/host/pci-aardvark.c        |  21 +++--
+ drivers/pci/host/pci-ftpci100.c        |  50 +++++++-----
+ drivers/pci/host/pci-host-common.c     |  27 +++++--
+ drivers/pci/host/pci-tegra.c           |   9 +--
+ drivers/pci/host/pci-versatile.c       |  22 +++++-
+ drivers/pci/host/pci-xgene.c           |  23 ++++--
+ drivers/pci/host/pcie-altera.c         |  24 ++++--
+ drivers/pci/host/pcie-iproc-bcma.c     |   7 +-
+ drivers/pci/host/pcie-iproc-platform.c |   7 +-
+ drivers/pci/host/pcie-iproc.c          | 135 +++++++++++++++++++++++----------
+ drivers/pci/host/pcie-rcar.c           |  40 ++++++----
+ drivers/pci/host/pcie-rockchip.c       |  24 ++++--
+ drivers/pci/host/pcie-xilinx-nwl.c     |  34 ++++++---
+ drivers/pci/host/pcie-xilinx.c         |  34 +++++----
+ drivers/pci/pci-driver.c               |   2 +
+ drivers/pci/probe.c                    | 105 ++++++++++++++++++-------
+ drivers/pci/setup-irq.c                |  45 ++++++++---
+ include/linux/pci.h                    |  12 +--
+ 31 files changed, 565 insertions(+), 293 deletions(-)
+
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
