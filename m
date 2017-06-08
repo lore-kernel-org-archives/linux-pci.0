@@ -1,94 +1,80 @@
-Return-Path: <SRS0=Adax=5M=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=Adax=5M=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v5 1/3] PCI: Add DT binding for tango PCIe controller
-To: Rob Herring <robh@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <69f3ffe7-3c39-fa94-71f8-91744a869cc9@sigmadesigns.com>
- <20170607212907.2wr3hqbokjb74kj3@rob-hp-laptop>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <e8cd62fb-f48e-c72a-f960-4794badfce70@free.fr>
-Date: Thu, 8 Jun 2017 00:34:49 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170607212907.2wr3hqbokjb74kj3@rob-hp-laptop>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:51314 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751481AbdFHOPF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:15:05 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Simon Horman <horms@verge.net.au>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 32/42] PCI: rcar: Drop pci_fixup_irqs()
+Date: Thu,  8 Jun 2017 15:13:32 +0100
+Message-Id: <20170608141342.2018-33-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Rob,
+Since, through struct pci_host_bridge.map/swizzle_irq hooks, IRQs
+are now allocated in the pci_assign_irq() callback automatically,
+PCI host bridge drivers can stop relying on pci_fixup_irqs()
+for IRQ allocation.
 
-On 07/06/2017 23:29, Rob Herring wrote:
-> On Wed, May 31, 2017 at 03:30:26PM +0200, Marc Gonzalez wrote:
->> Binding for the Sigma Designs SMP8759 SoC.
->>
->> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
->> ---
->>  Documentation/devicetree/bindings/pci/tango-pcie.txt | 30 ++++++++++++++++++++++++++++++
->>  1 file changed, 30 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
->> new file mode 100644
->> index 000000000000..35ef2c811a27
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
->> @@ -0,0 +1,30 @@
->> +Sigma Designs Tango PCIe controller
->> +
->> +Required properties:
->> +
->> +- compatible: "sigma,smp8759-pcie"
->> +- reg: address/size of PCI configuration space, address/size of register area
->> +- device_type: "pci"
->> +- #size-cells: <2>
->> +- #address-cells: <3>
->> +- msi-controller
->> +- ranges: translation from system to bus addresses
->> +- interrupts: spec for misc interrupts, spec for MSI
->> +
->> +http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
->> +http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
-> 
-> Why are these here?
+Drop pci_fixup_irqs() usage from PCI rcar host bridge driver.
 
-I found these references very helpful when writing the node.
-Where would you put them? In the example?
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Simon Horman <horms@verge.net.au>
+---
+ drivers/pci/host/pcie-rcar.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> There's several standard properties you are missing like bus-range.
-
-My reasoning for omitting "bus-range" was that the PCI core computes
-it by itself (1M per "bus" so SZ_4M => 4 devices). I thought redundant
-information was bad form?
-
-> Build your dts with "W=2". dtc recently gained some checks for PCI 
-> bindings.
-
-I'll give it a try. Did v4.9 already support it?
-
->> +Example:
->> +
->> +	pcie@2e000 {
->> +		compatible = "sigma,smp8759-pcie";
->> +		reg = <0x50000000 SZ_4M>, <0x2e000 0x100>;
->> +		device_type = "pci";
->> +		#size-cells = <2>;
->> +		#address-cells = <3>;
->> +		msi-controller;
->> +		ranges = <0x02000000 0x0 0x00400000  0x50400000  0x0 SZ_60M>;
-> 
-> I don't think SZ_60M exists or is available to dts files. Just put the 
-> number in.
-
-I #defined it at the top of my DTS.
-Using symbolic constants in DTS is not acceptable?
-
-Thanks for having a look.
-
-Regards.
+diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+index 8380274..246d485 100644
+--- a/drivers/pci/host/pcie-rcar.c
++++ b/drivers/pci/host/pcie-rcar.c
+@@ -465,6 +465,8 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+ 	bridge->sysdata = pcie;
+ 	bridge->busnr = pcie->root_bus_nr;
+ 	bridge->ops = &rcar_pcie_ops;
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	bridge->swizzle_irq = pci_common_swizzle;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI))
+ 		bridge->msi = &pcie->msi.chip;
+ 
+@@ -476,8 +478,6 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+ 
+ 	bus = bridge->bus;
+ 
+-	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+-
+ 	pci_bus_size_bridges(bus);
+ 	pci_bus_assign_resources(bus);
+ 
+-- 
+2.10.0
