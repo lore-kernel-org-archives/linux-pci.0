@@ -1,121 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f171.google.com ([209.85.128.171]:36516 "EHLO
-        mail-wr0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751864AbdFMEVR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jun 2017 00:21:17 -0400
-Received: by mail-wr0-f171.google.com with SMTP id 36so1469291wry.3
-        for <linux-pci@vger.kernel.org>; Mon, 12 Jun 2017 21:21:16 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1706121010010.2092-100000@iolanthe.rowland.org>
-References: <CAAd53p6S9NPBD=qGP419mhBgSgn-s1dc=adued8Y+Y0=GDsHKg@mail.gmail.com>
- <Pine.LNX.4.44L0.1706121010010.2092-100000@iolanthe.rowland.org>
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date: Tue, 13 Jun 2017 12:21:15 +0800
-Message-ID: <CAAd53p580X5_G6a05aAueHVxEoy5hpQrs6s2gtJA+gPEf2PqLg@mail.gmail.com>
-Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
-        USB list <linux-usb@vger.kernel.org>,
-        linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from foss.arm.com ([217.140.101.70]:51776 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751466AbdFHOPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:15:53 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 42/42] ARM64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()
+Date: Thu,  8 Jun 2017 15:13:42 +0100
+Message-Id: <20170608141342.2018-43-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 10:18 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> Let's get some help from people who understand PCI well.
->
-> Here's the general problem: Kai-Heng has a PCI-based USB host
-> controller that advertises wakeup capability from D3, but it doesn't
-> assert PME# from D3 when it should.  For "lspci -vv" output, see
->
->         http://marc.info/?l=linux-usb&m=149570231732519&w=2
->
-> On Mon, 12 Jun 2017, Kai-Heng Feng wrote:
->
->> On Mon, Jun 12, 2017 at 3:04 PM, Kai-Heng Feng
->> <kai.heng.feng@canonical.com> wrote:
->> > On Fri, Jun 9, 2017 at 10:43 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
->> >> On Fri, 9 Jun 2017, Kai-Heng Feng wrote:
->> >>
->> >> Is this really the right solution?  Maybe it would be better to allow
->> >> the controller to go into D3 provided no wakeup signal is needed.  You
->> >> could do:
->> >>
->> >>                 device_set_wakeup_capable(&pdev->dev, 0);
->> >
->> > This doesn't work.
->> > After applying this function, still nothing happens when devices get plugged in.
->> > IIUC this function disable the wakeup function, but what I want to do
->> > here is to have PME signal works even when runtime PM is enabled.
->
-> This may indicate a bug in either the PCI or USB stacks (or both!).  If
-> a driver requires wakeup capability from runtime suspend but the device
-> does not provide it, the PCI core should not allow the device to go
-> into runtime suspend.  Or is that the driver's responsibility?
->
->> > I also saw some legacy PCI PM stuff, so I also tried:
->> > device_set_wakeup_capable(&pdev->dev, 1);
->> > ...doesn't work either.
->> >
->> >>
->> >> Another alternative is to put the controller into D2 instead of D3, but
->> >> (1) I don't know how to do that, and (2) we don't know if wakeup
->> >> signalling works any better in D2 than it does in D3.
->> >
->> > I'll try if D2 works.
->>
->> Put the device into D2 instead of D3 can make the wakeup signaling
->> work, i.e. USB devices can be correctly detected after plugged into
->> EHCI port.
->>
->> Do you think this alternative an acceptable workaround?
->
-> Yes, it is.  The difficulty is that I don't know how to tell the PCI
-> core that the device should go in D2 during runtime suspend instead of
-> D3.  Some sort of quirk may be needed -- perhaps Bjorn can help.
->
+With the introduction of struct pci_host_bridge.map_irq pointer it is
+possible to assign IRQs for all devices originating from a PCI host
+bridge at probe time; this is implemented through pci_assign_irq() that
+relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
+given device.
 
-FWIW, this is the diff I used to make the controller transits to D2
-instead of D3:
+The benefits this brings are twofold:
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 563901cd9c06..36663688404a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -922,6 +922,9 @@ int pci_set_power_state(struct pci_dev *dev,
-pci_power_t state)
-        if (dev->current_state == state)
-                return 0;
+- the IRQ for a device is assigned once at probe time
+- the IRQ assignment works also for hotplugged devices
 
-+       if (state > PCI_D2 && (dev->dev_flags & PCI_DEV_FLAGS_MAX_D2))
-+               state = PCI_D2;
-+
-        __pci_start_power_transition(dev, state);
+With all DT based PCI host bridges converted to the struct
+pci_host_bridge.{map/swizzle}_irq hooks mechanism the DT IRQ
+allocation in ARM64 pcibios_alloc_irq() is now redundant and can
+be removed.
 
-        /* This device is quirked not to be put into D3, so
-diff --git a/drivers/usb/host/ehci-pci.c b/drivers/usb/host/ehci-pci.c
-index 93326974ff4b..a2c1fe62974a 100644
---- a/drivers/usb/host/ehci-pci.c
-+++ b/drivers/usb/host/ehci-pci.c
-@@ -181,6 +181,8 @@ static int ehci_pci_setup(struct usb_hcd *hcd)
-                if (pdev->device == 0x7808) {
-                        ehci->use_dummy_qh = 1;
-                        ehci_info(ehci, "applying AMD
-SB700/SB800/Hudson-2/3 EHCI dummy qh workaround\n");
-+
-+                       pdev->dev_flags |= PCI_DEV_FLAGS_MAX_D2;
-                }
-                break;
-        case PCI_VENDOR_ID_VIA:
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8039f9f0ca05..6f86f2aa8548 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -188,6 +188,7 @@ enum pci_dev_flags {
-         * the direct_complete optimization.
-         */
-        PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-+       PCI_DEV_FLAGS_MAX_D2 = (__force pci_dev_flags_t) (1 << 12),
- };
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/arm64/kernel/pci.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
- enum pci_irq_reroute_variant {
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 4f0e3eb..efcc351 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -39,20 +39,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return res->start;
+ }
+ 
++#ifdef CONFIG_ACPI
+ /*
+  * Try to assign the IRQ number when probing a new device
+  */
+ int pcibios_alloc_irq(struct pci_dev *dev)
+ {
+-	if (acpi_disabled)
+-		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
+-#ifdef CONFIG_ACPI
+-	else
+-		return acpi_pci_irq_enable(dev);
+-#endif
++	if (!acpi_disabled)
++		acpi_pci_irq_enable(dev);
+ 
+ 	return 0;
+ }
++#endif
+ 
+ /*
+  * raw_pci_read/write - Platform-specific PCI config space access.
+-- 
+2.10.0
