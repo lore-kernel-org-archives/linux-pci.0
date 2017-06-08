@@ -1,119 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45352 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:50364 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753774AbdF0VL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jun 2017 17:11:56 -0400
-Date: Tue, 27 Jun 2017 16:11:52 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Peter Anvin <hpa@zytor.com>, Borislav Petkov <bp@alien8.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Stephane Eranian <eranian@google.com>,
-        Andi Kleen <ak@linux.intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [patch 4/7] PCI: Provide Kconfig option for lockless config
- space accessors
-Message-ID: <20170627211152.GE764@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170316215002.726697858@linutronix.de>
- <20170316215057.205961140@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170316215057.205961140@linutronix.de>
+        id S1751524AbdFHONf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:13:35 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 13/42] PCI: aardvark: Convert PCI scan API to pci_scan_root_bus_bridge()
+Date: Thu,  8 Jun 2017 15:13:13 +0100
+Message-Id: <20170608141342.2018-14-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
+The introduction of pci_scan_root_bus_bridge() provides a PCI core
+API to scan a PCI root bus backed by an already initialized
+struct pci_host_bridge object, which simplifies the bus scan
+interface and makes the PCI scan root bus interface easier to
+generalize as members are added to the struct pci_host_bridge.
 
-On Thu, Mar 16, 2017 at 10:50:06PM +0100, Thomas Gleixner wrote:
-> The generic pci configuration space accessors are globally serialized via
-> pci_lock. On larger systems this causes massive lock contention when the
-> configuration space has to be accessed frequently. One such access pattern
-> is the Intel Uncore performance counter unit.
+Convert PCI aardvark host code to pci_scan_root_bus_bridge() to
+improve the PCI root bus scanning interface.
 
-s/pci/PCI/ above.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/pci/host/pci-aardvark.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-> Provide a kernel config option which can be selected by an architecture
-> when the low level PCI configuration space accessors in the architecture
-> use their own serialization or can operate completely lockless.
-
-The arch/x86/pci/common.c comment:
-
-  /*
-   * This interrupt-safe spinlock protects all accesses to PCI
-   * configuration space.
-   */
-  DEFINE_RAW_SPINLOCK(pci_config_lock);
-
-is no longer quite correct.
-
-I think the raw_pci_read() and raw_pci_write() implementations are
-such that we use the old locked accessors for the first 256 bytes,
-even when ECAM is available.  Not necessarily a problem, just an
-observation.  I guess the uncore PMU registers are in the extended
-config space.
-
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> ---
->  drivers/pci/Kconfig  |    3 +++
->  drivers/pci/access.c |   16 ++++++++++++----
->  2 files changed, 15 insertions(+), 4 deletions(-)
-> 
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -86,6 +86,9 @@ config PCI_ATS
->  config PCI_ECAM
->  	bool
->  
-> +config PCI_LOCKLESS_CONFIG
-> +	bool
-
-It's conceivable that this could be a per-host bridge property, but
-not worth worrying about for now.
-
->  config PCI_IOV
->  	bool "PCI IOV support"
->  	depends on PCI
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -25,6 +25,14 @@ DEFINE_RAW_SPINLOCK(pci_lock);
->  #define PCI_word_BAD (pos & 1)
->  #define PCI_dword_BAD (pos & 3)
->  
-> +#ifdef CONFIG_PCI_LOCKLESS_CONFIG
-> +# define pci_lock_config(f)	do { (void)(f); } while (0)
-> +# define pci_unlock_config(f)	do { (void)(f); } while (0)
-> +#else
-> +# define pci_lock_config(f)	raw_spin_lock_irqsave(&pci_lock, f)
-> +# define pci_unlock_config(f)	raw_spin_unlock_irqrestore(&pci_lock, f)
-> +#endif
-> +
->  #define PCI_OP_READ(size, type, len) \
->  int pci_bus_read_config_##size \
->  	(struct pci_bus *bus, unsigned int devfn, int pos, type *value)	\
-> @@ -33,10 +41,10 @@ int pci_bus_read_config_##size \
->  	unsigned long flags;						\
->  	u32 data = 0;							\
->  	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
-> -	raw_spin_lock_irqsave(&pci_lock, flags);			\
-> +	pci_lock_config(flags);						\
->  	res = bus->ops->read(bus, devfn, pos, len, &data);		\
->  	*value = (type)data;						\
-> -	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-> +	pci_unlock_config(flags);					\
->  	return res;							\
->  }
->  
-> @@ -47,9 +55,9 @@ int pci_bus_write_config_##size \
->  	int res;							\
->  	unsigned long flags;						\
->  	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
-> -	raw_spin_lock_irqsave(&pci_lock, flags);			\
-> +	pci_lock_config(flags);						\
->  	res = bus->ops->write(bus, devfn, pos, len, value);		\
-> -	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-> +	pci_unlock_config(flags);					\
->  	return res;							\
->  }
->  
-> 
-> 
+diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+index 37d0bcd..5fb9b62 100644
+--- a/drivers/pci/host/pci-aardvark.c
++++ b/drivers/pci/host/pci-aardvark.c
+@@ -886,12 +886,14 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 	struct advk_pcie *pcie;
+ 	struct resource *res;
+ 	struct pci_bus *bus, *child;
++	struct pci_host_bridge *bridge;
+ 	int ret, irq;
+ 
+-	pcie = devm_kzalloc(dev, sizeof(struct advk_pcie), GFP_KERNEL);
+-	if (!pcie)
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(struct advk_pcie));
++	if (!bridge)
+ 		return -ENOMEM;
+ 
++	pcie = pci_host_bridge_priv(bridge);
+ 	pcie->pdev = pdev;
+ 
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+@@ -929,14 +931,21 @@ static int advk_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
+ 
+-	bus = pci_scan_root_bus(dev, 0, &advk_pcie_ops,
+-				pcie, &pcie->resources);
+-	if (!bus) {
++	list_splice_init(&pcie->resources, &bridge->windows);
++	bridge->dev.parent = dev;
++	bridge->sysdata = pcie;
++	bridge->busnr = 0;
++	bridge->ops = &advk_pcie_ops;
++
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret < 0) {
+ 		advk_pcie_remove_msi_irq_domain(pcie);
+ 		advk_pcie_remove_irq_domain(pcie);
+-		return -ENOMEM;
++		return ret;
+ 	}
+ 
++	bus = bridge->bus;
++
+ 	pci_bus_assign_resources(bus);
+ 
+ 	list_for_each_entry(child, &bus->children, node)
+-- 
+2.10.0
