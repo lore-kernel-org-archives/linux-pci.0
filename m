@@ -1,256 +1,147 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:43735 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752646AbdFTWak (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 18:30:40 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [Update][PATCH 4/6] PCI / PM: Simplify device wakeup settings code
-Date: Wed, 21 Jun 2017 00:23:22 +0200
-Message-ID: <3503310.PpLX01x4gZ@aspire.rjw.lan>
-In-Reply-To: <6082855.gb7lhtNroi@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan> <6082855.gb7lhtNroi@aspire.rjw.lan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [RFT PATCH v2 03/42] drivers: pci: host: ftpci100: convert IRQ
+ masking to raw PCI config accessors
+Date: Thu,  8 Jun 2017 15:13:03 +0100
+Message-Id: <20170608141342.2018-4-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Roy Zang <tie-fei.zang@freescale.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Current ftpci100 driver host bridge controller driver requires struct
+pci_bus to be created in order to mask and clear IRQs using standard
+PCI bus config accessors.
 
-After previous changes it is not necessary to distinguish between
-device wakeup for run time and device wakeup from system sleep states
-any more, so rework the PCI device wakeup settings code accordingly.
+This struct pci_bus dependency is fictitious and burdens the driver
+with unneeded constraints (eg to use separate APIs to create and scan
+the root bus).
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Add PCI raw config space accessors to PCIe ftpci100 driver and remove the
+fictitious struct pci_bus dependency.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>
 ---
+ drivers/pci/host/pci-ftpci100.c | 44 ++++++++++++++++++++++++-----------------
+ 1 file changed, 26 insertions(+), 18 deletions(-)
 
-Updated to fix a build issue in pci-mid.c reported by 0-day.
-
----
- drivers/pci/pci-acpi.c   |    3 +--
- drivers/pci/pci-driver.c |    2 +-
- drivers/pci/pci-mid.c    |   10 ++--------
- drivers/pci/pci.c        |   36 ++++++++++--------------------------
- drivers/pci/pci.h        |    9 ++-------
- include/linux/pci.h      |    9 +--------
- 6 files changed, 17 insertions(+), 52 deletions(-)
-
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -616,8 +616,7 @@ static const struct pci_platform_pm_ops
- 	.set_state = acpi_pci_set_power_state,
- 	.get_state = acpi_pci_get_power_state,
- 	.choose_state = acpi_pci_choose_state,
--	.sleep_wake = acpi_pci_wakeup,
--	.run_wake = acpi_pci_wakeup,
-+	.set_wakeup = acpi_pci_wakeup,
- 	.need_resume = acpi_pci_need_resume,
- };
- 
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -574,8 +574,7 @@ static const struct pci_platform_pm_ops
- int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
- {
- 	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
--	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
--	    !ops->need_resume)
-+	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
- 		return -EINVAL;
- 	pci_platform_pm = ops;
- 	return 0;
-@@ -603,16 +602,10 @@ static inline pci_power_t platform_pci_c
- 			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index d26501c..1c1fd60 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -204,17 +204,13 @@ static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
+ 	return PCIBIOS_SUCCESSFUL;
  }
  
--static inline int platform_pci_sleep_wake(struct pci_dev *dev, bool enable)
-+static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
+-static int faraday_pci_write_config(struct pci_bus *bus, unsigned int fn,
+-				    int config, int size, u32 value)
++static int faraday_raw_pci_write_config(struct faraday_pci *p, int bus_number,
++					 unsigned int fn, int config, int size,
++					 u32 value)
  {
- 	return pci_platform_pm ?
--			pci_platform_pm->sleep_wake(dev, enable) : -ENODEV;
--}
+-	struct faraday_pci *p = bus->sysdata;
+ 	int ret = PCIBIOS_SUCCESSFUL;
+ 
+-	dev_dbg(&bus->dev,
+-		"[write] slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
+-		PCI_SLOT(fn), PCI_FUNC(fn), config, size, value);
 -
--static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable)
--{
--	return pci_platform_pm ?
--			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
-+			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
- }
- 
- static inline bool platform_pci_need_resume(struct pci_dev *dev)
-@@ -1889,10 +1882,9 @@ void pci_pme_active(struct pci_dev *dev,
- EXPORT_SYMBOL(pci_pme_active);
- 
- /**
-- * __pci_enable_wake - enable PCI device as wakeup event source
-+ * pci_enable_wake - enable PCI device as wakeup event source
-  * @dev: PCI device affected
-  * @state: PCI state from which device will issue wakeup events
-- * @runtime: True if the events are to be generated at run time
-  * @enable: True to enable event generation; false to disable
-  *
-  * This enables the device as a wakeup event source, or disables it.
-@@ -1908,14 +1900,10 @@ EXPORT_SYMBOL(pci_pme_active);
-  * Error code depending on the platform is returned if both the platform and
-  * the native mechanism fail to enable the generation of wake-up events
-  */
--int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--		      bool runtime, bool enable)
-+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
- {
- 	int ret = 0;
- 
--	if (enable && !runtime && !device_may_wakeup(&dev->dev))
--		return -EINVAL;
--
- 	/*
- 	 * Don't do the same thing twice in a row for one device, but restore
- 	 * PME Enable in case it has been updated by config space restoration.
-@@ -1938,24 +1926,20 @@ int __pci_enable_wake(struct pci_dev *de
- 			pci_pme_active(dev, true);
- 		else
- 			ret = 1;
--		error = runtime ? platform_pci_run_wake(dev, true) :
--					platform_pci_sleep_wake(dev, true);
-+		error = platform_pci_set_wakeup(dev, true);
- 		if (ret)
- 			ret = error;
- 		if (!ret)
- 			dev->wakeup_prepared = true;
- 	} else {
--		if (runtime)
--			platform_pci_run_wake(dev, false);
--		else
--			platform_pci_sleep_wake(dev, false);
-+		platform_pci_set_wakeup(dev, false);
- 		pci_pme_active(dev, false);
- 		dev->wakeup_prepared = false;
- 	}
- 
+-	writel(PCI_CONF_BUS(bus->number) |
++	writel(PCI_CONF_BUS(bus_number) |
+ 			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
+ 			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
+ 			PCI_CONF_WHERE(config) |
+@@ -238,6 +234,19 @@ static int faraday_pci_write_config(struct pci_bus *bus, unsigned int fn,
  	return ret;
  }
--EXPORT_SYMBOL(__pci_enable_wake);
-+EXPORT_SYMBOL(pci_enable_wake);
  
- /**
-  * pci_wake_from_d3 - enable/disable device to wake up from D3_hot or D3_cold
-@@ -2097,12 +2081,12 @@ int pci_finish_runtime_suspend(struct pc
- 
- 	dev->runtime_d3cold = target_state == PCI_D3cold;
- 
--	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
-+	pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
- 
- 	error = pci_set_power_state(dev, target_state);
- 
- 	if (error) {
--		__pci_enable_wake(dev, target_state, true, false);
-+		pci_enable_wake(dev, target_state, false);
- 		dev->runtime_d3cold = false;
- 	}
- 
-Index: linux-pm/include/linux/pci.h
-===================================================================
---- linux-pm.orig/include/linux/pci.h
-+++ linux-pm/include/linux/pci.h
-@@ -1097,8 +1097,7 @@ int pci_set_power_state(struct pci_dev *
- pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
- bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
- void pci_pme_active(struct pci_dev *dev, bool enable);
--int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--		      bool runtime, bool enable);
-+int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
- int pci_wake_from_d3(struct pci_dev *dev, bool enable);
- int pci_prepare_to_sleep(struct pci_dev *dev);
- int pci_back_from_sleep(struct pci_dev *dev);
-@@ -1108,12 +1107,6 @@ void pci_pme_wakeup_bus(struct pci_bus *
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
- 
--static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
--				  bool enable)
--{
--	return __pci_enable_wake(dev, state, false, enable);
--}
++static int faraday_pci_write_config(struct pci_bus *bus, unsigned int fn,
++				    int config, int size, u32 value)
++{
++	struct faraday_pci *p = bus->sysdata;
++
++	dev_dbg(&bus->dev,
++		"[write] slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
++		PCI_SLOT(fn), PCI_FUNC(fn), config, size, value);
++
++	return faraday_raw_pci_write_config(p, bus->number, fn, config, size,
++					    value);
++}
++
+ static struct pci_ops faraday_pci_ops = {
+ 	.read	= faraday_pci_read_config,
+ 	.write	= faraday_pci_write_config,
+@@ -496,17 +505,8 @@ static int faraday_pci_probe(struct platform_device *pdev)
+ 	val |= PCI_COMMAND_MEMORY;
+ 	val |= PCI_COMMAND_MASTER;
+ 	writel(val, p->base + PCI_CTRL);
 -
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
- void pci_restore_vc_state(struct pci_dev *dev);
-Index: linux-pm/drivers/pci/pci.h
-===================================================================
---- linux-pm.orig/drivers/pci/pci.h
-+++ linux-pm/drivers/pci/pci.h
-@@ -47,11 +47,7 @@ int pci_probe_reset_function(struct pci_
-  *                platform; to be used during system-wide transitions from a
-  *                sleeping state to the working state and vice versa
-  *
-- * @sleep_wake: enables/disables the system wake up capability of given device
-- *
-- * @run_wake: enables/disables the platform to generate run-time wake-up events
-- *		for given device (the device's wake-up capability has to be
-- *		enabled by @sleep_wake for this feature to work)
-+ * @set_wakeup: enables/disables wakeup capability for the device
-  *
-  * @need_resume: returns 'true' if the given device (which is currently
-  *		suspended) needs to be resumed to be configured for system
-@@ -65,8 +61,7 @@ struct pci_platform_pm_ops {
- 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
- 	pci_power_t (*get_state)(struct pci_dev *dev);
- 	pci_power_t (*choose_state)(struct pci_dev *dev);
--	int (*sleep_wake)(struct pci_dev *dev, bool enable);
--	int (*run_wake)(struct pci_dev *dev, bool enable);
-+	int (*set_wakeup)(struct pci_dev *dev, bool enable);
- 	bool (*need_resume)(struct pci_dev *dev);
- };
- 
-Index: linux-pm/drivers/pci/pci-driver.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-driver.c
-+++ linux-pm/drivers/pci/pci-driver.c
-@@ -1216,7 +1216,7 @@ static int pci_pm_runtime_resume(struct
- 
- 	pci_restore_standard_config(pci_dev);
- 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
--	__pci_enable_wake(pci_dev, PCI_D0, true, false);
-+	pci_enable_wake(pci_dev, PCI_D0, false);
- 	pci_fixup_device(pci_fixup_resume, pci_dev);
- 
- 	rc = pm->runtime_resume(dev);
-Index: linux-pm/drivers/pci/pci-mid.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-mid.c
-+++ linux-pm/drivers/pci/pci-mid.c
-@@ -39,12 +39,7 @@ static pci_power_t mid_pci_choose_state(
- 	return PCI_D3hot;
- }
- 
--static int mid_pci_sleep_wake(struct pci_dev *dev, bool enable)
--{
--	return 0;
--}
+-	list_splice_init(&res, &host->windows);
+-	ret = pci_register_host_bridge(host);
+-	if (ret) {
+-		dev_err(dev, "failed to register host: %d\n", ret);
+-		return ret;
+-	}
+-	p->bus = host->bus;
 -
--static int mid_pci_run_wake(struct pci_dev *dev, bool enable)
-+static int mid_pci_wakeup(struct pci_dev *dev, bool enable)
- {
- 	return 0;
- }
-@@ -59,8 +54,7 @@ static const struct pci_platform_pm_ops
- 	.set_state	= mid_pci_set_power_state,
- 	.get_state	= mid_pci_get_power_state,
- 	.choose_state	= mid_pci_choose_state,
--	.sleep_wake	= mid_pci_sleep_wake,
--	.run_wake	= mid_pci_run_wake,
-+	.set_wakeup	= mid_pci_wakeup,
- 	.need_resume	= mid_pci_need_resume,
- };
+ 	/* Mask and clear all interrupts */
+-	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2 + 2, 2, 0xF000);
++	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2 + 2, 2, 0xF000);
+ 	if (variant->cascaded_irq) {
+ 		ret = faraday_pci_setup_cascaded_irq(p);
+ 		if (ret) {
+@@ -519,6 +519,14 @@ static int faraday_pci_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
  
++	list_splice_init(&res, &host->windows);
++	ret = pci_register_host_bridge(host);
++	if (ret) {
++		dev_err(dev, "failed to register host: %d\n", ret);
++		return ret;
++	}
++	p->bus = host->bus;
++
+ 	pci_scan_child_bus(p->bus);
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ 	pci_bus_assign_resources(p->bus);
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
