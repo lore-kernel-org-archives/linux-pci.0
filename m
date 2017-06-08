@@ -1,108 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 6 Jun 2017 09:55:53 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:49936 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751536AbdFHOMv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:12:51 -0400
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>, rafael@kernel.org
-Cc: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-Message-ID: <20170606085553.GA20085@red-moon>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
- <20170530132408.GA2556@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 04/42] PCI: Initialize bridge release function at bridge allocation
+Date: Thu,  8 Jun 2017 15:13:04 +0100
+Message-Id: <20170608141342.2018-5-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gab, Rafael,
+The introduction of pci_register_host_bridge() kernel interface
+allows PCI host controller drivers to create the struct pci_host_bridge
+object, initialize it and register it with the kernel so that its
+corresponding PCI bus can be scanned and its devices probed.
 
-On Wed, May 31, 2017 at 10:24:47AM +0000, Gabriele Paoloni wrote:
+The host bridge device release function pci_release_host_bridge_dev is a
+static function common for all struct pci_host_bridge allocated objects,
+so in its current form cannot be used by PCI host bridge controllers
+drivers to initialize the allocated struct pci_host_bridge, which
+leaves struct pci_host_bridge devices release function uninitialized.
 
-[...]
+Since pci_release_host_bridge_dev is a function common to all PCI
+host bridge objects, initialize it in pci_alloc_host_bridge() (ie
+common host bridge allocation interface) so that all struct
+pci_host_bridge objects have their release function initialized by
+default at allocation time, removing the need for exporting the
+common pci_release_host_bridge_dev function to other compilation
+units.
 
-> > > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> > > index e39ec7b..37dd23c 100644
-> > > --- a/drivers/acpi/scan.c
-> > > +++ b/drivers/acpi/scan.c
-> > > @@ -2035,6 +2035,7 @@ int __init acpi_scan_init(void)
-> > >  	acpi_int340x_thermal_init();
-> > >  	acpi_amba_init();
-> > >  	acpi_watchdog_init();
-> > > +	acpi_indirectio_scan_init();
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Unfortunately this is becoming a pattern and we are ending up
-with a static ordering of "subsystems" init (even though for this
-LPC series it is just the Hisilicon driver that requires this call)
-and I am not sure I see any way of avoiding it. I think that's always
-been the case in x86, with fewer subsystems/kernel paths to care
-about, I wanted to flag this up though to check your opinion since
-I am not sure this is the right direction we are taking.
-
-I also think that relying on _DEP to build any dependency is not
-entirely a) usable (owing to legacy bindings and previous _DEP misuse)
-and b) compliant with ACPI bindings given that _DEP has to be used
-for operation regions only.
-
-Thoughts ?
-
-Thanks,
-Lorenzo
-
-> > >  	acpi_scan_add_handler(&generic_device_handler);
-> > >
-> > > diff --git a/include/acpi/acpi_indirect_pio.h
-> > b/include/acpi/acpi_indirect_pio.h
-> > > new file mode 100644
-> > > index 0000000..efc5c43
-> > > --- /dev/null
-> > > +++ b/include/acpi/acpi_indirect_pio.h
-> > > @@ -0,0 +1,24 @@
-> > > +/*
-> > > + * ACPI support for indirect-PIO bus.
-> > > + *
-> > > + * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-> > > + * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > > + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-> > > + *
-> > > + * This program is free software; you can redistribute it and/or
-> > modify
-> > > + * it under the terms of the GNU General Public License version 2 as
-> > > + * published by the Free Software Foundation.
-> > > + */
-> > > +
-> > > +#ifndef _ACPI_INDIRECT_PIO_H
-> > > +#define _ACPI_INDIRECT_PIO_H
-> > > +
-> > > +struct indirect_pio_device_desc {
-> > > +	void *pdata; /* device relevant info data */
-> > > +	int (*pre_setup)(struct acpi_device *adev, void *pdata);
-> > > +};
-> > > +
-> > > +int acpi_set_logic_pio_resource(struct device *child,
-> > > +		struct device *hostdev);
-> > > +
-> > > +#endif
-> > > --
-> > > 2.7.4
-> > >
-> > >
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950..586d83d 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -531,6 +531,7 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+ 		return NULL;
+ 
+ 	INIT_LIST_HEAD(&bridge->windows);
++	bridge->dev.release = pci_release_host_bridge_dev;
+ 
+ 	return bridge;
+ }
+@@ -2310,7 +2311,6 @@ static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
+ 		return NULL;
+ 
+ 	bridge->dev.parent = parent;
+-	bridge->dev.release = pci_release_host_bridge_dev;
+ 
+ 	list_splice_init(resources, &bridge->windows);
+ 	bridge->sysdata = sysdata;
+-- 
+2.10.0
