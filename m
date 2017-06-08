@@ -1,175 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:55354 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752103AbdFSVpv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 17:45:51 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
+Received: from foss.arm.com ([217.140.101.70]:50760 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751092AbdFHOOO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 8 Jun 2017 10:14:14 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 1/6] ACPI / PM: Drop run_wake from struct acpi_device_wakeup_flags
-Date: Mon, 19 Jun 2017 23:33:05 +0200
-Message-ID: <4516672.gNkEGjz9qs@aspire.rjw.lan>
-In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [RFT PATCH v2 21/42] PCI: rockchip: Convert PCI scan API to pci_scan_root_bus_bridge()
+Date: Thu,  8 Jun 2017 15:13:21 +0100
+Message-Id: <20170608141342.2018-22-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The introduction of pci_scan_root_bus_bridge() provides a PCI core
+API to scan a PCI root bus backed by an already initialized
+struct pci_host_bridge object, which simplifies the bus scan
+interface and makes the PCI scan root bus interface easier to
+generalize as members are added to the struct pci_host_bridge.
 
-The run_wake flag in struct acpi_device_wakeup_flags stores the
-information on whether or not the device can generate wakeup
-signals at run time, but in ACPI that really is equivalent to
-being able to generate wakeup signals at all.
+Convert PCI rockchip host code to pci_scan_root_bus_bridge() to
+improve the PCI root bus scanning interface.
 
-In fact, run_wake will always be set after successful executeion of
-acpi_setup_gpe_for_wake(), but if that fails, the device will not be
-able to use a wakeup GPE at all, so it won't be able to wake up the
-systems from sleep states too.  Hence, run_wake actually means that
-the device is capable of triggering wakeup and so it is equivalent
-to the valid flag.
-
-For this reason, drop run_wake from struct acpi_device_wakeup_flags
-and make sure that the valid flag is only set if
-acpi_setup_gpe_for_wake() has been successful.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/acpi/pci_root.c |    2 +-
- drivers/acpi/proc.c     |    4 ++--
- drivers/acpi/scan.c     |   23 ++++++++---------------
- drivers/pci/pci-acpi.c  |    3 +--
- include/acpi/acpi_bus.h |    1 -
- 5 files changed, 12 insertions(+), 21 deletions(-)
+ drivers/pci/host/pcie-rockchip.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -835,7 +835,7 @@ static int acpi_bus_extract_wakeup_devic
- 	return err;
- }
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 0e020b6..cae5a6d 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1284,6 +1284,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	struct rockchip_pcie *rockchip;
+ 	struct device *dev = &pdev->dev;
+ 	struct pci_bus *bus, *child;
++	struct pci_host_bridge *bridge;
+ 	struct resource_entry *win;
+ 	resource_size_t io_base;
+ 	struct resource	*mem;
+@@ -1295,10 +1296,12 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	if (!dev->of_node)
+ 		return -ENODEV;
  
--static void acpi_wakeup_gpe_init(struct acpi_device *device)
-+static bool acpi_wakeup_gpe_init(struct acpi_device *device)
- {
- 	static const struct acpi_device_id button_device_ids[] = {
- 		{"PNP0C0C", 0},
-@@ -845,13 +845,11 @@ static void acpi_wakeup_gpe_init(struct
- 	};
- 	struct acpi_device_wakeup *wakeup = &device->wakeup;
- 	acpi_status status;
--	acpi_event_status event_status;
+-	rockchip = devm_kzalloc(dev, sizeof(*rockchip), GFP_KERNEL);
+-	if (!rockchip)
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*rockchip));
++	if (!bridge)
+ 		return -ENOMEM;
  
- 	wakeup->flags.notifier_present = 0;
++	rockchip = pci_host_bridge_priv(bridge);
++
+ 	platform_set_drvdata(pdev, rockchip);
+ 	rockchip->dev = dev;
  
- 	/* Power button, Lid switch always enable wakeup */
- 	if (!acpi_match_device_ids(device, button_device_ids)) {
--		wakeup->flags.run_wake = 1;
- 		if (!acpi_match_device_ids(device, &button_device_ids[1])) {
- 			/* Do not use Lid/sleep button for S5 wakeup */
- 			if (wakeup->sleep_state == ACPI_STATE_S5)
-@@ -859,17 +857,12 @@ static void acpi_wakeup_gpe_init(struct
- 		}
- 		acpi_mark_gpe_for_wake(wakeup->gpe_device, wakeup->gpe_number);
- 		device_set_wakeup_capable(&device->dev, true);
--		return;
-+		return true;
+@@ -1396,11 +1399,18 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		goto err_free_res;
  	}
  
--	acpi_setup_gpe_for_wake(device->handle, wakeup->gpe_device,
--				wakeup->gpe_number);
--	status = acpi_get_gpe_status(wakeup->gpe_device, wakeup->gpe_number,
--				     &event_status);
--	if (ACPI_FAILURE(status))
--		return;
--
--	wakeup->flags.run_wake = !!(event_status & ACPI_EVENT_FLAG_HAS_HANDLER);
-+	status = acpi_setup_gpe_for_wake(device->handle, wakeup->gpe_device,
-+					 wakeup->gpe_number);
-+	return ACPI_SUCCESS(status);
- }
+-	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
+-	if (!bus) {
+-		err = -ENOMEM;
++	list_splice_init(&res, &bridge->windows);
++	bridge->dev.parent = &pdev->dev;
++	bridge->sysdata = rockchip;
++	bridge->busnr = 0;
++	bridge->ops = &rockchip_pcie_ops;
++
++	err = pci_scan_root_bus_bridge(bridge);
++	if (!err)
+ 		goto err_free_res;
+-	}
++
++	bus = bridge->bus;
++
+ 	rockchip->root_bus = bus;
  
- static void acpi_bus_get_wakeup_device_flags(struct acpi_device *device)
-@@ -887,10 +880,10 @@ static void acpi_bus_get_wakeup_device_f
- 		return;
- 	}
- 
--	device->wakeup.flags.valid = 1;
-+	device->wakeup.flags.valid = acpi_wakeup_gpe_init(device);
- 	device->wakeup.prepare_count = 0;
--	acpi_wakeup_gpe_init(device);
--	/* Call _PSW/_DSW object to disable its ability to wake the sleeping
-+	/*
-+	 * Call _PSW/_DSW object to disable its ability to wake the sleeping
- 	 * system for the ACPI device with the _PRW object.
- 	 * The _PSW object is depreciated in ACPI 3.0 and is replaced by _DSW.
- 	 * So it is necessary to call _DSW object first. Only when it is not
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -313,7 +313,6 @@ struct acpi_device_perf {
- /* Wakeup Management */
- struct acpi_device_wakeup_flags {
- 	u8 valid:1;		/* Can successfully enable wakeup? */
--	u8 run_wake:1;		/* Run-Wake GPE devices */
- 	u8 notifier_present:1;  /* Wake-up notify handler has been installed */
- 	u8 enabled:1;		/* Enabled for wakeup */
- };
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -608,7 +608,7 @@ static int acpi_pci_root_add(struct acpi
- 		pcie_no_aspm();
- 
- 	pci_acpi_add_bus_pm_notifier(device);
--	if (device->wakeup.flags.run_wake)
-+	if (device->wakeup.flags.valid)
- 		device_set_run_wake(root->bus->bridge, true);
- 
- 	if (hotadd) {
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -778,9 +778,8 @@ static void pci_acpi_setup(struct device
- 		return;
- 
- 	device_set_wakeup_capable(dev, true);
-+	device_set_run_wake(dev, true);
- 	acpi_pci_sleep_wake(pci_dev, false);
--	if (adev->wakeup.flags.run_wake)
--		device_set_run_wake(dev, true);
- }
- 
- static void pci_acpi_cleanup(struct device *dev)
-Index: linux-pm/drivers/acpi/proc.c
-===================================================================
---- linux-pm.orig/drivers/acpi/proc.c
-+++ linux-pm/drivers/acpi/proc.c
-@@ -42,7 +42,7 @@ acpi_system_wakeup_device_seq_show(struc
- 
- 		if (!dev->physical_node_count) {
- 			seq_printf(seq, "%c%-8s\n",
--				dev->wakeup.flags.run_wake ? '*' : ' ',
-+				dev->wakeup.flags.valid ? '*' : ' ',
- 				device_may_wakeup(&dev->dev) ?
- 					"enabled" : "disabled");
- 		} else {
-@@ -58,7 +58,7 @@ acpi_system_wakeup_device_seq_show(struc
- 					seq_printf(seq, "\t\t");
- 
- 				seq_printf(seq, "%c%-8s  %s:%s\n",
--					dev->wakeup.flags.run_wake ? '*' : ' ',
-+					dev->wakeup.flags.valid ? '*' : ' ',
- 					(device_may_wakeup(&dev->dev) ||
- 					device_may_wakeup(ldev)) ?
- 					"enabled" : "disabled",
+ 	pci_bus_size_bridges(bus);
+-- 
+2.10.0
