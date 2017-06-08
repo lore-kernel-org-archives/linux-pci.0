@@ -1,83 +1,135 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFT PATCH v2 01/42] PCI: xilinx-nwl: Remove nwl_pcie_enable_msi()
- unused bus parameter
-Date: Thu,  8 Jun 2017 15:13:01 +0100
-Message-Id: <20170608141342.2018-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:56443 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751393AbdFHSSX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jun 2017 14:18:23 -0400
+Message-ID: <1496945880.17240.20.camel@pengutronix.de>
+Subject: Re: [PATCH v2 1/9] pci: adding new irq api to pci-designware
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: bhelgaas@google.com, marc.zyngier@arm.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, niklas.cassel@axis.com,
+        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
+        linux-pci@vger.kernel.org
+Date: Thu, 08 Jun 2017 20:18:00 +0200
+In-Reply-To: <35ad0ce714dbf613f32d1fd85af78540bdb68d32.1496677911.git.jpinto@synopsys.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+         <35ad0ce714dbf613f32d1fd85af78540bdb68d32.1496677911.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-nwl_pcie_enable_msi() second parameter (ie bus) is unused and creates
-a fake dependency on the struct pci_bus that just does not exist.
+Am Montag, den 05.06.2017, 17:19 +0100 schrieb Joao Pinto:
+> This patch adds the new interrupt api to pcie-designware, keeping the old
+> one. Although the old API is still available, pcie-designware initiates with
+> the new one.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> ---
+> Change v1->v2:
+> - num_vectors is now not configurable by DT. Now it is 32 by default and
+> can be overiden by any specific SoC driver.
+> 
+>  drivers/pci/dwc/pcie-designware-host.c | 291 +++++++++++++++++++++++++++++----
+>  drivers/pci/dwc/pcie-designware.h      |  17 ++
+>  2 files changed, 277 insertions(+), 31 deletions(-)
+> 
+[...]
+>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+> @@ -279,11 +491,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	struct device *dev = pci->dev;
+>  	struct device_node *np = dev->of_node;
+>  	struct platform_device *pdev = to_platform_device(dev);
+> +	struct resource_entry *win, *tmp;
+>  	struct pci_bus *bus, *child;
+>  	struct resource *cfg_res;
+>  	int i, ret;
+> +
+>  	LIST_HEAD(res);
+> -	struct resource_entry *win, *tmp;
+> +
+> +	spin_lock_init(&pci->pp.lock);
+>  
+>  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+>  	if (cfg_res) {
+> @@ -377,18 +592,32 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		pci->num_viewport = 2;
+>  
+>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -		if (!pp->ops->msi_host_init) {
+> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+> -						MAX_MSI_IRQS, &msi_domain_ops,
+> -						&dw_pcie_msi_chip);
+> -			if (!pp->irq_domain) {
+> -				dev_err(dev, "irq domain init failed\n");
+> -				ret = -ENXIO;
+> +		/*
+> +		 * If a specific SoC driver needs to change the
+> +		 * default number of vectors, it needs to implement
+> +		 * the set_num_vectors callback.
+> +		 */
+No need for a function to implement this. The implementation glue driver
+can just set up pcie_port.num_vectors to the correct number before
+calling dw_pcie_host_init.
 
-Remove it.
+> +		if (!pp->ops->set_num_vectors) {
+> +			pp->num_vectors = MSI_DEF_NUM_VECTORS;
+> +		} else {
+> +			pp->ops->set_num_vectors(pp);
+> +
+> +			if (pp->num_vectors > MAX_MSI_IRQS ||
+> +			    pp->num_vectors == 0) {
+> +				dev_err(dev,
+> +					"Invalid number of vectors\n");
+>  				goto error;
+>  			}
+> +		}
+>  
+> -			for (i = 0; i < MAX_MSI_IRQS; i++)
+> -				irq_create_mapping(pp->irq_domain, i);
+> +		if (!pp->ops->msi_host_init) {
+> +			ret = dw_pcie_allocate_domains(pci);
+> +			if (ret)
+> +				goto error;
+> +
+> +			irq_set_chained_handler_and_data(pci->pp.msi_irq,
+> +							 dw_chained_msi_isr,
+> +							 pci);
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+So this breaks legacy PCI irqs on DWC platforms even more, as the IRQ
+line can not be shared, even if the endpoint device doesn't support
+MSIs.
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 4b16b26..26e66e8 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -530,7 +530,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
- 	return 0;
- }
- 
--static int nwl_pcie_enable_msi(struct nwl_pcie *pcie, struct pci_bus *bus)
-+static int nwl_pcie_enable_msi(struct nwl_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct platform_device *pdev = to_platform_device(dev);
-@@ -838,7 +838,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
--		err = nwl_pcie_enable_msi(pcie, bus);
-+		err = nwl_pcie_enable_msi(pcie);
- 		if (err < 0) {
- 			dev_err(dev, "failed to enable MSI support: %d\n", err);
- 			goto error;
--- 
-2.10.0
+Do we have any solution for that? In the worst case we would need a DT
+property to enable MSI support and not register the MSI IRQ domain in
+that case.
 
+Regards,
+Lucas
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  		} else {
+>  			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
+>  			if (ret < 0)
+> @@ -400,14 +629,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  		pp->ops->host_init(pp);
+>  
+>  	pp->root_bus_nr = pp->busn->start;
+> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+> -		bus = pci_scan_root_bus_msi(dev, pp->root_bus_nr,
+> -					    &dw_pcie_ops, pp, &res,
+> -					    &dw_pcie_msi_chip);
+> -		dw_pcie_msi_chip.dev = dev;
+> -	} else
+> -		bus = pci_scan_root_bus(dev, pp->root_bus_nr, &dw_pcie_ops,
+> -					pp, &res);
+> +
+> +	bus = pci_scan_root_bus(dev, pp->root_bus_nr, &dw_pcie_ops,
+> +				pp, &res);
+>  	if (!bus) {
+>  		ret = -ENOMEM;
+>  		goto error;
+> @@ -579,11 +803,16 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
