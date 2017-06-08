@@ -1,76 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFT PATCH v2 07/42] drivers: pci: host: ftpci100: Fix host bridge
- memory leakage
-Date: Thu,  8 Jun 2017 15:13:07 +0100
-Message-Id: <20170608141342.2018-8-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Roy Zang <tie-fei.zang@freescale.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54072 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1751827AbdFHPY5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jun 2017 11:24:57 -0400
+Date: Thu, 8 Jun 2017 11:24:55 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH 2/6] USB / PCI / PM: Allow the PCI core to do the resume
+ cleanup
+In-Reply-To: <1565826.hIbT8kZpDn@aspire.rjw.lan>
+Message-ID: <Pine.LNX.4.44L0.1706081124310.1949-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When probing the PCI host controller driver, if an error condition
-is trigger the probe function code does not free memory allocated
-for the struct pci_host_bridge resulting in memory leakage.
+On Thu, 8 Jun 2017, Rafael J. Wysocki wrote:
 
-Move the struct pci_host_bridge allocation over to the respective
-devm interface to fix the issue.
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> hcd_pci_resume_noirq() used as a universal _resume_noirq handler for
+> PCI USB controllers calls pci_back_from_sleep() which is unnecessary
+> and may become problematic.
+> 
+> It is unnecessary, because the PCI bus type carries out post-suspend
+> cleanup of all PCI devices during resume and that covers all things
+> done by the pci_back_from_sleep().  There is no reason why USB cannot
+> follow all of the other PCI devices in that respect.
+> 
+> It will become problematic after subsequent changes that make it
+> possible to go back to sleep again after executing dpm_resume_noirq()
+> if no valid system wakeup events have been detected at that point.
+> Namely, calling pci_back_from_sleep() at the _resume_noirq stage
+> will cause the wakeup status of the devices in question to be cleared
+> and if any of them has triggered system wakeup, that event may be
+> missed then.
+> 
+> For the above reasons, drop the pci_back_from_sleep() invocation
+> from hcd_pci_resume_noirq().
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/usb/core/hcd-pci.c |    7 +------
+>  1 file changed, 1 insertion(+), 6 deletions(-)
+> 
+> Index: linux-pm/drivers/usb/core/hcd-pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/usb/core/hcd-pci.c
+> +++ linux-pm/drivers/usb/core/hcd-pci.c
+> @@ -584,12 +584,7 @@ static int hcd_pci_suspend_noirq(struct
+>  
+>  static int hcd_pci_resume_noirq(struct device *dev)
+>  {
+> -	struct pci_dev		*pci_dev = to_pci_dev(dev);
+> -
+> -	powermac_set_asic(pci_dev, 1);
+> -
+> -	/* Go back to D0 and disable remote wakeup */
+> -	pci_back_from_sleep(pci_dev);
+> +	powermac_set_asic(to_pci_dev(dev), 1);
+>  	return 0;
+>  }
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/host/pci-ftpci100.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index 1c1fd60..89cbb1f 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -441,7 +441,7 @@ static int faraday_pci_probe(struct platform_device *pdev)
- 	u32 val;
- 	LIST_HEAD(res);
- 
--	host = pci_alloc_host_bridge(sizeof(*p));
-+	host = devm_pci_alloc_host_bridge(dev, sizeof(*p));
- 	if (!host)
- 		return -ENOMEM;
- 
--- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
