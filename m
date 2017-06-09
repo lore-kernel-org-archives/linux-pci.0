@@ -1,54 +1,69 @@
-Return-Path: <SRS0=oZDb=5H=dell.com=Narendra.K@kernel.org>
-Return-Path: <SRS0=oZDb=5H=dell.com=Narendra.K@kernel.org>
-From: <Narendra.K@dell.com>
-Cc: <jdelvare@suse.de>, <x86@kernel.org>, <linux-pci@vger.kernel.org>,
-	<Jordan.Hargrave@dell.com>, <Shyam.Iyer@dell.com>, <bhelgaas@google.com>,
-	<Sujith.Pandel@dell.com>
-To: <helgaas@kernel.org>
-Subject: RE: dmi type 0xB1 record - unknown flag
-Date: Fri, 2 Jun 2017 09:47:55 +0000
-Message-ID: <9b04fb5e2db744b29f660809197a2b52@BLRX13MDC105.AMER.DELL.COM>
-References: <20170601143826.5f980444@endymion>
- <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
- <20170601165959.GB12257@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170601165959.GB12257@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43246 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbdFIJDu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jun 2017 05:03:50 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: [PATCH 03/11] PCI: pci-driver: convert to use DRIVER_ATTR_WO
+Date: Fri,  9 Jun 2017 11:03:06 +0200
+Message-Id: <20170609090314.13991-3-gregkh@linuxfoundation.org>
+In-Reply-To: <20170609090314.13991-1-gregkh@linuxfoundation.org>
+References: <20170609090314.13991-1-gregkh@linuxfoundation.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Thursday, June 1, 2017 10:30 PM
-> To: K, Narendra <Narendra_K@Dell.com>
-> Cc: jdelvare@suse.de; x86@kernel.org; linux-pci@vger.kernel.org; Hargrave=
-,
-> Jordan <Jordan_Hargrave@Dell.com>; Iyer, Shyam
-> <Shyam_Iyer@Dell.com>; bhelgaas@google.com
-> Subject: Re: dmi type 0xB1 record - unknown flag
+We are trying to get rid of DRIVER_ATTR(), and all of the pci-driver
+core driver attributes can be trivially changed to use DRIVER_ATTR_WO().
 
-[...]
-> > The value 0x00 is not a valid value. When the flag is 0x00, the sort
-> > method will be the default that is decided by the kernel.
-> >
-> > There is no additional handling required for such a system.
->=20
-> That was added by 6e8af08dfa40 ("PCI: enable pci=3Dbfsort by default on
-> future Dell systems").
->=20
-> The fact that BIOS supplied a B1 record with an unknown value (0) looks l=
-ike a
-> Dell BIOS defect, which is ironic, considering that Dell added this thing=
- in the
-> first place.
->=20
-> I think we should remove the message, since it is alarming to users and t=
-hey
-> can't do anything about it anyway.
->=20
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-pci@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/pci-driver.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Hi Bjorn,
-
-Thank you for the feedback. We will submit a patch to remove the message.=20
-
-With regards,
-Narendra K
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 192e7b681b96..934a78a2fbef 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -96,7 +96,7 @@ static void pci_free_dynids(struct pci_driver *drv)
+  *
+  * Allow PCI IDs to be added to an existing driver via sysfs.
+  */
+-static ssize_t store_new_id(struct device_driver *driver, const char *buf,
++static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ 			    size_t count)
+ {
+ 	struct pci_driver *pdrv = to_pci_driver(driver);
+@@ -154,7 +154,7 @@ static ssize_t store_new_id(struct device_driver *driver, const char *buf,
+ 		return retval;
+ 	return count;
+ }
+-static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
++static DRIVER_ATTR_WO(new_id);
+ 
+ /**
+  * store_remove_id - remove a PCI device ID from this driver
+@@ -164,7 +164,7 @@ static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
+  *
+  * Removes a dynamic pci device ID to this driver.
+  */
+-static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
++static ssize_t remove_id_store(struct device_driver *driver, const char *buf,
+ 			       size_t count)
+ {
+ 	struct pci_dynid *dynid, *n;
+@@ -198,7 +198,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+ 
+ 	return retval;
+ }
+-static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
++static DRIVER_ATTR_WO(remove_id);
+ 
+ static struct attribute *pci_drv_attrs[] = {
+ 	&driver_attr_new_id.attr,
+-- 
+2.13.1
