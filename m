@@ -1,48 +1,197 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47666 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752289AbdFSXQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Jun 2017 19:16:45 -0400
-Date: Mon, 19 Jun 2017 18:16:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: vmd: Correct comment: VMD domains start at 0x10000,
- not 0x1000
-Message-ID: <20170619231642.GF554@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170619203601.2396.80335.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v5 6/6] drm/amdgpu: resize VRAM BAR for CPU access v3
+Date: Fri,  9 Jun 2017 10:59:47 +0200
+Message-Id: <1496998787-6371-7-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170619203601.2396.80335.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 19, 2017 at 03:36:01PM -0500, Bjorn Helgaas wrote:
-> VMD domains are allocated starting at 0x10000, not 0x1000 as the comment
-> said.  Correct the comment and add a reference to the ACPI spec for _SEG.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+From: Christian König <christian.koenig@amd.com>
 
-Applied with Keith's reviewed-by to pci/host-vmd for v4.13.
+Try to resize BAR0 to let CPU access all of VRAM.
 
-> ---
->  drivers/pci/host/vmd.c |    5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index e27ad2a3bd33..53aa1d4b17e8 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -539,7 +539,10 @@ static void vmd_detach_resources(struct vmd_dev *vmd)
->  }
->  
->  /*
-> - * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
-> + * VMD domains start at 0x10000 to not clash with ACPI _SEG domains.
-> + * Per ACPI r6.0, sec 6.5.6,  _SEG returns an integer, of which the lower
-> + * 16 bits are the PCI Segment Group (domain) number.  Other bits are
-> + * currently reserved.
->   */
->  static int vmd_find_free_domain(void)
->  {
-> 
+v2: rebased, style cleanups, disable mem decode before resize,
+    handle gmc_v9 as well, round size up to power of two.
+v3: handle gmc_v6 as well, release and reassign all BARs in the driver.
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 40 ++++++++++++++++++++++++++++++
+ drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c      |  8 +++---
+ drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++---
+ drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++---
+ drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 +++++---
+ 6 files changed, 62 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+index c6a2ca4..87655e2 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+@@ -1943,6 +1943,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
+ 				 struct ttm_mem_reg *mem);
+ void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
+ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
++void amdgpu_resize_bar0(struct amdgpu_device *adev);
+ void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
+ int amdgpu_ttm_init(struct amdgpu_device *adev);
+ void amdgpu_ttm_fini(struct amdgpu_device *adev);
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index 99290af..f74b79f 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -709,6 +709,46 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
+ 			mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
+ }
+ 
++/**
++ * amdgpu_resize_bar0 - try to resize BAR0
++ *
++ * @adev: amdgpu_device pointer
++ *
++ * Try to resize BAR0 to make all VRAM CPU accessible.
++ */
++void amdgpu_resize_bar0(struct amdgpu_device *adev)
++{
++	u64 space_needed = roundup_pow_of_two(adev->mc.real_vram_size);
++	u32 rbar_size = order_base_2(((space_needed >> 20) | 1)) - 1;
++	u16 cmd;
++	int r;
++
++	/* Disable memory decoding while we change the BAR addresses and size */
++	pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
++	pci_write_config_word(adev->pdev, PCI_COMMAND,
++			      cmd & ~PCI_COMMAND_MEMORY);
++
++	/* Free the VRAM and doorbell BAR, we most likely need to move both. */
++	amdgpu_doorbell_fini(adev);
++	pci_release_resource(adev->pdev, 0);
++	if (adev->asic_type >= CHIP_BONAIRE)
++		pci_release_resource(adev->pdev, 2);
++
++	r = pci_resize_resource(adev->pdev, 0, rbar_size);
++	if (r == -ENOSPC)
++		DRM_INFO("Not enough PCI address space for a large BAR.");
++	else if (r && r != -ENOTSUPP)
++		DRM_ERROR("Problem resizing BAR0 (%d).", r);
++
++	pci_assign_unassigned_bus_resources(adev->pdev->bus);
++	pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
++
++	/* When the doorbell BAR isn't available we have no chance of
++	 * using the device.
++	 */
++	BUG_ON(amdgpu_doorbell_init(adev));
++}
++
+ /*
+  * GPU helpers function.
+  */
+diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
+index a33ba60..af3c3c6 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
+@@ -334,12 +334,14 @@ static int gmc_v6_0_mc_init(struct amdgpu_device *adev)
+ 		break;
+ 	}
+ 	adev->mc.vram_width = numchan * chansize;
+-	/* Could aper size report 0 ? */
+-	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+-	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	/* size in MB on si */
+ 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
++
++	if (!(adev->flags & AMD_IS_APU))
++		amdgpu_resize_bar0(adev);
++	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
++	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	adev->mc.visible_vram_size = adev->mc.aper_size;
+ 
+ 	/* unless the user had overridden it, set the gart
+diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+index 1326c1f..1d9f7a2 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+@@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *adev)
+ 		}
+ 		adev->mc.vram_width = numchan * chansize;
+ 	}
+-	/* Could aper size report 0 ? */
+-	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+-	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	/* size in MB on si */
+ 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 
++	if (!(adev->flags & AMD_IS_APU))
++		amdgpu_resize_bar0(adev);
++	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
++	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++
+ #ifdef CONFIG_X86_64
+ 	if (adev->flags & AMD_IS_APU) {
+ 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+index 42e5b55..858153d 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+@@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *adev)
+ 		}
+ 		adev->mc.vram_width = numchan * chansize;
+ 	}
+-	/* Could aper size report 0 ? */
+-	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+-	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	/* size in MB on si */
+ 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 
++	if (!(adev->flags & AMD_IS_APU))
++		amdgpu_resize_bar0(adev);
++	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
++	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++
+ #ifdef CONFIG_X86_64
+ 	if (adev->flags & AMD_IS_APU) {
+ 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+index 68172aa..f2e311d 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+@@ -480,17 +480,19 @@ static int gmc_v9_0_mc_init(struct amdgpu_device *adev)
+ 	}
+ 	adev->mc.vram_width = numchan * chansize;
+ 
+-	/* Could aper size report 0 ? */
+-	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+-	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	/* size in MB on si */
+ 	adev->mc.mc_vram_size =
+ 		((adev->flags & AMD_IS_APU) ? nbio_v7_0_get_memsize(adev) :
+ 		 nbio_v6_1_get_memsize(adev)) * 1024ULL * 1024ULL;
+ 	adev->mc.real_vram_size = adev->mc.mc_vram_size;
+-	adev->mc.visible_vram_size = adev->mc.aper_size;
++
++	if (!(adev->flags & AMD_IS_APU))
++		amdgpu_resize_bar0(adev);
++	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
++	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 
+ 	/* In case the PCI BAR is larger than the actual amount of vram */
++	adev->mc.visible_vram_size = adev->mc.aper_size;
+ 	if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
+ 		adev->mc.visible_vram_size = adev->mc.real_vram_size;
+ 
+-- 
+2.7.4
