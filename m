@@ -1,57 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36986 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751458AbdFQQL5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 17 Jun 2017 12:11:57 -0400
-To: 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-        Serge Semin <fancer.lancer@gmail.com>
-References: <20170615203729.9009-1-logang@deltatee.com>
- <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
- <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
- <20170616163324.GA15472@mobilestation>
- <883bdb76-972c-7de9-0208-2d0933f192d4@deltatee.com>
- <20170616183824.GA5175@mobilestation.tp-local.ru>
- <33b6c321-c0af-7340-8e8e-e929a00005c7@deltatee.com>
- <20170616202100.GA24969@mobilestation.tp-local.ru>
- <20170617050959.GC6040@kroah.com>
-Cc: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        'Jon Mason' <jdmason@kudzu.us>,
-        'Dave Jiang' <dave.jiang@intel.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
-        'Stephen Bates' <sbates@raithlin.com>,
-        Sergey.Semin@t-platforms.ru
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <cf24258a-fa26-047f-e347-31c2b36a641a@deltatee.com>
-Date: Sat, 17 Jun 2017 10:11:33 -0600
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v5 4/6] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v4
+Date: Fri,  9 Jun 2017 10:59:45 +0200
+Message-Id: <1496998787-6371-5-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <20170617050959.GC6040@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Christian König <christian.koenig@amd.com>
 
+Most BIOS don't enable this because of compatibility reasons.
 
-On 16/06/17 11:09 PM, 'Greg Kroah-Hartman' wrote:
-> Ah, but the patchset does seem to properly formatted.  At least it's
-> easy for me to review as-published, while a much smaller number of
-> patches, making much larger individual patches, would be much much
-> harder to review.
-> 
-> But what do I know...
-> 
-> Oh wait, I review more kernel patches than anyone else :)
+Manually enable a 64bit BAR of 64GB size so that we have
+enough room for PCI devices.
 
-Thanks Greg.
+v2: style cleanups, increase size, add resource name, set correct flags,
+    print message that windows was added
+v3: add defines for all the magic numbers, style cleanups
+v4: add some comment that the BIOS should actually allow this using
+    _PRS and _SRS.
 
-> Logan, given that you need to rebase these on the "new" ntb api (and why
-> the hell is that tree on github? We can't take kernel git pulls from
-> github), is it worth reviewing this patch series as-is, or do you want
-> us to wait?
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ arch/x86/pci/fixup.c | 76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
 
-I think initial review at this time will still be useful. I don't expect
-the patchset will change _that_ much.
-
-Logan
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 6d52b94..489e753 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -571,3 +571,79 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
++
++#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
++#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
++#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
++#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
++
++#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
++#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
++
++#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
++#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
++#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
++#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
++
++/*
++ * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
++ * configuring host bridge windows using the _PRS and _SRS methods.
++ *
++ * But this is rarely implemented, so we manually enable a large 64bit BAR for
++ * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
++ */
++static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
++{
++	struct resource *res, *conflict;
++	u32 base, limit, high;
++	unsigned i;
++
++	for (i = 0; i < 8; ++i) {
++		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
++		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
++
++		/* Is this slot free? */
++		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
++			      AMD_141b_MMIO_BASE_WE_MASK)))
++			break;
++
++		base >>= 8;
++		base |= high << 24;
++
++		/* Abort if a slot already configures a 64bit BAR. */
++		if (base > 0x10000)
++			return;
++	}
++	if (i == 8)
++		return;
++
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
++		return;
++
++	res->name = "PCI Bus 0000:00";
++	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
++		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
++	res->start = 0x100000000ull;
++	res->end = 0xfd00000000ull - 1;
++
++	/* Just grab the free area behind system memory for this */
++	while ((conflict = request_resource_conflict(&iomem_resource, res)))
++		res->start = conflict->end + 1;
++
++	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
++
++	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
++		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
++	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
++	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
++		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
++		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
++
++	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
++	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
++	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
++
++	pci_bus_add_resource(dev->bus, res, 0);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+-- 
+2.7.4
