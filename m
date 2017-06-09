@@ -1,74 +1,211 @@
-Return-Path: <SRS0=HkhX=5Y=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=HkhX=5Y=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
- <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
- <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
- <7d9bfb52-b33a-79ea-dccf-fff1f849bd15@arm.com>
- <e45533a7-e469-7faf-4b30-acf6889b982c@sigmadesigns.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy
- <robin.murphy@arm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <0d84a5fc-9549-5fef-837b-4102d2e1f1d2@arm.com>
-Date: Mon, 19 Jun 2017 17:16:21 +0100
+Return-Path: <SRS0=OsY7=5O=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=OsY7=5O=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v3 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: John Garry <john.garry@huawei.com>, <leedom@chelsio.com>,
+        <ashok.raj@intel.com>, <helgaas@kernel.org>, <werner@chelsio.com>,
+        <ganeshgr@chelsio.com>, <asit.k.mallick@intel.com>,
+        <patrick.j.cramer@intel.com>, <Suravee.Suthikulpanit@amd.com>,
+        <Bob.Shaw@amd.com>, <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
+ <1496826968-10152-3-git-send-email-dingtianhong@huawei.com>
+ <a4b98567-286a-1fba-e935-f9ba50f1178d@huawei.com>
+CC: Linuxarm <linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <cf91605b-2c9d-150f-ad1d-a8cc17e0a1ee@huawei.com>
+Date: Fri, 9 Jun 2017 17:13:37 +0800
 MIME-Version: 1.0
-In-Reply-To: <e45533a7-e469-7faf-4b30-acf6889b982c@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <a4b98567-286a-1fba-e935-f9ba50f1178d@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/06/17 17:01, Marc Gonzalez wrote:
-> On 19/06/2017 17:58, Marc Zyngier wrote:
->> On 19/06/17 15:50, Marc Gonzalez wrote:
->>> On 07/06/2017 10:19, Marc Gonzalez wrote:
->>>
->>>> On 31/05/2017 15:33, Marc Gonzalez wrote:
->>>>
->>>>> +static int tango_pcie_probe(struct platform_device *pdev)
->>>>> +{
->>>>> +	int ret = -EINVAL;
->>>>> +	void __iomem *base;
->>>>> +	struct resource *res;
->>>>> +	struct tango_pcie *pcie;
->>>>> +	struct device *dev = &pdev->dev;
->>>>> +
->>>>> +	pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
->>>>> +	pr_err("Tainting kernel... Use driver at your own risk\n");
->>>>> +	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
->>>>
->>>> Hello Bjorn,
->>>>
->>>> In v4, your only comment was
->>>> "[muxing config and mem spaces] is a major issue and possibly even
->>>> a security problem [which requires at least an error message and a
->>>> kernel taint].
->>>>
->>>> Were there any other issues with the host bridge support?
->>>
->>> Hello Bjorn,
->>>
->>> I imagine you are now only waiting for Marc Z's Ack of patch 3/3 ?
->>> (AFAIU, all issues have been addressed as of v8 3/3.)
->>
->> Posting partial series is really not ideal, specially as you posted 3 of
->> them in less than 24 hours (and the latest was only 5 days ago).
->>
->> The maintainer is not going to chase you about potentially missing
->> patches...
+
+Hi John:
+
+Thanks for the reviewing, I will fix it in next version.
+
+Ding
+
+On 2017/6/8 1:55, John Garry wrote:
+> On 07/06/2017 10:16, Ding Tianhong wrote:
 > 
-> So the best course would be posting a new series with all patches
-> bumped to v8 then?
-
-No, because there is still the ambiguity of *which* v8 that is. Post a
-v9 that supersedes all the previously posted patches.
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> Hi Ding,
+> 
+> A few general style comments:
+> 
+>> The PCIe Device Control Register use the bit 4 to indicate that
+>> whether the device is permitted to enable relaxed ordering or not.
+>> But relaxed ordering is not safe for some platform which could only
+>> use strong write ordering, so devices are allowed (but not required)
+>> to enable relaxed ordering bit by default.
+>>
+>> If a PCIe device didn't enable the relaxed ordering attribute default,
+>> we should not do anything in the PCIe configuration, otherwise we
+>> should check if any of the devices above us do not support relaxed
+>> ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+>> the result if we get a return that indicate that the relaxed ordering
+>> is not supported we should update our device to disable relaxed ordering
+>> in configuration space. If the device above us doesn't exist or isn't
+>> the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+>> because we are probably running in a guest.
+> 
+> A guest machine/environment
+> 
+>>
+>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+>> ---
+>>  drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+>>  drivers/pci/probe.c | 43 +++++++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |  2 ++
+>>  3 files changed, 74 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index b01bd5b..3d42b38 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4878,6 +4878,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>>  EXPORT_SYMBOL(pcie_set_mps);
+>>
+>>  /**
+>> + * pcie_clear_relaxed_ordering - clear PCI Express relexed ordering bit
+>> + * @dev: PCI device to query
+>> + *
+>> + * If possible clear relaxed ordering
+>> + */
+>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
+>> +{
+>> +    return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>> +                      PCI_EXP_DEVCTL_RELAX_EN);
+>> +}
+>> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
+>> +
+>> +/**
+>> + * pcie_get_relaxed_ordering - check PCI Express relexed ordering bit
+> 
+> s/relexed/relaxed/
+> 
+> Check what on relaxed ordering bit?
+> 
+> And the function name is inconsistent with this discription.
+> 
+>> + * @dev: PCI device to query
+>> + *
+>> + * Returns true if relaxed ordering is been set
+> 
+> If you want to return true/false, then use !!, below in the function
+> 
+>> + */
+>> +int pcie_get_relaxed_ordering(struct pci_dev *dev)
+>> +{
+>> +    u16 v;
+>> +
+>> +    pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
+>> +
+>> +    return (v & PCI_EXP_DEVCTL_RELAX_EN) >> 4;
+>> +}
+>> +EXPORT_SYMBOL(pcie_get_relaxed_ordering);
+>> +
+>> +/**
+>>   * pcie_get_minimum_link - determine minimum link settings of a PCI device
+>>   * @dev: PCI device to query
+>>   * @speed: storage for minimum speed
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 19c8950..0c94c80 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1701,6 +1701,48 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+>>                       PCI_EXP_DEVCTL_EXT_TAG);
+>>  }
+>>
+>> +/**
+>> + * pci_dev_disable_relaxed_ordering - check if the PCI device
+>> + * should disable the relaxed ordering attribute.
+> 
+> I think that we need a more accurate description. I know some people think a function which just "checks" is vague.
+> 
+>> + * @dev: PCI device
+>> + *
+>> + * Return true if any of the PCI devices above us do not support
+>> + * relaxed ordering.
+>> + */
+>> +static int pci_dev_disable_relaxed_ordering(struct pci_dev *dev)
+> 
+> The function name implies an action - disabling - but this function does nothing except return a value
+> 
+>> +{
+>> +    int ro_disabled = 0;
+>> +
+>> +    while(dev) {
+> 
+> Did you run checkpatch?
+> 
+>> +        if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
+>> +            ro_disabled = 1;
+> 
+> just return true, and return false at the bottom, so you can do away with ro_disabled (which is not a bool)
+> 
+>> +            break;
+>> +        }
+>> +        dev = dev->bus->self;
+>> +    }
+>> +
+>> +    return ro_disabled;
+>> +}
+>> +
+>> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+>> +{
+>> +    struct pci_dev *bridge = pci_upstream_bridge(dev);
+>> +    int origin_ero;
+> 
+> You don't need this variable
+> 
+>> +
+>> +    if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+>> +        return;
+>> +
+>> +    origin_ero = pcie_get_relaxed_ordering(dev);
+>> +    /* If the releaxed ordering enable bit is not set, do nothing. */
+>> +    if (!origin_ero)
+>> +        return;
+>> +
+>> +    if (pci_dev_disable_relaxed_ordering(dev)) {
+>> +        pcie_clear_relaxed_ordering(dev);
+>> +        dev_info(&dev->dev, "Disable Relaxed Ordering\n");
+>> +    }
+>> +}
+>> +
+>>  static void pci_configure_device(struct pci_dev *dev)
+>>  {
+>>      struct hotplug_params hpp;
+>> @@ -1708,6 +1750,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>>
+>>      pci_configure_mps(dev);
+>>      pci_configure_extended_tags(dev);
+>> +    pci_configure_relaxed_ordering(dev);
+>>
+>>      memset(&hpp, 0, sizeof(hpp));
+>>      ret = pci_get_hp_params(dev, &hpp);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index e1e8428..299d2f3 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1105,6 +1105,8 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>>  void pci_d3cold_enable(struct pci_dev *dev);
+>>  void pci_d3cold_disable(struct pci_dev *dev);
+>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
+>> +int pcie_get_relaxed_ordering(struct pci_dev *dev);
+>>
+>>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>                    bool enable)
+>>
+> 
+> 
+> 
+> .
+> 
