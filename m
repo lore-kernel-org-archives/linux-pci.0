@@ -1,52 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36958 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751590AbdFNTN5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Jun 2017 15:13:57 -0400
-Date: Wed, 14 Jun 2017 14:13:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-pci@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] MAINTAINERS: update maintainer for rockchip PCIe driver
-Message-ID: <20170614191353.GF20778@bhelgaas-glaptop.roam.corp.google.com>
-References: <1496389333-234834-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v5 5/6] drm/amdgpu: move hw generation check into amdgpu_doorbell_init
+Date: Fri,  9 Jun 2017 10:59:46 +0200
+Message-Id: <1496998787-6371-6-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1496389333-234834-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 02, 2017 at 03:42:13PM +0800, Shawn Lin wrote:
-> Wenrui Li changed his employer and is no longer able to
-> maintain this driver. So remove his email address from this
-> file.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+From: Christian König <christian.koenig@amd.com>
 
-Applied to pci/host-rockhcip for v4.13, thanks!
+This way we can savely call it on SI as well.
 
-> ---
-> 
->  MAINTAINERS | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 9609ca6..5066ebe 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -10005,7 +10005,6 @@ F:	drivers/pci/dwc/pcie-hisi.c
->  
->  PCIE DRIVER FOR ROCKCHIP
->  M:	Shawn Lin <shawn.lin@rock-chips.com>
-> -M:	Wenrui Li <wenrui.li@rock-chips.com>
->  L:	linux-pci@vger.kernel.org
->  L:	linux-rockchip@lists.infradead.org
->  S:	Maintained
-> -- 
-> 1.9.1
-> 
-> 
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index a7d6804..99290af 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -419,6 +419,15 @@ void amdgpu_pci_config_reset(struct amdgpu_device *adev)
+  */
+ static int amdgpu_doorbell_init(struct amdgpu_device *adev)
+ {
++	/* No doorbell on SI hardware generation */
++	if (adev->asic_type < CHIP_BONAIRE) {
++		adev->doorbell.base = 0;
++		adev->doorbell.size = 0;
++		adev->doorbell.num_doorbells = 0;
++		adev->doorbell.ptr = NULL;
++		return 0;
++	}
++
+ 	/* doorbell bar mapping */
+ 	adev->doorbell.base = pci_resource_start(adev->pdev, 2);
+ 	adev->doorbell.size = pci_resource_len(adev->pdev, 2);
+@@ -2136,9 +2145,8 @@ int amdgpu_device_init(struct amdgpu_device *adev,
+ 	DRM_INFO("register mmio base: 0x%08X\n", (uint32_t)adev->rmmio_base);
+ 	DRM_INFO("register mmio size: %u\n", (unsigned)adev->rmmio_size);
+ 
+-	if (adev->asic_type >= CHIP_BONAIRE)
+-		/* doorbell bar mapping */
+-		amdgpu_doorbell_init(adev);
++	/* doorbell bar mapping */
++	amdgpu_doorbell_init(adev);
+ 
+ 	/* io port mapping */
+ 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
+@@ -2335,8 +2343,7 @@ void amdgpu_device_fini(struct amdgpu_device *adev)
+ 	adev->rio_mem = NULL;
+ 	iounmap(adev->rmmio);
+ 	adev->rmmio = NULL;
+-	if (adev->asic_type >= CHIP_BONAIRE)
+-		amdgpu_doorbell_fini(adev);
++	amdgpu_doorbell_fini(adev);
+ 	amdgpu_debugfs_regs_cleanup(adev);
+ }
+ 
+-- 
+2.7.4
