@@ -1,202 +1,161 @@
-Return-Path: <SRS0=URTd=5V=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=URTd=5V=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v4 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
- <1497265525-4752-3-git-send-email-dingtianhong@huawei.com>
- <CAKgT0UfMCTjRWVnYiz-7BaV6NxK+kHm9PppgVp+_sNhfVgKviQ@mail.gmail.com>
-CC: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
-        "Bjorn Helgaas" <helgaas@kernel.org>,
-        Michael Werner <werner@chelsio.com>,
-        "Ganesh Goudar" <ganeshgr@chelsio.com>,
-        Asit K Mallick
-	<asit.k.mallick@intel.com>,
-        Patrick J Cramer <patrick.j.cramer@intel.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Bob Shaw
-	<Bob.Shaw@amd.com>, h <l.stach@pengutronix.de>,
-        Amir Ancel
-	<amira@mellanox.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        David
- Laight <David.Laight@aculab.com>,
-        "Jeff Kirsher"
-	<jeffrey.t.kirsher@intel.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
-        Robin
- Murphy <robin.murphy@arm.com>,
-        David Miller <davem@davemloft.net>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Netdev <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <5854930e-af6a-4274-2822-cf38e5967da3@huawei.com>
-Date: Fri, 16 Jun 2017 09:10:50 +0800
-MIME-Version: 1.0
-In-Reply-To: <CAKgT0UfMCTjRWVnYiz-7BaV6NxK+kHm9PppgVp+_sNhfVgKviQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:20508 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbdFIXRW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jun 2017 19:17:22 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        James Puthukattukaran <james.puthukattukaran@oracle.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
+Date: Fri,  9 Jun 2017 16:16:17 -0700
+Message-Id: <20170609231617.20243-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 
+The IDT switch incorrectly flags an ACS source violation on a read config
+request to an end point device on the completion (IDT 89H32H8G3-YC,
+errata #36) even though the PCI Express spec states that completions are
+never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
 
-On 2017/6/13 5:28, Alexander Duyck wrote:
-> On Mon, Jun 12, 2017 at 4:05 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
-...
->>  /**
->> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
->> + * @dev: PCI device to query
->> + *
->> + * If possible clear relaxed ordering
->> + */
->> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
->> +{
->> +       return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->> +                                         PCI_EXP_DEVCTL_RELAX_EN);
->> +}
->> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
->> +
->> +/**
->> + * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
->> + * @dev: PCI device to query
->> + *
->> + * Returns true if the device support relaxed ordering attribute.
->> + */
->> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
->> +{
->> +       bool ro_supported = false;
->> +       u16 v;
->> +
->> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
->> +       if ((v & PCI_EXP_DEVCTL_RELAX_EN) >> 4)
->> +               ro_supported = true;
-> 
-> Instead of "return ro_supported" why not just "return !!(v &
-> PCIE_EXP_DEVCTL_RELAX_EN)"? You can cut out the extra steps and save
-> yourself some extra steps this way since the shift by 4 shouldn't even
-> really be needed since you are just testing for a bit anyway.
-> 
+The suggested workaround by IDT is to issue a configuration write to the
+downstream device before issuing the first config read. This allows the
+downstream device to capture its bus number, thus avoiding the ACS
+violation on the completion.
 
-OK.
+The patch does the following -
 
->> +
->> +       return ro_supported;
->> +}
->> +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
->> +
->> +/**
->>   * pcie_get_minimum_link - determine minimum link settings of a PCI device
->>   * @dev: PCI device to query
->>   * @speed: storage for minimum speed
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index 19c8950..ed1f717 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1701,6 +1701,46 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
->>                                          PCI_EXP_DEVCTL_EXT_TAG);
->>  }
->>
->> +/**
->> + * pci_dev_should_disable_relaxed_ordering - check if the PCI device
->> + * should disable the relaxed ordering attribute.
->> + * @dev: PCI device
->> + *
->> + * Return true if any of the PCI devices above us do not support
->> + * relaxed ordering.
->> + */
->> +static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
->> +{
->> +       bool ro_disabled = false;
->> +
->> +       while (dev) {
->> +               if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
->> +                       ro_disabled = true;
->> +                       break;
->> +               }
->> +               dev = dev->bus->self;
->> +       }
->> +
->> +       return ro_disabled;
-> 
-> Same thing here. I would suggest just returning either true or false,
-> and drop the ro_disabled value. It will return the lines of code and
-> make things a bit bit more direct.
-> 
+1. Disable ACS source violation if enabled
+2. Wait for config space access to become available by reading vendor id
+3. Do a config write to the end point (errata workaround)
+4. Enable ACS source validation (if it was enabled to begin with)
 
-OK.
+-v2: move workaround to pci_bus_read_dev_vendor_id() from pci_bus_check_dev()
+     and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
+-v3: add bus->self check for root bus and virtual bus for sriov vfs.
 
->> +}
->> +
->> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
->> +{
->> +       struct pci_dev *bridge = pci_upstream_bridge(dev);
->> +
->> +       if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
->> +               return;
-> 
-> The pci_is_pcie check is actually redundant based on the
-> pcie_relaxed_ordering_supported check using pcie_capability_read_word.
->
+Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Yes, pcie_capability_read_word already check it, thanks.
+--
 
+ drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h   |    1 +
+ drivers/pci/probe.c |   38 ++++++++++++++++++++++++++++++++++++--
+ 3 files changed, 70 insertions(+), 2 deletions(-)
 
-> Also I am not sure what the point is of the pci_upstream_bridge()
-> check is, it seems like you should be able to catch all the same stuff
-> in your pci_dev_should_disable_relaxed_ordering() call. Though it did
-> give me a thought. I don't think we can alter this for a VF, so you
-> might want to add a check for dev->is_virtfn to the list of checks and
-> if it is a virtual function just return since I don't think there are
-> any VFs that would let you alter this bit anyway.
-> 
-If the upstream device is null, does it mean that it is in a guest OS device? maybe I miss something.
-also I will check the dev->is_virtfn to avoid trying to change the configuration space for VF.
-
-Another question: Because it looks like that maybe the Casey is too busy these days, should we
-delay the modification of the cxgb4 and instead to update the ixgbe? what do you think about it. :)
-
-Thanks.
-Ding
-
->> +       /* If the releaxed ordering enable bit is not set, do nothing. */
->> +       if (!pcie_relaxed_ordering_supported(dev))
->> +               return;
->> +
->> +       if (pci_dev_should_disable_relaxed_ordering(dev)) {
->> +               pcie_clear_relaxed_ordering(dev);
->> +               dev_info(&dev->dev, "Disable Relaxed Ordering\n");
->> +       }
->> +}
->> +
->>  static void pci_configure_device(struct pci_dev *dev)
->>  {
->>         struct hotplug_params hpp;
->> @@ -1708,6 +1748,7 @@ static void pci_configure_device(struct pci_dev *dev)
->>
->>         pci_configure_mps(dev);
->>         pci_configure_extended_tags(dev);
->> +       pci_configure_relaxed_ordering(dev);
->>
->>         memset(&hpp, 0, sizeof(hpp));
->>         ret = pci_get_hp_params(dev, &hpp);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index e1e8428..9870781 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1105,6 +1105,8 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->>  void pci_pme_wakeup_bus(struct pci_bus *bus);
->>  void pci_d3cold_enable(struct pci_dev *dev);
->>  void pci_d3cold_disable(struct pci_dev *dev);
->> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
->> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
->>
->>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->>                                   bool enable)
->> --
->> 1.9.0
->>
->>
-> 
-> .
-> 
+Index: linux-2.6/drivers/pci/probe.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/probe.c
++++ linux-2.6/drivers/pci/probe.c
+@@ -1763,8 +1763,8 @@ struct pci_dev *pci_alloc_dev(struct pci
+ }
+ EXPORT_SYMBOL(pci_alloc_dev);
+ 
+-bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+-				int crs_timeout)
++static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn,
++					 u32 *l, int crs_timeout)
+ {
+ 	int delay = 1;
+ 
+@@ -1801,6 +1801,40 @@ bool pci_bus_read_dev_vendor_id(struct p
+ 
+ 	return true;
+ }
++
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++				int crs_timeout)
++{
++	int found;
++	int enable = -1;
++
++	/*
++	 * Some IDT switches flag an ACS violation for config reads
++	 * even though the PCI spec allows for it (PCIe 3.1, 6.1.12.1)
++	 * It flags it because the bus number is not properly set in the
++	 * completion. The workaround is to do a dummy write to properly
++	 * latch number once the device is ready for config operations
++	 */
++
++	if (bus->self)
++		enable = pci_std_enable_acs_sv(bus->self, false);
++
++	found = __pci_bus_read_dev_vendor_id(bus, devfn, l, crs_timeout);
++
++	/*
++	 * The fact that we can read the vendor id indicates that the device
++	 * is ready for config operations. Do the write as part of the errata
++	 * workaround.
++	 */
++	if (bus->self) {
++		if (found)
++			pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
++		if (enable > 0)
++			pci_std_enable_acs_sv(bus->self, enable);
++	}
++
++	return found;
++}
+ EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+ 
+ /*
+Index: linux-2.6/drivers/pci/pci.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.c
++++ linux-2.6/drivers/pci/pci.c
+@@ -2838,6 +2838,39 @@ static bool pci_acs_flags_enabled(struct
+ }
+ 
+ /**
++ *  pci_std_enable_acs_sv - enable/disable ACS source validation if supported by the switch
++ *  @dev - pcie switch/RP
++ *  @enable - enable (1) or disable (0) source validation
++ *
++ *  Returns : < 0 on failure
++ *           previous acs_sv state
++ */
++int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable)
++{
++	int pos;
++	u16 cap;
++	u16 ctrl;
++	int retval;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return -ENODEV;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	retval = !!(ctrl & cap & PCI_ACS_SV);
++	if (enable)
++		ctrl |= (cap & PCI_ACS_SV);
++	else
++		ctrl &= ~(cap & PCI_ACS_SV);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	return retval;
++}
++
++/**
+  * pci_acs_enabled - test ACS against required flags for a given device
+  * @pdev: device to test
+  * @acs_flags: required PCI ACS flags
+Index: linux-2.6/drivers/pci/pci.h
+===================================================================
+--- linux-2.6.orig/drivers/pci/pci.h
++++ linux-2.6/drivers/pci/pci.h
+@@ -343,6 +343,7 @@ static inline resource_size_t pci_resour
+ }
+ 
+ void pci_enable_acs(struct pci_dev *dev);
++int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable);
+ 
+ #ifdef CONFIG_PCIE_PTM
+ void pci_ptm_init(struct pci_dev *dev);
