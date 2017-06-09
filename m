@@ -1,48 +1,106 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 26 Jun 2017 16:29:41 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/6] ACPI / PM: Consolidate device wakeup settings code
-Message-ID: <20170626132941.GD629@lahna.fi.intel.com>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan>
- <20170622073937.GR629@lahna.fi.intel.com>
- <4634255.ux8TmyfYTx@aspire.rjw.lan>
- <8111646.zzkDnlQnPE@aspire.rjw.lan>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v5 1/6] PCI: add a define for the PCI resource type mask v2
+Date: Fri,  9 Jun 2017 10:59:42 +0200
+Message-Id: <1496998787-6371-2-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8111646.zzkDnlQnPE@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 03:05:57AM +0200, Rafael J. Wysocki wrote:
-> On Thursday, June 22, 2017 04:38:49 PM Rafael J. Wysocki wrote:
-> > On Thursday, June 22, 2017 10:39:37 AM Mika Westerberg wrote:
-> > > On Mon, Jun 19, 2017 at 11:33:52PM +0200, Rafael J. Wysocki wrote:
-> > > > -#ifdef CONFIG_PM_SLEEP
-> > > > -/**
-> > > > - * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
-> > > > - * @dev: Device to enable/desible to wake up the system from sleep states.
-> > > > - * @enable: Whether to enable or disable @dev to wake up the system.
-> > > > - */
-> > > > -int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
-> > > > +int acpi_pm_device_wakeup(struct device *dev, bool enable)
-> > > 
-> > > Can we call it acpi_pm_device_enable_wakeup() and then provide
-> > > corresponding acpi_pm_device_disable_wakeup()? I find those easier to
-> > > understand than acpi_pm_device_wakeup() that sounds like the device
-> > > should be woken up now.
-> > 
-> > OK, fair enough.  I'll change it this way.
-> 
-> Well, sorry, I'd rather not to, or we'll have to add a wrapper around them in
-> pci-acpi.c. :-)
-> 
-> I can rename it to acpi_pm_device_set_wakeup(), though.
+From: Christian König <christian.koenig@amd.com>
 
-Works for me :)
+We use this mask multiple times in the bus setup.
+
+v2: fix some style nit picks
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ drivers/pci/pci.h       |  4 ++++
+ drivers/pci/setup-bus.c | 12 +++---------
+ 2 files changed, 7 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8dd38e6..b3da553 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -3,6 +3,10 @@
+ 
+ #define PCI_FIND_CAP_TTL	48
+ 
++#define PCI_RES_TYPE_MASK \
++	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
++	 IORESOURCE_MEM_64)
++
+ extern const unsigned char pcie_link_speed[];
+ 
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index cb389277..451a9c0 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1523,8 +1523,6 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ {
+ 	struct pci_dev *dev = bus->self;
+ 	struct resource *r;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	unsigned old_flags = 0;
+ 	struct resource *b_res;
+ 	int idx = 1;
+@@ -1567,7 +1565,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 */
+ 	release_child_resources(r);
+ 	if (!release_resource(r)) {
+-		type = old_flags = r->flags & type_mask;
++		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
+ 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+ 					PCI_BRIDGE_RESOURCES + idx, r);
+ 		/* keep the old size */
+@@ -1758,8 +1756,6 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	enum release_type rel_type = leaf_only;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
+ 
+@@ -1818,7 +1814,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	 */
+ 	list_for_each_entry(fail_res, &fail_head, list)
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+-						 fail_res->flags & type_mask,
++						 fail_res->flags & PCI_RES_TYPE_MASK,
+ 						 rel_type);
+ 
+ 	/* restore size and flags */
+@@ -1862,8 +1858,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+@@ -1889,7 +1883,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	 */
+ 	list_for_each_entry(fail_res, &fail_head, list)
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+-						 fail_res->flags & type_mask,
++						 fail_res->flags & PCI_RES_TYPE_MASK,
+ 						 whole_subtree);
+ 
+ 	/* restore size and flags */
+-- 
+2.7.4
