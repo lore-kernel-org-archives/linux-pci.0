@@ -1,61 +1,162 @@
-Return-Path: <SRS0=Bbe8=5T=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=Bbe8=5T=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v7 3/3] PCI: Add tango MSI controller support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
- <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
- <82d6bf37-96b9-cd9d-134b-f01638fa2b1b@sigmadesigns.com>
- <d39b5b3a-48be-7aaa-b7dd-28d4ae1d2083@arm.com>
- <49b4138d-0030-1e8c-6a14-0e9151b63d24@sigmadesigns.com>
- <1588fa00-92c6-046d-ccfc-9a2deae61486@arm.com>
- <08d84ce3-5345-dc69-bbc3-37372a3df22b@sigmadesigns.com>
- <870f833b-6bff-b3b1-6591-7d46e374de66@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <a714b871-dd6c-4db0-3539-aabf7274938a@arm.com>
-Date: Wed, 14 Jun 2017 10:32:24 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v3 1/2] PCI: iproc: Retry request when CRS returned from EP
+Date: Sun, 11 Jun 2017 09:35:37 +0530
+Message-Id: <1497153938-26074-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <870f833b-6bff-b3b1-6591-7d46e374de66@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/06/17 10:19, Marc Gonzalez wrote:
-> On 14/06/2017 11:00, Marc Gonzalez wrote:
-> 
->> The MSI controller in Tango supports 256 message-signaled interrupts,
->> and a single doorbell address.
->>
->> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
->> ---
->> Changes from v6 to v7
->> o Call spin_lock() not spin_lock_irqsave() in the ISR
->> ---
->>  drivers/pci/host/pcie-tango.c | 225 ++++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 225 insertions(+)
-> 
-> Someone on IRC suggested testing the driver with LOCKDEP.
-> 
-> If I understand the warning below correctly, I am not supposed
-> to call irq_domain_set_info() while holding used_msi_lock?
+For Configuration Requests only, following reset
+it is possible for a device to terminate the request
+but indicate that it is temporarily unable to process
+the Request, but will be able to process the Request
+in the future – in this case, the Configuration Request
+Retry Status 10 (CRS) Completion Status is used
 
-Indeed. This creates an AB/BA situation, which will eventually deadlock.
-Once again, lockdep saves the day.
+SPDK user space NVMe driver reinitializes NVMe which
+causes reset, while doing this some configuration requests
+get NAKed by Endpoint (NVMe).
+Current iproc PCI driver is agnostic about it.
+PAXB will forward the NAKed response in stipulated AXI code.
 
-> NB: in probe, my driver calls
-> 
-> 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
-> 
-> This should not break LOCKDEP analysis, right?
+NVMe spec defines this timeout in 500 ms units, and this
+only happens if controller has been in reset, or with new firmware,
+or in abrupt shutdown case.
+Meanwhile config access could result into retry.
 
-It doesn't. The code is provably wrong, and lockdep proved that it is wrong.
+This patch fixes the problem, and attempts to read again in case
+of PAXB forwarding the NAK.
 
-	M.
+It implements iproc_pcie_config_read which gets called for Stingray.
+Otherwise it falls back to PCI generic APIs.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 0f39bd2..05a3647 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -68,6 +68,9 @@
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
++#define CFG_RETRY_STATUS             0xffff0001
++#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
++
+ /* derive the enum index of the outbound/inbound mapping registers */
+ #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+ 
+@@ -448,6 +451,47 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+ 	}
+ }
+ 
++static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++{
++	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
++	unsigned int ret;
++
++	do {
++		ret = readl(cfg_data_p);
++		if (ret == CFG_RETRY_STATUS)
++			udelay(1);
++		else
++			return PCIBIOS_SUCCESSFUL;
++	} while (timeout--);
++
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
++					       unsigned int busno,
++					       unsigned int slot,
++					       unsigned int fn,
++					       int where)
++{
++	u16 offset;
++	u32 val;
++
++	/* EP device access */
++	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
++		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
++		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
++		(where & CFG_ADDR_REG_NUM_MASK) |
++		(1 & CFG_ADDR_CFG_TYPE_MASK);
++
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++
++	return (pcie->base + offset);
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -499,13 +543,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	unsigned int slot = PCI_SLOT(devfn);
++	unsigned int fn = PCI_FUNC(devfn);
++	unsigned int busno = bus->number;
++	void __iomem *cfg_data_p;
++	int ret;
++
++	/* root complex access. */
++	if (busno == 0)
++		return pci_generic_config_read32(bus, devfn, where, size, val);
++
++	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
++
++	if (!cfg_data_p)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	ret = iproc_pcie_cfg_retry(cfg_data_p);
++	if (ret)
++		return ret;
++
++	*val = readl(cfg_data_p);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+ 	int ret;
++	struct iproc_pcie *pcie = iproc_data(bus);
+ 
+ 	iproc_pcie_apb_err_disable(bus, true);
+-	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	if (pcie->type == IPROC_PCIE_PAXB_V2)
++		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
++	else
++		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	iproc_pcie_apb_err_disable(bus, false);
+ 
+ 	return ret;
 -- 
-Jazz is not dead. It just smells funny...
+1.9.1
