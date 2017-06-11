@@ -1,42 +1,52 @@
-Return-Path: <SRS0=+rHZ=5S=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=+rHZ=5S=deltatee.com=logang@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
- <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
- <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- kernel test robot <fengguang.wu@intel.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
- linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
- Arnd Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>,
- David Airlie <airlied@linux.ie>, David Herrmann <dh.herrmann@gmail.com>,
- Daniel Vetter <daniel.vetter@ffwll.ch>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
-Date: Mon, 12 Jun 2017 22:29:20 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:34190 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750715AbdFKEF4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jun 2017 00:05:56 -0400
+Received: by mail-wr0-f180.google.com with SMTP id g76so65262320wrd.1
+        for <linux-pci@vger.kernel.org>; Sat, 10 Jun 2017 21:05:56 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v3 0/2] PCI: iproc: SOC specific fixes
+Date: Sun, 11 Jun 2017 09:35:36 +0530
+Message-Id: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20170613041842.GA13308@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable to
- handle kernel NULL pointer dereference at 00000000000000a8
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+PCI: iproc: Retry request when CRS returned from EP
 
+Above patch adds support for CRS in PCI RC driver,
+otherwise if not handled at lower level, the user
+space PMD (poll mode drivers) can timeout.
 
-On 12/06/17 10:18 PM, Greg Kroah-Hartman wrote:
-> What test causes so many major numbers to be allocated?  Is this
-> in-kernel test code?  Do you really have a system that requires so many
-> different drivers that all want a dynamic char major?
+PCI: iproc: add device shutdown for PCI RC
 
-This is a 0day kernel robot test. I'm not sure the motivations of its
-design but it seems to be similar to an allyesconfig. So all/most
-modules are compiled in and allocating their char device regions on boot
-of a qemu instance.
+This fixes the issue where certian PCI endpoints are
+not getting detected on Stingray SOC after reboot.
 
-Logan
+Changes Since v3:
+[re-send] 
+Changes Since v2:
+Fix compilation errors for pcie-iproc-platform.ko
+which was caught by kbuild.
+
+Oza Pawandeep (2):
+  PCI: iproc: Retry request when CRS returned from EP
+  PCI: iproc: add device shutdown for PCI RC
+
+ drivers/pci/host/pcie-iproc-platform.c |   8 +++
+ drivers/pci/host/pcie-iproc.c          | 126 ++++++++++++++++++++++++++++-----
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 116 insertions(+), 19 deletions(-)
+
+-- 
+1.9.1
