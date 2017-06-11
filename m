@@ -1,66 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:63931 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdFBSzN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 14:55:13 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v4 1/4] PCI: xilinx: Fix INTX irq dispatch
-Date: Fri, 2 Jun 2017 11:54:16 -0700
-Message-ID: <20170602185420.22281-2-paul.burton@imgtec.com>
-In-Reply-To: <20170602185420.22281-1-paul.burton@imgtec.com>
-References: <20170602185420.22281-1-paul.burton@imgtec.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v1 2/2] MIPS: PCI: Remove unused busn_offset
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>,
+        linux-kernel@vger.kernel.org
+References: <20170519195559.25338.30891.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170519195606.25338.73798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Joshua Kinard <kumba@gentoo.org>
+Message-ID: <1b895897-8ea6-0ee4-42db-8ec085f9e273@gentoo.org>
+Date: Sat, 10 Jun 2017 21:14:09 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170519195606.25338.73798.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The IRQ domain for INTX interrupts has 4 entries, numbered 0 to 3. This
-matches what the hardware reports from the interrupt FIFO exactly, but
-xilinx_pcie_intr_handler was adding 1 to that value to convert to the
-range 1 to 4. Stop adding 1, such that all of INTA through to INTD fall
-within the range of the IRQ domain.
+On 05/19/2017 15:56, Bjorn Helgaas wrote:
+> pci_add_resource_offset() is for host bridge windows where the bridge
+> translates CPU addresses to PCI bus addresses by adding an offset.  To my
+> knowledge, no host bridge translates bus numbers, so this is only useful
+> for MEM and IO windows.  In any event, host->busn_offset is never set to
+> anything other than zero, so pci_add_resource() is sufficient.
+> 
+> a2e50f53d535 ("MIPS: PCI: Add a hook for IORESOURCE_BUS in
+> pci_controller/bridge_controller") also added busn_resource itself.  This
+> is currently unused but may be used by future SGI IP27 fixes, so I left it
+> there.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> CC: Joshua Kinard <kumba@gentoo.org>
+> ---
+>  arch/mips/include/asm/pci.h |    1 -
+>  arch/mips/pci/pci-legacy.c  |    3 +--
+>  2 files changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+> index 1000c1b4c875..52f551ee492d 100644
+> --- a/arch/mips/include/asm/pci.h
+> +++ b/arch/mips/include/asm/pci.h
+> @@ -39,7 +39,6 @@ struct pci_controller {
+>  	unsigned long io_offset;
+>  	unsigned long io_map_base;
+>  	struct resource *busn_resource;
+> -	unsigned long busn_offset;
+>  
+>  #ifndef CONFIG_PCI_DOMAINS_GENERIC
+>  	unsigned int index;
+> diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
+> index 3a84f6c0c840..174575a9a112 100644
+> --- a/arch/mips/pci/pci-legacy.c
+> +++ b/arch/mips/pci/pci-legacy.c
+> @@ -86,8 +86,7 @@ static void pcibios_scanbus(struct pci_controller *hose)
+>  				hose->mem_resource, hose->mem_offset);
+>  	pci_add_resource_offset(&resources,
+>  				hose->io_resource, hose->io_offset);
+> -	pci_add_resource_offset(&resources,
+> -				hose->busn_resource, hose->busn_offset);
+> +	pci_add_resource(&resources, hose->busn_resource);
+>  	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+>  				&resources);
+>  	hose->bus = bus;
+> 
+> 
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP driver")
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
+I tested this change out on my Octane (SGI-IP30) and Origin 200 (SGI-IP27), and
+it appears to work fine on both systems (for now).
 
----
+The Octane has two PCI host bridges in it right now (BaseIO & PCI Card cage),
+while the Origin 200 only has one.  Haven't tested it on my bigger Onyx2 w/
+multiple host bridges, but that machine has other problems, so I am ignoring it
+for now.
 
-Changes in v4: None
+I wasn't aware that pci_add_resource existed back when I wrote the patch.  The
+symptom that was addressed was some conditional in the PCI core -- I forget
+where -- wasn't enumerating multiple PCI busses without having an
+IORESOURCE_BUS struct passed to it.  I think it found the first bus and then
+moved on to other subsystems, which usually led to a non-booting machine.
 
-Changes in v3:
-- Split out from Boston patchset.
-
-Changes in v2:
-- Add Fixes tag.
-
- drivers/pci/host/pcie-xilinx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 2fe2df51f9f8..6be2e5ee44f1 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -440,8 +440,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 				   XILINX_PCIE_REG_RPIFR1);
- 
- 			/* Handle INTx Interrupt */
--			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
--				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
-+			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
-+				XILINX_PCIE_RPIFR1_INTR_SHIFT;
- 			generic_handle_irq(irq_find_mapping(port->leg_domain,
- 							    val));
- 		}
--- 
-2.13.0
+Acked-by: Joshua Kinard <kumba@gentoo.org>
