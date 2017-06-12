@@ -1,65 +1,174 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Jun 2017 17:52:28 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42490 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753003AbdFLXns (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Jun 2017 19:43:48 -0400
+Date: Mon, 12 Jun 2017 18:43:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 4/4] PCI: versatile: fix another typo
-Message-ID: <20170627225228.GH17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170621215323.3921382-1-arnd@arndb.de>
- <20170621215323.3921382-4-arnd@arndb.de>
+To: Oza Pawandeep <oza.oza@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: Re: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
+Message-ID: <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
+References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+ <1497153938-26074-3-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20170621215323.3921382-4-arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Brian Norris <briannorris@chromium.org>, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1497153938-26074-3-git-send-email-oza.oza@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 21, 2017 at 11:53:02PM +0200, Arnd Bergmann wrote:
-> The struct members were added to the wrong variable:
+On Sun, Jun 11, 2017 at 09:35:38AM +0530, Oza Pawandeep wrote:
+> PERST# must be asserted around ~500ms before
+> the reboot is applied.
 > 
-> drivers/pci/host/pci-versatile.c: In function 'versatile_pci_probe':
-> drivers/pci/host/pci-versatile.c:212:2: error: 'host' undeclared (first use in this function)
+> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
+> LCPLL clock and PERST both goes off simultaneously.
+> This will cause certain Endpoints Intel NVMe not get detected, upon
+> next boot sequence.
 > 
-> Fixes: 997995e1722a ("PCI: versatile: Drop pci_fixup_irqs()")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> This happens because; Endpoint is expecting the clock for some amount of
+> time after PERST is asserted, which is not happening in our case
+> (Compare to Intel X86 boards, will have clocks running).
+> this cause NVMe to behave in undefined way.
 
-Folded into Lorenzo's series on pci/enumeration, thanks!
+This doesn't smell right.  The description makes this sound like a
+band-aid that happens to "solve" a problem with one particular device.
+It doesn't sound like this is making iProc adhere to something in the
+PCIe spec.
 
-> ---
->  drivers/pci/host/pci-versatile.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+Is there some PCIe spec timing requirement that tells you about this
+500ms number?  Please include the reference if so.
+
+> Essentially clock will remain alive for 500ms with PERST# = 0
+> before reboot.
+
+> This patch adds platform shutdown where it should be
+> called in device_shutdown while reboot command is issued.
 > 
-> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-> index f572c921cdd4..f6fcec6b5578 100644
-> --- a/drivers/pci/host/pci-versatile.c
-> +++ b/drivers/pci/host/pci-versatile.c
-> @@ -209,8 +209,8 @@ static int versatile_pci_probe(struct platform_device *pdev)
->  	bridge->sysdata = NULL;
->  	bridge->busnr = 0;
->  	bridge->ops = &pci_versatile_ops;
-> -	host->map_irq = of_irq_parse_and_map_pci;
-> -	host->swizzle_irq = pci_common_swizzle;
-> +	bridge->map_irq = of_irq_parse_and_map_pci;
-> +	bridge->swizzle_irq = pci_common_swizzle;
+> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+> followed by RC shutdown is called, which issues safe PERST
+> assertion.
+> 
+> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> 
+> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+> index 90d2bdd..9512960 100644
+> --- a/drivers/pci/host/pcie-iproc-platform.c
+> +++ b/drivers/pci/host/pcie-iproc-platform.c
+> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>  	return iproc_pcie_remove(pcie);
+>  }
 >  
->  	ret = pci_scan_root_bus_bridge(bridge);
->  	if (ret < 0)
+> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+> +{
+> +	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +	iproc_pcie_shutdown(pcie);
+> +}
+> +
+>  static struct platform_driver iproc_pcie_pltfm_driver = {
+>  	.driver = {
+>  		.name = "iproc-pcie",
+> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>  	},
+>  	.probe = iproc_pcie_pltfm_probe,
+>  	.remove = iproc_pcie_pltfm_remove,
+> +	.shutdown = iproc_pcie_pltfm_shutdown,
+>  };
+>  module_platform_driver(iproc_pcie_pltfm_driver);
+>  
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index 05a3647..bb61376 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+>  	.write = iproc_pcie_config_write32,
+>  };
+>  
+> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+>  {
+>  	u32 val;
+>  
+>  	/*
+> -	 * PAXC and the internal emulated endpoint device downstream should not
+> -	 * be reset.  If firmware has been loaded on the endpoint device at an
+> -	 * earlier boot stage, reset here causes issues.
+> +	 * The internal emulated endpoints (such as PAXC) device downstream
+> +	 * should not be reset. If firmware has been loaded on the endpoint
+> +	 * device at an earlier boot stage, reset here causes issues.
+>  	 */
+>  	if (pcie->ep_is_internal)
+>  		return;
+>  
+> -	/*
+> -	 * Select perst_b signal as reset source. Put the device into reset,
+> -	 * and then bring it out of reset
+> -	 */
+> -	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> -	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> -		~RC_PCIE_RST_OUTPUT;
+> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> -	udelay(250);
+> -
+> -	val |= RC_PCIE_RST_OUTPUT;
+> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> -	msleep(100);
+> +	if (assert) {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> +		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> +			~RC_PCIE_RST_OUTPUT;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> +		udelay(250);
+> +	} else {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> +		val |= RC_PCIE_RST_OUTPUT;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> +		msleep(100);
+> +	}
+> +}
+> +
+> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+> +{
+> +	iproc_pcie_perst_ctrl(pcie, true);
+> +	msleep(500);
+> +
+> +	return 0;
+>  }
+> +EXPORT_SYMBOL(iproc_pcie_shutdown);
+>  
+>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+>  {
+> @@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>  		goto err_exit_phy;
+>  	}
+>  
+> -	iproc_pcie_reset(pcie);
+> +	iproc_pcie_perst_ctrl(pcie, true);
+> +	iproc_pcie_perst_ctrl(pcie, false);
+>  
+>  	if (pcie->need_ob_cfg) {
+>  		ret = iproc_pcie_map_ranges(pcie, res);
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index 0bbe2ea..a6b55ce 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -110,6 +110,7 @@ struct iproc_pcie {
+>  
+>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>  int iproc_pcie_remove(struct iproc_pcie *pcie);
+> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+>  
+>  #ifdef CONFIG_PCIE_IPROC_MSI
+>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
 > -- 
-> 2.9.0
+> 1.9.1
 > 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
