@@ -1,136 +1,196 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Stefan Schoefegger
- <stefan.schoefegger@ginzinger.com>
-Subject: RE: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
-Date: Tue, 13 Jun 2017 02:00:16 +0000
-Message-ID: <AM5PR0402MB285053130F4B1FCBF67C31998CC20@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <1496835374-13053-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35046 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752430AbdFLVsv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 12 Jun 2017 17:48:51 -0400
+Date: Mon, 12 Jun 2017 16:48:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        James Puthukattukaran <james.puthukattukaran@oracle.com>
+Subject: Re: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
+Message-ID: <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170609231617.20243-1-yinghai@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, Jingoo Han <jingoohan1@gmail.com>,
- open list <linux-kernel@vger.kernel.org>, Kishon Vijay
- Abraham I <kishon@ti.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:PCI DRIVER FOR IMX6" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170609231617.20243-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, June 13, 2017 7:49 AM
-> To: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-> Cc: linux-pci@vger.kernel.org; Richard Zhu <hongxing.zhu@nxp.com>; Arnd
-> Bergmann <arnd@arndb.de>; open list <linux-kernel@vger.kernel.org>;
-> Kishon Vijay Abraham I <kishon@ti.com>; Jingoo Han
-> <jingoohan1@gmail.com>; Bjorn Helgaas <bhelgaas@google.com>;
-> moderated list:PCI DRIVER FOR IMX6 <linux-arm-kernel@lists.infradead.org>;
-> Lucas Stach <l.stach@pengutronix.de>
-> Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
+On Fri, Jun 09, 2017 at 04:16:17PM -0700, Yinghai Lu wrote:
+> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 > 
-> On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
-> > Link speed must not be limited to gen1 during link test for compliance
-> > tests
-> >
-> > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-> > ---
-> >
-> > Changes since v1:
-> >  - pci-imx6.c moved to dwc directory
-> >
-> >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
-> >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
-> >  2 files changed, 22 insertions(+), 9 deletions(-)
-> >
-> > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig index
-> > b7e15526d676..b6e9ced5a45d 100644
-> > --- a/drivers/pci/dwc/Kconfig
-> > +++ b/drivers/pci/dwc/Kconfig
-> > @@ -77,6 +77,16 @@ config PCI_IMX6
-> >  	select PCIEPORTBUS
-> >  	select PCIE_DW_HOST
-> >
-> > +config PCI_IMX6_COMPLIANCE_TEST
-> > +	bool "Enable pcie compliance tests on imx6"
-> > +	depends on PCI_IMX6
-> > +	default n
-> > +	help
-> > +	  Enables support for pcie compliance test on FSL iMX SoCs.
-> > +	  The link speed wouldn't be limited to gen1 when enabled.
-> > +	  Enable only during compliance tests, otherwise
-> > +	  link detection will fail on some peripherals.
-> 
-> I'm puzzled about why we would want to merge this patch.  It looks like
-> we're trying to game the system to make the device pass compliance testing
-> when it isn't really compliant.  Is this config option useful to users, or is it only
-> useful during internal development of iMX SoCs?
-> 
-[Zhu hongxing] Agree with Bjorn. These modifications shouldn't be merged.
-They are used for the boards used to pass the PCIe RC certification, when one
-Standalone external OSC is used as PCIe reference clock source in the boards design.
+> The IDT switch incorrectly flags an ACS source violation on a read config
+> request to an end point device on the completion (IDT 89H32H8G3-YC,
+> errata #36) even though the PCI Express spec states that completions are
+> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
 
-> >  config PCIE_SPEAR13XX
-> >  	bool "STMicroelectronics SPEAr PCIe controller"
-> >  	depends on PCI
-> > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> > index 19a289b8cc94..b0fbe52e25b0 100644
-> > --- a/drivers/pci/dwc/pci-imx6.c
-> > +++ b/drivers/pci/dwc/pci-imx6.c
-> > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct
-> imx6_pcie *imx6_pcie)
-> >  	u32 tmp;
-> >  	int ret;
-> >
-> > -	/*
-> > -	 * Force Gen1 operation when starting the link.  In case the link is
-> > -	 * started in Gen2 mode, there is a possibility the devices on the
-> > -	 * bus will not be detected at all.  This happens with PCIe switches.
-> > -	 */
-> > -	tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
-> > +		/*
-> > +		 * Force Gen1 operation when starting the link.  In case the
-> > +		 * link is started in Gen2 mode, there is a possibility the
-> > +		 * devices on the bus will not be detected at all.  This
-> > +		 * happens with PCIe switches.
-> > +		 */
-> > +		tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > +	}
-> >
-> >  	/* Start LTSSM. */
-> >  	if (imx6_pcie->variant == IMX7D)
-> > --
-> > 2.11.0
-> >
-> >
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Can you include a URL where this erratum is published?  If not, can
+you include the actual erratum text here?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Have you considered ways to make this patch apply only to the affected
+IDT switches?  Currently it applies to *all* devices.
+
+The purpose of the pci_bus_read_dev_vendor_id() path is to support the
+Configuration Request Retry Status feature (see PCIe r3.1, sec 2.3.2),
+which works by special handling of config reads of the Vendor ID after
+a reset.  Normally, that Vendor ID read would be the first access to
+a device when we enumerate it.
+
+This patch adds config reads and writes of the ACS capability *before*
+the Vendor ID read.  At that point we don't even know whether the
+device exists.  If it doesn't exist, pci_find_ext_capability() would
+read 0xffffffff data, and it probably fails reasonably gracefully.
+
+But if the device *does* exist, I think this patch breaks the CRS
+Software Visibility feature.  Without this patch, we try to read
+Vendor ID, and the device may return a CRS Completion Status.  If CRS
+visibility is enabled, the root complex may complete the request by
+returning 0x0001 for the Vendor ID, in which case we sleep and try
+again later.
+
+With this patch, we first try to read the ACS capability.  If the
+device returns a CRS Completion Status, the root complex is required
+to reissue the config request.  This is the required behavior
+regardless of whether CRS Software Visibility is enabled, so I think
+this effectively disables that feature.
+
+> The suggested workaround by IDT is to issue a configuration write to the
+> downstream device before issuing the first config read. This allows the
+> downstream device to capture its bus number, thus avoiding the ACS
+> violation on the completion.
+> 
+> The patch does the following -
+> 
+> 1. Disable ACS source violation if enabled
+> 2. Wait for config space access to become available by reading vendor id
+> 3. Do a config write to the end point (errata workaround)
+> 4. Enable ACS source validation (if it was enabled to begin with)
+> 
+> -v2: move workaround to pci_bus_read_dev_vendor_id() from pci_bus_check_dev()
+>      and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
+> -v3: add bus->self check for root bus and virtual bus for sriov vfs.
+> 
+> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> --
+> 
+>  drivers/pci/pci.c   |   33 +++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h   |    1 +
+>  drivers/pci/probe.c |   38 ++++++++++++++++++++++++++++++++++++--
+>  3 files changed, 70 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/probe.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/probe.c
+> +++ linux-2.6/drivers/pci/probe.c
+> @@ -1763,8 +1763,8 @@ struct pci_dev *pci_alloc_dev(struct pci
+>  }
+>  EXPORT_SYMBOL(pci_alloc_dev);
+>  
+> -bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> -				int crs_timeout)
+> +static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+> +					 u32 *l, int crs_timeout)
+>  {
+>  	int delay = 1;
+>  
+> @@ -1801,6 +1801,40 @@ bool pci_bus_read_dev_vendor_id(struct p
+>  
+>  	return true;
+>  }
+> +
+> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+> +				int crs_timeout)
+> +{
+> +	int found;
+> +	int enable = -1;
+> +
+> +	/*
+> +	 * Some IDT switches flag an ACS violation for config reads
+> +	 * even though the PCI spec allows for it (PCIe 3.1, 6.1.12.1)
+> +	 * It flags it because the bus number is not properly set in the
+> +	 * completion. The workaround is to do a dummy write to properly
+> +	 * latch number once the device is ready for config operations
+> +	 */
+> +
+> +	if (bus->self)
+> +		enable = pci_std_enable_acs_sv(bus->self, false);
+> +
+> +	found = __pci_bus_read_dev_vendor_id(bus, devfn, l, crs_timeout);
+> +
+> +	/*
+> +	 * The fact that we can read the vendor id indicates that the device
+> +	 * is ready for config operations. Do the write as part of the errata
+> +	 * workaround.
+> +	 */
+> +	if (bus->self) {
+> +		if (found)
+> +			pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
+> +		if (enable > 0)
+> +			pci_std_enable_acs_sv(bus->self, enable);
+> +	}
+> +
+> +	return found;
+> +}
+>  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+>  
+>  /*
+> Index: linux-2.6/drivers/pci/pci.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.c
+> +++ linux-2.6/drivers/pci/pci.c
+> @@ -2838,6 +2838,39 @@ static bool pci_acs_flags_enabled(struct
+>  }
+>  
+>  /**
+> + *  pci_std_enable_acs_sv - enable/disable ACS source validation if supported by the switch
+> + *  @dev - pcie switch/RP
+> + *  @enable - enable (1) or disable (0) source validation
+> + *
+> + *  Returns : < 0 on failure
+> + *           previous acs_sv state
+> + */
+> +int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable)
+> +{
+> +	int pos;
+> +	u16 cap;
+> +	u16 ctrl;
+> +	int retval;
+> +
+> +	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+> +	if (!pos)
+> +		return -ENODEV;
+> +
+> +	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
+> +	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+> +
+> +	retval = !!(ctrl & cap & PCI_ACS_SV);
+> +	if (enable)
+> +		ctrl |= (cap & PCI_ACS_SV);
+> +	else
+> +		ctrl &= ~(cap & PCI_ACS_SV);
+> +
+> +	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+> +
+> +	return retval;
+> +}
+> +
+> +/**
+>   * pci_acs_enabled - test ACS against required flags for a given device
+>   * @pdev: device to test
+>   * @acs_flags: required PCI ACS flags
+> Index: linux-2.6/drivers/pci/pci.h
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pci.h
+> +++ linux-2.6/drivers/pci/pci.h
+> @@ -343,6 +343,7 @@ static inline resource_size_t pci_resour
+>  }
+>  
+>  void pci_enable_acs(struct pci_dev *dev);
+> +int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable);
+>  
+>  #ifdef CONFIG_PCIE_PTM
+>  void pci_ptm_init(struct pci_dev *dev);
