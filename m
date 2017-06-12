@@ -1,244 +1,62 @@
-Return-Path: <SRS0=5rTb=5L=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=5rTb=5L=vodafone.de=deathsimple@kernel.org>
-Subject: Re: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access v2
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- Alex Deucher <alexander.deucher@amd.com>, David Airlie <airlied@linux.ie>,
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
- <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
- <20170601201430.GC12257@bhelgaas-glaptop.roam.corp.google.com>
- <72e061a5-9684-06e2-3021-80de8ca97bd7@vodafone.de>
- <20170602202631.GA1452@bhelgaas-glaptop.roam.corp.google.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <779a883a-265a-ae04-b0cd-8cb3599f0dc0@vodafone.de>
-Date: Tue, 6 Jun 2017 13:51:11 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 12 Jun 2017 17:20:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Will Deacon <will.deacon@arm.com>
+Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
+Message-ID: <20170612162036.GB32043@red-moon>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <20170612154537.GC22710@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170602202631.GA1452@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170612154537.GC22710@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 02.06.2017 um 22:26 schrieb Bjorn Helgaas:
-> On Fri, Jun 02, 2017 at 11:32:21AM +0200, Christian König wrote:
->> Hi Bjorn,
->>
->> sorry for not responding earlier and thanks for picking this thread
->> up again.
->>
->> Am 01.06.2017 um 22:14 schrieb Bjorn Helgaas:
->>> [+cc ADMGPU, DRM folks]
->>>
->>> On Tue, May 09, 2017 at 06:49:07PM +0200, Christian König wrote:
->>>> [SNIP]
->>>> +/**
->>>> + * amdgpu_resize_bar0 - try to resize BAR0
->>>> + *
->>>> + * @adev: amdgpu_device pointer
->>>> + *
->>>> + * Try to resize BAR0 to make all VRAM CPU accessible.
->>>> + */
->>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
->>>> +{
->>>> +	u64 space_needed = roundup_pow_of_two(adev->mc.real_vram_size);
->>>> +	u32 rbar_size = order_base_2(((space_needed >> 20) | 1)) -1;
->>>> +	u16 cmd;
->>>> +	int r;
->>>> +
->>>> +	/* Free the doorbell mapping, it most likely needs to move as well */
->>>> +	amdgpu_doorbell_fini(adev);
->>>> +	pci_release_resource(adev->pdev, 2);
->>>> +
->>>> +	/* Disable memory decoding while we change the BAR addresses and size */
->>>> +	pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
->>>> +	pci_write_config_word(adev->pdev, PCI_COMMAND,
->>>> +			      cmd & ~PCI_COMMAND_MEMORY);
->>>> +
->>>> +	r = pci_resize_resource(adev->pdev, 0, rbar_size);
->>>> +	if (r == -ENOSPC)
->>>> +		DRM_INFO("Not enough PCI address space for a large BAR.");
->>>> +	else if (r && r != -ENOTSUPP)
->>>> +		DRM_ERROR("Problem resizing BAR0 (%d).", r);
->>>> +
->>>> +	pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
->>>> +
->>>> +	/* When the doorbell BAR isn't available we have no chance of
->>>> +	 * using the device.
->>>> +	 */
->>>> +	BUG_ON(amdgpu_doorbell_init(adev));
->>> This amdgpu_doorbell_fini()/amdgpu_doorbell_init() thing doesn't look
->>> right.  amdgpu_device_init() only calls amdgpu_doorbell_init() for
->>> "adev->asic_type >= CHIP_BONAIRE", but we call it unconditionally
->>> here.
->>>
->>> This is the call graph:
->>>
->>>    amdgpu_device_init
->>>      adev->rmmio_base = pci_resource_start(adev->pdev, 5)   # 2 for < BONAIRE
->>>      adev->rmmio = ioremap(adev->rmmio_base, ...)
->>>      DRM_INFO("register mmio base: 0x%08X\n", (uint32_t)adev->rmmio_base)
->>>      if (adev->asic_type >= CHIP_BONAIRE) {
->>>        amdgpu_doorbell_init
->>> 	adev->doorbell.base = pci_resource_start(adev->pdev, 2)
->>> 	adev->doorbell.ptr = ioremap(adev->doorbell.base, ...)
->>>      }
->>>      amdgpu_init
->>>        gmc_v7_0_sw_init              # gmc_v7_0_ip_funcs.sw_init
->>> 	gmc_v7_0_mc_init
->>>    +         amdgpu_resize_bar0
->>>    +           amdgpu_doorbell_fini
->>>    +           pci_release_resource(adev->pdev, 2)
->>>    +           pci_resize_resource(adev->pdev, 0, size)
->>>    +           amdgpu_doorbell_init
->>> 	  adev->mc.aper_base = pci_resource_start(adev->pdev, 0)
->>>
->>> If "asic_type < CHIP_BONAIRE", we ioremapped BAR 2 in
->>> amdgpu_device_init(), then we released the resource here and never
->>> updated the ioremap.
->> The first hardware with a resizeable BAR I could find is a Tonga,
->> and that is even a generation later than Bonaire.
->>
->> So we are never going to call this code on earlier hardware generations.
-> The problem with that is that it's impossible for a code reader to
-> verify that.  So adding a check is ugly but I think makes it more
-> readable.
+On Mon, Jun 12, 2017 at 04:45:38PM +0100, Will Deacon wrote:
+> On Thu, Jun 08, 2017 at 03:13:00PM +0100, Lorenzo Pieralisi wrote:
+> > v1 -> v2
+> > 
+> > - Split pci_fixup_irqs() removal in several patches
+> > - Embedded pci_register_host_bridge() in pci_scan_root_bus_bridge()
+> > - Refactored iproc, faraday and xilinx-nwl host bridges in preparation
+> >   for irq fixup removal
+> > - Converted all DT PCI host bridge drivers to pci_scan_root_bus_bridge()
+> > - Dropped RFC tag
+> > - Added devm_pci_alloc_host_bridge() interface
+> > - Rebased against v4.12-rc3
+> 
+> For the arm64 and the host-common bits:
+> 
+> Acked-by: Will Deacon <will.deacon@arm.com>
 
-Good point. I will just move the check into the function itself, that 
-should handle all such cases.
+Thank you !
+Lorenzo
 
->>>  From the PCI core perspective, it would be much cleaner to do the BAR
->>> resize before the driver calls pci_enable_device().  If that could be
->>> done, there would be no need for this sort of shutdown/reinit stuff
->>> and we wouldn't have to worry about issues like these.  The amdgpu
->>> init path is pretty complicated, so I don't know whether this is
->>> possible.
->> I completely agree on this and it is actually the approach I tried first.
->>
->> There are just two problems with this approach:
->> 1. When the amdgpu driver is loaded there can already be the VGA
->> console, Vesa or EFI driver active for the device and displaying the
->> splash screen.
->>
->> When we resize and most likely relocate the BAR while those drivers
->> are active it will certainly cause problems.
->>
->> What amdgpu does before trying to resize the BAR is kicking out
->> other driver and making sure it has exclusive access to the
->> hardware.
-> I don't understand the problem here yet.  If you need to enable the
-> device, then disable it, resize, and re-enable it, that's fine.
-
-The issue is we never enable the device ourself in amdgpu, except for 
-some rare cases during resume.
-
-In most of the cases we have to handle this is the primary display 
-device which is enabled by either the BIOS, VGA console, VesaFB or 
-EFIFB. Amdgpu just kicks out whatever driver was responsible for the 
-device previously and takes over.
-
-I could of course do the disable/resize/reenable dance, but I would 
-rather want to avoid that.
-
-The hardware is most likely already displaying a boot splash and we want 
-to transit to the desktop without any flickering (at least that's the 
-long term goal). Completely disabling the device to do this doesn't 
-sounds like a good idea if we want that.
-
-> The important thing I'm looking for is that the resize happens before
-> a pci_enable_device(), because pci_enable_device() is the sync point
-> where the PCI core enables resources and makes them available to the
-> driver.  Drivers know that they can't look at the resources before
-> that point.  There's a little bit of text about this in [1].
-
-Yeah, I understand that. But wouldn't it be sufficient to just disable 
-memory decoding during the resize?
-
-I can easily guarantee that the CPU isn't accessing the BAR during the 
-time (we need to do this for changing the memory clocks as well), but I 
-have a bad gut feeling completely turning of the device while we are 
-still displaying stuff.
-
->> 2. Without taking a look at the registers you don't know how much
->> memory there actually is on the board.
->>
->> We could always resize it to the maximum supported, but that would
->> mean we could easily waste 128GB of address space while the hardware
->> only has 8GB of VRAM.
->>
->> That would not necessarily hurt us when we have enough address
->> space, but at least kind of sucks.
-> Enable, read regs, disable, kick out other drivers, resize, enable.
-> Does that solve this problem?
-
-Yeah, that sounds like it should do it. I will try and take a look if 
-that works or not.
-
->>> I would also like to simplify the driver usage model and get the
->>> PCI_COMMAND_MEMORY twiddling into the PCI core instead of the driver.
->>> Ideally, the driver would do something like this:
->>>
->>>    pci_resize_resource(adev->pdev, 0, rbar_size);
->>>    pci_enable_device(adev->pdev);
->>>
->>> And the PCI core would be something along these lines:
->>>
->>>    int pci_resize_resource(dev, bar, size)
->>>    {
->>>      if (pci_is_enabled(dev))
->>>        return -EBUSY;
->>>
->>>      pci_disable_decoding(dev);          # turn off MEM, IO decoding
->>>      pci_release_resources(dev);         # (all of them)
->>>      err = pci_resize_bar(dev, bar, size);     # change BAR size (only)
->>>      if (err)
->>>        return err;
->>>
->>>      pci_assign_resources(dev);          # reassign all "dev" resources
->>>      return 0;
->>>    }
->> I already tried the approach with releasing all resources, but it
->> didn't worked so well.
->>
->> When resizing fails because we don't have enough address space then
->> we at least want to get back to a working config.
->>
->> Releasing everything makes that rather tricky, since I would then
->> need to keep a backup of the old config and try to restore it.
-> If resizing fails because of lack of address space, I would expect the
-> PCI core to at least restore to the previous state.  If it doesn't, I
-> think that would be a defect.
-
-I completely agree, but this is unfortunately what happens.
-
-The allocation and alignment functions in the PCI core sometimes doesn't 
-seem to be able to restore the old config.
-
-I mean just try pci=realloc. The core sometimes doesn't seem to be able 
-to come up with a valid config with that.
-
-> Having the driver specify the BARs it thinks might cause issues feels
-> like a crutch.
-Why? The driver just releases what is necessary to move the BAR.
-
->
->> Additional to that I'm not sure if releasing the register BAR and
->> relocating it works with amdgpu.
-> If the BAR can't be relocated, that sounds like a hardware defect.  If
-> that's really the case, you could mark it IORESOURCE_PCI_FIXED so we
-> don't move it.  Or if it's an amdgpu defect, e.g., if amdgpu doesn't
-> re-read the resource addresses after pci_enable_device(), you should
-> fix amdgpu.
-
-No, the issue is not the hardware but rather the fact that the I/O BAR 
-might be used by more than one driver in the system.
-
-We also have an alsa audio driver using this to program it's DMA for 
-HDMI/DP audio and there is also the kicked out driver which might should 
-take over again if amdgpu ever unloads.
-
-I need to double check how those two work.
-
-Regards,
-Christian.
-
->
-> [1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/PCI/pci.txt#n255
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
