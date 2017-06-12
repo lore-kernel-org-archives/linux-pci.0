@@ -1,118 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Jun 2017 14:58:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
-Message-ID: <20170627195815.GA17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <E1dNcMp-0005RN-1w@optimist>
- <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
- <1498209196.26313.71.camel@mtkswgap22>
- <20170623094356.GA5337@red-moon>
+Return-Path: <SRS0=Wof8=5R=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=Wof8=5R=gmail.com=alexander.duyck@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170623094356.GA5337@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, Ryder Lee <ryder.lee@mediatek.com>,
- "kernel-build-reports@lists.linaro.org"
- <kernel-build-reports@lists.linaro.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Mark Brown <broonie@kernel.org>,
- "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 12 Jun 2017 14:33:00 -0700
+Message-ID: <CAKgT0UczQwfxLxsYR807WKH1ZMNcXmt97GwYWQDQn5ES8kyk3A@mail.gmail.com>
+Subject: Re: [PATCH v4 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+ flag
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Ashok Raj <ashok.raj@intel.com>, Ding Tianhong <dingtianhong@huawei.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
+	Ganesh Goudar <ganeshgr@chelsio.com>, Asit K Mallick <asit.k.mallick@intel.com>,
+	Patrick J Cramer <patrick.j.cramer@intel.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Bob Shaw <Bob.Shaw@amd.com>,
+	h <l.stach@pengutronix.de>, Amir Ancel <amira@mellanox.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>, David Laight <David.Laight@aculab.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
+	linux-arm-kernel@lists.infradead.org, Netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 10:43:56AM +0100, Lorenzo Pieralisi wrote:
-> On Fri, Jun 23, 2017 at 05:13:16PM +0800, Ryder Lee wrote:
-> > Sorry for late reply, 
-> > 
-> > +Lorenzo
-> > 
-> > On Wed, 2017-06-21 at 18:04 +0800, Mark Brown wrote:
-> > > On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
-> > > 
-> > > Today's -next fails to build an arm allmodconfig due to:
-> > > 
-> > > > 	arm-allmodconfig
-> > > > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-> > > 
-> > > caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
-> > > controller support).
-> > 
-> > 
-> > Hi Lorenzo,
-> > 
-> > I picked up your changes and had some modifications like what you did
-> > for other platforms:
-> > 
-> > 9f8e3a5 PCI: Add devm_pci_alloc_host_bridge() interface 
-> > 35a1a84 PCI: Add pci_free_host_bridge() interface
-> > e33aafd PCI: Initialize bridge release function at bridge allocation
-> > 
-> > ...and it looks Okay.
-> > 
-> > I have also noticed that you continue sending patches for other
-> > platforms but I have not yet had a look in detail. I'm quite busy these
-> > days and don't have time to dig it, hence it is becoming a little
-> > unmanageable for me.
-> 
-> If it is unmanageable you don't add yourself as a maintainer of that
-> PCI host bridge driver, you know, we are all busy.
-> 
-> Your driver in the PCI tree as it stands contains already two bugs:
-> 
-> 1) It leaks memory on the probe failure path
-> 2) pci_fixup_irqs() is broken on configurations with multiple host
->    bridges
-> 
-> And we keep copy'n'pasting that code.
-> 
-> > Did you have a chance to send the same patches for MediaTek?  I
-> > appreciate that and I can help to test it on our platforms.
-> 
-> No, how could I have sent them ? It is not upstream and it is a separate
-> branch in the PCI tree. As I mentioned in another thread it is probably
-> best to drop my pci_fixup_irqs() removal patches since it is impossible
-> to work on them without a stable branch to apply them against, in the
-> interim we keep adding PCI host bridges that use the wrong interfaces by
-> copy'n'pasting code that I have been trying to remove.
-> 
-> I think the best solution is to repost my series when v4.13-rc1 appears
-> and ask all new crop of host bridge drivers to rebase against it.
-> 
-> I won't be able to follow mailing lists till end of next week, which
-> is bad timing.
-> 
-> Bjorn, is the plan above ok ? Please let me know how you want to
-> proceed.
+On Mon, Jun 12, 2017 at 4:05 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+> From: Casey Leedom <leedom@chelsio.com>
+>
+> cxgb4 Ethernet driver now queries PCIe configuration space to determine
+> if it can send TLPs to it with the Relaxed Ordering Attribute set.
+>
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
 
-Sorry, I was on vacation myself most of last week, and you're
-unavailable most of this week, but I'd still like to try to get this
-into v4.13.
+Casey, does this patch work for you? I just want to make sure Ding
+didn't miss anything. The effect of this is that the relaxed ordering
+bits being set from your original patch are now dependent on them
+being set in the PCIe configuration space of the device. I recall you
+mentioning something about peer to peer and this currently disables
+that for the case where the root complex or any PCIe bridges in
+between cannot support relaxed ordering. Does that work for you or
+will you need additional changes for this driver to enable peer to
+peer in the that case?
 
-We may not get every host tested, but I'm not sure that will happen
-even if we wait for the next cycle.  If we trip over something it will
-likely be something small or for a relatively rare platform, so we can
-fix it up after the fact.
-
-I haven't looked at everything yet, but my plan is to try to
-incorporate the fixes people have posted and keep pushing forward.  If
-that turns out not to work, I'll drop the pci_fixup_irqs() series, but
-I'll at least give it a try.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+>  3 files changed, 21 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> index e88c180..478f25a 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
+>         USING_SOFT_PARAMS  = (1 << 6),
+>         MASTER_PF          = (1 << 7),
+>         FW_OFLD_CONN       = (1 << 9),
+> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
+>  };
+>
+>  enum {
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> index 38a5c67..1dd093d 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> @@ -4726,6 +4726,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>         adapter->msg_enable = DFLT_MSG_ENABLE;
+>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+>
+> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
+> +        * Ingress Packet Data to Free List Buffers in order to allow for
+> +        * chipset performance optimizations between the Root Complex and
+> +        * Memory Controllers.  (Messages to the associated Ingress Queue
+> +        * notifying new Packet Placement in the Free Lists Buffers will be
+> +        * send without the Relaxed Ordering Attribute thus guaranteeing that
+> +        * all preceding PCIe Transaction Layer Packets will be processed
+> +        * first.)  But some Root Complexes have various issues with Upstream
+> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
+> +        * The PCIe devices which under the Root Complexes will be cleared the
+> +        * Relaxed Ordering bit in the configuration space, So we check our
+> +        * PCIe configuration space to see if it's flagged with advice against
+> +        * using Relaxed Ordering.
+> +        */
+> +       if (pcie_relaxed_ordering_supported(pdev))
+> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+> +
+>         spin_lock_init(&adapter->stats_lock);
+>         spin_lock_init(&adapter->tid_release_lock);
+>         spin_lock_init(&adapter->win0_lock);
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> index f05f0d4..ac229a3 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>         struct fw_iq_cmd c;
+>         struct sge *s = &adap->sge;
+>         struct port_info *pi = netdev_priv(dev);
+> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+>
+>         /* Size needs to be multiple of 16, including status entry. */
+>         iq->size = roundup(iq->size, 16);
+> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>
+>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+> -                                            FW_IQ_CMD_FL0FETCHRO_F |
+> -                                            FW_IQ_CMD_FL0DATARO_F |
+> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
+> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
+>                                              FW_IQ_CMD_FL0PADEN_F);
+>                 if (cong >= 0)
+>                         c.iqns_to_fl0congen |=
+> --
+> 1.9.0
+>
+>
