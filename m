@@ -1,146 +1,93 @@
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v5 3/3] net/cxgb4: Use new
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com>
- <1497855239-18560-4-git-send-email-dingtianhong@huawei.com>
- <CAKgT0UdJ_zseo9O7SiU9U2m__OZeF_Z8eVjsA5N8ZK39rdK2fA@mail.gmail.com>
-CC: Mark Rutland <mark.rutland@arm.com>,
-        Gabriele Paoloni
-	<gabriele.paoloni@huawei.com>,
-        Asit K Mallick <asit.k.mallick@intel.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>, Ashok Raj <ashok.raj@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        "Jeff
- Kirsher" <jeffrey.t.kirsher@intel.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        Ganesh Goudar <ganeshgr@chelsio.com>, Bob Shaw
-	<Bob.Shaw@amd.com>,
-        Casey Leedom <leedom@chelsio.com>,
-        Patrick J Cramer
-	<patrick.j.cramer@intel.com>,
-        Michael Werner <werner@chelsio.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Amir Ancel <amira@mellanox.com>, Netdev <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        David Laight <David.Laight@aculab.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Robin Murphy
-	<robin.murphy@arm.com>,
-        David Miller <davem@davemloft.net>, h
-	<l.stach@pengutronix.de>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <3aa59c4a-62ad-dcb0-14d0-e0955b0005d2@huawei.com>
-Date: Thu, 22 Jun 2017 09:10:38 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2 6/8] PCI / PM: Restore PME Enable if skipping wakeup setup
+Date: Mon, 12 Jun 2017 22:53:36 +0200
+Message-ID: <1667474.rysFhR2k32@aspire.rjw.lan>
+In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0UdJ_zseo9O7SiU9U2m__OZeF_Z8eVjsA5N8ZK39rdK2fA@mail.gmail.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
+The wakeup_prepared PCI device flag is used for preventing subsequent
+changes of PCI device wakeup settings in the same way (e.g. enabling
+device wakeup twice in a row).
 
-On 2017/6/22 2:28, Alexander Duyck wrote:
-> On Sun, Jun 18, 2017 at 11:53 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
->> From: Casey Leedom <leedom@chelsio.com>
->>
->> cxgb4 Ethernet driver now queries PCIe configuration space to determine
->> if it can send TLPs to it with the Relaxed Ordering Attribute set.
->>
->> Signed-off-by: Casey Leedom <leedom@chelsio.com>
->> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
->> ---
->>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
->>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
->>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
->>  3 files changed, 21 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
->> index e88c180..478f25a 100644
->> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
->> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
->> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
->>         USING_SOFT_PARAMS  = (1 << 6),
->>         MASTER_PF          = (1 << 7),
->>         FW_OFLD_CONN       = (1 << 9),
->> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
->>  };
->>
->>  enum {
->> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
->> index ea1bfcf..7cd4e1b 100644
->> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
->> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
->> @@ -4735,6 +4735,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>         adapter->msg_enable = DFLT_MSG_ENABLE;
->>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
->>
->> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
->> +        * Ingress Packet Data to Free List Buffers in order to allow for
->> +        * chipset performance optimizations between the Root Complex and
->> +        * Memory Controllers.  (Messages to the associated Ingress Queue
->> +        * notifying new Packet Placement in the Free Lists Buffers will be
->> +        * send without the Relaxed Ordering Attribute thus guaranteeing that
->> +        * all preceding PCIe Transaction Layer Packets will be processed
->> +        * first.)  But some Root Complexes have various issues with Upstream
->> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
->> +        * The PCIe devices which under the Root Complexes will be cleared the
->> +        * Relaxed Ordering bit in the configuration space, So we check our
->> +        * PCIe configuration space to see if it's flagged with advice against
->> +        * using Relaxed Ordering.
->> +        */
->> +       if (pcie_relaxed_ordering_supported(pdev))
->> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
->> +
-> 
-> Looks like you have a typo here. It should be
-> "!pcie_relaxed_ordering_supported(pdev)" that you are testing for to
-> set this flag shouldn't it? Right now it appears the flag is getting
-> set if relaxed ordering is supported.
-> 
+However, in some cases PME Enable may be updated by things like PCI
+configuration space restoration in the meantime and it may need to be
+set again even though the rest of the settings need not change, so
+modify __pci_enable_wake() to do that when it is about to return
+early.
 
-Yes, I made a mistake here, thanks for correcting.
+Also, it is reasonable to expect that __pci_enable_wake() will always
+clear PME Status when invoked to disable device wakeup, so make it do
+so even if it is going to return early then.
 
-Ding
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci.c |   26 ++++++++++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
 
->>         spin_lock_init(&adapter->stats_lock);
->>         spin_lock_init(&adapter->tid_release_lock);
->>         spin_lock_init(&adapter->win0_lock);
->> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
->> index f05f0d4..ac229a3 100644
->> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
->> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
->> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
->>         struct fw_iq_cmd c;
->>         struct sge *s = &adap->sge;
->>         struct port_info *pi = netdev_priv(dev);
->> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
->>
->>         /* Size needs to be multiple of 16, including status entry. */
->>         iq->size = roundup(iq->size, 16);
->> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
->>
->>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
->>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
->> -                                            FW_IQ_CMD_FL0FETCHRO_F |
->> -                                            FW_IQ_CMD_FL0DATARO_F |
->> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
->> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
->>                                              FW_IQ_CMD_FL0PADEN_F);
->>                 if (cong >= 0)
->>                         c.iqns_to_fl0congen |=
->> --
->> 1.9.0
->>
->>
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-> 
-> .
-> 
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1805,6 +1805,23 @@ static void __pci_pme_active(struct pci_
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+ }
+ 
++static void pci_pme_restore(struct pci_dev *dev)
++{
++	u16 pmcsr;
++
++	if (!dev->pme_support)
++		return;
++
++	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
++	if (dev->wakeup_prepared) {
++		pmcsr |= PCI_PM_CTRL_PME_ENABLE;
++	} else {
++		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
++		pmcsr |= PCI_PM_CTRL_PME_STATUS;
++	}
++	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
++}
++
+ /**
+  * pci_pme_active - enable or disable PCI device's PME# function
+  * @dev: PCI device to handle.
+@@ -1899,9 +1916,14 @@ int __pci_enable_wake(struct pci_dev *de
+ 	if (enable && !runtime && !device_may_wakeup(&dev->dev))
+ 		return -EINVAL;
+ 
+-	/* Don't do the same thing twice in a row for one device. */
+-	if (!!enable == !!dev->wakeup_prepared)
++	/*
++	 * Don't do the same thing twice in a row for one device, but restore
++	 * PME Enable in case it has been updated by config space restoration.
++	 */
++	if (!!enable == !!dev->wakeup_prepared) {
++		pci_pme_restore(dev);
+ 		return 0;
++	}
+ 
+ 	/*
+ 	 * According to "PCI System Architecture" 4th ed. by Tom Shanley & Don
