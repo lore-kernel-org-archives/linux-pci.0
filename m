@@ -1,101 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46922 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753857AbdF0Vns (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jun 2017 17:43:48 -0400
-Date: Tue, 27 Jun 2017 16:43:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH v2] pci: ftpci100: Make clocks compulsory
-Message-ID: <20170627214345.GB17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170621085730.28804-1-linus.walleij@linaro.org>
+Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v4 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Mon, 12 Jun 2017 19:05:25 +0800
+Message-ID: <1497265525-4752-4-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
+References: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170621085730.28804-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 21, 2017 at 10:57:30AM +0200, Linus Walleij wrote:
-> This fixes a regression on the FTPCI100 PCI driver.
-> 
-> When the clock controller was augmented to probe clocks
-> from the platform device except to the most basic clocks
-> pertaining to timers, clocks may return an error pointer
-> containing -EPROBE_DEFER.
-> 
-> This hit the PCI driver which would try to continue
-> without the clocks, but the actual clocks appeared later,
-> so we did not pick them up properly, and in the end of
-> the boot, these clocks get gated off if no users register,
-> so the PCI host became numbed off and silently nonworking.
-> 
-> The clocks for this PCI bus are defined properly for all
-> platforms implementing it, so we should make them compulsory
-> before new users arrive so we have our resources under
-> control.
-> 
-> This makes the driver bail out of probe with any error
-> code from the clock, including -EPROBE_DEFER so that we
-> again have a clean boot.
-> 
-> Fixes: cea186ac1e45 ("pci: ftpci100: Add clock handling")
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+From: Casey Leedom <leedom@chelsio.com>
 
-I folded this into the "pci: ftpci100: Add clock handling" commit,
-thanks!
+cxgb4 Ethernet driver now queries PCIe configuration space to determine
+if it can send TLPs to it with the Relaxed Ordering Attribute set.
 
-> ---
-> ChangeLog v1->v2:
-> - Inadvertedly managed to switch PTR_ERR() for ERR_PTR()
->   in the code, and the compile screamed.
-> ---
->  drivers/pci/host/pci-ftpci100.c | 28 ++++++++++++----------------
->  1 file changed, 12 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-> index d3bf153a2ab2..db31ab21884e 100644
-> --- a/drivers/pci/host/pci-ftpci100.c
-> +++ b/drivers/pci/host/pci-ftpci100.c
-> @@ -463,24 +463,20 @@ static int faraday_pci_probe(struct platform_device *pdev)
->  
->  	/* Retrieve and enable optional clocks */
->  	clk = devm_clk_get(dev, "PCLK");
-> -	if (IS_ERR(clk)) {
-> -		dev_err(dev, "no PCLK available\n");
-> -	} else {
-> -		ret = clk_prepare_enable(clk);
-> -		if (ret) {
-> -			dev_err(dev, "could not prepare PCLK\n");
-> -			return ret;
-> -		}
-> +	if (IS_ERR(clk))
-> +		return PTR_ERR(clk);
-> +	ret = clk_prepare_enable(clk);
-> +	if (ret) {
-> +		dev_err(dev, "could not prepare PCLK\n");
-> +		return ret;
->  	}
->  	p->bus_clk = devm_clk_get(dev, "PCICLK");
-> -	if (IS_ERR(p->bus_clk)) {
-> -		dev_err(dev, "no PCICLK available\n");
-> -	} else {
-> -		ret = clk_prepare_enable(p->bus_clk);
-> -		if (ret) {
-> -			dev_err(dev, "could not prepare PCICLK\n");
-> -			return ret;
-> -		}
-> +	if (IS_ERR(p->bus_clk))
-> +		return PTR_ERR(clk);
-> +	ret = clk_prepare_enable(p->bus_clk);
-> +	if (ret) {
-> +		dev_err(dev, "could not prepare PCICLK\n");
-> +		return ret;
->  	}
->  
->  	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> -- 
-> 2.9.4
-> 
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+ 3 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+index e88c180..478f25a 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+@@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
+ 	USING_SOFT_PARAMS  = (1 << 6),
+ 	MASTER_PF          = (1 << 7),
+ 	FW_OFLD_CONN       = (1 << 9),
++	ROOT_NO_RELAXED_ORDERING = (1 << 10),
+ };
+ 
+ enum {
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index 38a5c67..1dd093d 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -4726,6 +4726,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	adapter->msg_enable = DFLT_MSG_ENABLE;
+ 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+ 
++	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
++	 * Ingress Packet Data to Free List Buffers in order to allow for
++	 * chipset performance optimizations between the Root Complex and
++	 * Memory Controllers.  (Messages to the associated Ingress Queue
++	 * notifying new Packet Placement in the Free Lists Buffers will be
++	 * send without the Relaxed Ordering Attribute thus guaranteeing that
++	 * all preceding PCIe Transaction Layer Packets will be processed
++	 * first.)  But some Root Complexes have various issues with Upstream
++	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
++	 * The PCIe devices which under the Root Complexes will be cleared the
++	 * Relaxed Ordering bit in the configuration space, So we check our
++	 * PCIe configuration space to see if it's flagged with advice against
++	 * using Relaxed Ordering.
++	 */
++	if (pcie_relaxed_ordering_supported(pdev))
++		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
++
+ 	spin_lock_init(&adapter->stats_lock);
+ 	spin_lock_init(&adapter->tid_release_lock);
+ 	spin_lock_init(&adapter->win0_lock);
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+index f05f0d4..ac229a3 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+@@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 	struct fw_iq_cmd c;
+ 	struct sge *s = &adap->sge;
+ 	struct port_info *pi = netdev_priv(dev);
++	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+ 
+ 	/* Size needs to be multiple of 16, including status entry. */
+ 	iq->size = roundup(iq->size, 16);
+@@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 
+ 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+ 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+-					     FW_IQ_CMD_FL0FETCHRO_F |
+-					     FW_IQ_CMD_FL0DATARO_F |
++					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
++					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
+ 					     FW_IQ_CMD_FL0PADEN_F);
+ 		if (cong >= 0)
+ 			c.iqns_to_fl0congen |=
+-- 
+1.9.0
