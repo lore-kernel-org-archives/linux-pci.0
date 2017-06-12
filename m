@@ -1,113 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36372 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752419AbdFSVwR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Jun 2017 17:52:17 -0400
-Date: Mon, 19 Jun 2017 16:52:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: bhelgaas@google.com, marc.zyngier@arm.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        David Daney <david.daney@cavium.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH] PCI/MSI: Improve MSI alias detection
-Message-ID: <20170619215214.GB554@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170531175230.16529-2-robin.murphy@arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+ <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v4 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Mon, 12 Jun 2017 19:05:22 +0800
+Message-ID: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170531175230.16529-2-robin.murphy@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc David, Alex]
+Some devices have problems with Transaction Layer Packets with the Relaxed
+Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+devices with Relaxed Ordering issues, and a use of this new flag by the
+cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+Ports.
 
-On Wed, May 31, 2017 at 06:52:28PM +0100, Robin Murphy wrote:
-> Currently, we consider all DMA aliases when calculating MSI requester
-> IDs. This turns out to be the wrong thing to do in the face of pure DMA
-> quirks like those of Marvell SATA cards, where we can end up configuring
-> the MSI doorbell to expect the phantom function alias, such that it then
-> goes on to happily ignore actual MSI writes coming from the card on the
-> real RID.
+It's been years since I've submitted kernel.org patches, I appolgise for the
+almost certain submission errors.
 
-I guess you're making the assumption that DMA might use phantom
-function aliases (aliases on the same bus as the actual device), but
-MSI writes will not?
+v2: Alexander point out that the v1 was only a part of the whole solution,
+    some platform which has some issues could use the new flag to indicate
+    that it is not safe to enable relaxed ordering attribute, then we need
+    to clear the relaxed ordering enable bits in the PCI configuration when
+    initializing the device. So add a new second patch to modify the PCI
+    initialization code to clear the relaxed ordering enable bit in the
+    event that the root complex doesn't want relaxed ordering enabled.
 
-> Improve the alias walk to only account for the topological aliases that
-> matter, based on the logic from the Intel IRQ remapping code.
+    The third patch was base on the v1's second patch and only be changed
+    to query the relaxed ordering enable bit in the PCI configuration space
+    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
+    set.
 
-Can you include a specific function reference here?  It sounds like
-it'd be useful to compare this with the Intel IRQ remapping code.
+    This version didn't plan to drop the defines for Intel Drivers to use the
+    new checking way to enable relaxed ordering because it is not the hardest
+    part of the moment, we could fix it in next patchset when this patches
+    reach the goal.  
 
-> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-> ---
->  drivers/pci/msi.c | 18 +++++++++++++-----
->  1 file changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index ba44fdfda66b..7b34c434970e 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1468,13 +1468,21 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
->  }
->  EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
->  
-> +/*
-> + * If the alias device/RID is on a different bus, it's a topological alias
-> + * we should care about; otherwise, it's a DMA quirk and we don't.
-> + */
->  static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
->  {
->  	u32 *pa = data;
-> +	u8 bus = PCI_BUS_NUM(*pa);
-> +
-> +	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
-> +		*pa = alias;
->  
-> -	*pa = alias;
+v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
+    If a PCIe device didn't enable the relaxed ordering attribute default,
+    we should not do anything in the PCIe configuration, otherwise we
+    should check if any of the devices above us do not support relaxed
+    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+    the result if we get a return that indicate that the relaxed ordering
+    is not supported we should update our device to disable relaxed ordering
+    in configuration space. If the device above us doesn't exist or isn't
+    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+    because we are probably running in a guest.
 
-Aliases can arise both because of device defects, e.g., the phantom
-function quirks, and because of bridges, e.g., all the stuff in
-pci_for_each_dma_alias().
+v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
+    according John's suggestion, and modify the description, use the true/false
+    as the return value.
 
-Why is it that the users of get_msi_id_cb() can get away with
-collapsing any of these bridge aliases into the last one that
-pci_for_each_dma_alias() finds?  I guess this is another question
-about exactly why DMA and MSI are different here.
+    We shouldn't enable relaxed ordering attribute by the setting in the root
+    complex configuration space for PCIe device, so fix it for cxgb4.
 
->  	return 0;
->  }
-> +
->  /**
->   * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
->   * @domain:	The interrupt domain
-> @@ -1488,7 +1496,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
->  u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
->  {
->  	struct device_node *of_node;
-> -	u32 rid = 0;
-> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
->  
->  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
->  
-> @@ -1504,14 +1512,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
->   * @pdev:	The PCI device
->   *
->   * Use the firmware data to find a device-specific MSI domain
-> - * (i.e. not one that is ste as a default).
-> + * (i.e. not one that is set as a default).
->   *
-> - * Returns: The coresponding MSI domain or NULL if none has been found.
-> + * Returns: The corresponding MSI domain or NULL if none has been found.
->   */
->  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
->  {
->  	struct irq_domain *dom;
-> -	u32 rid = 0;
-> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
->  
->  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
->  	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
-> -- 
-> 2.12.2.dirty
-> 
+    Fix some format issues.
+
+Casey Leedom (2):
+  PCI: Add new PCIe Fabric End Node flag,
+    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+
+Ding Tianhong (1):
+  PCI: Enable PCIe Relaxed Ordering if supported
+
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
+ drivers/pci/pci.c                               | 32 +++++++++++++++++++
+ drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
+ drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
+ include/linux/pci.h                             |  4 +++
+ 7 files changed, 136 insertions(+), 2 deletions(-)
+
+-- 
+1.9.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
