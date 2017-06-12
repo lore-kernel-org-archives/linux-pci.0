@@ -1,16 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
- catalin.marinas@arm.com, will.deacon@arm.com, wangkefeng.wang@huawei.com,
- xuejiancheng@hisilicon.com, peter.griffin@linaro.org,
- puck.chen@hisilicon.com, lee.jones@linaro.org, ulf.hansson@linaro.org,
- bhelgaas@google.com, arnd@arndb.de
-Subject: [PATCH v3 10/21] arm64: dts: hi3660: add power key dts node
-Date: Wed, 14 Jun 2017 16:23:27 +0800
-Message-Id: <20170614082338.15673-11-guodong.xu@linaro.org>
-In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Date: Mon, 12 Jun 2017 16:45:38 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
+Message-ID: <20170612154537.GC22710@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+MIME-Version: 1.0
+In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,66 +15,43 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Guodong Xu <guodong.xu@linaro.org>,
- linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-kernel@vger.kernel.org, John Stultz <john.stultz@linaro.org>,
- Chen Jun <chenjun14@huawei.com>, zhangfei.gao@linaro.org,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Chen Jun <chenjun14@huawei.com>
+On Thu, Jun 08, 2017 at 03:13:00PM +0100, Lorenzo Pieralisi wrote:
+> v1 -> v2
+> 
+> - Split pci_fixup_irqs() removal in several patches
+> - Embedded pci_register_host_bridge() in pci_scan_root_bus_bridge()
+> - Refactored iproc, faraday and xilinx-nwl host bridges in preparation
+>   for irq fixup removal
+> - Converted all DT PCI host bridge drivers to pci_scan_root_bus_bridge()
+> - Dropped RFC tag
+> - Added devm_pci_alloc_host_bridge() interface
+> - Rebased against v4.12-rc3
 
-We use gpio_034 as power key on hikey960, and set gpio with pull-up
-state, when key press the voltage on the gpio will come to lower, and
-power key event will be reported.
+For the arm64 and the host-common bits:
 
-Signed-off-by: Chen Jun <chenjun14@huawei.com>
-Signed-off-by: John Stultz <john.stultz@linaro.org>
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
----
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-index c25fff9..7aac35b 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-@@ -10,6 +10,8 @@
- #include "hi3660.dtsi"
- #include "hikey960-pinctrl.dtsi"
- #include <dt-bindings/gpio/gpio.h>
-+#include <dt-bindings/input/input.h>
-+#include <dt-bindings/interrupt-controller/irq.h>
- 
- / {
- 	model = "HiKey960";
-@@ -34,6 +36,19 @@
- 		/* rewrite this at bootloader */
- 		reg = <0x0 0x0 0x0 0x0>;
- 	};
-+
-+	keys {
-+		compatible = "gpio-keys";
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pwr_key_pmx_func &pwr_key_cfg_func>;
-+
-+		power {
-+			wakeup-source;
-+			gpios = <&gpio4 2 GPIO_ACTIVE_LOW>;
-+			label = "GPIO Power";
-+			linux,code = <KEY_POWER>;
-+		};
-+	};
- };
- 
- &i2c0 {
--- 
-2.10.2
-
+Will
 
 _______________________________________________
 linux-arm-kernel mailing list
