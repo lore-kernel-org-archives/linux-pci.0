@@ -1,58 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] pci: Add and use PCI_GENERIC_SETUP Kconfig entry
-To: Palmer Dabbelt <palmer@dabbelt.com>, ink@jurassic.park.msu.ru,
- mattst88@gmail.com, vgupta@synopsys.com, linux@armlinux.org.uk,
- catalin.marinas@arm.com, will.deacon@arm.com, geert@linux-m68k.org,
- ralf@linux-mips.org, ysato@users.sourceforge.jp, dalias@libc.org,
- davem@davemloft.net, cmetcalf@mellanox.com, gxt@mprc.pku.edu.cn,
- bhelgaas@google.com, viro@zeniv.linux.org.uk, akpm@linux-foundation.org,
- linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-snps-arc@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
- linux-m68k@vger.kernel.org, linux-mips@linux-mips.org,
- linux-sh@vger.kernel.org, sparclinux@vger.kernel.org,
- linux-pci@vger.kernel.org, hch@infradead.org
-References: <20170623220104.GE31455@jhogan-linux.le.imgtec.org>
- <20170623220857.28774-1-palmer@dabbelt.com>
- <20170623220857.28774-2-palmer@dabbelt.com>
-From: Richard Henderson <rth@twiddle.net>
-Message-ID: <60bd9a54-0220-5d52-8843-ea3a654020a6@twiddle.net>
-Date: Sat, 24 Jun 2017 08:08:43 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:49233 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752871AbdFLVEW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 17:04:22 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2 0/8] ACPI / PM: Suspend-to-idle rework to deal with spurious ACPI wakeups
+Date: Mon, 12 Jun 2017 22:46:47 +0200
+Message-ID: <1615075.mBkoKApGGc@aspire.rjw.lan>
+In-Reply-To: <8918199.uo13RZ8hZk@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170623220857.28774-2-palmer@dabbelt.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/23/2017 03:08 PM, Palmer Dabbelt wrote:
-> We wanted to add RISC-V to the list of architectures that used the
-> generic PCI setup-irq.o inside the Makefile and it was suggested that
-> instead we define a Kconfig entry and use that.
+Hi All,
+
+On Thursday, June 08, 2017 02:00:40 AM Rafael J. Wysocki wrote:
+> Hi All,
 > 
-> I've done very minimal testing on this: I just checked to see that
-> an aarch64 defconfig still build setup-irq.o with the patch applied.
-> The intention is that this patch doesn't change the behavior of any
-> build.
+> This series is a replacement for commit eed4d47efe95 (ACPI / sleep: Ignore
+> spurious SCI wakeups from suspend-to-idle) which is still there in 4.12-rc4 but
+> will be reverted shortly, because it triggered issues on quite a few systems.
 > 
-> Signed-off-by: Palmer Dabbelt<palmer@dabbelt.com>
-> Reviewed-by: James Hogan<james.hogan@imgtec.com>
-> ---
->   arch/alpha/Kconfig     |  1 +
+> The last patch in the series is a counterpart of the above commit with a few
+> modifications, mostly to avoid affecting suspend-to-RAM and to reorder messages
+> printed to kernel logs to make them somewhat less confusing.
 
-Acked-by: Richard Henderson <rth@twiddle.net>
+Here's a v2 which is very similar to the previous one, except for 3 things:
+- There are few build fixes in the last patch.
+- The patch from Hans mentioned previously is included now (as [7/8]).
+- There is an additional PCI change related to config space saving/restoring
+  and PME.
 
+If anyone has any objections or concerns regarding this, please speak up now,
+as I'm going to put it into linux-next shortly to allow it to receive some more
+testing than commit eed4d47efe95 had had before it went it.
 
-r~
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Rafael
