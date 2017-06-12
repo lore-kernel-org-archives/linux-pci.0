@@ -1,52 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:33508 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754752AbdFNIZj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:25:39 -0400
-Received: by mail-pf0-f174.google.com with SMTP id 83so80790464pfr.0
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:25:39 -0700 (PDT)
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
-        peter.griffin@linaro.org, puck.chen@hisilicon.com,
-        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
-        arnd@arndb.de
-Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
-        Guodong Xu <guodong.xu@linaro.org>
-Subject: [PATCH v3 17/21] dt-bindings: mfd: hi6421: Add hi6421v530 compatible string
-Date: Wed, 14 Jun 2017 16:23:34 +0800
-Message-Id: <20170614082338.15673-18-guodong.xu@linaro.org>
-In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2 2/8] USB / PCI / PM: Allow the PCI core to do the resume cleanup
+Date: Mon, 12 Jun 2017 22:49:40 +0200
+Message-ID: <38416217.53MZsF26VB@aspire.rjw.lan>
+In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add compatible string for HiSilicon Hi6421v530 PMIC.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
-Acked-for-mfd-by: Lee Jones <lee.jones@linaro.org>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+hcd_pci_resume_noirq() used as a universal _resume_noirq handler for
+PCI USB controllers calls pci_back_from_sleep() which is unnecessary
+and may become problematic.
+
+It is unnecessary, because the PCI bus type carries out post-suspend
+cleanup of all PCI devices during resume and that covers all things
+done by the pci_back_from_sleep().  There is no reason why USB cannot
+follow all of the other PCI devices in that respect.
+
+It will become problematic after subsequent changes that make it
+possible to go back to sleep again after executing dpm_resume_noirq()
+if no valid system wakeup events have been detected at that point.
+Namely, calling pci_back_from_sleep() at the _resume_noirq stage
+will cause the wakeup status of the devices in question to be cleared
+and if any of them has triggered system wakeup, that event may be
+missed then.
+
+For the above reasons, drop the pci_back_from_sleep() invocation
+from hcd_pci_resume_noirq().
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 ---
- Documentation/devicetree/bindings/mfd/hi6421.txt | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/usb/core/hcd-pci.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/mfd/hi6421.txt b/Documentation/devicetree/bindings/mfd/hi6421.txt
-index 0d5a446..22da96d 100644
---- a/Documentation/devicetree/bindings/mfd/hi6421.txt
-+++ b/Documentation/devicetree/bindings/mfd/hi6421.txt
-@@ -1,7 +1,9 @@
- * HI6421 Multi-Functional Device (MFD), by HiSilicon Ltd.
+Index: linux-pm/drivers/usb/core/hcd-pci.c
+===================================================================
+--- linux-pm.orig/drivers/usb/core/hcd-pci.c
++++ linux-pm/drivers/usb/core/hcd-pci.c
+@@ -584,12 +584,7 @@ static int hcd_pci_suspend_noirq(struct
  
- Required parent device properties:
--- compatible	: contains "hisilicon,hi6421-pmic";
-+- compatible    : One of the following chip-specific strings:
-+	"hisilicon,hi6421-pmic";
-+	"hisilicon,hi6421v530-pmic";
- - reg		: register range space of hi6421;
+ static int hcd_pci_resume_noirq(struct device *dev)
+ {
+-	struct pci_dev		*pci_dev = to_pci_dev(dev);
+-
+-	powermac_set_asic(pci_dev, 1);
+-
+-	/* Go back to D0 and disable remote wakeup */
+-	pci_back_from_sleep(pci_dev);
++	powermac_set_asic(to_pci_dev(dev), 1);
+ 	return 0;
+ }
  
- Supported Hi6421 sub-devices include:
--- 
-2.10.2
+
