@@ -1,55 +1,159 @@
-Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
-Date: Tue, 13 Jun 2017 18:35:08 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	kernel test robot <fengguang.wu@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	David Airlie <airlied@linux.ie>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
- to handle kernel NULL pointer dereference at 00000000000000a8
-Message-ID: <20170613163508.GA31961@kroah.com>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
- <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
- <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
- <20170613043416.GB14217@kroah.com>
- <20170613043518.GA14621@kroah.com>
- <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
+Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v3 3/3] net/cxgb4: Use new
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
+ <1496826968-10152-4-git-send-email-dingtianhong@huawei.com>
+ <CAKgT0UeN7BK94wgU=LiD9CAo0ihrFgv2bZLFrTtr_+bgSbswxQ@mail.gmail.com>
+CC: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
+        "Bjorn Helgaas" <helgaas@kernel.org>,
+        Michael Werner <werner@chelsio.com>,
+        "Ganesh Goudar" <ganeshgr@chelsio.com>,
+        Asit K Mallick
+	<asit.k.mallick@intel.com>,
+        Patrick J Cramer <patrick.j.cramer@intel.com>,
+        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+        Bob Shaw
+	<Bob.Shaw@amd.com>, h <l.stach@pengutronix.de>,
+        Amir Ancel
+	<amira@mellanox.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        David
+ Laight <David.Laight@aculab.com>,
+        "Jeff Kirsher"
+	<jeffrey.t.kirsher@intel.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
+        Robin
+ Murphy <robin.murphy@arm.com>,
+        David Miller <davem@davemloft.net>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <2805c6bb-9d1d-0216-60ef-48cb7c377c4b@huawei.com>
+Date: Mon, 12 Jun 2017 14:53:29 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
+In-Reply-To: <CAKgT0UeN7BK94wgU=LiD9CAo0ihrFgv2bZLFrTtr_+bgSbswxQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 10:25:40AM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 12/06/17 10:35 PM, Greg Kroah-Hartman wrote:
-> > Or better yet, just turn all char major allocations into dynamic, which
-> > would be really good for test systems.  I thought someone proposed
-> > patches for that a long time ago, but I can't find them anymore.  That
-> > would be the simplest solution here.
-> 
-> Would people not complain about that? I would not be surprised if some
-> crazy application is using hard coded major numbers in userspace. So
-> such a change could potentially break userspace...
 
-For char devices, I doubt it, but we can't take the chance, which is why
-you make it an option.  Then, it's enabled for 'allmodconfig' builds,
-which helps testers out.
 
-thanks,
+On 2017/6/8 7:24, Alexander Duyck wrote:
+> On Wed, Jun 7, 2017 at 2:16 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+>> From: Casey Leedom <leedom@chelsio.com>
+>>
+>> cxgb4 Ethernet driver now queries Root Complex Port to determine if it can
+>> send TLPs to it with the Relaxed Ordering Attribute set.
+>>
+>> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> 
+> So I am pretty sure this patch doesn't work with patch 2. We need to
+> update it so that it doesn't check the root complex but instead checks
+> itself to see if it is allowed to use relaxed ordering.
+> 
 
-greg k-h
+Right, we should check the End Point PCIe device configuration space, not RC.
+
+> What we need here is the ability to detect if relaxed ordering is
+> disabled, and if so take the steps needed to enable peer to peer
+> relaxed ordering without enabling relaxed ordering to the root
+> complex. Do I have that right Casey?
+> 
+
+I am not very clear to this driver about how to enable peer to peer
+relaxed ordering without enabling relaxed ordering to the RC, need
+some help from Casey, so I will still focus on this patch and only
+fix the peer to RC relaxed ordering problem, I hope Casey could send
+another patch to fix it later.
+
+Thanks
+Ding
+
+>> ---
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
+>>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+>>  3 files changed, 21 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+>> index e88c180..478f25a 100644
+>> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+>> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+>> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
+>>         USING_SOFT_PARAMS  = (1 << 6),
+>>         MASTER_PF          = (1 << 7),
+>>         FW_OFLD_CONN       = (1 << 9),
+>> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
+>>  };
+>>
+>>  enum {
+>> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+>> index 38a5c67..fbfe341 100644
+>> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+>> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+>> @@ -4628,6 +4628,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>  #ifdef CONFIG_PCI_IOV
+>>         u32 v, port_vec;
+>>  #endif
+>> +       struct pci_dev *root;
+>>
+>>         printk_once(KERN_INFO "%s - version %s\n", DRV_DESC, DRV_VERSION);
+>>
+>> @@ -4726,6 +4727,22 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>         adapter->msg_enable = DFLT_MSG_ENABLE;
+>>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+>>
+>> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
+>> +        * Ingress Packet Data to Free List Buffers in order to allow for
+>> +        * chipset performance optimizations between the Root Complex and
+>> +        * Memory Controllers.  (Messages to the associated Ingress Queue
+>> +        * notifying new Packet Placement in the Free Lists Buffers will be
+>> +        * send without the Relaxed Ordering Attribute thus guaranteing that
+>> +        * all preceding PCIe Transaction Layer Packets will be processed
+>> +        * first.)  But some Root Complexes have various issues with Upstream
+>> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
+>> +        * So we check our Root Complex to see if it's flaged with advice
+>> +        * against using Relaxed Ordering.
+>> +        */
+>> +       root = pci_find_pcie_root_port(adapter->pdev);
+>> +       if (pcie_get_relaxed_ordering(root))
+>> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+>> +
+>>         spin_lock_init(&adapter->stats_lock);
+>>         spin_lock_init(&adapter->tid_release_lock);
+>>         spin_lock_init(&adapter->win0_lock);
+>> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+>> index f05f0d4..ac229a3 100644
+>> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
+>> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+>> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>>         struct fw_iq_cmd c;
+>>         struct sge *s = &adap->sge;
+>>         struct port_info *pi = netdev_priv(dev);
+>> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+>>
+>>         /* Size needs to be multiple of 16, including status entry. */
+>>         iq->size = roundup(iq->size, 16);
+>> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>>
+>>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+>>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+>> -                                            FW_IQ_CMD_FL0FETCHRO_F |
+>> -                                            FW_IQ_CMD_FL0DATARO_F |
+>> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
+>> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
+>>                                              FW_IQ_CMD_FL0PADEN_F);
+>>                 if (cong >= 0)
+>>                         c.iqns_to_fl0congen |=
+>> --
+>> 1.9.0
+>>
+>>
+> 
+> .
+> 
