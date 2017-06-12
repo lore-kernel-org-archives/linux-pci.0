@@ -1,635 +1,155 @@
-Return-Path: <SRS0=IYSz=5W=rsyncme.org=piotrgregor@kernel.org>
-Return-Path: <SRS0=IYSz=5W=rsyncme.org=piotrgregor@kernel.org>
-Date: Sat, 17 Jun 2017 18:45:44 +0100
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Neo Jia <cjia@nvidia.com>, Kirti Wankhede <kwankhede@nvidia.com>,
-	Vlad Tsyrklevich <vlad@tsyrklevich.net>,
-	Arvind Yadav <arvind.yadav.cs@gmail.com>,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
-Message-ID: <20170617174543.GA1723@westernst>
-References: <20170526210222.GA22204@westernst>
- <20170616225446.GG11129@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 12 Jun 2017 16:57:00 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>, rafael@kernel.org,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+Message-ID: <20170612155700.GA31930@red-moon>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
+ <20170530132408.GA2556@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
+ <20170606085553.GA20085@red-moon>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="GvXjxJ+pjyke8COw"
-In-Reply-To: <20170616225446.GG11129@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170606085553.GA20085@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ John Garry <john.garry@huawei.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
+ "olof@lixom.net" <olof@lixom.net>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+Mika]
 
---GvXjxJ+pjyke8COw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Gab, Rafael,
 
-Hi Bjorn,
-
-The pci_cfg_access_lock is most likely not needed there.
-The assignment by return type is indeed preferred in this case.
-
-However, you have changed the meaning of returned boolean information
-by pci_intx_mask_broken leaving pci_intx_mask_supported unchanged.
-The test should be: 
-
-    if (new != toggle) /* the test failed */
-	        return 1;
-	return 0;
-
-I have attached patch (created on pci/enumeration branch,
-should I commit this to your repo too?).
-
-Regarding v2.3 - do you think it is worth to apply the check
-so we would have something like
-
-    if ((new == toggle) || PCI_VERSION_PRIOR_TO_23) /* test OK or PCI prior to r2.3 */
-	        return 0;
-	return 1;
-
-cheers,
-Piotr
-
-
-On Fri, Jun 16, 2017 at 05:54:46PM -0500, Bjorn Helgaas wrote:
-> On Fri, May 26, 2017 at 10:02:25PM +0100, Piotr Gregor wrote:
-> > The test for INTx masking via config space command performed
-> > in pci_intx_mask_supported() should be performed before PCI device
-> > can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
-> > register which may collide with MSI/MSI-X interrupts.
-> > 
-> > This patch moves test performed in pci_intx_mask_supported() to
-> > 
-> > static void pci_test_intx_masking(struct pci_dev *dev)
-> > 
-> > defined in drivers/pci/probe.c.
-> > 
-> > This function is called from pci_setup_device(). It skips the test
-> > if the device has been already marked to have broken INTx masking
-> > feature. Otherwise the test is executed and broken_intx_masking
-> > field of struct pci_dev is set accordingly. broken_intx_masking
-> > meaning is: if it is true then the test has been either skipped
-> > because the device has been already known to have broken INTx
-> > masking support, or the test's been done and it has detected INTx
-> > masking support to be broken.
-> > The test result can be queried at any time later from the pci_dev
-> > using same interface as before (though whith changed implementation)
-> > 
-> > static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
-> > {
-> >         /*
-> >          * INTx masking is supported if device has not been marked
-> >          * to have this feature broken and it has passed
-> >          * pci_test_intx_masking() test.
-> >          */
-> >         return !pdev->broken_intx_masking;
-> > }
-> > 
-> > so current users of pci_intx_mask_supported: uio and vfio, keep
-> > their code unchanged.
-> > 
-> > Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
-> > ---
-> >  drivers/pci/pci.c   | 42 +-----------------------------------------
-> >  drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
-> >  include/linux/pci.h | 13 +++++++++++--
-> >  3 files changed, 56 insertions(+), 43 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index b01bd5b..7c4e1aa 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
-> >  }
-> >  EXPORT_SYMBOL_GPL(pci_intx);
-> >  
-> > -/**
-> > - * pci_intx_mask_supported - probe for INTx masking support
-> > - * @dev: the PCI device to operate on
-> > - *
-> > - * Check if the device dev support INTx masking via the config space
-> > - * command word.
-> > - */
-> > -bool pci_intx_mask_supported(struct pci_dev *dev)
-> > -{
-> > -	bool mask_supported = false;
-> > -	u16 orig, new;
-> > -
-> > -	if (dev->broken_intx_masking)
-> > -		return false;
-> > -
-> > -	pci_cfg_access_lock(dev);
-> > -
-> > -	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> > -	pci_write_config_word(dev, PCI_COMMAND,
-> > -			      orig ^ PCI_COMMAND_INTX_DISABLE);
-> > -	pci_read_config_word(dev, PCI_COMMAND, &new);
-> > -
-> > -	/*
-> > -	 * There's no way to protect against hardware bugs or detect them
-> > -	 * reliably, but as long as we know what the value should be, let's
-> > -	 * go ahead and check it.
-> > -	 */
-> > -	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
-> > -		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
-> > -			orig, new);
-> > -	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
-> > -		mask_supported = true;
-> > -		pci_write_config_word(dev, PCI_COMMAND, orig);
-> > -	}
-> > -
-> > -	pci_cfg_access_unlock(dev);
-> > -	return mask_supported;
-> > -}
-> > -EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
-> > -
-> >  static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
-> >  {
-> >  	struct pci_bus *bus = dev->bus;
-> > @@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
-> >   * @dev: the PCI device to operate on
-> >   *
-> >   * Check if the device dev has its INTx line asserted, mask it and
-> > - * return true in that case. False is returned if not interrupt was
-> > + * return true in that case. False is returned if no interrupt was
-> >   * pending.
-> >   */
-> >  bool pci_check_and_mask_intx(struct pci_dev *dev)
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 19c8950..ee6b55c 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -1330,6 +1330,48 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
-> >  }
-> >  
-> >  /**
-> > + * pci_test_intx_masking - probe for INTx masking support
-> > + * @dev: the PCI device to operate on
-> > + *
-> > + * Check if the @dev supports INTx masking via the config space
-> > + * command word. Executed when PCI device is setup. Result is saved
-> > + * in broken_intx_masking field of struct pci_dev and can be checked
-> > + * with pci_intx_mask_supported at any time later, after the PCI device
-> > + * has been setup (this avoids testing of PCI_COMMAND_INTX_DISABLE
-> > + * register at runtime).
-> > + */
-> > +static void pci_test_intx_masking(struct pci_dev *dev)
-> > +{
-> > +	u16 orig, toggle, new;
-> > +
-> > +	/*
-> > +	 * If device doesn't support this feature though it could pass the test.
-> > +	 */
-> > +	if (dev->broken_intx_masking)
-> > +		return;
+On Tue, Jun 06, 2017 at 09:55:53AM +0100, Lorenzo Pieralisi wrote:
+> Hi Gab, Rafael,
 > 
-> I don't think we need this check anymore, because broken_intx_masking
-> is only set by "FINAL" quirks, which run long after this code.
+> On Wed, May 31, 2017 at 10:24:47AM +0000, Gabriele Paoloni wrote:
 > 
-> > +
-> > +	pci_cfg_access_lock(dev);
+> [...]
 > 
-> I don't think we need this locking either.  This lock protects against
-> user-space config access, and the device isn't accessible to user
-> space yet.
+> > > > diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+> > > > index e39ec7b..37dd23c 100644
+> > > > --- a/drivers/acpi/scan.c
+> > > > +++ b/drivers/acpi/scan.c
+> > > > @@ -2035,6 +2035,7 @@ int __init acpi_scan_init(void)
+> > > >  	acpi_int340x_thermal_init();
+> > > >  	acpi_amba_init();
+> > > >  	acpi_watchdog_init();
+> > > > +	acpi_indirectio_scan_init();
 > 
-> > +	/*
-> > +	 * Perform the test.
-> > +	 */
-> > +	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> > +	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
-> > +	pci_write_config_word(dev, PCI_COMMAND, toggle);
-> > +	pci_read_config_word(dev, PCI_COMMAND, &new);
-> > +
-> > +	/*
-> > +	 * Restore initial state.
-> > +	 */
-> > +	pci_write_config_word(dev, PCI_COMMAND, orig);
-> > +
-> > +	pci_cfg_access_unlock(dev);
-> > +
-> > +	if (new != toggle)
-> > +		dev->broken_intx_masking = 1;
-> > +}
-> > +
-> > +/**
-> >   * pci_setup_device - fill in class and map information of a device
-> >   * @dev: the device structure to fill
-> >   *
-> > @@ -1399,6 +1441,8 @@ int pci_setup_device(struct pci_dev *dev)
-> >  		}
-> >  	}
-> >  
-> > +	pci_test_intx_masking(dev);
+> Unfortunately this is becoming a pattern and we are ending up
+> with a static ordering of "subsystems" init (even though for this
+> LPC series it is just the Hisilicon driver that requires this call)
+> and I am not sure I see any way of avoiding it. I think that's always
+> been the case in x86, with fewer subsystems/kernel paths to care
+> about, I wanted to flag this up though to check your opinion since
+> I am not sure this is the right direction we are taking.
 > 
-> I think it's nicer to read the code if the assignment isn't hidden
-> away, e.g., something like this:
-> 
->   dev->broken_intx_masking = pci_test_intx_masking(dev);
-> 
-> That's more like what we do for dev->cfg_size and similar things.
-> 
-> I provisionally made these changes and attached the updated patch below.
-> Let me know if it looks OK.
-> 
-> This is on my pci/enumeration branch, intended for v4.13.
-> 
-> >  	switch (dev->hdr_type) {		    /* header type */
-> >  	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
-> >  		if (class == PCI_CLASS_BRIDGE_PCI)
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 33c2b0b..8a307fc 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -366,7 +366,7 @@ struct pci_dev {
-> >  	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
-> >  	unsigned int    __aer_firmware_first_valid:1;
-> >  	unsigned int	__aer_firmware_first:1;
-> > -	unsigned int	broken_intx_masking:1;
-> > +	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
-> >  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
-> >  	unsigned int	irq_managed:1;
-> >  	unsigned int	has_secondary_link:1;
-> > @@ -1003,6 +1003,16 @@ int __must_check pci_reenable_device(struct pci_dev *);
-> >  int __must_check pcim_enable_device(struct pci_dev *pdev);
-> >  void pcim_pin_device(struct pci_dev *pdev);
-> >  
-> > +static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
-> > +{
-> > +	/*
-> > +	 * INTx masking is supported if device has not been marked
-> > +	 * to have this feature broken and it has passed
-> > +	 * pci_test_intx_masking() test.
-> > +	 */
-> > +	return !pdev->broken_intx_masking;
-> > +}
-> > +
-> >  static inline int pci_is_enabled(struct pci_dev *pdev)
-> >  {
-> >  	return (atomic_read(&pdev->enable_cnt) > 0);
-> > @@ -1026,7 +1036,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
-> >  int pci_try_set_mwi(struct pci_dev *dev);
-> >  void pci_clear_mwi(struct pci_dev *dev);
-> >  void pci_intx(struct pci_dev *dev, int enable);
-> > -bool pci_intx_mask_supported(struct pci_dev *dev);
-> >  bool pci_check_and_mask_intx(struct pci_dev *dev);
-> >  bool pci_check_and_unmask_intx(struct pci_dev *dev);
-> >  int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
-> 
-> 
-> commit 73ab6bc006ba966e233785577a1742c6cace9c8a
-> Author: Piotr Gregor <piotrgregor@rsyncme.org>
-> Date:   Fri May 26 22:02:25 2017 +0100
-> 
->     PCI: Test INTx masking during enumeration, not at run-time
->     
->     The test for INTx masking via PCI_COMMAND_INTX_DISABLE performed in
->     pci_intx_mask_supported() should be done before the device can be used.
->     This is to avoid writing PCI_COMMAND while the driver owns the device, in
->     case that has any effect on MSI/MSI-X interrupts.
->     
->     Move the content of pci_intx_mask_supported() to pci_intx_mask_broken() and
->     call it from pci_setup_device().
->     
->     The test result can be queried at any time later using the same
->     pci_intx_mask_supported() interface as before (though with changed
->     implementation), so callers (uio, vfio) should be unaffected.
->     
->     Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
->     [bhelgaas: changelog, remove quirk check, remove locking, move
->     dev->broken_intx_masking assignment to caller]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
->     Acked-by: Michael S. Tsirkin <mst@redhat.com>
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b01bd5bba8e6..7c4e1aa67c67 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
->  }
->  EXPORT_SYMBOL_GPL(pci_intx);
->  
-> -/**
-> - * pci_intx_mask_supported - probe for INTx masking support
-> - * @dev: the PCI device to operate on
-> - *
-> - * Check if the device dev support INTx masking via the config space
-> - * command word.
-> - */
-> -bool pci_intx_mask_supported(struct pci_dev *dev)
-> -{
-> -	bool mask_supported = false;
-> -	u16 orig, new;
-> -
-> -	if (dev->broken_intx_masking)
-> -		return false;
-> -
-> -	pci_cfg_access_lock(dev);
-> -
-> -	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> -	pci_write_config_word(dev, PCI_COMMAND,
-> -			      orig ^ PCI_COMMAND_INTX_DISABLE);
-> -	pci_read_config_word(dev, PCI_COMMAND, &new);
-> -
-> -	/*
-> -	 * There's no way to protect against hardware bugs or detect them
-> -	 * reliably, but as long as we know what the value should be, let's
-> -	 * go ahead and check it.
-> -	 */
-> -	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
-> -		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
-> -			orig, new);
-> -	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
-> -		mask_supported = true;
-> -		pci_write_config_word(dev, PCI_COMMAND, orig);
-> -	}
-> -
-> -	pci_cfg_access_unlock(dev);
-> -	return mask_supported;
-> -}
-> -EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
-> -
->  static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
->  {
->  	struct pci_bus *bus = dev->bus;
-> @@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
->   * @dev: the PCI device to operate on
->   *
->   * Check if the device dev has its INTx line asserted, mask it and
-> - * return true in that case. False is returned if not interrupt was
-> + * return true in that case. False is returned if no interrupt was
->   * pending.
->   */
->  bool pci_check_and_mask_intx(struct pci_dev *dev)
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 19c8950c6c38..28c57b31261c 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1329,6 +1329,34 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
->  		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
->  }
->  
-> +/**
-> + * pci_intx_mask_broken - test PCI_COMMAND_INTX_DISABLE writability
-> + * @dev: PCI device
-> + *
-> + * Test whether PCI_COMMAND_INTX_DISABLE is writable for @dev.  Check this
-> + * at enumeration-time to avoid modifying PCI_COMMAND at run-time.
-> + */
-> +static int pci_intx_mask_broken(struct pci_dev *dev)
-> +{
-> +	u16 orig, toggle, new;
-> +
-> +	pci_read_config_word(dev, PCI_COMMAND, &orig);
-> +	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
-> +	pci_write_config_word(dev, PCI_COMMAND, toggle);
-> +	pci_read_config_word(dev, PCI_COMMAND, &new);
-> +
-> +	pci_write_config_word(dev, PCI_COMMAND, orig);
-> +
-> +	/*
-> +	 * PCI_COMMAND_INTX_DISABLE was reserved and read-only prior to PCI
-> +	 * r2.3, so strictly speaking, a device is not *broken* if it's not
-> +	 * writable.
-> +	 */
-> +	if (new == toggle)
-> +		return 1;
-> +	return 0;
-> +}
-> +
->  /**
->   * pci_setup_device - fill in class and map information of a device
->   * @dev: the device structure to fill
-> @@ -1399,6 +1427,8 @@ int pci_setup_device(struct pci_dev *dev)
->  		}
->  	}
->  
-> +	dev->broken_intx_masking = pci_intx_mask_broken(dev);
-> +
->  	switch (dev->hdr_type) {		    /* header type */
->  	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
->  		if (class == PCI_CLASS_BRIDGE_PCI)
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 33c2b0b77429..4f0613d5d2d9 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -366,7 +366,7 @@ struct pci_dev {
->  	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
->  	unsigned int    __aer_firmware_first_valid:1;
->  	unsigned int	__aer_firmware_first:1;
-> -	unsigned int	broken_intx_masking:1;
-> +	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
->  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
->  	unsigned int	irq_managed:1;
->  	unsigned int	has_secondary_link:1;
-> @@ -1003,6 +1003,15 @@ int __must_check pci_reenable_device(struct pci_dev *);
->  int __must_check pcim_enable_device(struct pci_dev *pdev);
->  void pcim_pin_device(struct pci_dev *pdev);
->  
-> +static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
-> +{
-> +	/*
-> +	 * INTx masking is supported if PCI_COMMAND_INTX_DISABLE is
-> +	 * writable and no quirk has marked the feature broken.
-> +	 */
-> +	return !pdev->broken_intx_masking;
-> +}
-> +
->  static inline int pci_is_enabled(struct pci_dev *pdev)
->  {
->  	return (atomic_read(&pdev->enable_cnt) > 0);
-> @@ -1026,7 +1035,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
->  int pci_try_set_mwi(struct pci_dev *dev);
->  void pci_clear_mwi(struct pci_dev *dev);
->  void pci_intx(struct pci_dev *dev, int enable);
-> -bool pci_intx_mask_supported(struct pci_dev *dev);
->  bool pci_check_and_mask_intx(struct pci_dev *dev);
->  bool pci_check_and_unmask_intx(struct pci_dev *dev);
->  int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+> I also think that relying on _DEP to build any dependency is not
+> entirely a) usable (owing to legacy bindings and previous _DEP misuse)
+> and b) compliant with ACPI bindings given that _DEP has to be used
+> for operation regions only.
 
---GvXjxJ+pjyke8COw
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="0001-PCI-Test-INTx-masking-during-enumeration-not-at-run-.patch"
+I had a more in-depth look at this series and from my understanding
+the problem are the following to manage the LPC bindings in ACPI.
 
->From 6d814685b907980b4cae5c27c57fb4bdea13d5bb Mon Sep 17 00:00:00 2001
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-Date: Fri, 26 May 2017 22:02:25 +0100
-Subject: [PATCH] PCI: Test INTx masking during enumeration, not at run-time
+(1) Child devices of an LPC controller require special handling when
+    filling their resources (ie they need to be translated - in DT
+    that's guaranteed by the "isa" binding, in ACPI it has to be
+    done by new code)
+(2) In DT systems, LPC child devices are created by the LPC bus
+    controller driver through an of_platform_populate() call with
+    the LPC controller node as the fwnode root. For ACPI to work
+    the same way there must be a way to prevent LPC children to
+    be enumerated in acpi_default_enumeration() something like
+    I2C does (and then the LPC driver would enumerate its children as
+    DT does)
 
-The test for INTx masking via PCI_COMMAND_INTX_DISABLE performed in
-pci_intx_mask_supported() should be done before the device can be used.
-This is to avoid writing PCI_COMMAND while the driver owns the device, in
-case that has any effect on MSI/MSI-X interrupts.
+I am not sure how (1) and (2) can be managed with current ACPI bindings
+and kernel code - I suspect it may be done by mirroring what's done
+for I2C but I am not sure, that's why I CC'ed Mika (ie the LPC adapter
+is matched as a platform device and it takes care of enumerating its
+children - problem though is preventing enumeration from core ACPI code).
 
-Move the content of pci_intx_mask_supported() to pci_intx_mask_broken() and
-call it from pci_setup_device().
+I will let Gabriele and Hisilicon guys chime in if I missed something,
+which is likely, please let me know your opinion on how this code
+can be made functional on ACPI systems - it is uncharted territory.
 
-The test result can be queried at any time later using the same
-pci_intx_mask_supported() interface as before (though with changed
-implementation), so callers (uio, vfio) should be unaffected.
+Thank you !
+Lorenzo
 
-Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
-[bhelgaas: changelog, remove quirk check, remove locking, move
-dev->broken_intx_masking assignment to caller]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
----
- drivers/pci/pci.c   | 42 +-----------------------------------------
- drivers/pci/probe.c | 30 ++++++++++++++++++++++++++++++
- include/linux/pci.h | 12 ++++++++++--
- 3 files changed, 41 insertions(+), 43 deletions(-)
+> 
+> Thoughts ?
+> 
+> Thanks,
+> Lorenzo
+> 
+> > > >  	acpi_scan_add_handler(&generic_device_handler);
+> > > >
+> > > > diff --git a/include/acpi/acpi_indirect_pio.h
+> > > b/include/acpi/acpi_indirect_pio.h
+> > > > new file mode 100644
+> > > > index 0000000..efc5c43
+> > > > --- /dev/null
+> > > > +++ b/include/acpi/acpi_indirect_pio.h
+> > > > @@ -0,0 +1,24 @@
+> > > > +/*
+> > > > + * ACPI support for indirect-PIO bus.
+> > > > + *
+> > > > + * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
+> > > > + * Author: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > > > + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> > > > + *
+> > > > + * This program is free software; you can redistribute it and/or
+> > > modify
+> > > > + * it under the terms of the GNU General Public License version 2 as
+> > > > + * published by the Free Software Foundation.
+> > > > + */
+> > > > +
+> > > > +#ifndef _ACPI_INDIRECT_PIO_H
+> > > > +#define _ACPI_INDIRECT_PIO_H
+> > > > +
+> > > > +struct indirect_pio_device_desc {
+> > > > +	void *pdata; /* device relevant info data */
+> > > > +	int (*pre_setup)(struct acpi_device *adev, void *pdata);
+> > > > +};
+> > > > +
+> > > > +int acpi_set_logic_pio_resource(struct device *child,
+> > > > +		struct device *hostdev);
+> > > > +
+> > > > +#endif
+> > > > --
+> > > > 2.7.4
+> > > >
+> > > >
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5b..7c4e1aa 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
- }
- EXPORT_SYMBOL_GPL(pci_intx);
- 
--/**
-- * pci_intx_mask_supported - probe for INTx masking support
-- * @dev: the PCI device to operate on
-- *
-- * Check if the device dev support INTx masking via the config space
-- * command word.
-- */
--bool pci_intx_mask_supported(struct pci_dev *dev)
--{
--	bool mask_supported = false;
--	u16 orig, new;
--
--	if (dev->broken_intx_masking)
--		return false;
--
--	pci_cfg_access_lock(dev);
--
--	pci_read_config_word(dev, PCI_COMMAND, &orig);
--	pci_write_config_word(dev, PCI_COMMAND,
--			      orig ^ PCI_COMMAND_INTX_DISABLE);
--	pci_read_config_word(dev, PCI_COMMAND, &new);
--
--	/*
--	 * There's no way to protect against hardware bugs or detect them
--	 * reliably, but as long as we know what the value should be, let's
--	 * go ahead and check it.
--	 */
--	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
--		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
--			orig, new);
--	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
--		mask_supported = true;
--		pci_write_config_word(dev, PCI_COMMAND, orig);
--	}
--
--	pci_cfg_access_unlock(dev);
--	return mask_supported;
--}
--EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
--
- static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
- {
- 	struct pci_bus *bus = dev->bus;
-@@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
-  * @dev: the PCI device to operate on
-  *
-  * Check if the device dev has its INTx line asserted, mask it and
-- * return true in that case. False is returned if not interrupt was
-+ * return true in that case. False is returned if no interrupt was
-  * pending.
-  */
- bool pci_check_and_mask_intx(struct pci_dev *dev)
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 19c8950..e2c2650 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1330,6 +1330,34 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
- }
- 
- /**
-+ * pci_intx_mask_broken - test PCI_COMMAND_INTX_DISABLE writability
-+ * @dev: PCI device
-+ *
-+ * Test whether PCI_COMMAND_INTX_DISABLE is writable for @dev.  Check this
-+ * at enumeration-time to avoid modifying PCI_COMMAND at run-time.
-+ */
-+static int pci_intx_mask_broken(struct pci_dev *dev)
-+{
-+	u16 orig, toggle, new;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &orig);
-+	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
-+	pci_write_config_word(dev, PCI_COMMAND, toggle);
-+	pci_read_config_word(dev, PCI_COMMAND, &new);
-+
-+	pci_write_config_word(dev, PCI_COMMAND, orig);
-+
-+	/*
-+	 * PCI_COMMAND_INTX_DISABLE was reserved and read-only prior to PCI
-+	 * r2.3, so strictly speaking, a device is not *broken* if it's not
-+	 * writable.
-+	 */
-+	if (new != toggle)
-+		return 1;
-+	return 0;
-+}
-+
-+/**
-  * pci_setup_device - fill in class and map information of a device
-  * @dev: the device structure to fill
-  *
-@@ -1399,6 +1427,8 @@ int pci_setup_device(struct pci_dev *dev)
- 		}
- 	}
- 
-+	dev->broken_intx_masking = pci_intx_mask_broken(dev);
-+
- 	switch (dev->hdr_type) {		    /* header type */
- 	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
- 		if (class == PCI_CLASS_BRIDGE_PCI)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..4f0613d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -366,7 +366,7 @@ struct pci_dev {
- 	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
--	unsigned int	broken_intx_masking:1;
-+	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
- 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
- 	unsigned int	irq_managed:1;
- 	unsigned int	has_secondary_link:1;
-@@ -1003,6 +1003,15 @@ int __must_check pci_reenable_device(struct pci_dev *);
- int __must_check pcim_enable_device(struct pci_dev *pdev);
- void pcim_pin_device(struct pci_dev *pdev);
- 
-+static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
-+{
-+	/*
-+	 * INTx masking is supported if PCI_COMMAND_INTX_DISABLE is
-+	 * writable and no quirk has marked the feature broken.
-+	 */
-+	return !pdev->broken_intx_masking;
-+}
-+
- static inline int pci_is_enabled(struct pci_dev *pdev)
- {
- 	return (atomic_read(&pdev->enable_cnt) > 0);
-@@ -1026,7 +1035,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
- int pci_try_set_mwi(struct pci_dev *dev);
- void pci_clear_mwi(struct pci_dev *dev);
- void pci_intx(struct pci_dev *dev, int enable);
--bool pci_intx_mask_supported(struct pci_dev *dev);
- bool pci_check_and_mask_intx(struct pci_dev *dev);
- bool pci_check_and_unmask_intx(struct pci_dev *dev);
- int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
--- 
-2.1.4
-
-
---GvXjxJ+pjyke8COw--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
