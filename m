@@ -1,110 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
- <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v5 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Mon, 19 Jun 2017 14:53:56 +0800
-Message-ID: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59599 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752724AbdFLVEU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 17:04:20 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2 3/8] ACPI / PM: Change log level of wakeup-related message
+Date: Mon, 12 Jun 2017 22:50:24 +0200
+Message-ID: <1783355.A64TiuK6yP@aspire.rjw.lan>
+In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
+Change the log level of the "System wakeup enabled/disabled by ACPI"
+message in acpi_pm_device_sleep_wake() to "debug" to reduce to log
+noise level.
 
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/device_pm.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
-
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.  
-
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
-    according John's suggestion, and modify the description, use the true/false
-    as the return value.
-
-    We shouldn't enable relaxed ordering attribute by the setting in the root
-    complex configuration space for PCIe device, so fix it for cxgb4.
-
-    Fix some format issues.
-
-v5: Removed the unnecessary code for some function which only return the bool
-    value, and add the check for VF device.
-
-    Make this patch set base on 4.12-rc5.
-
-Casey Leedom (2):
-  PCI: Add new PCIe Fabric End Node flag,
-    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (1):
-  PCI: Enable PCIe Relaxed Ordering if supported
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
- drivers/pci/pci.c                               | 32 +++++++++++++++++++
- drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
- drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
- include/linux/pci.h                             |  4 +++
- 7 files changed, 136 insertions(+), 2 deletions(-)
-
--- 
-1.9.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -756,8 +756,8 @@ int acpi_pm_device_sleep_wake(struct dev
+ 
+ 	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
+ 	if (!error)
+-		dev_info(dev, "System wakeup %s by ACPI\n",
+-				enable ? "enabled" : "disabled");
++		dev_dbg(dev, "System wakeup %s by ACPI\n",
++			enable ? "enabled" : "disabled");
+ 
+ 	return error;
+ }
