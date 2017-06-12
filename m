@@ -1,103 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:57938 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751551AbdF2BZX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jun 2017 21:25:23 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 2/3] PCI: rockchip: control optional 12v power supply
-Date: Thu, 29 Jun 2017 09:22:23 +0800
-Message-Id: <1498699343-65467-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1498699288-63944-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1498699288-63944-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:61055 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752719AbdFLVET (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 17:04:19 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2 4/8] ACPI / PM: Clean up device wakeup enable/disable code
+Date: Mon, 12 Jun 2017 22:51:07 +0200
+Message-ID: <21723904.gpIm5LkHCV@aspire.rjw.lan>
+In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch is trying to get vpcie12v from DT and control
-it if available.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+The wakeup.flags.enabled flag in struct acpi_device is not used
+consistently, as there is no reason why it should only apply
+to the enabling/disabling of the wakeup GPE, so put the invocation
+of acpi_enable_wakeup_device_power() under it too.
+
+Moreover, it is not necessary to call
+acpi_enable_wakeup_devices() and acpi_disable_wakeup_devices() for
+suspend-to-idle, so don't do that.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
+ drivers/acpi/device_pm.c |   19 ++++++++-----------
+ drivers/acpi/sleep.c     |    4 ++--
+ 2 files changed, 10 insertions(+), 13 deletions(-)
 
- drivers/pci/host/pcie-rockchip.c | 25 ++++++++++++++++++++++++-
- 1 file changed, 24 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 199edd5..c545213 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -221,6 +221,7 @@ struct rockchip_pcie {
- 	struct	clk *aclk_perf_pcie;
- 	struct	clk *hclk_pcie;
- 	struct	clk *clk_pcie_pm;
-+	struct	regulator *vpcie12v; /* 12V power supply */
- 	struct	regulator *vpcie3v3; /* 3.3V power supply */
- 	struct	regulator *vpcie1v8; /* 1.8V power supply */
- 	struct	regulator *vpcie0v9; /* 0.9V power supply */
-@@ -1013,6 +1014,13 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -688,26 +688,23 @@ static int acpi_device_wakeup(struct acp
+ 		acpi_status res;
+ 		int error;
  
-+	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
-+	if (IS_ERR(rockchip->vpcie12v)) {
-+		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+		dev_info(dev, "no vpcie12v regulator found\n");
-+	}
++		if (adev->wakeup.flags.enabled)
++			return 0;
 +
- 	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
- 	if (IS_ERR(rockchip->vpcie3v3)) {
- 		if (PTR_ERR(rockchip->vpcie3v3) == -EPROBE_DEFER)
-@@ -1042,11 +1050,19 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- 	struct device *dev = rockchip->dev;
- 	int err;
+ 		error = acpi_enable_wakeup_device_power(adev, target_state);
+ 		if (error)
+ 			return error;
  
-+	if (!IS_ERR(rockchip->vpcie12v)) {
-+		err = regulator_enable(rockchip->vpcie12v);
-+		if (err) {
-+			dev_err(dev, "fail to enable vpcie12v regulator\n");
-+			goto err_out;
-+		}
-+	}
-+
- 	if (!IS_ERR(rockchip->vpcie3v3)) {
- 		err = regulator_enable(rockchip->vpcie3v3);
- 		if (err) {
- 			dev_err(dev, "fail to enable vpcie3v3 regulator\n");
--			goto err_out;
-+			goto err_disable_12v;
+-		if (adev->wakeup.flags.enabled)
+-			return 0;
+-
+ 		res = acpi_enable_gpe(wakeup->gpe_device, wakeup->gpe_number);
+-		if (ACPI_SUCCESS(res)) {
+-			adev->wakeup.flags.enabled = 1;
+-		} else {
++		if (ACPI_FAILURE(res)) {
+ 			acpi_disable_wakeup_device_power(adev);
+ 			return -EIO;
  		}
+-	} else {
+-		if (adev->wakeup.flags.enabled) {
+-			acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
+-			adev->wakeup.flags.enabled = 0;
+-		}
++		adev->wakeup.flags.enabled = 1;
++	} else if (adev->wakeup.flags.enabled) {
++		acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
+ 		acpi_disable_wakeup_device_power(adev);
++		adev->wakeup.flags.enabled = 0;
  	}
- 
-@@ -1074,6 +1090,9 @@ static int rockchip_pcie_set_vpcie(struct rockchip_pcie *rockchip)
- err_disable_3v3:
- 	if (!IS_ERR(rockchip->vpcie3v3))
- 		regulator_disable(rockchip->vpcie3v3);
-+err_disable_12v:
-+	if (!IS_ERR(rockchip->vpcie12v))
-+		regulator_disable(rockchip->vpcie12v);
- err_out:
- 	return err;
+ 	return 0;
  }
-@@ -1497,6 +1516,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- err_free_res:
- 	pci_free_resource_list(&res);
- err_vpcie:
-+	if (!IS_ERR(rockchip->vpcie12v))
-+		regulator_disable(rockchip->vpcie12v);
- 	if (!IS_ERR(rockchip->vpcie3v3))
- 		regulator_disable(rockchip->vpcie3v3);
- 	if (!IS_ERR(rockchip->vpcie1v8))
-@@ -1533,6 +1554,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
- 	clk_disable_unprepare(rockchip->aclk_pcie);
+Index: linux-pm/drivers/acpi/sleep.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/sleep.c
++++ linux-pm/drivers/acpi/sleep.c
+@@ -658,19 +658,19 @@ static int acpi_freeze_begin(void)
  
-+	if (!IS_ERR(rockchip->vpcie12v))
-+		regulator_disable(rockchip->vpcie12v);
- 	if (!IS_ERR(rockchip->vpcie3v3))
- 		regulator_disable(rockchip->vpcie3v3);
- 	if (!IS_ERR(rockchip->vpcie1v8))
--- 
-1.9.1
+ static int acpi_freeze_prepare(void)
+ {
+-	acpi_enable_wakeup_devices(ACPI_STATE_S0);
+ 	acpi_enable_all_wakeup_gpes();
+ 	acpi_os_wait_events_complete();
+ 	if (acpi_sci_irq_valid())
+ 		enable_irq_wake(acpi_sci_irq);
++
+ 	return 0;
+ }
+ 
+ static void acpi_freeze_restore(void)
+ {
+-	acpi_disable_wakeup_devices(ACPI_STATE_S0);
+ 	if (acpi_sci_irq_valid())
+ 		disable_irq_wake(acpi_sci_irq);
++
+ 	acpi_enable_all_runtime_gpes();
+ }
+ 
