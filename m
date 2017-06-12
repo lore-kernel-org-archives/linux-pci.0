@@ -1,92 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:7897 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751090AbdFSJ7e (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 05:59:34 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <guodong.xu@linaro.org>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>
-CC: <songxiaowei@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 1/3] PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-Date: Mon, 19 Jun 2017 17:59:18 +0800
-Message-ID: <20170619095920.40920-2-songxiaowei@hisilicon.com>
-In-Reply-To: <20170619095920.40920-1-songxiaowei@hisilicon.com>
-References: <20170619095920.40920-1-songxiaowei@hisilicon.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56766 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751984AbdFLOPf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 10:15:35 -0400
+Subject: patch "PCI: pci-driver: convert to use DRIVER_ATTR_WO" added to driver-core-testing
+To: gregkh@linuxfoundation.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+From: <gregkh@linuxfoundation.org>
+Date: Mon, 12 Jun 2017 16:15:21 +0200
+Message-ID: <1497276921130207@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ANSI_X3.4-1968
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/pci/kirin-pcie.txt         | 55 ++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-new file mode 100644
-index 000000000000..5ac5a585dd2a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -0,0 +1,55 @@
-+HiSilicon Kirin SoCs PCIe host DT description
-+
-+Kirin PCIe host controller is based on Designware PCI core.
-+It shares common functions with PCIe Designware core driver
-+and inherits common properties defined in
-+Documentation/devicetree/bindings/pci/designware-pci.txt.
-+
-+Additional properties are described here:
-+
-+Required properties
-+- compatible:
-+	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
-+- reg: Should contain rc_dbi, apb, phy, config registers location and length.
-+- reg-names: Must include the following entries:
-+  "dbi": controller configuration registers;
-+  "apb": apb Ctrl register defined by Kirin;
-+  "phy": apb PHY register defined by Kirin;
-+  "config": PCIe configuration space registers.
-+- reset-gpios: The gpio to generate PCIe perst assert and deassert signal.
-+
-+Optional properties:
-+
-+Example based on kirin960:
-+
-+	pcie@f4000000 {
-+		compatible = "hisilicon,kirin960-pcie";
-+		reg = <0x0 0xf4000000 0x0 0x1000>,
-+		      <0x0 0xff3fe000 0x0 0x1000>,
-+		      <0x0 0xf3f20000 0x0 0x40000>,
-+		      <0x0 0xf4000000 0x0 0x2000>;
-+		reg-names = "dbi","apb","phy", "config";
-+		bus-range = <0x0  0x1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		device_type = "pci";
-+		ranges = <0x02000000 0x0 0x0
-+			  0x0 0xf5000000
-+			  0x0 0x2000000>;
-+		num-lanes = <1>;
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0xf800 0 0 7>;
-+		interrupt-map = <0x0 0 0 1 &gic 0  282 4>,
-+				<0x0 0 0 2 &gic 0  283 4>,
-+				<0x0 0 0 3 &gic 0  284 4>,
-+				<0x0 0 0 4 &gic 0  285 4>;
-+		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+		clock-names = "pcie_phy_ref", "pcie_aux",
-+			      "pcie_apb_phy", "pcie_apb_sys",
-+			      "pcie_aclk";
-+		reset-gpios = <&gpio11 1 0>;
-+	};
+This is a note to let you know that I've just added the patch titled
+
+    PCI: pci-driver: convert to use DRIVER_ATTR_WO
+
+to my driver-core git tree which can be found at
+    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git
+in the driver-core-testing branch.
+
+The patch will show up in the next release of the linux-next tree
+(usually sometime within the next 24 hours during the week.)
+
+The patch will be merged to the driver-core-next branch sometime soon,
+after it passes testing, and the merge window is open.
+
+If you have any questions about this process, please let me know.
+
+
+>From a942774128deb4a909e85742e20da6e249a92bfe Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Fri, 9 Jun 2017 11:03:06 +0200
+Subject: PCI: pci-driver: convert to use DRIVER_ATTR_WO
+
+We are trying to get rid of DRIVER_ATTR(), and all of the pci-driver
+core driver attributes can be trivially changed to use DRIVER_ATTR_WO().
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-pci@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/pci-driver.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 192e7b681b96..934a78a2fbef 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -96,7 +96,7 @@ static void pci_free_dynids(struct pci_driver *drv)
+  *
+  * Allow PCI IDs to be added to an existing driver via sysfs.
+  */
+-static ssize_t store_new_id(struct device_driver *driver, const char *buf,
++static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ 			    size_t count)
+ {
+ 	struct pci_driver *pdrv = to_pci_driver(driver);
+@@ -154,7 +154,7 @@ static ssize_t store_new_id(struct device_driver *driver, const char *buf,
+ 		return retval;
+ 	return count;
+ }
+-static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
++static DRIVER_ATTR_WO(new_id);
+ 
+ /**
+  * store_remove_id - remove a PCI device ID from this driver
+@@ -164,7 +164,7 @@ static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
+  *
+  * Removes a dynamic pci device ID to this driver.
+  */
+-static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
++static ssize_t remove_id_store(struct device_driver *driver, const char *buf,
+ 			       size_t count)
+ {
+ 	struct pci_dynid *dynid, *n;
+@@ -198,7 +198,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+ 
+ 	return retval;
+ }
+-static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
++static DRIVER_ATTR_WO(remove_id);
+ 
+ static struct attribute *pci_drv_attrs[] = {
+ 	&driver_attr_new_id.attr,
 -- 
-2.11.GIT
+2.13.1
