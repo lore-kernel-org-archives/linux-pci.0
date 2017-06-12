@@ -1,105 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.ru ([107.173.13.209]:46476 "EHLO ozlabs.ru"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752143AbdFOFs7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 01:48:59 -0400
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        David Gibson <david@gibson.dropbear.id.au>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Subject: [PATCH kernel 3/3] vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
-Date: Thu, 15 Jun 2017 15:48:45 +1000
-Message-Id: <20170615054845.8428-4-aik@ozlabs.ru>
-In-Reply-To: <20170615054845.8428-1-aik@ozlabs.ru>
-References: <20170615054845.8428-1-aik@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH v2 5/8] PM / sleep: Print timing information if debug is enabled
+Date: Mon, 12 Jun 2017 22:51:55 +0200
+Message-ID: <7222456.034JZvbkBs@aspire.rjw.lan>
+In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yongji Xie <elohimes@gmail.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-This patch tries to expose MSI-X tables to userspace if hardware
-enables interrupt remapping which can ensure that a given PCI
-device can only shoot the MSIs assigned for it. So we could
-never worry that userspace driver can hurt other devices by
-writing to the exposed MSI-X table directly.
+Avoid printing the device suspend/resume timing information if
+CONFIG_PM_DEBUG is not set to reduce the log noise level.
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/vfio/pci/vfio_pci.c      | 18 +++++++++++++++---
- drivers/vfio/pci/vfio_pci_rdwr.c |  3 ++-
- 2 files changed, 17 insertions(+), 4 deletions(-)
+ drivers/base/power/main.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-index 324c52e3a1a4..700e9d04dab5 100644
---- a/drivers/vfio/pci/vfio_pci.c
-+++ b/drivers/vfio/pci/vfio_pci.c
-@@ -564,8 +564,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+Index: linux-pm/drivers/base/power/main.c
+===================================================================
+--- linux-pm.orig/drivers/base/power/main.c
++++ linux-pm/drivers/base/power/main.c
+@@ -417,6 +417,7 @@ static void pm_dev_err(struct device *de
+ 		dev_name(dev), pm_verb(state.event), info, error);
+ }
  
- 	end = pci_resource_len(vdev->pdev, vdev->msix_bar);
++#ifdef CONFIG_PM_DEBUG
+ static void dpm_show_time(ktime_t starttime, pm_message_t state, char *info)
+ {
+ 	ktime_t calltime;
+@@ -433,6 +434,9 @@ static void dpm_show_time(ktime_t startt
+ 		info ?: "", info ? " " : "", pm_verb(state.event),
+ 		usecs / USEC_PER_MSEC, usecs % USEC_PER_MSEC);
+ }
++#else
++static inline void dpm_show_time(ktime_t starttime, pm_message_t state, char *info) {}
++#endif /* CONFIG_PM_DEBUG */
  
--	/* If MSI-X table is aligned to the start or end, only one area */
--	if (((vdev->msix_offset & PAGE_MASK) == 0) ||
-+	/*
-+	 * If MSI-X table is allowed to mmap because of the capability
-+	 * of IRQ remapping or aligned to the start or end, only one area
-+	 */
-+	if ((vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) ||
-+	    ((vdev->msix_offset & PAGE_MASK) == 0) ||
- 	    (PAGE_ALIGN(vdev->msix_offset + vdev->msix_size) >= end))
- 		nr_areas = 1;
- 
-@@ -577,6 +581,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
- 
- 	sparse->nr_areas = nr_areas;
- 
-+	if (vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) {
-+		sparse->areas[i].offset = 0;
-+		sparse->areas[i].size = end;
-+		goto out;
-+	}
-+
- 	if (vdev->msix_offset & PAGE_MASK) {
- 		sparse->areas[i].offset = 0;
- 		sparse->areas[i].size = vdev->msix_offset & PAGE_MASK;
-@@ -590,6 +600,7 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
- 		i++;
- 	}
- 
-+out:
- 	ret = vfio_info_add_capability(caps, VFIO_REGION_INFO_CAP_SPARSE_MMAP,
- 				       sparse);
- 	kfree(sparse);
-@@ -1115,7 +1126,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
- 	if (req_start + req_len > phys_len)
- 		return -EINVAL;
- 
--	if (index == vdev->msix_bar) {
-+	if (index == vdev->msix_bar &&
-+		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
- 		/*
- 		 * Disallow mmaps overlapping the MSI-X table; users don't
- 		 * get to touch this directly.  We could find somewhere
-diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
-index 357243d76f10..5378f2c3ac8e 100644
---- a/drivers/vfio/pci/vfio_pci_rdwr.c
-+++ b/drivers/vfio/pci/vfio_pci_rdwr.c
-@@ -164,7 +164,8 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
- 	} else
- 		io = vdev->barmap[bar];
- 
--	if (bar == vdev->msix_bar) {
-+	if (bar == vdev->msix_bar &&
-+		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
- 		x_start = vdev->msix_offset;
- 		x_end = vdev->msix_offset + vdev->msix_size;
- 	}
--- 
-2.11.0
+ static int dpm_run_callback(pm_callback_t cb, struct device *dev,
+ 			    pm_message_t state, char *info)
