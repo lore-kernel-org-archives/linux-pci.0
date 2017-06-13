@@ -1,153 +1,180 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:32315 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750946AbdFTRFb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 13:05:31 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
- <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <594955BC.3010703@ti.com>
-Date: Tue, 20 Jun 2017 13:05:00 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 13 Jun 2017 08:58:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?iso-8859-1?Q?Sch=F6fegger?= Stefan <Stefan.Schoefegger@ginzinger.com>
+Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
+Message-ID: <20170613135847.GA7128@bhelgaas-glaptop.roam.corp.google.com>
+References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
+ <1496835374-13053-1-git-send-email-stefan.schoefegger@ginzinger.com>
+ <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
+ <2668097.SlerkO2uVy@en-pc05>
 MIME-Version: 1.0
-In-Reply-To: <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <2668097.SlerkO2uVy@en-pc05>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
+ Jingoo Han <jingoohan1@gmail.com>, open list <linux-kernel@vger.kernel.org>,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "moderated list:PCI DRIVER FOR IMX6" <linux-arm-kernel@lists.infradead.org>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/20/2017 12:28 PM, Joao Pinto wrote:
-> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
->> On 06/19/2017 12:31 PM, Joao Pinto wrote:
->>>
->>> Hi Murali,
->>>
->>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->>>> Joao,
->>>>
->>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>>>> This patch series adds the new interrupt api to pcie-designware
->>>>> make it possible to use features like MSIX.
->>>>>
->>>>> The work consisted of adapting the pcie-designware-host and each SoC
->>>>> specific driver.
->>>>>
->>>>> The patch set was made against the Bjorn' next branch.
->>>>>
->>>>> Joao Pinto (9):
->>>>>   pci: adding new irq api to pci-designware
->>>>>   pci: exynos SoC driver adapted to new irq API
->>>>>   pci: imx6 SoC driver adapted to new irq API
->>>>>   pci: artpec6 SoC driver adapted to new irq API
->>>>>   pci: generic PCIe DW driver adapted to new irq API
->>>>>   pci: qcom SoC driver adapted to new irq API
->>>>>   pci: keystone SoC driver adapted to new irq API
->>>>>   pci: removing old irq api from pcie-designware
->>>>>   pci: remove limitation of the number of the available IRQs
->>>>>
->>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>>>
->>>>
->>>> I gave this a try today and it failed. Logs at
->>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>>>
->>>> The first part of the log is with your patch series.
->>>> The second part is before applying the patch. You will see
->>>> that there is qc timeout log that shows the issue
->>>>
->>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>
->>>> Is there any DT change I need to make for this? I didn't have a
->>>> chance to review your patch w.r.t Keystone. But I see you have change
->>>> the MSI IRq handling.
->>>>
->>>
->>> There is no need to change your DT. I think I will need to debug this issue
->>> further. Could you please advice a board containing this SoC?
->>>
->> I think I may be able to work with you on this. Keystone has different 
->> register set for MSI IRQ. It is in application space. Also there are
->> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
->> please review the original code vs the changed one w.r.t to this. I haven't
->> had a chance to review the code as I am in the middle of a release.
->> But will be able to spend some time after two weeks. Meanwhile please
->> spend some time reviewing the code and exchange email to identify
->> the issue. I can add specific debug prints for you as well and provide
->> you the log for analysis.
-> 
-> Ok, I agree! Thanks!
-> 
->>
-Look at this logic in the patch where a potential issue exists for Keystone.
+On Tue, Jun 13, 2017 at 05:43:14AM +0000, Sch=F6fegger Stefan wrote:
+> On Monday, June 12, 2017 6:49:24 PM CEST Bjorn Helgaas wrote:
+> > On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
+> > > Link speed must not be limited to gen1 during link test for compliance
+> > > tests
+> > > =
 
-+static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
-+       struct pcie_port *pp = &pci->pp;
-+       u64 msi_target;
-+
-+       if (pp->ops->get_msi_addr)
-+               msi_target = pp->ops->get_msi_addr(pp);
-+       else
-+               msi_target = virt_to_phys((void *)pp->msi_data);
-+
-+       msg->address_lo = lower_32_bits(msi_target);
-+       msg->address_hi = upper_32_bits(msi_target);
-+
-+       if (pp->ops->get_msi_data)
-+               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
-+       else
-+               msg->data = data->hwirq;
-+
-+       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
-+               (int)data->hwirq, msg->address_hi, msg->address_lo);
-+}
+> > > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
+> > > ---
+> > > =
 
-Keystone has 8 hw irqs, 4 multiplexed over each since the register
-set is different than other DWC cores. So will not work for Keystone,
-right?
+> > > Changes since v1:
+> > >  - pci-imx6.c moved to dwc directory
+> > >  =
 
-Murali
+> > >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
+> > >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
+> > >  2 files changed, 22 insertions(+), 9 deletions(-)
+> > > =
 
->> Let me know.
->>
->> Murali
->>> Thanks.
->>>
->>>
->>>
->>>
->>
->>
-> 
+> > > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> > > index b7e15526d676..b6e9ced5a45d 100644
+> > > --- a/drivers/pci/dwc/Kconfig
+> > > +++ b/drivers/pci/dwc/Kconfig
+> > > @@ -77,6 +77,16 @@ config PCI_IMX6
+> > > =
+
+> > >  	select PCIEPORTBUS
+> > >  	select PCIE_DW_HOST
+> > > =
+
+> > > +config PCI_IMX6_COMPLIANCE_TEST
+> > > +	bool "Enable pcie compliance tests on imx6"
+> > > +	depends on PCI_IMX6
+> > > +	default n
+> > > +	help
+> > > +	  Enables support for pcie compliance test on FSL iMX SoCs.
+> > > +	  The link speed wouldn't be limited to gen1 when enabled.
+> > > +	  Enable only during compliance tests, otherwise
+> > > +	  link detection will fail on some peripherals.
+> > =
+
+> > I'm puzzled about why we would want to merge this patch.  It looks
+> > like we're trying to game the system to make the device pass
+> > compliance testing when it isn't really compliant.  Is this config
+> > option useful to users, or is it only useful during internal
+> > development of iMX SoCs?
+> =
+
+> It's not for passing compliance tests, it is necessary to do the complian=
+ce =
+
+> tests. Without this patch only gen 1 speed is possible to test. Also i.mx=
+6 is =
+
+> not fully gen2 compliant (withour external clk) we should have the option=
+ to =
+
+> do gen2 tests. Switching from gen1 to gen2 is done with a 100MHz (1ms) cl=
+k =
+
+> pulse on the receiver. Without this patch link speed is forced to gen1 =
+
+> afterwards.
+
+I don't understand the purpose of this yet, so maybe all we need is a
+better description.
+
+"It's not for passing compliance testing, it is necessary to do the
+compliance tests" doesn't make sense to me -- it seems
+self-contradictory.
+
+The Kconfig text says "enable only for testing because it makes link
+detection fail."  To me that means this option is not useful for
+users.  We need some justification for why it should be in the
+mainline kernel, where users and distros may enable it.
+
+If you can only support gen2 in certain board configurations, maybe
+you should add a config option that can always be enabled for those
+boards.
+
+> Yes it is only useful for board setup, it is comparable to =
+
+> CONFIG_USB_EHSET_TEST_FIXTURE for usb (ok, this is more general and not h=
+ost =
+
+> specific).
+
+USB_EHSET_TEST_FIXTURE (added by 1353aa53851e ("usb: misc: EHSET Test
+Fixture device driver for host compliance")) looks like just another
+driver in the sense that it's always safe to enable it and it doesn't
+hurt anything if you enable it without having the hardware.
+
+This patch doesn't seem comparable to USB_EHSET_TEST_FIXTURE because
+this new option apparently breaks link detection in some cases.
+
+> > >  config PCIE_SPEAR13XX
+> > >  =
+
+> > >  	bool "STMicroelectronics SPEAr PCIe controller"
+> > >  	depends on PCI
+> > > =
+
+> > > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> > > index 19a289b8cc94..b0fbe52e25b0 100644
+> > > --- a/drivers/pci/dwc/pci-imx6.c
+> > > +++ b/drivers/pci/dwc/pci-imx6.c
+> > > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct imx6=
+_pcie
+> > > *imx6_pcie)> =
+
+> > >  	u32 tmp;
+> > >  	int ret;
+> > > =
+
+> > > -	/*
+> > > -	 * Force Gen1 operation when starting the link.  In case the link is
+> > > -	 * started in Gen2 mode, there is a possibility the devices on the
+> > > -	 * bus will not be detected at all.  This happens with PCIe switche=
+s.
+> > > -	 */
+> > > -	tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
+> > > -	tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> > > -	tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+> > > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+> > > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
+> > > +		/*
+> > > +		 * Force Gen1 operation when starting the link.  In case the
+> > > +		 * link is started in Gen2 mode, there is a possibility the
+> > > +		 * devices on the bus will not be detected at all.  This
+> > > +		 * happens with PCIe switches.
+> > > +		 */
+> > > +		tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
+> > > +		tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> > > +		tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+> > > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+> > > +	}
+> > > =
+
+> > >  	/* Start LTSSM. */
+> > >  	if (imx6_pcie->variant =3D=3D IMX7D)
+> =
 
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
