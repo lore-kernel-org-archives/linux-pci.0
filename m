@@ -1,62 +1,76 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 24 Jun 2017 10:14:07 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: James Hogan <james.hogan@imgtec.com>
-Subject: Re: [PATCH] pci:  Add and use PCI_GENERIC_SETUP Kconfig entry
-Message-ID: <20170624091406.GZ4902@n2100.armlinux.org.uk>
-References: <20170623214538.25967-1-palmer@dabbelt.com>
- <20170623220104.GE31455@jhogan-linux.le.imgtec.org>
+Return-Path: <SRS0=TnGP=5S=sigmadesigns.com=marc_gonzalez@kernel.org>
+Return-Path: <SRS0=TnGP=5S=sigmadesigns.com=marc_gonzalez@kernel.org>
+Subject: [PATCH v6 1/3] PCI: Add DT binding for tango PCIe controller
+To: Rob Herring <robh@kernel.org>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Liviu Dudau
+	<liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>, linux-pci
+	<linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, LKML <linux-kernel@vger.kernel.org>,
+	DT <devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>
+References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
+ <69f3ffe7-3c39-fa94-71f8-91744a869cc9@sigmadesigns.com>
+ <20170607212907.2wr3hqbokjb74kj3@rob-hp-laptop>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <3790db8d-6a4c-5c74-9ca2-431715a712a7@sigmadesigns.com>
+Date: Tue, 13 Jun 2017 15:51:32 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170623220104.GE31455@jhogan-linux.le.imgtec.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, dalias@libc.org, linux-sh@vger.kernel.org,
- catalin.marinas@arm.com, will.deacon@arm.com, sparclinux@vger.kernel.org,
- gxt@mprc.pku.edu.cn, ysato@users.sourceforge.jp, hch@infradead.org,
- geert@linux-m68k.org, linux-pci@vger.kernel.org, mattst88@gmail.com,
- linux-snps-arc@lists.infradead.org, cmetcalf@mellanox.com,
- linux-m68k@lists.linux-m68k.org, ink@jurassic.park.msu.ru,
- viro@zeniv.linux.org.uk, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, rth@twiddle.net, vgupta@synopsys.com,
- linux-kernel@vger.kernel.org, ralf@linux-mips.org,
- Palmer Dabbelt <palmer@dabbelt.com>, linux-alpha@vger.kernel.org,
- akpm@linux-foundation.org, davem@davemloft.net
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170607212907.2wr3hqbokjb74kj3@rob-hp-laptop>
+Content-Type: text/plain; charset=WINDOWS-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 11:01:04PM +0100, James Hogan wrote:
-> On Fri, Jun 23, 2017 at 02:45:38PM -0700, Palmer Dabbelt wrote:
-> > diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> > index 4c1a35f15838..86872246951c 100644
-> > --- a/arch/arm/Kconfig
-> > +++ b/arch/arm/Kconfig
-> > @@ -96,6 +96,7 @@ config ARM
-> >  	select PERF_USE_VMALLOC
-> >  	select RTC_LIB
-> >  	select SYS_SUPPORTS_APM_EMULATION
-> > +	select PCI_GENERIC_SETUP
-> >  	# Above selects are sorted alphabetically; please add new ones
-> >  	# according to that.  Thanks.
-> 
-> This comment seems to suggest PCI_GENERIC_SETUP should be added a few
-> lines up to preserve the alphabetical sorting.
+Binding for the Sigma Designs SMP8759 SoC.
 
-Indeed it should.
+Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+---
+Changes from v5 to v6
+o Delete links to elinux.org
+o Use explicit hex numbers instead of symbolic constants for sizes (in the =
+example)
+o Add bus-range to "Required properties"
+---
+ .../devicetree/bindings/pci/tango-pcie.txt         | 29 ++++++++++++++++++=
+++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documen=
+tation/devicetree/bindings/pci/tango-pcie.txt
+new file mode 100644
+index 000000000000..244683836a79
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
+@@ -0,0 +1,29 @@
++Sigma Designs Tango PCIe controller
++
++Required properties:
++
++- compatible: "sigma,smp8759-pcie"
++- reg: address/size of PCI configuration space, address/size of register a=
+rea
++- bus-range: defined by size of PCI configuration space
++- device_type: "pci"
++- #size-cells: <2>
++- #address-cells: <3>
++- msi-controller
++- ranges: translation from system to bus addresses
++- interrupts: spec for misc interrupts, spec for MSI
++
++Example:
++
++=09pcie@2e000 {
++=09=09compatible =3D "sigma,smp8759-pcie";
++=09=09reg =3D <0x50000000 0x400000>, <0x2e000 0x100>;
++=09=09bus-range =3D <0 3>;
++=09=09device_type =3D "pci";
++=09=09#size-cells =3D <2>;
++=09=09#address-cells =3D <3>;
++=09=09msi-controller;
++=09=09ranges =3D <0x02000000 0x0 0x00400000  0x50400000  0x0 0x3c00000>;
++=09=09interrupts =3D
++=09=09=09<54 IRQ_TYPE_LEVEL_HIGH>, /* misc interrupts */
++=09=09=09<55 IRQ_TYPE_LEVEL_HIGH>; /* MSI */
++=09};
+--=20
+2.11.0
