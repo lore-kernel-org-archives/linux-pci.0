@@ -1,111 +1,155 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
- hi3660 mmc
-To: Ulf Hansson <ulf.hansson@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
- <20170614082338.15673-20-guodong.xu@linaro.org>
- <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com>
- <5947CAD8.4040607@hisilicon.com>
- <CAPDyKFo=hqp=j=nWpO8uf_0pGTSKjN0T-ZKqD8cuKp1C3Q2_hA@mail.gmail.com>
-From: Wei Xu <xuwei5@hisilicon.com>
-Message-ID: <5948F1F9.90903@hisilicon.com>
-Date: Tue, 20 Jun 2017 10:59:21 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAPDyKFo=hqp=j=nWpO8uf_0pGTSKjN0T-ZKqD8cuKp1C3Q2_hA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- wangkefeng.wang@huawei.com, Arnd Bergmann <arnd@arndb.de>,
- Guodong Xu <guodong.xu@linaro.org>, Linux PCI <linux-pci@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Peter Griffin <peter.griffin@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Rob Herring <robh+dt@kernel.org>, Li Wei <liwei213@huawei.com>,
- puck.chen@hisilicon.com, xuejiancheng@hisilicon.com,
- zhangfei <zhangfei.gao@linaro.org>, Lee Jones <lee.jones@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+ devices before scanning
+Date: Tue, 13 Jun 2017 19:01:38 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
+ <20170530132408.GA2556@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
+ <20170606085553.GA20085@red-moon> <20170612155700.GA31930@red-moon>
+ <20170613084831.GP3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+In-Reply-To: <20170613151013.GT3187@lahna.fi.intel.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Uffe,
+Hi Mika
 
-On 2017/6/20 9:36, Ulf Hansson wrote:
-> Hi Wei,
+> -----Original Message-----
+> From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
+> Sent: 13 June 2017 16:10
+> To: Gabriele Paoloni
+> Cc: Lorenzo Pieralisi; rafael@kernel.org; Rafael J. Wysocki;
+> catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
+> kernel@lists.infradead.org; mark.rutland@arm.com;
+> brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
+> kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
+> pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
+> Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+> devices before scanning
 > 
-> On 19 June 2017 at 15:00, Wei Xu <xuwei5@hisilicon.com> wrote:
->> Hi Ulf,
->>
->> On 2017/6/19 13:43, Ulf Hansson wrote:
->>> On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
->>>> Add bindings for hi3660 mmc support
->>>>
->>>> Signed-off-by: Li Wei <liwei213@huawei.com>
->>>> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
->>>> ---
->>>>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
->>>>  1 file changed, 1 insertion(+)
->>>>
->>>> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>>> index df37058..8af1afc 100644
->>>> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>>> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>>> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
->>>>  Required Properties:
->>>>
->>>>  * compatible: should be one of the following.
->>>> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
->>>>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
->>>>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
->>>>
->>>> --
->>>> 2.10.2
->>>>
->>>
->>> Thanks, applied for next!
->>
->> Thanks!
->> Last week I had applied the v4 patch set[1]
->> and this patch is included.
->> But it should be fine for the upper gatekeeper to merge
->> since these 2 patch are same.
+> On Tue, Jun 13, 2017 at 02:38:26PM +0000, Gabriele Paoloni wrote:
+> > > Is there an example ASL showing how these LPC devices are
+> > > currently presented in ACPI?
+> >
+> > Please find below the asl sketch for our LPC and IPMI
+> >
+> > //
+> > // LPC
+> > //
+> >
+> > Scope(_SB) {
+> >   Device (LPC0) {
+> >     Name (_HID, "HISI0191")  // HiSi LPC
+> >     Name (_CRS, ResourceTemplate () {
+> >       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+> >     })
+> >   }
+> >
+> >   Device (LPC0.IPMI) {
+> >     Name (_HID, "IPI0001")
+> >     Method (_IFT) {
+> >       Return (0x03)
+> >     }
+> >     Name (LORS, ResourceTemplate() {
+> >       QWordIO (
+> >         ResourceConsumer,
+> > 	MinNotFixed,     // _MIF
+> > 	MaxNotFixed,     // _MAF
+> > 	PosDecode,
+> > 	EntireRange,
+> > 	0x0,             // _GRA
+> > 	0xe4,            // _MIN
+> > 	0x3fff,          // _MAX
+> > 	0x0,             // _TRA
+> > 	0x04,            // _LEN
+> > 	, ,
+> > 	BTIO
+> >       )
+> >     })
+> >     CreateQWordField (LORS, BTIO._MIN, CMIN)
+> >     CreateQWordField (LORS, BTIO._MAX, CMAX)
+> >     CreateQWordField (LORS, BTIO._LEN, CLEN)
+> >
+> >     Method (_PRS, 0) {
+> >       Return (LORS)
+> >     }
+> >
+> >     Method (_CRS, 0) {
+> >       Return (LORS)
+> >     }
+> >     Method (_SRS, 1) {
+> >       CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MIN, IMIN)
+> >       Store (IMIN, CMIN)
+> >       CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MAX, IMAX)
+> >       Store (IMAX, CMAX)
+> >     }
+> >   }
+> > [...]
+> > }
 > 
-> No, that's not how git works.
-> 
-> If the patch has the same hash, that would be fine, but that isn't the
-> case here as we have two different hashes for the same change.
+> Thanks. So this looks pretty much like normal Linux MFD device which we
+> already have support for adding ACPI bindings to child devices. It
+> should also support splitting resources to child devices IIRC.
 
-Got it. Thanks for your explaining!
+I am not very familiar with Linux MFD however the main issue here is that
+1) for IPMI we want to re-use the standard IPMI driver without touching it:
+   see 
 
-> 
-> To deal with this, I have just dropped the change from my tree and
-> leave it to you to carry the patch. Feel free to add my ack for it.
+   static const struct acpi_device_id acpi_ipmi_match[] = {
+         { "IPI0001", 0 },
+         { },
+   };
 
-Thanks!
-But the pull request I sent last week has been merged.
+   in "drivers/char/ipmi/ipmi_si_intf.c" (and in general any standard driver
+   of an LPC child)
 
-Best Regards,
-Wei
+2) We need a way to guarantee that all LPC children are not enumerated
+   by acpi_default_enumeration() (so for example if an ipmi node is an LPC#
+   child it should not be enumerated, otherwise it should be)
+   Currently acpi_default_enumeration() skips spi/i2c slaves by checking:
+   1) if the acpi resource type is a serial bus
+   2) if the type of serial bus descriptor is I2C or SPI
 
-> 
-> Kind regards
-> Uffe
-> 
-> .
-> 
+   For LPC we cannot leverage on any ACPI property to "recognize" that our
+   devices are LPC children; hence before I proposed for acpi_default_enumeration()
+   to skip devices that have already been enumerated (by calling 
+   acpi_device_enumerated() ).
+
+So in the current scenario, how do you think that MFD can help?
+Do you see any possible solution?
+
+Many thanks
+Gab
+  
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
