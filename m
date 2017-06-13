@@ -1,42 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:34138 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750792AbdFPTRk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:17:40 -0400
-To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170615203729.9009-1-logang@deltatee.com>
- <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
- <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
- <000101d2e6b6$0fcc2880$2f647980$@dell.com>
- <6c2b819d-d000-38e2-29ee-d532f92909d2@deltatee.com>
- <000201d2e6cb$9f4f4e50$ddedeaf0$@dell.com>
-Cc: 'Jon Mason' <jdmason@kudzu.us>,
-        'Dave Jiang' <dave.jiang@intel.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
-        'Stephen Bates' <sbates@raithlin.com>,
-        'Serge Semin' <fancer.lancer@gmail.com>,
-        Sergey.Semin@t-platforms.ru
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <15f31689-bc66-81b3-9880-a8eeb9b1e9e7@deltatee.com>
-Date: Fri, 16 Jun 2017 13:17:14 -0600
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36098 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752535AbdFMHSy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jun 2017 03:18:54 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kishon@ti.com, bhelgaas@google.com
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] PCI: dwc: dra7xx: Fix compilation warning.
+Date: Tue, 13 Jun 2017 12:48:24 +0530
+Message-Id: <9ec4f891371506238afa813227b4be90341fee88.1497338120.git.arvind.yadav.cs@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <000201d2e6cb$9f4f4e50$ddedeaf0$@dell.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_msi_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:177:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+       ~LEG_EP_INTERRUPTS & ~MSI);
+       ^
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_wrapper_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:187:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+       ~INTERRUPTS);
 
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-On 16/06/17 12:08 PM, Allen Hubbe wrote:
-> Alright.  I'll leave it to you to find and reconcile common functionalities of the drivers.  What about making spad emulation optional?
-
-Ok.
-
-I don't see the point of making spad emulation optional. Who would want
-to disable it and what would be the benefit?
-
-Logan
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 8decf46..328d480 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -174,7 +174,7 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+-			   ~LEG_EP_INTERRUPTS & ~MSI);
++			   (u32)~LEG_EP_INTERRUPTS & (u32)~MSI);
+ 
+ 	dra7xx_pcie_writel(dra7xx,
+ 			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+@@ -184,7 +184,7 @@ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-			   ~INTERRUPTS);
++			   (u32)~INTERRUPTS);
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
+ 			   INTERRUPTS);
+ }
+-- 
+1.9.1
