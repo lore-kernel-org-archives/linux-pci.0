@@ -1,139 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 21 Jun 2017 16:41:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
-Message-ID: <20170621154136.GA1362@red-moon>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
- <CACRpkdZ1rBq9eLJkz_gRuXAG=if+xXf-jPzDEPCfG8EgUmUG3A@mail.gmail.com>
- <20170621103042.GA1712@red-moon> <20170621104538.GA8477@red-moon>
- <CACRpkda_6=qWRQDpTy67MFc=-fYRhqWDPx0NnNG5mjXQLyAAkw@mail.gmail.com>
+Return-Path: <SRS0=Xauo=5S=oracle.com=james.puthukattukaran@kernel.org>
+Return-Path: <SRS0=Xauo=5S=oracle.com=james.puthukattukaran@kernel.org>
+Subject: Re: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
+To: Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+References: <20170609231617.20243-1-yinghai@kernel.org>
+ <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
+ <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: james puthukattukaran <james.puthukattukaran@oracle.com>
+Message-ID: <8e04aa73-8fe0-d1ac-208b-3f8fa4b04c4b@oracle.com>
+Date: Tue, 13 Jun 2017 14:30:55 -0400
 MIME-Version: 1.0
-In-Reply-To: <CACRpkda_6=qWRQDpTy67MFc=-fYRhqWDPx0NnNG5mjXQLyAAkw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
 
-On Wed, Jun 21, 2017 at 05:14:13PM +0200, Linus Walleij wrote:
-> On Wed, Jun 21, 2017 at 12:45 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> 
-> > Sorry I miss yet another usage of struct pci_bus before bus is
-> > scanned in faraday_pci_parse_map_dma_ranges(), all these config
-> > accessors want is to access bus number 0 and writei/read some config
-> > values in there, please confirm.
-> >
-> > Updated patch here:
-> 
-> I fixed it. This was needed:
-> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-> index 86f8a3d1c1da..5162dffc102b 100644
-> --- a/drivers/pci/host/pci-ftpci100.c
-> +++ b/drivers/pci/host/pci-ftpci100.c
-> @@ -450,6 +450,8 @@ static int faraday_pci_probe(struct platform_device *pdev)
->      struct resource *io;
->      struct pci_host_bridge *host;
->      struct clk *clk;
-> +    unsigned char max_bus_speed = PCI_SPEED_33MHz;
-> +    unsigned char cur_bus_speed = PCI_SPEED_33MHz;
 
-I could not fix it myself since we do not have the same code base,
-I can't find any clock handling in the mainline as per v4.12-rc6.
+On 6/13/2017 1:00 PM, Yinghai Lu wrote:
+> On Mon, Jun 12, 2017 at 2:48 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Fri, Jun 09, 2017 at 04:16:17PM -0700, Yinghai Lu wrote:
+>>> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+>>>
+>>> The IDT switch incorrectly flags an ACS source violation on a read config
+>>> request to an end point device on the completion (IDT 89H32H8G3-YC,
+>>> errata #36) even though the PCI Express spec states that completions are
+>>> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
+>> Can you include a URL where this erratum is published?  If not, can
+>> you include the actual erratum text here?
+> Ok.
 
-Is the ftpci100.c clock handling being queued for this merge window ?
+Here's the errata text
+------------------------------------
+Item #36 - Downstream port applies ACS Source Validation to Completions
+“Section 6.12.1.1" of the PCI Express Base Specification 3.1 states that 
+completions are never affected
+by ACS Source Validation. However, completions received by a downstream 
+port of the PCIe switch from a device that has not yet captured a PCIe 
+bus number are incorrectly dropped by ACS source validation by the 
+switch downstream port.
 
-This patch:
+Workaround: Issue a CfgWr1 to the downstream device before issuing the 
+first CfgRd1 to the device.
+This allows the downstream device to capture its bus number; ACS source 
+validation no longer stops
+completions from being forwarded by the downstream port. It has been 
+observed that Microsoft Windows implements this workaround already; 
+however, some versions of Linux and other operating systems may not.
+--------------------------------------------
 
-https://patchwork.ozlabs.org/patch/778716/
-
-fixes a commit that is not in v4.12-rc6, I need some input to understand
-how to proceed.
-
-Thanks,
-Lorenzo
-
->      int ret;
->      u32 val;
->      LIST_HEAD(res);
-> @@ -553,27 +555,27 @@ static int faraday_pci_probe(struct platform_device *pdev)
->          unsigned long rate;
->          u32 val;
-> 
-> -        faraday_pci_read_config(p->bus, 0,
-> -                    FARADAY_PCI_STATUS_CMD, 4, &val);
-> +        faraday_raw_pci_read_config(p, 0, 0,
-> +                        FARADAY_PCI_STATUS_CMD, 4, &val);
->          rate = clk_get_rate(p->bus_clk);
-> 
->          if ((rate == 33000000) && (val & PCI_STATUS_66MHZ_CAPABLE)) {
->              dev_info(dev, "33MHz bus is 66MHz capable\n");
-> -            p->bus->max_bus_speed = PCI_SPEED_66MHz;
-> +            max_bus_speed = PCI_SPEED_66MHz;
->              ret = clk_set_rate(p->bus_clk, 66000000);
->              if (ret)
->                  dev_err(dev, "failed to set bus clock\n");
->          } else {
->              dev_info(dev, "33MHz only bus\n");
-> -            p->bus->max_bus_speed = PCI_SPEED_33MHz;
-> +            max_bus_speed = PCI_SPEED_33MHz;
->          }
-> 
->          /* Bumping the clock may fail so read back the rate */
->          rate = clk_get_rate(p->bus_clk);
->          if (rate == 33000000)
-> -            p->bus->cur_bus_speed = PCI_SPEED_33MHz;
-> +            cur_bus_speed = PCI_SPEED_33MHz;
->          if (rate == 66000000)
-> -            p->bus->cur_bus_speed = PCI_SPEED_66MHz;
-> +            cur_bus_speed = PCI_SPEED_66MHz;
->      }
-> 
->      ret = faraday_pci_parse_map_dma_ranges(p, dev->of_node);
-> @@ -587,6 +589,8 @@ static int faraday_pci_probe(struct platform_device *pdev)
->          return ret;
->      }
->      p->bus = host->bus;
-> +    p->bus->max_bus_speed = max_bus_speed;
-> +    p->bus->cur_bus_speed = cur_bus_speed;
-> 
->      pci_bus_assign_resources(p->bus);
->      pci_bus_add_devices(p->bus);
-> 
-> 
-> I'll send a modified and tested version of your patch.
-> 
-> Yours,
-> Linus Walleij
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> Have you considered ways to make this patch apply only to the affected
+>> IDT switches?  Currently it applies to *all* devices.
+> But we need to apply that workaround before we know vendorid/deviceid
+> under that root port or downstream port.
+>
+>> The purpose of the pci_bus_read_dev_vendor_id() path is to support the
+>> Configuration Request Retry Status feature (see PCIe r3.1, sec 2.3.2),
+>> which works by special handling of config reads of the Vendor ID after
+>> a reset.  Normally, that Vendor ID read would be the first access to
+>> a device when we enumerate it.
+>>
+>> This patch adds config reads and writes of the ACS capability *before*
+>> the Vendor ID read.  At that point we don't even know whether the
+>> device exists.  If it doesn't exist, pci_find_ext_capability() would
+>> read 0xffffffff data, and it probably fails reasonably gracefully.
+>>
+>> But if the device *does* exist, I think this patch breaks the CRS
+>> Software Visibility feature.  Without this patch, we try to read
+>> Vendor ID, and the device may return a CRS Completion Status.  If CRS
+>> visibility is enabled, the root complex may complete the request by
+>> returning 0x0001 for the Vendor ID, in which case we sleep and try
+>> again later.
+>>
+>> With this patch, we first try to read the ACS capability.  If the
+>> device returns a CRS Completion Status, the root complex is required
+>> to reissue the config request.  This is the required behavior
+>> regardless of whether CRS Software Visibility is enabled, so I think
+>> this effectively disables that feature.
+> The workaround (acs reading etc) is applied to root port or downstream port.
+> and pci_bus_read_dev_vendor_id() is for reading vendorid of device
+> under that root port or downstream port.
+>
+> Thanks
+>
+> Yinghai
