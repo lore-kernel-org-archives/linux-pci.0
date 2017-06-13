@@ -1,180 +1,214 @@
-Return-Path: <SRS0=BEfK=5T=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=BEfK=5T=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=+rHZ=5S=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=+rHZ=5S=deltatee.com=logang@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
+ <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
+ <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+ <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+ <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+ <20170613041842.GA13308@kroah.com>
+ <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+ <20170613043416.GB14217@kroah.com> <20170613043518.GA14621@kroah.com>
+ <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
+ <20170613163508.GA31961@kroah.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ kernel test robot <fengguang.wu@intel.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+ linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
+ Arnd Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>,
+ David Airlie <airlied@linux.ie>, David Herrmann <dh.herrmann@gmail.com>,
+ Daniel Vetter <daniel.vetter@ffwll.ch>
+Message-ID: <f848a5fb-096c-a025-cc3b-314cc3899f9e@deltatee.com>
+Date: Tue, 13 Jun 2017 11:47:30 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
-References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
- <1497153938-26074-3-git-send-email-oza.oza@broadcom.com> <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Wed, 14 Jun 2017 10:24:11 +0530
-Message-ID: <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com>
-Subject: Re: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170613163508.GA31961@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable to
+ handle kernel NULL pointer dereference at 00000000000000a8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Sun, Jun 11, 2017 at 09:35:38AM +0530, Oza Pawandeep wrote:
->> PERST# must be asserted around ~500ms before
->> the reboot is applied.
->>
->> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
->> LCPLL clock and PERST both goes off simultaneously.
->> This will cause certain Endpoints Intel NVMe not get detected, upon
->> next boot sequence.
->>
->> This happens because; Endpoint is expecting the clock for some amount of
->> time after PERST is asserted, which is not happening in our case
->> (Compare to Intel X86 boards, will have clocks running).
->> this cause NVMe to behave in undefined way.
->
-> This doesn't smell right.  The description makes this sound like a
-> band-aid that happens to "solve" a problem with one particular device.
-> It doesn't sound like this is making iProc adhere to something in the
-> PCIe spec.
->
-> Is there some PCIe spec timing requirement that tells you about this
-> 500ms number?  Please include the reference if so.
 
-On chip PLL which sources the reference clock to the device gets reset
-when soft reset is applied; the soft reset also asserts PERST#.
-This simultaneous assertion of reset and clock being lost is a problem
-with some NVME cards.
-The delay is added to keep clock alive while PERST gets asserted.
-The time delay number can be set to a number that will allow the NVME
-device to go into reset state.
-500 ms delay is picked for that reason only, which is long enough to
-get EP into reset correctly.
 
->
->> Essentially clock will remain alive for 500ms with PERST# = 0
->> before reboot.
->
->> This patch adds platform shutdown where it should be
->> called in device_shutdown while reboot command is issued.
->>
->> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
->> followed by RC shutdown is called, which issues safe PERST
->> assertion.
->>
->> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
->> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
->> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
->>
->> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
->> index 90d2bdd..9512960 100644
->> --- a/drivers/pci/host/pcie-iproc-platform.c
->> +++ b/drivers/pci/host/pcie-iproc-platform.c
->> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->>       return iproc_pcie_remove(pcie);
->>  }
->>
->> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
->> +{
->> +     struct iproc_pcie *pcie = platform_get_drvdata(pdev);
->> +
->> +     iproc_pcie_shutdown(pcie);
->> +}
->> +
->>  static struct platform_driver iproc_pcie_pltfm_driver = {
->>       .driver = {
->>               .name = "iproc-pcie",
->> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->>       },
->>       .probe = iproc_pcie_pltfm_probe,
->>       .remove = iproc_pcie_pltfm_remove,
->> +     .shutdown = iproc_pcie_pltfm_shutdown,
->>  };
->>  module_platform_driver(iproc_pcie_pltfm_driver);
->>
->> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
->> index 05a3647..bb61376 100644
->> --- a/drivers/pci/host/pcie-iproc.c
->> +++ b/drivers/pci/host/pcie-iproc.c
->> @@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
->>       .write = iproc_pcie_config_write32,
->>  };
->>
->> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
->> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
->>  {
->>       u32 val;
->>
->>       /*
->> -      * PAXC and the internal emulated endpoint device downstream should not
->> -      * be reset.  If firmware has been loaded on the endpoint device at an
->> -      * earlier boot stage, reset here causes issues.
->> +      * The internal emulated endpoints (such as PAXC) device downstream
->> +      * should not be reset. If firmware has been loaded on the endpoint
->> +      * device at an earlier boot stage, reset here causes issues.
->>        */
->>       if (pcie->ep_is_internal)
->>               return;
->>
->> -     /*
->> -      * Select perst_b signal as reset source. Put the device into reset,
->> -      * and then bring it out of reset
->> -      */
->> -     val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
->> -     val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
->> -             ~RC_PCIE_RST_OUTPUT;
->> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> -     udelay(250);
->> -
->> -     val |= RC_PCIE_RST_OUTPUT;
->> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> -     msleep(100);
->> +     if (assert) {
->> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
->> +             val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
->> +                     ~RC_PCIE_RST_OUTPUT;
->> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> +             udelay(250);
->> +     } else {
->> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
->> +             val |= RC_PCIE_RST_OUTPUT;
->> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> +             msleep(100);
->> +     }
->> +}
->> +
->> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
->> +{
->> +     iproc_pcie_perst_ctrl(pcie, true);
->> +     msleep(500);
->> +
->> +     return 0;
->>  }
->> +EXPORT_SYMBOL(iproc_pcie_shutdown);
->>
->>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
->>  {
->> @@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->>               goto err_exit_phy;
->>       }
->>
->> -     iproc_pcie_reset(pcie);
->> +     iproc_pcie_perst_ctrl(pcie, true);
->> +     iproc_pcie_perst_ctrl(pcie, false);
->>
->>       if (pcie->need_ob_cfg) {
->>               ret = iproc_pcie_map_ranges(pcie, res);
->> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
->> index 0bbe2ea..a6b55ce 100644
->> --- a/drivers/pci/host/pcie-iproc.h
->> +++ b/drivers/pci/host/pcie-iproc.h
->> @@ -110,6 +110,7 @@ struct iproc_pcie {
->>
->>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
->>  int iproc_pcie_remove(struct iproc_pcie *pcie);
->> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
->>
->>  #ifdef CONFIG_PCIE_IPROC_MSI
->>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
->> --
->> 1.9.1
->>
+On 13/06/17 10:35 AM, Greg Kroah-Hartman wrote:
+> For char devices, I doubt it, but we can't take the chance, which is why
+> you make it an option.  Then, it's enabled for 'allmodconfig' builds,
+> which helps testers out.
+
+Well I took a look at this and it looks like a lot of work to modify all
+the drivers to support a possible dynamic allocation and I'm not really
+able to do all that right now.
+
+However, correct me if I'm missing something, but it looks fairly
+straightforward to extend the dynamic region above 256 in cases like
+this. There are already fixed major numbers above 255 and the
+infrastructure appears to support it. So what are your thoughts on the
+change below? I'd be happy to clean it up into a proper patch if you
+agree it's a workable option.
+
+Thanks,
+
+Logan
+
+
+
+diff --git a/fs/char_dev.c b/fs/char_dev.c
+index fb8507f521b2..539352425d95 100644
+--- a/fs/char_dev.c
++++ b/fs/char_dev.c
+@@ -59,6 +59,29 @@ void chrdev_show(struct seq_file *f, off_t offset)
+
+ #endif /* CONFIG_PROC_FS */
+
++static int find_dynamic_major(void)
++{
++	int i;
++	struct char_device_struct **cp;
++
++	for (i = ARRAY_SIZE(chrdevs)-1; i > CHRDEV_MAJOR_DYN_END; i--) {
++		if (chrdevs[i] == NULL)
++			return i;
++	}
++
++	for (i = CHRDEV_MAJOR_DYN_EXT_START;
++	     i > CHRDEV_MAJOR_DYN_EXT_END; i--) {
++		for (cp = &chrdevs[major_to_index(i)]; *cp; cp = &(*cp)->next)
++			if ((*cp)->major == i)
++				break;
++
++		if (*cp == NULL || (*cp)->major != i)
++			return i;
++	}
++
++	return -EBUSY;
++}
++
+ /*
+  * Register a single major with a specified minor range.
+  *
+@@ -84,22 +107,11 @@ __register_chrdev_region(unsigned int major,
+unsigned int baseminor,
+
+ 	mutex_lock(&chrdevs_lock);
+
+-	/* temporary */
+ 	if (major == 0) {
+-		for (i = ARRAY_SIZE(chrdevs)-1; i > 0; i--) {
+-			if (chrdevs[i] == NULL)
+-				break;
+-		}
+-
+-		if (i < CHRDEV_MAJOR_DYN_END)
+-			pr_warn("CHRDEV \"%s\" major number %d goes below the dynamic
+allocation range\n",
+-				name, i);
+-
+-		if (i == 0) {
+-			ret = -EBUSY;
++		ret = find_dynamic_major();
++		if (ret < 0)
+ 			goto out;
+-		}
+-		major = i;
++		major = ret;
+ 	}
+
+ 	cd->major = major;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 249dad4e8d26..5780d69034ca 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2448,6 +2448,9 @@ static inline void bd_unlink_disk_holder(struct
+block_device *bdev,
+ #define CHRDEV_MAJOR_HASH_SIZE	255
+ /* Marks the bottom of the first segment of free char majors */
+ #define CHRDEV_MAJOR_DYN_END 234
++#define CHRDEV_MAJOR_DYN_EXT_START 511
++#define CHRDEV_MAJOR_DYN_EXT_END 384
++
+ extern int alloc_chrdev_region(dev_t *, unsigned, unsigned, const char *);
+ extern int register_chrdev_region(dev_t, unsigned, const char *);
+ extern int __register_chrdev(unsigned int major, unsigned int baseminor,
+
+
+
+----
+
+This results in char devices like this (another patch might be prudent
+to fix the ordering):
+
+Character devices:
+510 ttySLM
+  1 mem
+511 noz
+  4 /dev/vc/0
+  4 tty
+  4 ttyS
+  5 /dev/tty
+  5 /dev/console
+  5 /dev/ptmx
+  7 vcs
+  9 st
+ 10 misc
+ 13 input
+ 21 sg
+ 29 fb
+ 43 ttyI
+ 45 isdn
+ 68 capi20
+ 86 ch
+ 90 mtd
+ 99 ppdev
+108 ppp
+128 ptm
+136 pts
+152 aoechr
+153 spi
+161 ircomm
+172 ttyMX
+174 ttyMI
+202 cpu/msr
+203 cpu/cpuid
+204 ttyJ
+204 ttyMAX
+206 osst
+226 drm
+235 ttyS
+236 ttyRP
+237 ttyARC
+238 ttyPS
+239 ttyIFX
+494 rio_cm
+240 ttySC
+495 cros_ec
+241 ipmidev
+496 hidraw
+242 rio_mport
+497 ttySDIO
+243 xz_dec_test
+498 uio
+244 bsg
+499 firewire
+245 pvfs2-req
+500 nvme
+246 watchdog
+501 aac
+247 iio
+502 mei
+248 ptp
+503 phantom
+249 pps
+504 aux
+250 dax
+505 cmx
+251 dimmctl
+506 cmm
+252 ndctl
+507 ttySLP
+253 tpm
+508 ttyIPWp
+254 gpiochip
+509 ttySL
