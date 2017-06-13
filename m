@@ -1,206 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38062 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751090AbdFTNHX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 20 Jun 2017 09:07:23 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravi Kiran Gummaluri <rgummal@xilinx.com>,
+Received: from mail.ginzinger.com ([31.193.165.229]:18298 "EHLO
+        mail.ginzinger.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbdFMFnR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jun 2017 01:43:17 -0400
+From: =?iso-8859-1?Q?Sch=F6fegger_Stefan?=
+        <Stefan.Schoefegger@ginzinger.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        open list <linux-kernel@vger.kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH] microblaze/PCI: Remove pcibios_setup_bus_{self/devices} dead code
-Date: Tue, 20 Jun 2017 14:08:44 +0100
-Message-Id: <20170620130844.11109-1-lorenzo.pieralisi@arm.com>
+        "moderated list:PCI DRIVER FOR IMX6"
+        <linux-arm-kernel@lists.infradead.org>,
+        Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
+Date: Tue, 13 Jun 2017 05:43:14 +0000
+Message-ID: <2668097.SlerkO2uVy@en-pc05>
+References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
+ <1496835374-13053-1-git-send-email-stefan.schoefegger@ginzinger.com>
+ <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-commit 01cf9d524ff0 ("microblaze/PCI: Support generic Xilinx AXI PCIe Host
-Bridge IP driver") removed pcibios calls to:
+On Monday, June 12, 2017 6:49:24 PM CEST Bjorn Helgaas wrote:
+> On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
+> > Link speed must not be limited to gen1 during link test for compliance
+> > tests
+> > 
+> > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
+> > ---
+> > 
+> > Changes since v1:
+> >  - pci-imx6.c moved to dwc directory
+> >  
+> >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
+> >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
+> >  2 files changed, 22 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+> > index b7e15526d676..b6e9ced5a45d 100644
+> > --- a/drivers/pci/dwc/Kconfig
+> > +++ b/drivers/pci/dwc/Kconfig
+> > @@ -77,6 +77,16 @@ config PCI_IMX6
+> > 
+> >  	select PCIEPORTBUS
+> >  	select PCIE_DW_HOST
+> > 
+> > +config PCI_IMX6_COMPLIANCE_TEST
+> > +	bool "Enable pcie compliance tests on imx6"
+> > +	depends on PCI_IMX6
+> > +	default n
+> > +	help
+> > +	  Enables support for pcie compliance test on FSL iMX SoCs.
+> > +	  The link speed wouldn't be limited to gen1 when enabled.
+> > +	  Enable only during compliance tests, otherwise
+> > +	  link detection will fail on some peripherals.
+> 
+> I'm puzzled about why we would want to merge this patch.  It looks
+> like we're trying to game the system to make the device pass
+> compliance testing when it isn't really compliant.  Is this config
+> option useful to users, or is it only useful during internal
+> development of iMX SoCs?
 
-pcibios_setup_bus_self()
-pcibios_setup_bus_devices()
+It's not for passing compliance tests, it is necessary to do the compliance 
+tests. Without this patch only gen 1 speed is possible to test. Also i.mx6 is 
+not fully gen2 compliant (withour external clk) we should have the option to 
+do gen2 tests. Switching from gen1 to gen2 is done with a 100MHz (1ms) clk 
+pulse on the receiver. Without this patch link speed is forced to gen1 
+afterwards.
+Yes it is only useful for board setup, it is comparable to 
+CONFIG_USB_EHSET_TEST_FIXTURE for usb (ok, this is more general and not host 
+specific).
 
-Given that pcibios_fixup_bus() was the only caller of those functions
-they have now become dead code (along with the functions they were
-calling in turn) so they can be removed.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
----
-Bjorn, Michal,
-
-spotted this while reading microblaze code that parses legacy IRQs,
-I am not familiar with microblaze code but as things stand those
-pcibios calls are just unused IIUC.
-
-Lorenzo
-
- arch/microblaze/include/asm/pci.h |   3 -
- arch/microblaze/pci/pci-common.c  | 131 --------------------------------------
- 2 files changed, 134 deletions(-)
-
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index efd4983..114b934 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -81,9 +81,6 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
- 
- #define HAVE_ARCH_PCI_RESOURCE_TO_USER
- 
--extern void pcibios_setup_bus_devices(struct pci_bus *bus);
--extern void pcibios_setup_bus_self(struct pci_bus *bus);
--
- /* This part of code was originally in xilinx-pci.h */
- #ifdef CONFIG_PCI_XILINX
- extern void __init xilinx_pci_init(void);
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 404fb38..970b3a7 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -678,138 +678,7 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_fixup_resources);
- 
--/* This function tries to figure out if a bridge resource has been initialized
-- * by the firmware or not. It doesn't have to be absolutely bullet proof, but
-- * things go more smoothly when it gets it right. It should covers cases such
-- * as Apple "closed" bridge resources and bare-metal pSeries unassigned bridges
-- */
--static int pcibios_uninitialized_bridge_resource(struct pci_bus *bus,
--						 struct resource *res)
--{
--	struct pci_controller *hose = pci_bus_to_host(bus);
--	struct pci_dev *dev = bus->self;
--	resource_size_t offset;
--	u16 command;
--	int i;
--
--	/* Job is a bit different between memory and IO */
--	if (res->flags & IORESOURCE_MEM) {
--		/* If the BAR is non-0 (res != pci_mem_offset) then it's
--		 * probably been initialized by somebody
--		 */
--		if (res->start != hose->pci_mem_offset)
--			return 0;
--
--		/* The BAR is 0, let's check if memory decoding is enabled on
--		 * the bridge. If not, we consider it unassigned
--		 */
--		pci_read_config_word(dev, PCI_COMMAND, &command);
--		if ((command & PCI_COMMAND_MEMORY) == 0)
--			return 1;
--
--		/* Memory decoding is enabled and the BAR is 0. If any of
--		 * the bridge resources covers that starting address (0 then
--		 * it's good enough for us for memory
--		 */
--		for (i = 0; i < 3; i++) {
--			if ((hose->mem_resources[i].flags & IORESOURCE_MEM) &&
--			   hose->mem_resources[i].start == hose->pci_mem_offset)
--				return 0;
--		}
--
--		/* Well, it starts at 0 and we know it will collide so we may as
--		 * well consider it as unassigned. That covers the Apple case.
--		 */
--		return 1;
--	} else {
--		/* If the BAR is non-0, then we consider it assigned */
--		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		if (((res->start - offset) & 0xfffffffful) != 0)
--			return 0;
--
--		/* Here, we are a bit different than memory as typically IO
--		 * space starting at low addresses -is- valid. What we do
--		 * instead if that we consider as unassigned anything that
--		 * doesn't have IO enabled in the PCI command register,
--		 * and that's it.
--		 */
--		pci_read_config_word(dev, PCI_COMMAND, &command);
--		if (command & PCI_COMMAND_IO)
--			return 0;
--
--		/* It's starting at 0 and IO is disabled in the bridge, consider
--		 * it unassigned
--		 */
--		return 1;
--	}
--}
--
- /* Fixup resources of a PCI<->PCI bridge */
--static void pcibios_fixup_bridge(struct pci_bus *bus)
--{
--	struct resource *res;
--	int i;
--
--	struct pci_dev *dev = bus->self;
--
--	pci_bus_for_each_resource(bus, res, i) {
--		if (!res)
--			continue;
--		if (!res->flags)
--			continue;
--		if (i >= 3 && bus->self->transparent)
--			continue;
--
--		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x] fixup...\n",
--			 pci_name(dev), i,
--			 (unsigned long long)res->start,
--			 (unsigned long long)res->end,
--			 (unsigned int)res->flags);
--
--		/* Try to detect uninitialized P2P bridge resources,
--		 * and clear them out so they get re-assigned later
--		 */
--		if (pcibios_uninitialized_bridge_resource(bus, res)) {
--			res->flags = 0;
--			pr_debug("PCI:%s            (unassigned)\n",
--								pci_name(dev));
--		} else {
--			pr_debug("PCI:%s            %016llx-%016llx\n",
--				 pci_name(dev),
--				 (unsigned long long)res->start,
--				 (unsigned long long)res->end);
--		}
--	}
--}
--
--void pcibios_setup_bus_self(struct pci_bus *bus)
--{
--	/* Fix up the bus resources for P2P bridges */
--	if (bus->self != NULL)
--		pcibios_fixup_bridge(bus);
--}
--
--void pcibios_setup_bus_devices(struct pci_bus *bus)
--{
--	struct pci_dev *dev;
--
--	pr_debug("PCI: Fixup bus devices %d (%s)\n",
--		 bus->number, bus->self ? pci_name(bus->self) : "PHB");
--
--	list_for_each_entry(dev, &bus->devices, bus_list) {
--		/* Setup OF node pointer in archdata */
--		dev->dev.of_node = pci_device_to_OF_node(dev);
--
--		/* Fixup NUMA node as it may not be setup yet by the generic
--		 * code and is needed by the DMA init
--		 */
--		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
--
--		/* Read default IRQs and fixup if necessary */
--		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
--	}
--}
--
- void pcibios_fixup_bus(struct pci_bus *bus)
- {
- 	/* nothing to do */
--- 
-2.10.0
+> 
+> >  config PCIE_SPEAR13XX
+> >  
+> >  	bool "STMicroelectronics SPEAr PCIe controller"
+> >  	depends on PCI
+> > 
+> > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> > index 19a289b8cc94..b0fbe52e25b0 100644
+> > --- a/drivers/pci/dwc/pci-imx6.c
+> > +++ b/drivers/pci/dwc/pci-imx6.c
+> > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct imx6_pcie
+> > *imx6_pcie)> 
+> >  	u32 tmp;
+> >  	int ret;
+> > 
+> > -	/*
+> > -	 * Force Gen1 operation when starting the link.  In case the link is
+> > -	 * started in Gen2 mode, there is a possibility the devices on the
+> > -	 * bus will not be detected at all.  This happens with PCIe switches.
+> > -	 */
+> > -	tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
+> > -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> > -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+> > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+> > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
+> > +		/*
+> > +		 * Force Gen1 operation when starting the link.  In case the
+> > +		 * link is started in Gen2 mode, there is a possibility the
+> > +		 * devices on the bus will not be detected at all.  This
+> > +		 * happens with PCIe switches.
+> > +		 */
+> > +		tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
+> > +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> > +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+> > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+> > +	}
+> > 
+> >  	/* Start LTSSM. */
+> >  	if (imx6_pcie->variant == IMX7D)
