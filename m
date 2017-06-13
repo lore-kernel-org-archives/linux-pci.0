@@ -1,78 +1,55 @@
-Return-Path: <SRS0=cf5F=6A=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=cf5F=6A=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
+Date: Tue, 13 Jun 2017 18:35:08 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	kernel test robot <fengguang.wu@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	David Airlie <airlied@linux.ie>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
+ to handle kernel NULL pointer dereference at 00000000000000a8
+Message-ID: <20170613163508.GA31961@kroah.com>
+References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
+ <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
+ <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+ <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+ <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+ <20170613041842.GA13308@kroah.com>
+ <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+ <20170613043416.GB14217@kroah.com>
+ <20170613043518.GA14621@kroah.com>
+ <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20170627234326.GO17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan> <2524735.NRzn8A9HAf@aspire.rjw.lan>
- <20170627234326.GO17844@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 28 Jun 2017 01:49:29 +0200
-Message-ID: <CAJZ5v0jzyj=gEu9NXYaf1mM3XG+4GcRuWcz+Pwhq67ZVEg4Y4w@mail.gmail.com>
-Subject: Re: [PATCH v2 0/5] PM: Unify the handling of device wakeup settings
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PM <linux-pm@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 28, 2017 at 1:43 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> Hi Rafael,
+On Tue, Jun 13, 2017 at 10:25:40AM -0600, Logan Gunthorpe wrote:
+> 
+> 
+> On 12/06/17 10:35 PM, Greg Kroah-Hartman wrote:
+> > Or better yet, just turn all char major allocations into dynamic, which
+> > would be really good for test systems.  I thought someone proposed
+> > patches for that a long time ago, but I can't find them anymore.  That
+> > would be the simplest solution here.
+> 
+> Would people not complain about that? I would not be surprised if some
+> crazy application is using hard coded major numbers in userspace. So
+> such a change could potentially break userspace...
 
-Hi Bjorn,
+For char devices, I doubt it, but we can't take the chance, which is why
+you make it an option.  Then, it's enabled for 'allmodconfig' builds,
+which helps testers out.
 
-> On Sat, Jun 24, 2017 at 01:50:55AM +0200, Rafael J. Wysocki wrote:
->> On Monday, June 19, 2017 11:31:58 PM Rafael J. Wysocki wrote:
->> > Hi All,
->> >
->> > The handling of device wakeup settings, especially in the ACPI core and the PCI
->> > bus type, depends on whether it is about system wakeup from sleep states or
->> > remote wakeup in the working state (runtime).  However, that distinction is
->> > mostly based on the ACPI concept of "wakeup" and "runtime" GPEs, which is
->> > somewhat artificial, because the underlying hardware mechanism is basically
->> > the same in both cases.
->> >
->> > Moreover, suspend-to-idle is now supported as a sleep state and wakeup from it
->> > is based on exactly the same hardware capabilities as the working-state
->> > (runtime) remote wakeup.
->> >
->> > The following patch series removes that distinction and unifies the handling of
->> > device wakeup settings between system sleep and runtime.  It also fixes one
->> > issue related to wakeup signaling through PCI bridges.
->> >
->> > [1/6]: Get rid of the "runtime wakeup" concept from the ACPI core.
->> > [2/6]: Unify device wakeup settings code paths in the ACPI core.
->> > [3-4/6]: Unify device wakeup settings code paths in the PCI bus type code.
->> > [5/6]: Fix wakeup-related issue with bridges in the PCI bus type code.
->> > [6/6]: Get rid of the "runtime wakeup" concept from the driver core.
->> >
->> > The series is based on current linux-next and will be made available for
->> > testing in the linux-pm.git tree in a couple of days.
->>
->> Here's a v2 with tentatively added Reviewed-by tags from Mika.
->>
->> I've dropped patch [5/6] from the previous iteration as it didn't really belong
->> here and the issue it attempted to fix is rather theoretical.  I'm going to
->> take a different approach there.
->>
->> Apart from this, the function previously called acpi_pm_device_wakeup() has
->> a different name now: acpi_pm_set_device_wakeup(), to possibly avoid
->> confusion about its purpose.
->>
->> Also the changelog of patch [3/5] has been modified slightly.
->
-> This series does touch drivers/pci, but is mostly ACPI.  Do you want
-> to take it via your tree?
+thanks,
 
-Yes, I do.
-
-> I have a couple PM changes in my tree, but
-> I don't see anything that should conflict with this series.
->
-> For the PCI parts:
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Thanks!
+greg k-h
