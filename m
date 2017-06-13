@@ -1,90 +1,152 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52522 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752643AbdFMWKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Jun 2017 18:10:18 -0400
-Date: Tue, 13 Jun 2017 17:10:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        James Puthukattukaran <james.puthukattukaran@oracle.com>
-Subject: Re: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
-Message-ID: <20170613221015.GB7012@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170609231617.20243-1-yinghai@kernel.org>
- <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
- <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>, Lorenzo Pieralisi
+ <lorenzo.pieralisi@arm.com>
+Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+ devices before scanning
+Date: Tue, 13 Jun 2017 14:38:26 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
+ <20170530132408.GA2556@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
+ <20170606085553.GA20085@red-moon> <20170612155700.GA31930@red-moon>
+ <20170613084831.GP3187@lahna.fi.intel.com>
+In-Reply-To: <20170613084831.GP3187@lahna.fi.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "arnd@arndb.de" <arnd@arndb.de>, "rafael@kernel.org" <rafael@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ John Garry <john.garry@huawei.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ "olof@lixom.net" <olof@lixom.net>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 10:00:33AM -0700, Yinghai Lu wrote:
-> On Mon, Jun 12, 2017 at 2:48 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Jun 09, 2017 at 04:16:17PM -0700, Yinghai Lu wrote:
-> >> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-> >>
-> >> The IDT switch incorrectly flags an ACS source violation on a read config
-> >> request to an end point device on the completion (IDT 89H32H8G3-YC,
-> >> errata #36) even though the PCI Express spec states that completions are
-> >> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
-> ...
+Hi Mika
 
-> > Have you considered ways to make this patch apply only to the affected
-> > IDT switches?  Currently it applies to *all* devices.
+> -----Original Message-----
+> From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
+> Sent: 13 June 2017 09:49
+> To: Lorenzo Pieralisi
+> Cc: Gabriele Paoloni; rafael@kernel.org; Rafael J. Wysocki;
+> catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
+> kernel@lists.infradead.org; mark.rutland@arm.com;
+> brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
+> kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
+> pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
+> Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+> devices before scanning
 > 
-> But we need to apply that workaround before we know vendorid/deviceid
-> under that root port or downstream port.
-
-If I understand correctly, the problem (the ACS source violation)
-occurs when we enumerate a device below an IDT switch.  We enumerate
-a switch before we enumerate any devices under the switch, so I don't
-understand why this can't be made IDT-specific.
-
-> > The purpose of the pci_bus_read_dev_vendor_id() path is to support the
-> > Configuration Request Retry Status feature (see PCIe r3.1, sec 2.3.2),
-> > which works by special handling of config reads of the Vendor ID after
-> > a reset.  Normally, that Vendor ID read would be the first access to
-> > a device when we enumerate it.
+> On Mon, Jun 12, 2017 at 04:57:00PM +0100, Lorenzo Pieralisi wrote:
+> > I had a more in-depth look at this series and from my understanding
+> > the problem are the following to manage the LPC bindings in ACPI.
 > >
-> > This patch adds config reads and writes of the ACS capability *before*
-> > the Vendor ID read.  At that point we don't even know whether the
-> > device exists.  If it doesn't exist, pci_find_ext_capability() would
-> > read 0xffffffff data, and it probably fails reasonably gracefully.
+> > (1) Child devices of an LPC controller require special handling when
+> >     filling their resources (ie they need to be translated - in DT
+> >     that's guaranteed by the "isa" binding, in ACPI it has to be
+> >     done by new code)
+> > (2) In DT systems, LPC child devices are created by the LPC bus
+> >     controller driver through an of_platform_populate() call with
+> >     the LPC controller node as the fwnode root. For ACPI to work
+> >     the same way there must be a way to prevent LPC children to
+> >     be enumerated in acpi_default_enumeration() something like
+> >     I2C does (and then the LPC driver would enumerate its children as
+> >     DT does)
 > >
-> > But if the device *does* exist, I think this patch breaks the CRS
-> > Software Visibility feature.  Without this patch, we try to read
-> > Vendor ID, and the device may return a CRS Completion Status.  If CRS
-> > visibility is enabled, the root complex may complete the request by
-> > returning 0x0001 for the Vendor ID, in which case we sleep and try
-> > again later.
-> >
-> > With this patch, we first try to read the ACS capability.  If the
-> > device returns a CRS Completion Status, the root complex is required
-> > to reissue the config request.  This is the required behavior
-> > regardless of whether CRS Software Visibility is enabled, so I think
-> > this effectively disables that feature.
+> > I am not sure how (1) and (2) can be managed with current ACPI
+> bindings
+> > and kernel code - I suspect it may be done by mirroring what's done
+> > for I2C but I am not sure, that's why I CC'ed Mika (ie the LPC
+> adapter
+> > is matched as a platform device and it takes care of enumerating its
+> > children - problem though is preventing enumeration from core ACPI
+> code).
 > 
-> The workaround (acs reading etc) is applied to root port or downstream port.
-> and pci_bus_read_dev_vendor_id() is for reading vendorid of device
-> under that root port or downstream port.
+> Is there an example ASL showing how these LPC devices are
+> currently presented in ACPI?
 
-OK, I see what you're saying: pci_std_enable_acs_sv() twiddles the ACS
-capability of the upstream bridge when we're enumerating a device
-*below* the bridge.  Since the bridge has already been enumerated,
-we've already read its Vendor ID, so looking up its ACS capability
-should not cause any CRS completions.
+Please find below the asl sketch for our LPC and IPMI
 
-Still, I think all this fiddling around with the ACS capability is too
-intrusive for non-IDT devices.  Caching the ACS capability location
-would help a little bit, but it's still too much in my opinion.
+//
+// LPC
+//
 
-If ACS is broken on the IDT switch, one obvious possibility is a quirk
-to disable use of ACS on those switches.
+Scope(_SB) {
+  Device (LPC0) {
+    Name (_HID, "HISI0191")  // HiSi LPC
+    Name (_CRS, ResourceTemplate () {
+      Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+    })
+  }
 
-The current patch appears to penalize everybody for the sins of IDT,
-which I'd like to avoid.
+  Device (LPC0.IPMI) {
+    Name (_HID, "IPI0001")
+    Method (_IFT) {
+      Return (0x03)
+    }
+    Name (LORS, ResourceTemplate() {
+      QWordIO (
+        ResourceConsumer,
+	MinNotFixed,     // _MIF
+	MaxNotFixed,     // _MAF
+	PosDecode,
+	EntireRange,
+	0x0,             // _GRA
+	0xe4,            // _MIN
+	0x3fff,          // _MAX
+	0x0,             // _TRA
+	0x04,            // _LEN
+	, ,
+	BTIO
+      )
+    })
+    CreateQWordField (LORS, BTIO._MIN, CMIN)
+    CreateQWordField (LORS, BTIO._MAX, CMAX)
+    CreateQWordField (LORS, BTIO._LEN, CLEN)
 
-Bjorn
+    Method (_PRS, 0) {
+      Return (LORS)
+    }
+
+    Method (_CRS, 0) {
+      Return (LORS)
+    }
+    Method (_SRS, 1) {
+      CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MIN, IMIN)
+      Store (IMIN, CMIN)
+      CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MAX, IMAX)
+      Store (IMAX, CMAX)
+    }
+  } 
+[...]
+}
+
+Many thanks
+Gab
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
