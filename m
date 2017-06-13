@@ -1,78 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC,20/30] iommu/arm-smmu-v3: Enable PCI PASID in masters
-To: Sinan Kaya <okaya@codeaurora.org>
-References: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
- <f18163da-30a6-a7d4-0a2c-bca4fc1b0fff@codeaurora.org>
- <fad6510f-922a-550b-0429-bc59f857c307@codeaurora.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <f47b89f9-2fee-22d4-9cac-476a20f8e93b@arm.com>
-Date: Fri, 23 Jun 2017 16:15:10 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52862 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753239AbdFMWOx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Jun 2017 18:14:53 -0400
+Date: Tue, 13 Jun 2017 17:14:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: james puthukattukaran <james.puthukattukaran@oracle.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
+Message-ID: <20170613221451.GC7012@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170609231617.20243-1-yinghai@kernel.org>
+ <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
+ <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
+ <8e04aa73-8fe0-d1ac-208b-3f8fa4b04c4b@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <fad6510f-922a-550b-0429-bc59f857c307@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <8e04aa73-8fe0-d1ac-208b-3f8fa4b04c4b@oracle.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/23/2017 03:39 PM, Sinan Kaya wrote:
-> Hi Jean-Philippe,
->  
->> On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
->> Enable PASID for PCI devices that support it.
->>
->> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
->> ---
->>  drivers/iommu/arm-smmu-v3.c | 66 ++++++++++++++++++++++++++++++++++++++++++---
->>  1 file changed, 63 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
->> index 499dc1cd07eb..37fd061405e9 100644
->> --- a/drivers/iommu/arm-smmu-v3.c
->> +++ b/drivers/iommu/arm-smmu-v3.c
->> @@ -730,6 +730,8 @@ struct arm_smmu_master_data {
->>  
->>  	struct arm_smmu_stream		*streams;
->>  	struct rb_root			contexts;
->> +
->> +	u32				avail_contexts;
->>  };
->>  
+On Tue, Jun 13, 2017 at 02:30:55PM -0400, james puthukattukaran wrote:
+> On 6/13/2017 1:00 PM, Yinghai Lu wrote:
+> >On Mon, Jun 12, 2017 at 2:48 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >>On Fri, Jun 09, 2017 at 04:16:17PM -0700, Yinghai Lu wrote:
+> >>>From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+> >>>
+> >>>The IDT switch incorrectly flags an ACS source violation on a read config
+> >>>request to an end point device on the completion (IDT 89H32H8G3-YC,
+> >>>errata #36) even though the PCI Express spec states that completions are
+> >>>never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
+> >>Can you include a URL where this erratum is published?  If not, can
+> >>you include the actual erratum text here?
+> >Ok.
 > 
-> According to the PASID ECN here (https://pcisig.com/sites/default/files/specification_documents/ECN-PASID-ATS-2011-03-31.pdf),
-> PASID should be enabled only if all switches between the root port and
-> a device support TLP prefix. 
->  
-> I'm only seeing a call to pci_enable_pasid() in this patch but I don't
-> see anybody checking for TLP prefix support on the hierarchy.
+> Here's the errata text
+> ------------------------------------
+> Item #36 - Downstream port applies ACS Source Validation to Completions
+> “Section 6.12.1.1" of the PCI Express Base Specification 3.1 states
+> that completions are never affected
+> by ACS Source Validation. However, completions received by a
+> downstream port of the PCIe switch from a device that has not yet
+> captured a PCIe bus number are incorrectly dropped by ACS source
+> validation by the switch downstream port.
 > 
-> This could potentially be an addition to the PCI core code.
+> Workaround: Issue a CfgWr1 to the downstream device before issuing
+> the first CfgRd1 to the device.
+> This allows the downstream device to capture its bus number; ACS
+> source validation no longer stops
+> completions from being forwarded by the downstream port. It has been
+> observed that Microsoft Windows implements this workaround already;
+> however, some versions of Linux and other operating systems may not.
 
-Good point, I think we should inspect bit "End-End TLP Prefix Supported"
-in the PCI_EXP_DEVCAP2 capability of all bridges between the endpoint
-and the IOMMU. And it should probably be done inside pci_enable_pasid().
+This doesn't mention anything about disabling ACS.  Issuing a config
+write to devices downstream of an IDT bridge sounds simpler than what
+this patch does.  Why don't you do that?
 
-Thanks,
-Jean
+This patch does write to PCI_VENDOR_ID, which purports to be part of
+the workaround, but that happens *after* the first config read (which
+happens inside __pci_bus_read_dev_vendor_id()).
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
