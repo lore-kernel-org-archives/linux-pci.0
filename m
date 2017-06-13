@@ -1,49 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:59928 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbdFUVyW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2017 17:54:22 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-        Gregory Clement <gregory.clement@free-electrons.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/4] ARM/PCI: mv78xx0: pass pci_ops correctly again
-Date: Wed, 21 Jun 2017 23:53:00 +0200
-Message-Id: <20170621215323.3921382-2-arnd@arndb.de>
-In-Reply-To: <20170621215323.3921382-1-arnd@arndb.de>
-References: <20170621215323.3921382-1-arnd@arndb.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Owqj=5S=linux.intel.com=alan@kernel.org>
+Return-Path: <SRS0=Owqj=5S=linux.intel.com=alan@kernel.org>
+Message-ID: <1497354494.5693.1.camel@linux.intel.com>
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
+ to handle kernel NULL pointer dereference at 00000000000000a8
+From: Alan Cox <alan@linux.intel.com>
+To: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: kernel test robot <fengguang.wu@intel.com>, Linus Torvalds
+ <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+ linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ wfg@linux.intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arnd
+ Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>, David
+ Airlie <airlied@linux.ie>,  David Herrmann <dh.herrmann@gmail.com>, Daniel
+ Vetter <daniel.vetter@ffwll.ch>
+Date: Tue, 13 Jun 2017 12:48:14 +0100
+In-Reply-To: <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
+	 <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
+	 <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+	 <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+	 <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-We used to pass the operations when calling pci_scan_root_bus, but
-that argument was removed:
+On Mon, 2017-06-12 at 17:34 -0600, Logan Gunthorpe wrote:
+> Hey,
+> 
+> Ok, I dug into this bug and I know what's going on. Unfortunately,
+> it's
+> a mess of a couple issues and I don't know what correct the
+> solution(s)
+> is(are).
+> 
+> 1) The test we are looking at is overrunning the dynamic char dev
+> major
+> numbers by a lot. On a successful run, it gets down to 216 where the
+> limit is 234. Thus, there are 18 too many major numbers assigned and
+> the
+> fact that this test used to work is really just luck. (I've cc'd
+> developers from 49db08c3 for this issue.)
+> 
 
-arch/arm/mach-mv78xx0/pcie.c:175:23: error: 'pcie_ops' defined but not used [-Werror=unused-variable]
+If you dump the list of majors and drivers do they all look valid or is
+there any corruption or repetition that looks odd (wondering if we've
+got too many devices or a leak) ?
 
-Setting it in pci_hw should address this.
-
-Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- arch/arm/mach-mv78xx0/pcie.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
-index 2b406e909a43..cb7f95c9d8eb 100644
---- a/arch/arm/mach-mv78xx0/pcie.c
-+++ b/arch/arm/mach-mv78xx0/pcie.c
-@@ -214,6 +214,7 @@ static int __init mv78xx0_pcie_map_irq(const struct pci_dev *dev, u8 slot,
- }
- 
- static struct hw_pci mv78xx0_pci __initdata = {
-+	.ops		= &pcie_ops,
- 	.nr_controllers	= 8,
- 	.preinit	= mv78xx0_pcie_preinit,
- 	.setup		= mv78xx0_pcie_setup,
--- 
-2.9.0
+Alan
