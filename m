@@ -1,123 +1,71 @@
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: [PATCH v5 4/6] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v4
-Date: Fri,  9 Jun 2017 10:59:45 +0200
-Message-Id: <1496998787-6371-5-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <SRS0=Gfpc=5S=gmail.com=yhlu.kernel@kernel.org>
+Return-Path: <SRS0=Gfpc=5S=gmail.com=yhlu.kernel@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170609231617.20243-1-yinghai@kernel.org> <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Tue, 13 Jun 2017 10:00:33 -0700
+Message-ID: <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
+Subject: Re: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	James Puthukattukaran <james.puthukattukaran@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Mon, Jun 12, 2017 at 2:48 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Jun 09, 2017 at 04:16:17PM -0700, Yinghai Lu wrote:
+>> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+>>
+>> The IDT switch incorrectly flags an ACS source violation on a read config
+>> request to an end point device on the completion (IDT 89H32H8G3-YC,
+>> errata #36) even though the PCI Express spec states that completions are
+>> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
+>
+> Can you include a URL where this erratum is published?  If not, can
+> you include the actual erratum text here?
 
-Most BIOS don't enable this because of compatibility reasons.
+Ok.
 
-Manually enable a 64bit BAR of 64GB size so that we have
-enough room for PCI devices.
+>
+> Have you considered ways to make this patch apply only to the affected
+> IDT switches?  Currently it applies to *all* devices.
 
-v2: style cleanups, increase size, add resource name, set correct flags,
-    print message that windows was added
-v3: add defines for all the magic numbers, style cleanups
-v4: add some comment that the BIOS should actually allow this using
-    _PRS and _SRS.
+But we need to apply that workaround before we know vendorid/deviceid
+under that root port or downstream port.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- arch/x86/pci/fixup.c | 76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
+>
+> The purpose of the pci_bus_read_dev_vendor_id() path is to support the
+> Configuration Request Retry Status feature (see PCIe r3.1, sec 2.3.2),
+> which works by special handling of config reads of the Vendor ID after
+> a reset.  Normally, that Vendor ID read would be the first access to
+> a device when we enumerate it.
+>
+> This patch adds config reads and writes of the ACS capability *before*
+> the Vendor ID read.  At that point we don't even know whether the
+> device exists.  If it doesn't exist, pci_find_ext_capability() would
+> read 0xffffffff data, and it probably fails reasonably gracefully.
+>
+> But if the device *does* exist, I think this patch breaks the CRS
+> Software Visibility feature.  Without this patch, we try to read
+> Vendor ID, and the device may return a CRS Completion Status.  If CRS
+> visibility is enabled, the root complex may complete the request by
+> returning 0x0001 for the Vendor ID, in which case we sleep and try
+> again later.
+>
+> With this patch, we first try to read the ACS capability.  If the
+> device returns a CRS Completion Status, the root complex is required
+> to reissue the config request.  This is the required behavior
+> regardless of whether CRS Software Visibility is enabled, so I think
+> this effectively disables that feature.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 6d52b94..489e753 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -571,3 +571,79 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-+
-+#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
-+#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
-+#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
-+#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
-+
-+#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
-+#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
-+
-+#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
-+#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
-+#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
-+#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
-+
-+/*
-+ * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
-+ * configuring host bridge windows using the _PRS and _SRS methods.
-+ *
-+ * But this is rarely implemented, so we manually enable a large 64bit BAR for
-+ * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
-+ */
-+static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-+{
-+	struct resource *res, *conflict;
-+	u32 base, limit, high;
-+	unsigned i;
-+
-+	for (i = 0; i < 8; ++i) {
-+		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
-+		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
-+
-+		/* Is this slot free? */
-+		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
-+			      AMD_141b_MMIO_BASE_WE_MASK)))
-+			break;
-+
-+		base >>= 8;
-+		base |= high << 24;
-+
-+		/* Abort if a slot already configures a 64bit BAR. */
-+		if (base > 0x10000)
-+			return;
-+	}
-+	if (i == 8)
-+		return;
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return;
-+
-+	res->name = "PCI Bus 0000:00";
-+	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
-+		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-+	res->start = 0x100000000ull;
-+	res->end = 0xfd00000000ull - 1;
-+
-+	/* Just grab the free area behind system memory for this */
-+	while ((conflict = request_resource_conflict(&iomem_resource, res)))
-+		res->start = conflict->end + 1;
-+
-+	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-+
-+	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
-+		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
-+	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
-+	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
-+		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
-+		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
-+
-+	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
-+	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
-+	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
-+
-+	pci_bus_add_resource(dev->bus, res, 0);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
--- 
-2.7.4
+The workaround (acs reading etc) is applied to root port or downstream port.
+and pci_bus_read_dev_vendor_id() is for reading vendorid of device
+under that root port or downstream port.
+
+Thanks
+
+Yinghai
