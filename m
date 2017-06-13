@@ -1,149 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50476 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750813AbdFBONO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 2 Jun 2017 10:13:14 -0400
-Date: Fri, 2 Jun 2017 16:13:11 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: <Narendra.K@dell.com>
-Cc: <x86@kernel.org>, <linux-pci@vger.kernel.org>,
-        <Jordan.Hargrave@dell.com>, <Shyam.Iyer@dell.com>,
-        <bhelgaas@google.com>
-Subject: Re: dmi type 0xB1 record - unknown flag
-Message-ID: <20170602161311.27eab72d@endymion>
-In-Reply-To: <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
-References: <20170601143826.5f980444@endymion>
- <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
+Date: Tue, 13 Jun 2017 06:35:18 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	kernel test robot <fengguang.wu@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	David Airlie <airlied@linux.ie>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
+ to handle kernel NULL pointer dereference at 00000000000000a8
+Message-ID: <20170613043518.GA14621@kroah.com>
+References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
+ <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
+ <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+ <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+ <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+ <20170613041842.GA13308@kroah.com>
+ <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+ <20170613043416.GB14217@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170613043416.GB14217@kroah.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Narendra,
-
-Thanks for your answer.
-
-On Thu, 1 Jun 2017 13:28:31 +0000, Narendra.K@dell.com wrote:
-> > -----Original Message-----
-> > From: Jean Delvare [mailto:jdelvare@suse.de]
-> > I see the following message in my kernel log:
+On Tue, Jun 13, 2017 at 06:34:16AM +0200, Greg Kroah-Hartman wrote:
+> On Mon, Jun 12, 2017 at 10:29:20PM -0600, Logan Gunthorpe wrote:
 > > 
-> > dmi type 0xB1 record - unknown flag
 > > 
-> > This is on a Dell Optiplex 9020 workstation. I see the message comes
-> > from:
+> > On 12/06/17 10:18 PM, Greg Kroah-Hartman wrote:
+> > > What test causes so many major numbers to be allocated?  Is this
+> > > in-kernel test code?  Do you really have a system that requires so many
+> > > different drivers that all want a dynamic char major?
 > > 
-> > static void __init read_dmi_type_b1(const struct dmi_header *dm,
-> >                                     void *private_data) {
-> > 	(...)
-> >         switch (((*(u32 *)d) >> 9) & 0x03) {
-> >         case 0x00:
-> >                 printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
-> >                 break;
-> > 
-> > What is the value of this message? Is there anything which needs to be done
-> > to properly support such systems?  
+> > This is a 0day kernel robot test. I'm not sure the motivations of its
+> > design but it seems to be similar to an allyesconfig. So all/most
+> > modules are compiled in and allocating their char device regions on boot
+> > of a qemu instance.
 > 
-> This function was added to avoid adding systems to the 'pciprobe_dmi_table' and set breadth first sorting in a generic way.
-> 
-> This flag is a hint to indicate the sort method to be used. The value 0x01 indicates that PCI breadth first sort be used.
-> ' find_sort_method' function checks if smbios_type_b1_flag is set to 1 and if yes, calls 'set_bf_sort '. This function sets ' pci_bf_sort' to 'pci_dmi_bf'.
+> Ah, that makes sense.  Well, someone can always work on expanding the
+> range of dynamic char major numbers if they are running out of them on a
+> real system, I'll gladly take patches for that :)
 
-I can read the code, thank you ;-)
+Or better yet, just turn all char major allocations into dynamic, which
+would be really good for test systems.  I thought someone proposed
+patches for that a long time ago, but I can't find them anymore.  That
+would be the simplest solution here.
 
-> The value 0x00 is not a valid value. When the flag is 0x00, the sort method will be the default that is decided by the kernel.
+thnaks,
 
-How can it be invalid? I have DMI dumps of several Dell systems with a
-type 0xB1 DMI structure, with value 0x00 for these bits. If Dell ships
-such systems, then this is valid by definition.
-
-> There is no additional handling required for such a system.
-
-I don't understand the complexity of the code. There are 4 possible
-values for these bits, the code treats all of them differently:
-* 0x01, you set smbios_type_b1_flag to 1 and this later triggers a call
-  to set_bf_sort().
-* 0x02, you set smbios_type_b1_flag to 2 but this has no effect.
-* 0x00, you print a rather cryptic info message which serves no purpose.
-* 0x03, you do nothing.
-
-On top of that, I can't see the value of the intermediate variable
-smbios_type_b1_flag. The only situations where it would make a
-difference is if multiple type 0xB1 structures with conflicting
-information were present; but I don't think this is supposed to happen
-in the first place.
-
-Lastly I'm not sure why you continue processing the list of DMI
-matches, when smbios_type_b1_flag == 1, and stop processing it if not.
-This seems needlessly inconsistent.
-
-I think the whole thing can be simplified like this:
-
-From: Jean Delvare <jdelvare@suse.de>
-Subject: x86/PCI: Simplify Dell DMI B1 quirk
-
-No need for such convoluted code, when all we need is to call one
-function in one specific case.
-
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
----
- arch/x86/pci/common.c |   27 +++++----------------------
- 1 file changed, 5 insertions(+), 22 deletions(-)
-
---- linux-4.11.orig/arch/x86/pci/common.c	2017-05-01 04:47:48.000000000 +0200
-+++ linux-4.11/arch/x86/pci/common.c	2017-06-02 16:04:05.737889598 +0200
-@@ -24,7 +24,6 @@ unsigned int pci_probe = PCI_PROBE_BIOS
- 
- unsigned int pci_early_dump_regs;
- static int pci_bf_sort;
--static int smbios_type_b1_flag;
- int pci_routeirq;
- int noioapicquirk;
- #ifdef CONFIG_X86_REROUTE_FOR_BROKEN_BOOT_IRQS
-@@ -197,34 +196,18 @@ static int __init set_bf_sort(const stru
- static void __init read_dmi_type_b1(const struct dmi_header *dm,
- 				    void *private_data)
- {
--	u8 *d = (u8 *)dm + 4;
-+	u8 *data = (u8 *)dm + 4;
- 
- 	if (dm->type != 0xB1)
- 		return;
--	switch (((*(u32 *)d) >> 9) & 0x03) {
--	case 0x00:
--		printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
--		break;
--	case 0x01: /* set pci=bfsort */
--		smbios_type_b1_flag = 1;
--		break;
--	case 0x02: /* do not set pci=bfsort */
--		smbios_type_b1_flag = 2;
--		break;
--	default:
--		break;
--	}
-+	if ((((*(u32 *)data) >> 9) & 0x03) == 0x01)
-+		set_bf_sort((const struct dmi_system_id *)private_data);
- }
- 
- static int __init find_sort_method(const struct dmi_system_id *d)
- {
--	dmi_walk(read_dmi_type_b1, NULL);
--
--	if (smbios_type_b1_flag == 1) {
--		set_bf_sort(d);
--		return 0;
--	}
--	return -1;
-+	dmi_walk(read_dmi_type_b1, (void *)d);
-+	return 0;
- }
- 
- /*
-
-What do you think?
-
-Thanks,
--- 
-Jean Delvare
-SUSE L3 Support
+greg k-h
