@@ -1,287 +1,106 @@
-Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: helgaas@kernel.org
-Cc: rakesh@tuxera.com,
-	linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: [PATCH 2/3] PCI: split reset_notify method
-Date: Thu,  1 Jun 2017 13:10:38 +0200
-Message-Id: <20170601111039.8913-3-hch@lst.de>
-In-Reply-To: <20170601111039.8913-1-hch@lst.de>
-References: <20170601111039.8913-1-hch@lst.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 13 Jun 2017 18:10:13 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+Message-ID: <20170613151013.GT3187@lahna.fi.intel.com>
+References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
+ <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
+ <20170530132408.GA2556@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
+ <20170606085553.GA20085@red-moon>
+ <20170612155700.GA31930@red-moon>
+ <20170613084831.GP3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The prepare and done cases have no shared functionality whatsoever, so
-split them into separate methods.
+On Tue, Jun 13, 2017 at 02:38:26PM +0000, Gabriele Paoloni wrote:
+> > Is there an example ASL showing how these LPC devices are
+> > currently presented in ACPI?
+> 
+> Please find below the asl sketch for our LPC and IPMI
+> 
+> //
+> // LPC
+> //
+> 
+> Scope(_SB) {
+>   Device (LPC0) {
+>     Name (_HID, "HISI0191")  // HiSi LPC
+>     Name (_CRS, ResourceTemplate () {
+>       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
+>     })
+>   }
+> 
+>   Device (LPC0.IPMI) {
+>     Name (_HID, "IPI0001")
+>     Method (_IFT) {
+>       Return (0x03)
+>     }
+>     Name (LORS, ResourceTemplate() {
+>       QWordIO (
+>         ResourceConsumer,
+> 	MinNotFixed,     // _MIF
+> 	MaxNotFixed,     // _MAF
+> 	PosDecode,
+> 	EntireRange,
+> 	0x0,             // _GRA
+> 	0xe4,            // _MIN
+> 	0x3fff,          // _MAX
+> 	0x0,             // _TRA
+> 	0x04,            // _LEN
+> 	, ,
+> 	BTIO
+>       )
+>     })
+>     CreateQWordField (LORS, BTIO._MIN, CMIN)
+>     CreateQWordField (LORS, BTIO._MAX, CMAX)
+>     CreateQWordField (LORS, BTIO._LEN, CLEN)
+> 
+>     Method (_PRS, 0) {
+>       Return (LORS)
+>     }
+> 
+>     Method (_CRS, 0) {
+>       Return (LORS)
+>     }
+>     Method (_SRS, 1) {
+>       CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MIN, IMIN)
+>       Store (IMIN, CMIN)
+>       CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MAX, IMAX)
+>       Store (IMAX, CMAX)
+>     }
+>   } 
+> [...]
+> }
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/net/ethernet/intel/fm10k/fm10k_pci.c | 36 +++++--------
- drivers/net/wireless/marvell/mwifiex/pcie.c  | 75 ++++++++++++++++------------
- drivers/nvme/host/pci.c                      | 15 +++---
- drivers/pci/pci.c                            | 25 +++-------
- include/linux/pci.h                          |  3 +-
- 5 files changed, 75 insertions(+), 79 deletions(-)
-
-diff --git a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-index 3e26d27ad213..63784576ae8b 100644
---- a/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-+++ b/drivers/net/ethernet/intel/fm10k/fm10k_pci.c
-@@ -2348,30 +2348,19 @@ static void fm10k_io_resume(struct pci_dev *pdev)
- 		netif_device_attach(netdev);
- }
- 
--/**
-- * fm10k_io_reset_notify - called when PCI function is reset
-- * @pdev: Pointer to PCI device
-- *
-- * This callback is called when the PCI function is reset such as from
-- * /sys/class/net/<enpX>/device/reset or similar. When prepare is true, it
-- * means we should prepare for a function reset. If prepare is false, it means
-- * the function reset just occurred.
-- */
--static void fm10k_io_reset_notify(struct pci_dev *pdev, bool prepare)
-+static void fm10k_io_reset_prepare(struct pci_dev *pdev)
- {
--	struct fm10k_intfc *interface = pci_get_drvdata(pdev);
--	int err = 0;
--
--	if (prepare) {
--		/* warn incase we have any active VF devices */
--		if (pci_num_vf(pdev))
--			dev_warn(&pdev->dev,
--				 "PCIe FLR may cause issues for any active VF devices\n");
-+	/* warn incase we have any active VF devices */
-+	if (pci_num_vf(pdev))
-+		dev_warn(&pdev->dev,
-+			 "PCIe FLR may cause issues for any active VF devices\n");
-+	fm10k_prepare_suspend(pci_get_drvdata(pdev));
-+}
- 
--		fm10k_prepare_suspend(interface);
--	} else {
--		err = fm10k_handle_resume(interface);
--	}
-+static void fm10k_io_reset_done(struct pci_dev *pdev)
-+{
-+	struct fm10k_intfc *interface = pci_get_drvdata(pdev);
-+	int err = fm10k_handle_resume(interface);
- 
- 	if (err) {
- 		dev_warn(&pdev->dev,
-@@ -2384,7 +2373,8 @@ static const struct pci_error_handlers fm10k_err_handler = {
- 	.error_detected = fm10k_io_error_detected,
- 	.slot_reset = fm10k_io_slot_reset,
- 	.resume = fm10k_io_resume,
--	.reset_notify = fm10k_io_reset_notify,
-+	.reset_prepare = fm10k_io_reset_prepare,
-+	.reset_done = fm10k_io_reset_done,
- };
- 
- static struct pci_driver fm10k_driver = {
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index ac62bce50e96..279adf124fc9 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -346,11 +346,13 @@ static const struct pci_device_id mwifiex_ids[] = {
- 
- MODULE_DEVICE_TABLE(pci, mwifiex_ids);
- 
--static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
-+/*
-+ * Cleanup all software without cleaning anything related to PCIe and HW.
-+ */
-+static void mwifiex_pcie_reset_prepare(struct pci_dev *pdev)
- {
- 	struct pcie_service_card *card = pci_get_drvdata(pdev);
- 	struct mwifiex_adapter *adapter = card->adapter;
--	int ret;
- 
- 	if (!adapter) {
- 		dev_err(&pdev->dev, "%s: adapter structure is not valid\n",
-@@ -359,37 +361,48 @@ static void mwifiex_pcie_reset_notify(struct pci_dev *pdev, bool prepare)
- 	}
- 
- 	mwifiex_dbg(adapter, INFO,
--		    "%s: vendor=0x%4.04x device=0x%4.04x rev=%d %s\n",
--		    __func__, pdev->vendor, pdev->device,
--		    pdev->revision,
--		    prepare ? "Pre-FLR" : "Post-FLR");
--
--	if (prepare) {
--		/* Kernel would be performing FLR after this notification.
--		 * Cleanup all software without cleaning anything related to
--		 * PCIe and HW.
--		 */
--		mwifiex_shutdown_sw(adapter);
--		adapter->surprise_removed = true;
--		clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
--		clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
--	} else {
--		/* Kernel stores and restores PCIe function context before and
--		 * after performing FLR respectively. Reconfigure the software
--		 * and firmware including firmware redownload
--		 */
--		adapter->surprise_removed = false;
--		ret = mwifiex_reinit_sw(adapter);
--		if (ret) {
--			dev_err(&pdev->dev, "reinit failed: %d\n", ret);
--			return;
--		}
--	}
-+		    "%s: vendor=0x%4.04x device=0x%4.04x rev=%d Pre-FLR\n",
-+		    __func__, pdev->vendor, pdev->device, pdev->revision);
-+
-+	mwifiex_shutdown_sw(adapter);
-+	adapter->surprise_removed = true;
-+	clear_bit(MWIFIEX_IFACE_WORK_DEVICE_DUMP, &card->work_flags);
-+	clear_bit(MWIFIEX_IFACE_WORK_CARD_RESET, &card->work_flags);
- 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
- }
- 
--static const struct pci_error_handlers mwifiex_pcie_err_handler[] = {
--		{ .reset_notify = mwifiex_pcie_reset_notify, },
-+/*
-+ * Kernel stores and restores PCIe function context before and after performing
-+ * FLR respectively. Reconfigure the software and firmware including firmware
-+ * redownload.
-+ */
-+static void mwifiex_pcie_reset_done(struct pci_dev *pdev)
-+{
-+	struct pcie_service_card *card = pci_get_drvdata(pdev);
-+	struct mwifiex_adapter *adapter = card->adapter;
-+	int ret;
-+
-+	if (!adapter) {
-+		dev_err(&pdev->dev, "%s: adapter structure is not valid\n",
-+			__func__);
-+		return;
-+	}
-+
-+	mwifiex_dbg(adapter, INFO,
-+		    "%s: vendor=0x%4.04x device=0x%4.04x rev=%d Post-FLR\n",
-+		    __func__, pdev->vendor, pdev->device, pdev->revision);
-+
-+	adapter->surprise_removed = false;
-+	ret = mwifiex_reinit_sw(adapter);
-+	if (ret)
-+		dev_err(&pdev->dev, "reinit failed: %d\n", ret);
-+	else
-+		mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
-+}
-+
-+static const struct pci_error_handlers mwifiex_pcie_err_handler = {
-+	.reset_prepare		= mwifiex_pcie_reset_prepare,
-+	.reset_done		= mwifiex_pcie_reset_done,
- };
- 
- #ifdef CONFIG_PM_SLEEP
-@@ -410,7 +423,7 @@ static struct pci_driver __refdata mwifiex_pcie = {
- 	},
- #endif
- 	.shutdown = mwifiex_pcie_shutdown,
--	.err_handler = mwifiex_pcie_err_handler,
-+	.err_handler = &mwifiex_pcie_err_handler,
- };
- 
- /*
-diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index d52701df7245..5059f0f983b5 100644
---- a/drivers/nvme/host/pci.c
-+++ b/drivers/nvme/host/pci.c
-@@ -2152,14 +2152,14 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return result;
- }
- 
--static void nvme_reset_notify(struct pci_dev *pdev, bool prepare)
-+static void nvme_reset_prepare(struct pci_dev *pdev)
- {
--	struct nvme_dev *dev = pci_get_drvdata(pdev);
-+	nvme_dev_disable(pci_get_drvdata(pdev), false);
-+}
- 
--	if (prepare)
--		nvme_dev_disable(dev, false);
--	else
--		nvme_reset(dev);
-+static void nvme_reset_done(struct pci_dev *pdev)
-+{
-+	nvme_reset(pci_get_drvdata(pdev));
- }
- 
- static void nvme_shutdown(struct pci_dev *pdev)
-@@ -2281,7 +2281,8 @@ static const struct pci_error_handlers nvme_err_handler = {
- 	.error_detected	= nvme_error_detected,
- 	.slot_reset	= nvme_slot_reset,
- 	.resume		= nvme_error_resume,
--	.reset_notify	= nvme_reset_notify,
-+	.reset_prepare	= nvme_reset_prepare,
-+	.reset_done	= nvme_reset_done,
- };
- 
- static const struct pci_device_id nvme_id_table[] = {
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 92f7e5ae2e5e..b3f9ae7a4e21 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4128,26 +4128,13 @@ static void pci_dev_unlock(struct pci_dev *dev)
- 	pci_cfg_access_unlock(dev);
- }
- 
--/**
-- * pci_reset_notify - notify device driver of reset
-- * @dev: device to be notified of reset
-- * @prepare: 'true' if device is about to be reset; 'false' if reset attempt
-- *           completed
-- *
-- * Must be called prior to device access being disabled and after device
-- * access is restored.
-- */
--static void pci_reset_notify(struct pci_dev *dev, bool prepare)
-+static void pci_dev_save_and_disable(struct pci_dev *dev)
- {
- 	const struct pci_error_handlers *err_handler =
- 			dev->driver ? dev->driver->err_handler : NULL;
--	if (err_handler && err_handler->reset_notify)
--		err_handler->reset_notify(dev, prepare);
--}
- 
--static void pci_dev_save_and_disable(struct pci_dev *dev)
--{
--	pci_reset_notify(dev, true);
-+	if (err_handler && err_handler->reset_prepare)
-+		err_handler->reset_prepare(dev);
- 
- 	/*
- 	 * Wake-up device prior to save.  PM registers default to D0 after
-@@ -4169,8 +4156,12 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
- 
- static void pci_dev_restore(struct pci_dev *dev)
- {
-+	const struct pci_error_handlers *err_handler =
-+			dev->driver ? dev->driver->err_handler : NULL;
-+
- 	pci_restore_state(dev);
--	pci_reset_notify(dev, false);
-+	if (err_handler && err_handler->reset_done)
-+		err_handler->reset_done(dev);
- }
- 
- static int pci_dev_reset(struct pci_dev *dev, int probe)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8039f9f0ca05..b87aec18e673 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -695,7 +695,8 @@ struct pci_error_handlers {
- 	pci_ers_result_t (*slot_reset)(struct pci_dev *dev);
- 
- 	/* PCI function reset prepare or completed */
--	void (*reset_notify)(struct pci_dev *dev, bool prepare);
-+	void (*reset_prepare)(struct pci_dev *dev);
-+	void (*reset_done)(struct pci_dev *dev);
- 
- 	/* Device driver may resume normal operations */
- 	void (*resume)(struct pci_dev *dev);
--- 
-2.11.0
+Thanks. So this looks pretty much like normal Linux MFD device which we
+already have support for adding ACPI bindings to child devices. It
+should also support splitting resources to child devices IIRC.
