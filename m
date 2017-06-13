@@ -1,67 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44320 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753752AbdFMOFM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Jun 2017 10:05:12 -0400
+Date: Tue, 13 Jun 2017 09:05:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: rakesh@tuxera.com, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: ensure the PCI device is locked over
+ ->reset_notify calls
+Message-ID: <20170613140504.GB7128@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170601111039.8913-1-hch@lst.de>
+ <20170601111039.8913-2-hch@lst.de>
+ <20170606053142.GA25064@bhelgaas-glaptop.roam.corp.google.com>
+ <20170606104836.GB24297@lst.de>
+ <20170606211443.GB12672@bhelgaas-glaptop.roam.corp.google.com>
+ <20170607182936.GA31815@lst.de>
+ <20170612231423.GB4379@bhelgaas-glaptop.roam.corp.google.com>
+ <20170613070810.GA31936@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <1498481507.6075.10.camel@mtkswgap22>
-References: <E1dPPgG-0002pe-3A@optimist>
- <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
- <1498481507.6075.10.camel@mtkswgap22>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 27 Jun 2017 09:36:09 +0200
-Message-ID: <CAK8P3a31MDiyhvDhyfRG0EZFG7VfUpsy1J-=cJePHefvtWfadQ@mail.gmail.com>
-Subject: Re: next-20170626 build: 1 failures 1 warnings (next-20170626)
-To: Ryder Lee <ryder.lee@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Stephen Rothwell <sfr@canb.auug.org.au>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Kernel Build Reports Mailman List <kernel-build-reports@lists.linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Mark Brown <broonie@kernel.org>,
- Linux-Next Mailing List <linux-next@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Andrew Morton <akpm@linux-foundation.org>,
- linaro-kernel@lists.linaro.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170613070810.GA31936@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 26, 2017 at 2:51 PM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> On Mon, 2017-06-26 at 12:56 +0100, Mark Brown wrote:
->> On Mon, Jun 26, 2017 at 09:47:36AM +0100, Build bot for Mark Brown wrote:
->>
->> This build failure is still present in -next:
->>
->> >     arm-allmodconfig
->> > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
->>
->> and we're at -rc7 now.
->
-> Hi Mark,
->
-> This is due to we are in different branch but merge together...
->
-> Anyway, I could send a critical patch, but I need Bjorn help to apply to
-> -next. Seems he didn't response these days.
->
-> Not sure how could I send it?
+On Tue, Jun 13, 2017 at 09:08:10AM +0200, Christoph Hellwig wrote:
+> On Mon, Jun 12, 2017 at 06:14:23PM -0500, Bjorn Helgaas wrote:
+> > My main concern is being able to verify the locking.  I think that is
+> > much easier if the locking is adjacent to the method invocation.  But
+> > if you just add a comment at the method invocation about where the
+> > locking is, that should be sufficient.
+> 
+> Ok.  I can add comments for all the methods as a separate patch,
+> similar to Documentation/vfs/Locking
+> 
+> > > Yes, I mentioned this earlier, and I also vaguely remember we got
+> > > bug reports from IBM on power for this a while ago.  I just don't
+> > > feel confident enough to touch all these without a good test plan.
+> > 
+> > Hmmm.  I see your point, but I hate leaving a known bug unfixed.  I
+> > wonder if some enterprising soul could tickle this bug by injecting
+> > errors while removing and rescanning devices below the bridge?
+> 
+> I'm completely loaded up at the moment, but this sounds like a good
+> idea.
+> 
+> In the meantime how do you want to proceed with this patch?
 
-It's really something that Bjorn needs to fix by applying your patch,
-but if he's currently not able to do that for some reason, a possible
-workaround would be for either Stephen Rothwell to apply your fixup
-on linux-next, or Andrew Morton to add it to his mmotm tree, either
-way it will be part of linux-next and on top of the pci-next tree,
-until Bjorn applies it.
+Can you just add comments about the locking?  I'd prefer that in the
+same patch that adds the locking because that's what I had a hard time
+reviewing.  I'm not thinking of anything fancy like
+Documentation/filesystems/Locking; I'm just thinking of something
+along the lines of "caller must hold pci_dev_lock() to protect
+err_handler->reset_notify from racing ->remove()".  And the changelog
+should contain the general principle about the locking strategy.
 
-Please re-send your patch to both of them, with Bjorn on Cc.
-
-        Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
