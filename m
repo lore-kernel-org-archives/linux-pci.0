@@ -1,40 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37037 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751962AbdFQQRF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 17 Jun 2017 12:17:05 -0400
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20170615203729.9009-1-logang@deltatee.com>
- <20170615203729.9009-3-logang@deltatee.com> <20170617051145.GD6040@kroah.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <04e01458-e57b-a328-d4ff-c1fbb8664bb1@deltatee.com>
-Date: Sat, 17 Jun 2017 10:16:53 -0600
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43222 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752097AbdFMF7B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 13 Jun 2017 01:59:01 -0400
+Subject: patch "PCI: pci-driver: convert to use DRIVER_ATTR_WO" added to driver-core-next
+To: gregkh@linuxfoundation.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org
+From: <gregkh@linuxfoundation.org>
+Date: Tue, 13 Jun 2017 07:58:51 +0200
+Message-ID: <149733353122479@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <20170617051145.GD6040@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC PATCH 02/13] switchtec: export class symbol for use in upper
- layer driver
+Content-Type: text/plain; charset=ANSI_X3.4-1968
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
+This is a note to let you know that I've just added the patch titled
 
-On 16/06/17 11:11 PM, Greg Kroah-Hartman wrote:
-> EXPORT_SYMBOL_GPL()?
-> 
-> And do you really have to move from a dynamic class to a static one?  I
-> know it will work just the same, but I hate seeing static structures
-> that have reference counts on them :)
+    PCI: pci-driver: convert to use DRIVER_ATTR_WO
 
-I'll change both for v1. I didn't really need a static one. I just saw
-an example of some other user of class_interface which and it seemed
-appropriate.
+to my driver-core git tree which can be found at
+    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git
+in the driver-core-next branch.
 
-Logan
+The patch will show up in the next release of the linux-next tree
+(usually sometime within the next 24 hours during the week.)
+
+The patch will also be merged in the next major kernel release
+during the merge window.
+
+If you have any questions about this process, please let me know.
+
+
+>From a942774128deb4a909e85742e20da6e249a92bfe Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Fri, 9 Jun 2017 11:03:06 +0200
+Subject: PCI: pci-driver: convert to use DRIVER_ATTR_WO
+
+We are trying to get rid of DRIVER_ATTR(), and all of the pci-driver
+core driver attributes can be trivially changed to use DRIVER_ATTR_WO().
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-pci@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/pci/pci-driver.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 192e7b681b96..934a78a2fbef 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -96,7 +96,7 @@ static void pci_free_dynids(struct pci_driver *drv)
+  *
+  * Allow PCI IDs to be added to an existing driver via sysfs.
+  */
+-static ssize_t store_new_id(struct device_driver *driver, const char *buf,
++static ssize_t new_id_store(struct device_driver *driver, const char *buf,
+ 			    size_t count)
+ {
+ 	struct pci_driver *pdrv = to_pci_driver(driver);
+@@ -154,7 +154,7 @@ static ssize_t store_new_id(struct device_driver *driver, const char *buf,
+ 		return retval;
+ 	return count;
+ }
+-static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
++static DRIVER_ATTR_WO(new_id);
+ 
+ /**
+  * store_remove_id - remove a PCI device ID from this driver
+@@ -164,7 +164,7 @@ static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
+  *
+  * Removes a dynamic pci device ID to this driver.
+  */
+-static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
++static ssize_t remove_id_store(struct device_driver *driver, const char *buf,
+ 			       size_t count)
+ {
+ 	struct pci_dynid *dynid, *n;
+@@ -198,7 +198,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+ 
+ 	return retval;
+ }
+-static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
++static DRIVER_ATTR_WO(remove_id);
+ 
+ static struct attribute *pci_drv_attrs[] = {
+ 	&driver_attr_new_id.attr,
+-- 
+2.13.1
