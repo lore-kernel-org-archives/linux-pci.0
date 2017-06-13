@@ -1,122 +1,312 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 5 Jun 2017 12:20:25 -0500
-From: Rob Herring <robh@kernel.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [PATCH 2/7] dt-bindings: PCI: Describe ATS property for root
- complex nodes
-Message-ID: <20170605172025.qgnocl5ytexnklue@rob-hp-laptop>
-References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
- <20170524180143.19855-3-jean-philippe.brucker@arm.com>
- <20170531172320.3u6bdctv44aqighy@rob-hp-laptop>
- <cd63a2dc-8259-482d-19e9-9db60be866f7@arm.com>
+Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v5 3/3] PCI: Add tango MSI controller support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Thomas Gleixner <tglx@linutronix.de>
+References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
+ <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
+Date: Tue, 13 Jun 2017 13:09:47 +0100
 MIME-Version: 1.0
-In-Reply-To: <cd63a2dc-8259-482d-19e9-9db60be866f7@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- linux-pci@vger.kernel.org, joro@8bytes.org, thunder.leizhen@huawei.com,
- rjw@rjwysocki.net, will.deacon@arm.com, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, bhelgaas@google.com,
- tn@semihalf.com, sunil.kovvuri@gmail.com, robin.murphy@arm.com,
- linux-arm-kernel@lists.infradead.org, lenb@kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 01:28:01PM +0100, Jean-Philippe Brucker wrote:
-> On 31/05/17 18:23, Rob Herring wrote:
-> > On Wed, May 24, 2017 at 07:01:38PM +0100, Jean-Philippe Brucker wrote:
-> >> Address Translation Service (ATS) is an extension to PCIe allowing
-> >> endpoints to manage their own IOTLB, called Address Translation Cache
-> >> (ATC). Instead of having every memory transaction processed by the IOMMU,
-> >> the endpoint can first send an Address Translation Requests for an IOVA,
-> >> obtain the corresponding Physical Address from the IOMMU and store it in
-> >> its ATC. Subsequent transactions to this memory region can be performed on
-> >> the PA, in which case they are marked 'translated' and (partially) bypass
-> >> the IOMMU.
-> >>
-> >> Since the extension uses fields that were previously reserved in the
-> >> PCIe Translation Layer Packet, it seems ill-advised to enabled it on a
-> >> system that doesn't fully support ATS.
-> >>
-> >> To "old" root complexes that simply ignored the new AT field, an Address
-> >> Translation Request will look exactly like a Memory Read Request, so the
-> >> root bridge will forward a memory read to the IOMMU instead of a
-> >> translation request. If the access succeeds, the RC will send a Read
-> >> Completion, which looks like a Translation Completion, back to the
-> >> endpoint. As a result the endpoint might end up storing the content of
-> >> memory instead of a physical address in its ATC. In reality, it's more
-> >> likely that the size fields will be invalid and either end will detect the
-> >> error, but in any case, it is undesirable.
-> >>
-> >> Add a way for firmware to tell the OS that ATS is supported by the PCI
-> >> root complex.
-> > 
-> > Can't firmware have already enabled ATS? Often for things like this, not 
-> > present means "use firmware setting".
+On 31/05/17 14:35, Marc Gonzalez wrote:
+> The MSI controller in Tango supports 256 message-signaled interrupts,
+> and a single doorbell address.
 > 
-> I don't think it's up to firmware to enable ATS in endpoints, because it
-> depends on IOMMU properties (e.g. configured page size). It must also be
-> enabled after the PASID capability, which the OS may or may not want to
-> enable.
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> ---
+>  drivers/pci/host/pcie-tango.c | 222 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 222 insertions(+)
 > 
-> While endpoints have ATS capability and config register, there is no
-> architected mechanism in root complexes as far as I know. So firmware may
-> have a mechanism outside the OS scope to toggle ATS in the root complex.
-> If there is a bug and firmware cannot enable ATS, then the OS must be made
-> aware of it, so that it doesn't enable ATS in endpoints, or else we might
-> end up with silent memory corruption as described above. (Lack of ATS may
-> slow the system down but shouldn't be fatal.)
-> 
-> If the SMMU supports ATS, then the root complex attached to it will most
-> likely supports ATS. The switch in this patch simply allows firmware to
-> confirm that.
-> 
-> >> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-> >> ---
-> >>  Documentation/devicetree/bindings/pci/pci-iommu.txt | 8 ++++++++
-> >>  1 file changed, 8 insertions(+)
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/pci/pci-iommu.txt b/Documentation/devicetree/bindings/pci/pci-iommu.txt
-> >> index 0def586fdcdf..f21a68ec471a 100644
-> >> --- a/Documentation/devicetree/bindings/pci/pci-iommu.txt
-> >> +++ b/Documentation/devicetree/bindings/pci/pci-iommu.txt
-> >> @@ -44,6 +44,14 @@ Optional properties
-> >>  - iommu-map-mask: A mask to be applied to each Requester ID prior to being
-> >>    mapped to an IOMMU specifier per the iommu-map property.
-> >>  
-> >> +- ats-supported: if present, the root complex supports the Address
-> >> +  Translation Service (ATS). It is able to interpret the AT field in PCIe
-> >> +  Transaction Layer Packets, and forward Translation Completions or
-> >> +  Invalidation Requests to endpoints.
-> > 
-> > Why can't this be based on the compatible strings?
-> 
-> Host controllers like the generic ECAM one should be able to advertise
-> ATS, if for instance the virtual IOMMU in Qemu offers a channel for ATS
-> invalidation. In that case we would have pci-host-{e,}cam-generic{-ats,}
-> compatible strings and double the number of compatible strings each time
-> we add a similar capability.
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+> index 67aaadcc1c5e..7d99ef26173f 100644
+> --- a/drivers/pci/host/pcie-tango.c
+> +++ b/drivers/pci/host/pcie-tango.c
+> @@ -1,16 +1,225 @@
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/irqdomain.h>
+>  #include <linux/pci-ecam.h>
+>  #include <linux/delay.h>
+> +#include <linux/msi.h>
+>  #include <linux/of.h>
+>  
+>  #define MSI_MAX 256
+>  
+>  #define SMP8759_MUX		0x48
+>  #define SMP8759_TEST_OUT	0x74
+> +#define SMP8759_STATUS		0x80
+> +#define SMP8759_ENABLE		0xa0
+> +#define SMP8759_DOORBELL	0xa002e07c
+>  
+>  struct tango_pcie {
+> +	DECLARE_BITMAP(used, MSI_MAX);
+> +	spinlock_t lock;
 
-It would not double the compatibles. A given SoC will either support ATS 
-or not, right? A given compatible will imply whether ATS is supported or 
-not.
+These two fields have pretty generic names. Consider naming them in a
+way that indicates their purpose (used_msi? used_msi_lock?).
 
-pci-host-{e,}cam-generic is a special case. I'm okay with having a 
-property for that I suppose. We should not require this property though 
-and allow for it to be implied by the SoC specific compatible as well.
+>  	void __iomem *mux;
+> +	void __iomem *msi_status;
+> +	void __iomem *msi_enable;
+> +	phys_addr_t msi_doorbell;
+> +	struct irq_domain *irq_dom;
+> +	struct irq_domain *msi_dom;
+> +	int irq;
+>  };
+>  
+> +/*** MSI CONTROLLER SUPPORT ***/
+> +
+> +static void tango_msi_isr(struct irq_desc *desc)
+> +{
+> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
+> +	unsigned long status, base, virq, idx, pos = 0;
+> +
+> +	chained_irq_enter(chip, desc);
+> +
+> +	while ((pos = find_next_bit(pcie->used, MSI_MAX, pos)) < MSI_MAX) {
 
-Rob
+The pcie->used bitmap read can race against another CPU accessing this
+bitmap in the alloc/free paths.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +		base = round_down(pos, 32);
+> +		status = readl_relaxed(pcie->msi_status + base / 8);
+> +		for_each_set_bit(idx, &status, 32) {
+> +			virq = irq_find_mapping(pcie->irq_dom, base + idx);
+> +			generic_handle_irq(virq);
+> +		}
+> +		pos = base + 32;
+> +	}
+> +
+> +	chained_irq_exit(chip, desc);
+> +}
+> +
+> +static void tango_ack(struct irq_data *d)
+> +{
+> +	struct tango_pcie *pcie = d->chip_data;
+> +	u32 offset = (d->hwirq / 32) * 4;
+> +	u32 bit = BIT(d->hwirq % 32);
+> +
+> +	writel_relaxed(bit, pcie->msi_status + offset);
+> +}
+> +
+> +static void update_msi_enable(struct irq_data *d, bool unmask)
+> +{
+> +	unsigned long flags;
+> +	struct tango_pcie *pcie = d->chip_data;
+> +	u32 offset = (d->hwirq / 32) * 4;
+> +	u32 bit = BIT(d->hwirq % 32);
+> +	u32 val;
+> +
+> +	spin_lock_irqsave(&pcie->lock, flags);
+> +	val = readl_relaxed(pcie->msi_enable + offset);
+> +	val = unmask ? val | bit : val & ~bit;
+> +	writel_relaxed(val, pcie->msi_enable + offset);
+> +	spin_unlock_irqrestore(&pcie->lock, flags);
+> +}
+> +
+> +static void tango_mask(struct irq_data *d)
+> +{
+> +	update_msi_enable(d, false);
+> +}
+> +
+> +static void tango_unmask(struct irq_data *d)
+> +{
+> +	update_msi_enable(d, true);
+> +}
+> +
+> +static int tango_set_affinity(struct irq_data *d,
+> +		const struct cpumask *mask, bool force)
+> +{
+> +	return -EINVAL;
+> +}
+> +
+> +static void tango_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
+> +{
+> +	struct tango_pcie *pcie = d->chip_data;
+> +	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
+> +	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
+> +	msg->data = d->hwirq;
+> +}
+> +
+> +static struct irq_chip tango_chip = {
+> +	.irq_ack		= tango_ack,
+> +	.irq_mask		= tango_mask,
+> +	.irq_unmask		= tango_unmask,
+> +	.irq_set_affinity	= tango_set_affinity,
+> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+> +};
+> +
+> +static void msi_ack(struct irq_data *d)
+> +{
+> +	irq_chip_ack_parent(d);
+> +}
+> +
+> +static void msi_mask(struct irq_data *d)
+> +{
+> +	pci_msi_mask_irq(d);
+> +	irq_chip_mask_parent(d);
+> +}
+> +
+> +static void msi_unmask(struct irq_data *d)
+> +{
+> +	pci_msi_unmask_irq(d);
+> +	irq_chip_unmask_parent(d);
+> +}
+> +
+> +static struct irq_chip msi_chip = {
+> +	.name = "MSI",
+> +	.irq_ack = msi_ack,
+> +	.irq_mask = msi_mask,
+> +	.irq_unmask = msi_unmask,
+> +};
+> +
+> +static struct msi_domain_info msi_dom_info = {
+> +	.flags	= MSI_FLAG_PCI_MSIX
+> +		| MSI_FLAG_USE_DEF_DOM_OPS
+> +		| MSI_FLAG_USE_DEF_CHIP_OPS,
+> +	.chip	= &msi_chip,
+> +};
+> +
+> +static int tango_irq_domain_alloc(struct irq_domain *dom,
+> +		unsigned int virq, unsigned int nr_irqs, void *args)
+> +{
+> +	unsigned long flags;
+> +	int pos, err = -ENOSPC;
+> +	struct tango_pcie *pcie = dom->host_data;
+> +
+> +	spin_lock_irqsave(&pcie->lock, flags);
+> +	pos = find_first_zero_bit(pcie->used, MSI_MAX);
+> +	if (pos < MSI_MAX) {
+> +		err = 0;
+> +		__set_bit(pos, pcie->used);
+> +		irq_domain_set_info(dom, virq, pos,
+> +				&tango_chip, pcie, handle_edge_irq, NULL, NULL);
+> +	}
+> +	spin_unlock_irqrestore(&pcie->lock, flags);
+> +
+> +	return err;
+> +}
+> +
+> +static void tango_irq_domain_free(struct irq_domain *dom,
+> +		unsigned int virq, unsigned int nr_irqs)
+> +{
+> +	unsigned long flags;
+> +	struct irq_data *d = irq_domain_get_irq_data(dom, virq);
+> +	struct tango_pcie *pcie = d->chip_data;
+> +
+> +	spin_lock_irqsave(&pcie->lock, flags);
+> +	__clear_bit(d->hwirq, pcie->used);
+> +	spin_unlock_irqrestore(&pcie->lock, flags);
+> +}
+> +
+> +static const struct irq_domain_ops irq_dom_ops = {
+> +	.alloc	= tango_irq_domain_alloc,
+> +	.free	= tango_irq_domain_free,
+> +};
+> +
+> +static int tango_msi_remove(struct platform_device *pdev)
+> +{
+> +	struct tango_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
+> +	irq_domain_remove(pcie->msi_dom);
+> +	irq_domain_remove(pcie->irq_dom);
+> +
+> +	return 0;
+> +}
+> +
+> +static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
+> +{
+> +	int i, virq;
+> +	struct irq_domain *msi_dom, *irq_dom;
+> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +
+> +	spin_lock_init(&pcie->lock);
+> +	for (i = 0; i < MSI_MAX / 32; ++i)
+> +		writel_relaxed(0, pcie->msi_enable + i * 4);
+> +
+> +	virq = platform_get_irq(pdev, 1);
+> +	if (virq <= 0) {
+> +		pr_err("Failed to map IRQ\n");
+> +		return -ENXIO;
+> +	}
+> +
+> +	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pcie);
+> +	if (!irq_dom) {
+> +		pr_err("Failed to create IRQ domain\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
+> +	if (!msi_dom) {
+> +		pr_err("Failed to create MSI domain\n");
+> +		return -ENOMEM;
+
+You're now leaking irq_dom.
+
+> +	}
+> +
+> +	pcie->irq_dom = irq_dom;
+> +	pcie->msi_dom = msi_dom;
+> +	pcie->irq = virq;
+> +
+> +	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
+> +
+> +	return 0;
+> +}
+> +
+>  /*** HOST BRIDGE SUPPORT ***/
+>  
+>  static int smp8759_config_read(struct pci_bus *bus,
+> @@ -88,6 +297,9 @@ static int tango_check_pcie_link(void __iomem *test_out)
+>  static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
+>  {
+>  	pcie->mux		= base + SMP8759_MUX;
+> +	pcie->msi_status	= base + SMP8759_STATUS;
+> +	pcie->msi_enable	= base + SMP8759_ENABLE;
+> +	pcie->msi_doorbell	= SMP8759_DOORBELL;
+>  
+>  	return tango_check_pcie_link(base + SMP8759_TEST_OUT);
+>  }
+> @@ -121,11 +333,21 @@ static int tango_pcie_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> +	ret = tango_msi_probe(pdev, pcie);
+> +	if (ret)
+> +		return ret;
+> +
+>  	return pci_host_common_probe(pdev, &smp8759_ecam_ops);
+>  }
+>  
+> +static int tango_pcie_remove(struct platform_device *pdev)
+> +{
+> +	return tango_msi_remove(pdev);
+> +}
+> +
+>  static struct platform_driver tango_pcie_driver = {
+>  	.probe	= tango_pcie_probe,
+> +	.remove	= tango_pcie_remove,
+>  	.driver	= {
+>  		.name = KBUILD_MODNAME,
+>  		.of_match_table = tango_pcie_ids,
+> 
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
