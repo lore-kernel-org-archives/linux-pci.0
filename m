@@ -1,244 +1,157 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Jun 2017 18:37:40 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34370 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752489AbdFMR2v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 13 Jun 2017 13:28:51 -0400
+Date: Tue, 13 Jun 2017 12:28:49 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Palmer Dabbelt <palmer@dabbelt.com>
-Subject: Re: [PATCH] pci:  Add and use PCI_GENERIC_SETUP Kconfig entry
-Message-ID: <20170627233740.GN17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170623214538.25967-1-palmer@dabbelt.com>
+To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        gregkh@linuxfoundation.org, USB list <linux-usb@vger.kernel.org>,
+        linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pm@vger.kernel.org
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI
+ controller
+Message-ID: <20170613172849.GA7012@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAAd53p6S9NPBD=qGP419mhBgSgn-s1dc=adued8Y+Y0=GDsHKg@mail.gmail.com>
+ <Pine.LNX.4.44L0.1706121010010.2092-100000@iolanthe.rowland.org>
+ <CAAd53p580X5_G6a05aAueHVxEoy5hpQrs6s2gtJA+gPEf2PqLg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170623214538.25967-1-palmer@dabbelt.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, dalias@libc.org, linux-sh@vger.kernel.org,
- catalin.marinas@arm.com, will.deacon@arm.com, sparclinux@vger.kernel.org,
- gxt@mprc.pku.edu.cn, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- ysato@users.sourceforge.jp, linux@armlinux.org.uk, hch@infradead.org,
- geert@linux-m68k.org, linux-pci@vger.kernel.org, mattst88@gmail.com,
- linux-snps-arc@lists.infradead.org, cmetcalf@mellanox.com,
- linux-m68k@lists.linux-m68k.org, ink@jurassic.park.msu.ru,
- viro@zeniv.linux.org.uk, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, rth@twiddle.net, vgupta@synopsys.com,
- linux-kernel@vger.kernel.org, ralf@linux-mips.org, linux-alpha@vger.kernel.org,
- akpm@linux-foundation.org, davem@davemloft.net
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAd53p580X5_G6a05aAueHVxEoy5hpQrs6s2gtJA+gPEf2PqLg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo]
+[+cc Rafael, linux-pm]
 
-Hi Palmer,
-
-On Fri, Jun 23, 2017 at 02:45:38PM -0700, Palmer Dabbelt wrote:
-> We wanted to add RISC-V to the list of architectures that used the
-> generic PCI setup-irq.o inside the Makefile and it was suggested that
-> instead we define a Kconfig entry and use that.
+On Tue, Jun 13, 2017 at 12:21:15PM +0800, Kai-Heng Feng wrote:
+> On Mon, Jun 12, 2017 at 10:18 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > Let's get some help from people who understand PCI well.
+> >
+> > Here's the general problem: Kai-Heng has a PCI-based USB host
+> > controller that advertises wakeup capability from D3, but it doesn't
+> > assert PME# from D3 when it should.  For "lspci -vv" output, see
+> >
+> >         http://marc.info/?l=linux-usb&m=149570231732519&w=2
+> >
+> > On Mon, 12 Jun 2017, Kai-Heng Feng wrote:
+> >
+> >> On Mon, Jun 12, 2017 at 3:04 PM, Kai-Heng Feng
+> >> <kai.heng.feng@canonical.com> wrote:
+> >> > On Fri, Jun 9, 2017 at 10:43 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >> >> On Fri, 9 Jun 2017, Kai-Heng Feng wrote:
+> >> >>
+> >> >> Is this really the right solution?  Maybe it would be better to allow
+> >> >> the controller to go into D3 provided no wakeup signal is needed.  You
+> >> >> could do:
+> >> >>
+> >> >>                 device_set_wakeup_capable(&pdev->dev, 0);
+> >> >
+> >> > This doesn't work.
+> >> > After applying this function, still nothing happens when devices get plugged in.
+> >> > IIUC this function disable the wakeup function, but what I want to do
+> >> > here is to have PME signal works even when runtime PM is enabled.
+> >
+> > This may indicate a bug in either the PCI or USB stacks (or both!).  If
+> > a driver requires wakeup capability from runtime suspend but the device
+> > does not provide it, the PCI core should not allow the device to go
+> > into runtime suspend.  Or is that the driver's responsibility?
+> >
+> >> > I also saw some legacy PCI PM stuff, so I also tried:
+> >> > device_set_wakeup_capable(&pdev->dev, 1);
+> >> > ...doesn't work either.
+> >> >
+> >> >>
+> >> >> Another alternative is to put the controller into D2 instead of D3, but
+> >> >> (1) I don't know how to do that, and (2) we don't know if wakeup
+> >> >> signalling works any better in D2 than it does in D3.
+> >> >
+> >> > I'll try if D2 works.
+> >>
+> >> Put the device into D2 instead of D3 can make the wakeup signaling
+> >> work, i.e. USB devices can be correctly detected after plugged into
+> >> EHCI port.
+> >>
+> >> Do you think this alternative an acceptable workaround?
+> >
+> > Yes, it is.  The difficulty is that I don't know how to tell the PCI
+> > core that the device should go in D2 during runtime suspend instead of
+> > D3.  Some sort of quirk may be needed -- perhaps Bjorn can help.
+> >
 > 
-> I've done very minimal testing on this: I just checked to see that
-> an aarch64 defconfig still build setup-irq.o with the patch applied.
-> The intention is that this patch doesn't change the behavior of any
-> build.
+> FWIW, this is the diff I used to make the controller transits to D2
+> instead of D3:
 > 
-> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
-
-Lorenzo Pieralisi's "ARM/ARM64: remove pci_fixup_irqs() usage" series
-overlaps with this quite a bit, and includes this patch:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/enumeration&id=5b64036feff4
-
-which makes it so we build setup-irq.o on *all* arches.  Can you check
-out the pci/enumeration branch and see whether it accomplishes what
-you need?
-
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
-
-> ---
->  arch/alpha/Kconfig     |  1 +
->  arch/arc/Kconfig       |  1 +
->  arch/arm/Kconfig       |  1 +
->  arch/arm64/Kconfig     |  1 +
->  arch/m68k/Kconfig      |  1 +
->  arch/mips/Kconfig      |  1 +
->  arch/sh/Kconfig        |  1 +
->  arch/sparc/Kconfig     |  1 +
->  arch/tile/Kconfig      |  1 +
->  arch/unicore32/Kconfig |  1 +
->  drivers/pci/Kconfig    |  3 +++
->  drivers/pci/Makefile   | 11 +----------
->  12 files changed, 14 insertions(+), 10 deletions(-)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 563901cd9c06..36663688404a 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -922,6 +922,9 @@ int pci_set_power_state(struct pci_dev *dev,
+> pci_power_t state)
+>         if (dev->current_state == state)
+>                 return 0;
 > 
-> diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
-> index 0e49d39ea74a..30f4e711f681 100644
-> --- a/arch/alpha/Kconfig
-> +++ b/arch/alpha/Kconfig
-> @@ -26,6 +26,7 @@ config ALPHA
->  	select ODD_RT_SIGACTION
->  	select OLD_SIGSUSPEND
->  	select CPU_NO_EFFICIENT_FFS if !ALPHA_EV67
-> +	select PCI_GENERIC_SETUP
->  	help
->  	  The Alpha is a 64-bit general-purpose processor designed and
->  	  marketed by the Digital Equipment Corporation of blessed memory,
-> diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
-> index a5459698f0ee..dd1f64858118 100644
-> --- a/arch/arc/Kconfig
-> +++ b/arch/arc/Kconfig
-> @@ -44,6 +44,7 @@ config ARC
->  	select HAVE_GENERIC_DMA_COHERENT
->  	select HAVE_KERNEL_GZIP
->  	select HAVE_KERNEL_LZMA
-> +	select PCI_GENERIC_SETUP
->  
->  config MIGHT_HAVE_PCI
->  	bool
-> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
-> index 4c1a35f15838..86872246951c 100644
-> --- a/arch/arm/Kconfig
-> +++ b/arch/arm/Kconfig
-> @@ -96,6 +96,7 @@ config ARM
->  	select PERF_USE_VMALLOC
->  	select RTC_LIB
->  	select SYS_SUPPORTS_APM_EMULATION
-> +	select PCI_GENERIC_SETUP
->  	# Above selects are sorted alphabetically; please add new ones
->  	# according to that.  Thanks.
->  	help
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index b2024db225a9..6c684d8c8816 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -115,6 +115,7 @@ config ARM64
->  	select SPARSE_IRQ
->  	select SYSCTL_EXCEPTION_TRACE
->  	select THREAD_INFO_IN_TASK
-> +	select PCI_GENERIC_SETUP
->  	help
->  	  ARM 64-bit (AArch64) Linux support.
->  
-> diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
-> index d140206d5d29..c16214344f1c 100644
-> --- a/arch/m68k/Kconfig
-> +++ b/arch/m68k/Kconfig
-> @@ -22,6 +22,7 @@ config M68K
->  	select MODULES_USE_ELF_RELA
->  	select OLD_SIGSUSPEND3
->  	select OLD_SIGACTION
-> +	select PCI_GENERIC_SETUP
->  
->  config RWSEM_GENERIC_SPINLOCK
->  	bool
-> diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
-> index 2828ecde133d..474a7c710686 100644
-> --- a/arch/mips/Kconfig
-> +++ b/arch/mips/Kconfig
-> @@ -70,6 +70,7 @@ config MIPS
->  	select HAVE_EXIT_THREAD
->  	select HAVE_REGS_AND_STACK_ACCESS_API
->  	select HAVE_COPY_THREAD_TLS
-> +	select PCI_GENERIC_SETUP
->  
->  menu "Machine selection"
->  
-> diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-> index ee086958b2b2..90a98ac526fb 100644
-> --- a/arch/sh/Kconfig
-> +++ b/arch/sh/Kconfig
-> @@ -48,6 +48,7 @@ config SUPERH
->  	select HAVE_ARCH_AUDITSYSCALL
->  	select HAVE_FUTEX_CMPXCHG if FUTEX
->  	select HAVE_NMI
-> +	select PCI_GENERIC_SETUP
->  	help
->  	  The SuperH is a RISC processor targeted for use in embedded systems
->  	  and consumer electronics; it was also used in the Sega Dreamcast
-> diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
-> index 5639c9fe5b55..24cea64104bd 100644
-> --- a/arch/sparc/Kconfig
-> +++ b/arch/sparc/Kconfig
-> @@ -424,6 +424,7 @@ config SPARC_LEON
->  	depends on SPARC32
->  	select USB_EHCI_BIG_ENDIAN_MMIO
->  	select USB_EHCI_BIG_ENDIAN_DESC
-> +	select PCI_GENERIC_SETUP
->  	---help---
->  	  If you say Y here if you are running on a SPARC-LEON processor.
->  	  The LEON processor is a synthesizable VHDL model of the
-> diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
-> index 4583c0320059..6679af85a882 100644
-> --- a/arch/tile/Kconfig
-> +++ b/arch/tile/Kconfig
-> @@ -33,6 +33,7 @@ config TILE
->  	select USER_STACKTRACE_SUPPORT
->  	select USE_PMC if PERF_EVENTS
->  	select VIRT_TO_BUS
-> +	select PCI_GENERIC_SETUP
->  
->  config MMU
->  	def_bool y
-> diff --git a/arch/unicore32/Kconfig b/arch/unicore32/Kconfig
-> index 0769066929c6..162a7d3def0c 100644
-> --- a/arch/unicore32/Kconfig
-> +++ b/arch/unicore32/Kconfig
-> @@ -18,6 +18,7 @@ config UNICORE32
->  	select ARCH_WANT_FRAME_POINTERS
->  	select GENERIC_IOMAP
->  	select MODULES_USE_ELF_REL
-> +	select PCI_GENERIC_SETUP
->  	help
->  	  UniCore-32 is 32-bit Instruction Set Architecture,
->  	  including a series of low-power-consumption RISC chip
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index e0cacb7b8563..658c9f95ab3f 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -131,6 +131,9 @@ config PCI_HYPERV
->            The PCI device frontend driver allows the kernel to import arbitrary
->            PCI devices from a PCI backend to support PCI driver domains.
->  
-> +config PCI_GENERIC_SETUP
-> +	def_bool n
+> +       if (state > PCI_D2 && (dev->dev_flags & PCI_DEV_FLAGS_MAX_D2))
+> +               state = PCI_D2;
 > +
->  source "drivers/pci/hotplug/Kconfig"
->  source "drivers/pci/dwc/Kconfig"
->  source "drivers/pci/host/Kconfig"
-> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-> index 462c1f5f5546..26f4710c88ec 100644
-> --- a/drivers/pci/Makefile
-> +++ b/drivers/pci/Makefile
-> @@ -31,16 +31,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
->  #
->  # Some architectures use the generic PCI setup functions
->  #
-> -obj-$(CONFIG_ALPHA) += setup-irq.o
-> -obj-$(CONFIG_ARC) += setup-irq.o
-> -obj-$(CONFIG_ARM) += setup-irq.o
-> -obj-$(CONFIG_ARM64) += setup-irq.o
-> -obj-$(CONFIG_UNICORE32) += setup-irq.o
-> -obj-$(CONFIG_SUPERH) += setup-irq.o
-> -obj-$(CONFIG_MIPS) += setup-irq.o
-> -obj-$(CONFIG_TILE) += setup-irq.o
-> -obj-$(CONFIG_SPARC_LEON) += setup-irq.o
-> -obj-$(CONFIG_M68K) += setup-irq.o
-> +obj-$(CONFIG_PCI_GENERIC_SETUP) += setup-irq.o
->  
->  #
->  # ACPI Related PCI FW Functions
-> -- 
-> 2.13.0
+>         __pci_start_power_transition(dev, state);
 > 
+>         /* This device is quirked not to be put into D3, so
+> diff --git a/drivers/usb/host/ehci-pci.c b/drivers/usb/host/ehci-pci.c
+> index 93326974ff4b..a2c1fe62974a 100644
+> --- a/drivers/usb/host/ehci-pci.c
+> +++ b/drivers/usb/host/ehci-pci.c
+> @@ -181,6 +181,8 @@ static int ehci_pci_setup(struct usb_hcd *hcd)
+>                 if (pdev->device == 0x7808) {
+>                         ehci->use_dummy_qh = 1;
+>                         ehci_info(ehci, "applying AMD
+> SB700/SB800/Hudson-2/3 EHCI dummy qh workaround\n");
+> +
+> +                       pdev->dev_flags |= PCI_DEV_FLAGS_MAX_D2;
+>                 }
+>                 break;
+>         case PCI_VENDOR_ID_VIA:
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8039f9f0ca05..6f86f2aa8548 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -188,6 +188,7 @@ enum pci_dev_flags {
+>          * the direct_complete optimization.
+>          */
+>         PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
+> +       PCI_DEV_FLAGS_MAX_D2 = (__force pci_dev_flags_t) (1 << 12),
+>  };
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  enum pci_irq_reroute_variant {
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+The lspci output [1] shows:
+
+  00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD] FCH USB EHCI Controller (rev 39) (prog-if 20 [EHCI])
+    Capabilities: [c0] Power Management version 2
+      Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+      Status: D3 NoSoftRst- PME-Enable+ DSel=0 DScale=0 PME-
+      Bridge: PM- B3+
+
+The device claims it can assert PME# from D3hot.  If it can't, that
+sounds like a hardware defect that should be addressed with a quirk.
+Ideally we would also have a pointer to the AMD hardware erratum.
+
+Is the following path involved here?
+
+  pci_finish_runtime_suspend
+    target_state = pci_target_state()
+      if (device_may_wakup())
+	if (dev->pme_support)
+	  ...
+    pci_set_power_state(..., target_state)
+
+If so, I would naively expect that a quirk could clear the
+PCI_PM_CAP_PME_D3 and PCI_PM_CAP_PME_D3cold bits in dev->pme_support,
+and pci_target_state() would then avoid selecting D3 or D3cold.  But
+I'm not an expert in power management.
+
+Bjorn
+
+[1] http://marc.info/?l=linux-usb&m=149570231732519&w=2
