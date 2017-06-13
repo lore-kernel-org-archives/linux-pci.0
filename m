@@ -1,262 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=PqzH=5S=ginzinger.com=Stefan.Schoefegger@kernel.org>
+Return-Path: <SRS0=PqzH=5S=ginzinger.com=Stefan.Schoefegger@kernel.org>
+From: =?iso-8859-1?Q?Sch=F6fegger_Stefan?= <Stefan.Schoefegger@ginzinger.com>
+To: Richard Zhu <hongxing.zhu@nxp.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, open list
+	<linux-kernel@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>,
+	Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	"moderated list:PCI DRIVER FOR IMX6" <linux-arm-kernel@lists.infradead.org>,
+	Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
+Date: Tue, 13 Jun 2017 05:55:09 +0000
+Message-ID: <1782110.RW4F1b4ZIY@en-pc05>
+References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
+ <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
+ <AM5PR0402MB285053130F4B1FCBF67C31998CC20@AM5PR0402MB2850.eurprd04.prod.outlook.com>
+In-Reply-To: <AM5PR0402MB285053130F4B1FCBF67C31998CC20@AM5PR0402MB2850.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20170614125902.GA29762@red-moon>
-References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
- <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
- <CAAsHzquFJE7X0MQyZCP4+UW_E+WK2ORe1EK6yxiq-ev81i1-xg@mail.gmail.com>
- <20170505165119.GA8614@red-moon>
- <CAAsHzqttOoWOCAEmYaWjWmH4a--o0FXCRKfFC9S-+3KGiZVuHQ@mail.gmail.com>
- <CAAsHzqvnGWkG_KN6m_+HzGFaNOHU-m2FocTxy3pyM7Hhd9rz7w@mail.gmail.com>
- <20170608103956.GB8644@red-moon>
- <CAAsHzqv=mjd_k1K+uOSjfZmnrFeidpjg4DdqUtQeLvAYeCOC-w@mail.gmail.com>
- <20170614125902.GA29762@red-moon>
-From: Khuong Dinh <kdinh@apm.com>
-Date: Wed, 14 Jun 2017 10:43:23 -0700
-Message-ID: <CAAsHzqtB4izsDaWRAceOhiHh8ULY-0Z_E=1QLTW5Pnhu92Dccw@mail.gmail.com>
-Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci@vger.kernel.org, msalter@redhat.com, patches@apm.com,
- linux-kernel@vger.kernel.org, jcm@redhat.com,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gV2VkLCBKdW4gMTQsIDIwMTcgYXQgNTo1OSBBTSwgTG9yZW56byBQaWVyYWxpc2kKPGxvcmVu
-em8ucGllcmFsaXNpQGFybS5jb20+IHdyb3RlOgo+IE9uIFR1ZSwgSnVuIDEzLCAyMDE3IGF0IDAx
-OjU2OjQ0UE0gLTA3MDAsIEtodW9uZyBEaW5oIHdyb3RlOgo+PiBIaSBMb3JlbnpvLAo+Pgo+PiBP
-biBUaHUsIEp1biA4LCAyMDE3IGF0IDM6MzkgQU0sIExvcmVuem8gUGllcmFsaXNpCj4+IDxsb3Jl
-bnpvLnBpZXJhbGlzaUBhcm0uY29tPiB3cm90ZToKPj4gPiBPbiBUdWUsIEp1biAwNiwgMjAxNyBh
-dCAwOTo0NDoxNUFNIC0wNzAwLCBLaHVvbmcgRGluaCB3cm90ZToKPj4gPj4gSGkgTG9yZW56bywK
-Pj4gPj4KPj4gPj4gT24gVHVlLCBNYXkgOSwgMjAxNyBhdCAzOjU1IFBNLCBLaHVvbmcgRGluaCA8
-a2RpbmhAYXBtLmNvbT4gd3JvdGU6Cj4+ID4+ID4gSGkgTG9yZW56bywKPj4gPj4gPgo+PiA+PiA+
-IE9uIEZyaSwgTWF5IDUsIDIwMTcgYXQgOTo1MSBBTSwgTG9yZW56byBQaWVyYWxpc2kKPj4gPj4g
-PiA8bG9yZW56by5waWVyYWxpc2lAYXJtLmNvbT4gd3JvdGU6Cj4+ID4+ID4+IE9uIFRodSwgTWF5
-IDA0LCAyMDE3IGF0IDA1OjM2OjA2UE0gLTA3MDAsIEtodW9uZyBEaW5oIHdyb3RlOgo+PiA+PiA+
-Pj4gSGkgTWFyYywKPj4gPj4gPj4+IFRoZXJlJ3Mgbm8gZXhwbGljaXQgZGVwZW5kZW5jeSBiZXR3
-ZWVuIHBjaWUgZHJpdmVyIGFuZCBtc2kKPj4gPj4gPj4+IGNvbnRyb2xsZXIuICBUaGUgY3VycmVu
-dCBzb2x1dGlvbiB0aGF0IHdlIGRpZCBpcyByZWx5aW5nIG9uIHRoZQo+PiA+PiA+Pj4gbm9kZSBv
-cmRlcmluZyBpbiBCSU9TLiAgQUNQSSA1LjAgaW50cm9kdWNlZCBfREVQIG1ldGhvZCB0byBhc3Np
-Z24gYQo+PiA+PiA+Pj4gaGlnaGVyIHByaW9yaXR5IGluIHN0YXJ0IG9yZGVyaW5nLiAgVGhpcyBt
-ZXRob2QgY291bGQgYmUgYXBwbGllZCBpbgo+PiA+PiA+Pj4gY2FzZSBvZiBtc2kgYW5kIHBjaWUg
-YXJlIHRoZSBzYW1lIGxldmVsIG9mIHN1YnN5c19pbml0IChpbiBBQ1BJCj4+ID4+ID4+PiBib290
-KS4gIEhvd2V2ZXIsIFBDSWUgZHJpdmVyIGhhcyBub3Qgc3VwcG9ydGVkIGZvciB0aGlzIGRlcGVu
-ZGVuY3kKPj4gPj4gPj4+IGNoZWNrIHlldC4gIEhvdyBkbyB5b3UgdGhpbmsgYWJvdXQgdGhpcyBz
-b2x1dGlvbi4KPj4gPj4gPj4KPj4gPj4gPj4gRmlyc3Qgb2ZmLCB5b3UgY2FuJ3QgcG9zdCBlbWFp
-bHMgd2l0aCBjb25maWRlbnRpYWxpdHkgbm90aWNlcyBvbgo+PiA+PiA+PiBtYWlsaW5nIGxpc3Rz
-IHNvIHJlbW92ZSBpdCBmcm9tIG5vdyBvbndhcmRzLgo+PiA+PiA+Cj4+ID4+ID4gRml4ZWQKPj4g
-Pj4gPgo+PiA+PiA+PiBTZWNvbmRseSwgSSBjb21tZW50ZWQgb24gdGhpcyBiZWZvcmUsIHNvIHlv
-dSBrbm93IHdoYXQgbXkgb3BpbmlvbiBpcy4KPj4gPj4gPgo+PiA+PiA+IEkgZ290IHlvdXIgb3Bp
-bmlvbi4gSSdsbCBpbXBsZW1lbnQgYXMgeW91ciBzdWdnZXN0aW9uLgo+PiA+PiA+Cj4+ID4+Cj4+
-ID4+ICAgUmVnYXJkaW5nIHRvIHlvdXIgcHJldmlvdXMgc3VnZ2VzdGlvbiB0byBhZGQgYSBob29r
-IHdhbGtpbmcgdGhlIEFDUEkKPj4gPj4gICBuYW1lc3BhY2UgYmVmb3JlIGFjcGlfYnVzX3NjYW4o
-KSBpbiBhY3BpX3NjYW5faW5pdCgpIHRvIG1ha2UgTVNJCj4+ID4+ICAgY29udHJvbGxlcnMgbXVz
-dCBiZSBwcm9iZWQgYmVmb3JlIFBDSS4gIEkgaGF2ZSBhIGNvbmNlcm4gdGhhdCB0aGUKPj4gPj4g
-ICBNU0kgbmFtZXNwYWNlIOKAnCBfU0IuTVNJWOKAnSBpcyBub3QgYSB1bmlxdWUgbmFtZSBhbmQg
-aG93IGNhbiB3ZSB3YWxrCj4+ID4+ICAgdGhlIEFDUEkgbmFtZXNwYWNlIGFuZCB1c2UgdGhpcyBu
-YW1lIHRvIG1ha2UgTVNJIHByb2JlZCBiZWZvcmUgUENJLgo+PiA+PiAgIE1heSB5b3UgaGF2ZSBs
-aXR0bGUgYml0IG1vcmUgaW5mb3JtYXRpb24gZm9yIHRoaXMgb3IgZG8geW91IGhhdmUKPj4gPj4g
-ICBhbm90aGVyIHN1Z2dlc3Rpb24gZm9yIHRoaXM/Cj4+ID4+Cj4+ID4+ICAgIFRoZXJl4oCZcyBh
-bm90aGVyIHNvbHV0aW9uIHdoaWNoIG1ha2VzIHRoaXMgc2ltcGxlciBhbmQgSeKAmWQgbGlrZSB0
-bwo+PiA+PiAgICBhc2sgeW91ciBvcGluaW9uIGFib3V0IHRoaXMuCj4+ID4+ICAgIFRoZSBzb2x1
-dGlvbiBpcyB0byBtYWtlIGFuIGhpZXJhcmNoeSBiZXR3ZWVuIE1TSSBhbmQgUENJIG5vZGVzICBh
-cyBiZWxvdzoKPj4gPj4gRGV2aWNlKFxfU0IuTVNJWCkgewo+PiA+PiAgICBEZXZpY2UoXF9TQi5Q
-Q0kwKQo+PiA+PiAgICBEZXZpY2UoXF9TQi5QQ0kxKQo+PiA+PiAgICDigKbigKYKPj4gPj4gfQo+
-PiA+PiAgIEluIG90aGVyIHdvcmQsIE1TSVggbm9kZSBpcyBhIHBhcmVudCBub2RlIG9mIFBDSSBu
-b2RlcyBpbiBBQ1BJCj4+ID4+ICAgdGFibGUuICBJbiB0aGlzIHNlbnNlLCB0aGVyZeKAmXMgYW4g
-ZXhwbGljaXQgZGVwZW5kZW5jeSBiZXR3ZWVuIE1TSQo+PiA+PiAgIGFuZCBQQ0ksIE1TSSBjb250
-cm9sbGVyIG11c3QgYmUgcHJvYmVkIGJlZm9yZSBQQ0kgYW5kIGl0IHdpbGwKPj4gPj4gICBndWFy
-YW50ZWUgbm90IGJyZWFraW5nIG5leHQga2VybmVsIHJlbGVhc2VzLiAgSG93IGRvIHlvdSB0aGlu
-ayBhYm91dAo+PiA+PiAgIHRoaXMgc29sdXRpb24uCj4+ID4KPj4gPiBJIHRoaW5rIHRoYXQncyBh
-IHBsYXN0ZXIgYXMgaW5lZmZlY3RpdmUgYXMgcmVvcmRlcmluZyBub2RlcywgaW4gc2hvcnQKPj4g
-PiBpdCBpcyBub3QgYSBzb2x1dGlvbiBhbmQgeW91IHN0aWxsIHJlbHkgb24ga2VybmVsIGxpbmsg
-b3JkZXJpbmcsIHlvdQo+PiA+IGNhbiBmaWRkbGUgd2l0aCBBQ1BJIHRhYmxlcyBhcyBtdWNoIGFz
-IHlvdSB3YW50IGJ1dCB0aGF0IGRvZXMgbm90IGNoYW5nZS4KPj4gPgo+PiA+PiAgSSBhbHNvIHRy
-aWVkIHRvIHVzZSBfREVQIG1ldGhvZCB0byBkZXNjcmliZSB0aGUgZGVwZW5kZW5jeSBvZiBQQ0ll
-Cj4+ID4+ICBub2RlcywgYnV0IGl0IGxvb2tzIHRoYXQgaXQgZG9lcyBub3Qgd29yayBhcyBQQ0kg
-YW5kIE1TSSBhcmUgaGFuZGVkCj4+ID4+ICBieSBhY3BpX2J1c19zY2FuIGFuZCBzdGlsbCBoYXZp
-bmcgaXNzdWUgd2hlbiB3ZSByZS1wcm9iZSBQQ0kuCj4+ID4KPj4gPiBUaGF0J3MgYSB0YWQgdmFn
-dWUgdG8gYmUgZnJhbmssIGFueXdheSBpdCBpcyBwcmV0dHkgY2xlYXIgdG8gbWUgdGhhdCB3ZQo+
-PiA+IGhhdmUgaGl0IGEgd2FsbC4gSW4gQUNQSSB0aGVyZSBpcyBubyB3YXkgdG8gZGVzY3JpYmUg
-cHJvYmUgZGVwZW5kZW5jaWVzCj4+ID4gbGlrZSB0aGUgb25lIHlvdSBoYXZlLCBpdCBpcyBhcyBz
-aW1wbGUgYXMgdGhhdCwgYW5kIHRoaXMgTVNJIGlzc3VlIHlvdQo+PiA+IGFyZSBmYWNpbmcgaXMg
-anVzdCBhbiBleGFtcGxlLCB0aGVyZSBhcmUgbW9yZSBlZzoKPj4gPgo+PiA+IGh0dHBzOi8vd3d3
-LnNwaW5pY3MubmV0L2xpc3RzL2FybS1rZXJuZWwvbXNnNTg1ODI1Lmh0bWwKPj4gPgo+PiA+IEF0
-IHRoZSBlbmQgb2YgdGhlIGRheSB0aGUgY2hvaWNlIGlzIHNpbXBsZSBlaXRoZXIgd2UgYWNjZXB0
-IChhbmQgd2UKPj4gPiBtYWludGFpbiBiZWNhdXNlIHRoYXQncyB0aGUgcHJvYmxlbSkgdGhlc2Ug
-aGFja3MgLSBhbmQgSSBhbSBub3Qgd2lsbGluZwo+PiA+IHRvIGRvIHRoYXQgLSBvciB3ZSBmaW5k
-IGEgd2F5IHRvIHNvbHZlIHRoaXMgZnJvbSBhIGdlbmVyYWwgcGVyc3BlY3RpdmUgbm90Cj4+ID4g
-YXMgYSBwb2ludCBoYWNrLgo+PiA+Cj4+ID4gSSBjYW4gaGF2ZSBhIGxvb2sgYXQgc29sdmluZyB0
-aGUgd2hvbGUgaXNzdWUgYnV0IGl0IHdvbid0IGhhcHBlbgo+PiA+IHRvbW9ycm93Lgo+Pgo+PiBU
-aGFua3MgZm9yIGhlbHBpbmcgdG8gcmVzb2x2ZSB0aGlzIGdlbmVyYWwgQUNQSSBkZXBlbmRlbmNl
-IGlzc3VlLgo+PiBJIGxvb2sgZm9yd2FyZCBmb3IgYSB2ZXJzaW9uIHRvIHRlc3Qgd2l0aC4KPj4K
-Pj4gQ2FuIHdlIHNlcGFyYXRlIHRoZSBnZW5lcmFsIGRlcGVuZGVuY2UgcGF0Y2ggZnJvbSB0aGUg
-WC1HZW5lIE1TSSBBQ1BJCj4+IGVuYWJsZSBwYXRjaC4KPj4gVGhpcyBvcmlnaW5hbCBwYXRjaCB3
-YXMgdG8gZW5hYmxlIEFDUEkgc3VwcG9ydCBmb3IgUENJZSBNU0kuCj4+IFRoZSBkZXBlbmRlbmNl
-IGlzc3VlIGNhbiBiZSByZXNvbHZlZCBzZXBhcmF0ZWx5Lgo+PiBDYW4geW91IGhlbHAgdG8gcHVs
-bCBpbiB0aGUgcGF0Y2guCj4KPiBPaywgcHJhZ21hdGljYWxseSB0aGUgb25seSBzYW5lIHRoaW5n
-IHlvdSBjYW4gZG8gaXM6Cj4KPiAoMSkgIEFkZCBhbiBYLWdlbmUgc3BlY2lmaWMgaG9vayBpbiBk
-cml2ZXJzL2FjcGkvc2Nhbi5jIChhY3BpX3NjYW5faW5pdCgpKQo+ICAgICAgdGhhdCBjYXJyaWVz
-IG91dCBmd25vZGUgcmVnaXN0cmF0aW9uIChpZSByZWdpc3RlciB0aGUgZndub2RlIGJ5Cj4gICAg
-ICBzZWFyY2hpbmcgdGhlIE1TSSBISUQgb2JqZWN0IC0gdGhpcyBkb2VzIG5vdCBkZXBlbmQgb24g
-QUNQSSBkZXZpY2UKPiAgICAgIG5vZGVzIG9yZGVyIC0geW91IGVuZm9yY2UgdGhlIG9yZGVyIGJ5
-IHBhcnNpbmcgdGhlIG5hbWVzcGFjZSBiZWZvcmUKPiAgICAgIEFDUEkgY29yZSBkb2VzIGl0LCBh
-dCB0aGF0IHBvaW50IGluIHRpbWUgQUNQSSBvYmplY3RzIGFyZSBjcmVhdGVkKS4KPiAgICAgIE5v
-dCBzdXJlIFJhZmFlbCB3aWxsIGJlIGhhcHB5IHRvIHNlZSB0aGlzIGNvZGUgYnV0IHRoYXQncyB0
-aGUgb25seQo+ICAgICAgc29sdXRpb24gdGhhdCBkb2VzIG5vdCByZWx5IG9uIEFDUEkgZGV2aWNl
-IG5vZGVzIG9yZGVyaW5nIGFuZCBrZXJuZWwKPiAgICAgIGxpbmsgb3JkZXJpbmcuIFlvdSBtYXkg
-YWNoaWV2ZSB0aGUgc2FtZSBieSBleHRlbmRpbmcgdGhlIEFDUEkgQVBECj4gICAgICBjb2RlIChk
-cml2ZXJzL2FjcGkvYWNwaV9hcGQuYykgd2hldGhlciB0aGF0J3MgdGhlIGJlc3Qgd2F5IGZvcndh
-cmQgaXMKPiAgICAgIHRvIGJlIHNlZW4uCgpIaSBSYWZhZWwsCiAgICBEbyB5b3UgaGF2ZSBhbnkg
-aWRlYSBhYm91dCB0aGlzIHN1Z2dlc3Rpb24/CiAgICBPdGhlcndpc2UsIEknbGwgZm9sbG93IHRo
-aXMgTG9yZW56bydzIGFwcHJvYWNoICgxKS4KCj4gKDIpICBZb3UgY2FuIGFsc28gYWRkIGFuIHhn
-ZW5lIHNwZWNpZmljIHNjYW4gaGFuZGxlciBhdCBhcmNoX2luaXRfY2FsbCgpCj4gICAgICBidXQg
-Z2l2ZW4gdGhhdCBQQ0kgcm9vdCBicmlkZ2UgaXMgbWFuYWdlZCB0aHJvdWdoIGEgc2NhbiBoYW5k
-bGVyIHRvbyB5b3UKPiAgICAgIHdvdWxkIHJlbHkgb24gQUNQSSBkZXZpY2VzIG5vZGVzIG9yZGVy
-aW5nIGluIHRoZSBEU0RULiBMZXQgbWUgZXhwbGFpbgo+ICAgICAgc29tZXRoaW5nIGZvciB0aGUg
-YmVuZWZpdCBvZiBldmVyeW9uZSByZWFkaW5nIHRoaXMgdGhyZWFkOiBJIGRvIG5vdCB3YW50Cj4g
-ICAgICBYLWdlbmUgQUNQSSB0YWJsZXMgdG8gZm9yY2UgdGhlIGtlcm5lbCB0byBzY2FuIGRldmlj
-ZXMgaW4gYW55IG9yZGVyCj4gICAgICB3aGF0c292ZXIgYmVjYXVzZSB0aGlzIHdvdWxkIG1lYW4g
-d2Ugd2lsbCBfbmV2ZXJfIGJlIGFibGUgdG8gY2hhbmdlIHRoZQo+ICAgICAgc2NhbiBvcmRlciBp
-ZiB3ZSB3YW50ZWQgdG8gbGVzdCB3ZSB0cmlnZ2VyIHJlZ3Jlc3Npb25zLiBTbyB0aGlzIGlzCj4g
-ICAgICBhIG5vbi1vcHRpb24gaW4gbXkgb3Bpbmlvbi4KPgo+ICgzKSBMYXN0IG9wdGlvbiBpcyB0
-byByZWdpc3RlciB0aGUgTVNJIGZ3bm9kZSBlaXRoZXIgaW4gUENJIEVDQU0gcXVpcmsKPiAgICAg
-aGFuZGxpbmcgb3IgaW4gYXJtNjQgYmVmb3JlIHByb2JpbmcgdGhlIFBDSSByb290IGJ1cy4KPgo+
-IEkgYW0gbm90IGtlZW4gb24gKDIpIGFuZCAoMykgYXQgYWxsLCBzbyBfaWZfIHdlIGhhdmUgdG8g
-ZmluZCBhIHNvbHV0aW9uCj4gdG8gdGhpcyBwcm9ibGVtICgxKSBpcyB0aGUgb25seSBvcHRpb24g
-eW91IGhhdmUgZm9yIHRoZSB0aW1lIGJlaW5nIGFzCj4gZmFyIGFzIEkgYW0gY29uY2VybmVkLgoK
-VGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciBzdWdnZXN0aW9ucywgTG9yZW56by4KSWYgdGhl
-cmUncyBub3QgYW55IG90aGVyIGlkZWEsIEknbGwgZm9sbG93IHlvdXIgYXBwcm9hY2ggKDEpCgpC
-ZXN0IHJlZ2FyZHMsCktodW9uZyBEaW5oCgo+IExvcmVuem8KPgo+Pgo+PiBCZXN0IHJlZ2FyZHMs
-Cj4+IEtodW9uZyBEaW5oCj4+Cj4+ID4gVGhhbmtzLAo+PiA+IExvcmVuem8KPj4gPgo+PiA+PiBU
-aGFua3MsCj4+ID4+IEtodW9uZyBEaW5oCj4+ID4+Cj4+ID4+ID4+IEZpbmFsbHksIHBsZWFzZSBl
-eGVjdXRlIHRoaXMgY29tbWFuZCBvbiB0aGUgdm1saW51eCB0aGF0ICJ3b3JrcyIKPj4gPj4gPj4g
-Zm9yIHlvdToKPj4gPj4gPj4KPj4gPj4gPj4gbm0gdm1saW51eCB8IGdyZXAgLUUgJ19faW5pdGNh
-bGxfKHhnZW5lX3BjaWVfbXNpX2luaXR8YWNwaV9pbml0KScKPj4gPj4gPgo+PiA+PiA+ICQgbm0g
-dm1saW51eCB8IGdyZXAgLUUgJ19faW5pdGNhbGxfKHhnZW5lX3BjaWVfbXNpX2luaXR8YWNwaV9p
-bml0KScKPj4gPj4gPiBmZmZmMDAwMDA4ZGFiMmQ4IHQgX19pbml0Y2FsbF9hY3BpX2luaXQ0Cj4+
-ID4+ID4gZmZmZjAwMDAwOGRhYjJjOCB0IF9faW5pdGNhbGxfeGdlbmVfcGNpZV9tc2lfaW5pdDQK
-Pj4gPj4gPgo+PiA+PiA+IEJlc3QgcmVnYXJkcywKPj4gPj4gPiBLaHVvbmcgRGluaAo+PiA+PiA+
-Cj4+ID4+ID4+IEV2ZW4gYnkgb3JkZXJpbmcgZGV2aWNlcyBpbiB0aGUgQUNQSSB0YWJsZXMgKHRo
-YXQgSSBhYmhvcikgSSBzdGlsbCBkbwo+PiA+PiA+PiBub3QgdW5kZXJzdGFuZCBob3cgdGhpcyB3
-b3JrcyAoSSBtZWFuIHdpdGhvdXQgcmVseWluZyBvbiBrZXJuZWwgbGluawo+PiA+PiA+PiBvcmRl
-ciB0byBlbnN1cmUgdGhhdCB0aGUgTVNJIGRyaXZlciBpcyBwcm9iZWQgYmVmb3JlIFBDSSBkZXZp
-Y2VzIGFyZQo+PiA+PiA+PiBlbnVtZXJhdGVkIGluIGFjcGlfaW5pdCgpKS4KPj4gPj4gPj4KPj4g
-Pj4gPj4gVGhhbmtzLAo+PiA+PiA+PiBMb3JlbnpvCj4+ID4+ID4+Cj4+ID4+ID4+PiBCZXN0IHJl
-Z2FyZHMsCj4+ID4+ID4+PiBLaHVvbmcKPj4gPj4gPj4+Cj4+ID4+ID4+PiBPbiBGcmksIEFwciAy
-OCwgMjAxNyBhdCAyOjI3IEFNLCBNYXJjIFp5bmdpZXIgPG1hcmMuenluZ2llckBhcm0uY29tPiB3
-cm90ZToKPj4gPj4gPj4+ID4gT24gMjgvMDQvMTcgMDE6NTQsIEtodW9uZyBEaW5oIHdyb3RlOgo+
-PiA+PiA+Pj4gPj4gRnJvbTogS2h1b25nIERpbmggPGtkaW5oQGFwbS5jb20+Cj4+ID4+ID4+PiA+
-Pgo+PiA+PiA+Pj4gPj4gVGhpcyBwYXRjaCBtYWtlcyBwY2kteGdlbmUtbXNpIGRyaXZlciBBQ1BJ
-LWF3YXJlIGFuZCBwcm92aWRlcwo+PiA+PiA+Pj4gPj4gTVNJIGNhcGFiaWxpdHkgZm9yIFgtR2Vu
-ZSB2MSBQQ0llIGNvbnRyb2xsZXJzIGluIEFDUEkgYm9vdCBtb2RlLgo+PiA+PiA+Pj4gPj4KPj4g
-Pj4gPj4+ID4+IFNpZ25lZC1vZmYtYnk6IEtodW9uZyBEaW5oIDxrZGluaEBhcG0uY29tPgo+PiA+
-PiA+Pj4gPj4gU2lnbmVkLW9mZi1ieTogRHVjIERhbmcgPGRoZGFuZ0BhcG0uY29tPgo+PiA+PiA+
-Pj4gPj4gQWNrZWQtYnk6IE1hcmMgWnluZ2llciA8bWFyYy56eW5naWVyQGFybS5jb20+Cj4+ID4+
-ID4+PiA+PiAtLS0KPj4gPj4gPj4+ID4+IHYyOgo+PiA+PiA+Pj4gPj4gIC0gVmVyaWZ5IHdpdGgg
-QklPUyB2ZXJzaW9uIDMuMDYuMjUgYW5kIDMuMDcuMDkKPj4gPj4gPj4+ID4+IHYxOgo+PiA+PiA+
-Pj4gPj4gIC0gSW5pdGlhbCB2ZXJzaW9uCj4+ID4+ID4+PiA+PiAtLS0KPj4gPj4gPj4+ID4+ICBk
-cml2ZXJzL3BjaS9ob3N0L3BjaS14Z2VuZS1tc2kuYyB8ICAgMzUgKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKystLS0KPj4gPj4gPj4+ID4+ICAxIGZpbGVzIGNoYW5nZWQsIDMyIGluc2Vy
-dGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCj4+ID4+ID4+PiA+Pgo+PiA+PiA+Pj4gPj4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLXhnZW5lLW1zaS5jIGIvZHJpdmVycy9wY2kvaG9z
-dC9wY2kteGdlbmUtbXNpLmMKPj4gPj4gPj4+ID4+IGluZGV4IGYxYjYzM2IuLjAwYWFhM2QgMTAw
-NjQ0Cj4+ID4+ID4+PiA+PiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaS14Z2VuZS1tc2kuYwo+
-PiA+PiA+Pj4gPj4gKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2kteGdlbmUtbXNpLmMKPj4gPj4g
-Pj4+ID4+IEBAIC0yNCw2ICsyNCw3IEBACj4+ID4+ID4+PiA+PiAgI2luY2x1ZGUgPGxpbnV4L3Bj
-aS5oPgo+PiA+PiA+Pj4gPj4gICNpbmNsdWRlIDxsaW51eC9wbGF0Zm9ybV9kZXZpY2UuaD4KPj4g
-Pj4gPj4+ID4+ICAjaW5jbHVkZSA8bGludXgvb2ZfcGNpLmg+Cj4+ID4+ID4+PiA+PiArI2luY2x1
-ZGUgPGxpbnV4L2FjcGkuaD4KPj4gPj4gPj4+ID4+Cj4+ID4+ID4+PiA+PiAgI2RlZmluZSBNU0lf
-SVIwICAgICAgICAgICAgICAgICAgICAgIDB4MDAwMDAwCj4+ID4+ID4+PiA+PiAgI2RlZmluZSBN
-U0lfSU5UMCAgICAgICAgICAgICAweDgwMDAwMAo+PiA+PiA+Pj4gPj4gQEAgLTM5LDcgKzQwLDcg
-QEAgc3RydWN0IHhnZW5lX21zaV9ncm91cCB7Cj4+ID4+ID4+PiA+PiAgfTsKPj4gPj4gPj4+ID4+
-Cj4+ID4+ID4+PiA+PiAgc3RydWN0IHhnZW5lX21zaSB7Cj4+ID4+ID4+PiA+PiAtICAgICBzdHJ1
-Y3QgZGV2aWNlX25vZGUgICAgICAqbm9kZTsKPj4gPj4gPj4+ID4+ICsgICAgIHN0cnVjdCBmd25v
-ZGVfaGFuZGxlICAgICpmd25vZGU7Cj4+ID4+ID4+PiA+PiAgICAgICBzdHJ1Y3QgaXJxX2RvbWFp
-biAgICAgICAqaW5uZXJfZG9tYWluOwo+PiA+PiA+Pj4gPj4gICAgICAgc3RydWN0IGlycV9kb21h
-aW4gICAgICAgKm1zaV9kb21haW47Cj4+ID4+ID4+PiA+PiAgICAgICB1NjQgICAgICAgICAgICAg
-ICAgICAgICBtc2lfYWRkcjsKPj4gPj4gPj4+ID4+IEBAIC0yNDksNiArMjUwLDEzIEBAIHN0YXRp
-YyB2b2lkIHhnZW5lX2lycV9kb21haW5fZnJlZShzdHJ1Y3QgaXJxX2RvbWFpbiAqZG9tYWluLAo+
-PiA+PiA+Pj4gPj4gICAgICAgLmZyZWUgICA9IHhnZW5lX2lycV9kb21haW5fZnJlZSwKPj4gPj4g
-Pj4+ID4+ICB9Owo+PiA+PiA+Pj4gPj4KPj4gPj4gPj4+ID4+ICsjaWZkZWYgQ09ORklHX0FDUEkK
-Pj4gPj4gPj4+ID4+ICtzdGF0aWMgc3RydWN0IGZ3bm9kZV9oYW5kbGUgKnhnZW5lX21zaV9nZXRf
-Zndub2RlKHN0cnVjdCBkZXZpY2UgKmRldikKPj4gPj4gPj4+ID4+ICt7Cj4+ID4+ID4+PiA+PiAr
-ICAgICByZXR1cm4geGdlbmVfbXNpX2N0cmwuZndub2RlOwo+PiA+PiA+Pj4gPj4gK30KPj4gPj4g
-Pj4+ID4+ICsjZW5kaWYKPj4gPj4gPj4+ID4+ICsKPj4gPj4gPj4+ID4+ICBzdGF0aWMgaW50IHhn
-ZW5lX2FsbG9jYXRlX2RvbWFpbnMoc3RydWN0IHhnZW5lX21zaSAqbXNpKQo+PiA+PiA+Pj4gPj4g
-IHsKPj4gPj4gPj4+ID4+ICAgICAgIG1zaS0+aW5uZXJfZG9tYWluID0gaXJxX2RvbWFpbl9hZGRf
-bGluZWFyKE5VTEwsIE5SX01TSV9WRUMsCj4+ID4+ID4+PiA+PiBAQCAtMjU2LDcgKzI2NCw3IEBA
-IHN0YXRpYyBpbnQgeGdlbmVfYWxsb2NhdGVfZG9tYWlucyhzdHJ1Y3QgeGdlbmVfbXNpICptc2kp
-Cj4+ID4+ID4+PiA+PiAgICAgICBpZiAoIW1zaS0+aW5uZXJfZG9tYWluKQo+PiA+PiA+Pj4gPj4g
-ICAgICAgICAgICAgICByZXR1cm4gLUVOT01FTTsKPj4gPj4gPj4+ID4+Cj4+ID4+ID4+PiA+PiAt
-ICAgICBtc2ktPm1zaV9kb21haW4gPSBwY2lfbXNpX2NyZWF0ZV9pcnFfZG9tYWluKG9mX25vZGVf
-dG9fZndub2RlKG1zaS0+bm9kZSksCj4+ID4+ID4+PiA+PiArICAgICBtc2ktPm1zaV9kb21haW4g
-PSBwY2lfbXNpX2NyZWF0ZV9pcnFfZG9tYWluKG1zaS0+Zndub2RlLAo+PiA+PiA+Pj4gPj4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAmeGdlbmVfbXNp
-X2RvbWFpbl9pbmZvLAo+PiA+PiA+Pj4gPj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBtc2ktPmlubmVyX2RvbWFpbik7Cj4+ID4+ID4+PiA+Pgo+PiA+
-PiA+Pj4gPj4gQEAgLTI2NSw2ICsyNzMsOSBAQCBzdGF0aWMgaW50IHhnZW5lX2FsbG9jYXRlX2Rv
-bWFpbnMoc3RydWN0IHhnZW5lX21zaSAqbXNpKQo+PiA+PiA+Pj4gPj4gICAgICAgICAgICAgICBy
-ZXR1cm4gLUVOT01FTTsKPj4gPj4gPj4+ID4+ICAgICAgIH0KPj4gPj4gPj4+ID4+Cj4+ID4+ID4+
-PiA+PiArI2lmZGVmIENPTkZJR19BQ1BJCj4+ID4+ID4+PiA+PiArICAgICBwY2lfbXNpX3JlZ2lz
-dGVyX2Z3bm9kZV9wcm92aWRlcigmeGdlbmVfbXNpX2dldF9md25vZGUpOwo+PiA+PiA+Pj4gPj4g
-KyNlbmRpZgo+PiA+PiA+Pj4gPj4gICAgICAgcmV0dXJuIDA7Cj4+ID4+ID4+PiA+PiAgfQo+PiA+
-PiA+Pj4gPj4KPj4gPj4gPj4+ID4+IEBAIC00NDksNiArNDYwLDEzIEBAIHN0YXRpYyBpbnQgeGdl
-bmVfbXNpX2h3aXJxX2ZyZWUodW5zaWduZWQgaW50IGNwdSkKPj4gPj4gPj4+ID4+ICAgICAgIHt9
-LAo+PiA+PiA+Pj4gPj4gIH07Cj4+ID4+ID4+PiA+Pgo+PiA+PiA+Pj4gPj4gKyNpZmRlZiBDT05G
-SUdfQUNQSQo+PiA+PiA+Pj4gPj4gK3N0YXRpYyBjb25zdCBzdHJ1Y3QgYWNwaV9kZXZpY2VfaWQg
-eGdlbmVfbXNpX2FjcGlfaWRzW10gPSB7Cj4+ID4+ID4+PiA+PiArICAgICB7IkFQTUMwRDBFIiwg
-MH0sCj4+ID4+ID4+PiA+PiArICAgICB7IH0sCj4+ID4+ID4+PiA+PiArfTsKPj4gPj4gPj4+ID4+
-ICsjZW5kaWYKPj4gPj4gPj4+ID4+ICsKPj4gPj4gPj4+ID4+ICBzdGF0aWMgaW50IHhnZW5lX21z
-aV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQo+PiA+PiA+Pj4gPj4gIHsKPj4g
-Pj4gPj4+ID4+ICAgICAgIHN0cnVjdCByZXNvdXJjZSAqcmVzOwo+PiA+PiA+Pj4gPj4gQEAgLTQ2
-OSw3ICs0ODcsMTcgQEAgc3RhdGljIGludCB4Z2VuZV9tc2lfcHJvYmUoc3RydWN0IHBsYXRmb3Jt
-X2RldmljZSAqcGRldikKPj4gPj4gPj4+ID4+ICAgICAgICAgICAgICAgZ290byBlcnJvcjsKPj4g
-Pj4gPj4+ID4+ICAgICAgIH0KPj4gPj4gPj4+ID4+ICAgICAgIHhnZW5lX21zaS0+bXNpX2FkZHIg
-PSByZXMtPnN0YXJ0Owo+PiA+PiA+Pj4gPj4gLSAgICAgeGdlbmVfbXNpLT5ub2RlID0gcGRldi0+
-ZGV2Lm9mX25vZGU7Cj4+ID4+ID4+PiA+PiArCj4+ID4+ID4+PiA+PiArICAgICB4Z2VuZV9tc2kt
-PmZ3bm9kZSA9IG9mX25vZGVfdG9fZndub2RlKHBkZXYtPmRldi5vZl9ub2RlKTsKPj4gPj4gPj4+
-ID4+ICsgICAgIGlmICgheGdlbmVfbXNpLT5md25vZGUpIHsKPj4gPj4gPj4+ID4+ICsgICAgICAg
-ICAgICAgeGdlbmVfbXNpLT5md25vZGUgPSBpcnFfZG9tYWluX2FsbG9jX2Z3bm9kZShOVUxMKTsK
-Pj4gPj4gPj4+ID4KPj4gPj4gPj4+ID4gUGxlYXNlIHByb3ZpZGUgc29tZXRoaW5nIG90aGVyIHRo
-YW4gTlVMTCwgc3VjaCBhcyB0aGUgYmFzZSBhZGRyZXNzIGlmCj4+ID4+ID4+PiA+IHRoZSBkZXZp
-Y2UuIFRoYXQncyBxdWl0ZSB1c2VmdWwgZm9yIGRlYnVnZ2luZy4KPj4gPj4gPj4+ID4KPj4gPj4g
-Pj4+ID4+ICsgICAgICAgICAgICAgaWYgKCF4Z2VuZV9tc2ktPmZ3bm9kZSkgewo+PiA+PiA+Pj4g
-Pj4gKyAgICAgICAgICAgICAgICAgICAgIGRldl9lcnIoJnBkZXYtPmRldiwgIkZhaWxlZCB0byBj
-cmVhdGUgZndub2RlXG4iKTsKPj4gPj4gPj4+ID4+ICsgICAgICAgICAgICAgICAgICAgICByYyA9
-IEVOT01FTTsKPj4gPj4gPj4+ID4+ICsgICAgICAgICAgICAgICAgICAgICBnb3RvIGVycm9yOwo+
-PiA+PiA+Pj4gPj4gKyAgICAgICAgICAgICB9Cj4+ID4+ID4+PiA+PiArICAgICB9Cj4+ID4+ID4+
-PiA+PiArCj4+ID4+ID4+PiA+PiAgICAgICB4Z2VuZV9tc2ktPm51bV9jcHVzID0gbnVtX3Bvc3Np
-YmxlX2NwdXMoKTsKPj4gPj4gPj4+ID4+Cj4+ID4+ID4+PiA+PiAgICAgICByYyA9IHhnZW5lX21z
-aV9pbml0X2FsbG9jYXRvcih4Z2VuZV9tc2kpOwo+PiA+PiA+Pj4gPj4gQEAgLTU0MCw2ICs1Njgs
-NyBAQCBzdGF0aWMgaW50IHhnZW5lX21zaV9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpw
-ZGV2KQo+PiA+PiA+Pj4gPj4gICAgICAgLmRyaXZlciA9IHsKPj4gPj4gPj4+ID4+ICAgICAgICAg
-ICAgICAgLm5hbWUgPSAieGdlbmUtbXNpIiwKPj4gPj4gPj4+ID4+ICAgICAgICAgICAgICAgLm9m
-X21hdGNoX3RhYmxlID0geGdlbmVfbXNpX21hdGNoX3RhYmxlLAo+PiA+PiA+Pj4gPj4gKyAgICAg
-ICAgICAgICAuYWNwaV9tYXRjaF90YWJsZSA9IEFDUElfUFRSKHhnZW5lX21zaV9hY3BpX2lkcyks
-Cj4+ID4+ID4+PiA+PiAgICAgICB9LAo+PiA+PiA+Pj4gPj4gICAgICAgLnByb2JlID0geGdlbmVf
-bXNpX3Byb2JlLAo+PiA+PiA+Pj4gPj4gICAgICAgLnJlbW92ZSA9IHhnZW5lX21zaV9yZW1vdmUs
-Cj4+ID4+ID4+PiA+Pgo+PiA+PiA+Pj4gPgo+PiA+PiA+Pj4gPiBUaGUgY29kZSBpcyB0cml2aWFs
-LCBidXQgcmVsaWVzIG9uIHRoZSBNU0kgY29udHJvbGxlciB0byBwcm9iZSBiZWZvcmUKPj4gPj4g
-Pj4+ID4gdGhlIFBDSSBidXMuIFdoYXQgZW5mb3JjZXMgdGhpcz8gSG93IGlzIGl0IG1ha2luZyBz
-dXJlIHRoYXQgdGhpcyBpcyBub3QKPj4gPj4gPj4+ID4gZ29pbmcgdG8gYnJlYWsgaW4gdGhlIG5l
-eHQga2VybmVsIHJlbGVhc2U/IEFzIGZhciBhcyBJIGNhbiB0ZWxsLCB0aGVyZQo+PiA+PiA+Pj4g
-PiBpcyBubyBleHBsaWNpdCBkZXBlbmRlbmN5IGJldHdlZW4gdGhlIHR3bywgbWFraW5nIGl0IHRo
-ZSB3aG9sZSB0aGluZwo+PiA+PiA+Pj4gPiBleHRyZW1lbHkgZnJhZ2lsZS4KPj4gPj4gPj4+ID4K
-Pj4gPj4gPj4+ID4gVGhhbmtzLAo+PiA+PiA+Pj4gPgo+PiA+PiA+Pj4gPiAgICAgICAgIE0uCj4+
-ID4+ID4+PiA+IC0tCj4+ID4+ID4+PiA+IEphenogaXMgbm90IGRlYWQuIEl0IGp1c3Qgc21lbGxz
-IGZ1bm55Li4uCj4+ID4+ID4+Pgo+PiA+PiA+Pj4gLS0KCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0Cmxp
-bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFk
-Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Tuesday, June 13, 2017 2:00:16 AM CEST Richard Zhu wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Tuesday, June 13, 2017 7:49 AM
+> > To: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
+> > Cc: linux-pci@vger.kernel.org; Richard Zhu <hongxing.zhu@nxp.com>; Arnd
+> > Bergmann <arnd@arndb.de>; open list <linux-kernel@vger.kernel.org>;
+> > Kishon Vijay Abraham I <kishon@ti.com>; Jingoo Han
+> > <jingoohan1@gmail.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> > moderated list:PCI DRIVER FOR IMX6 <linux-arm-kernel@lists.infradead.or=
+g>;
+> > Lucas Stach <l.stach@pengutronix.de>
+> > Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
+> >=20
+> > On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
+> > > Link speed must not be limited to gen1 during link test for complianc=
+e
+> > > tests
+> > >=20
+> > > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
+> > > ---
+> > >=20
+> > > Changes since v1:
+> > >  - pci-imx6.c moved to dwc directory
+> > > =20
+> > >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
+> > >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
+> > >  2 files changed, 22 insertions(+), 9 deletions(-)
+> > >=20
+> > > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig index
+> > > b7e15526d676..b6e9ced5a45d 100644
+> > > --- a/drivers/pci/dwc/Kconfig
+> > > +++ b/drivers/pci/dwc/Kconfig
+> > > @@ -77,6 +77,16 @@ config PCI_IMX6
+> > >=20
+> > >  	select PCIEPORTBUS
+> > >  	select PCIE_DW_HOST
+> > >=20
+> > > +config PCI_IMX6_COMPLIANCE_TEST
+> > > +	bool "Enable pcie compliance tests on imx6"
+> > > +	depends on PCI_IMX6
+> > > +	default n
+> > > +	help
+> > > +	  Enables support for pcie compliance test on FSL iMX SoCs.
+> > > +	  The link speed wouldn't be limited to gen1 when enabled.
+> > > +	  Enable only during compliance tests, otherwise
+> > > +	  link detection will fail on some peripherals.
+> >=20
+> > I'm puzzled about why we would want to merge this patch.  It looks like
+> > we're trying to game the system to make the device pass compliance test=
+ing
+> > when it isn't really compliant.  Is this config option useful to users,=
+ or
+> > is it only useful during internal development of iMX SoCs?
+>=20
+> [Zhu hongxing] Agree with Bjorn. These modifications shouldn't be merged.
+> They are used for the boards used to pass the PCIe RC certification, when
+> one Standalone external OSC is used as PCIe reference clock source in the
+> boards design.
+Yes, passing gen2 compliance test is only possible with external clk. But t=
+his=20
+is a errata of imx6 pci phy of PCIe clk jitter. Why should we not be able t=
+o=20
+do gen2 tests? I think it is useful to do other gen2 tests (signal integrit=
+y)=20
+during board design.
+> > >  config PCIE_SPEAR13XX
+> > > =20
+> > >  	bool "STMicroelectronics SPEAr PCIe controller"
+> > >  	depends on PCI
+> > >=20
+> > > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> > > index 19a289b8cc94..b0fbe52e25b0 100644
+> > > --- a/drivers/pci/dwc/pci-imx6.c
+> > > +++ b/drivers/pci/dwc/pci-imx6.c
+> > > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct
+> >=20
+> > imx6_pcie *imx6_pcie)
+> >=20
+> > >  	u32 tmp;
+> > >  	int ret;
+> > >=20
+> > > -	/*
+> > > -	 * Force Gen1 operation when starting the link.  In case the link i=
+s
+> > > -	 * started in Gen2 mode, there is a possibility the devices on the
+> > > -	 * bus will not be detected at all.  This happens with PCIe switche=
+s.
+> > > -	 */
+> > > -	tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
+> > > -	tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> > > -	tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+> > > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+> > > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
+> > > +		/*
+> > > +		 * Force Gen1 operation when starting the link.  In case the
+> > > +		 * link is started in Gen2 mode, there is a possibility the
+> > > +		 * devices on the bus will not be detected at all.  This
+> > > +		 * happens with PCIe switches.
+> > > +		 */
+> > > +		tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
+> > > +		tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+> > > +		tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
+> > > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
+> > > +	}
+> > >=20
+> > >  	/* Start LTSSM. */
+> > >  	if (imx6_pcie->variant =3D=3D IMX7D)
+> > >=20
+> > > --
+> > > 2.11.0
+> > >=20
+> > >=20
+> > > _______________________________________________
+> > > linux-arm-kernel mailing list
+> > > linux-arm-kernel@lists.infradead.org
+> > > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
