@@ -1,49 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:39572 "EHLO
-        kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754497AbdFWJmN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jun 2017 05:42:13 -0400
-Date: Fri, 23 Jun 2017 11:41:41 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-gen2: make of_device_ids const
-Message-ID: <20170623094141.GB24191@verge.net.au>
-References: <99e5ddc3b23962b22740dc93113d178f6f98df2f.1498210098.git.arvind.yadav.cs@gmail.com>
+Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
+Date: Tue, 13 Jun 2017 06:18:42 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	kernel test robot <fengguang.wu@intel.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	David Airlie <airlied@linux.ie>,
+	David Herrmann <dh.herrmann@gmail.com>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
+ to handle kernel NULL pointer dereference at 00000000000000a8
+Message-ID: <20170613041842.GA13308@kroah.com>
+References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
+ <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
+ <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+ <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+ <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <99e5ddc3b23962b22740dc93113d178f6f98df2f.1498210098.git.arvind.yadav.cs@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 02:59:52PM +0530, Arvind Yadav wrote:
-> of_device_ids are not supposed to change at runtime. All functions
-> working with of_device_ids provided by <linux/of.h> work with const
-> of_device_ids. So mark the non-const structs as const.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+On Mon, Jun 12, 2017 at 05:34:59PM -0600, Logan Gunthorpe wrote:
+> 1) The test we are looking at is overrunning the dynamic char dev major
+> numbers by a lot. On a successful run, it gets down to 216 where the
+> limit is 234. Thus, there are 18 too many major numbers assigned and the
+> fact that this test used to work is really just luck. (I've cc'd
+> developers from 49db08c3 for this issue.)
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+What test causes so many major numbers to be allocated?  Is this
+in-kernel test code?  Do you really have a system that requires so many
+different drivers that all want a dynamic char major?
 
+thanks,
 
-> ---
->  drivers/pci/host/pci-rcar-gen2.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-rcar-gen2.c b/drivers/pci/host/pci-rcar-gen2.c
-> index 8534859..6f87968 100644
-> --- a/drivers/pci/host/pci-rcar-gen2.c
-> +++ b/drivers/pci/host/pci-rcar-gen2.c
-> @@ -429,7 +429,7 @@ static int rcar_pci_probe(struct platform_device *pdev)
->  	return 0;
->  }
->  
-> -static struct of_device_id rcar_pci_of_match[] = {
-> +static const struct of_device_id rcar_pci_of_match[] = {
->  	{ .compatible = "renesas,pci-r8a7790", },
->  	{ .compatible = "renesas,pci-r8a7791", },
->  	{ .compatible = "renesas,pci-r8a7794", },
-> -- 
-> 1.9.1
-> 
+gre gk-h
