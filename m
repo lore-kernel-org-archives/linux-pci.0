@@ -1,114 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34990 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751606AbdFOCrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Jun 2017 22:47:35 -0400
-Date: Wed, 14 Jun 2017 21:47:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>,
-        Alexander Duyck <alexander.h.duyck@intel.com>,
-        oss-drivers@netronome.com
-Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
-Message-ID: <20170615024726.GH20778@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Greg KH <greg@kroah.com>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2 2/8] USB / PCI / PM: Allow the PCI core to do the resume cleanup
+Date: Tue, 13 Jun 2017 13:14:27 +0200
+Message-ID: <2860180.RSLfeucCac@aspire.rjw.lan>
+In-Reply-To: <20170613085252.GA21068@kroah.com>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <38416217.53MZsF26VB@aspire.rjw.lan> <20170613085252.GA21068@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170522225023.14010-1-jakub.kicinski@netronome.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:
-> PCI core sets the driver pointer before calling ->probe() and only
-> clears it after ->remove().  This means driver's ->sriov_configure()
-> callback will happily race with probe() and remove(), most likely
-> leading to BUGs, since drivers don't expect this.
+On Tuesday, June 13, 2017 10:52:52 AM Greg KH wrote:
+> On Mon, Jun 12, 2017 at 10:49:40PM +0200, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > hcd_pci_resume_noirq() used as a universal _resume_noirq handler for
+> > PCI USB controllers calls pci_back_from_sleep() which is unnecessary
+> > and may become problematic.
+> > 
+> > It is unnecessary, because the PCI bus type carries out post-suspend
+> > cleanup of all PCI devices during resume and that covers all things
+> > done by the pci_back_from_sleep().  There is no reason why USB cannot
+> > follow all of the other PCI devices in that respect.
+> > 
+> > It will become problematic after subsequent changes that make it
+> > possible to go back to sleep again after executing dpm_resume_noirq()
+> > if no valid system wakeup events have been detected at that point.
+> > Namely, calling pci_back_from_sleep() at the _resume_noirq stage
+> > will cause the wakeup status of the devices in question to be cleared
+> > and if any of them has triggered system wakeup, that event may be
+> > missed then.
+> > 
+> > For the above reasons, drop the pci_back_from_sleep() invocation
+> > from hcd_pci_resume_noirq().
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Acked-by: Alan Stern <stern@rowland.harvard.edu>
 > 
-> We could reorder pointer assignments, or try detecting races in all
-> drivers, but it seems simpler and cleaner to just hold the device lock
-> instead of special SR-IOV lock, since that lock is already supposed
-> to synchronize the driver callbacks.
-> 
-> Remove the iov lock completely, since we remove the last user.
-> 
-> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Applied with Christoph's reviewed-by to pci/virtualization for v4.13,
-thanks!
+Thanks!
 
-> ---
->  drivers/pci/iov.c       | 4 ----
->  drivers/pci/pci-sysfs.c | 5 ++---
->  drivers/pci/pci.h       | 1 -
->  3 files changed, 2 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index d9dc7363ac77..120485d6f352 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -461,8 +461,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
->  	else
->  		iov->dev = dev;
->  
-> -	mutex_init(&iov->lock);
-> -
->  	dev->sriov = iov;
->  	dev->is_physfn = 1;
->  	rc = compute_max_vf_buses(dev);
-> @@ -491,8 +489,6 @@ static void sriov_release(struct pci_dev *dev)
->  	if (dev != dev->sriov->dev)
->  		pci_dev_put(dev->sriov->dev);
->  
-> -	mutex_destroy(&dev->sriov->lock);
-> -
->  	kfree(dev->sriov);
->  	dev->sriov = NULL;
->  }
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 31e99613a12e..7755559558df 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -472,7 +472,6 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  				  const char *buf, size_t count)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> -	struct pci_sriov *iov = pdev->sriov;
->  	int ret;
->  	u16 num_vfs;
->  
-> @@ -483,7 +482,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
->  		return -ERANGE;
->  
-> -	mutex_lock(&iov->dev->sriov->lock);
-> +	device_lock(&pdev->dev);
->  
->  	if (num_vfs == pdev->sriov->num_VFs)
->  		goto exit;
-> @@ -518,7 +517,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
->  			 num_vfs, ret);
->  
->  exit:
-> -	mutex_unlock(&iov->dev->sriov->lock);
-> +	device_unlock(&pdev->dev);
->  
->  	if (ret < 0)
->  		return ret;
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index f8113e5b9812..93f4044b8f4b 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -272,7 +272,6 @@ struct pci_sriov {
->  	u16 driver_max_VFs;	/* max num VFs driver supports */
->  	struct pci_dev *dev;	/* lowest numbered PF */
->  	struct pci_dev *self;	/* this PF */
-> -	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
->  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
->  	bool drivers_autoprobe;	/* auto probing of VFs by driver */
->  };
-> -- 
-> 2.11.0
-> 
