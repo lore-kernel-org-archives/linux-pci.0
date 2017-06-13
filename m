@@ -1,101 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 23 Jun 2017 10:43:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ryder Lee <ryder.lee@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
-Message-ID: <20170623094356.GA5337@red-moon>
-References: <E1dNcMp-0005RN-1w@optimist>
- <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
- <1498209196.26313.71.camel@mtkswgap22>
+Return-Path: <SRS0=+rHZ=5S=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=+rHZ=5S=deltatee.com=logang@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
+ <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
+ <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+ <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+ <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+ <20170613041842.GA13308@kroah.com>
+ <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+ <20170613043416.GB14217@kroah.com> <20170613043518.GA14621@kroah.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ kernel test robot <fengguang.wu@intel.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+ linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
+ Arnd Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>,
+ David Airlie <airlied@linux.ie>, David Herrmann <dh.herrmann@gmail.com>,
+ Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
+Date: Tue, 13 Jun 2017 10:25:40 -0600
 MIME-Version: 1.0
-In-Reply-To: <1498209196.26313.71.camel@mtkswgap22>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
- "kernel-build-reports@lists.linaro.org"
- <kernel-build-reports@lists.linaro.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Mark Brown <broonie@kernel.org>,
- "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170613043518.GA14621@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable to
+ handle kernel NULL pointer dereference at 00000000000000a8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 05:13:16PM +0800, Ryder Lee wrote:
-> Sorry for late reply, 
-> 
-> +Lorenzo
-> 
-> On Wed, 2017-06-21 at 18:04 +0800, Mark Brown wrote:
-> > On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
-> > 
-> > Today's -next fails to build an arm allmodconfig due to:
-> > 
-> > > 	arm-allmodconfig
-> > > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-> > 
-> > caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
-> > controller support).
-> 
-> 
-> Hi Lorenzo,
-> 
-> I picked up your changes and had some modifications like what you did
-> for other platforms:
-> 
-> 9f8e3a5 PCI: Add devm_pci_alloc_host_bridge() interface 
-> 35a1a84 PCI: Add pci_free_host_bridge() interface
-> e33aafd PCI: Initialize bridge release function at bridge allocation
-> 
-> ...and it looks Okay.
-> 
-> I have also noticed that you continue sending patches for other
-> platforms but I have not yet had a look in detail. I'm quite busy these
-> days and don't have time to dig it, hence it is becoming a little
-> unmanageable for me.
 
-If it is unmanageable you don't add yourself as a maintainer of that
-PCI host bridge driver, you know, we are all busy.
 
-Your driver in the PCI tree as it stands contains already two bugs:
+On 12/06/17 10:35 PM, Greg Kroah-Hartman wrote:
+> Or better yet, just turn all char major allocations into dynamic, which
+> would be really good for test systems.  I thought someone proposed
+> patches for that a long time ago, but I can't find them anymore.  That
+> would be the simplest solution here.
 
-1) It leaks memory on the probe failure path
-2) pci_fixup_irqs() is broken on configurations with multiple host
-   bridges
+Would people not complain about that? I would not be surprised if some
+crazy application is using hard coded major numbers in userspace. So
+such a change could potentially break userspace...
 
-And we keep copy'n'pasting that code.
-
-> Did you have a chance to send the same patches for MediaTek?  I
-> appreciate that and I can help to test it on our platforms.
-
-No, how could I have sent them ? It is not upstream and it is a separate
-branch in the PCI tree. As I mentioned in another thread it is probably
-best to drop my pci_fixup_irqs() removal patches since it is impossible
-to work on them without a stable branch to apply them against, in the
-interim we keep adding PCI host bridges that use the wrong interfaces by
-copy'n'pasting code that I have been trying to remove.
-
-I think the best solution is to repost my series when v4.13-rc1 appears
-and ask all new crop of host bridge drivers to rebase against it.
-
-I won't be able to follow mailing lists till end of next week, which
-is bad timing.
-
-Bjorn, is the plan above ok ? Please let me know how you want to
-proceed.
-
-Thanks,
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Logan
