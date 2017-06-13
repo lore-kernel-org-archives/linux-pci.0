@@ -1,76 +1,39 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 26 Jun 2017 12:56:53 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>, lorenzo.pieralisi@arm.com,
- Bjorn Helgaas <bhelgaas@google.com>
-Message-ID: <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
-References: <E1dPPgG-0002pe-3A@optimist>
+Return-Path: <SRS0=7vYb=5S=lst.de=hch@kernel.org>
+Return-Path: <SRS0=7vYb=5S=lst.de=hch@kernel.org>
+Date: Tue, 13 Jun 2017 09:08:10 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, rakesh@tuxera.com,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] PCI: ensure the PCI device is locked over
+	->reset_notify calls
+Message-ID: <20170613070810.GA31936@lst.de>
+References: <20170601111039.8913-1-hch@lst.de> <20170601111039.8913-2-hch@lst.de> <20170606053142.GA25064@bhelgaas-glaptop.roam.corp.google.com> <20170606104836.GB24297@lst.de> <20170606211443.GB12672@bhelgaas-glaptop.roam.corp.google.com> <20170607182936.GA31815@lst.de> <20170612231423.GB4379@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <E1dPPgG-0002pe-3A@optimist>
-Subject: Re: next-20170626 build: 1 failures 1 warnings (next-20170626)
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linaro-kernel@lists.linaro.org,
- linux-next@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- kernel-build-reports@lists.linaro.org
-Content-Type: multipart/mixed; boundary="===============8844594429072918368=="
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170612231423.GB4379@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jun 12, 2017 at 06:14:23PM -0500, Bjorn Helgaas wrote:
+> My main concern is being able to verify the locking.  I think that is
+> much easier if the locking is adjacent to the method invocation.  But
+> if you just add a comment at the method invocation about where the
+> locking is, that should be sufficient.
 
---===============8844594429072918368==
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="iu7yg3gbpixrsrf6"
-Content-Disposition: inline
+Ok.  I can add comments for all the methods as a separate patch,
+similar to Documentation/vfs/Locking
 
+> > Yes, I mentioned this earlier, and I also vaguely remember we got
+> > bug reports from IBM on power for this a while ago.  I just don't
+> > feel confident enough to touch all these without a good test plan.
+> 
+> Hmmm.  I see your point, but I hate leaving a known bug unfixed.  I
+> wonder if some enterprising soul could tickle this bug by injecting
+> errors while removing and rescanning devices below the bridge?
 
---iu7yg3gbpixrsrf6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+I'm completely loaded up at the moment, but this sounds like a good
+idea.
 
-On Mon, Jun 26, 2017 at 09:47:36AM +0100, Build bot for Mark Brown wrote:
-
-This build failure is still present in -next:
-
-> 	arm-allmodconfig
-> ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-
-and we're at -rc7 now.
-
---iu7yg3gbpixrsrf6
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAllQ9oQACgkQJNaLcl1U
-h9BgWgf/SVn12U3lkzO9oEN9+0gaMVl/QR0XjFgFD1OnVGhd+lehjZQHsOgXf87n
-XxykI6WZxFgBcLg6NYKZih3tuREKT7mKsg65/luCV0fzkVwvsbk8u/6QlPIuB1mK
-urhv2qQI3QD0HWn4htaUdBBhBslh5zOEV11xWRHHDHIcDdggG4h+VuRN/cJN+Fm5
-eeOe/USHTCdtIerwNNbL3qpC24EN2pdbV2OQRJVu1QC3nE819kxMG+ookwQ4rI6z
-BPGLg4hU5vKfgM6OXrUrVuXJcYJAVAsIBxJBii2zGDl8r/8LttnWj1j9voNrlzYk
-a7oqgI8eIaoTtHMntmGndCXAhvYmeA==
-=50hA
------END PGP SIGNATURE-----
-
---iu7yg3gbpixrsrf6--
-
-
---===============8844594429072918368==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---===============8844594429072918368==--
+In the meantime how do you want to proceed with this patch?
