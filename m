@@ -1,59 +1,83 @@
-Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
-Date: Tue, 13 Jun 2017 06:35:18 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	kernel test robot <fengguang.wu@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	David Airlie <airlied@linux.ie>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
- to handle kernel NULL pointer dereference at 00000000000000a8
-Message-ID: <20170613043518.GA14621@kroah.com>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
- <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
- <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
- <20170613043416.GB14217@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170613043416.GB14217@kroah.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:36708 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932112AbdFNI0F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:26:05 -0400
+Received: by mail-pg0-f44.google.com with SMTP id a70so72565075pge.3
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:26:05 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+        Guodong Xu <guodong.xu@linaro.org>
+Subject: [PATCH v3 21/21] arm64: dts: hi3660-hikey960: add nodes for WiFi
+Date: Wed, 14 Jun 2017 16:23:38 +0800
+Message-Id: <20170614082338.15673-22-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 06:34:16AM +0200, Greg Kroah-Hartman wrote:
-> On Mon, Jun 12, 2017 at 10:29:20PM -0600, Logan Gunthorpe wrote:
-> > 
-> > 
-> > On 12/06/17 10:18 PM, Greg Kroah-Hartman wrote:
-> > > What test causes so many major numbers to be allocated?  Is this
-> > > in-kernel test code?  Do you really have a system that requires so many
-> > > different drivers that all want a dynamic char major?
-> > 
-> > This is a 0day kernel robot test. I'm not sure the motivations of its
-> > design but it seems to be similar to an allyesconfig. So all/most
-> > modules are compiled in and allocating their char device regions on boot
-> > of a qemu instance.
-> 
-> Ah, that makes sense.  Well, someone can always work on expanding the
-> range of dynamic char major numbers if they are running out of them on a
-> real system, I'll gladly take patches for that :)
+Add nodes for WiFi. HiKey960 is using TI WL1837MOD module.
 
-Or better yet, just turn all char major allocations into dynamic, which
-would be really good for test systems.  I thought someone proposed
-patches for that a long time ago, but I can't find them anymore.  That
-would be the simplest solution here.
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 33 +++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-thnaks,
-
-greg k-h
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index cec0b60..6609b0f 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -145,6 +145,20 @@
+ 			};
+ 		};
+ 	};
++
++	wlan_en: wlan-en-1-8v {
++		compatible = "regulator-fixed";
++		regulator-name = "wlan-en-regulator";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++
++		/* GPIO_051_WIFI_EN */
++		gpio = <&gpio6 3 0>;
++
++		/* WLAN card specific delay */
++		startup-delay-us = <70000>;
++		enable-active-high;
++	};
+ };
+ 
+ &i2c0 {
+@@ -208,3 +222,22 @@
+ 	vqmmc-supply = <&ldo9>;
+ 	status = "okay";
+ };
++
++&dwmmc2 { /* WIFI */
++	broken-cd;
++	/* WL_EN */
++	vmmc-supply = <&wlan_en>;
++	ti,non-removable;
++	non-removable;
++	#address-cells = <0x1>;
++	#size-cells = <0x0>;
++	status = "ok";
++
++	wlcore: wlcore@2 {
++		compatible = "ti,wl1837";
++		reg = <2>;      /* sdio func num */
++		/* WL_IRQ, GPIO_179_WL_WAKEUP_AP */
++		interrupt-parent = <&gpio22>;
++		interrupts = <3 IRQ_TYPE_EDGE_RISING>;
++	};
++};
+-- 
+2.10.2
