@@ -1,51 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:45949 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751135AbdFTUH3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 16:07:29 -0400
-Date: Tue, 20 Jun 2017 22:07:10 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Keith Busch <keith.busch@intel.com>
-cc: LKML <linux-kernel@vger.kernel.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Christoph Hellwig <hch@lst.de>, Ingo Molnar <mingo@kernel.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Jens Axboe <axboe@kernel.dk>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [patch 15/55] PCI: vmd: Create named irq domain
-In-Reply-To: <20170620200758.GC24415@localhost.localdomain>
-Message-ID: <alpine.DEB.2.20.1706202206370.2157@nanos>
-References: <20170619233700.547167146@linutronix.de> <20170619235444.379861978@linutronix.de> <20170620200758.GC24415@localhost.localdomain>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, wangkefeng.wang@huawei.com,
+ xuejiancheng@hisilicon.com, peter.griffin@linaro.org,
+ puck.chen@hisilicon.com, lee.jones@linaro.org, ulf.hansson@linaro.org,
+ bhelgaas@google.com, arnd@arndb.de
+Subject: [PATCH v3 10/21] arm64: dts: hi3660: add power key dts node
+Date: Wed, 14 Jun 2017 16:23:27 +0800
+Message-Id: <20170614082338.15673-11-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Guodong Xu <guodong.xu@linaro.org>,
+ linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, John Stultz <john.stultz@linaro.org>,
+ Chen Jun <chenjun14@huawei.com>, zhangfei.gao@linaro.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 20 Jun 2017, Keith Busch wrote:
-> On Tue, Jun 20, 2017 at 01:37:15AM +0200, Thomas Gleixner wrote:
-> >  static int vmd_enable_domain(struct vmd_dev *vmd)
-> >  {
-> >  	struct pci_sysdata *sd = &vmd->sysdata;
-> > +	struct fwnode_handle *fn;
-> >  	struct resource *res;
-> >  	u32 upper_bits;
-> >  	unsigned long flags;
-> > @@ -617,8 +618,13 @@ static int vmd_enable_domain(struct vmd_
-> >  
-> >  	sd->node = pcibus_to_node(vmd->dev->bus);
-> >  
-> > -	vmd->irq_domain = pci_msi_create_irq_domain(NULL, &vmd_msi_domain_info,
-> > +	fn = irq_domain_alloc_named_id_fwnode("VMD-MSI", vmd->sysdata.domain);
-> > +	if (!fn)
-> > +		return -ENODEV;
-> > +
-> > +	vmd->irq_domain = pci_msi_create_irq_domain(fn, &vmd_msi_domain_info,
-> >  						    x86_vector_domain);
-> > +	kfree(fn);
-> 
-> If I'm following all this correctly, it looks like we need to use
-> irq_domain_free_fwnode with irq_domain_alloc_named_id_fwnode instead of
-> freeing 'fn' directly, otherwise we leak 'fwid->name'.
+From: Chen Jun <chenjun14@huawei.com>
 
-Yes, I'm a moron.
+We use gpio_034 as power key on hikey960, and set gpio with pull-up
+state, when key press the voltage on the gpio will come to lower, and
+power key event will be reported.
+
+Signed-off-by: Chen Jun <chenjun14@huawei.com>
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index c25fff9..7aac35b 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -10,6 +10,8 @@
+ #include "hi3660.dtsi"
+ #include "hikey960-pinctrl.dtsi"
+ #include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/input/input.h>
++#include <dt-bindings/interrupt-controller/irq.h>
+ 
+ / {
+ 	model = "HiKey960";
+@@ -34,6 +36,19 @@
+ 		/* rewrite this at bootloader */
+ 		reg = <0x0 0x0 0x0 0x0>;
+ 	};
++
++	keys {
++		compatible = "gpio-keys";
++		pinctrl-names = "default";
++		pinctrl-0 = <&pwr_key_pmx_func &pwr_key_cfg_func>;
++
++		power {
++			wakeup-source;
++			gpios = <&gpio4 2 GPIO_ACTIVE_LOW>;
++			label = "GPIO Power";
++			linux,code = <KEY_POWER>;
++		};
++	};
+ };
+ 
+ &i2c0 {
+-- 
+2.10.2
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
