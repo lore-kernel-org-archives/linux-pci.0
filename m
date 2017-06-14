@@ -1,49 +1,102 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 14 Jun 2017 13:10:04 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2 6/8] PCI / PM: Restore PME Enable if skipping wakeup
+ setup
+Message-ID: <20170614181004.GB20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
+ <1615075.mBkoKApGGc@aspire.rjw.lan>
+ <1667474.rysFhR2k32@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAMuHMdUiuqB3vPYkAJfP5+qotcH=o1gJnH8Mosr9VSKxAQGJMQ@mail.gmail.com>
-References: <20170523004107.536-1-palmer@dabbelt.com> <20170606230007.19101-1-palmer@dabbelt.com>
- <20170606230007.19101-7-palmer@dabbelt.com> <CAMuHMdUiuqB3vPYkAJfP5+qotcH=o1gJnH8Mosr9VSKxAQGJMQ@mail.gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 7 Jun 2017 10:01:57 +0200
-Message-ID: <CAK8P3a3FVKto9Kg8nfxizoKa+6kjYpT1JQrSASwAd1o5bBJBUw@mail.gmail.com>
-Subject: Re: [PATCH 06/17] pci: Add generic pcibios_{fixup_bus,align_resource}
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Olof Johansson <olof@lixom.net>, albert@sifive.com,
-        patches@groups.riscv.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1667474.rysFhR2k32@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 7, 2017 at 9:19 AM, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> CC pci folks
->
-> On Wed, Jun 7, 2017 at 12:59 AM, Palmer Dabbelt <palmer@dabbelt.com> wrote:
->> While upstreaming the RISC-V port, it was pointed out that multiple
->> architectures (arc, arm64, cris, microblaze, sh, tile) have copied the
->> mostly empty versions of at least one of these functions.  This defines
->> weakly bound versions of the common functions so other architetures can
->> use them.
->>
->> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+On Mon, Jun 12, 2017 at 10:53:36PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The wakeup_prepared PCI device flag is used for preventing subsequent
+> changes of PCI device wakeup settings in the same way (e.g. enabling
+> device wakeup twice in a row).
+> 
+> However, in some cases PME Enable may be updated by things like PCI
+> configuration space restoration in the meantime and it may need to be
+> set again even though the rest of the settings need not change, so
+> modify __pci_enable_wake() to do that when it is about to return
+> early.
+> 
+> Also, it is reasonable to expect that __pci_enable_wake() will always
+> clear PME Status when invoked to disable device wakeup, so make it do
+> so even if it is going to return early then.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks a lot for taking care of this!
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
->> diff --git a/drivers/pci/bios.c b/drivers/pci/bios.c
->> new file mode 100644
->> index 000000000000..ffe34c024aa8
->> --- /dev/null
->> +++ b/drivers/pci/bios.c
->> @@ -0,0 +1,42 @@
->> +
->> +/* This file contains weakly bound functions that implement pcibios functions
->> + * that some architectures have copied verbatim.
->> + */
-
-Instead of adding a new file, I would suggest adding the two functions next
-to their callers, in probe.c and setup-res.c, respectively.
-
-        Arnd
+> ---
+>  drivers/pci/pci.c |   26 ++++++++++++++++++++++++--
+>  1 file changed, 24 insertions(+), 2 deletions(-)
+> 
+> Index: linux-pm/drivers/pci/pci.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci.c
+> +++ linux-pm/drivers/pci/pci.c
+> @@ -1805,6 +1805,23 @@ static void __pci_pme_active(struct pci_
+>  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+>  }
+>  
+> +static void pci_pme_restore(struct pci_dev *dev)
+> +{
+> +	u16 pmcsr;
+> +
+> +	if (!dev->pme_support)
+> +		return;
+> +
+> +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+> +	if (dev->wakeup_prepared) {
+> +		pmcsr |= PCI_PM_CTRL_PME_ENABLE;
+> +	} else {
+> +		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
+> +		pmcsr |= PCI_PM_CTRL_PME_STATUS;
+> +	}
+> +	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+> +}
+> +
+>  /**
+>   * pci_pme_active - enable or disable PCI device's PME# function
+>   * @dev: PCI device to handle.
+> @@ -1899,9 +1916,14 @@ int __pci_enable_wake(struct pci_dev *de
+>  	if (enable && !runtime && !device_may_wakeup(&dev->dev))
+>  		return -EINVAL;
+>  
+> -	/* Don't do the same thing twice in a row for one device. */
+> -	if (!!enable == !!dev->wakeup_prepared)
+> +	/*
+> +	 * Don't do the same thing twice in a row for one device, but restore
+> +	 * PME Enable in case it has been updated by config space restoration.
+> +	 */
+> +	if (!!enable == !!dev->wakeup_prepared) {
+> +		pci_pme_restore(dev);
+>  		return 0;
+> +	}
+>  
+>  	/*
+>  	 * According to "PCI System Architecture" 4th ed. by Tom Shanley & Don
+> 
