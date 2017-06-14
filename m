@@ -1,433 +1,427 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:48934 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751741AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 23:27:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:41 -0600
-Message-Id: <20170629032648.3073-10-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
-References: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 09/16] switchtec_ntb: initialize hardware for memory windows
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:36035 "EHLO
+        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754309AbdFNIYa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:24:30 -0400
+Received: by mail-pf0-f171.google.com with SMTP id x63so80796955pff.3
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:24:30 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+        Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
+Subject: [PATCH v3 06/21] arm64: dts: hi3660: add gpio dtsi file for Hisilicon Hi3660 SOC
+Date: Wed, 14 Jun 2017 16:23:23 +0800
+Message-Id: <20170614082338.15673-7-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This commit adds the code to initialize the memory windows in the
-hardware. This includes setting up the requester ID table, and
-figuring out which bar corresponds to which memory window. (Seeing
-the switch can be configured with any number of bars.)
+From: Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
 
-Also, seeing the device doesn't have hardware for scratchpads or
-determining the link status, we create a shared memory window that has
-these features. A magic number with a version copmonent will be used
-to determine if the otherside's driver is actually up.
+This patch adds pl061 device nodes for Hi3660 SoC.
 
-The shared memory window also informs the other side of the
-size and count of the local memory windows.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Signed-off-by: Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
 ---
- drivers/ntb/hw/mscc/switchtec_ntb.c | 338 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 338 insertions(+)
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 380 ++++++++++++++++++++++++++++++
+ 1 file changed, 380 insertions(+)
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 253efba72275..ff03424153d9 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -15,37 +15,374 @@
- 
- #include <linux/switchtec.h>
- #include <linux/module.h>
-+#include <linux/delay.h>
-+#include <linux/kthread.h>
- 
- MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
- MODULE_VERSION("0.1");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Microsemi Corporation");
- 
-+static bool use_lut_mws;
-+module_param(use_lut_mws, bool, 0644);
-+MODULE_PARM_DESC(use_lut_mws,
-+		 "Enable the use of the LUT based memory windows");
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 9abe84e..b03be4d 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -251,5 +251,385 @@
+ 			clock-names = "uartclk", "apb_pclk";
+ 			status = "disabled";
+ 		};
 +
-+#ifndef ioread64
-+#ifdef readq
-+#define ioread64 readq
-+#else
-+#define ioread64 _ioread64
-+static inline u64 _ioread64(void __iomem *mmio)
-+{
-+	u64 low, high;
++		gpio0: gpio@e8a0b000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a0b000 0 0x1000>;
++			interrupts = <GIC_SPI 84 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 1 0 7>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO0>;
++			clock-names = "apb_pclk";
++		};
 +
-+	low = ioread32(mmio);
-+	high = ioread32(mmio + sizeof(u32));
-+	return low | (high << 32);
-+}
-+#endif
-+#endif
++		gpio1: gpio@e8a0c000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a0c000 0 0x1000>;
++			interrupts = <GIC_SPI 85 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 1 7 7>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO1>;
++			clock-names = "apb_pclk";
++		};
 +
-+#ifndef iowrite64
-+#ifdef writeq
-+#define iowrite64 writeq
-+#else
-+#define iowrite64 _iowrite64
-+static inline void _iowrite64(u64 val, void __iomem *mmio)
-+{
-+	iowrite32(val, mmio);
-+	iowrite32(val >> 32, mmio + sizeof(u32));
-+}
-+#endif
-+#endif
++		gpio2: gpio@e8a0d000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a0d000 0 0x1000>;
++			interrupts = <GIC_SPI 86 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 14 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO2>;
++			clock-names = "apb_pclk";
++		};
 +
-+#define SWITCHTEC_NTB_MAGIC 0x45CC0001
-+#define MAX_MWS     128
++		gpio3: gpio@e8a0e000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a0e000 0 0x1000>;
++			interrupts = <GIC_SPI 87 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 22 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO3>;
++			clock-names = "apb_pclk";
++		};
 +
-+struct shared_mw {
-+	u32 magic;
-+	u32 partition_id;
-+	u16 nr_direct_mw;
-+	u16 nr_lut_mw;
-+	u64 mw_sizes[MAX_MWS];
-+};
++		gpio4: gpio@e8a0f000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a0f000 0 0x1000>;
++			interrupts = <GIC_SPI 88 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 30 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO4>;
++			clock-names = "apb_pclk";
++		};
 +
-+#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-+#define LUT_SIZE SZ_64K
++		gpio5: gpio@e8a10000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a10000 0 0x1000>;
++			interrupts = <GIC_SPI 89 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 38 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO5>;
++			clock-names = "apb_pclk";
++		};
 +
- struct switchtec_ntb {
- 	struct switchtec_dev *stdev;
++		gpio6: gpio@e8a11000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a11000 0 0x1000>;
++			interrupts = <GIC_SPI 90 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 46 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO6>;
++			clock-names = "apb_pclk";
++		};
 +
-+	int self_partition;
-+	int peer_partition;
++		gpio7: gpio@e8a12000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a12000 0 0x1000>;
++			interrupts = <GIC_SPI 91 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 54 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO7>;
++			clock-names = "apb_pclk";
++		};
 +
-+	struct ntb_info_regs __iomem *mmio_ntb;
-+	struct ntb_ctrl_regs __iomem *mmio_ctrl;
-+	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
-+	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
-+	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
-+	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
++		gpio8: gpio@e8a13000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a13000 0 0x1000>;
++			interrupts = <GIC_SPI 92 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 62 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO8>;
++			clock-names = "apb_pclk";
++		};
 +
-+	struct shared_mw *self_shared;
-+	struct shared_mw __iomem *peer_shared;
-+	dma_addr_t self_shared_dma;
++		gpio9: gpio@e8a14000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a14000 0 0x1000>;
++			interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 70 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO9>;
++			clock-names = "apb_pclk";
++		};
 +
-+	int nr_direct_mw;
-+	int nr_lut_mw;
-+	int direct_mw_to_bar[MAX_DIRECT_MW];
++		gpio10: gpio@e8a15000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a15000 0 0x1000>;
++			interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 78 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO10>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio11: gpio@e8a16000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a16000 0 0x1000>;
++			interrupts = <GIC_SPI 95 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 86 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO11>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio12: gpio@e8a17000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a17000 0 0x1000>;
++			interrupts = <GIC_SPI 96 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 94 3 &pmx0 7 101 1>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO12>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio13: gpio@e8a18000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a18000 0 0x1000>;
++			interrupts = <GIC_SPI 97 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 102 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO13>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio14: gpio@e8a19000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a19000 0 0x1000>;
++			interrupts = <GIC_SPI 98 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 110 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO14>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio15: gpio@e8a1a000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a1a000 0 0x1000>;
++			interrupts = <GIC_SPI 99 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx0 0 118 6>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO15>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio16: gpio@e8a1b000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a1b000 0 0x1000>;
++			interrupts = <GIC_SPI 100 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO16>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio17: gpio@e8a1c000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a1c000 0 0x1000>;
++			interrupts = <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO17>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio18: gpio@ff3b4000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xff3b4000 0 0x1000>;
++			interrupts = <GIC_SPI 102 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx2 0 0 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO18>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio19: gpio@ff3b5000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xff3b5000 0 0x1000>;
++			interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx2 0 8 4>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO19>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio20: gpio@e8a1f000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a1f000 0 0x1000>;
++			interrupts = <GIC_SPI 104 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			gpio-ranges = <&pmx1 0 0 6>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO20>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio21: gpio@e8a20000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xe8a20000 0 0x1000>;
++			interrupts = <GIC_SPI 105 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			gpio-ranges = <&pmx3 0 0 6>;
++			clocks = <&crg_ctrl HI3660_PCLK_GPIO21>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio22: gpio@fff0b000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff0b000 0 0x1000>;
++			interrupts = <GIC_SPI 106 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			/* GPIO176 */
++			gpio-ranges = <&pmx4 2 0 6>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO0>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio23: gpio@fff0c000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff0c000 0 0x1000>;
++			interrupts = <GIC_SPI 107 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			/* GPIO184 */
++			gpio-ranges = <&pmx4 0 6 7>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO1>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio24: gpio@fff0d000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff0d000 0 0x1000>;
++			interrupts = <GIC_SPI 108 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			/* GPIO192 */
++			gpio-ranges = <&pmx4 0 13 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO2>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio25: gpio@fff0e000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff0e000 0 0x1000>;
++			interrupts = <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			/* GPIO200 */
++			gpio-ranges = <&pmx4 0 21 4 &pmx4 5 25 3>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO3>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio26: gpio@fff0f000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff0f000 0 0x1000>;
++			interrupts = <GIC_SPI 110 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			/* GPIO208 */
++			gpio-ranges = <&pmx4 0 28 8>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO4>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio27: gpio@fff10000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff10000 0 0x1000>;
++			interrupts = <GIC_SPI 111 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			/* GPIO216 */
++			gpio-ranges = <&pmx4 0 36 6>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO5>;
++			clock-names = "apb_pclk";
++		};
++
++		gpio28: gpio@fff1d000 {
++			compatible = "arm,pl061", "arm,primecell";
++			reg = <0 0xfff1d000 0 0x1000>;
++			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>;
++			gpio-controller;
++			#gpio-cells = <2>;
++			interrupt-controller;
++			#interrupt-cells = <2>;
++			clocks = <&sctrl HI3660_PCLK_AO_GPIO6>;
++			clock-names = "apb_pclk";
++		};
+ 	};
  };
- 
-+static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
-+				 struct ntb_ctrl_regs __iomem *ctl,
-+				 u32 op, int wait_status)
-+{
-+	static const char * const op_text[] = {
-+		[NTB_CTRL_PART_OP_LOCK] = "lock",
-+		[NTB_CTRL_PART_OP_CFG] = "configure",
-+		[NTB_CTRL_PART_OP_RESET] = "reset",
-+	};
-+
-+	int i;
-+	u32 ps;
-+	int status;
-+
-+	switch (op) {
-+	case NTB_CTRL_PART_OP_LOCK:
-+		status = NTB_CTRL_PART_STATUS_LOCKING;
-+		break;
-+	case NTB_CTRL_PART_OP_CFG:
-+		status = NTB_CTRL_PART_STATUS_CONFIGURING;
-+		break;
-+	case NTB_CTRL_PART_OP_RESET:
-+		status = NTB_CTRL_PART_STATUS_RESETTING;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	iowrite32(op, &ctl->partition_op);
-+
-+	for (i = 0; i < 1000; i++) {
-+		if (msleep_interruptible(50) != 0) {
-+			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
-+			return -EINTR;
-+		}
-+
-+		ps = ioread32(&ctl->partition_status) & 0xFFFF;
-+
-+		if (ps != status)
-+			break;
-+	}
-+
-+	if (ps == wait_status)
-+		return 0;
-+
-+	if (ps == status) {
-+		dev_err(&sndev->stdev->dev,
-+			"Timed out while peforming %s (%d). (%08x)",
-+			op_text[op], op,
-+			ioread32(&ctl->partition_status));
-+
-+		return -ETIMEDOUT;
-+	}
-+
-+	return -EIO;
-+}
-+
-+static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
-+{
-+	u64 part_map;
-+
-+	sndev->self_partition = sndev->stdev->partition;
-+
-+	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-+	part_map = ioread64(&sndev->mmio_ntb->ep_map);
-+	part_map &= ~(1 << sndev->self_partition);
-+	sndev->peer_partition = ffs(part_map) - 1;
-+
-+	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
-+		sndev->self_partition, sndev->stdev->partition_count,
-+		part_map);
-+
-+	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
-+		SWITCHTEC_NTB_REG_CTRL_OFFSET;
-+	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
-+		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
-+
-+	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
-+	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
-+	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
-+}
-+
-+static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
-+{
-+	int i;
-+	int cnt = 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(sndev->mmio_self_ctrl->bar_entry); i++) {
-+		u32 r = ioread32(&sndev->mmio_self_ctrl->bar_entry[i].ctl);
-+
-+		if (r & NTB_CTRL_BAR_VALID)
-+			sndev->direct_mw_to_bar[cnt++] = i;
-+	}
-+
-+	sndev->nr_direct_mw = cnt;
-+
-+	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
-+	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
-+
-+	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
-+		sndev->nr_direct_mw, cnt - sndev->nr_direct_mw);
-+}
-+
-+static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
-+{
-+	int rc = 0;
-+	u16 req_id = ioread16(&sndev->mmio_ntb->requester_id);
-+	u32 error;
-+
-+	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
-+		dev_err(&sndev->stdev->dev,
-+			"Not enough requester IDs available.");
-+		return -EFAULT;
-+	}
-+
-+	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-+				   NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		return rc;
-+
-+	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
-+		  &sndev->mmio_self_ctrl->partition_ctrl);
-+
-+	// Root Complex Requester ID
-+	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
-+		  &sndev->mmio_self_ctrl->req_id_table[0]);
-+
-+	// Host Bridge Requester ID
-+	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
-+		  &sndev->mmio_self_ctrl->req_id_table[1]);
-+
-+	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-+				   NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+
-+	if (rc == -EIO) {
-+		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
-+		dev_err(&sndev->stdev->dev,
-+			"Error setting up the requester ID table: %08x",
-+			error);
-+	}
-+
-+	return rc;
-+}
-+
-+static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
-+{
-+	int i;
-+
-+	memset(sndev->self_shared, 0, LUT_SIZE);
-+	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
-+	sndev->self_shared->partition_id = sndev->stdev->partition;
-+	sndev->self_shared->nr_direct_mw = sndev->nr_direct_mw;
-+	sndev->self_shared->nr_lut_mw = use_lut_mws ? sndev->nr_lut_mw - 1 : 0;
-+
-+	for (i = 0; i < sndev->nr_direct_mw; i++) {
-+		int bar = sndev->direct_mw_to_bar[i];
-+		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
-+
-+		if (i == 0)
-+			sz = min_t(resource_size_t, sz,
-+				   LUT_SIZE * sndev->nr_lut_mw);
-+
-+		sndev->self_shared->mw_sizes[i] = sz;
-+	}
-+
-+	for (i = 0; i < sndev->self_shared->nr_lut_mw; i++) {
-+		int idx = sndev->nr_direct_mw + i;
-+
-+		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
-+	}
-+}
-+
-+static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
-+{
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+	int bar = sndev->direct_mw_to_bar[0];
-+	u32 ctl_val;
-+	int rc;
-+
-+	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
-+						 LUT_SIZE,
-+						 &sndev->self_shared_dma,
-+						 GFP_KERNEL);
-+	if (!sndev->self_shared) {
-+		dev_err(&sndev->stdev->dev,
-+			"unable to allocate memory for shared mw");
-+		return -ENOMEM;
-+	}
-+
-+	switchtec_ntb_init_shared(sndev);
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		goto unalloc_and_exit;
-+
-+	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
-+	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
-+	ctl_val &= 0xFF;
-+	ctl_val |= ilog2(LUT_SIZE) << 8;
-+	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
-+	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
-+
-+	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
-+		   sndev->self_shared_dma),
-+		  &ctl->lut_entry[0]);
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+	if (rc) {
-+		u32 bar_error, lut_error;
-+
-+		bar_error = ioread32(&ctl->bar_error);
-+		lut_error = ioread32(&ctl->lut_error);
-+		dev_err(&sndev->stdev->dev,
-+			"Error setting up shared MW: %08x / %08x",
-+			bar_error, lut_error);
-+		goto unalloc_and_exit;
-+	}
-+
-+	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
-+	if (!sndev->peer_shared) {
-+		rc = -ENOMEM;
-+		goto unalloc_and_exit;
-+	}
-+
-+	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
-+	return 0;
-+
-+unalloc_and_exit:
-+	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-+			  sndev->self_shared, sndev->self_shared_dma);
-+
-+	return rc;
-+}
-+
-+static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
-+{
-+	if (sndev->peer_shared)
-+		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
-+
-+	if (sndev->self_shared)
-+		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-+				  sndev->self_shared,
-+				  sndev->self_shared_dma);
-+}
-+
- static int switchtec_ntb_add(struct device *dev,
- 			     struct class_interface *class_intf)
- {
- 	struct switchtec_dev *stdev = to_stdev(dev);
- 	struct switchtec_ntb *sndev;
-+	int rc;
- 
- 	stdev->sndev = NULL;
- 
- 	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
- 		return -ENODEV;
- 
-+	if (stdev->partition_count != 2)
-+		dev_warn(dev, "ntb driver only supports 2 partitions");
-+
- 	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
- 	if (!sndev)
- 		return -ENOMEM;
- 
- 	sndev->stdev = stdev;
- 
-+	switchtec_ntb_init_sndev(sndev);
-+	switchtec_ntb_init_mw(sndev);
-+
-+	rc = switchtec_ntb_init_req_id_table(sndev);
-+	if (rc)
-+		goto free_and_exit;
-+
-+	rc = switchtec_ntb_init_shared_mw(sndev);
-+	if (rc)
-+		goto free_and_exit;
-+
- 	stdev->sndev = sndev;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
-+
-+free_and_exit:
-+	kfree(sndev);
-+	dev_err(dev, "failed to register ntb device: %d", rc);
-+	return rc;
- }
- 
- void switchtec_ntb_remove(struct device *dev,
-@@ -58,6 +395,7 @@ void switchtec_ntb_remove(struct device *dev,
- 		return;
- 
- 	stdev->sndev = NULL;
-+	switchtec_ntb_deinit_shared_mw(sndev);
- 	kfree(sndev);
- 	dev_info(dev, "ntb device unregistered");
- }
 -- 
-2.11.0
+2.10.2
