@@ -1,117 +1,113 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 23 Jun 2017 12:59:35 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
-Message-ID: <20170623115934.GD28331@red-moon>
-References: <E1dNcMp-0005RN-1w@optimist>
- <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
- <1498209196.26313.71.camel@mtkswgap22>
- <20170623094356.GA5337@red-moon>
- <1498213333.2190.24.camel@mtkswgap22>
-MIME-Version: 1.0
-In-Reply-To: <1498213333.2190.24.camel@mtkswgap22>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
- "kernel-build-reports@lists.linaro.org"
- <kernel-build-reports@lists.linaro.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Mark Brown <broonie@kernel.org>,
- "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:34251 "EHLO
+        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754566AbdFNIYS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:24:18 -0400
+Received: by mail-pf0-f180.google.com with SMTP id s66so12691351pfs.1
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:24:17 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v3 04/21] arm64: dts: hi3660: add resources for clock and reset
+Date: Wed, 14 Jun 2017 16:23:21 +0800
+Message-Id: <20170614082338.15673-5-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 06:22:13PM +0800, Ryder Lee wrote:
-> On Fri, 2017-06-23 at 10:43 +0100, Lorenzo Pieralisi wrote:
-> > On Fri, Jun 23, 2017 at 05:13:16PM +0800, Ryder Lee wrote:
-> > > Sorry for late reply, 
-> > > 
-> > > +Lorenzo
-> > > 
-> > > On Wed, 2017-06-21 at 18:04 +0800, Mark Brown wrote:
-> > > > On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
-> > > > 
-> > > > Today's -next fails to build an arm allmodconfig due to:
-> > > > 
-> > > > > 	arm-allmodconfig
-> > > > > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-> > > > 
-> > > > caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
-> > > > controller support).
-> > > 
-> > > 
-> > > Hi Lorenzo,
-> > > 
-> > > I picked up your changes and had some modifications like what you did
-> > > for other platforms:
-> > > 
-> > > 9f8e3a5 PCI: Add devm_pci_alloc_host_bridge() interface 
-> > > 35a1a84 PCI: Add pci_free_host_bridge() interface
-> > > e33aafd PCI: Initialize bridge release function at bridge allocation
-> > > 
-> > > ...and it looks Okay.
-> > > 
-> > > I have also noticed that you continue sending patches for other
-> > > platforms but I have not yet had a look in detail. I'm quite busy these
-> > > days and don't have time to dig it, hence it is becoming a little
-> > > unmanageable for me.
-> > 
-> > If it is unmanageable you don't add yourself as a maintainer of that
-> > PCI host bridge driver, you know, we are all busy.
-> > 
-> > Your driver in the PCI tree as it stands contains already two bugs:
-> > 
-> > 1) It leaks memory on the probe failure path
-> > 2) pci_fixup_irqs() is broken on configurations with multiple host
-> >    bridges
-> > 
-> > And we keep copy'n'pasting that code.
-> 
-> Sure, I have already tested it, and I'll send a patch with your new
-> methods :)
+From: Zhangfei Gao <zhangfei.gao@linaro.org>
 
-Thank you for testing it but please do not send anything before we
-decide what to do with my pci_fixup_irqs() removal series.
+Add some resource nodes for clock and reset
 
-> > > Did you have a chance to send the same patches for MediaTek?  I
-> > > appreciate that and I can help to test it on our platforms.
-> > 
-> > No, how could I have sent them ? It is not upstream and it is a separate
-> > branch in the PCI tree. As I mentioned in another thread it is probably
-> > best to drop my pci_fixup_irqs() removal patches since it is impossible
-> > to work on them without a stable branch to apply them against, in the
-> > interim we keep adding PCI host bridges that use the wrong interfaces by
-> > copy'n'pasting code that I have been trying to remove.
-> > 
-> > I think the best solution is to repost my series when v4.13-rc1 appears
-> > and ask all new crop of host bridge drivers to rebase against it.
-> > 
-> > I won't be able to follow mailing lists till end of next week, which
-> > is bad timing.
-> 
-> I meant I'm also not sure how to do it in separate branch. I didn't
-> notice what you discussed in another thread. Sorry about that.
+Signed-off-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 53 +++++++++++++++++++++++++++----
+ 1 file changed, 46 insertions(+), 7 deletions(-)
 
-No worries, yes we need to understand how to sync the changes, as I
-said it is probably better for my series to be dropped, posted at
-v4.13-rc1, create a branch out of it and ask all PCI host bridges
-to be based against it, it is up to Bjorn to decide what's the least
-complicated way for him to sync all these changes.
-
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 3983086..f55710a 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/clock/hi3660-clock.h>
+ 
+ / {
+ 	compatible = "hisilicon,hi3660";
+@@ -141,18 +142,56 @@
+ 		#size-cells = <2>;
+ 		ranges;
+ 
+-		fixed_uart5: fixed_19_2M {
+-			compatible = "fixed-clock";
+-			#clock-cells = <0>;
+-			clock-frequency = <19200000>;
+-			clock-output-names = "fixed:uart5";
++		crg_ctrl: crg_ctrl@fff35000 {
++			compatible = "hisilicon,hi3660-crgctrl", "syscon";
++			reg = <0x0 0xfff35000 0x0 0x1000>;
++			#clock-cells = <1>;
+ 		};
+ 
+-		uart5: uart@fdf05000 {
++		crg_rst: crg_rst_controller {
++			compatible = "hisilicon,hi3660-reset";
++			#reset-cells = <2>;
++			hisi,rst-syscon = <&crg_ctrl>;
++		};
++
++
++		pctrl: pctrl@e8a09000 {
++			compatible = "hisilicon,hi3660-pctrl", "syscon";
++			reg = <0x0 0xe8a09000 0x0 0x2000>;
++			#clock-cells = <1>;
++		};
++
++		pmuctrl: crg_ctrl@fff34000 {
++			compatible = "hisilicon,hi3660-pmuctrl", "syscon";
++			reg = <0x0 0xfff34000 0x0 0x1000>;
++			#clock-cells = <1>;
++		};
++
++		sctrl: sctrl@fff0a000 {
++			compatible = "hisilicon,hi3660-sctrl", "syscon";
++			reg = <0x0 0xfff0a000 0x0 0x1000>;
++			#clock-cells = <1>;
++		};
++
++		iomcu: iomcu@ffd7e000 {
++			compatible = "hisilicon,hi3660-iomcu", "syscon";
++			reg = <0x0 0xffd7e000 0x0 0x1000>;
++			#clock-cells = <1>;
++
++		};
++
++		iomcu_rst: reset {
++			compatible = "hisilicon,hi3660-reset";
++			hisi,rst-syscon = <&iomcu>;
++			#reset-cells = <2>;
++		};
++
++		uart5: serial@fdf05000 {
+ 			compatible = "arm,pl011", "arm,primecell";
+ 			reg = <0x0 0xfdf05000 0x0 0x1000>;
+ 			interrupts = <GIC_SPI 78 IRQ_TYPE_LEVEL_HIGH>;
+-			clocks = <&fixed_uart5 &fixed_uart5>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_UART5>,
++				 <&crg_ctrl HI3660_CLK_GATE_UART5>;
+ 			clock-names = "uartclk", "apb_pclk";
+ 			status = "disabled";
+ 		};
+-- 
+2.10.2
