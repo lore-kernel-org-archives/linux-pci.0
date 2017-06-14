@@ -1,102 +1,97 @@
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v6 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Thu, 22 Jun 2017 20:15:21 +0800
-Message-ID: <1498133721-21152-4-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:36433 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754664AbdFNIZB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:25:01 -0400
+Received: by mail-pg0-f50.google.com with SMTP id a70so72552124pge.3
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:25:01 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+        Guodong Xu <guodong.xu@linaro.org>
+Subject: [PATCH v3 11/21] arm64: dts: hikey960: add LED nodes
+Date: Wed, 14 Jun 2017 16:23:28 +0800
+Message-Id: <20170614082338.15673-12-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+HiKey960 has four user LEDs, and two special purpose LEDs: WiFi and BT
+respectively.
 
-cxgb4 Ethernet driver now queries PCIe configuration space to determine
-if it can send TLPs to it with the Relaxed Ordering Attribute set.
+All of them are implemented as GPIO.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
 ---
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
- 3 files changed, 21 insertions(+), 2 deletions(-)
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 48 +++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index e88c180..478f25a 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
- 	USING_SOFT_PARAMS  = (1 << 6),
- 	MASTER_PF          = (1 << 7),
- 	FW_OFLD_CONN       = (1 << 9),
-+	ROOT_NO_RELAXED_ORDERING = (1 << 10),
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index 7aac35b..9ecf6c6 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -49,6 +49,54 @@
+ 			linux,code = <KEY_POWER>;
+ 		};
+ 	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		user_led1 {
++			label = "user_led1";
++			/* gpio_150_user_led1 */
++			gpios = <&gpio18 6 0>;
++			linux,default-trigger = "heartbeat";
++		};
++
++		user_led2 {
++			label = "user_led2";
++			/* gpio_151_user_led2 */
++			gpios = <&gpio18 7 0>;
++			linux,default-trigger = "mmc0";
++		};
++
++		user_led3 {
++			label = "user_led3";
++			/* gpio_189_user_led3 */
++			gpios = <&gpio23 5 0>;
++			default-state = "off";
++		};
++
++		user_led4 {
++			label = "user_led4";
++			/* gpio_190_user_led4 */
++			gpios = <&gpio23 6 0>;
++			linux,default-trigger = "cpu0";
++		};
++
++		wlan_active_led {
++			label = "wifi_active";
++			/* gpio_205_wifi_active */
++			gpios = <&gpio25 5 0>;
++			linux,default-trigger = "phy0tx";
++			default-state = "off";
++		};
++
++		bt_active_led {
++			label = "bt_active";
++			gpios = <&gpio25 7 0>;
++			/* gpio_207_user_led1 */
++			linux,default-trigger = "hci0-power";
++			default-state = "off";
++		};
++	};
  };
  
- enum {
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index ea1bfcf..0c4a6e9 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -4735,6 +4735,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
- 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
- 
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteeing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * The PCIe devices which under the Root Complexes will be cleared the
-+	 * Relaxed Ordering bit in the configuration space, So we check our
-+	 * PCIe configuration space to see if it's flagged with advice against
-+	 * using Relaxed Ordering.
-+	 */
-+	if (!pcie_relaxed_ordering_supported(pdev))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	spin_lock_init(&adapter->stats_lock);
- 	spin_lock_init(&adapter->tid_release_lock);
- 	spin_lock_init(&adapter->win0_lock);
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-index f05f0d4..ac229a3 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 	struct fw_iq_cmd c;
- 	struct sge *s = &adap->sge;
- 	struct port_info *pi = netdev_priv(dev);
-+	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/* Size needs to be multiple of 16, including status entry. */
- 	iq->size = roundup(iq->size, 16);
-@@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 
- 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
- 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
--					     FW_IQ_CMD_FL0FETCHRO_F |
--					     FW_IQ_CMD_FL0DATARO_F |
-+					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 					     FW_IQ_CMD_FL0PADEN_F);
- 		if (cong >= 0)
- 			c.iqns_to_fl0congen |=
+ &i2c0 {
 -- 
-1.9.0
+2.10.2
