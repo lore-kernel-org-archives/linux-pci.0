@@ -1,124 +1,119 @@
-Return-Path: <SRS0=9kBv=52=axtens.net=dja@kernel.org>
-Return-Path: <SRS0=9kBv=52=axtens.net=dja@kernel.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Xinliang Liu <z.liuxinliang@hisilicon.com>, Rongrong Zou <zourongrong@gmail.com>
-Subject: Re: [PATCH v2] PCI: Support hibmc VGA cards behind a misbehaving HiSilicon bridge
-In-Reply-To: <20170620174759.GA3363@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170620013302.528-1-dja@axtens.net> <20170620174759.GA3363@bhelgaas-glaptop.roam.corp.google.com>
-Date: Wed, 21 Jun 2017 10:00:33 +1000
-Message-ID: <87a852p5um.fsf@linkitivity.dja.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48962 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752834AbdFNWeO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Jun 2017 18:34:14 -0400
+Date: Wed, 14 Jun 2017 17:34:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        alex.williamson@redhat.com, briannorris@chromium.org
+Subject: Re: [PATCH] pci: Disable master abort while waiting for an FLR to
+ complete
+Message-ID: <20170614223406.GG20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170512181107.13853.34680.stgit@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170512181107.13853.34680.stgit@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Fri, May 12, 2017 at 11:13:57AM -0700, Alexander Duyck wrote:
+> From: Alexander Duyck <alexander.h.duyck@intel.com>
+> 
+> This patch is meant to address issues seen when performing on FLR on some
+> systems as the long wait can result in a master abort when reading a
+> function that is not yet ready.
+> 
+> To prevent the master abort from being reported up we should disable
+> reporting for it while waiting on the reset. Once the reset is completed
+> then we can re-enable the master abort for the bus.
+> 
+> Fixes: 5adecf817dd6 ("PCI: Wait for up to 1000ms after FLR reset")
+> 
+> Reported-by: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> ---
+> 
+> I haven't been able to test this code as I don't have a system that can
+> reproduce the issue. The fix itself is based on the issue as reported by
+> Brian so I am hoping he can test this on the Samsung Chromebook Plus with
+> RK399 OP1 that this was seen on.
 
-> How exactly is this bridge broken?  Apparently the PCI_BRIDGE_CTL_VGA
-> is a read-only zero.  Does the bridge then *always* forward the
-> 0xa0000-0xbffff mem range and the 0x3b0-0x3bb and 0x3c0-0x3df I/O
-> ranges?  (This is from the PCI-to-PCI Bridge Spec, r1.2, sec
-> 3.2.5.18).
+I'm slightly hesitant about turning off Master Abort reporting in the
+upstream bridge because that potentially affects several devices below
+the bridge, not just the one that's being reset.  But maybe it's the
+best we can do.
 
-Good question. I will forward this to the HiSilicon hardware engineers
-and get their input. This may take a couple of days as there's a
-language barrier.
+Is there a public problem report we can reference?  It'd be nice to
+have "lspci -vvxxxx" output (for future reference since lspci doesn't
+decode FRS stuff yet).
 
-> I don't know whether the hibmc VGA card requires those legacy VGA
-> resources, so the fact that the card works doesn't answer the
-> question -- the driver may be able to operate the card without those
-> legacy resources.
+Alex W, since you wrote 5adecf817dd6, have you seen similar problems
+or do you have any thoughts on this?
 
-My understanding is that the hibmc card does not require the legacy VGA
-resources.
+I have the same question as Alex D -- why aren't we using CRS in this
+path as in pci_bus_read_dev_vendor_id()?  PCIe r3.1, sec 6.6.2, says a
+function should use CRS if it requires more time.  I see the comment
+about VFs not implementing the first dword, but a VF vendor ID
+*should* read as 0xffff, which is distinguishable from a CRS response
+(0x0001).
 
-> But if the system contains multiple VGA devices, we may not be able to
-> arbitrate between them correctly if this bit doesn't work.  For
-> example, if the bridge always forwards the legacy VGA resources, and a
-> second VGA devices behind a different bridge requires those resources,
-> we'll have a problem: a read may receive two responses.
+Per sec 6.6.2, a function must complete an FLR within 100ms.  I assume
+that means the Intel IGD from 5adecf817dd6 and whatever device is
+involved here (what is it, by the way?) are out of spec.  Or is there
+some weasel wording that allows devices to take this long after a
+reset?
 
-I see.
+If they're out of spec, it'd be nice to identify them with quirks
+(maybe using pci_dev_specific_reset()) instead of changing the generic
+code to accommodate them.  That way the code matches the spec better
+and we can potentially work on better ways to handle the issue within
+the spec, e.g., via something like Function Readiness Status
+notifications (sec 6.23.2).
 
-> The fact that this patch doesn't save any kind of "vga_broken" bit for
-> later use by the VGA arbiter makes me suspect that we're making the
-> device work in the current configuration, but things might break if we
-> add another VGA card.
+Please repost this eventually with the typo correction and hopefully a
+link to the problem report and lspci info.
 
-I'll have a think about that and get back to you when I hear back from
-HiSilicon.
+Bjorn
 
-Regards,
-Daniel
-
->> Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
->> Cc: Rongrong Zou <zourongrong@gmail.com>
->> Signed-off-by: Daniel Axtens <dja@axtens.net>
->> ---
->>  drivers/pci/quirks.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 46 insertions(+)
->> 
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 16e6cd86ad71..86d7c848f3e2 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -25,6 +25,7 @@
->>  #include <linux/sched.h>
->>  #include <linux/ktime.h>
->>  #include <linux/mm.h>
->> +#include <linux/vgaarb.h>
->>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->>  #include "pci.h"
->>  
->> @@ -4664,3 +4665,48 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
->>  }
->>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
->>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
->> +
->> +/*
->> + * The hibmc card on a HiSilicon D05 board sits behind a non-compliant
->> + * bridge. The bridge has the PCI_BRIDGE_CTL_VGA config bit fixed at 0
->> + * in hardware. This prevents the vgaarb from marking a card behind it
->> + * as boot VGA device.
->> + *
->> + * However, the hibmc card is known to still work, so if we have that
->> + * card behind that particular bridge (19e5:1610), mark it as the
->> + * default device if none has been detected.
->> + */
->> +static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
->> +{
->> +	struct pci_dev *bridge;
->> +	struct pci_bus *bus;
->> +	u16 config;
->> +
->> +	bus = pdev->bus;
->> +	bridge = bus->self;
->> +	if (!bridge)
->> +		return;
->> +
->> +	if (!pci_is_bridge(bridge))
->> +		return;
->> +
->> +	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
->> +	    bridge->device != 0x1610)
->> +		return;
->> +
->> +	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
->> +			     &config);
->> +	if (config & PCI_BRIDGE_CTL_VGA) {
->> +		/*
->> +		 * Weirdly, this bridge *is* spec compliant, so bail
->> +		 * and let vgaarb do its job
->> +		 */
->> +		return;
->> +	}
->> +
->> +	if (vga_default_device())
->> +		return;
->> +
->> +	vga_set_default_device(pdev);
->> +}
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
->> -- 
->> 2.11.0
->> 
+>  drivers/pci/pci.c |   17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02ffdb9..acbdbabeaa0e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3758,14 +3758,31 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>   */
+>  static void pci_flr_wait(struct pci_dev *dev)
+>  {
+> +	struct pci_dev *bridge = dev->bus->self;
+>  	int i = 0;
+> +	u16 bctl;
+>  	u32 id;
+>  
+> +	/*
+> +	 * Disable MasterAbortMode while we are waiting to avoid reporting
+> +	 * bus errors for reading the command register on a device that is
+> +	 * not ready (in some architectures)
+> +	 */
+> +	if (bridge) {
+> +		pci_read_config_word(bridge, PCI_BRIDGE_CONTROL, &bctl);
+> +		pci_write_config_word(bridge, PCI_BRIDGE_CONTROL,
+> +				      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
+> +	}
+> +
+>  	do {
+>  		msleep(100);
+>  		pci_read_config_dword(dev, PCI_COMMAND, &id);
+>  	} while (i++ < 10 && id == ~0);
+>  
+> +	/* restore bridge state */
+> +	if (bridge)
+> +		pci_write_config_word(bridge, PCI_BRIDGE_CONTROL, bctl);
+> +
+>  	if (id == ~0)
+>  		dev_warn(&dev->dev, "Failed to return from FLR\n");
+>  	else if (i > 1)
+> 
