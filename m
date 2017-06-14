@@ -1,66 +1,98 @@
-Return-Path: <SRS0=dobd=5V=dell.com=Narendra.K@kernel.org>
-Return-Path: <SRS0=dobd=5V=dell.com=Narendra.K@kernel.org>
-From: <Narendra.K@dell.com>
-Cc: <x86@kernel.org>, <linux-pci@vger.kernel.org>, <Jordan.Hargrave@dell.com>,
-	<Shyam.Iyer@dell.com>, <bhelgaas@google.com>, <Narendra.K@dell.com>
-To: <helgaas@kernel.org>, <jdelvare@suse.de>
-Subject: RE: dmi type 0xB1 record - unknown flag
-Date: Fri, 16 Jun 2017 09:36:27 +0000
-Message-ID: <fb0d720dc6c441539fb5130d2628158f@BLRX13MDC105.AMER.DELL.COM>
-References: <20170601143826.5f980444@endymion>
- <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
- <20170602161311.27eab72d@endymion>
- <20170615213935.GH12735@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170615213935.GH12735@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+        Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>,
+        Guodong Xu <guodong.xu@linaro.org>
+Subject: [PATCH v3 12/21] arm64: dts: hi3660: add spi device nodes
+Date: Wed, 14 Jun 2017 16:23:29 +0800
+Message-Id: <20170614082338.15673-13-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Friday, June 16, 2017 3:10 AM
-> To: Jean Delvare <jdelvare@suse.de>
-> Cc: K, Narendra <Narendra_K@Dell.com>; x86@kernel.org; linux-
-> pci@vger.kernel.org; Hargrave, Jordan <Jordan_Hargrave@Dell.com>; Iyer,
-> Shyam <Shyam_Iyer@Dell.com>; bhelgaas@google.com
-> Subject: Re: dmi type 0xB1 record - unknown flag
->=20
-> On Fri, Jun 02, 2017 at 04:13:11PM +0200, Jean Delvare wrote:
-> > ...
-> > I think the whole thing can be simplified like this:
-> >
-> > From: Jean Delvare <jdelvare@suse.de>
-> > Subject: x86/PCI: Simplify Dell DMI B1 quirk
-> >
-> > No need for such convoluted code, when all we need is to call one
-> > function in one specific case.
-> >
-> > Signed-off-by: Jean Delvare <jdelvare@suse.de>
->=20
-> Applied to pci/misc for v4.13, thanks!
->=20
-> As far as I can tell, the new code is functionally equivalent to the old =
-code, so
-> I don't think there's any risk here.
->=20
+From: Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
 
-Hi Jean/Bjorn,
+Add spi2 and spi3 device nodes for hi3660, and enable them for hikey960.
 
-Sorry for the delay. I applied the patch to the mainline kernel version 4.1=
-2-rc5 and performed sanity test on  a  DellEMC PowerEdge R730XD system. It =
-is working as=20
-expected.  'dmesg' shows the message that 'pci=3Dbfsort' is enabled.
+On HiKey960:
+ - SPI2 is wired out through low speed expansion connector.
+ - SPI3 is wired out through high speed expansion connector.
 
-I also booted kernel version 4.12-rc5 with patch applied on a DellEMC Power=
-Edge 1950 system which is listed in the ' pciprobe_dmi_table' quicks table.
-It is working as expected and has not caused regression on this system. 'dm=
-esg' shows the message that 'pci=3Dbfsort' is enabled.
+Signed-off-by: Wang Xiaoyin <hw.wangxiaoyin@hisilicon.com>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 12 +++++++++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi         | 30 +++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
 
-[...]
-> >
-> > What do you think?
-=20
-Thank you for simplifying the code and for the patch.=20
-
-With regards,
-Narendra K
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index 9ecf6c6..ca448f0 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -142,3 +142,15 @@
+ 	label = "LS-UART1";
+ 	status = "okay";
+ };
++
++&spi2 {
++	/* On Low speed expansion */
++	label = "LS-SPI0";
++	status = "okay";
++};
++
++&spi3 {
++	/* On High speed expansion */
++	label = "HS-SPI1";
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index 3b2a3a7..a6b91f1 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -713,5 +713,35 @@
+ 			clocks = <&sctrl HI3660_PCLK_AO_GPIO6>;
+ 			clock-names = "apb_pclk";
+ 		};
++
++		spi2: spi@ffd68000 {
++			compatible = "arm,pl022", "arm,primecell";
++			reg = <0x0 0xffd68000 0x0 0x1000>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_SPI2>;
++			clock-names = "apb_pclk";
++			pinctrl-names = "default";
++			pinctrl-0 = <&spi2_pmx_func>;
++			num-cs = <1>;
++			cs-gpios = <&gpio27 2 0>;
++			status = "disabled";
++		};
++
++		spi3: spi@ff3b3000 {
++			compatible = "arm,pl022", "arm,primecell";
++			reg = <0x0 0xff3b3000 0x0 0x1000>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			interrupts = <GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_SPI3>;
++			clock-names = "apb_pclk";
++			pinctrl-names = "default";
++			pinctrl-0 = <&spi3_pmx_func>;
++			num-cs = <1>;
++			cs-gpios = <&gpio18 5 0>;
++			status = "disabled";
++		};
+ 	};
+ };
+-- 
+2.10.2
