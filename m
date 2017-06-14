@@ -1,67 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:43114 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752289AbdFSWjK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Jun 2017 18:39:10 -0400
-Date: Mon, 19 Jun 2017 17:39:07 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Oza <oza.oza@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: Re: [PATCH v3 1/2] PCI: iproc: Retry request when CRS returned from
- EP
-Message-ID: <20170619223907.GD554@bhelgaas-glaptop.roam.corp.google.com>
-References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
- <1497153938-26074-2-git-send-email-oza.oza@broadcom.com>
- <20170612233039.GC4379@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPchnNBnKmeXvhcWTM0Kzdb4b9mvTKXJsHe4KzJ=kk8M=Q@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAMSpPPchnNBnKmeXvhcWTM0Kzdb4b9mvTKXJsHe4KzJ=kk8M=Q@mail.gmail.com>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33593 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754773AbdFNI0D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:26:03 -0400
+Received: by mail-pf0-f172.google.com with SMTP id 83so80794489pfr.0
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:26:03 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+        Li Wei <liwei213@huawei.com>, Chen Jun <chenjun14@huawei.com>
+Subject: [PATCH v3 20/21] arm64: dts: hi3660: add sd/sdio device nodes
+Date: Wed, 14 Jun 2017 16:23:37 +0800
+Message-Id: <20170614082338.15673-21-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 09:58:22AM +0530, Oza Oza wrote:
-> On Tue, Jun 13, 2017 at 5:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > Please wrap your changelogs to use 75 columns.  "git log" indents the
-> > changelog by four spaces, so if your text is 75 wide, it will still
-> > fit without wrapping.
-> >
-> > On Sun, Jun 11, 2017 at 09:35:37AM +0530, Oza Pawandeep wrote:
-> >> For Configuration Requests only, following reset
-> >> it is possible for a device to terminate the request
-> >> but indicate that it is temporarily unable to process
-> >> the Request, but will be able to process the Request
-> >> in the future – in this case, the Configuration Request
-> >> Retry Status 10 (CRS) Completion Status is used
-> >
-> > How does this relate to the CRS support we already have in the core,
-> > e.g., pci_bus_read_dev_vendor_id()?  It looks like your root complex
-> > already returns 0xffff0001 (CFG_RETRY_STATUS) in some cases.
-> >
-> > Also, per spec (PCIe r3.1, sec 2.3.2), CRS Software Visibility only
-> > affects config reads of the Vendor ID, but you call
-> > iproc_pcie_cfg_retry() for all config offsets.
-> 
-> Yes, as per Spec, CRS Software Visibility only affects config read of
-> the Vendor ID.
-> For config write or any other config read the Root must automatically
-> re-issue configuration
-> request again as a new request, and our PCIe RC fails to do so.
+From: Li Wei <liwei213@huawei.com>
 
-OK, if this is a workaround for a hardware defect, let's make that
-explicit in the changelog (and probably a comment in the code, too).
+Add sd/sdio device nodes for hi3660 soc
 
-I'm actually not sure the spec *requires* the CRS retries to be done
-directly in hardware, so it's conceivable the hardware could be
-working as designed.  But a comment would go a long way toward making
-this understandable by differentiating it from the generic CRS
-handling in the core.
+Signed-off-by: Li Wei <liwei213@huawei.com>
+Signed-off-by: Chen Jun <chenjun14@huawei.com>
+---
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts |  8 ++++
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi         | 58 +++++++++++++++++++++++
+ 2 files changed, 66 insertions(+)
 
-Bjorn
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+index e579333..cec0b60 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
++++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
+@@ -18,6 +18,8 @@
+ 	compatible = "hisilicon,hi3660-hikey960", "hisilicon,hi3660";
+ 
+ 	aliases {
++		mshc1 = &dwmmc1;
++		mshc2 = &dwmmc2;
+ 		serial0 = &uart0;
+ 		serial1 = &uart1;
+ 		serial2 = &uart2;
+@@ -200,3 +202,9 @@
+ 	label = "HS-SPI1";
+ 	status = "okay";
+ };
++
++&dwmmc1 {
++	vmmc-supply = <&ldo16>;
++	vqmmc-supply = <&ldo9>;
++	status = "okay";
++};
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index bdfdf27..e102b95 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -849,5 +849,63 @@
+ 			reset-gpios = <&gpio11 1 0 >;
+ 			status = "ok";
+ 		};
++
++		/* SD */
++		dwmmc1: dwmmc1@ff37f000 {
++			#address-cells = <1>;
++			#size-cells = <0>;
++			cd-inverted;
++			compatible = "hisilicon,hi3660-dw-mshc";
++			num-slots = <1>;
++			bus-width = <0x4>;
++			disable-wp;
++			cap-sd-highspeed;
++			supports-highspeed;
++			card-detect-delay = <200>;
++			reg = <0x0 0xff37f000 0x0 0x1000>;
++			interrupts = <GIC_SPI 139 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_SD>,
++				<&crg_ctrl HI3660_HCLK_GATE_SD>;
++			clock-names = "ciu", "biu";
++			clock-frequency = <3200000>;
++			resets = <&crg_rst 0x94 18>;
++			cd-gpios = <&gpio25 3 0>;
++			hisilicon,peripheral-syscon = <&sctrl>;
++			pinctrl-names = "default";
++			pinctrl-0 = <&sd_pmx_func
++				     &sd_clk_cfg_func
++				     &sd_cfg_func>;
++			sd-uhs-sdr12;
++			sd-uhs-sdr25;
++			sd-uhs-sdr50;
++			sd-uhs-sdr104;
++			status = "disabled";
++
++			slot@0 {
++				reg = <0x0>;
++				bus-width = <4>;
++				disable-wp;
++			};
++		};
++
++		/* SDIO */
++		dwmmc2: dwmmc2@ff3ff000 {
++			compatible = "hisilicon,hi3660-dw-mshc";
++			reg = <0x0 0xff3ff000 0x0 0x1000>;
++			interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
++			num-slots = <1>;
++			clocks = <&crg_ctrl HI3660_CLK_GATE_SDIO0>,
++				 <&crg_ctrl HI3660_HCLK_GATE_SDIO0>;
++			clock-names = "ciu", "biu";
++			resets = <&crg_rst 0x94 20>;
++			card-detect-delay = <200>;
++			supports-highspeed;
++			keep-power-in-suspend;
++			pinctrl-names = "default";
++			pinctrl-0 = <&sdio_pmx_func
++				     &sdio_clk_cfg_func
++				     &sdio_cfg_func>;
++			status = "disabled";
++		};
+ 	};
+ };
+-- 
+2.10.2
