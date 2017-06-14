@@ -1,42 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35342 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751590AbdFOVfI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 17:35:08 -0400
-Date: Thu, 15 Jun 2017 16:35:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v4 0/4] PCI: xilinx: Fixes, optimisation & MIPS support
-Message-ID: <20170615213505.GG12735@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170602185420.22281-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=yVtC=5T=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=yVtC=5T=deltatee.com=logang@kernel.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
+ <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
+ <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
+ <20170613041842.GA13308@kroah.com>
+ <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+ <20170613043416.GB14217@kroah.com> <20170613043518.GA14621@kroah.com>
+ <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
+ <20170613163508.GA31961@kroah.com>
+ <f848a5fb-096c-a025-cc3b-314cc3899f9e@deltatee.com>
+ <20170614050049.GA11630@kroah.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ kernel test robot <fengguang.wu@intel.com>,
+ Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
+ linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
+ Arnd Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>,
+ David Airlie <airlied@linux.ie>, David Herrmann <dh.herrmann@gmail.com>,
+ Daniel Vetter <daniel.vetter@ffwll.ch>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <541d1104-6139-c902-ec91-943ec1e8a881@deltatee.com>
+Date: Tue, 13 Jun 2017 23:55:37 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170602185420.22281-1-paul.burton@imgtec.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170614050049.GA11630@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable to
+ handle kernel NULL pointer dereference at 00000000000000a8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 02, 2017 at 11:54:15AM -0700, Paul Burton wrote:
-> This series fixes an issue found using INTx interrupts with the Xilinx
-> AXI PCIe Host Bridge IP on the Imagination Technologies MIPS Boston
-> development board, performs a couple of optimisations to interrupt
-> handling & allows the driver to be used on MIPS systems.
-> 
-> Applies atop v4.12-rc3.
-> 
-> Paul Burton (4):
->   PCI: xilinx: Fix INTX irq dispatch
->   PCI: xilinx: Unify INTx & MSI interrupt decode
->   PCI: xilinx: Don't enable config completion interrupts
->   PCI: xilinx: Allow build on MIPS platforms
-> 
->  drivers/pci/host/Kconfig       |  2 +-
->  drivers/pci/host/pcie-xilinx.c | 57 +++++++++++++++---------------------------
->  2 files changed, 21 insertions(+), 38 deletions(-)
 
-Hi Paul, et al.,
 
-Waiting for resolution on patch 1 and ack from maintainers.
+On 13/06/17 11:00 PM, Greg Kroah-Hartman wrote:
+> No, don't modify any drivers, do this in the core chardev code.
+
+Ok, well then maybe I misunderstood what you originally asked for
+because I don't see how you can change a fixed allocation to a dynamic
+one without touching the driver code which needs to know the major that
+was assigned in the end.
+
+> At quick glance, looks good to me, care to clean it up and make it behind
+> a config option?
+
+Sure. However, is a config option really necessary here? As is, the
+extended dynamic region will only be used if there are too many chardev
+majors and it shouldn't have _any_ effect on users that have a small
+number. So it seems like not selecting that option is just telling the
+kernel to be broken for no obvious trade-off.
+
+Logan
