@@ -1,38 +1,118 @@
-Return-Path: <SRS0=Od1n=5V=rowland.harvard.edu=stern+5952b05e@kernel.org>
-Return-Path: <SRS0=Od1n=5V=rowland.harvard.edu=stern+5952b05e@kernel.org>
-Date: Fri, 16 Jun 2017 13:30:15 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-     <gregkh@linuxfoundation.org>, USB list <linux-usb@vger.kernel.org>,
-     <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-     <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
-In-Reply-To: <CAAd53p4ntaZ48dsHG+ftDadgOnX=xwX9c3WeBr2SXZye3VL4CA@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1706161327410.1715-100000@iolanthe.rowland.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, wangkefeng.wang@huawei.com,
+ xuejiancheng@hisilicon.com, peter.griffin@linaro.org,
+ puck.chen@hisilicon.com, lee.jones@linaro.org, ulf.hansson@linaro.org,
+ bhelgaas@google.com, arnd@arndb.de
+Subject: [PATCH v3 00/21] arm64: dts: hi3660: add device nodes
+Date: Wed, 14 Jun 2017 16:23:17 +0800
+Message-Id: <20170614082338.15673-1-guodong.xu@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Guodong Xu <guodong.xu@linaro.org>,
+ linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 17 Jun 2017, Kai-Heng Feng wrote:
+This patchset adds various devices nodes for hi3660 and hikey960.
 
-> On Fri, Jun 16, 2017 at 11:07 AM, Kai-Heng Feng
-> <kai.heng.feng@canonical.com> wrote:
-> > On Thu, Jun 15, 2017 at 10:12 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> >> Those documents refer to a hardware bug with a workaround in the BIOS.
-> >> Have you checked to see if your BIOS is up to date?
-> >
-> > Yes, it's up to date.
-> >
-> 
-> Alan, I re-sent a patch but I forgot to add you to CC list:
-> http://marc.info/?l=linux-pci&m=149760607914628&w=2
+HiKey960 is one of 96boards. For details information about it, please
+refer to [1].
 
-Thanks for letting me know.  The patch seems reasonable.
+In v3,
+* nothing is changed for patches already exists in v2.
+* added 9 more dts patches. Most of them already were reviewed with their
+    corresponding driver patchset. For purpose of easy integration for
+    platform maintainer, I copied them here, including threads [2], [3],
+    and [4].
+* four patches, this is the first time they are sent out for review.
+v3-0014-arm64-dts-hi3660-enable-idle-states.patch
+v3-0019-dt-bindings-mmc-dw_mmc-k3-add-document-of-hi3660-.patch
+v3-0020-arm64-dts-hi3660-add-sd-sdio-device-nodes.patch
+v3-0021-arm64-dts-hi3660-hikey960-add-nodes-for-WiFi.patch
+    mmc driver is under review in [5].
 
-Have you tested it with system suspend?  That is, if you suspend the 
-whole computer, does plugging or unplugging a USB device cause the 
-system to wake up?
+In v2, incorporated review comments from Rob Herring <robh@kernel.org>
+* uart4: max-speed should be in slave device bluetooth node
+* LEDs:	- bt_active triggered by 'hci0-power'
+	- move out of SoC level
+* pinctrl: update dts to use #pinctrl-cells
+* uart: add pinctrl information into uart nodes; add label strings.
+* chosen: update stdout-path. serial6 is used.
+* i2c: add label strings. change reg address to lower case.
+* remove unnecessary status="ok"
+* gpio-keys: move out of SoC level.
 
-Alan Stern
+[1] https://github.com/96boards/documentation/tree/master/ConsumerEdition/HiKey960
+[2] sp804 timer: https://www.spinics.net/lists/kernel/msg2513025.html
+[3] PCIe: https://www.spinics.net/lists/kernel/msg2520677.html
+[4] mfd and regulator: https://www.spinics.net/lists/arm-kernel/msg586147.html
+[5] mmc: https://patchwork.kernel.org/patch/9783273/
+
+Chen Feng (2):
+  arm64: dts: hi3660: Add uarts nodes
+  arm64: dts: hi3660: Add pl031 rtc node
+
+Chen Jun (1):
+  arm64: dts: hi3660: add power key dts node
+
+Guodong Xu (7):
+  dt-bindings: arm: hisilicon: add bindings for HiKey960 board
+  arm64: dts: hisilicon: update compatible string for hikey960
+  arm64: dts: hikey960: add WL1837 Bluetooth device node
+  arm64: dts: hikey960: add LED nodes
+  dt-bindings: mfd: hi6421: Add hi6421v530 compatible string
+  dt-bindings: mmc: dw_mmc-k3: add document of hi3660 mmc
+  arm64: dts: hi3660-hikey960: add nodes for WiFi
+
+Leo Yan (2):
+  arm64: dts: hi3660: add sp804 timer node
+  arm64: dts: hi3660: enable idle states
+
+Li Wei (1):
+  arm64: dts: hi3660: add sd/sdio device nodes
+
+Wang Xiaoyin (4):
+  arm64: dts: hikey960: pinctrl: add more pinmux and pinconfig
+  arm64: dts: hi3660: add gpio dtsi file for Hisilicon Hi3660 SOC
+  arm64: dts: hi3660: add spi device nodes
+  arm64: dts: hikey960: add device node for pmic and regulators
+
+Xiaowei Song (2):
+  dt-bindings: PCI: hisi: Add document for PCIe of Kirin SoCs
+  arm64: dts: hisi: add kirin pcie node
+
+Zhangfei Gao (2):
+  arm64: dts: hi3660: add resources for clock and reset
+  arm64: dts: Add I2C nodes for Hi3660
+
+ .../bindings/arm/hisilicon/hisilicon.txt           |   4 +
+ Documentation/devicetree/bindings/mfd/hi6421.txt   |   4 +-
+ .../devicetree/bindings/mmc/k3-dw-mshc.txt         |   1 +
+ .../devicetree/bindings/pci/kirin-pcie.txt         |  50 ++
+ arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts  | 217 +++++-
+ arch/arm64/boot/dts/hisilicon/hi3660.dtsi          | 765 +++++++++++++++++++-
+ .../arm64/boot/dts/hisilicon/hikey960-pinctrl.dtsi | 778 +++++++++++++++++++--
+ 7 files changed, 1744 insertions(+), 75 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+
+-- 
+2.10.2
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
