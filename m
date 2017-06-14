@@ -1,98 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, lee.jones@linaro.org,
- ulf.hansson@linaro.org, bhelgaas@google.com, xuwei5@hisilicon.com,
- catalin.marinas@arm.com, will.deacon@arm.com, wangkefeng.wang@huawei.com,
- arnd@arndb.de, xuejiancheng@hisilicon.com, puck.chen@hisilicon.com
-Subject: [PATCH v5 15/20] arm64: dts: hisi: add kirin pcie node
-Date: Fri, 16 Jun 2017 22:13:22 +0800
-Message-Id: <20170616141322.30466-1-guodong.xu@linaro.org>
-In-Reply-To: <20170615030417.14059-16-guodong.xu@linaro.org>
-References: <20170615030417.14059-16-guodong.xu@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Guodong Xu <guodong.xu@linaro.org>,
- linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
- linux-kernel@vger.kernel.org, Xiaowei Song <songxiaowei@hisilicon.com>,
- zhangfei.gao@linaro.org, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:36958 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751590AbdFNTN5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Jun 2017 15:13:57 -0400
+Date: Wed, 14 Jun 2017 14:13:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-pci@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] MAINTAINERS: update maintainer for rockchip PCIe driver
+Message-ID: <20170614191353.GF20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <1496389333-234834-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1496389333-234834-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Xiaowei Song <songxiaowei@hisilicon.com>
+On Fri, Jun 02, 2017 at 03:42:13PM +0800, Shawn Lin wrote:
+> Wenrui Li changed his employer and is no longer able to
+> maintain this driver. So remove his email address from this
+> file.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Add PCIe node for hi3660
+Applied to pci/host-rockhcip for v4.13, thanks!
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-
-Changes in v5:
- * fix interrupt-map, to conform to gic's #address-cells = <0>
- * remove redundant status = "ok"
----
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 36 +++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index e138973..8183d71 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -754,5 +754,41 @@
- 			cs-gpios = <&gpio18 5 0>;
- 			status = "disabled";
- 		};
-+
-+		pcie@f4000000 {
-+			compatible = "hisilicon,kirin960-pcie";
-+			reg = <0x0 0xf4000000 0x0 0x1000>,
-+			      <0x0 0xff3fe000 0x0 0x1000>,
-+			      <0x0 0xf3f20000 0x0 0x40000>,
-+			      <0x0 0xf5000000 0x0 0x2000>;
-+			reg-names = "dbi", "apb", "phy", "config";
-+			bus-range = <0x0  0x1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x02000000 0x0 0x00000000
-+				  0x0 0xf6000000
-+				  0x0 0x02000000>;
-+			num-lanes = <1>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0xf800 0 0 7>;
-+			interrupt-map = <0x0 0 0 1
-+					 &gic GIC_SPI 282 IRQ_TYPE_LEVEL_HIGH>,
-+					<0x0 0 0 2
-+					 &gic GIC_SPI 283 IRQ_TYPE_LEVEL_HIGH>,
-+					<0x0 0 0 3
-+					 &gic GIC_SPI 284 IRQ_TYPE_LEVEL_HIGH>,
-+					<0x0 0 0 4
-+					 &gic GIC_SPI 285 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+				 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+			clock-names = "pcie_phy_ref", "pcie_aux",
-+				      "pcie_apb_phy", "pcie_apb_sys",
-+				      "pcie_aclk";
-+			reset-gpios = <&gpio11 1 0 >;
-+		};
- 	};
- };
--- 
-2.10.2
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> 
+>  MAINTAINERS | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 9609ca6..5066ebe 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -10005,7 +10005,6 @@ F:	drivers/pci/dwc/pcie-hisi.c
+>  
+>  PCIE DRIVER FOR ROCKCHIP
+>  M:	Shawn Lin <shawn.lin@rock-chips.com>
+> -M:	Wenrui Li <wenrui.li@rock-chips.com>
+>  L:	linux-pci@vger.kernel.org
+>  L:	linux-rockchip@lists.infradead.org
+>  S:	Maintained
+> -- 
+> 1.9.1
+> 
+> 
