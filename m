@@ -1,33 +1,49 @@
-Return-Path: <sfr@canb.auug.org.au>
-Date: Wed, 28 Jun 2017 08:10:26 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Bjorn Helgaas <bjorn.helgaas@gmail.com>
-Cc: bjorn@helgaas.com, Ryder Lee <ryder.lee@mediatek.com>, Andrew Morton
- <akpm@linux-foundation.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RESEND PATCH] critical patch to fix pci-tree build bot failure
-Message-ID: <20170628081026.5a211391@canb.auug.org.au>
-In-Reply-To: <CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
-References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
-	<CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:35581 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932104AbdFNIZw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:25:52 -0400
+Received: by mail-pg0-f47.google.com with SMTP id k71so72587244pgd.2
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:25:51 -0700 (PDT)
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+        catalin.marinas@arm.com, will.deacon@arm.com,
+        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
+        peter.griffin@linaro.org, puck.chen@hisilicon.com,
+        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
+        arnd@arndb.de
+Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
+        Guodong Xu <guodong.xu@linaro.org>,
+        Li Wei <liwei213@huawei.com>
+Subject: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of hi3660 mmc
+Date: Wed, 14 Jun 2017 16:23:36 +0800
+Message-Id: <20170614082338.15673-20-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Add bindings for hi3660 mmc support
 
-On Tue, 27 Jun 2017 08:20:44 -0500 Bjorn Helgaas <bjorn.helgaas@gmail.com> wrote:
->
-> On Tue, Jun 27, 2017 at 4:24 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> > Hi Stephen and Andrew,
-> >
-> > Could you help to apply this patch? Seems Bjorn didn't response it these days.  
-> 
-> I'm not dead, but I was on vacation most of last week.  I'll resolve this today.
+Signed-off-by: Li Wei <liwei213@huawei.com>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+---
+ Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
-Should I just add this patch to linux-next today (if you don't get
-around to it in the next hour or so)?
-
+diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+index df37058..8af1afc 100644
+--- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
++++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+@@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
+ Required Properties:
+ 
+ * compatible: should be one of the following.
++  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
+   - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
+   - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
+ 
 -- 
-Cheers,
-Stephen Rothwell
+2.10.2
