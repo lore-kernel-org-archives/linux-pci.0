@@ -1,18 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
- <kgene@kernel.org>, <krzk@kernel.org>, <javier@osg.samsung.com>,
- <hongxing.zhu@nxp.com>, <l.stach@pengutronix.de>,
- <m-karicheri2@ti.com>, <minghuan.Lian@freescale.com>,
- <mingkai.hu@freescale.com>, <tie-fei.zang@freescale.com>,
- <thomas.petazzoni@free-electrons.com>, <niklas.cassel@axis.com>,
- <jesper.nilsson@axis.com>, <Joao.Pinto@synopsys.com>,
- <svarbanov@mm-sol.com>, <pratyush.anand@gmail.com>
-Subject: [PATCH] PCI: dwc: Constify dw_pcie_host_ops structures
-Date: Mon, 5 Jun 2017 16:53:46 +0800
-Message-ID: <20170605085346.3732-1-jszhang@marvell.com>
-MIME-Version: 1.0
+From: Guodong Xu <guodong.xu@linaro.org>
+To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, wangkefeng.wang@huawei.com,
+ xuejiancheng@hisilicon.com, peter.griffin@linaro.org,
+ puck.chen@hisilicon.com, lee.jones@linaro.org, ulf.hansson@linaro.org,
+ bhelgaas@google.com, arnd@arndb.de
+Subject: [PATCH v3 01/21] dt-bindings: arm: hisilicon: add bindings for
+ HiKey960 board
+Date: Wed, 14 Jun 2017 16:23:18 +0800
+Message-Id: <20170614082338.15673-2-guodong.xu@linaro.org>
+In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,194 +19,41 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jisheng Zhang <jszhang@marvell.com>, linux-samsung-soc@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@axis.com, linux-arm-msm@vger.kernel.org,
- linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+Cc: devicetree@vger.kernel.org, Guodong Xu <guodong.xu@linaro.org>,
+ linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, zhangfei.gao@linaro.org,
  linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The dw_pcie_host_ops structures are never modified. Constify these
-structures such that these can be write-protected.
+Add bindings for HiKey960 Board.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
 ---
- drivers/pci/dwc/pci-dra7xx.c           | 2 +-
- drivers/pci/dwc/pci-exynos.c           | 2 +-
- drivers/pci/dwc/pci-imx6.c             | 2 +-
- drivers/pci/dwc/pci-keystone.c         | 2 +-
- drivers/pci/dwc/pci-layerscape.c       | 6 +++---
- drivers/pci/dwc/pcie-armada8k.c        | 2 +-
- drivers/pci/dwc/pcie-artpec6.c         | 2 +-
- drivers/pci/dwc/pcie-designware-plat.c | 2 +-
- drivers/pci/dwc/pcie-designware.h      | 2 +-
- drivers/pci/dwc/pcie-qcom.c            | 2 +-
- drivers/pci/dwc/pcie-spear13xx.c       | 2 +-
- 11 files changed, 13 insertions(+), 13 deletions(-)
+ Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 8decf46cf525..e4166032b3c6 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -208,7 +208,7 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- 	dra7xx_pcie_enable_interrupts(dra7xx);
- }
+diff --git a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+index 2e73215..7111fbc8 100644
+--- a/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
++++ b/Documentation/devicetree/bindings/arm/hisilicon/hisilicon.txt
+@@ -4,6 +4,10 @@ Hi3660 SoC
+ Required root node properties:
+ 	- compatible = "hisilicon,hi3660";
  
--static struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
-+static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
- 	.host_init = dra7xx_pcie_host_init,
- };
- 
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-index 546082ad5a3f..c78c06552590 100644
---- a/drivers/pci/dwc/pci-exynos.c
-+++ b/drivers/pci/dwc/pci-exynos.c
-@@ -590,7 +590,7 @@ static void exynos_pcie_host_init(struct pcie_port *pp)
- 	exynos_pcie_enable_interrupts(ep);
- }
- 
--static struct dw_pcie_host_ops exynos_pcie_host_ops = {
-+static const struct dw_pcie_host_ops exynos_pcie_host_ops = {
- 	.rd_own_conf = exynos_pcie_rd_own_conf,
- 	.wr_own_conf = exynos_pcie_wr_own_conf,
- 	.host_init = exynos_pcie_host_init,
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index a98cba55c7f0..fb4816088a7a 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -602,7 +602,7 @@ static int imx6_pcie_link_up(struct dw_pcie *pci)
- 			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
- }
- 
--static struct dw_pcie_host_ops imx6_pcie_host_ops = {
-+static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
- 	.host_init = imx6_pcie_host_init,
- };
- 
-diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-index fcc9723bad6e..4783cec1f78d 100644
---- a/drivers/pci/dwc/pci-keystone.c
-+++ b/drivers/pci/dwc/pci-keystone.c
-@@ -291,7 +291,7 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
- 			"Asynchronous external abort");
- }
- 
--static struct dw_pcie_host_ops keystone_pcie_host_ops = {
-+static const struct dw_pcie_host_ops keystone_pcie_host_ops = {
- 	.rd_other_conf = ks_dw_pcie_rd_other_conf,
- 	.wr_other_conf = ks_dw_pcie_wr_other_conf,
- 	.host_init = ks_pcie_host_init,
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 27d638c4e134..fd861289ad8b 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -39,7 +39,7 @@ struct ls_pcie_drvdata {
- 	u32 lut_offset;
- 	u32 ltssm_shift;
- 	u32 lut_dbg;
--	struct dw_pcie_host_ops *ops;
-+	const struct dw_pcie_host_ops *ops;
- 	const struct dw_pcie_ops *dw_pcie_ops;
- };
- 
-@@ -185,12 +185,12 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 	return 0;
- }
- 
--static struct dw_pcie_host_ops ls1021_pcie_host_ops = {
-+static const struct dw_pcie_host_ops ls1021_pcie_host_ops = {
- 	.host_init = ls1021_pcie_host_init,
- 	.msi_host_init = ls_pcie_msi_host_init,
- };
- 
--static struct dw_pcie_host_ops ls_pcie_host_ops = {
-+static const struct dw_pcie_host_ops ls_pcie_host_ops = {
- 	.host_init = ls_pcie_host_init,
- 	.msi_host_init = ls_pcie_msi_host_init,
- };
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index 495b023042b3..ea8f34af6a85 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -160,7 +160,7 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
--static struct dw_pcie_host_ops armada8k_pcie_host_ops = {
-+static const struct dw_pcie_host_ops armada8k_pcie_host_ops = {
- 	.host_init = armada8k_pcie_host_init,
- };
- 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 82a04acc42fd..01c6f7823672 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -184,7 +184,7 @@ static void artpec6_pcie_host_init(struct pcie_port *pp)
- 	artpec6_pcie_enable_interrupts(artpec6_pcie);
- }
- 
--static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
-+static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
- 	.host_init = artpec6_pcie_host_init,
- };
- 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index a9865d91b43c..091b4e7ad059 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -46,7 +46,7 @@ static void dw_plat_pcie_host_init(struct pcie_port *pp)
- 		dw_pcie_msi_init(pp);
- }
- 
--static struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
-+static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
- 	.host_init = dw_plat_pcie_host_init,
- };
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index c6a840575796..b4d2a89f8e58 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -162,7 +162,7 @@ struct pcie_port {
- 	struct resource		*mem;
- 	struct resource		*busn;
- 	int			irq;
--	struct dw_pcie_host_ops	*ops;
-+	const struct dw_pcie_host_ops *ops;
- 	int			msi_irq;
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 96ee527c1ed2..39e8c0095715 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -634,7 +634,7 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	return dw_pcie_read(pci->dbi_base + where, size, val);
- }
- 
--static struct dw_pcie_host_ops qcom_pcie_dw_ops = {
-+static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
- 	.host_init = qcom_pcie_host_init,
- 	.rd_own_conf = qcom_pcie_rd_own_conf,
- };
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index 8ff36b3dbbdf..80897291e0fb 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -186,7 +186,7 @@ static void spear13xx_pcie_host_init(struct pcie_port *pp)
- 	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
- }
- 
--static struct dw_pcie_host_ops spear13xx_pcie_host_ops = {
-+static const struct dw_pcie_host_ops spear13xx_pcie_host_ops = {
- 	.host_init = spear13xx_pcie_host_init,
- };
- 
++HiKey960 Board
++Required root node properties:
++	- compatible = "hisilicon,hi3660-hikey960", "hisilicon,hi3660";
++
+ Hi3798cv200 SoC
+ Required root node properties:
+ 	- compatible = "hisilicon,hi3798cv200";
 -- 
-2.11.0
+2.10.2
 
 
 _______________________________________________
