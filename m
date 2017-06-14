@@ -1,216 +1,180 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51170 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751526AbdFHOOw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:14:52 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Jason Cooper <jason@lakedaemon.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>, Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will.deacon@arm.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Simon Horman <horms@verge.net.au>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Matthew Minter <matt@masarand.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for bios32 host controllers
-Date: Thu,  8 Jun 2017 15:13:29 +0100
-Message-Id: <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=BEfK=5T=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=BEfK=5T=broadcom.com=oza.oza@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
+References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+ <1497153938-26074-3-git-send-email-oza.oza@broadcom.com> <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Wed, 14 Jun 2017 10:24:11 +0530
+Message-ID: <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Legacy PCI host controllers (ie host controllers that set-up the PCI bus
-through the ARM pci_common_init() API) are currently relying on
-pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
-in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
-given system some of which may well be enabled by the time
-pci_fixup_irqs() is called (ie a system with multiple host controllers).
-With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
-possible to assign IRQs for all devices originating from a PCI host
-bridge at probe time; this is implemented through pci_assign_irq() that
-relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
-given device.
+On Tue, Jun 13, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sun, Jun 11, 2017 at 09:35:38AM +0530, Oza Pawandeep wrote:
+>> PERST# must be asserted around ~500ms before
+>> the reboot is applied.
+>>
+>> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
+>> LCPLL clock and PERST both goes off simultaneously.
+>> This will cause certain Endpoints Intel NVMe not get detected, upon
+>> next boot sequence.
+>>
+>> This happens because; Endpoint is expecting the clock for some amount of
+>> time after PERST is asserted, which is not happening in our case
+>> (Compare to Intel X86 boards, will have clocks running).
+>> this cause NVMe to behave in undefined way.
+>
+> This doesn't smell right.  The description makes this sound like a
+> band-aid that happens to "solve" a problem with one particular device.
+> It doesn't sound like this is making iProc adhere to something in the
+> PCIe spec.
+>
+> Is there some PCIe spec timing requirement that tells you about this
+> 500ms number?  Please include the reference if so.
 
-The benefits this brings are twofold:
+On chip PLL which sources the reference clock to the device gets reset
+when soft reset is applied; the soft reset also asserts PERST#.
+This simultaneous assertion of reset and clock being lost is a problem
+with some NVME cards.
+The delay is added to keep clock alive while PERST gets asserted.
+The time delay number can be set to a number that will allow the NVME
+device to go into reset state.
+500 ms delay is picked for that reason only, which is long enough to
+get EP into reset correctly.
 
-- the IRQ for a device is assigned once at probe time
-- the IRQ assignment works also for hotplugged devices
-
-Remove pci_fixup_irqs() call from bios32 code and rely on
-pci_assign_irq() to carry out the IRQ mapping at device probe
-time.
-
-The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
-set-up in the struct pci_host_bridge created in the bios32
-pcibios_init_hw() function and mach-* code paths (for PCI mach
-implementations that require a specific struct hw_pci.(*scan) function
-callback).
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>
----
- arch/arm/kernel/bios32.c    |  4 ++--
- arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
- arch/arm/mach-iop13xx/pci.c |  2 ++
- arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
- 4 files changed, 29 insertions(+), 23 deletions(-)
-
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 4c7621a..da201a2 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -494,6 +494,8 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				bridge->busnr = sys->busnr;
- 				bridge->ops = hw->ops;
- 				bridge->msi = hw->msi_ctrl;
-+				bridge->map_irq = pcibios_map_irq;
-+				bridge->swizzle_irq = pcibios_swizzle;
- 				bridge->align_resource =
- 						hw->align_resource;
- 
-@@ -530,8 +532,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- 	if (hw->postinit)
- 		hw->postinit();
- 
--	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
--
- 	list_for_each_entry(sys, &head, node) {
- 		struct pci_bus *bus = sys->bus;
- 
-diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
-index dfb62f3..8d54a67 100644
---- a/arch/arm/mach-dove/pcie.c
-+++ b/arch/arm/mach-dove/pcie.c
-@@ -152,6 +152,14 @@ static void rc_pci_fixup(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL, PCI_ANY_ID, rc_pci_fixup);
- 
-+static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	struct pci_sys_data *sys = dev->sysdata;
-+	struct pcie_port *pp = sys->private_data;
-+
-+	return pp->index ? IRQ_DOVE_PCIE1 : IRQ_DOVE_PCIE0;
-+}
-+
- static int __init
- dove_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
- {
-@@ -167,18 +175,12 @@ dove_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	bridge->sysdata = sys;
- 	bridge->busnr = sys->busnr;
- 	bridge->ops = &pcie_ops;
-+	bridge->map_irq = dove_pcie_map_irq;
-+	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	return pci_scan_root_bus_bridge(bridge);
- }
- 
--static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	struct pci_sys_data *sys = dev->sysdata;
--	struct pcie_port *pp = sys->private_data;
--
--	return pp->index ? IRQ_DOVE_PCIE1 : IRQ_DOVE_PCIE0;
--}
--
- static struct hw_pci dove_pci __initdata = {
- 	.nr_controllers	= 2,
- 	.setup		= dove_pcie_setup,
-diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
-index 4babf15..b97879b 100644
---- a/arch/arm/mach-iop13xx/pci.c
-+++ b/arch/arm/mach-iop13xx/pci.c
-@@ -532,6 +532,7 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	bridge->dev.parent = NULL;
- 	bridge->sysdata = sys;
- 	bridge->busnr = sys->busnr;
-+	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	switch (which_atu) {
- 	case IOP13XX_INIT_ATU_ATUX:
-@@ -547,6 +548,7 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
- 		break;
- 	case IOP13XX_INIT_ATU_ATUE:
- 		bridge->ops = &iop13xx_atue_ops;
-+		bridge->map_irq = iop13xx_pcie_map_irq;
- 		ret = pci_scan_root_bus_bridge(bridge);
- 		if (!ret)
- 			pci_bus_atue = bridge->bus;
-diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
-index 76951bf..0f1c343 100644
---- a/arch/arm/mach-orion5x/pci.c
-+++ b/arch/arm/mach-orion5x/pci.c
-@@ -555,6 +555,19 @@ int __init orion5x_pci_sys_setup(int nr, struct pci_sys_data *sys)
- 	return 0;
- }
- 
-+int __init orion5x_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	int bus = dev->bus->number;
-+
-+	/*
-+	 * PCIe endpoint?
-+	 */
-+	if (orion5x_pci_disabled || bus < orion5x_pci_local_bus_nr())
-+		return IRQ_ORION5X_PCIE0_INT;
-+
-+	return -1;
-+}
-+
- int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
- {
- 	struct pci_sys_data *sys = pci_host_bridge_priv(bridge);
-@@ -563,6 +576,8 @@ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	bridge->dev.parent = NULL;
- 	bridge->sysdata = sys;
- 	bridge->busnr = sys->busnr;
-+	bridge->map_irq = orion5x_pci_map_irq;
-+	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	if (nr == 0) {
- 		bridge->ops = &pcie_ops;
-@@ -577,16 +592,3 @@ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	BUG();
- 	return -ENODEV;
- }
--
--int __init orion5x_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	int bus = dev->bus->number;
--
--	/*
--	 * PCIe endpoint?
--	 */
--	if (orion5x_pci_disabled || bus < orion5x_pci_local_bus_nr())
--		return IRQ_ORION5X_PCIE0_INT;
--
--	return -1;
--}
--- 
-2.10.0
+>
+>> Essentially clock will remain alive for 500ms with PERST# = 0
+>> before reboot.
+>
+>> This patch adds platform shutdown where it should be
+>> called in device_shutdown while reboot command is issued.
+>>
+>> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+>> followed by RC shutdown is called, which issues safe PERST
+>> assertion.
+>>
+>> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+>> index 90d2bdd..9512960 100644
+>> --- a/drivers/pci/host/pcie-iproc-platform.c
+>> +++ b/drivers/pci/host/pcie-iproc-platform.c
+>> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>>       return iproc_pcie_remove(pcie);
+>>  }
+>>
+>> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+>> +{
+>> +     struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+>> +
+>> +     iproc_pcie_shutdown(pcie);
+>> +}
+>> +
+>>  static struct platform_driver iproc_pcie_pltfm_driver = {
+>>       .driver = {
+>>               .name = "iproc-pcie",
+>> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>>       },
+>>       .probe = iproc_pcie_pltfm_probe,
+>>       .remove = iproc_pcie_pltfm_remove,
+>> +     .shutdown = iproc_pcie_pltfm_shutdown,
+>>  };
+>>  module_platform_driver(iproc_pcie_pltfm_driver);
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>> index 05a3647..bb61376 100644
+>> --- a/drivers/pci/host/pcie-iproc.c
+>> +++ b/drivers/pci/host/pcie-iproc.c
+>> @@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+>>       .write = iproc_pcie_config_write32,
+>>  };
+>>
+>> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
+>> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+>>  {
+>>       u32 val;
+>>
+>>       /*
+>> -      * PAXC and the internal emulated endpoint device downstream should not
+>> -      * be reset.  If firmware has been loaded on the endpoint device at an
+>> -      * earlier boot stage, reset here causes issues.
+>> +      * The internal emulated endpoints (such as PAXC) device downstream
+>> +      * should not be reset. If firmware has been loaded on the endpoint
+>> +      * device at an earlier boot stage, reset here causes issues.
+>>        */
+>>       if (pcie->ep_is_internal)
+>>               return;
+>>
+>> -     /*
+>> -      * Select perst_b signal as reset source. Put the device into reset,
+>> -      * and then bring it out of reset
+>> -      */
+>> -     val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+>> -     val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+>> -             ~RC_PCIE_RST_OUTPUT;
+>> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> -     udelay(250);
+>> -
+>> -     val |= RC_PCIE_RST_OUTPUT;
+>> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> -     msleep(100);
+>> +     if (assert) {
+>> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+>> +             val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+>> +                     ~RC_PCIE_RST_OUTPUT;
+>> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> +             udelay(250);
+>> +     } else {
+>> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+>> +             val |= RC_PCIE_RST_OUTPUT;
+>> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> +             msleep(100);
+>> +     }
+>> +}
+>> +
+>> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+>> +{
+>> +     iproc_pcie_perst_ctrl(pcie, true);
+>> +     msleep(500);
+>> +
+>> +     return 0;
+>>  }
+>> +EXPORT_SYMBOL(iproc_pcie_shutdown);
+>>
+>>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+>>  {
+>> @@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>>               goto err_exit_phy;
+>>       }
+>>
+>> -     iproc_pcie_reset(pcie);
+>> +     iproc_pcie_perst_ctrl(pcie, true);
+>> +     iproc_pcie_perst_ctrl(pcie, false);
+>>
+>>       if (pcie->need_ob_cfg) {
+>>               ret = iproc_pcie_map_ranges(pcie, res);
+>> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+>> index 0bbe2ea..a6b55ce 100644
+>> --- a/drivers/pci/host/pcie-iproc.h
+>> +++ b/drivers/pci/host/pcie-iproc.h
+>> @@ -110,6 +110,7 @@ struct iproc_pcie {
+>>
+>>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>>  int iproc_pcie_remove(struct iproc_pcie *pcie);
+>> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+>>
+>>  #ifdef CONFIG_PCIE_IPROC_MSI
+>>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+>> --
+>> 1.9.1
+>>
