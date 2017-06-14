@@ -1,62 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 12 Jun 2017 17:20:36 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Will Deacon <will.deacon@arm.com>
-Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
-Message-ID: <20170612162036.GB32043@red-moon>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
- <20170612154537.GC22710@arm.com>
+Return-Path: <SRS0=Bbe8=5T=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=Bbe8=5T=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v7 3/3] PCI: Add tango MSI controller support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Thomas Gleixner <tglx@linutronix.de>
+References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
+ <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
+ <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
+ <82d6bf37-96b9-cd9d-134b-f01638fa2b1b@sigmadesigns.com>
+ <d39b5b3a-48be-7aaa-b7dd-28d4ae1d2083@arm.com>
+ <49b4138d-0030-1e8c-6a14-0e9151b63d24@sigmadesigns.com>
+ <1588fa00-92c6-046d-ccfc-9a2deae61486@arm.com>
+ <08d84ce3-5345-dc69-bbc3-37372a3df22b@sigmadesigns.com>
+ <870f833b-6bff-b3b1-6591-7d46e374de66@sigmadesigns.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <a714b871-dd6c-4db0-3539-aabf7274938a@arm.com>
+Date: Wed, 14 Jun 2017 10:32:24 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170612154537.GC22710@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <870f833b-6bff-b3b1-6591-7d46e374de66@sigmadesigns.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 04:45:38PM +0100, Will Deacon wrote:
-> On Thu, Jun 08, 2017 at 03:13:00PM +0100, Lorenzo Pieralisi wrote:
-> > v1 -> v2
-> > 
-> > - Split pci_fixup_irqs() removal in several patches
-> > - Embedded pci_register_host_bridge() in pci_scan_root_bus_bridge()
-> > - Refactored iproc, faraday and xilinx-nwl host bridges in preparation
-> >   for irq fixup removal
-> > - Converted all DT PCI host bridge drivers to pci_scan_root_bus_bridge()
-> > - Dropped RFC tag
-> > - Added devm_pci_alloc_host_bridge() interface
-> > - Rebased against v4.12-rc3
+On 14/06/17 10:19, Marc Gonzalez wrote:
+> On 14/06/2017 11:00, Marc Gonzalez wrote:
 > 
-> For the arm64 and the host-common bits:
+>> The MSI controller in Tango supports 256 message-signaled interrupts,
+>> and a single doorbell address.
+>>
+>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+>> ---
+>> Changes from v6 to v7
+>> o Call spin_lock() not spin_lock_irqsave() in the ISR
+>> ---
+>>  drivers/pci/host/pcie-tango.c | 225 ++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 225 insertions(+)
 > 
-> Acked-by: Will Deacon <will.deacon@arm.com>
+> Someone on IRC suggested testing the driver with LOCKDEP.
+> 
+> If I understand the warning below correctly, I am not supposed
+> to call irq_domain_set_info() while holding used_msi_lock?
 
-Thank you !
-Lorenzo
+Indeed. This creates an AB/BA situation, which will eventually deadlock.
+Once again, lockdep saves the day.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> NB: in probe, my driver calls
+> 
+> 	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+> 
+> This should not break LOCKDEP analysis, right?
+
+It doesn't. The code is provably wrong, and lockdep proved that it is wrong.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
