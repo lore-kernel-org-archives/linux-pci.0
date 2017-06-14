@@ -1,146 +1,221 @@
-Return-Path: <SRS0=KJCd=5L=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=KJCd=5L=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Wed, 14 Jun 2017 13:09:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux USB <linux-usb@vger.kernel.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mario Limonciello <mario_limonciello@dell.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Hans De Goede <hdegoede@redhat.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2 1/8] ACPI / PM: Run wakeup notify handlers
+ synchronously
+Message-ID: <20170614180943.GA20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
+ <1615075.mBkoKApGGc@aspire.rjw.lan>
+ <5652844.yCt16F1gBo@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170606085936.GB20085@red-moon>
-References: <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
- <20170518154708.GA30182@red-moon> <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
- <20170518174612.GA31373@red-moon> <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
- <20170601161511.GB19003@red-moon> <CAKv+Gu9FyLuQk3hkauoRzGME1FxHPgusWQe0v8eSJaKfaX7LMA@mail.gmail.com>
- <20170606085936.GB20085@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Tue, 6 Jun 2017 09:14:26 +0000
-Message-ID: <CAKv+Gu-jVGvEJY7YBxSQHu+0jtnDHG7_6Gdpac8ca4PbPggw3Q@mail.gmail.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR configuration
- to be preserved
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>, Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5652844.yCt16F1gBo@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6 June 2017 at 08:59, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> Hi Ard,
->
-> On Thu, Jun 01, 2017 at 04:18:54PM +0000, Ard Biesheuvel wrote:
->> On 1 June 2017 at 16:15, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->> > On Thu, Jun 01, 2017 at 03:04:09PM +0000, Ard Biesheuvel wrote:
->> >> On 18 May 2017 at 18:46, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->> >> > On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
->> >> >> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->> >> >> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
->> >> >> >
->> >> >> > [...]
->> >> >> >
->> >> >> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
->> >> >> >> >> allocation under the control of the firmware, which completely removes
->> >> >> >> >> the burden of having to reason about a policy in the kernel. That
->> >> >> >> >> leaves the question which will be the default, but that is of minor
->> >> >> >> >> importance IMO.
->> >> >> >> >
->> >> >> >> > I agree; we should try to follow the spec unless we have a good reason
->> >> >> >> > not to, which argues for honoring the _DSM, so I think it's worth a
->> >> >> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
->> >> >> >> > kernel (because we don't know the effect of reassigning something the
->> >> >> >> > firmware told us not to touch).
->> >> >> >> >
->> >> >> >>
->> >> >> >> I'd like to hear Lorenzo's view on this first, but I can certainly
->> >> >> >> respin my _DSM patch to take pci=realloc into account, and move the
->> >> >> >> handling to generic code as well.
->> >> >> >
->> >> >> > I agree with both of you on _DSM implementation and interpretation.
->> >> >> >
->> >> >> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
->> >> >> > are going to trigger regressions, that's certain (ie we can then boot
->> >> >> > with pci=realloc - still, we are breaking systems), that's the reason
->> >> >> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
->> >> >> > ACPI testing before queuing it (either I can set-up a testing branch
->> >> >> > or we ask Bjorn to do it - as you guys prefer - as long as we have
->> >> >> > a branch for people to test patch(2) on ARM64 ACPI systems).
->> >> >> >
->> >> >> > You still need to assign resources that could not be claimed though
->> >> >> > so patch(2) still needs updating:
->> >> >> >
->> >> >> > PCI FW spec 3.1 - 4.6.5
->> >> >> >
->> >> >> > "...However, the operating system is free to configure the devices in this
->> >> >> > hierarchy that have not been configured by the firmware."
->> >> >> >
->> >> >> > Which in kernel-speak it means that you have to assign resources that
->> >> >> > could not be claimed.
->> >> >> >
->> >> >>
->> >> >> Right. AFAICT this is the part that is typically handled by
->> >> >> pcibios_resource_survey() et al, whose default __weak implementations
->> >> >> are empty functions. Shall I override those for arm64 to host this
->> >> >> logic?
->> >> >
->> >> > I think it makes sense yes unless Bjorn spots something wrong with that
->> >> > but you should also call it in ARM64 pci_acpi_scan_root() since it is
->> >> > not called by PCI core on non-hot-added bridges, I reckon you figured
->> >> > that out already though.
->> >> >
->> >>
->> >> Another data point for this discussion: currently, when booting arm64
->> >> via DT, we set PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS (unless
->> >> PCI_PROBE_ONLY is requested), which forces not only resource
->> >> allocations but also the bus numbering to be reconfigured from
->> >> scratch.
->> >>
->> >> On arm64/ACPI, we never set those flags, which will cause
->> >> pci_scan_bridge() to preserve the secondary and subordinate bridge
->> >> numbers if they are non-zero. This actually prevents log messages like
->> >>
->> >> pci_bus 0000:02: busn_res: can not insert [bus 02-ff] under [bus
->> >> 00-7f] (conflicts with (null) [bus 00-7f])
->> >>
->> >> which I see on AMD Seattle as well as QEMU when booting via DT (and I
->> >> suspect on any DT PCI root whose bus range != {0x0 0xff>). However, it
->> >> also means that we already have different behavior between ACPI and DT
->> >> boot on arm64, which makes it ambiguous what the behavior should be if
->> >> _DSM indicates that the configuration should not be preserved. IOW,
->> >> 'reconfigure everything' currently means different things between DT
->> >> and ACPI boot.
->> >
->> > IMO they should mean the same thing which implies setting those flags
->> > (ie PCI_REASSIGN_ALL_RSRC has no effect though on ARM64) on ARM64
->> > ACPI systems as a starting point and then changes in this thread can
->> > be applied on top.
->> >
->>
->> OK
->>
->> > Having said that, I am not sure the message you get above is really
->> > effective (not sure I undestand the net effect of that resource
->> > conflict) so I should look into this.
->> >
->>
->> It appears to be behavior that is known to be incorrect but is
->> preserved for historical reasons.
->>
->> Please refer to
->> 12d8706963f0 Revert "PCI: Make sure bus number resources stay within
->> their parents bounds"
->> 1820ffdccb9b PCI: Make sure bus number resources stay within their
->> parents bounds
->
-> Do you want me to create a branch out of these patches (inclusive of
-> another patch to fix this bus reallocation policy discrepancy) for
-> ARM64 folks to test ? Let me know, thanks !
->
+On Mon, Jun 12, 2017 at 10:48:41PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The work functions provided by the users of acpi_add_pm_notifier()
+> should be run synchronously before re-enabling the wakeup GPE in
+> case they are used to clear the status and/or disable the wakeup
+> signaling at the source.  Otherwise, which is the case currently in
+> the PCI bus type code, the same wakeup event may be signaled for
+> multiple times while the execution of the work function in response
+> to it has already been queued up.
+> 
+> Fortunately, acpi_add_pm_notifier() is only used by PCI and by
+> ACPI device PM code internally, so the change is relatively
+> straightforward to make.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Hi Lorenzo,
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Bjorn has already picked up #1, which is now in -next. I will get back
-to this topic today or tomorrow, so let me respin (including the bus
-range fix) first, ok?
-
-Thanks,
-Ard.
+> ---
+>  drivers/acpi/device_pm.c |   27 +++++++++++----------------
+>  drivers/pci/pci-acpi.c   |   17 +++++++----------
+>  include/acpi/acpi_bus.h  |    4 ++--
+>  3 files changed, 20 insertions(+), 28 deletions(-)
+> 
+> Index: linux-pm/drivers/acpi/device_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/device_pm.c
+> +++ linux-pm/drivers/acpi/device_pm.c
+> @@ -400,8 +400,8 @@ static void acpi_pm_notify_handler(acpi_
+>  
+>  	if (adev->wakeup.flags.notifier_present) {
+>  		__pm_wakeup_event(adev->wakeup.ws, 0);
+> -		if (adev->wakeup.context.work.func)
+> -			queue_pm_work(&adev->wakeup.context.work);
+> +		if (adev->wakeup.context.func)
+> +			adev->wakeup.context.func(&adev->wakeup.context);
+>  	}
+>  
+>  	mutex_unlock(&acpi_pm_notifier_lock);
+> @@ -413,7 +413,7 @@ static void acpi_pm_notify_handler(acpi_
+>   * acpi_add_pm_notifier - Register PM notify handler for given ACPI device.
+>   * @adev: ACPI device to add the notify handler for.
+>   * @dev: Device to generate a wakeup event for while handling the notification.
+> - * @work_func: Work function to execute when handling the notification.
+> + * @func: Work function to execute when handling the notification.
+>   *
+>   * NOTE: @adev need not be a run-wake or wakeup device to be a valid source of
+>   * PM wakeup events.  For example, wakeup events may be generated for bridges
+> @@ -421,11 +421,11 @@ static void acpi_pm_notify_handler(acpi_
+>   * bridge itself doesn't have a wakeup GPE associated with it.
+>   */
+>  acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
+> -				 void (*work_func)(struct work_struct *work))
+> +			void (*func)(struct acpi_device_wakeup_context *context))
+>  {
+>  	acpi_status status = AE_ALREADY_EXISTS;
+>  
+> -	if (!dev && !work_func)
+> +	if (!dev && !func)
+>  		return AE_BAD_PARAMETER;
+>  
+>  	mutex_lock(&acpi_pm_notifier_lock);
+> @@ -435,8 +435,7 @@ acpi_status acpi_add_pm_notifier(struct
+>  
+>  	adev->wakeup.ws = wakeup_source_register(dev_name(&adev->dev));
+>  	adev->wakeup.context.dev = dev;
+> -	if (work_func)
+> -		INIT_WORK(&adev->wakeup.context.work, work_func);
+> +	adev->wakeup.context.func = func;
+>  
+>  	status = acpi_install_notify_handler(adev->handle, ACPI_SYSTEM_NOTIFY,
+>  					     acpi_pm_notify_handler, NULL);
+> @@ -469,10 +468,7 @@ acpi_status acpi_remove_pm_notifier(stru
+>  	if (ACPI_FAILURE(status))
+>  		goto out;
+>  
+> -	if (adev->wakeup.context.work.func) {
+> -		cancel_work_sync(&adev->wakeup.context.work);
+> -		adev->wakeup.context.work.func = NULL;
+> -	}
+> +	adev->wakeup.context.func = NULL;
+>  	adev->wakeup.context.dev = NULL;
+>  	wakeup_source_unregister(adev->wakeup.ws);
+>  
+> @@ -658,16 +654,15 @@ EXPORT_SYMBOL(acpi_pm_device_sleep_state
+>  
+>  /**
+>   * acpi_pm_notify_work_func - ACPI devices wakeup notification work function.
+> - * @work: Work item to handle.
+> + * @context: Device wakeup context.
+>   */
+> -static void acpi_pm_notify_work_func(struct work_struct *work)
+> +static void acpi_pm_notify_work_func(struct acpi_device_wakeup_context *context)
+>  {
+> -	struct device *dev;
+> +	struct device *dev = context->dev;
+>  
+> -	dev = container_of(work, struct acpi_device_wakeup_context, work)->dev;
+>  	if (dev) {
+>  		pm_wakeup_event(dev, 0);
+> -		pm_runtime_resume(dev);
+> +		pm_request_resume(dev);
+>  	}
+>  }
+>  
+> Index: linux-pm/include/acpi/acpi_bus.h
+> ===================================================================
+> --- linux-pm.orig/include/acpi/acpi_bus.h
+> +++ linux-pm/include/acpi/acpi_bus.h
+> @@ -319,7 +319,7 @@ struct acpi_device_wakeup_flags {
+>  };
+>  
+>  struct acpi_device_wakeup_context {
+> -	struct work_struct work;
+> +	void (*func)(struct acpi_device_wakeup_context *context);
+>  	struct device *dev;
+>  };
+>  
+> @@ -599,7 +599,7 @@ static inline bool acpi_device_always_pr
+>  
+>  #ifdef CONFIG_PM
+>  acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
+> -				 void (*work_func)(struct work_struct *work));
+> +			void (*func)(struct acpi_device_wakeup_context *context));
+>  acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
+>  int acpi_pm_device_sleep_state(struct device *, int *, int);
+>  int acpi_pm_device_run_wake(struct device *, bool);
+> Index: linux-pm/drivers/pci/pci-acpi.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-acpi.c
+> +++ linux-pm/drivers/pci/pci-acpi.c
+> @@ -395,29 +395,26 @@ bool pciehp_is_native(struct pci_dev *pd
+>  
+>  /**
+>   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
+> - * @work: Work item to handle.
+> + * @context: Device wakeup context.
+>   */
+> -static void pci_acpi_wake_bus(struct work_struct *work)
+> +static void pci_acpi_wake_bus(struct acpi_device_wakeup_context *context)
+>  {
+>  	struct acpi_device *adev;
+>  	struct acpi_pci_root *root;
+>  
+> -	adev = container_of(work, struct acpi_device, wakeup.context.work);
+> +	adev = container_of(context, struct acpi_device, wakeup.context);
+>  	root = acpi_driver_data(adev);
+>  	pci_pme_wakeup_bus(root->bus);
+>  }
+>  
+>  /**
+>   * pci_acpi_wake_dev - PCI device wakeup notification work function.
+> - * @handle: ACPI handle of a device the notification is for.
+> - * @work: Work item to handle.
+> + * @context: Device wakeup context.
+>   */
+> -static void pci_acpi_wake_dev(struct work_struct *work)
+> +static void pci_acpi_wake_dev(struct acpi_device_wakeup_context *context)
+>  {
+> -	struct acpi_device_wakeup_context *context;
+>  	struct pci_dev *pci_dev;
+>  
+> -	context = container_of(work, struct acpi_device_wakeup_context, work);
+>  	pci_dev = to_pci_dev(context->dev);
+>  
+>  	if (pci_dev->pme_poll)
+> @@ -425,7 +422,7 @@ static void pci_acpi_wake_dev(struct wor
+>  
+>  	if (pci_dev->current_state == PCI_D3cold) {
+>  		pci_wakeup_event(pci_dev);
+> -		pm_runtime_resume(&pci_dev->dev);
+> +		pm_request_resume(&pci_dev->dev);
+>  		return;
+>  	}
+>  
+> @@ -434,7 +431,7 @@ static void pci_acpi_wake_dev(struct wor
+>  		pci_check_pme_status(pci_dev);
+>  
+>  	pci_wakeup_event(pci_dev);
+> -	pm_runtime_resume(&pci_dev->dev);
+> +	pm_request_resume(&pci_dev->dev);
+>  
+>  	pci_pme_wakeup_bus(pci_dev->subordinate);
+>  }
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
