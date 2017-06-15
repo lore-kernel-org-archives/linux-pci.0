@@ -1,297 +1,205 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-00010702.pphosted.com ([148.163.156.75]:42099 "EHLO
-        mx0b-00010702.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751209AbdFAJn1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 05:43:27 -0400
-From: Wong Vee Khee <vee.khee.wong@ni.com>
-To: <bhelgaas@google.com>
-CC: <linux-kernel@vger.kernel.org>, <jhearn@ni.com>,
-        <Ram.Amrani@cavium.com>, <hui.chun.ong@ni.com>,
-        <shhuiw@foxmail.com>, <rajatja@google.com>,
-        <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
-        <jonathan.yong@intel.com>, vwong <vee.khee.wong@ni.com>
-Subject: [RESEND PATCH v3] pci-sysfs: Make PCI bridge attribute visible in sysfs
-Date: Thu, 1 Jun 2017 17:43:06 +0800
-Message-ID: <1496310186-42222-1-git-send-email-vee.khee.wong@ni.com>
+Received: from mail.kernel.org ([198.145.29.99]:51124 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750923AbdFONl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 09:41:28 -0400
+Date: Thu, 15 Jun 2017 08:41:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Oza <oza.oza@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: Re: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
+Message-ID: <20170615134124.GK20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+ <1497153938-26074-3-git-send-email-oza.oza@broadcom.com>
+ <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: vwong <vee.khee.wong@ni.com>
+On Wed, Jun 14, 2017 at 10:24:11AM +0530, Oza Oza wrote:
+> On Tue, Jun 13, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Sun, Jun 11, 2017 at 09:35:38AM +0530, Oza Pawandeep wrote:
+> >> PERST# must be asserted around ~500ms before
+> >> the reboot is applied.
+> >>
+> >> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
+> >> LCPLL clock and PERST both goes off simultaneously.
+> >> This will cause certain Endpoints Intel NVMe not get detected, upon
+> >> next boot sequence.
+> >>
+> >> This happens because; Endpoint is expecting the clock for some amount of
+> >> time after PERST is asserted, which is not happening in our case
+> >> (Compare to Intel X86 boards, will have clocks running).
+> >> this cause NVMe to behave in undefined way.
+> >
+> > This doesn't smell right.  The description makes this sound like a
+> > band-aid that happens to "solve" a problem with one particular device.
+> > It doesn't sound like this is making iProc adhere to something in the
+> > PCIe spec.
+> >
+> > Is there some PCIe spec timing requirement that tells you about this
+> > 500ms number?  Please include the reference if so.
+> 
+> On chip PLL which sources the reference clock to the device gets reset
+> when soft reset is applied; the soft reset also asserts PERST#.
+> This simultaneous assertion of reset and clock being lost is a problem
+> with some NVME cards.
+> The delay is added to keep clock alive while PERST gets asserted.
+> The time delay number can be set to a number that will allow the NVME
+> device to go into reset state.
+> 500 ms delay is picked for that reason only, which is long enough to
+> get EP into reset correctly.
 
- In this commit, we are exposing PCIe bridges attributes
- such as secondary bus number, subordinate bus number,
- max link speed and link width, current link speed and
- link width to sysfs located in /sys/bus/pci/devices/...
+This doesn't really tell me anything new.
 
- Part of the reasons we are doing this rather than getting
- these information through parsing lspci is due to the fact
- that accessing PCIe link information via lspci require root
- privilege.
+We're talking about the protocol on the link between the RC and the
+endpoint.  That *should* be completely specified by the PCIe spec.  If
+there's some requirement that the clock keep running after PERST is
+asserted, that should be in the spec.
 
- This changes also allow clients to get PCIe bridges information
- easily because lspci list out all PCIe devices.
+If it's not in the spec, and an endpoint relies on it, the endpoint is
+non-compliant, and we'll likely see similar issues with that endpoint
+on other platforms.
 
-Signed-off-by: Wong Vee Khee <vee.khee.wong@ni.com>
-Signed-off-by: Hui Chun Ong <hui.chun.ong@ni.com>
----
-v3: Update commit message to be more explicit
-v2: Remove error checking on LNKCAP
-    Add define of PCI_LNKCAP_SLS_8_0GB
----
- drivers/pci/pci-sysfs.c       | 197 +++++++++++++++++++++++++++++++++++++++++-
- include/uapi/linux/pci_regs.h |   1 +
- 2 files changed, 194 insertions(+), 4 deletions(-)
+If we need a workaround for a specific endpoint, that might be OK; the
+world isn't perfect.  But if that's the case, we should include more
+specifics about the device, e.g., vendor/device IDs and "lspci -vv"
+output.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 31e9961..a2ada91 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -154,6 +154,127 @@ static ssize_t resource_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(resource);
- 
-+static ssize_t max_link_speed_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u32 linkcap;
-+	int err;
-+	const char *speed;
-+
-+	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-+
-+	if (!err) {
-+		switch (linkcap & PCI_EXP_LNKCAP_SLS) {
-+		case PCI_EXP_LNKCAP_SLS_8_0GB:
-+			speed = "8 GT/s";
-+			break;
-+		case PCI_EXP_LNKCAP_SLS_5_0GB:
-+			speed = "5 GT/s";
-+			break;
-+		case PCI_EXP_LNKCAP_SLS_2_5GB:
-+			speed = "2.5 GT/s";
-+			break;
-+		default:
-+			speed = "Unknown speed";
-+		}
-+
-+		return sprintf(buf, "%s\n", speed);
-+	}
-+
-+	return -EINVAL;
-+}
-+static DEVICE_ATTR_RO(max_link_speed);
-+
-+static ssize_t max_link_width_show(struct device *dev,
-+				   struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u32 linkcap;
-+	int err;
-+
-+	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-+
-+	return err ? -EINVAL : sprintf(
-+		buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
-+}
-+static DEVICE_ATTR_RO(max_link_width);
-+
-+static ssize_t current_link_speed_show(struct device *dev,
-+				       struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u16 linkstat;
-+	int err;
-+	const char *speed;
-+
-+	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
-+
-+	if (!err) {
-+		switch (linkstat & PCI_EXP_LNKSTA_CLS) {
-+		case PCI_EXP_LNKSTA_CLS_8_0GB:
-+			speed = "8 GT/s";
-+			break;
-+		case PCI_EXP_LNKSTA_CLS_5_0GB:
-+			speed = "5 GT/s";
-+			break;
-+		case PCI_EXP_LNKSTA_CLS_2_5GB:
-+			speed = "2.5 GT/s";
-+			break;
-+		default:
-+			speed = "Unknown speed";
-+		}
-+
-+		return sprintf(buf, "%s\n", speed);
-+	}
-+
-+	return -EINVAL;
-+}
-+static DEVICE_ATTR_RO(current_link_speed);
-+
-+static ssize_t current_link_width_show(struct device *dev,
-+				       struct device_attribute *attr, char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u16 linkstat;
-+	int err;
-+
-+	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
-+
-+	return err ? -EINVAL : sprintf(
-+		buf, "%u\n",
-+		(linkstat & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT);
-+}
-+static DEVICE_ATTR_RO(current_link_width);
-+
-+static ssize_t secondary_bus_number_show(struct device *dev,
-+					 struct device_attribute *attr,
-+					 char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u8 sec_bus;
-+	int err;
-+
-+	err = pci_read_config_byte(pci_dev, PCI_SECONDARY_BUS, &sec_bus);
-+
-+	return err ? -EINVAL : sprintf(buf, "%u\n", sec_bus);
-+}
-+static DEVICE_ATTR_RO(secondary_bus_number);
-+
-+static ssize_t subordinate_bus_number_show(struct device *dev,
-+					   struct device_attribute *attr,
-+					   char *buf)
-+{
-+	struct pci_dev *pci_dev = to_pci_dev(dev);
-+	u8 sub_bus;
-+	int err;
-+
-+	err = pci_read_config_byte(pci_dev, PCI_SUBORDINATE_BUS, &sub_bus);
-+
-+	return err ? -EINVAL : sprintf(buf, "%u\n", sub_bus);
-+}
-+static DEVICE_ATTR_RO(subordinate_bus_number);
-+
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
- {
-@@ -629,12 +750,17 @@ static struct attribute *pci_dev_attrs[] = {
- 	NULL,
- };
- 
--static const struct attribute_group pci_dev_group = {
--	.attrs = pci_dev_attrs,
-+static struct attribute *pci_bridge_attrs[] = {
-+	&dev_attr_subordinate_bus_number.attr,
-+	&dev_attr_secondary_bus_number.attr,
-+	NULL,
- };
- 
--const struct attribute_group *pci_dev_groups[] = {
--	&pci_dev_group,
-+static struct attribute *pcie_dev_attrs[] = {
-+	&dev_attr_current_link_speed.attr,
-+	&dev_attr_current_link_width.attr,
-+	&dev_attr_max_link_width.attr,
-+	&dev_attr_max_link_speed.attr,
- 	NULL,
- };
- 
-@@ -1557,6 +1683,57 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
- 	return a->mode;
- }
- 
-+static umode_t pci_bridge_attrs_are_visible(struct kobject *kobj,
-+					    struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (pci_is_bridge(pdev))
-+		return a->mode;
-+
-+	return 0;
-+}
-+
-+static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
-+					  struct attribute *a, int n)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	if (pci_is_pcie(pdev))
-+		return a->mode;
-+
-+	return 0;
-+}
-+
-+static const struct attribute_group pci_dev_group = {
-+	.attrs = pci_dev_attrs,
-+};
-+
-+const struct attribute_group *pci_dev_groups[] = {
-+	&pci_dev_group,
-+	NULL,
-+};
-+
-+static const struct attribute_group pci_bridge_group = {
-+	.attrs = pci_bridge_attrs,
-+};
-+
-+const struct attribute_group *pci_bridge_groups[] = {
-+	&pci_bridge_group,
-+	NULL,
-+};
-+
-+static const struct attribute_group pcie_dev_group = {
-+	.attrs = pcie_dev_attrs,
-+};
-+
-+const struct attribute_group *pcie_dev_groups[] = {
-+	&pcie_dev_group,
-+	NULL,
-+};
-+
- static struct attribute_group pci_dev_hp_attr_group = {
- 	.attrs = pci_dev_hp_attrs,
- 	.is_visible = pci_dev_hp_attrs_are_visible,
-@@ -1592,12 +1769,24 @@ static struct attribute_group pci_dev_attr_group = {
- 	.is_visible = pci_dev_attrs_are_visible,
- };
- 
-+static struct attribute_group pci_bridge_attr_group = {
-+	.attrs = pci_bridge_attrs,
-+	.is_visible = pci_bridge_attrs_are_visible,
-+};
-+
-+static struct attribute_group pcie_dev_attr_group = {
-+	.attrs = pcie_dev_attrs,
-+	.is_visible = pcie_dev_attrs_are_visible,
-+};
-+
- static const struct attribute_group *pci_dev_attr_groups[] = {
- 	&pci_dev_attr_group,
- 	&pci_dev_hp_attr_group,
- #ifdef CONFIG_PCI_IOV
- 	&sriov_dev_attr_group,
- #endif
-+	&pci_bridge_attr_group,
-+	&pcie_dev_attr_group,
- 	NULL,
- };
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index d56bb00..c22d3eb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -517,6 +517,7 @@
- #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
- #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
- #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
-+#define  PCI_EXP_LNKCAP_SLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
- #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
- #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
- #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
--- 
-2.7.4
+> >> Essentially clock will remain alive for 500ms with PERST# = 0
+> >> before reboot.
+> >
+> >> This patch adds platform shutdown where it should be
+> >> called in device_shutdown while reboot command is issued.
+> >>
+> >> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+> >> followed by RC shutdown is called, which issues safe PERST
+> >> assertion.
+> >>
+> >> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> >> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> >> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> >>
+> >> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+> >> index 90d2bdd..9512960 100644
+> >> --- a/drivers/pci/host/pcie-iproc-platform.c
+> >> +++ b/drivers/pci/host/pcie-iproc-platform.c
+> >> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+> >>       return iproc_pcie_remove(pcie);
+> >>  }
+> >>
+> >> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+> >> +{
+> >> +     struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+> >> +
+> >> +     iproc_pcie_shutdown(pcie);
+> >> +}
+> >> +
+> >>  static struct platform_driver iproc_pcie_pltfm_driver = {
+> >>       .driver = {
+> >>               .name = "iproc-pcie",
+> >> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+> >>       },
+> >>       .probe = iproc_pcie_pltfm_probe,
+> >>       .remove = iproc_pcie_pltfm_remove,
+> >> +     .shutdown = iproc_pcie_pltfm_shutdown,
+> >>  };
+> >>  module_platform_driver(iproc_pcie_pltfm_driver);
+> >>
+> >> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> >> index 05a3647..bb61376 100644
+> >> --- a/drivers/pci/host/pcie-iproc.c
+> >> +++ b/drivers/pci/host/pcie-iproc.c
+> >> @@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+> >>       .write = iproc_pcie_config_write32,
+> >>  };
+> >>
+> >> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> >> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+> >>  {
+> >>       u32 val;
+> >>
+> >>       /*
+> >> -      * PAXC and the internal emulated endpoint device downstream should not
+> >> -      * be reset.  If firmware has been loaded on the endpoint device at an
+> >> -      * earlier boot stage, reset here causes issues.
+> >> +      * The internal emulated endpoints (such as PAXC) device downstream
+> >> +      * should not be reset. If firmware has been loaded on the endpoint
+> >> +      * device at an earlier boot stage, reset here causes issues.
+> >>        */
+> >>       if (pcie->ep_is_internal)
+> >>               return;
+> >>
+> >> -     /*
+> >> -      * Select perst_b signal as reset source. Put the device into reset,
+> >> -      * and then bring it out of reset
+> >> -      */
+> >> -     val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> >> -     val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> >> -             ~RC_PCIE_RST_OUTPUT;
+> >> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> >> -     udelay(250);
+> >> -
+> >> -     val |= RC_PCIE_RST_OUTPUT;
+> >> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> >> -     msleep(100);
+> >> +     if (assert) {
+> >> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> >> +             val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> >> +                     ~RC_PCIE_RST_OUTPUT;
+> >> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> >> +             udelay(250);
+> >> +     } else {
+> >> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> >> +             val |= RC_PCIE_RST_OUTPUT;
+> >> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> >> +             msleep(100);
+> >> +     }
+> >> +}
+> >> +
+> >> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+> >> +{
+> >> +     iproc_pcie_perst_ctrl(pcie, true);
+> >> +     msleep(500);
+> >> +
+> >> +     return 0;
+> >>  }
+> >> +EXPORT_SYMBOL(iproc_pcie_shutdown);
+> >>
+> >>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+> >>  {
+> >> @@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+> >>               goto err_exit_phy;
+> >>       }
+> >>
+> >> -     iproc_pcie_reset(pcie);
+> >> +     iproc_pcie_perst_ctrl(pcie, true);
+> >> +     iproc_pcie_perst_ctrl(pcie, false);
+> >>
+> >>       if (pcie->need_ob_cfg) {
+> >>               ret = iproc_pcie_map_ranges(pcie, res);
+> >> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> >> index 0bbe2ea..a6b55ce 100644
+> >> --- a/drivers/pci/host/pcie-iproc.h
+> >> +++ b/drivers/pci/host/pcie-iproc.h
+> >> @@ -110,6 +110,7 @@ struct iproc_pcie {
+> >>
+> >>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+> >>  int iproc_pcie_remove(struct iproc_pcie *pcie);
+> >> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+> >>
+> >>  #ifdef CONFIG_PCIE_IPROC_MSI
+> >>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+> >> --
+> >> 1.9.1
+> >>
