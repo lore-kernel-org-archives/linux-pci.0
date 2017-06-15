@@ -1,83 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:36708 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932112AbdFNI0F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:26:05 -0400
-Received: by mail-pg0-f44.google.com with SMTP id a70so72565075pge.3
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:26:05 -0700 (PDT)
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
-        peter.griffin@linaro.org, puck.chen@hisilicon.com,
-        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
-        arnd@arndb.de
-Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
-        Guodong Xu <guodong.xu@linaro.org>
-Subject: [PATCH v3 21/21] arm64: dts: hi3660-hikey960: add nodes for WiFi
-Date: Wed, 14 Jun 2017 16:23:38 +0800
-Message-Id: <20170614082338.15673-22-guodong.xu@linaro.org>
-In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
+Received: from mail.kernel.org ([198.145.29.99]:37290 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752062AbdFODL4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Jun 2017 23:11:56 -0400
+Date: Wed, 14 Jun 2017 22:11:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: rakesh@tuxera.com, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org
+Subject: Re: avoid null pointer rereference during FLR V2
+Message-ID: <20170615031153.GI20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170601111039.8913-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170601111039.8913-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add nodes for WiFi. HiKey960 is using TI WL1837MOD module.
+On Thu, Jun 01, 2017 at 01:10:36PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> Rakesh reported a bug where a FLR can trivially crash his system.
+> The reason for that is that NVMe unbinds the driver from the PCI device
+> on an unrecoverable error, and that races with the reset_notify method.
+> 
+> This is fairly easily fixable by taking the device lock for a slightly
+> longer period.  Note that the other PCI error handling methods actually
+> have the same issue, but with them not taking the lock yet and me having
+> no good way to reproducibly call them I'm a little reluctant to touch
+> them, but it would be great if we could fix those issues as well.
+> 
+> Patches 2 and 3 are cleanups in the same area and not 4.12 material,
+> but given that they depend on the first one I thought I'd send them
+> along.
+> 
+> Changes since V1:
+>  - lock over all calls to ->reset_notify
 
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
----
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 33 +++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
-
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-index cec0b60..6609b0f 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-@@ -145,6 +145,20 @@
- 			};
- 		};
- 	};
-+
-+	wlan_en: wlan-en-1-8v {
-+		compatible = "regulator-fixed";
-+		regulator-name = "wlan-en-regulator";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+
-+		/* GPIO_051_WIFI_EN */
-+		gpio = <&gpio6 3 0>;
-+
-+		/* WLAN card specific delay */
-+		startup-delay-us = <70000>;
-+		enable-active-high;
-+	};
- };
- 
- &i2c0 {
-@@ -208,3 +222,22 @@
- 	vqmmc-supply = <&ldo9>;
- 	status = "okay";
- };
-+
-+&dwmmc2 { /* WIFI */
-+	broken-cd;
-+	/* WL_EN */
-+	vmmc-supply = <&wlan_en>;
-+	ti,non-removable;
-+	non-removable;
-+	#address-cells = <0x1>;
-+	#size-cells = <0x0>;
-+	status = "ok";
-+
-+	wlcore: wlcore@2 {
-+		compatible = "ti,wl1837";
-+		reg = <2>;      /* sdio func num */
-+		/* WL_IRQ, GPIO_179_WL_WAKEUP_AP */
-+		interrupt-parent = <&gpio22>;
-+		interrupts = <3 IRQ_TYPE_EDGE_RISING>;
-+	};
-+};
--- 
-2.10.2
+Applied all three (with some updated changelogs and comments) to
+pci/virtualization for v4.13, thanks!
