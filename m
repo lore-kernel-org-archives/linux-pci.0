@@ -1,48 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44575 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751016AbdFOOE2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 10:04:28 -0400
-Date: Thu, 15 Jun 2017 16:04:21 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Daniel Drake <drake@endlessm.com>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        Samuel Sieb <samuel@sieb.net>,
-        David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Message-ID: <20170615140421.GB25710@suse.de>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:46715 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750861AbdFOH3E (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jun 2017 03:29:04 -0400
+Subject: Re: [PATCH v2] PCI: dwc: dra7xx: Fix compilation warning.
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>, <bhelgaas@google.com>
+References: <673ccda2e1a722fa1b511a9c3bf1af6fbfc262a3.1497507582.git.arvind.yadav.cs@gmail.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <2de7127a-78c3-36dc-fa74-5d29e15fc64c@ti.com>
+Date: Thu, 15 Jun 2017 12:58:24 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+In-Reply-To: <673ccda2e1a722fa1b511a9c3bf1af6fbfc262a3.1497507582.git.arvind.yadav.cs@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi,
 
-On Fri, Apr 07, 2017 at 04:32:18PM +0200, Joerg Roedel wrote:
-> From: Joerg Roedel <jroedel@suse.de>
+On Thursday 15 June 2017 11:52 AM, Arvind Yadav wrote:
+> drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_msi_interrupts’:
+> drivers/pci/dwc/pci-dra7xx.c:177:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+>        ~LEG_EP_INTERRUPTS & ~MSI);
+>        ^
+> drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_wrapper_interrupts’:
+> drivers/pci/dwc/pci-dra7xx.c:187:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+>        ~INTERRUPTS);
+
+Er.. actually both PCIECTRL_TI_CONF_IRQSTATUS_MSI and
+PCIECTRL_TI_CONF_IRQSTATUS_MAIN are "write 1 to clear" registers. So writing
+'0' here means no action.
+
+So the right fix should be
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 8decf46cf525..aab0187cdf87 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -174,7 +174,7 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+        dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+-                          ~LEG_EP_INTERRUPTS & ~MSI);
++                          MSI | LEG_EP_INTERRUPTS);
+
+        dra7xx_pcie_writel(dra7xx,
+                           PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+@@ -184,7 +184,7 @@ static void dra7xx_pcie_enable_msi_interrupts(struct
+dra7xx_pcie *dra7xx)
+ static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+        dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-                          ~INTERRUPTS);
++                          INTERRUPTS);
+        dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
+                           INTERRUPTS);
+ }
 > 
-> ATS is broken on this hardware and causes IOMMU stalls and
-> system failure. Disable ATS on these devices to make them
-> usable again with IOMMU enabled.
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 > 
-> Note that the commit in the Fixes-tag is not buggy, it
-> just uncovers the problem in the hardware by increasing
-> the ATS-flush rate.
-> 
-> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
-> Signed-off-by: Joerg Roedel <jroedel@suse.de>
-> ---
->  drivers/pci/quirks.c | 19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
+> Changes in v2:
+>              Add casts in the definitions.
 
-Any more objections on this patch? Please let me know if you want to
-have something changed.
+please move the change log below "---"
 
-
-Regards,
-
-	Joerg
+Thanks
+Kishon
