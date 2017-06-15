@@ -1,79 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 13 Jun 2017 21:13:32 +0200 (CEST)
-From: Sven-Haegar Koch <haegar@sdinet.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
- to handle kernel NULL pointer dereference at 00000000000000a8
-In-Reply-To: <20170613163508.GA31961@kroah.com>
-Message-ID: <alpine.DEB.2.20.1706132106410.11042@aurora.sdinet.de>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
- <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
- <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
- <20170613043416.GB14217@kroah.com> <20170613043518.GA14621@kroah.com>
- <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
- <20170613163508.GA31961@kroah.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 15 Jun 2017 15:49:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: kishon@ti.com, bhelgaas@google.com, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] PCI: dwc: dra7xx: Fix compilation warning.
+Message-ID: <20170615204951.GD12735@bhelgaas-glaptop.roam.corp.google.com>
+References: <a2736e3907827e7b39dd85381101c1080012584c.1497514167.git.arvind.yadav.cs@gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
- linux-doc@vger.kernel.org, David Airlie <airlied@linux.ie>, LKP <lkp@01.org>,
- Linus Walleij <linus.walleij@linaro.org>,
- David Herrmann <dh.herrmann@gmail.com>, linux-kernel@vger.kernel.org,
- Daniel Vetter <daniel.vetter@ffwll.ch>,
- Linus Torvalds <torvalds@linux-foundation.org>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, wfg@linux.intel.com,
- kernel test robot <fengguang.wu@intel.com>,
- Logan Gunthorpe <logang@deltatee.com>, linux-arm-kernel@lists.infradead.org,
- Alan Cox <alan@linux.intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a2736e3907827e7b39dd85381101c1080012584c.1497514167.git.arvind.yadav.cs@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 13 Jun 2017, Greg Kroah-Hartman wrote:
+On Thu, Jun 15, 2017 at 02:19:20PM +0530, Arvind Yadav wrote:
+> drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_msi_interrupts’:
+> drivers/pci/dwc/pci-dra7xx.c:177:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+>        ~LEG_EP_INTERRUPTS & ~MSI);
+>        ^
+> drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_wrapper_interrupts’:
+> drivers/pci/dwc/pci-dra7xx.c:187:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+>        ~INTERRUPTS);
 
-> On Tue, Jun 13, 2017 at 10:25:40AM -0600, Logan Gunthorpe wrote:
-> > 
-> > On 12/06/17 10:35 PM, Greg Kroah-Hartman wrote:
-> > > Or better yet, just turn all char major allocations into dynamic, which
-> > > would be really good for test systems.  I thought someone proposed
-> > > patches for that a long time ago, but I can't find them anymore.  That
-> > > would be the simplest solution here.
-> > 
-> > Would people not complain about that? I would not be surprised if some
-> > crazy application is using hard coded major numbers in userspace. So
-> > such a change could potentially break userspace...
+I don't object to the patch itself (hopefully Kishon will verify that
+it's correct), but the subject and changelog are now completely wrong.
+
+If the patch is correct, it is now a bug fix and is not at all about
+fixing a compilation warning.  We used to write
+
+  ~LEG_EP_INTERRUPTS & ~MSI
+  ~(INTA | INTB | INTC | INTD) & ~MSI
+  ~(BIT(0) | BIT(1) | BIT(2) | BIT(3)) & ~(BIT(4))
+  ~(0x1 | 0x2 | 0x4 | 0x8) & ~(0x10)
+  ~(0xf) & ~(0x10)
+  0xfffffff0 & 0xffffffef
+  0xffffffe0
+
+and now we write
+
+  LEG_EP_INTERRUPTS | MSI
+  ...
+  0x1f
+
+It is about using these two registers correctly, and the fact that the
+compilation warning goes away is a happy coincidence but not even
+worth mentioning in the changelog.
+
+So, if Kishon acks the content of the patch, please post this again
+with an updated subject and changelog.
+
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> ---
+> Changes in v2:
+>              Add casts in the definitions.
+> Changes in v3:
+>              Change logic insted of casting.
 > 
-> For char devices, I doubt it, but we can't take the chance, which is why
-> you make it an option.  Then, it's enabled for 'allmodconfig' builds,
-> which helps testers out.
-
-At least for /dev/null, /dev/zero, and perhaps /dev/tty it would 
-definitely break things if the major+minor number is not static. I have 
-multiple chroot environments having only some minimal needed static 
-/dev subdir, with naturally no daemons or filesystem creating those 
-on-demand. For the main /dev I use whatever the system sets up, so 
-devtmpfs with udev.
-
-c'ya
-sven-haegar
-
--- 
-Three may keep a secret, if two of them are dead.
-- Ben F.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>  drivers/pci/dwc/pci-dra7xx.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 8decf46..668dc15 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -174,7 +174,7 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
+>  static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+>  {
+>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+> -			   ~LEG_EP_INTERRUPTS & ~MSI);
+> +			   LEG_EP_INTERRUPTS | MSI);
+>  
+>  	dra7xx_pcie_writel(dra7xx,
+>  			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+> @@ -184,7 +184,7 @@ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+>  static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
+>  {
+>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+> -			   ~INTERRUPTS);
+> +			   INTERRUPTS);
+>  	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
+>  			   INTERRUPTS);
+>  }
+> -- 
+> 1.9.1
+> 
