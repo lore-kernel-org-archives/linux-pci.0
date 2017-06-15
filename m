@@ -1,142 +1,83 @@
-Return-Path: <SRS0=F1XN=5G=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=F1XN=5G=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 1 Jun 2017 18:38:57 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
- configuration to be preserved
-Message-ID: <20170601173857.GA19494@red-moon>
-References: <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
- <20170518154708.GA30182@red-moon>
- <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
- <20170518174612.GA31373@red-moon>
- <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
- <20170601161511.GB19003@red-moon>
- <CAKv+Gu9FyLuQk3hkauoRzGME1FxHPgusWQe0v8eSJaKfaX7LMA@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 15 Jun 2017 16:11:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Subject: Re: [PATCH] PCI: mediatek: fix error handling in
+ mtk_pcie_parse_and_add_res()
+Message-ID: <20170615211130.GF12735@bhelgaas-glaptop.roam.corp.google.com>
+References: <1496644078-27122-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu9FyLuQk3hkauoRzGME1FxHPgusWQe0v8eSJaKfaX7LMA@mail.gmail.com>
+In-Reply-To: <1496644078-27122-1-git-send-email-ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 04:18:54PM +0000, Ard Biesheuvel wrote:
-> On 1 June 2017 at 16:15, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> > On Thu, Jun 01, 2017 at 03:04:09PM +0000, Ard Biesheuvel wrote:
-> >> On 18 May 2017 at 18:46, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> >> > On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
-> >> >> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> >> >> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
-> >> >> >
-> >> >> > [...]
-> >> >> >
-> >> >> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
-> >> >> >> >> allocation under the control of the firmware, which completely removes
-> >> >> >> >> the burden of having to reason about a policy in the kernel. That
-> >> >> >> >> leaves the question which will be the default, but that is of minor
-> >> >> >> >> importance IMO.
-> >> >> >> >
-> >> >> >> > I agree; we should try to follow the spec unless we have a good reason
-> >> >> >> > not to, which argues for honoring the _DSM, so I think it's worth a
-> >> >> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
-> >> >> >> > kernel (because we don't know the effect of reassigning something the
-> >> >> >> > firmware told us not to touch).
-> >> >> >> >
-> >> >> >>
-> >> >> >> I'd like to hear Lorenzo's view on this first, but I can certainly
-> >> >> >> respin my _DSM patch to take pci=realloc into account, and move the
-> >> >> >> handling to generic code as well.
-> >> >> >
-> >> >> > I agree with both of you on _DSM implementation and interpretation.
-> >> >> >
-> >> >> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
-> >> >> > are going to trigger regressions, that's certain (ie we can then boot
-> >> >> > with pci=realloc - still, we are breaking systems), that's the reason
-> >> >> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
-> >> >> > ACPI testing before queuing it (either I can set-up a testing branch
-> >> >> > or we ask Bjorn to do it - as you guys prefer - as long as we have
-> >> >> > a branch for people to test patch(2) on ARM64 ACPI systems).
-> >> >> >
-> >> >> > You still need to assign resources that could not be claimed though
-> >> >> > so patch(2) still needs updating:
-> >> >> >
-> >> >> > PCI FW spec 3.1 - 4.6.5
-> >> >> >
-> >> >> > "...However, the operating system is free to configure the devices in this
-> >> >> > hierarchy that have not been configured by the firmware."
-> >> >> >
-> >> >> > Which in kernel-speak it means that you have to assign resources that
-> >> >> > could not be claimed.
-> >> >> >
-> >> >>
-> >> >> Right. AFAICT this is the part that is typically handled by
-> >> >> pcibios_resource_survey() et al, whose default __weak implementations
-> >> >> are empty functions. Shall I override those for arm64 to host this
-> >> >> logic?
-> >> >
-> >> > I think it makes sense yes unless Bjorn spots something wrong with that
-> >> > but you should also call it in ARM64 pci_acpi_scan_root() since it is
-> >> > not called by PCI core on non-hot-added bridges, I reckon you figured
-> >> > that out already though.
-> >> >
-> >>
-> >> Another data point for this discussion: currently, when booting arm64
-> >> via DT, we set PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS (unless
-> >> PCI_PROBE_ONLY is requested), which forces not only resource
-> >> allocations but also the bus numbering to be reconfigured from
-> >> scratch.
-> >>
-> >> On arm64/ACPI, we never set those flags, which will cause
-> >> pci_scan_bridge() to preserve the secondary and subordinate bridge
-> >> numbers if they are non-zero. This actually prevents log messages like
-> >>
-> >> pci_bus 0000:02: busn_res: can not insert [bus 02-ff] under [bus
-> >> 00-7f] (conflicts with (null) [bus 00-7f])
-> >>
-> >> which I see on AMD Seattle as well as QEMU when booting via DT (and I
-> >> suspect on any DT PCI root whose bus range != {0x0 0xff>). However, it
-> >> also means that we already have different behavior between ACPI and DT
-> >> boot on arm64, which makes it ambiguous what the behavior should be if
-> >> _DSM indicates that the configuration should not be preserved. IOW,
-> >> 'reconfigure everything' currently means different things between DT
-> >> and ACPI boot.
-> >
-> > IMO they should mean the same thing which implies setting those flags
-> > (ie PCI_REASSIGN_ALL_RSRC has no effect though on ARM64) on ARM64
-> > ACPI systems as a starting point and then changes in this thread can
-> > be applied on top.
-> >
+On Mon, Jun 05, 2017 at 02:27:58PM +0800, Ryder Lee wrote:
+> The 'linkup' variable would always increment by one whether the link
+> status is true or not. Therefore, this patch fixes the return value in
+> mtk_pcie_parse_and_add_res() and removes unnecessary 'linkup' variable.
 > 
-> OK
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+
+I folded this into pci/host-mediatek for v4.13, thanks!
+
+I just noticed that we didn't get a MAINTAINERS update for this driver.
+Can you send me that, too, please?
+
+> ---
+>  drivers/pci/host/pcie-mediatek.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
-> > Having said that, I am not sure the message you get above is really
-> > effective (not sure I undestand the net effect of that resource
-> > conflict) so I should look into this.
-> >
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index 8ec8fa8..3baafa8 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -373,7 +373,7 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
+>  	struct of_pci_range_parser parser;
+>  	struct of_pci_range range;
+>  	struct resource res;
+> -	int err, linkup = 0;
+> +	int err;
+>  
+>  	/* parse shared resources */
+>  	err = mtk_pcie_handle_shared_resource(pcie);
+> @@ -444,11 +444,11 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
+>  
+>  		/* enable each port, and then check link status */
+>  		err = mtk_pcie_enable_ports(port);
+> -		if (!err)
+> -			linkup++;
+> +		if (err)
+> +			return err;
+>  	}
+>  
+> -	return !linkup;
+> +	return 0;
+>  }
+>  
+>  static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
+> -- 
+> 1.9.1
 > 
-> It appears to be behavior that is known to be incorrect but is
-> preserved for historical reasons.
 > 
-> Please refer to
-> 12d8706963f0 Revert "PCI: Make sure bus number resources stay within
-> their parents bounds"
-> 1820ffdccb9b PCI: Make sure bus number resources stay within their
-> parents bounds
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-I am not sure the call to:
-
-pci_bus_insert_busn_res(child, max+1, 0xff);
-
-is there to do anything useful given that the bus range resource is
-claimed later but I need to debug it to prove my point.
-
-Lorenzo
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
