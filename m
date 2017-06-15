@@ -1,193 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:44814 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:35600 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753592AbdF0VAf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jun 2017 17:00:35 -0400
-Date: Tue, 27 Jun 2017 16:00:33 -0500
+        id S1751623AbdFOVji (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 17:39:38 -0400
+Date: Thu, 15 Jun 2017 16:39:35 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
-        Peter Anvin <hpa@zytor.com>, Borislav Petkov <bp@alien8.de>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Stephane Eranian <eranian@google.com>,
-        Andi Kleen <ak@linux.intel.com>, linux-pci@vger.kernel.org
-Subject: Re: [patch 3/7] x86/pci/ce4100: Properly lock accessor functions
-Message-ID: <20170627210033.GD764@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170316215002.726697858@linutronix.de>
- <20170316215057.126873574@linutronix.de>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: Narendra.K@dell.com, x86@kernel.org, linux-pci@vger.kernel.org,
+        Jordan.Hargrave@dell.com, Shyam.Iyer@dell.com, bhelgaas@google.com
+Subject: Re: dmi type 0xB1 record - unknown flag
+Message-ID: <20170615213935.GH12735@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170601143826.5f980444@endymion>
+ <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+ <20170602161311.27eab72d@endymion>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170316215057.126873574@linutronix.de>
+In-Reply-To: <20170602161311.27eab72d@endymion>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci]
-
-On Thu, Mar 16, 2017 at 10:50:05PM +0100, Thomas Gleixner wrote:
-> x86 wants to get rid of the global pci_lock protecting the config space
-> accessors so ECAM mode can operate completely lockless, but the CE4100 pci
-> code relies on that to protect the simulation registers.
-
-s/pci/PCI/
-
-> Restructure the code so it uses the x86 specific pci_config_lock to
-> serialize the inner workings of the CE4100 PCI magic. That allows to remove
-> the global locking via pci_lock later.
+On Fri, Jun 02, 2017 at 04:13:11PM +0200, Jean Delvare wrote:
+> ...
+> I think the whole thing can be simplified like this:
 > 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> From: Jean Delvare <jdelvare@suse.de>
+> Subject: x86/PCI: Simplify Dell DMI B1 quirk
+> 
+> No need for such convoluted code, when all we need is to call one
+> function in one specific case.
+> 
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+
+Applied to pci/misc for v4.13, thanks!
+
+As far as I can tell, the new code is functionally equivalent to the
+old code, so I don't think there's any risk here.
+
 > ---
->  arch/x86/pci/ce4100.c |   87 +++++++++++++++++++++++++++-----------------------
->  1 file changed, 48 insertions(+), 39 deletions(-)
+>  arch/x86/pci/common.c |   27 +++++----------------------
+>  1 file changed, 5 insertions(+), 22 deletions(-)
 > 
-> --- a/arch/x86/pci/ce4100.c
-> +++ b/arch/x86/pci/ce4100.c
-> @@ -65,6 +65,9 @@ struct sim_reg_op {
->  { PCI_DEVFN(device, func), offset, init_op, read_op, write_op,\
->  	{0, SIZE_TO_MASK(size)} },
+> --- linux-4.11.orig/arch/x86/pci/common.c	2017-05-01 04:47:48.000000000 +0200
+> +++ linux-4.11/arch/x86/pci/common.c	2017-06-02 16:04:05.737889598 +0200
+> @@ -24,7 +24,6 @@ unsigned int pci_probe = PCI_PROBE_BIOS
 >  
-> +/*
-> + * All read/write functions are called with pci_config_lock held.
-> + */
->  static void reg_init(struct sim_dev_reg *reg)
+>  unsigned int pci_early_dump_regs;
+>  static int pci_bf_sort;
+> -static int smbios_type_b1_flag;
+>  int pci_routeirq;
+>  int noioapicquirk;
+>  #ifdef CONFIG_X86_REROUTE_FOR_BROKEN_BOOT_IRQS
+> @@ -197,34 +196,18 @@ static int __init set_bf_sort(const stru
+>  static void __init read_dmi_type_b1(const struct dmi_header *dm,
+>  				    void *private_data)
 >  {
->  	pci_direct_conf1.read(0, 1, reg->dev_func, reg->reg, 4,
-> @@ -73,21 +76,13 @@ static void reg_init(struct sim_dev_reg
+> -	u8 *d = (u8 *)dm + 4;
+> +	u8 *data = (u8 *)dm + 4;
 >  
->  static void reg_read(struct sim_dev_reg *reg, u32 *value)
+>  	if (dm->type != 0xB1)
+>  		return;
+> -	switch (((*(u32 *)d) >> 9) & 0x03) {
+> -	case 0x00:
+> -		printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
+> -		break;
+> -	case 0x01: /* set pci=bfsort */
+> -		smbios_type_b1_flag = 1;
+> -		break;
+> -	case 0x02: /* do not set pci=bfsort */
+> -		smbios_type_b1_flag = 2;
+> -		break;
+> -	default:
+> -		break;
+> -	}
+> +	if ((((*(u32 *)data) >> 9) & 0x03) == 0x01)
+> +		set_bf_sort((const struct dmi_system_id *)private_data);
+>  }
+>  
+>  static int __init find_sort_method(const struct dmi_system_id *d)
 >  {
-> -	unsigned long flags;
+> -	dmi_walk(read_dmi_type_b1, NULL);
 > -
-> -	raw_spin_lock_irqsave(&pci_config_lock, flags);
->  	*value = reg->sim_reg.value;
-> -	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
+> -	if (smbios_type_b1_flag == 1) {
+> -		set_bf_sort(d);
+> -		return 0;
+> -	}
+> -	return -1;
+> +	dmi_walk(read_dmi_type_b1, (void *)d);
+> +	return 0;
 >  }
 >  
->  static void reg_write(struct sim_dev_reg *reg, u32 value)
->  {
-> -	unsigned long flags;
-> -
-> -	raw_spin_lock_irqsave(&pci_config_lock, flags);
->  	reg->sim_reg.value = (value & reg->sim_reg.mask) |
->  		(reg->sim_reg.value & ~reg->sim_reg.mask);
-> -	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
->  }
->  
->  static void sata_reg_init(struct sim_dev_reg *reg)
-> @@ -117,12 +112,8 @@ static void sata_revid_read(struct sim_d
->  
->  static void reg_noirq_read(struct sim_dev_reg *reg, u32 *value)
->  {
-> -	unsigned long flags;
-> -
-> -	raw_spin_lock_irqsave(&pci_config_lock, flags);
->  	/* force interrupt pin value to 0 */
->  	*value = reg->sim_reg.value & 0xfff00ff;
-> -	raw_spin_unlock_irqrestore(&pci_config_lock, flags);
->  }
->  
->  static struct sim_dev_reg bus1_fixups[] = {
-> @@ -265,24 +256,33 @@ int bridge_read(unsigned int devfn, int
->  	return retval;
->  }
->  
-> -static int ce4100_conf_read(unsigned int seg, unsigned int bus,
-> -			    unsigned int devfn, int reg, int len, u32 *value)
-> +static int ce4100_bus1_read(unsigned int devfn, int reg, int len, u32 *value)
->  {
-> +	unsigned long flags;
->  	int i;
->  
-> -	WARN_ON(seg);
-> -	if (bus == 1) {
-> -		for (i = 0; i < ARRAY_SIZE(bus1_fixups); i++) {
-> -			if (bus1_fixups[i].dev_func == devfn &&
-> -			    bus1_fixups[i].reg == (reg & ~3) &&
-> -			    bus1_fixups[i].read) {
-> -				bus1_fixups[i].read(&(bus1_fixups[i]),
-> -						    value);
-> -				extract_bytes(value, reg, len);
-> -				return 0;
-> -			}
-> +	for (i = 0; i < ARRAY_SIZE(bus1_fixups); i++) {
-> +		if (bus1_fixups[i].dev_func == devfn &&
-> +		    bus1_fixups[i].reg == (reg & ~3) &&
-> +		    bus1_fixups[i].read) {
-> +
-> +			raw_spin_lock_irqsave(&pci_config_lock, flags);
-> +			bus1_fixups[i].read(&(bus1_fixups[i]), value);
-> +			raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-> +			extract_bytes(value, reg, len);
-> +			return 0;
->  		}
->  	}
-> +	return -1;
-> +}
-> +
-> +static int ce4100_conf_read(unsigned int seg, unsigned int bus,
-> +			    unsigned int devfn, int reg, int len, u32 *value)
-> +{
-> +	WARN_ON(seg);
-> +
-> +	if (bus == 1 && !ce4100_bus1_read(devfn, reg, len, value))
-> +		return 0;
->  
->  	if (bus == 0 && (PCI_DEVFN(1, 0) == devfn) &&
->  	    !bridge_read(devfn, reg, len, value))
-> @@ -291,23 +291,32 @@ static int ce4100_conf_read(unsigned int
->  	return pci_direct_conf1.read(seg, bus, devfn, reg, len, value);
->  }
->  
-> -static int ce4100_conf_write(unsigned int seg, unsigned int bus,
-> -			     unsigned int devfn, int reg, int len, u32 value)
-> +static int ce4100_bus1_write(unsigned int devfn, int reg, int len, u32 value)
->  {
-> +	unsigned long flags;
->  	int i;
->  
-> -	WARN_ON(seg);
-> -	if (bus == 1) {
-> -		for (i = 0; i < ARRAY_SIZE(bus1_fixups); i++) {
-> -			if (bus1_fixups[i].dev_func == devfn &&
-> -			    bus1_fixups[i].reg == (reg & ~3) &&
-> -			    bus1_fixups[i].write) {
-> -				bus1_fixups[i].write(&(bus1_fixups[i]),
-> -						     value);
-> -				return 0;
-> -			}
-> +	for (i = 0; i < ARRAY_SIZE(bus1_fixups); i++) {
-> +		if (bus1_fixups[i].dev_func == devfn &&
-> +		    bus1_fixups[i].reg == (reg & ~3) &&
-> +		    bus1_fixups[i].write) {
-> +
-> +			raw_spin_lock_irqsave(&pci_config_lock, flags);
-> +			bus1_fixups[i].write(&(bus1_fixups[i]), value);
-> +			raw_spin_unlock_irqrestore(&pci_config_lock, flags);
-> +			return 0;
->  		}
->  	}
-> +	return -1;
-> +}
-> +
-> +static int ce4100_conf_write(unsigned int seg, unsigned int bus,
-> +			     unsigned int devfn, int reg, int len, u32 value)
-> +{
-> +	WARN_ON(seg);
-> +
-> +	if (bus == 1 && !ce4100_bus1_write(devfn, reg, len, value))
-> +		return 0;
->  
->  	/* Discard writes to A/V bridge BAR. */
->  	if (bus == 0 && PCI_DEVFN(1, 0) == devfn &&
-> @@ -318,8 +327,8 @@ static int ce4100_conf_write(unsigned in
->  }
->  
->  static const struct pci_raw_ops ce4100_pci_conf = {
-> -	.read =	ce4100_conf_read,
-> -	.write = ce4100_conf_write,
-> +	.read	= ce4100_conf_read,
-> +	.write	= ce4100_conf_write,
->  };
->  
->  int __init ce4100_pci_init(void)
+>  /*
 > 
+> What do you think?
 > 
+> Thanks,
+> -- 
+> Jean Delvare
+> SUSE L3 Support
