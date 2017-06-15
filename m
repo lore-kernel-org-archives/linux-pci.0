@@ -1,59 +1,139 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 12 Jun 2017 16:45:38 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
-Message-ID: <20170612154537.GC22710@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-MIME-Version: 1.0
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:58928 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751898AbdFOUiC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 16:38:02 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 15 Jun 2017 14:37:19 -0600
+Message-Id: <20170615203729.9009-4-logang@deltatee.com>
+In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+Subject: [RFC PATCH 03/13] switchtec: add ntb hardware register definitions
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 08, 2017 at 03:13:00PM +0100, Lorenzo Pieralisi wrote:
-> v1 -> v2
-> 
-> - Split pci_fixup_irqs() removal in several patches
-> - Embedded pci_register_host_bridge() in pci_scan_root_bus_bridge()
-> - Refactored iproc, faraday and xilinx-nwl host bridges in preparation
->   for irq fixup removal
-> - Converted all DT PCI host bridge drivers to pci_scan_root_bus_bridge()
-> - Dropped RFC tag
-> - Added devm_pci_alloc_host_bridge() interface
-> - Rebased against v4.12-rc3
+There are two additional regions: ctrl and dbmsg. The first is
+for generic ntb control and memory windows. The second for doorbells
+and message registers. This patch also adds a number of related
+constants for using these registers.
 
-For the arm64 and the host-common bits:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ include/linux/switchtec.h | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
 
-Acked-by: Will Deacon <will.deacon@arm.com>
-
-Will
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 3b87618fc42f..3c6b964885e9 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -147,6 +147,12 @@ struct flash_info_regs {
+ 	struct partition_info vendor[8];
+ };
+ 
++enum {
++	SWITCHTEC_NTB_REG_INFO_OFFSET   = 0x0000,
++	SWITCHTEC_NTB_REG_CTRL_OFFSET   = 0x4000,
++	SWITCHTEC_NTB_REG_DBMSG_OFFSET  = 0x64000,
++};
++
+ struct ntb_info_regs {
+ 	u8  partition_count;
+ 	u8  partition_id;
+@@ -182,6 +188,84 @@ struct part_cfg_regs {
+ } __packed;
+ 
+ enum {
++	NTB_CTRL_PART_OP_LOCK = 0x1,
++	NTB_CTRL_PART_OP_CFG = 0x2,
++	NTB_CTRL_PART_OP_RESET = 0x3,
++
++	NTB_CTRL_PART_STATUS_NORMAL = 0x1,
++	NTB_CTRL_PART_STATUS_LOCKED = 0x2,
++	NTB_CTRL_PART_STATUS_LOCKING = 0x3,
++	NTB_CTRL_PART_STATUS_CONFIGURING = 0x4,
++	NTB_CTRL_PART_STATUS_RESETTING = 0x5,
++
++	NTB_CTRL_BAR_VALID = 1 << 0,
++	NTB_CTRL_BAR_DIR_WIN_EN = 1 << 4,
++	NTB_CTRL_BAR_LUT_WIN_EN = 1 << 5,
++
++	NTB_CTRL_REQ_ID_EN = 1 << 0,
++
++	NTB_CTRL_LUT_EN = 1 << 0,
++
++	NTB_PART_CTRL_ID_PROT_DIS = 1 << 0,
++};
++
++struct ntb_ctrl_regs {
++	u32 partition_status;
++	u32 partition_op;
++	u32 partition_ctrl;
++	u32 bar_setup;
++	u32 bar_error;
++	u16 lut_table_entries;
++	u16 lut_table_offset;
++	u32 lut_error;
++	u16 req_id_table_size;
++	u16 req_id_table_offset;
++	u32 req_id_error;
++	u32 reserved1[7];
++	struct {
++		u32 ctl;
++		u32 win_size;
++		u64 xlate_addr;
++	} bar_entry[6];
++	u32 reserved2[216];
++	u32 req_id_table[256];
++	u32 reserved3[512];
++	u64 lut_entry[512];
++} __packed;
++
++#define NTB_DBMSG_IMSG_STATUS BIT_ULL(32)
++#define NTB_DBMSG_IMSG_MASK   BIT_ULL(40)
++
++struct ntb_dbmsg_regs {
++	u32 reserved1[1024];
++	u64 odb;
++	u64 odb_mask;
++	u64 idb;
++	u64 idb_mask;
++	u8  idb_vec_map[64];
++	u32 msg_map;
++	u32 reserved2;
++	struct {
++		u32 msg;
++		u32 status;
++	} omsg[4];
++
++	struct {
++		u32 msg;
++		u8  status;
++		u8  mask;
++		u8  src;
++		u8  reserved;
++	} imsg[4];
++
++	u8 reserved3[3928];
++	u8 msix_table[1024];
++	u8 reserved4[3072];
++	u8 pba[24];
++	u8 reserved5[4072];
++} __packed;
++
++enum {
+ 	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
+ 	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
+ 	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
+-- 
+2.11.0
