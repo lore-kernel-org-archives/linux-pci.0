@@ -1,107 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <5948F1F9.90903@hisilicon.com>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
- <20170614082338.15673-20-guodong.xu@linaro.org>
- <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com>
- <5947CAD8.4040607@hisilicon.com>
- <CAPDyKFo=hqp=j=nWpO8uf_0pGTSKjN0T-ZKqD8cuKp1C3Q2_hA@mail.gmail.com>
- <5948F1F9.90903@hisilicon.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 20 Jun 2017 12:28:46 +0200
-Message-ID: <CAPDyKFozmMED7ytofXTgHhWH=Ro_38r4iCCdoO6+rq-AznrSDQ@mail.gmail.com>
-Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
- hi3660 mmc
-To: Wei Xu <xuwei5@hisilicon.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- wangkefeng.wang@huawei.com, Arnd Bergmann <arnd@arndb.de>,
- Guodong Xu <guodong.xu@linaro.org>, Linux PCI <linux-pci@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Peter Griffin <peter.griffin@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Rob Herring <robh+dt@kernel.org>, Li Wei <liwei213@huawei.com>,
- puck.chen@hisilicon.com, xuejiancheng@hisilicon.com,
- zhangfei <zhangfei.gao@linaro.org>, Lee Jones <lee.jones@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ozlabs.ru ([107.173.13.209]:46476 "EHLO ozlabs.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752143AbdFOFs7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 01:48:59 -0400
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Subject: [PATCH kernel 3/3] vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+Date: Thu, 15 Jun 2017 15:48:45 +1000
+Message-Id: <20170615054845.8428-4-aik@ozlabs.ru>
+In-Reply-To: <20170615054845.8428-1-aik@ozlabs.ru>
+References: <20170615054845.8428-1-aik@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 20 June 2017 at 11:59, Wei Xu <xuwei5@hisilicon.com> wrote:
-> Hi Uffe,
->
-> On 2017/6/20 9:36, Ulf Hansson wrote:
->> Hi Wei,
->>
->> On 19 June 2017 at 15:00, Wei Xu <xuwei5@hisilicon.com> wrote:
->>> Hi Ulf,
->>>
->>> On 2017/6/19 13:43, Ulf Hansson wrote:
->>>> On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
->>>>> Add bindings for hi3660 mmc support
->>>>>
->>>>> Signed-off-by: Li Wei <liwei213@huawei.com>
->>>>> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
->>>>> ---
->>>>>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
->>>>>  1 file changed, 1 insertion(+)
->>>>>
->>>>> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>>>> index df37058..8af1afc 100644
->>>>> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>>>> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>>>> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
->>>>>  Required Properties:
->>>>>
->>>>>  * compatible: should be one of the following.
->>>>> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
->>>>>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
->>>>>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
->>>>>
->>>>> --
->>>>> 2.10.2
->>>>>
->>>>
->>>> Thanks, applied for next!
->>>
->>> Thanks!
->>> Last week I had applied the v4 patch set[1]
->>> and this patch is included.
->>> But it should be fine for the upper gatekeeper to merge
->>> since these 2 patch are same.
->>
->> No, that's not how git works.
->>
->> If the patch has the same hash, that would be fine, but that isn't the
->> case here as we have two different hashes for the same change.
->
-> Got it. Thanks for your explaining!
->
->>
->> To deal with this, I have just dropped the change from my tree and
->> leave it to you to carry the patch. Feel free to add my ack for it.
->
-> Thanks!
-> But the pull request I sent last week has been merged.
+From: Yongji Xie <elohimes@gmail.com>
 
-No worries, it's fine even without my ack this time.
+This patch tries to expose MSI-X tables to userspace if hardware
+enables interrupt remapping which can ensure that a given PCI
+device can only shoot the MSIs assigned for it. So we could
+never worry that userspace driver can hurt other devices by
+writing to the exposed MSI-X table directly.
 
-Kind regards
-Uffe
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+---
+ drivers/vfio/pci/vfio_pci.c      | 18 +++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c |  3 ++-
+ 2 files changed, 17 insertions(+), 4 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 324c52e3a1a4..700e9d04dab5 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -564,8 +564,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 
+ 	end = pci_resource_len(vdev->pdev, vdev->msix_bar);
+ 
+-	/* If MSI-X table is aligned to the start or end, only one area */
+-	if (((vdev->msix_offset & PAGE_MASK) == 0) ||
++	/*
++	 * If MSI-X table is allowed to mmap because of the capability
++	 * of IRQ remapping or aligned to the start or end, only one area
++	 */
++	if ((vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) ||
++	    ((vdev->msix_offset & PAGE_MASK) == 0) ||
+ 	    (PAGE_ALIGN(vdev->msix_offset + vdev->msix_size) >= end))
+ 		nr_areas = 1;
+ 
+@@ -577,6 +581,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 
+ 	sparse->nr_areas = nr_areas;
+ 
++	if (vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) {
++		sparse->areas[i].offset = 0;
++		sparse->areas[i].size = end;
++		goto out;
++	}
++
+ 	if (vdev->msix_offset & PAGE_MASK) {
+ 		sparse->areas[i].offset = 0;
+ 		sparse->areas[i].size = vdev->msix_offset & PAGE_MASK;
+@@ -590,6 +600,7 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 		i++;
+ 	}
+ 
++out:
+ 	ret = vfio_info_add_capability(caps, VFIO_REGION_INFO_CAP_SPARSE_MMAP,
+ 				       sparse);
+ 	kfree(sparse);
+@@ -1115,7 +1126,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (req_start + req_len > phys_len)
+ 		return -EINVAL;
+ 
+-	if (index == vdev->msix_bar) {
++	if (index == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
+diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
+index 357243d76f10..5378f2c3ac8e 100644
+--- a/drivers/vfio/pci/vfio_pci_rdwr.c
++++ b/drivers/vfio/pci/vfio_pci_rdwr.c
+@@ -164,7 +164,8 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
+ 	} else
+ 		io = vdev->barmap[bar];
+ 
+-	if (bar == vdev->msix_bar) {
++	if (bar == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		x_start = vdev->msix_offset;
+ 		x_end = vdev->msix_offset + vdev->msix_size;
+ 	}
+-- 
+2.11.0
