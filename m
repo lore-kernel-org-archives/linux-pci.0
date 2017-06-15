@@ -1,67 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50956 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751490AbdFHOOc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:14:32 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Matthew Minter <matt@masarand.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will.deacon@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>,
-        Simon Horman <horms@verge.net.au>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [RFT PATCH v2 25/42] PCI: Add IRQ mapping function pointers to pci_host_bridge struct
-Date: Thu,  8 Jun 2017 15:13:25 +0100
-Message-Id: <20170608141342.2018-26-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Received: from mail-it0-f65.google.com ([209.85.214.65]:35822 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750774AbdFOGWq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jun 2017 02:22:46 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kishon@ti.com, bhelgaas@google.com
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2] PCI: dwc: dra7xx: Fix compilation warning.
+Date: Thu, 15 Jun 2017 11:52:13 +0530
+Message-Id: <673ccda2e1a722fa1b511a9c3bf1af6fbfc262a3.1497507582.git.arvind.yadav.cs@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_msi_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:177:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+       ~LEG_EP_INTERRUPTS & ~MSI);
+       ^
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_wrapper_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:187:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+       ~INTERRUPTS);
 
-In order to defer IRQ assignment arches must be able to register functions
-to map and swizzle interrupts. These registered functions are stored in
-the pci_host_bridge struct.
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-Signed-off-by: Matthew Minter <matt@masarand.com>
+Changes in v2:
+             Add casts in the definitions.
 ---
- include/linux/pci.h | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/dwc/pci-dra7xx.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 31ee3b3..72b4796 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -437,6 +437,8 @@ struct pci_host_bridge {
- 	void *sysdata;
- 	int busnr;
- 	struct list_head windows;	/* resource_entry */
-+	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* platform irq swizzler */
-+	int (*map_irq)(const struct pci_dev *, u8, u8);
- 	void (*release_fn)(struct pci_host_bridge *);
- 	void *release_data;
- 	struct msi_controller *msi;
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 8decf46..0286d6d 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -48,7 +48,7 @@
+ #define	LINK_UP_EVT					BIT(12)
+ #define	CFG_BME_EVT					BIT(13)
+ #define	CFG_MSE_EVT					BIT(14)
+-#define	INTERRUPTS (ERR_SYS | ERR_FATAL | ERR_NONFATAL | ERR_COR | ERR_AXI | \
++#define	INTERRUPTS (u32)(ERR_SYS | ERR_FATAL | ERR_NONFATAL | ERR_COR | ERR_AXI | \
+ 			ERR_ECRC | PME_TURN_OFF | PME_TO_ACK | PM_PME | \
+ 			LINK_REQ_RST | LINK_UP_EVT | CFG_BME_EVT | CFG_MSE_EVT)
+ 
+@@ -58,8 +58,8 @@
+ #define	INTB						BIT(1)
+ #define	INTC						BIT(2)
+ #define	INTD						BIT(3)
+-#define	MSI						BIT(4)
+-#define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
++#define	MSI						(u32)(BIT(4))
++#define	LEG_EP_INTERRUPTS (u32)(INTA | INTB | INTC | INTD)
+ 
+ #define	PCIECTRL_TI_CONF_DEVICE_TYPE			0x0100
+ #define	DEVICE_TYPE_EP					0x0
 -- 
-2.10.0
+1.9.1
