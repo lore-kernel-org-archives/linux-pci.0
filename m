@@ -1,76 +1,114 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC,20/30] iommu/arm-smmu-v3: Enable PCI PASID in masters
-To: Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>
-References: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
- <f18163da-30a6-a7d4-0a2c-bca4fc1b0fff@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <fad6510f-922a-550b-0429-bc59f857c307@codeaurora.org>
-Date: Fri, 23 Jun 2017 10:39:06 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34990 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751606AbdFOCrf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 14 Jun 2017 22:47:35 -0400
+Date: Wed, 14 Jun 2017 21:47:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>,
+        Alexander Duyck <alexander.h.duyck@intel.com>,
+        oss-drivers@netronome.com
+Subject: Re: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
+Message-ID: <20170615024726.GH20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170522225023.14010-1-jakub.kicinski@netronome.com>
 MIME-Version: 1.0
-In-Reply-To: <f18163da-30a6-a7d4-0a2c-bca4fc1b0fff@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170522225023.14010-1-jakub.kicinski@netronome.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jean-Philippe,
- 
-> On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
-> Enable PASID for PCI devices that support it.
->
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+On Mon, May 22, 2017 at 03:50:23PM -0700, Jakub Kicinski wrote:
+> PCI core sets the driver pointer before calling ->probe() and only
+> clears it after ->remove().  This means driver's ->sriov_configure()
+> callback will happily race with probe() and remove(), most likely
+> leading to BUGs, since drivers don't expect this.
+> 
+> We could reorder pointer assignments, or try detecting races in all
+> drivers, but it seems simpler and cleaner to just hold the device lock
+> instead of special SR-IOV lock, since that lock is already supposed
+> to synchronize the driver callbacks.
+> 
+> Remove the iov lock completely, since we remove the last user.
+> 
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+
+Applied with Christoph's reviewed-by to pci/virtualization for v4.13,
+thanks!
+
 > ---
->  drivers/iommu/arm-smmu-v3.c | 66 ++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 63 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-> index 499dc1cd07eb..37fd061405e9 100644
-> --- a/drivers/iommu/arm-smmu-v3.c
-> +++ b/drivers/iommu/arm-smmu-v3.c
-> @@ -730,6 +730,8 @@ struct arm_smmu_master_data {
+>  drivers/pci/iov.c       | 4 ----
+>  drivers/pci/pci-sysfs.c | 5 ++---
+>  drivers/pci/pci.h       | 1 -
+>  3 files changed, 2 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index d9dc7363ac77..120485d6f352 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -461,8 +461,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	else
+>  		iov->dev = dev;
 >  
->  	struct arm_smmu_stream		*streams;
->  	struct rb_root			contexts;
-> +
-> +	u32				avail_contexts;
+> -	mutex_init(&iov->lock);
+> -
+>  	dev->sriov = iov;
+>  	dev->is_physfn = 1;
+>  	rc = compute_max_vf_buses(dev);
+> @@ -491,8 +489,6 @@ static void sriov_release(struct pci_dev *dev)
+>  	if (dev != dev->sriov->dev)
+>  		pci_dev_put(dev->sriov->dev);
+>  
+> -	mutex_destroy(&dev->sriov->lock);
+> -
+>  	kfree(dev->sriov);
+>  	dev->sriov = NULL;
+>  }
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 31e99613a12e..7755559558df 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -472,7 +472,6 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  				  const char *buf, size_t count)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> -	struct pci_sriov *iov = pdev->sriov;
+>  	int ret;
+>  	u16 num_vfs;
+>  
+> @@ -483,7 +482,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	if (num_vfs > pci_sriov_get_totalvfs(pdev))
+>  		return -ERANGE;
+>  
+> -	mutex_lock(&iov->dev->sriov->lock);
+> +	device_lock(&pdev->dev);
+>  
+>  	if (num_vfs == pdev->sriov->num_VFs)
+>  		goto exit;
+> @@ -518,7 +517,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  			 num_vfs, ret);
+>  
+>  exit:
+> -	mutex_unlock(&iov->dev->sriov->lock);
+> +	device_unlock(&pdev->dev);
+>  
+>  	if (ret < 0)
+>  		return ret;
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index f8113e5b9812..93f4044b8f4b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -272,7 +272,6 @@ struct pci_sriov {
+>  	u16 driver_max_VFs;	/* max num VFs driver supports */
+>  	struct pci_dev *dev;	/* lowest numbered PF */
+>  	struct pci_dev *self;	/* this PF */
+> -	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+>  	bool drivers_autoprobe;	/* auto probing of VFs by driver */
 >  };
->  
-
-According to the PASID ECN here (https://pcisig.com/sites/default/files/specification_documents/ECN-PASID-ATS-2011-03-31.pdf),
-PASID should be enabled only if all switches between the root port and
-a device support TLP prefix. 
- 
-I'm only seeing a call to pci_enable_pasid() in this patch but I don't
-see anybody checking for TLP prefix support on the hierarchy.
-
-This could potentially be an addition to the PCI core code.
-
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -- 
+> 2.11.0
+> 
