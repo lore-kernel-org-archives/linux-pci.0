@@ -1,138 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from esa4.dell-outbound.iphmx.com ([68.232.149.214]:58769 "EHLO
-        esa4.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751055AbdFFIDD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 6 Jun 2017 04:03:03 -0400
-From: <Narendra.K@dell.com>
-Cc: <x86@kernel.org>, <linux-pci@vger.kernel.org>,
-        <Jordan.Hargrave@dell.com>, <Shyam.Iyer@dell.com>,
-        <bhelgaas@google.com>, <Narendra.K@dell.com>
-To: <jdelvare@suse.de>
-Subject: RE: dmi type 0xB1 record - unknown flag
-Date: Tue, 6 Jun 2017 08:02:40 +0000
-Message-ID: <1d8d53bdb9e94e7d8ec89a79e99d4cdd@BLRX13MDC105.AMER.DELL.COM>
-References: <20170601143826.5f980444@endymion>
- <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
- <20170602161311.27eab72d@endymion>
-In-Reply-To: <20170602161311.27eab72d@endymion>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        Michael Roth <mdroth@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@ozlabs.org>
+Subject: [PATCH kernel 3/3] vfio-pci: Allow to expose MSI-X table to userspace if interrupt remapping is enabled
+Date: Thu, 15 Jun 2017 15:06:42 +1000
+Message-Id: <20170615050642.8197-4-aik@ozlabs.ru>
+In-Reply-To: <20170615050642.8197-1-aik@ozlabs.ru>
+References: <20170615050642.8197-1-aik@ozlabs.ru>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Jean Delvare [mailto:jdelvare@suse.de]
-> Sent: Friday, June 2, 2017 7:43 PM
-> To: K, Narendra <Narendra_K@Dell.com>
-> Cc: x86@kernel.org; linux-pci@vger.kernel.org; Hargrave, Jordan
-> <Jordan_Hargrave@Dell.com>; Iyer, Shyam <Shyam_Iyer@Dell.com>;
-> bhelgaas@google.com
-> Subject: Re: dmi type 0xB1 record - unknown flag
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 
-[...]
-> > The value 0x00 is not a valid value. When the flag is 0x00, the sort me=
-thod
-> will be the default that is decided by the kernel.
->=20
-> How can it be invalid? I have DMI dumps of several Dell systems with a ty=
-pe
-> 0xB1 DMI structure, with value 0x00 for these bits. If Dell ships such sy=
-stems,
-> then this is valid by definition.
->=20
-> > There is no additional handling required for such a system.
->=20
-> I don't understand the complexity of the code. There are 4 possible value=
-s
-> for these bits, the code treats all of them differently:
-> * 0x01, you set smbios_type_b1_flag to 1 and this later triggers a call
->   to set_bf_sort().
-> * 0x02, you set smbios_type_b1_flag to 2 but this has no effect.
-> * 0x00, you print a rather cryptic info message which serves no purpose.
-> * 0x03, you do nothing.
->=20
-> On top of that, I can't see the value of the intermediate variable
-> smbios_type_b1_flag. The only situations where it would make a difference
-> is if multiple type 0xB1 structures with conflicting information were pre=
-sent;
-> but I don't think this is supposed to happen in the first place.
->=20
-> Lastly I'm not sure why you continue processing the list of DMI matches,
-> when smbios_type_b1_flag =3D=3D 1, and stop processing it if not.
-> This seems needlessly inconsistent.
->=20
-> I think the whole thing can be simplified like this:
->=20
-> From: Jean Delvare <jdelvare@suse.de>
-> Subject: x86/PCI: Simplify Dell DMI B1 quirk
->=20
-> No need for such convoluted code, when all we need is to call one functio=
-n in
-> one specific case.
->=20
-> Signed-off-by: Jean Delvare <jdelvare@suse.de>
-> ---
->  arch/x86/pci/common.c |   27 +++++----------------------
->  1 file changed, 5 insertions(+), 22 deletions(-)
->=20
-> --- linux-4.11.orig/arch/x86/pci/common.c	2017-05-01
-> 04:47:48.000000000 +0200
-> +++ linux-4.11/arch/x86/pci/common.c	2017-06-02 16:04:05.737889598 +0200
-> @@ -24,7 +24,6 @@ unsigned int pci_probe =3D PCI_PROBE_BIOS
->=20
->  unsigned int pci_early_dump_regs;
->  static int pci_bf_sort;
-> -static int smbios_type_b1_flag;
->  int pci_routeirq;
->  int noioapicquirk;
->  #ifdef CONFIG_X86_REROUTE_FOR_BROKEN_BOOT_IRQS
-> @@ -197,34 +196,18 @@ static int __init set_bf_sort(const stru  static vo=
-id
-> __init read_dmi_type_b1(const struct dmi_header *dm,
->  				    void *private_data)
->  {
-> -	u8 *d =3D (u8 *)dm + 4;
-> +	u8 *data =3D (u8 *)dm + 4;
->=20
->  	if (dm->type !=3D 0xB1)
->  		return;
-> -	switch (((*(u32 *)d) >> 9) & 0x03) {
-> -	case 0x00:
-> -		printk(KERN_INFO "dmi type 0xB1 record - unknown flag\n");
-> -		break;
-> -	case 0x01: /* set pci=3Dbfsort */
-> -		smbios_type_b1_flag =3D 1;
-> -		break;
-> -	case 0x02: /* do not set pci=3Dbfsort */
-> -		smbios_type_b1_flag =3D 2;
-> -		break;
-> -	default:
-> -		break;
-> -	}
-> +	if ((((*(u32 *)data) >> 9) & 0x03) =3D=3D 0x01)
-> +		set_bf_sort((const struct dmi_system_id *)private_data);
->  }
->=20
->  static int __init find_sort_method(const struct dmi_system_id *d)  {
-> -	dmi_walk(read_dmi_type_b1, NULL);
-> -
-> -	if (smbios_type_b1_flag =3D=3D 1) {
-> -		set_bf_sort(d);
-> -		return 0;
-> -	}
-> -	return -1;
-> +	dmi_walk(read_dmi_type_b1, (void *)d);
-> +	return 0;
->  }
->=20
->  /*
->=20
-> What do you think?
+This patch tries to expose MSI-X tables to userspace if hardware
+enables interrupt remapping which can ensure that a given PCI
+device can only shoot the MSIs assigned for it. So we could
+never worry that userspace driver can hurt other devices by
+writing to the exposed MSI-X table directly.
 
-Hi Jean,
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Michael Roth <mdroth@linux.vnet.ibm.com>
+Signed-off-by: Paul Mackerras <paulus@ozlabs.org>
+---
+ drivers/vfio/pci/vfio_pci.c      | 18 +++++++++++++++---
+ drivers/vfio/pci/vfio_pci_rdwr.c |  3 ++-
+ 2 files changed, 17 insertions(+), 4 deletions(-)
 
-Thank you for reviewing and providing feedback. We will look into this and =
-provide feedback.
-
-With regards,
-Narendra K
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 324c52e3a1a4..700e9d04dab5 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -564,8 +564,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 
+ 	end = pci_resource_len(vdev->pdev, vdev->msix_bar);
+ 
+-	/* If MSI-X table is aligned to the start or end, only one area */
+-	if (((vdev->msix_offset & PAGE_MASK) == 0) ||
++	/*
++	 * If MSI-X table is allowed to mmap because of the capability
++	 * of IRQ remapping or aligned to the start or end, only one area
++	 */
++	if ((vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) ||
++	    ((vdev->msix_offset & PAGE_MASK) == 0) ||
+ 	    (PAGE_ALIGN(vdev->msix_offset + vdev->msix_size) >= end))
+ 		nr_areas = 1;
+ 
+@@ -577,6 +581,12 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 
+ 	sparse->nr_areas = nr_areas;
+ 
++	if (vdev->pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP) {
++		sparse->areas[i].offset = 0;
++		sparse->areas[i].size = end;
++		goto out;
++	}
++
+ 	if (vdev->msix_offset & PAGE_MASK) {
+ 		sparse->areas[i].offset = 0;
+ 		sparse->areas[i].size = vdev->msix_offset & PAGE_MASK;
+@@ -590,6 +600,7 @@ static int msix_sparse_mmap_cap(struct vfio_pci_device *vdev,
+ 		i++;
+ 	}
+ 
++out:
+ 	ret = vfio_info_add_capability(caps, VFIO_REGION_INFO_CAP_SPARSE_MMAP,
+ 				       sparse);
+ 	kfree(sparse);
+@@ -1115,7 +1126,8 @@ static int vfio_pci_mmap(void *device_data, struct vm_area_struct *vma)
+ 	if (req_start + req_len > phys_len)
+ 		return -EINVAL;
+ 
+-	if (index == vdev->msix_bar) {
++	if (index == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		/*
+ 		 * Disallow mmaps overlapping the MSI-X table; users don't
+ 		 * get to touch this directly.  We could find somewhere
+diff --git a/drivers/vfio/pci/vfio_pci_rdwr.c b/drivers/vfio/pci/vfio_pci_rdwr.c
+index 357243d76f10..5378f2c3ac8e 100644
+--- a/drivers/vfio/pci/vfio_pci_rdwr.c
++++ b/drivers/vfio/pci/vfio_pci_rdwr.c
+@@ -164,7 +164,8 @@ ssize_t vfio_pci_bar_rw(struct vfio_pci_device *vdev, char __user *buf,
+ 	} else
+ 		io = vdev->barmap[bar];
+ 
+-	if (bar == vdev->msix_bar) {
++	if (bar == vdev->msix_bar &&
++		!(pdev->bus->bus_flags & PCI_BUS_FLAGS_MSI_REMAP)) {
+ 		x_start = vdev->msix_offset;
+ 		x_end = vdev->msix_offset + vdev->msix_size;
+ 	}
+-- 
+2.11.0
