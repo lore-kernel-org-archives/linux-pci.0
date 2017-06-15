@@ -1,54 +1,190 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:35010 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751271AbdFXJeI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Jun 2017 05:34:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170624015044.16746-2-palmer@dabbelt.com>
-References: <20170624015044.16746-1-palmer@dabbelt.com> <20170624015044.16746-2-palmer@dabbelt.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Sat, 24 Jun 2017 11:34:06 +0200
-Message-ID: <CAMuHMdWd_4GzySTWsb5PupBw3UkLUKAwE-OvAgHScZutT-wiNQ@mail.gmail.com>
-Subject: Re: [PATCH 1/3] pci: Add a generic, weakly-linked pcibios_fixup_bus
-To: Palmer Dabbelt <palmer@dabbelt.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Received: from ale.deltatee.com ([207.54.116.67]:58971 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752477AbdFOUhw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 16:37:52 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        arcml <linux-snps-arc@lists.infradead.org>,
-        Cris <linux-cris-kernel@axis.com>,
-        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        Linux-sh list <linux-sh@vger.kernel.org>,
-        sparclinux <sparclinux@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 15 Jun 2017 14:37:26 -0600
+Message-Id: <20170615203729.9009-11-logang@deltatee.com>
+In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+Subject: [RFC PATCH 10/13] switchtec_ntb: implement doorbell registers
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Palmer,
+Pretty straightforward implementation of doorbell registers.
+The shift and mask were setup in an earlier patch and this just hooks
+up the approprirate portion of the idb register as the local doorbells
+and the opposite portion of odb as the peer doorbells. The db mask is
+protected by a spinlock to avoid concurrent read-modify-write accesses.
 
-On Sat, Jun 24, 2017 at 3:50 AM, Palmer Dabbelt <palmer@dabbelt.com> wrote:
-> Multiple architectures define this as an empty function, and I'm adding
-> another one as part of the RISC-V port.  This adds a __weak version of
-> pci_fixup_bios and deletes the now obselete ones in a handful of ports.
->
-> The only functional change should be that microblaze used to export
-> pcibios_fixup_bus.  None of the other architectures export this, so I
-> just dropped it.
->
-> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 89 +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 85 insertions(+), 4 deletions(-)
 
-Given this is an empty function, wouldn't it make more sense to have
-a static inline in asm-generic, protected by #ifndef pcibios_fixup_bus?
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 19fa8fb0f15c..53604c22be67 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -90,6 +90,9 @@ struct switchtec_ntb {
+ 	int db_shift;
+ 	int db_peer_shift;
+ 
++	/* synchronize rmw access of db_mask and hw reg */
++	spinlock_t db_mask_lock;
++
+ 	int nr_direct_mw;
+ 	int nr_lut_mw;
+ 	int direct_mw_to_bar[MAX_DIRECT_MW];
+@@ -336,41 +339,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+ 
+ static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	return 1;
+ }
+ 
+ static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_vector < 0 || db_vector > 1)
++		return 0;
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
+ {
+-	return 0;
++	u64 ret;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
++
++	return ret & sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++	{
++		sndev->db_mask |= db_bits << sndev->db_shift;
++		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	}
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++	{
++		sndev->db_mask &= ~(db_bits << sndev->db_shift);
++		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	}
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
++	return 0;
++}
++
++static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
++}
++
++static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
++				      phys_addr_t *db_addr,
++				      resource_size_t *db_size)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
++		(unsigned long)sndev->stdev->mmio;
++
++	offset += sndev->db_shift / 8;
++
++	if (db_addr)
++		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
++	if (db_size)
++		*db_size = sizeof(u32);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_peer_shift,
++		  &sndev->mmio_self_dbmsg->odb);
++
+ 	return 0;
+ }
+ 
+@@ -408,6 +485,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.db_clear		= switchtec_ntb_db_clear,
+ 	.db_set_mask		= switchtec_ntb_db_set_mask,
+ 	.db_clear_mask		= switchtec_ntb_db_clear_mask,
++	.db_read_mask		= switchtec_ntb_db_read_mask,
++	.peer_db_addr		= switchtec_ntb_peer_db_addr,
+ 	.peer_db_set		= switchtec_ntb_peer_db_set,
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+@@ -632,6 +711,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
+ 
+ 	dev_dbg(&sndev->stdev->dev, "doorbell\n");
+ 
++	ntb_db_event(&sndev->ntb, 0);
++
+ 	return IRQ_HANDLED;
+ }
+ 
+-- 
+2.11.0
