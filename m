@@ -1,107 +1,48 @@
-Return-Path: <SRS0=ZObv=5V=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=ZObv=5V=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:44575 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751016AbdFOOE2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 10:04:28 -0400
+Date: Thu, 15 Jun 2017 16:04:21 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Daniel Drake <drake@endlessm.com>,
+        Alexander Deucher <Alexander.Deucher@amd.com>,
+        Samuel Sieb <samuel@sieb.net>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Message-ID: <20170615140421.GB25710@suse.de>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20170616194559.GD11129@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495702147-31427-1-git-send-email-yu.c.chen@intel.com> <20170616194559.GD11129@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sat, 17 Jun 2017 00:23:58 +0200
-Message-ID: <CAJZ5v0gBeO2559mVNCO-w9_mgzfbzZB6oRY7xc6T=G2DsXV5ag@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Restore the status of PCI devices across hibernation
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Chen Yu <yu.c.chen@intel.com>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Len Brown <len.brown@intel.com>,
-	Dan Williams <dan.j.williams@intel.com>, Rui Zhang <rui.zhang@intel.com>,
-	Ying Huang <ying.huang@intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 16, 2017 at 9:45 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, May 25, 2017 at 04:49:07PM +0800, Chen Yu wrote:
->> Currently we saw a lot of "No irq handler" errors during hibernation,
->> which caused the system hang finally:
->>
->> [  710.141581] ata4.00: qc timeout (cmd 0xec)
->> [  710.147135] ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->> [  710.154593] ata4.00: revalidation failed (errno=-5)
->> [  710.468124] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->> [  710.477746] do_IRQ: 31.151 No irq handler for vector
->>
->> According to above logs, there is an interrupt triggered and it is
->> dispatched to CPU31 with a vector number 151, but there is no handler
->> for it, thus this irq will not get acked and caused irq flood which kill
->> the system. To be more specific, the 31.151 is an interrupt from the ahci
->> host controller.
->>
->> After some investigation, the reason why this issue is triggered is
->> because the thaw_noirq() function does not restore the MSI/MSIX settings
->> across hibernation.
->>
->> The scenario is illustrated below:
->>
->> 1. Before the hibernation starts, the irq 34 is the handler for the ahci device,
->>    which is binded on cpu31.
->> 2. Hibernation starts, the ahci device is put into low power state.
->> 3. All the nonboot CPUs are put offline, so the irq 34 has to be migrated to
->>    the last alive one - CPU0.
->> 4. After the snapshot has been created, all the nonboot CPUs are brought up again,
->>    the CPU affinity for IRQ 34 remains to be 0.
->> 5. ahci device are put into D0.
->> 6. The snapshot is written to the disk.
->>
->> The issue is triggered in step 6, in theory the ahci interrupt should be
->> delivered to CPU0, however the actually result is that this interrupt is
->> delivered to the original CPU31 instead, which cause the "No irq handler" issue.
->>
->> Ying Huang has has provided a clue that, in step 3 it is possible that the writing
->> to the register might not take effect as the PCI devices have been put suspended.
->> Actually it is true:
->> In step 3, the irq 34 affinity is supposed to be modified from 31 to 0,
->> but actually it did not. In __pci_write_msi_msg(), if the device is already
->> in low power state, the low level msi message entry will not be updated
->> but cached. So in theory during the device restore process, the cached msi
->> modification information should be written back to the hardware, and this
->> is what pci_restore_msi_state() do during normal suspend-resume.
->> But this is not the case for hibernation, pci_restore_msi_state() is not
->> invoked currently, to be more specific, pci_restore_state() is not invoked
->> in pci_pm_thaw_noirq(), although pci_save_state() has saved the necessary
->> pci cached information in pci_pm_freeze_noirq().
->>
->> This patch tries to restore the pci status for the device during hibernation,
->> otherwise the status might be lost across hibernation(for example, the MSI/MSIX
->> message settings), which might cause problems during hibernation.
->>
->> Suggested-by: Ying Huang <ying.huang@intel.com>
->> Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Len Brown <len.brown@intel.com>
->> Cc: Dan Williams <dan.j.williams@intel.com>
->> Cc: Rui Zhang <rui.zhang@intel.com>
->> Cc: Ying Huang <ying.huang@intel.com>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-pm@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
->
-> Added a stable tag and applied with Rafael's reviewed-by to pci/pm for
-> v4.13, thanks!
->
-> pci_restore_state() restores a lot of stuff besides MSI/MSI-X: PCIe
-> device, link, slot control, ATS, VC, BARs, ACS, IOV.  I guess I'm a
-> little surprised that we haven't noticed more issues if all these
-> things were broken.
+Hi Bjorn,
 
-That's because they weren't broken. :-)
+On Fri, Apr 07, 2017 at 04:32:18PM +0200, Joerg Roedel wrote:
+> From: Joerg Roedel <jroedel@suse.de>
+> 
+> ATS is broken on this hardware and causes IOMMU stalls and
+> system failure. Disable ATS on these devices to make them
+> usable again with IOMMU enabled.
+> 
+> Note that the commit in the Fixes-tag is not buggy, it
+> just uncovers the problem in the hardware by increasing
+> the ATS-flush rate.
+> 
+> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> ---
+>  drivers/pci/quirks.c | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
 
-None of them is expected to change over the image creation, which is
-why pci_pm_thaw_noirq() didn't call pci_restore_state(), but we
-overlooked the fact that taking nonboot CPUs offline changed the
-configuration of interrupts that needed to be restored afterward.
+Any more objections on this patch? Please let me know if you want to
+have something changed.
 
-So this one is really exceptional.
 
-Thanks,
-Rafael
+Regards,
+
+	Joerg
