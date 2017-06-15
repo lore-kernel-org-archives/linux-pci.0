@@ -1,54 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52630 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752792AbdF0XVA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 27 Jun 2017 19:21:00 -0400
-Date: Tue, 27 Jun 2017 18:20:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: mediatek: change to use the new host bridge
- interface
-Message-ID: <20170627232057.GK17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
- <1498555451-55073-2-git-send-email-ryder.lee@mediatek.com>
- <20170627223039.GE17844@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mail-it0-f65.google.com ([209.85.214.65]:33400 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750774AbdFOFoM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 15 Jun 2017 01:44:12 -0400
+Received: by mail-it0-f65.google.com with SMTP id l6so863846iti.0
+        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 22:44:12 -0700 (PDT)
+Subject: Re: [PATCH kernel 0/3] vfio-pci: Add support for mmapping MSI-X table
+To: linuxppc-dev@lists.ozlabs.org
+Cc: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>
+References: <20170615050642.8197-1-aik@ozlabs.ru>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <b1fc1f3e-a2f4-b829-de34-131159046fbe@ozlabs.ru>
+Date: Thu, 15 Jun 2017 15:44:04 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170627223039.GE17844@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170615050642.8197-1-aik@ozlabs.ru>
+Content-Type: text/plain; charset=koi8-r
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 27, 2017 at 05:30:40PM -0500, Bjorn Helgaas wrote:
-> On Tue, Jun 27, 2017 at 05:24:11PM +0800, Ryder Lee wrote:
-> > With the introduction of pci_scan_root_bus_bridge() there is no need to
-> > export pci_register_host_bridge() to other kernel subsystems other than the
-> > PCI compilation unit that needs it.
-> > 
-> > Make pci_register_host_bridge() static to its compilation unit and convert
-> > the existing drivers usage over to pci_scan_root_bus_bridge().
-> > 
-> > Also, when probing the PCI host controller driver, if an error occurs, the probe
-> > function code does not free memory allocated for the struct pci_host_bridge
-> > resulting in memory leakage.
-> > 
-> > This patch fixes them by using the methods that introduces by Lorenzo.
-> > 
-> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> 
-> I rebased my pci/host-mediatek branch on top of pci/enumeration (which
-> contains the series from Lorenzo), and folded this into the initial
-> MediaTek driver commit.
-> 
-> This branch:
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-mediatek&id=b6ca15d18881b784dc9efc5d81989be26ecd9fc8
-> 
-> should have all the MediaTek bits I know about.  Can you double-check
-> it, please?
+Ouch, this is a wrong one, please ignore. I'll repost in a sec.
 
-Sorry, that's wrong; I see your controller powerup stuff in patchwork, and
-that's *not* included yet.
+
+On 15/06/17 15:06, Alexey Kardashevskiy wrote:
+> Here is a patchset which Yongji was working on before
+> leaving IBM LTC. Since we still want to have this functionality
+> in the kernel (DPDK is the first user), here is a rebase
+> on the current upstream.
+> 
+> 
+> Current vfio-pci implementation disallows to mmap the page
+> containing MSI-X table in case that users can write directly
+> to MSI-X table and generate an incorrect MSIs.
+> 
+> However, this will cause some performance issue when there
+> are some critical device registers in the same page as the
+> MSI-X table. We have to handle the mmio access to these
+> registers in QEMU emulation rather than in guest.
+> 
+> To solve this issue, this series allows to expose MSI-X table
+> to userspace when hardware enables the capability of interrupt
+> remapping which can ensure that a given PCI device can only
+> shoot the MSIs assigned for it. And we introduce a new bus_flags
+> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+> for different archs.
+> 
+> The patch 3 are based on the proposed patchset[1].
+> 
+> Changelog
+> v3:
+> - rebased on the current upstream
+> 
+> v2:
+> - Make the commit log more clear
+> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+>   so that we could clearly know what the function does
+> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+>   of iommu_bus_notifier()
+> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+>   table so that we can know whether we allow to mmap MSI-X table
+>   in QEMU
+> 
+> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+> 
+> 
+> This is based on sha1
+> 63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
+> 
+> Please comment. Thanks.
+> 
+> 
+> 
+> Yongji Xie (3):
+>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
+>     remapping is enabled
+> 
+>  include/linux/pci.h                       |  1 +
+>  arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
+>  drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
+>  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
+>  4 files changed, 26 insertions(+), 4 deletions(-)
+> 
+
+
+-- 
+Alexey
