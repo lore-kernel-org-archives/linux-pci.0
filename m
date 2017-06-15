@@ -1,148 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 30 Jun 2017 11:16:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: linux-pci@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        gregkh@linuxfoundation.org, USB list <linux-usb@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pm@vger.kernel.org,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v2] PCI / PM: Avoid using device_may_wakeup() for runtime
- PM
-Message-ID: <20170630161648.GY17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org>
- <2883450.A8OIi7Gmb8@aspire.rjw.lan>
- <2677722.OnHOCzR3UZ@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2677722.OnHOCzR3UZ@aspire.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:58782 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750727AbdFOUMe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 16:12:34 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 15 Jun 2017 14:12:23 -0600
+Message-Id: <20170615201224.5371-2-logang@deltatee.com>
+In-Reply-To: <20170615201224.5371-1-logang@deltatee.com>
+References: <20170615201224.5371-1-logang@deltatee.com>
+Subject: [PATCH 1/2] switchtec: running status flag to fw partition info ioctl
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 02:58:11PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> pci_target_state() calls device_may_wakeup() which checks whether
-> or not the device may wake up the system from sleep states, but
-> pci_target_state() is used for runtime PM too.
-> 
-> Since runtime PM is expected to always enable remote wakeup if
-> possible, modify pci_target_state() to take additional argument
-> indicating whether or not it should look for a state from which
-> the device can signal wakeup and pass either the return value
-> of device_can_wakeup(), or "false" (if the device itself is not
-> wakeup-capable) to it from the code related to runtime PM.
-> 
-> While at it, fix the comment in pci_dev_run_wake() which is not
-> about sleep states.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This flag lets userspace know which firmware partitions are actually
+currently in use as opposed to just active. (Active meaning they will
+be in use for the next reboot, where as running means they are currently
+in use.)
 
-Applied with Mika's reviewed-by to pci/pm for v4.13, thanks!
+If an old kernel is in use, or the firmware doesn't support these
+fields, the new flag will not be set in the output.
 
-> ---
-> 
-> -> v2:
-> 
-> Passing "true" as the second argument to pci_target_state() for runtime PM
-> might trigger suboptimal state choices to be made, so pass the return value
-> of device_can_wakeup() to it instead and pass "false" to it in pci_dev_run_wake(),
-> because that assumes device_can_wakeup() to return "false" already.
-> 
-> ---
->  drivers/pci/pci.c |   22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -1982,12 +1982,13 @@ EXPORT_SYMBOL(pci_wake_from_d3);
->  /**
->   * pci_target_state - find an appropriate low power state for a given PCI dev
->   * @dev: PCI device
-> + * @wakeup: Whether or not wakeup functionality will be enabled for the device.
->   *
->   * Use underlying platform code to find a supported low power state for @dev.
->   * If the platform can't manage @dev, return the deepest state from which it
->   * can generate wake events, based on any available PME info.
->   */
-> -static pci_power_t pci_target_state(struct pci_dev *dev)
-> +static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
->  {
->  	pci_power_t target_state = PCI_D3hot;
->  
-> @@ -2024,7 +2025,7 @@ static pci_power_t pci_target_state(stru
->  	if (dev->current_state == PCI_D3cold)
->  		target_state = PCI_D3cold;
->  
-> -	if (device_may_wakeup(&dev->dev)) {
-> +	if (wakeup) {
->  		/*
->  		 * Find the deepest state from which the device can generate
->  		 * wake-up events, make it the target state and enable device
-> @@ -2050,13 +2051,14 @@ static pci_power_t pci_target_state(stru
->   */
->  int pci_prepare_to_sleep(struct pci_dev *dev)
->  {
-> -	pci_power_t target_state = pci_target_state(dev);
-> +	bool wakeup = device_may_wakeup(&dev->dev);
-> +	pci_power_t target_state = pci_target_state(dev, wakeup);
->  	int error;
->  
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> -	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
-> +	pci_enable_wake(dev, target_state, wakeup);
->  
->  	error = pci_set_power_state(dev, target_state);
->  
-> @@ -2089,9 +2091,10 @@ EXPORT_SYMBOL(pci_back_from_sleep);
->   */
->  int pci_finish_runtime_suspend(struct pci_dev *dev)
->  {
-> -	pci_power_t target_state = pci_target_state(dev);
-> +	pci_power_t target_state;
->  	int error;
->  
-> +	target_state = pci_target_state(dev, device_can_wakeup(&dev->dev));
->  	if (target_state == PCI_POWER_ERROR)
->  		return -EIO;
->  
-> @@ -2127,8 +2130,8 @@ bool pci_dev_run_wake(struct pci_dev *de
->  	if (!dev->pme_support)
->  		return false;
->  
-> -	/* PME-capable in principle, but not from the intended sleep state */
-> -	if (!pci_pme_capable(dev, pci_target_state(dev)))
-> +	/* PME-capable in principle, but not from the target power state */
-> +	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
->  		return false;
->  
->  	while (bus->parent) {
-> @@ -2163,9 +2166,10 @@ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
->  bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
->  {
->  	struct device *dev = &pci_dev->dev;
-> +	bool wakeup = device_may_wakeup(dev);
->  
->  	if (!pm_runtime_suspended(dev)
-> -	    || pci_target_state(pci_dev) != pci_dev->current_state
-> +	    || pci_target_state(pci_dev, wakeup) != pci_dev->current_state
->  	    || platform_pci_need_resume(pci_dev)
->  	    || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
->  		return false;
-> @@ -2183,7 +2187,7 @@ bool pci_dev_keep_suspended(struct pci_d
->  	spin_lock_irq(&dev->power.lock);
->  
->  	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold &&
-> -	    !device_may_wakeup(dev))
-> +	    !wakeup)
->  		__pci_pme_active(pci_dev, false);
->  
->  	spin_unlock_irq(&dev->power.lock);
-> 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/pci/switch/switchtec.c       | 22 ++++++++++++++++++++--
+ include/uapi/linux/switchtec_ioctl.h |  3 +++
+ 2 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index f6a63406c76e..5cf59af989f4 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -120,6 +120,13 @@ struct sw_event_regs {
+ 	u32 reserved16[4];
+ } __packed;
+ 
++enum {
++	SWITCHTEC_CFG0_RUNNING = 0x04,
++	SWITCHTEC_CFG1_RUNNING = 0x05,
++	SWITCHTEC_IMG0_RUNNING = 0x03,
++	SWITCHTEC_IMG1_RUNNING = 0x07,
++};
++
+ struct sys_info_regs {
+ 	u32 device_id;
+ 	u32 device_version;
+@@ -129,7 +136,9 @@ struct sys_info_regs {
+ 	u32 table_format_version;
+ 	u32 partition_id;
+ 	u32 cfg_file_fmt_version;
+-	u32 reserved2[58];
++	u16 cfg_running;
++	u16 img_running;
++	u32 reserved2[57];
+ 	char vendor_id[8];
+ 	char product_id[16];
+ 	char product_revision[4];
+@@ -807,6 +816,7 @@ static int ioctl_flash_part_info(struct switchtec_dev *stdev,
+ {
+ 	struct switchtec_ioctl_flash_part_info info = {0};
+ 	struct flash_info_regs __iomem *fi = stdev->mmio_flash_info;
++	struct sys_info_regs __iomem *si = stdev->mmio_sys_info;
+ 	u32 active_addr = -1;
+ 
+ 	if (copy_from_user(&info, uinfo, sizeof(info)))
+@@ -816,18 +826,26 @@ static int ioctl_flash_part_info(struct switchtec_dev *stdev,
+ 	case SWITCHTEC_IOCTL_PART_CFG0:
+ 		active_addr = ioread32(&fi->active_cfg);
+ 		set_fw_info_part(&info, &fi->cfg0);
++		if (ioread16(&si->cfg_running) == SWITCHTEC_CFG0_RUNNING)
++			info.active |= SWITCHTEC_IOCTL_PART_RUNNING;
+ 		break;
+ 	case SWITCHTEC_IOCTL_PART_CFG1:
+ 		active_addr = ioread32(&fi->active_cfg);
+ 		set_fw_info_part(&info, &fi->cfg1);
++		if (ioread16(&si->cfg_running) == SWITCHTEC_CFG1_RUNNING)
++			info.active |= SWITCHTEC_IOCTL_PART_RUNNING;
+ 		break;
+ 	case SWITCHTEC_IOCTL_PART_IMG0:
+ 		active_addr = ioread32(&fi->active_img);
+ 		set_fw_info_part(&info, &fi->img0);
++		if (ioread16(&si->img_running) == SWITCHTEC_IMG0_RUNNING)
++			info.active |= SWITCHTEC_IOCTL_PART_RUNNING;
+ 		break;
+ 	case SWITCHTEC_IOCTL_PART_IMG1:
+ 		active_addr = ioread32(&fi->active_img);
+ 		set_fw_info_part(&info, &fi->img1);
++		if (ioread16(&si->img_running) == SWITCHTEC_IMG1_RUNNING)
++			info.active |= SWITCHTEC_IOCTL_PART_RUNNING;
+ 		break;
+ 	case SWITCHTEC_IOCTL_PART_NVLOG:
+ 		set_fw_info_part(&info, &fi->nvlog);
+@@ -861,7 +879,7 @@ static int ioctl_flash_part_info(struct switchtec_dev *stdev,
+ 	}
+ 
+ 	if (info.address == active_addr)
+-		info.active = 1;
++		info.active |= SWITCHTEC_IOCTL_PART_ACTIVE;
+ 
+ 	if (copy_to_user(uinfo, &info, sizeof(info)))
+ 		return -EFAULT;
+diff --git a/include/uapi/linux/switchtec_ioctl.h b/include/uapi/linux/switchtec_ioctl.h
+index 3e824e1a6495..5e392968bad2 100644
+--- a/include/uapi/linux/switchtec_ioctl.h
++++ b/include/uapi/linux/switchtec_ioctl.h
+@@ -39,6 +39,9 @@ struct switchtec_ioctl_flash_info {
+ 	__u32 padding;
+ };
+ 
++#define SWITCHTEC_IOCTL_PART_ACTIVE  1
++#define SWITCHTEC_IOCTL_PART_RUNNING 2
++
+ struct switchtec_ioctl_flash_part_info {
+ 	__u32 flash_partition;
+ 	__u32 address;
+-- 
+2.11.0
