@@ -1,62 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:3779 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752193AbdFZNeR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 09:34:17 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-CC: Mark Brown <broonie@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] PCI: mediatek: change to use pci_scan_root_bus_bridge()
-Date: Mon, 26 Jun 2017 21:34:01 +0800
-Message-ID: <1498484041-6181-2-git-send-email-ryder.lee@mediatek.com>
-In-Reply-To: <1498484041-6181-1-git-send-email-ryder.lee@mediatek.com>
-References: <1498484041-6181-1-git-send-email-ryder.lee@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 15 Jun 2017 14:37:29 -0600
+Message-Id: <20170615203729.9009-14-logang@deltatee.com>
+In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+Subject: [RFC PATCH 13/13] switchtec_ntb: update switchtec documentation with notes for ntb
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a critical patch fixes Build bot failed:
-> 	arm-allmodconfig
-> ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of
-function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
+The switchtec_ntb driver has a couple requirements on the switchec's
+hardware configuration so we add these notes to the documentation.
 
-It uses the new registration methods pci_scan_root_bus_bridge().
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ Documentation/switchtec.txt | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 3baafa8..514ef34 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -482,12 +482,10 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 	host->dev.parent = pcie->dev;
- 	host->ops = &mtk_pcie_ops;
- 
--	err = pci_register_host_bridge(host);
-+	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0)
- 		return err;
- 
--	pci_scan_child_bus(host->bus);
--
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 	pci_bus_size_bridges(host->bus);
- 	pci_bus_assign_resources(host->bus);
-@@ -506,7 +504,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *host;
- 	int err;
- 
--	host = pci_alloc_host_bridge(sizeof(*pcie));
-+	host = devm_pci_alloc_host_bridge(&pdev->dev, sizeof(*pcie));
- 	if (!host)
- 		return -ENOMEM;
- 
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
+index a0a9c7b3d4d5..978a346e1fb3 100644
+--- a/Documentation/switchtec.txt
++++ b/Documentation/switchtec.txt
+@@ -78,3 +78,15 @@ The following IOCTLs are also supported by the device:
+   between PCI Function Framework number (used by the event system)
+   and Switchtec Logic Port ID and Partition number (which is more
+   user friendly).
++
++
++Non-Transparent Bridge (NTB) Driver
++===================================
++
++An NTB driver is provided for the switchtec hardware in switchec_ntb.
++Currently, it only supports switches configured with exactly 2
++partitions. It also requires the following configuration settings:
++
++* Both partitions must be able to access each other's GAS spaces.
++  Thus, the bits in the GAS Access Vector under Management Settings
++  must be set to support this.
 -- 
-1.9.1
+2.11.0
