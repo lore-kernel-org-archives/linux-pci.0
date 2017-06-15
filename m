@@ -1,205 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:51124 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750923AbdFONl2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 09:41:28 -0400
-Date: Thu, 15 Jun 2017 08:41:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Oza <oza.oza@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: Re: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
-Message-ID: <20170615134124.GK20778@bhelgaas-glaptop.roam.corp.google.com>
-References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
- <1497153938-26074-3-git-send-email-oza.oza@broadcom.com>
- <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170615002358.GD28496@leoy-ThinkPad-T440>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+ <20170614082338.15673-15-guodong.xu@linaro.org>
+ <20170615002358.GD28496@leoy-ThinkPad-T440>
+From: Guodong Xu <guodong.xu@linaro.org>
+Date: Thu, 15 Jun 2017 10:55:07 +0800
+Message-ID: <CAFGCpxyxUnML7E_vszXAX=sHOgHFEBcYkXxY=tfNK5YC9NariA@mail.gmail.com>
+Subject: Re: [PATCH v3 14/21] arm64: dts: hi3660: enable idle states
+To: Leo Yan <leo.yan@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Kefeng Wang <wangkefeng.wang@huawei.com>, Arnd Bergmann <arnd@arndb.de>,
+ Kevin Wang <jean.wangtao@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, linux-mmc@vger.kernel.org,
+ Daniel Lezcano <daniel.lezcano@linaro.org>, Will Deacon <will.deacon@arm.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>, "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Peter Griffin <peter.griffin@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>,
+ "Chenfeng \(puck\)" <puck.chen@hisilicon.com>,
+ Xuejiancheng <xuejiancheng@hisilicon.com>,
+ Zhangfei Gao <zhangfei.gao@linaro.org>, Lee Jones <lee.jones@linaro.org>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 14, 2017 at 10:24:11AM +0530, Oza Oza wrote:
-> On Tue, Jun 13, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Sun, Jun 11, 2017 at 09:35:38AM +0530, Oza Pawandeep wrote:
-> >> PERST# must be asserted around ~500ms before
-> >> the reboot is applied.
-> >>
-> >> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
-> >> LCPLL clock and PERST both goes off simultaneously.
-> >> This will cause certain Endpoints Intel NVMe not get detected, upon
-> >> next boot sequence.
-> >>
-> >> This happens because; Endpoint is expecting the clock for some amount of
-> >> time after PERST is asserted, which is not happening in our case
-> >> (Compare to Intel X86 boards, will have clocks running).
-> >> this cause NVMe to behave in undefined way.
-> >
-> > This doesn't smell right.  The description makes this sound like a
-> > band-aid that happens to "solve" a problem with one particular device.
-> > It doesn't sound like this is making iProc adhere to something in the
-> > PCIe spec.
-> >
-> > Is there some PCIe spec timing requirement that tells you about this
-> > 500ms number?  Please include the reference if so.
-> 
-> On chip PLL which sources the reference clock to the device gets reset
-> when soft reset is applied; the soft reset also asserts PERST#.
-> This simultaneous assertion of reset and clock being lost is a problem
-> with some NVME cards.
-> The delay is added to keep clock alive while PERST gets asserted.
-> The time delay number can be set to a number that will allow the NVME
-> device to go into reset state.
-> 500 ms delay is picked for that reason only, which is long enough to
-> get EP into reset correctly.
+On Thu, Jun 15, 2017 at 8:23 AM, Leo Yan <leo.yan@linaro.org> wrote:
+> On Wed, Jun 14, 2017 at 04:23:31PM +0800, Guodong Xu wrote:
+>> From: Leo Yan <leo.yan@linaro.org>
+>>
+>> On Hi3660 there have two clusters, one is CA53 cluster and another is
+>> CA73 cluster. This two clusters have different idle states separately.
+>> With Daniel Lezcano's patch (ARM: cpuidle: Support asymmetric idle
+>> definition), now ARM idle driver can support different clusters with
+>> different idle states.
+>>
+>> Base on this, this patch is to bind two clusters idle states on Hi3660.
+>> Except the "WFI" states are enabled by default for all CPUs, this patch
+>> also binds below extra idle states:
+>>
+>> - CA53 CPUs have two more states:
+>>   CPU_SLEEP:       CPU power off state
+>>   CLUSTER_SLEEP_0: Cluster power off state
+>>
+>> - CA73 CPUs have three more states:
+>>   CPU_NAP:         CPU retention state
+>>   CPU_SLEEP:       CPU power off state
+>>   CLUSTER_SLEEP_1: Cluster power off state
+>
+> Hi Guodong, Wei and all,
+>
+> As Daniel reminded, this patch is dependent on patch (ARM: cpuidle:
+> Support asymmetric idle definition) [1] but his patch has not been
+> finally merged yet. So let us hold on this patch for Daniel's patch
+> is picked up firstly.
+>
+> At the meantime welcome the review and comment for this patch ahead.
+>
 
-This doesn't really tell me anything new.
+Ok, so, I will drop this patch, and resend my patchset as v4.
 
-We're talking about the protocol on the link between the RC and the
-endpoint.  That *should* be completely specified by the PCIe spec.  If
-there's some requirement that the clock keep running after PERST is
-asserted, that should be in the spec.
+-Guodong
 
-If it's not in the spec, and an endpoint relies on it, the endpoint is
-non-compliant, and we'll likely see similar issues with that endpoint
-on other platforms.
+> [1] https://patchwork.kernel.org/patch/9781869/
+>
+> [...]
+>
+> Thanks,
+> Leo Yan
 
-If we need a workaround for a specific endpoint, that might be OK; the
-world isn't perfect.  But if that's the case, we should include more
-specifics about the device, e.g., vendor/device IDs and "lspci -vv"
-output.
-
-> >> Essentially clock will remain alive for 500ms with PERST# = 0
-> >> before reboot.
-> >
-> >> This patch adds platform shutdown where it should be
-> >> called in device_shutdown while reboot command is issued.
-> >>
-> >> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-> >> followed by RC shutdown is called, which issues safe PERST
-> >> assertion.
-> >>
-> >> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> >> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> >> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> >>
-> >> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-> >> index 90d2bdd..9512960 100644
-> >> --- a/drivers/pci/host/pcie-iproc-platform.c
-> >> +++ b/drivers/pci/host/pcie-iproc-platform.c
-> >> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
-> >>       return iproc_pcie_remove(pcie);
-> >>  }
-> >>
-> >> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-> >> +{
-> >> +     struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-> >> +
-> >> +     iproc_pcie_shutdown(pcie);
-> >> +}
-> >> +
-> >>  static struct platform_driver iproc_pcie_pltfm_driver = {
-> >>       .driver = {
-> >>               .name = "iproc-pcie",
-> >> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
-> >>       },
-> >>       .probe = iproc_pcie_pltfm_probe,
-> >>       .remove = iproc_pcie_pltfm_remove,
-> >> +     .shutdown = iproc_pcie_pltfm_shutdown,
-> >>  };
-> >>  module_platform_driver(iproc_pcie_pltfm_driver);
-> >>
-> >> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> >> index 05a3647..bb61376 100644
-> >> --- a/drivers/pci/host/pcie-iproc.c
-> >> +++ b/drivers/pci/host/pcie-iproc.c
-> >> @@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
-> >>       .write = iproc_pcie_config_write32,
-> >>  };
-> >>
-> >> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
-> >> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
-> >>  {
-> >>       u32 val;
-> >>
-> >>       /*
-> >> -      * PAXC and the internal emulated endpoint device downstream should not
-> >> -      * be reset.  If firmware has been loaded on the endpoint device at an
-> >> -      * earlier boot stage, reset here causes issues.
-> >> +      * The internal emulated endpoints (such as PAXC) device downstream
-> >> +      * should not be reset. If firmware has been loaded on the endpoint
-> >> +      * device at an earlier boot stage, reset here causes issues.
-> >>        */
-> >>       if (pcie->ep_is_internal)
-> >>               return;
-> >>
-> >> -     /*
-> >> -      * Select perst_b signal as reset source. Put the device into reset,
-> >> -      * and then bring it out of reset
-> >> -      */
-> >> -     val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> >> -     val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-> >> -             ~RC_PCIE_RST_OUTPUT;
-> >> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> >> -     udelay(250);
-> >> -
-> >> -     val |= RC_PCIE_RST_OUTPUT;
-> >> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> >> -     msleep(100);
-> >> +     if (assert) {
-> >> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> >> +             val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-> >> +                     ~RC_PCIE_RST_OUTPUT;
-> >> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> >> +             udelay(250);
-> >> +     } else {
-> >> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> >> +             val |= RC_PCIE_RST_OUTPUT;
-> >> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> >> +             msleep(100);
-> >> +     }
-> >> +}
-> >> +
-> >> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-> >> +{
-> >> +     iproc_pcie_perst_ctrl(pcie, true);
-> >> +     msleep(500);
-> >> +
-> >> +     return 0;
-> >>  }
-> >> +EXPORT_SYMBOL(iproc_pcie_shutdown);
-> >>
-> >>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
-> >>  {
-> >> @@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
-> >>               goto err_exit_phy;
-> >>       }
-> >>
-> >> -     iproc_pcie_reset(pcie);
-> >> +     iproc_pcie_perst_ctrl(pcie, true);
-> >> +     iproc_pcie_perst_ctrl(pcie, false);
-> >>
-> >>       if (pcie->need_ob_cfg) {
-> >>               ret = iproc_pcie_map_ranges(pcie, res);
-> >> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> >> index 0bbe2ea..a6b55ce 100644
-> >> --- a/drivers/pci/host/pcie-iproc.h
-> >> +++ b/drivers/pci/host/pcie-iproc.h
-> >> @@ -110,6 +110,7 @@ struct iproc_pcie {
-> >>
-> >>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
-> >>  int iproc_pcie_remove(struct iproc_pcie *pcie);
-> >> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
-> >>
-> >>  #ifdef CONFIG_PCIE_IPROC_MSI
-> >>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
-> >> --
-> >> 1.9.1
-> >>
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
