@@ -1,197 +1,205 @@
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: [PATCH v5 6/6] drm/amdgpu: resize VRAM BAR for CPU access v3
-Date: Fri,  9 Jun 2017 10:59:47 +0200
-Message-Id: <1496998787-6371-7-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:58904 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751795AbdFOUhp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 16:37:45 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 15 Jun 2017 14:37:21 -0600
+Message-Id: <20170615203729.9009-6-logang@deltatee.com>
+In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+Subject: [RFC PATCH 05/13] switchtec_ntb: introduce initial ntb driver
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+Seeing the switchtec NTB hardware shares the same endpoint as the
+management endpoint we utilize the class_interface api to register
+an NTB driver for every switchtec device in the system that has the
+NTB class code.
 
-Try to resize BAR0 to let CPU access all of VRAM.
-
-v2: rebased, style cleanups, disable mem decode before resize,
-    handle gmc_v9 as well, round size up to power of two.
-v3: handle gmc_v6 as well, release and reassign all BARs in the driver.
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 40 ++++++++++++++++++++++++++++++
- drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c      |  8 +++---
- drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++---
- drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++---
- drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 +++++---
- 6 files changed, 62 insertions(+), 13 deletions(-)
+ MAINTAINERS                         |  1 +
+ drivers/ntb/hw/Kconfig              |  1 +
+ drivers/ntb/hw/Makefile             |  1 +
+ drivers/ntb/hw/mscc/Kconfig         |  9 +++++
+ drivers/ntb/hw/mscc/Makefile        |  1 +
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 81 +++++++++++++++++++++++++++++++++++++
+ include/linux/switchtec.h           |  4 ++
+ 7 files changed, 98 insertions(+)
+ create mode 100644 drivers/ntb/hw/mscc/Kconfig
+ create mode 100644 drivers/ntb/hw/mscc/Makefile
+ create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index c6a2ca4..87655e2 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -1943,6 +1943,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
- 				 struct ttm_mem_reg *mem);
- void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
- void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
-+void amdgpu_resize_bar0(struct amdgpu_device *adev);
- void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
- int amdgpu_ttm_init(struct amdgpu_device *adev);
- void amdgpu_ttm_fini(struct amdgpu_device *adev);
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index 99290af..f74b79f 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -709,6 +709,46 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
- 			mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6cee5e253ec3..fbd88be1be03 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9842,6 +9842,7 @@ F:	Documentation/ABI/testing/sysfs-class-switchtec
+ F:	drivers/pci/switch/switchtec*
+ F:	include/uapi/linux/switchtec_ioctl.h
+ F:	include/linux/switchtec.h
++F:	drivers/ntb/hw/mscc/
  
-+/**
-+ * amdgpu_resize_bar0 - try to resize BAR0
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+diff --git a/drivers/ntb/hw/Kconfig b/drivers/ntb/hw/Kconfig
+index 7116472b4625..1d1360db87e1 100644
+--- a/drivers/ntb/hw/Kconfig
++++ b/drivers/ntb/hw/Kconfig
+@@ -1,2 +1,3 @@
+ source "drivers/ntb/hw/amd/Kconfig"
+ source "drivers/ntb/hw/intel/Kconfig"
++source "drivers/ntb/hw/mscc/Kconfig"
+diff --git a/drivers/ntb/hw/Makefile b/drivers/ntb/hw/Makefile
+index 532e0859b4a1..690c00274174 100644
+--- a/drivers/ntb/hw/Makefile
++++ b/drivers/ntb/hw/Makefile
+@@ -1,2 +1,3 @@
+ obj-$(CONFIG_NTB_AMD)	+= amd/
+ obj-$(CONFIG_NTB_INTEL)	+= intel/
++obj-$(CONFIG_NTB_SWITCHTEC) += mscc/
+diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
+new file mode 100644
+index 000000000000..013ed6716438
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/Kconfig
+@@ -0,0 +1,9 @@
++config NTB_SWITCHTEC
++	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
++	select PCI_SW_SWITCHTEC
++	help
++	 Enables NTB support for Switchtec PCI switches. This also
++	 selects the Switchtec management driver as they share the same
++	 hardware interface.
++
++	 If unsure, say N.
+diff --git a/drivers/ntb/hw/mscc/Makefile b/drivers/ntb/hw/mscc/Makefile
+new file mode 100644
+index 000000000000..21907b364e19
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_NTB_SWITCHTEC) += switchtec_ntb.o
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+new file mode 100644
+index 000000000000..1f094216aa1c
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -0,0 +1,81 @@
++/*
++ * Microsemi Switchtec(tm) PCIe Management Driver
++ * Copyright (c) 2017, Microsemi Corporation
 + *
-+ * @adev: amdgpu_device pointer
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
 + *
-+ * Try to resize BAR0 to make all VRAM CPU accessible.
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
 + */
-+void amdgpu_resize_bar0(struct amdgpu_device *adev)
++
++#include <linux/switchtec.h>
++#include <linux/module.h>
++
++MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
++MODULE_VERSION("0.1");
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Microsemi Corporation");
++
++struct switchtec_ntb {
++	struct switchtec_dev *stdev;
++};
++
++static int switchtec_ntb_add(struct device *dev,
++			     struct class_interface *class_intf)
 +{
-+	u64 space_needed = roundup_pow_of_two(adev->mc.real_vram_size);
-+	u32 rbar_size = order_base_2(((space_needed >> 20) | 1)) - 1;
-+	u16 cmd;
-+	int r;
++	struct switchtec_dev *stdev = to_stdev(dev);
++	struct switchtec_ntb *sndev;
 +
-+	/* Disable memory decoding while we change the BAR addresses and size */
-+	pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
-+	pci_write_config_word(adev->pdev, PCI_COMMAND,
-+			      cmd & ~PCI_COMMAND_MEMORY);
++	stdev->sndev = NULL;
 +
-+	/* Free the VRAM and doorbell BAR, we most likely need to move both. */
-+	amdgpu_doorbell_fini(adev);
-+	pci_release_resource(adev->pdev, 0);
-+	if (adev->asic_type >= CHIP_BONAIRE)
-+		pci_release_resource(adev->pdev, 2);
++	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
++		return -ENODEV;
 +
-+	r = pci_resize_resource(adev->pdev, 0, rbar_size);
-+	if (r == -ENOSPC)
-+		DRM_INFO("Not enough PCI address space for a large BAR.");
-+	else if (r && r != -ENOTSUPP)
-+		DRM_ERROR("Problem resizing BAR0 (%d).", r);
++	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
++	if (!sndev)
++		return -ENOMEM;
 +
-+	pci_assign_unassigned_bus_resources(adev->pdev->bus);
-+	pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
++	sndev->stdev = stdev;
 +
-+	/* When the doorbell BAR isn't available we have no chance of
-+	 * using the device.
-+	 */
-+	BUG_ON(amdgpu_doorbell_init(adev));
++	stdev->sndev = sndev;
++	dev_info(dev, "NTB device registered");
++
++	return 0;
 +}
 +
- /*
-  * GPU helpers function.
-  */
-diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
-index a33ba60..af3c3c6 100644
---- a/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
-+++ b/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
-@@ -334,12 +334,14 @@ static int gmc_v6_0_mc_init(struct amdgpu_device *adev)
- 		break;
- 	}
- 	adev->mc.vram_width = numchan * chansize;
--	/* Could aper size report 0 ? */
--	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
--	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	/* size in MB on si */
- 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
++void switchtec_ntb_remove(struct device *dev,
++			  struct class_interface *class_intf)
++{
++	struct switchtec_dev *stdev = to_stdev(dev);
++	struct switchtec_ntb *sndev = stdev->sndev;
 +
-+	if (!(adev->flags & AMD_IS_APU))
-+		amdgpu_resize_bar0(adev);
-+	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
-+	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	adev->mc.visible_vram_size = adev->mc.aper_size;
- 
- 	/* unless the user had overridden it, set the gart
-diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-index 1326c1f..1d9f7a2 100644
---- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-+++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-@@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *adev)
- 		}
- 		adev->mc.vram_width = numchan * chansize;
- 	}
--	/* Could aper size report 0 ? */
--	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
--	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	/* size in MB on si */
- 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 
-+	if (!(adev->flags & AMD_IS_APU))
-+		amdgpu_resize_bar0(adev);
-+	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
-+	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++	if (!sndev)
++		return;
 +
- #ifdef CONFIG_X86_64
- 	if (adev->flags & AMD_IS_APU) {
- 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
-diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-index 42e5b55..858153d 100644
---- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-+++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-@@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *adev)
- 		}
- 		adev->mc.vram_width = numchan * chansize;
- 	}
--	/* Could aper size report 0 ? */
--	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
--	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	/* size in MB on si */
- 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 
-+	if (!(adev->flags & AMD_IS_APU))
-+		amdgpu_resize_bar0(adev);
-+	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
-+	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++	stdev->sndev = NULL;
++	kfree(sndev);
++	dev_info(dev, "ntb device unregistered");
++}
 +
- #ifdef CONFIG_X86_64
- 	if (adev->flags & AMD_IS_APU) {
- 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
-diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
-index 68172aa..f2e311d 100644
---- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
-+++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
-@@ -480,17 +480,19 @@ static int gmc_v9_0_mc_init(struct amdgpu_device *adev)
- 	}
- 	adev->mc.vram_width = numchan * chansize;
- 
--	/* Could aper size report 0 ? */
--	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
--	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	/* size in MB on si */
- 	adev->mc.mc_vram_size =
- 		((adev->flags & AMD_IS_APU) ? nbio_v7_0_get_memsize(adev) :
- 		 nbio_v6_1_get_memsize(adev)) * 1024ULL * 1024ULL;
- 	adev->mc.real_vram_size = adev->mc.mc_vram_size;
--	adev->mc.visible_vram_size = adev->mc.aper_size;
++static struct class_interface switchtec_interface  = {
++	.class = &switchtec_class,
++	.add_dev = switchtec_ntb_add,
++	.remove_dev = switchtec_ntb_remove,
++};
 +
-+	if (!(adev->flags & AMD_IS_APU))
-+		amdgpu_resize_bar0(adev);
-+	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
-+	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++static int __init switchtec_ntb_init(void)
++{
++	return class_interface_register(&switchtec_interface);
++}
++module_init(switchtec_ntb_init);
++
++static void __exit switchtec_ntb_exit(void)
++{
++	class_interface_unregister(&switchtec_interface);
++}
++module_exit(switchtec_ntb_exit);
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 8d66a0659cef..0a7d0ed77507 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -312,6 +312,8 @@ struct pff_csr_regs {
+ 	u32 reserved4[174];
+ } __packed;
  
- 	/* In case the PCI BAR is larger than the actual amount of vram */
-+	adev->mc.visible_vram_size = adev->mc.aper_size;
- 	if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
- 		adev->mc.visible_vram_size = adev->mc.real_vram_size;
++struct switchtec_ntb;
++
+ struct switchtec_dev {
+ 	struct pci_dev *pdev;
+ 	struct device dev;
+@@ -349,6 +351,8 @@ struct switchtec_dev {
+ 	struct work_struct link_event_work;
+ 	struct blocking_notifier_head link_notifier;
+ 	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
++
++	struct switchtec_ntb *sndev;
+ };
  
+ static inline struct switchtec_dev *to_stdev(struct device *dev)
 -- 
-2.7.4
+2.11.0
