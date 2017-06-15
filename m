@@ -1,39 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:44671 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751541AbdF2BYd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jun 2017 21:24:33 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/3] dt-bindings: PCI: rockchip: Add vpcie12v-supply for Rockchip PCIe controller
-Date: Thu, 29 Jun 2017 09:21:28 +0800
-Message-Id: <1498699288-63944-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@ozlabs.org>
+Subject: [PATCH kernel 2/3] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+Date: Thu, 15 Jun 2017 15:06:41 +1000
+Message-Id: <20170615050642.8197-3-aik@ozlabs.ru>
+In-Reply-To: <20170615050642.8197-1-aik@ozlabs.ru>
+References: <20170615050642.8197-1-aik@ozlabs.ru>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe connector provide a optional 12V power supply for high
-power downstream components, so we add this as a optional
-one if we need to control it.
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Any IODA host bridge have the capability of IRQ remapping.
+So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
+is detected.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Reviewed-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+Signed-off-by: Paul Mackerras <paulus@ozlabs.org>
 ---
+ arch/powerpc/platforms/powernv/pci-ioda.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
- Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 1453a73..9b88959 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -47,6 +47,7 @@ Optional Property:
- 	using 24MHz OSC for RC's PHY.
- - ep-gpios: contain the entry for pre-reset gpio
- - num-lanes: number of lanes to use
-+- vpcie12v-supply: The phandle to the 12v regulator to use for PCIe.
- - vpcie3v3-supply: The phandle to the 3.3v regulator to use for PCIe.
- - vpcie1v8-supply: The phandle to the 1.8v regulator to use for PCIe.
- - vpcie0v9-supply: The phandle to the 0.9v regulator to use for PCIe.
+diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+index 283caf1070c9..b6bda1918273 100644
+--- a/arch/powerpc/platforms/powernv/pci-ioda.c
++++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+@@ -3177,6 +3177,12 @@ static void pnv_pci_ioda_fixup(void)
+ #endif
+ }
+ 
++int pnv_pci_ioda_root_bridge_prepare(struct pci_host_bridge *bridge)
++{
++	bridge->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
++	return 0;
++}
++
+ /*
+  * Returns the alignment for I/O or memory windows for P2P
+  * bridges. That actually depends on how PEs are segmented.
+@@ -3861,6 +3867,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+ 	 */
+ 	ppc_md.pcibios_fixup = pnv_pci_ioda_fixup;
+ 
++	ppc_md.pcibios_root_bridge_prepare = pnv_pci_ioda_root_bridge_prepare;
++
+ 	if (phb->type == PNV_PHB_NPU) {
+ 		hose->controller_ops = pnv_npu_ioda_controller_ops;
+ 	} else {
 -- 
-1.9.1
+2.11.0
