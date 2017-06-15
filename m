@@ -1,52 +1,54 @@
-Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=XPBu=5S=linuxfoundation.org=gregkh@kernel.org>
-Date: Tue, 13 Jun 2017 06:34:16 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	kernel test robot <fengguang.wu@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	David Airlie <airlied@linux.ie>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
- to handle kernel NULL pointer dereference at 00000000000000a8
-Message-ID: <20170613043416.GB14217@kroah.com>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
- <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
- <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0073.outbound.protection.outlook.com ([104.47.36.73]:58096
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751546AbdFOSN5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 14:13:57 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Samuel Sieb' <samuel@sieb.net>, Joerg Roedel <jroedel@suse.de>,
+        "Bjorn Helgaas" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Date: Thu, 15 Jun 2017 18:13:49 +0000
+Message-ID: <BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+ <20170615140421.GB25710@suse.de>
+ <6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net>
+In-Reply-To: <6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 10:29:20PM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 12/06/17 10:18 PM, Greg Kroah-Hartman wrote:
-> > What test causes so many major numbers to be allocated?  Is this
-> > in-kernel test code?  Do you really have a system that requires so many
-> > different drivers that all want a dynamic char major?
-> 
-> This is a 0day kernel robot test. I'm not sure the motivations of its
-> design but it seems to be similar to an allyesconfig. So all/most
-> modules are compiled in and allocating their char device regions on boot
-> of a qemu instance.
-
-Ah, that makes sense.  Well, someone can always work on expanding the
-range of dynamic char major numbers if they are running out of them on a
-real system, I'll gladly take patches for that :)
-
-thanks,
-
-greg k-h
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBTYW11ZWwgU2llYiBbbWFpbHRv
+OnNhbXVlbEBzaWViLm5ldF0NCj4gU2VudDogVGh1cnNkYXksIEp1bmUgMTUsIDIwMTcgMTowMiBQ
+TQ0KPiBUbzogSm9lcmcgUm9lZGVsOyBCam9ybiBIZWxnYWFzDQo+IENjOiBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBEYW5pZWwgRHJha2U7
+DQo+IERldWNoZXIsIEFsZXhhbmRlcjsgRGF2aWQgV29vZGhvdXNlDQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0ggdjJdIFBDSTogQWRkIEFUUy1kaXNhYmxlIHF1aXJrIGZvciBBTUQgU3RvbmV5IEdQVXMN
+Cj4gDQo+IE9uIDA2LzE1LzIwMTcgMDc6MDQgQU0sIEpvZXJnIFJvZWRlbCB3cm90ZToNCj4gPiBI
+aSBCam9ybiwNCj4gPg0KPiA+IE9uIEZyaSwgQXByIDA3LCAyMDE3IGF0IDA0OjMyOjE4UE0gKzAy
+MDAsIEpvZXJnIFJvZWRlbCB3cm90ZToNCj4gPj4gRnJvbTogSm9lcmcgUm9lZGVsIDxqcm9lZGVs
+QHN1c2UuZGU+DQo+ID4+DQo+ID4+IEFUUyBpcyBicm9rZW4gb24gdGhpcyBoYXJkd2FyZSBhbmQg
+Y2F1c2VzIElPTU1VIHN0YWxscyBhbmQNCj4gPj4gc3lzdGVtIGZhaWx1cmUuIERpc2FibGUgQVRT
+IG9uIHRoZXNlIGRldmljZXMgdG8gbWFrZSB0aGVtDQo+ID4+IHVzYWJsZSBhZ2FpbiB3aXRoIElP
+TU1VIGVuYWJsZWQuDQo+ID4+DQo+ID4+IE5vdGUgdGhhdCB0aGUgY29tbWl0IGluIHRoZSBGaXhl
+cy10YWcgaXMgbm90IGJ1Z2d5LCBpdA0KPiA+PiBqdXN0IHVuY292ZXJzIHRoZSBwcm9ibGVtIGlu
+IHRoZSBoYXJkd2FyZSBieSBpbmNyZWFzaW5nDQo+ID4+IHRoZSBBVFMtZmx1c2ggcmF0ZS4NCj4g
+Pj4NCj4gPj4gRml4ZXM6IGIxNTE2YTE0NjU3YSAoJ2lvbW11L2FtZDogSW1wbGVtZW50IGZsdXNo
+IHF1ZXVlJykNCj4gPj4gU2lnbmVkLW9mZi1ieTogSm9lcmcgUm9lZGVsIDxqcm9lZGVsQHN1c2Uu
+ZGU+DQo+ID4+IC0tLQ0KPiA+PiAgIGRyaXZlcnMvcGNpL3F1aXJrcy5jIHwgMTkgKysrKysrKysr
+KysrKysrKysrKw0KPiA+PiAgIDEgZmlsZSBjaGFuZ2VkLCAxOSBpbnNlcnRpb25zKCspDQo+ID4N
+Cj4gPiBBbnkgbW9yZSBvYmplY3Rpb25zIG9uIHRoaXMgcGF0Y2g/IFBsZWFzZSBsZXQgbWUga25v
+dyBpZiB5b3Ugd2FudCB0bw0KPiA+IGhhdmUgc29tZXRoaW5nIGNoYW5nZWQuDQo+IA0KPiBUaGUg
+b3RoZXIgcGF0Y2ggc2VlbXMgdG8gZml4IHRoaXMgaXNzdWUgd2l0aG91dCBkaXNhYmxpbmcgQVRT
+LiAgSXNuJ3QNCj4gdGhhdCBiZXR0ZXI/DQoNCkkgdGFsa2VkIHRvIG91ciB2YWxpZGF0aW9uIHRl
+YW0gYW5kIEFUUyB3YXMgdmFsaWRhdGVkIG9uIFN0b25leSwgc28gdGhpcyBwYXRjaCBpcyBqdXN0
+IHdvcmtpbmcgYXJvdW5kIHNvbWV0aGluZyBlbHNlLiAgVGhlIG90aGVyIHBhdGNoIGZpeGVzIGl0
+IGFuZCBpcyBhIHZhbGlkIG9wdGltaXphdGlvbiAoaXQgc2hvdWxkIGJlIGFwcGxpZWQgZXZlbnR1
+YWxseSksIGJ1dCBhcHBhcmVudGx5IHRoZSBjdXJyZW50IGJlaGF2aW9yIGlzIGFsbG93ZWQgZXZl
+biBpZiBpdCdzIG5vdyBvcHRpbWFsLiAgSSdtIG5vdCByZWFsbHkgYW4gQVRTIGV4cGVydC4NCg0K
+QWxleA0KDQo=
