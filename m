@@ -1,66 +1,594 @@
-Return-Path: <SRS0=/uOW=5Y=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=/uOW=5Y=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
-To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Liviu Dudau
-	<liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>, linux-pci
-	<linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, Mason
-	<slash.tmp@free.fr>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
- <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
- <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
- <7d9bfb52-b33a-79ea-dccf-fff1f849bd15@arm.com>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <e45533a7-e469-7faf-4b30-acf6889b982c@sigmadesigns.com>
-Date: Mon, 19 Jun 2017 18:01:15 +0200
-MIME-Version: 1.0
-In-Reply-To: <7d9bfb52-b33a-79ea-dccf-fff1f849bd15@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:58940 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752272AbdFOUht (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 15 Jun 2017 16:37:49 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 15 Jun 2017 14:37:17 -0600
+Message-Id: <20170615203729.9009-2-logang@deltatee.com>
+In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+Subject: [RFC PATCH 01/13] switchtec: move structure definitions into a common header
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/06/2017 17:58, Marc Zyngier wrote:
-> On 19/06/17 15:50, Marc Gonzalez wrote:
->> On 07/06/2017 10:19, Marc Gonzalez wrote:
->>
->>> On 31/05/2017 15:33, Marc Gonzalez wrote:
->>>
->>>> +static int tango_pcie_probe(struct platform_device *pdev)
->>>> +{
->>>> +=09int ret =3D -EINVAL;
->>>> +=09void __iomem *base;
->>>> +=09struct resource *res;
->>>> +=09struct tango_pcie *pcie;
->>>> +=09struct device *dev =3D &pdev->dev;
->>>> +
->>>> +=09pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
->>>> +=09pr_err("Tainting kernel... Use driver at your own risk\n");
->>>> +=09add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
->>>
->>> Hello Bjorn,
->>>
->>> In v4, your only comment was
->>> "[muxing config and mem spaces] is a major issue and possibly even
->>> a security problem [which requires at least an error message and a
->>> kernel taint].
->>>
->>> Were there any other issues with the host bridge support?
->>
->> Hello Bjorn,
->>
->> I imagine you are now only waiting for Marc Z's Ack of patch 3/3 ?
->> (AFAIU, all issues have been addressed as of v8 3/3.)
->=20
-> Posting partial series is really not ideal, specially as you posted 3 of
-> them in less than 24 hours (and the latest was only 5 days ago).
->=20
-> The maintainer is not going to chase you about potentially missing
-> patches...
+Create the switchtec.h header in include/linux with hardware defines
+and the switchtec_dev structure moved directly from switchtec.c.
+This is a prep patch for created an NTB driver for switchtec.
 
-So the best course would be posting a new series with all patches
-bumped to v8 then?
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ MAINTAINERS                    |   1 +
+ drivers/pci/switch/switchtec.c | 249 +------------------------------------
+ include/linux/switchtec.h      | 270 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 272 insertions(+), 248 deletions(-)
+ create mode 100644 include/linux/switchtec.h
 
-Regards.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 09b5ab6a8a5c..6cee5e253ec3 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9841,6 +9841,7 @@ F:	Documentation/switchtec.txt
+ F:	Documentation/ABI/testing/sysfs-class-switchtec
+ F:	drivers/pci/switch/switchtec*
+ F:	include/uapi/linux/switchtec_ioctl.h
++F:	include/linux/switchtec.h
+ 
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index f6a63406c76e..c4369ba7bbc1 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -13,6 +13,7 @@
+  *
+  */
+ 
++#include <linux/switchtec.h>
+ #include <linux/switchtec_ioctl.h>
+ 
+ #include <linux/interrupt.h>
+@@ -37,254 +38,6 @@ static dev_t switchtec_devt;
+ static struct class *switchtec_class;
+ static DEFINE_IDA(switchtec_minor_ida);
+ 
+-#define MICROSEMI_VENDOR_ID         0x11f8
+-#define MICROSEMI_NTB_CLASSCODE     0x068000
+-#define MICROSEMI_MGMT_CLASSCODE    0x058000
+-
+-#define SWITCHTEC_MRPC_PAYLOAD_SIZE 1024
+-#define SWITCHTEC_MAX_PFF_CSR 48
+-
+-#define SWITCHTEC_EVENT_OCCURRED BIT(0)
+-#define SWITCHTEC_EVENT_CLEAR    BIT(0)
+-#define SWITCHTEC_EVENT_EN_LOG   BIT(1)
+-#define SWITCHTEC_EVENT_EN_CLI   BIT(2)
+-#define SWITCHTEC_EVENT_EN_IRQ   BIT(3)
+-#define SWITCHTEC_EVENT_FATAL    BIT(4)
+-
+-enum {
+-	SWITCHTEC_GAS_MRPC_OFFSET       = 0x0000,
+-	SWITCHTEC_GAS_TOP_CFG_OFFSET    = 0x1000,
+-	SWITCHTEC_GAS_SW_EVENT_OFFSET   = 0x1800,
+-	SWITCHTEC_GAS_SYS_INFO_OFFSET   = 0x2000,
+-	SWITCHTEC_GAS_FLASH_INFO_OFFSET = 0x2200,
+-	SWITCHTEC_GAS_PART_CFG_OFFSET   = 0x4000,
+-	SWITCHTEC_GAS_NTB_OFFSET        = 0x10000,
+-	SWITCHTEC_GAS_PFF_CSR_OFFSET    = 0x134000,
+-};
+-
+-struct mrpc_regs {
+-	u8 input_data[SWITCHTEC_MRPC_PAYLOAD_SIZE];
+-	u8 output_data[SWITCHTEC_MRPC_PAYLOAD_SIZE];
+-	u32 cmd;
+-	u32 status;
+-	u32 ret_value;
+-} __packed;
+-
+-enum mrpc_status {
+-	SWITCHTEC_MRPC_STATUS_INPROGRESS = 1,
+-	SWITCHTEC_MRPC_STATUS_DONE = 2,
+-	SWITCHTEC_MRPC_STATUS_ERROR = 0xFF,
+-	SWITCHTEC_MRPC_STATUS_INTERRUPTED = 0x100,
+-};
+-
+-struct sw_event_regs {
+-	u64 event_report_ctrl;
+-	u64 reserved1;
+-	u64 part_event_bitmap;
+-	u64 reserved2;
+-	u32 global_summary;
+-	u32 reserved3[3];
+-	u32 stack_error_event_hdr;
+-	u32 stack_error_event_data;
+-	u32 reserved4[4];
+-	u32 ppu_error_event_hdr;
+-	u32 ppu_error_event_data;
+-	u32 reserved5[4];
+-	u32 isp_error_event_hdr;
+-	u32 isp_error_event_data;
+-	u32 reserved6[4];
+-	u32 sys_reset_event_hdr;
+-	u32 reserved7[5];
+-	u32 fw_exception_hdr;
+-	u32 reserved8[5];
+-	u32 fw_nmi_hdr;
+-	u32 reserved9[5];
+-	u32 fw_non_fatal_hdr;
+-	u32 reserved10[5];
+-	u32 fw_fatal_hdr;
+-	u32 reserved11[5];
+-	u32 twi_mrpc_comp_hdr;
+-	u32 twi_mrpc_comp_data;
+-	u32 reserved12[4];
+-	u32 twi_mrpc_comp_async_hdr;
+-	u32 twi_mrpc_comp_async_data;
+-	u32 reserved13[4];
+-	u32 cli_mrpc_comp_hdr;
+-	u32 cli_mrpc_comp_data;
+-	u32 reserved14[4];
+-	u32 cli_mrpc_comp_async_hdr;
+-	u32 cli_mrpc_comp_async_data;
+-	u32 reserved15[4];
+-	u32 gpio_interrupt_hdr;
+-	u32 gpio_interrupt_data;
+-	u32 reserved16[4];
+-} __packed;
+-
+-struct sys_info_regs {
+-	u32 device_id;
+-	u32 device_version;
+-	u32 firmware_version;
+-	u32 reserved1;
+-	u32 vendor_table_revision;
+-	u32 table_format_version;
+-	u32 partition_id;
+-	u32 cfg_file_fmt_version;
+-	u32 reserved2[58];
+-	char vendor_id[8];
+-	char product_id[16];
+-	char product_revision[4];
+-	char component_vendor[8];
+-	u16 component_id;
+-	u8 component_revision;
+-} __packed;
+-
+-struct flash_info_regs {
+-	u32 flash_part_map_upd_idx;
+-
+-	struct active_partition_info {
+-		u32 address;
+-		u32 build_version;
+-		u32 build_string;
+-	} active_img;
+-
+-	struct active_partition_info active_cfg;
+-	struct active_partition_info inactive_img;
+-	struct active_partition_info inactive_cfg;
+-
+-	u32 flash_length;
+-
+-	struct partition_info {
+-		u32 address;
+-		u32 length;
+-	} cfg0;
+-
+-	struct partition_info cfg1;
+-	struct partition_info img0;
+-	struct partition_info img1;
+-	struct partition_info nvlog;
+-	struct partition_info vendor[8];
+-};
+-
+-struct ntb_info_regs {
+-	u8  partition_count;
+-	u8  partition_id;
+-	u16 reserved1;
+-	u64 ep_map;
+-	u16 requester_id;
+-} __packed;
+-
+-struct part_cfg_regs {
+-	u32 status;
+-	u32 state;
+-	u32 port_cnt;
+-	u32 usp_port_mode;
+-	u32 usp_pff_inst_id;
+-	u32 vep_pff_inst_id;
+-	u32 dsp_pff_inst_id[47];
+-	u32 reserved1[11];
+-	u16 vep_vector_number;
+-	u16 usp_vector_number;
+-	u32 port_event_bitmap;
+-	u32 reserved2[3];
+-	u32 part_event_summary;
+-	u32 reserved3[3];
+-	u32 part_reset_hdr;
+-	u32 part_reset_data[5];
+-	u32 mrpc_comp_hdr;
+-	u32 mrpc_comp_data[5];
+-	u32 mrpc_comp_async_hdr;
+-	u32 mrpc_comp_async_data[5];
+-	u32 dyn_binding_hdr;
+-	u32 dyn_binding_data[5];
+-	u32 reserved4[159];
+-} __packed;
+-
+-enum {
+-	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
+-	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
+-	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
+-	SWITCHTEC_PART_CFG_EVENT_DYN_PART_CMP = 1 << 3,
+-};
+-
+-struct pff_csr_regs {
+-	u16 vendor_id;
+-	u16 device_id;
+-	u32 pci_cfg_header[15];
+-	u32 pci_cap_region[48];
+-	u32 pcie_cap_region[448];
+-	u32 indirect_gas_window[128];
+-	u32 indirect_gas_window_off;
+-	u32 reserved[127];
+-	u32 pff_event_summary;
+-	u32 reserved2[3];
+-	u32 aer_in_p2p_hdr;
+-	u32 aer_in_p2p_data[5];
+-	u32 aer_in_vep_hdr;
+-	u32 aer_in_vep_data[5];
+-	u32 dpc_hdr;
+-	u32 dpc_data[5];
+-	u32 cts_hdr;
+-	u32 cts_data[5];
+-	u32 reserved3[6];
+-	u32 hotplug_hdr;
+-	u32 hotplug_data[5];
+-	u32 ier_hdr;
+-	u32 ier_data[5];
+-	u32 threshold_hdr;
+-	u32 threshold_data[5];
+-	u32 power_mgmt_hdr;
+-	u32 power_mgmt_data[5];
+-	u32 tlp_throttling_hdr;
+-	u32 tlp_throttling_data[5];
+-	u32 force_speed_hdr;
+-	u32 force_speed_data[5];
+-	u32 credit_timeout_hdr;
+-	u32 credit_timeout_data[5];
+-	u32 link_state_hdr;
+-	u32 link_state_data[5];
+-	u32 reserved4[174];
+-} __packed;
+-
+-struct switchtec_dev {
+-	struct pci_dev *pdev;
+-	struct device dev;
+-	struct cdev cdev;
+-
+-	int partition;
+-	int partition_count;
+-	int pff_csr_count;
+-	char pff_local[SWITCHTEC_MAX_PFF_CSR];
+-
+-	void __iomem *mmio;
+-	struct mrpc_regs __iomem *mmio_mrpc;
+-	struct sw_event_regs __iomem *mmio_sw_event;
+-	struct sys_info_regs __iomem *mmio_sys_info;
+-	struct flash_info_regs __iomem *mmio_flash_info;
+-	struct ntb_info_regs __iomem *mmio_ntb;
+-	struct part_cfg_regs __iomem *mmio_part_cfg;
+-	struct part_cfg_regs __iomem *mmio_part_cfg_all;
+-	struct pff_csr_regs __iomem *mmio_pff_csr;
+-
+-	/*
+-	 * The mrpc mutex must be held when accessing the other
+-	 * mrpc_ fields, alive flag and stuser->state field
+-	 */
+-	struct mutex mrpc_mutex;
+-	struct list_head mrpc_queue;
+-	int mrpc_busy;
+-	struct work_struct mrpc_work;
+-	struct delayed_work mrpc_timeout;
+-	bool alive;
+-
+-	wait_queue_head_t event_wq;
+-	atomic_t event_cnt;
+-};
+-
+-static struct switchtec_dev *to_stdev(struct device *dev)
+-{
+-	return container_of(dev, struct switchtec_dev, dev);
+-}
+-
+ enum mrpc_state {
+ 	MRPC_IDLE = 0,
+ 	MRPC_QUEUED,
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+new file mode 100644
+index 000000000000..508cda78a430
+--- /dev/null
++++ b/include/linux/switchtec.h
+@@ -0,0 +1,270 @@
++/*
++ * Microsemi Switchtec PCIe Driver
++ * Copyright (c) 2017, Microsemi Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ */
++
++#ifndef _SWITCHTEC_H
++#define _SWITCHTEC_H
++
++#include <linux/pci.h>
++#include <linux/cdev.h>
++
++#define MICROSEMI_VENDOR_ID         0x11f8
++#define MICROSEMI_NTB_CLASSCODE     0x068000
++#define MICROSEMI_MGMT_CLASSCODE    0x058000
++
++#define SWITCHTEC_MRPC_PAYLOAD_SIZE 1024
++#define SWITCHTEC_MAX_PFF_CSR 48
++
++#define SWITCHTEC_EVENT_OCCURRED BIT(0)
++#define SWITCHTEC_EVENT_CLEAR    BIT(0)
++#define SWITCHTEC_EVENT_EN_LOG   BIT(1)
++#define SWITCHTEC_EVENT_EN_CLI   BIT(2)
++#define SWITCHTEC_EVENT_EN_IRQ   BIT(3)
++#define SWITCHTEC_EVENT_FATAL    BIT(4)
++
++enum {
++	SWITCHTEC_GAS_MRPC_OFFSET       = 0x0000,
++	SWITCHTEC_GAS_TOP_CFG_OFFSET    = 0x1000,
++	SWITCHTEC_GAS_SW_EVENT_OFFSET   = 0x1800,
++	SWITCHTEC_GAS_SYS_INFO_OFFSET   = 0x2000,
++	SWITCHTEC_GAS_FLASH_INFO_OFFSET = 0x2200,
++	SWITCHTEC_GAS_PART_CFG_OFFSET   = 0x4000,
++	SWITCHTEC_GAS_NTB_OFFSET        = 0x10000,
++	SWITCHTEC_GAS_PFF_CSR_OFFSET    = 0x134000,
++};
++
++struct mrpc_regs {
++	u8 input_data[SWITCHTEC_MRPC_PAYLOAD_SIZE];
++	u8 output_data[SWITCHTEC_MRPC_PAYLOAD_SIZE];
++	u32 cmd;
++	u32 status;
++	u32 ret_value;
++} __packed;
++
++enum mrpc_status {
++	SWITCHTEC_MRPC_STATUS_INPROGRESS = 1,
++	SWITCHTEC_MRPC_STATUS_DONE = 2,
++	SWITCHTEC_MRPC_STATUS_ERROR = 0xFF,
++	SWITCHTEC_MRPC_STATUS_INTERRUPTED = 0x100,
++};
++
++struct sw_event_regs {
++	u64 event_report_ctrl;
++	u64 reserved1;
++	u64 part_event_bitmap;
++	u64 reserved2;
++	u32 global_summary;
++	u32 reserved3[3];
++	u32 stack_error_event_hdr;
++	u32 stack_error_event_data;
++	u32 reserved4[4];
++	u32 ppu_error_event_hdr;
++	u32 ppu_error_event_data;
++	u32 reserved5[4];
++	u32 isp_error_event_hdr;
++	u32 isp_error_event_data;
++	u32 reserved6[4];
++	u32 sys_reset_event_hdr;
++	u32 reserved7[5];
++	u32 fw_exception_hdr;
++	u32 reserved8[5];
++	u32 fw_nmi_hdr;
++	u32 reserved9[5];
++	u32 fw_non_fatal_hdr;
++	u32 reserved10[5];
++	u32 fw_fatal_hdr;
++	u32 reserved11[5];
++	u32 twi_mrpc_comp_hdr;
++	u32 twi_mrpc_comp_data;
++	u32 reserved12[4];
++	u32 twi_mrpc_comp_async_hdr;
++	u32 twi_mrpc_comp_async_data;
++	u32 reserved13[4];
++	u32 cli_mrpc_comp_hdr;
++	u32 cli_mrpc_comp_data;
++	u32 reserved14[4];
++	u32 cli_mrpc_comp_async_hdr;
++	u32 cli_mrpc_comp_async_data;
++	u32 reserved15[4];
++	u32 gpio_interrupt_hdr;
++	u32 gpio_interrupt_data;
++	u32 reserved16[4];
++} __packed;
++
++struct sys_info_regs {
++	u32 device_id;
++	u32 device_version;
++	u32 firmware_version;
++	u32 reserved1;
++	u32 vendor_table_revision;
++	u32 table_format_version;
++	u32 partition_id;
++	u32 cfg_file_fmt_version;
++	u32 reserved2[58];
++	char vendor_id[8];
++	char product_id[16];
++	char product_revision[4];
++	char component_vendor[8];
++	u16 component_id;
++	u8 component_revision;
++} __packed;
++
++struct flash_info_regs {
++	u32 flash_part_map_upd_idx;
++
++	struct active_partition_info {
++		u32 address;
++		u32 build_version;
++		u32 build_string;
++	} active_img;
++
++	struct active_partition_info active_cfg;
++	struct active_partition_info inactive_img;
++	struct active_partition_info inactive_cfg;
++
++	u32 flash_length;
++
++	struct partition_info {
++		u32 address;
++		u32 length;
++	} cfg0;
++
++	struct partition_info cfg1;
++	struct partition_info img0;
++	struct partition_info img1;
++	struct partition_info nvlog;
++	struct partition_info vendor[8];
++};
++
++struct ntb_info_regs {
++	u8  partition_count;
++	u8  partition_id;
++	u16 reserved1;
++	u64 ep_map;
++	u16 requester_id;
++} __packed;
++
++struct part_cfg_regs {
++	u32 status;
++	u32 state;
++	u32 port_cnt;
++	u32 usp_port_mode;
++	u32 usp_pff_inst_id;
++	u32 vep_pff_inst_id;
++	u32 dsp_pff_inst_id[47];
++	u32 reserved1[11];
++	u16 vep_vector_number;
++	u16 usp_vector_number;
++	u32 port_event_bitmap;
++	u32 reserved2[3];
++	u32 part_event_summary;
++	u32 reserved3[3];
++	u32 part_reset_hdr;
++	u32 part_reset_data[5];
++	u32 mrpc_comp_hdr;
++	u32 mrpc_comp_data[5];
++	u32 mrpc_comp_async_hdr;
++	u32 mrpc_comp_async_data[5];
++	u32 dyn_binding_hdr;
++	u32 dyn_binding_data[5];
++	u32 reserved4[159];
++} __packed;
++
++enum {
++	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
++	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
++	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
++	SWITCHTEC_PART_CFG_EVENT_DYN_PART_CMP = 1 << 3,
++};
++
++struct pff_csr_regs {
++	u16 vendor_id;
++	u16 device_id;
++	u32 pci_cfg_header[15];
++	u32 pci_cap_region[48];
++	u32 pcie_cap_region[448];
++	u32 indirect_gas_window[128];
++	u32 indirect_gas_window_off;
++	u32 reserved[127];
++	u32 pff_event_summary;
++	u32 reserved2[3];
++	u32 aer_in_p2p_hdr;
++	u32 aer_in_p2p_data[5];
++	u32 aer_in_vep_hdr;
++	u32 aer_in_vep_data[5];
++	u32 dpc_hdr;
++	u32 dpc_data[5];
++	u32 cts_hdr;
++	u32 cts_data[5];
++	u32 reserved3[6];
++	u32 hotplug_hdr;
++	u32 hotplug_data[5];
++	u32 ier_hdr;
++	u32 ier_data[5];
++	u32 threshold_hdr;
++	u32 threshold_data[5];
++	u32 power_mgmt_hdr;
++	u32 power_mgmt_data[5];
++	u32 tlp_throttling_hdr;
++	u32 tlp_throttling_data[5];
++	u32 force_speed_hdr;
++	u32 force_speed_data[5];
++	u32 credit_timeout_hdr;
++	u32 credit_timeout_data[5];
++	u32 link_state_hdr;
++	u32 link_state_data[5];
++	u32 reserved4[174];
++} __packed;
++
++struct switchtec_dev {
++	struct pci_dev *pdev;
++	struct device dev;
++	struct cdev cdev;
++
++	int partition;
++	int partition_count;
++	int pff_csr_count;
++	char pff_local[SWITCHTEC_MAX_PFF_CSR];
++
++	void __iomem *mmio;
++	struct mrpc_regs __iomem *mmio_mrpc;
++	struct sw_event_regs __iomem *mmio_sw_event;
++	struct sys_info_regs __iomem *mmio_sys_info;
++	struct flash_info_regs __iomem *mmio_flash_info;
++	struct ntb_info_regs __iomem *mmio_ntb;
++	struct part_cfg_regs __iomem *mmio_part_cfg;
++	struct part_cfg_regs __iomem *mmio_part_cfg_all;
++	struct pff_csr_regs __iomem *mmio_pff_csr;
++
++	/*
++	 * The mrpc mutex must be held when accessing the other
++	 * mrpc_ fields, alive flag and stuser->state field
++	 */
++	struct mutex mrpc_mutex;
++	struct list_head mrpc_queue;
++	int mrpc_busy;
++	struct work_struct mrpc_work;
++	struct delayed_work mrpc_timeout;
++	bool alive;
++
++	wait_queue_head_t event_wq;
++	atomic_t event_cnt;
++};
++
++static inline struct switchtec_dev *to_stdev(struct device *dev)
++{
++	return container_of(dev, struct switchtec_dev, dev);
++}
++
++#endif
+-- 
+2.11.0
