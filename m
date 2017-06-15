@@ -1,226 +1,139 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 12 Jun 2017 18:51:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jisheng Zhang <jszhang@marvell.com>
-Subject: Re: [PATCH] PCI: dwc: Constify dw_pcie_host_ops structures
-Message-ID: <20170612235104.GF4379@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170605085346.3732-1-jszhang@marvell.com>
+Return-Path: <SRS0=40ic=5U=canonical.com=kai.heng.feng@kernel.org>
+Return-Path: <SRS0=40ic=5U=canonical.com=kai.heng.feng@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170605085346.3732-1-jszhang@marvell.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@axis.com,
- jesper.nilsson@axis.com, Joao.Pinto@synopsys.com, pratyush.anand@gmail.com,
- krzk@kernel.org, kishon@ti.com, javier@osg.samsung.com, kgene@kernel.org,
- niklas.cassel@axis.com, hongxing.zhu@nxp.com, linux-arm-msm@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org,
- m-karicheri2@ti.com, bhelgaas@google.com, mingkai.hu@freescale.com,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- thomas.petazzoni@free-electrons.com, jingoohan1@gmail.com,
- linux-kernel@vger.kernel.org, svarbanov@mm-sol.com,
- minghuan.Lian@freescale.com, tie-fei.zang@freescale.com,
- l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <Pine.LNX.4.44L0.1706141449190.1889-100000@iolanthe.rowland.org>
+References: <20170613172849.GA7012@bhelgaas-glaptop.roam.corp.google.com> <Pine.LNX.4.44L0.1706141449190.1889-100000@iolanthe.rowland.org>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Thu, 15 Jun 2017 15:02:25 +0800
+Message-ID: <CAAd53p7RuDDqJ4q4JcRyJJ6AkVz4yZ5b-K3p8ooYpLJpFpHpqw@mail.gmail.com>
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
+	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 05, 2017 at 04:53:46PM +0800, Jisheng Zhang wrote:
-> The dw_pcie_host_ops structures are never modified. Constify these
-> structures such that these can be write-protected.
-> 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+On Thu, Jun 15, 2017 at 2:55 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Tue, 13 Jun 2017, Bjorn Helgaas wrote:
+>
+>> [+cc Rafael, linux-pm]
+>>
+>> On Tue, Jun 13, 2017 at 12:21:15PM +0800, Kai-Heng Feng wrote:
+>> > On Mon, Jun 12, 2017 at 10:18 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> > > Let's get some help from people who understand PCI well.
+>> > >
+>> > > Here's the general problem: Kai-Heng has a PCI-based USB host
+>> > > controller that advertises wakeup capability from D3, but it doesn't
+>> > > assert PME# from D3 when it should.  For "lspci -vv" output, see
+>> > >
+>> > >         http://marc.info/?l=linux-usb&m=149570231732519&w=2
+>> > >
+>> > > On Mon, 12 Jun 2017, Kai-Heng Feng wrote:
+>> > >
+>> > >> On Mon, Jun 12, 2017 at 3:04 PM, Kai-Heng Feng
+>> > >> <kai.heng.feng@canonical.com> wrote:
+>> > >> > On Fri, Jun 9, 2017 at 10:43 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> > >> >> On Fri, 9 Jun 2017, Kai-Heng Feng wrote:
+>> > >> >>
+>> > >> >> Is this really the right solution?  Maybe it would be better to allow
+>> > >> >> the controller to go into D3 provided no wakeup signal is needed.  You
+>> > >> >> could do:
+>> > >> >>
+>> > >> >>                 device_set_wakeup_capable(&pdev->dev, 0);
+>> > >> >
+>> > >> > This doesn't work.
+>> > >> > After applying this function, still nothing happens when devices get plugged in.
+>> > >> > IIUC this function disable the wakeup function, but what I want to do
+>> > >> > here is to have PME signal works even when runtime PM is enabled.
+>> > >
+>> > > This may indicate a bug in either the PCI or USB stacks (or both!).  If
+>> > > a driver requires wakeup capability from runtime suspend but the device
+>> > > does not provide it, the PCI core should not allow the device to go
+>> > > into runtime suspend.  Or is that the driver's responsibility?
+>> > >
+>> > >> > I also saw some legacy PCI PM stuff, so I also tried:
+>> > >> > device_set_wakeup_capable(&pdev->dev, 1);
+>> > >> > ...doesn't work either.
+>> > >> >
+>> > >> >>
+>> > >> >> Another alternative is to put the controller into D2 instead of D3, but
+>> > >> >> (1) I don't know how to do that, and (2) we don't know if wakeup
+>> > >> >> signalling works any better in D2 than it does in D3.
+>> > >> >
+>> > >> > I'll try if D2 works.
+>> > >>
+>> > >> Put the device into D2 instead of D3 can make the wakeup signaling
+>> > >> work, i.e. USB devices can be correctly detected after plugged into
+>> > >> EHCI port.
+>> > >>
+>> > >> Do you think this alternative an acceptable workaround?
+>> > >
+>> > > Yes, it is.  The difficulty is that I don't know how to tell the PCI
+>> > > core that the device should go in D2 during runtime suspend instead of
+>> > > D3.  Some sort of quirk may be needed -- perhaps Bjorn can help.
+>
+>> The lspci output [1] shows:
+>>
+>>   00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD] FCH USB EHCI Controller (rev 39) (prog-if 20 [EHCI])
+>>     Capabilities: [c0] Power Management version 2
+>>       Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+>>       Status: D3 NoSoftRst- PME-Enable+ DSel=0 DScale=0 PME-
+>>       Bridge: PM- B3+
+>>
+>> The device claims it can assert PME# from D3hot.  If it can't, that
+>> sounds like a hardware defect that should be addressed with a quirk.
+>> Ideally we would also have a pointer to the AMD hardware erratum.
+>>
+>> Is the following path involved here?
+>>
+>>   pci_finish_runtime_suspend
+>>     target_state = pci_target_state()
+>>       if (device_may_wakup())
+>>       if (dev->pme_support)
+>>         ...
+>>     pci_set_power_state(..., target_state)
+>>
+>> If so, I would naively expect that a quirk could clear the
+>> PCI_PM_CAP_PME_D3 and PCI_PM_CAP_PME_D3cold bits in dev->pme_support,
+>> and pci_target_state() would then avoid selecting D3 or D3cold.  But
+>> I'm not an expert in power management.
+>
+> That's a good idea.  However, we should apply the quirk only when it is
+> needed.  Which means we need to know the numeric values for the PCI
+> IDs.  Also, this will help searching for published errata.
+>
+> Kai-Heng, what does "lspci -nvs 00:12.0" show?
 
-Applied with Jingoo's ack to pci/host-designware for v4.13, thanks!
+00:12.0 0c03: 1022:7808 (rev 39) (prog-if 20 [EHCI])
+        Subsystem: 1028:0732
+        Flags: bus master, 66MHz, medium devsel, latency 32, IRQ 18
+        Memory at fe769000 (32-bit, non-prefetchable) [size=256]
+        Capabilities: [c0] Power Management version 2
+        Capabilities: [e4] Debug port: BAR=1 offset=00e0
+        Kernel driver in use: ehci-pci
 
-> ---
->  drivers/pci/dwc/pci-dra7xx.c           | 2 +-
->  drivers/pci/dwc/pci-exynos.c           | 2 +-
->  drivers/pci/dwc/pci-imx6.c             | 2 +-
->  drivers/pci/dwc/pci-keystone.c         | 2 +-
->  drivers/pci/dwc/pci-layerscape.c       | 6 +++---
->  drivers/pci/dwc/pcie-armada8k.c        | 2 +-
->  drivers/pci/dwc/pcie-artpec6.c         | 2 +-
->  drivers/pci/dwc/pcie-designware-plat.c | 2 +-
->  drivers/pci/dwc/pcie-designware.h      | 2 +-
->  drivers/pci/dwc/pcie-qcom.c            | 2 +-
->  drivers/pci/dwc/pcie-spear13xx.c       | 2 +-
->  11 files changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 8decf46cf525..e4166032b3c6 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -208,7 +208,7 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
->  	dra7xx_pcie_enable_interrupts(dra7xx);
->  }
->  
-> -static struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops dra7xx_pcie_host_ops = {
->  	.host_init = dra7xx_pcie_host_init,
->  };
->  
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 546082ad5a3f..c78c06552590 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -590,7 +590,7 @@ static void exynos_pcie_host_init(struct pcie_port *pp)
->  	exynos_pcie_enable_interrupts(ep);
->  }
->  
-> -static struct dw_pcie_host_ops exynos_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops exynos_pcie_host_ops = {
->  	.rd_own_conf = exynos_pcie_rd_own_conf,
->  	.wr_own_conf = exynos_pcie_wr_own_conf,
->  	.host_init = exynos_pcie_host_init,
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> index a98cba55c7f0..fb4816088a7a 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -602,7 +602,7 @@ static int imx6_pcie_link_up(struct dw_pcie *pci)
->  			PCIE_PHY_DEBUG_R1_XMLH_LINK_UP;
->  }
->  
-> -static struct dw_pcie_host_ops imx6_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops imx6_pcie_host_ops = {
->  	.host_init = imx6_pcie_host_init,
->  };
->  
-> diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
-> index fcc9723bad6e..4783cec1f78d 100644
-> --- a/drivers/pci/dwc/pci-keystone.c
-> +++ b/drivers/pci/dwc/pci-keystone.c
-> @@ -291,7 +291,7 @@ static void __init ks_pcie_host_init(struct pcie_port *pp)
->  			"Asynchronous external abort");
->  }
->  
-> -static struct dw_pcie_host_ops keystone_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops keystone_pcie_host_ops = {
->  	.rd_other_conf = ks_dw_pcie_rd_other_conf,
->  	.wr_other_conf = ks_dw_pcie_wr_other_conf,
->  	.host_init = ks_pcie_host_init,
-> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-> index 27d638c4e134..fd861289ad8b 100644
-> --- a/drivers/pci/dwc/pci-layerscape.c
-> +++ b/drivers/pci/dwc/pci-layerscape.c
-> @@ -39,7 +39,7 @@ struct ls_pcie_drvdata {
->  	u32 lut_offset;
->  	u32 ltssm_shift;
->  	u32 lut_dbg;
-> -	struct dw_pcie_host_ops *ops;
-> +	const struct dw_pcie_host_ops *ops;
->  	const struct dw_pcie_ops *dw_pcie_ops;
->  };
->  
-> @@ -185,12 +185,12 @@ static int ls_pcie_msi_host_init(struct pcie_port *pp,
->  	return 0;
->  }
->  
-> -static struct dw_pcie_host_ops ls1021_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops ls1021_pcie_host_ops = {
->  	.host_init = ls1021_pcie_host_init,
->  	.msi_host_init = ls_pcie_msi_host_init,
->  };
->  
-> -static struct dw_pcie_host_ops ls_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops ls_pcie_host_ops = {
->  	.host_init = ls_pcie_host_init,
->  	.msi_host_init = ls_pcie_msi_host_init,
->  };
-> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-> index 495b023042b3..ea8f34af6a85 100644
-> --- a/drivers/pci/dwc/pcie-armada8k.c
-> +++ b/drivers/pci/dwc/pcie-armada8k.c
-> @@ -160,7 +160,7 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
->  	return IRQ_HANDLED;
->  }
->  
-> -static struct dw_pcie_host_ops armada8k_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops armada8k_pcie_host_ops = {
->  	.host_init = armada8k_pcie_host_init,
->  };
->  
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> index 82a04acc42fd..01c6f7823672 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -184,7 +184,7 @@ static void artpec6_pcie_host_init(struct pcie_port *pp)
->  	artpec6_pcie_enable_interrupts(artpec6_pcie);
->  }
->  
-> -static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops artpec6_pcie_host_ops = {
->  	.host_init = artpec6_pcie_host_init,
->  };
->  
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> index a9865d91b43c..091b4e7ad059 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -46,7 +46,7 @@ static void dw_plat_pcie_host_init(struct pcie_port *pp)
->  		dw_pcie_msi_init(pp);
->  }
->  
-> -static struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops dw_plat_pcie_host_ops = {
->  	.host_init = dw_plat_pcie_host_init,
->  };
->  
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index c6a840575796..b4d2a89f8e58 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -162,7 +162,7 @@ struct pcie_port {
->  	struct resource		*mem;
->  	struct resource		*busn;
->  	int			irq;
-> -	struct dw_pcie_host_ops	*ops;
-> +	const struct dw_pcie_host_ops *ops;
->  	int			msi_irq;
->  	struct irq_domain	*irq_domain;
->  	unsigned long		msi_data;
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 96ee527c1ed2..39e8c0095715 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -634,7 +634,7 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
->  	return dw_pcie_read(pci->dbi_base + where, size, val);
->  }
->  
-> -static struct dw_pcie_host_ops qcom_pcie_dw_ops = {
-> +static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
->  	.host_init = qcom_pcie_host_init,
->  	.rd_own_conf = qcom_pcie_rd_own_conf,
->  };
-> diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-> index 8ff36b3dbbdf..80897291e0fb 100644
-> --- a/drivers/pci/dwc/pcie-spear13xx.c
-> +++ b/drivers/pci/dwc/pcie-spear13xx.c
-> @@ -186,7 +186,7 @@ static void spear13xx_pcie_host_init(struct pcie_port *pp)
->  	spear13xx_pcie_enable_interrupts(spear13xx_pcie);
->  }
->  
-> -static struct dw_pcie_host_ops spear13xx_pcie_host_ops = {
-> +static const struct dw_pcie_host_ops spear13xx_pcie_host_ops = {
->  	.host_init = spear13xx_pcie_host_init,
->  };
->  
-> -- 
-> 2.11.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Here's the diff that can make it work:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 1a14ca8965e6..7bd278535ab3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2208,6 +2208,12 @@ void pci_pm_init(struct pci_dev *dev)
+        }
+
+        pmc &= PCI_PM_CAP_PME_MASK;
++
++       if (unlikely(dev->vendor == 0x1022 && dev->device == 0x7808))
+{
++               dev_info(&dev->dev, "PME# does not work under D3,
+disabling it\n");
++               pmc &= ~(PCI_PM_CAP_PME_D3 | PCI_PM_CAP_PME_D3cold);
++       }
++
+        if (pmc) {
+                dev_printk(KERN_DEBUG, &dev->dev,
+                         "PME# supported from%s%s%s%s%s\n",
+
+If you think this is OK, I'll resend the patch.
