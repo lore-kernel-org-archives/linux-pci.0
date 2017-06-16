@@ -1,104 +1,107 @@
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v6 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Date: Thu, 22 Jun 2017 20:15:19 +0800
-Message-ID: <1498133721-21152-2-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=ZObv=5V=gmail.com=rjwysocki@kernel.org>
+Return-Path: <SRS0=ZObv=5V=gmail.com=rjwysocki@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Sender: rjwysocki@gmail.com
+In-Reply-To: <20170616194559.GD11129@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495702147-31427-1-git-send-email-yu.c.chen@intel.com> <20170616194559.GD11129@bhelgaas-glaptop.roam.corp.google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Sat, 17 Jun 2017 00:23:58 +0200
+Message-ID: <CAJZ5v0gBeO2559mVNCO-w9_mgzfbzZB6oRY7xc6T=G2DsXV5ag@mail.gmail.com>
+Subject: Re: [PATCH] PCI / PM: Restore the status of PCI devices across hibernation
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Chen Yu <yu.c.chen@intel.com>, "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Len Brown <len.brown@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>, Rui Zhang <rui.zhang@intel.com>,
+	Ying Huang <ying.huang@intel.com>, Linux PCI <linux-pci@vger.kernel.org>,
+	Linux PM <linux-pm@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+On Fri, Jun 16, 2017 at 9:45 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, May 25, 2017 at 04:49:07PM +0800, Chen Yu wrote:
+>> Currently we saw a lot of "No irq handler" errors during hibernation,
+>> which caused the system hang finally:
+>>
+>> [  710.141581] ata4.00: qc timeout (cmd 0xec)
+>> [  710.147135] ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>> [  710.154593] ata4.00: revalidation failed (errno=-5)
+>> [  710.468124] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+>> [  710.477746] do_IRQ: 31.151 No irq handler for vector
+>>
+>> According to above logs, there is an interrupt triggered and it is
+>> dispatched to CPU31 with a vector number 151, but there is no handler
+>> for it, thus this irq will not get acked and caused irq flood which kill
+>> the system. To be more specific, the 31.151 is an interrupt from the ahci
+>> host controller.
+>>
+>> After some investigation, the reason why this issue is triggered is
+>> because the thaw_noirq() function does not restore the MSI/MSIX settings
+>> across hibernation.
+>>
+>> The scenario is illustrated below:
+>>
+>> 1. Before the hibernation starts, the irq 34 is the handler for the ahci device,
+>>    which is binded on cpu31.
+>> 2. Hibernation starts, the ahci device is put into low power state.
+>> 3. All the nonboot CPUs are put offline, so the irq 34 has to be migrated to
+>>    the last alive one - CPU0.
+>> 4. After the snapshot has been created, all the nonboot CPUs are brought up again,
+>>    the CPU affinity for IRQ 34 remains to be 0.
+>> 5. ahci device are put into D0.
+>> 6. The snapshot is written to the disk.
+>>
+>> The issue is triggered in step 6, in theory the ahci interrupt should be
+>> delivered to CPU0, however the actually result is that this interrupt is
+>> delivered to the original CPU31 instead, which cause the "No irq handler" issue.
+>>
+>> Ying Huang has has provided a clue that, in step 3 it is possible that the writing
+>> to the register might not take effect as the PCI devices have been put suspended.
+>> Actually it is true:
+>> In step 3, the irq 34 affinity is supposed to be modified from 31 to 0,
+>> but actually it did not. In __pci_write_msi_msg(), if the device is already
+>> in low power state, the low level msi message entry will not be updated
+>> but cached. So in theory during the device restore process, the cached msi
+>> modification information should be written back to the hardware, and this
+>> is what pci_restore_msi_state() do during normal suspend-resume.
+>> But this is not the case for hibernation, pci_restore_msi_state() is not
+>> invoked currently, to be more specific, pci_restore_state() is not invoked
+>> in pci_pm_thaw_noirq(), although pci_save_state() has saved the necessary
+>> pci cached information in pci_pm_freeze_noirq().
+>>
+>> This patch tries to restore the pci status for the device during hibernation,
+>> otherwise the status might be lost across hibernation(for example, the MSI/MSIX
+>> message settings), which might cause problems during hibernation.
+>>
+>> Suggested-by: Ying Huang <ying.huang@intel.com>
+>> Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Len Brown <len.brown@intel.com>
+>> Cc: Dan Williams <dan.j.williams@intel.com>
+>> Cc: Rui Zhang <rui.zhang@intel.com>
+>> Cc: Ying Huang <ying.huang@intel.com>
+>> Cc: linux-pci@vger.kernel.org
+>> Cc: linux-pm@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+>
+> Added a stable tag and applied with Rafael's reviewed-by to pci/pm for
+> v4.13, thanks!
+>
+> pci_restore_state() restores a lot of stuff besides MSI/MSI-X: PCIe
+> device, link, slot control, ATS, VC, BARs, ACS, IOV.  I guess I'm a
+> little surprised that we haven't noticed more issues if all these
+> things were broken.
 
-The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
-Ordering Attribute should not be used on Transaction Layer Packets destined
-for the PCIe End Node so flagged.  Initially flagged this way are Intel
-E5-26xx Root Complex Ports which suffer from a Flow Control Credit
-Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
-don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
+That's because they weren't broken. :-)
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |  2 ++
- 2 files changed, 40 insertions(+)
+None of them is expected to change over the image creation, which is
+why pci_pm_thaw_noirq() didn't call pci_restore_state(), but we
+overlooked the fact that taking nonboot CPUs offline changed the
+configuration of interrupts that needed to be restored afterward.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 085fb78..58bdd23 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3999,6 +3999,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
- 			      quirk_tw686x_class);
- 
- /*
-+ * Some devices have problems with Transaction Layer Packets with the Relaxed
-+ * Ordering Attribute set.  Such devices should mark themselves and other
-+ * Device Drivers should check before sending TLPs with RO set.
-+ */
-+static void quirk_relaxedordering_disable(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
-+}
-+
-+/*
-+ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
-+ * cause performance problems with Upstream Transaction Layer Packets with
-+ * Relaxed Ordering set.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-+ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
-+ * where Upstream Transaction Layer Packets with the Relaxed Ordering
-+ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
-+ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
-+ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
-+ * November 10, 2010).  As a result, on this platform we can't use Relaxed
-+ * Ordering for Upstream TLPs.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8039f9f..ce77690 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -188,6 +188,8 @@ enum pci_dev_flags {
- 	 * the direct_complete optimization.
- 	 */
- 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-+	/* Don't use Relaxed Ordering for TLPs directed at this device */
-+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
- };
- 
- enum pci_irq_reroute_variant {
--- 
-1.9.0
+So this one is really exceptional.
+
+Thanks,
+Rafael
