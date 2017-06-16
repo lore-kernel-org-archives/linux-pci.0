@@ -1,251 +1,111 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:51389 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751118AbdFSSFM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 14:05:12 -0400
-Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
-        id 1dN12r-0001OP-Mo
-        for linux-pci@vger.kernel.org; Mon, 19 Jun 2017 18:05:02 +0000
-From: Christoph Hellwig <hch@lst.de>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/pcieport: move EH methods to struct pcie_port_service_driver
-Date: Mon, 19 Jun 2017 20:04:58 +0200
-Message-Id: <20170619180458.28377-1-hch@lst.de>
+Received: from esa3.dell-outbound.iphmx.com ([68.232.153.94]:4273 "EHLO
+        esa3.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752294AbdFPNxS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jun 2017 09:53:18 -0400
+From: "Allen Hubbe" <Allen.Hubbe@dell.com>
+To: "'Logan Gunthorpe'" <logang@deltatee.com>,
+        <linux-ntb@googlegroups.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Cc: "'Jon Mason'" <jdmason@kudzu.us>,
+        "'Dave Jiang'" <dave.jiang@intel.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
+        "'Kurt Schwemmer'" <kurt.schwemmer@microsemi.com>,
+        "'Stephen Bates'" <sbates@raithlin.com>,
+        "'Serge Semin'" <fancer.lancer@gmail.com>,
+        <Sergey.Semin@t-platforms.ru>
+References: <20170615203729.9009-1-logang@deltatee.com>
+In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
+Subject: RE: [RFC PATCH 00/13] Switchtec NTB Support
+Date: Fri, 16 Jun 2017 09:53:01 -0400
+Message-ID: <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-And avoid the detour throught the mostly unused pci_error_handlers
-structure.
+From: Logan Gunthorpe
+> Hi,
+>=20
+> This patchset implements Non-Transparent Bridge (NTB) support for the
+> Microsemi Switchtec series of switches. We're looking for some
+> review from the community at this point but hope to get it upstreamed
+> for v4.14.
+>=20
+> Switchtec NTB support is configured over the same function and bar
+> as the management endpoint. Thus, the new driver hooks into the
+> management driver which we had merged in v4.12. We use the class
+> interface API to register an NTB device for every switchtec device
+> which supports NTB (not all do).
+>=20
+> The Switchtec hardware supports doorbells, memory windows and =
+messages.
+> Seeing there is no native scratchpad support, 128 spads are emulated
+> through the use of a pre-setup memory window. The switch has 64
+> doorbells which are shared between the two partitions and a
+> configurable set of memory windows. While the hardware supports more
+> than 2 partitions, this driver only supports the first two seeing
+> the current NTB API only supports two hosts.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
+See what is staged in https://github.com/jonmason/ntb.git ntb-next, with =
+the addition of multi-peer support by Serge.  It would be good at this =
+stage to understand whether the api changes there would also support the =
+Switchtec driver, and what if anything must change, or be planned to =
+change, to support the Switchtec driver.
 
-Note: this is based on the pci/virtualization branch.
+Thanks for providing the patch set for the Switchtec driver.  My first =
+impression is that it is a good patch set.  Only to be included, it =
+needs to be reconciled with the api changes in ntb-next.  I will follow =
+up with a more detailed review of patches in this series, but sending =
+this now as I don't want to delay your review of ntb-next.
 
- drivers/pci/pcie/aer/aerdrv.c  |  25 +---------
- drivers/pci/pcie/portdrv_pci.c | 105 +++--------------------------------------
- include/linux/pcieport_if.h    |   4 +-
- 3 files changed, 9 insertions(+), 125 deletions(-)
-
-diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-index dea186a9d6b6..6ff5f5b4f5e6 100644
---- a/drivers/pci/pcie/aer/aerdrv.c
-+++ b/drivers/pci/pcie/aer/aerdrv.c
-@@ -32,16 +32,9 @@
- 
- static int aer_probe(struct pcie_device *dev);
- static void aer_remove(struct pcie_device *dev);
--static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
--	enum pci_channel_state error);
- static void aer_error_resume(struct pci_dev *dev);
- static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
- 
--static const struct pci_error_handlers aer_error_handlers = {
--	.error_detected = aer_error_detected,
--	.resume		= aer_error_resume,
--};
--
- static struct pcie_port_service_driver aerdriver = {
- 	.name		= "aer",
- 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-@@ -49,9 +42,7 @@ static struct pcie_port_service_driver aerdriver = {
- 
- 	.probe		= aer_probe,
- 	.remove		= aer_remove,
--
--	.err_handler	= &aer_error_handlers,
--
-+	.error_resume	= aer_error_resume,
- 	.reset_link	= aer_root_reset,
- };
- 
-@@ -350,20 +341,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
- }
- 
- /**
-- * aer_error_detected - update severity status
-- * @dev: pointer to Root Port's pci_dev data structure
-- * @error: error severity being notified by port bus
-- *
-- * Invoked by Port Bus driver during error recovery.
-- */
--static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
--			enum pci_channel_state error)
--{
--	/* Root Port has no impact. Always recovers. */
--	return PCI_ERS_RESULT_CAN_RECOVER;
--}
--
--/**
-  * aer_error_resume - clean up corresponding error status bits
-  * @dev: pointer to Root Port's pci_dev data structure
-  *
-diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-index 8aa3f14bc87d..be635f017756 100644
---- a/drivers/pci/pcie/portdrv_pci.c
-+++ b/drivers/pci/pcie/portdrv_pci.c
-@@ -21,7 +21,6 @@
- 
- #include "../pci.h"
- #include "portdrv.h"
--#include "aer/aerdrv.h"
- 
- /* If this switch is set, PCIe port native services should not be enabled. */
- bool pcie_ports_disabled;
-@@ -177,108 +176,20 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
- 	pcie_port_device_remove(dev);
- }
- 
--static int error_detected_iter(struct device *device, void *data)
--{
--	struct pcie_device *pcie_device;
--	struct pcie_port_service_driver *driver;
--	struct aer_broadcast_data *result_data;
--	pci_ers_result_t status;
--
--	result_data = (struct aer_broadcast_data *) data;
--
--	if (device->bus == &pcie_port_bus_type && device->driver) {
--		driver = to_service_driver(device->driver);
--		if (!driver ||
--			!driver->err_handler ||
--			!driver->err_handler->error_detected)
--			return 0;
--
--		pcie_device = to_pcie_device(device);
--
--		/* Forward error detected message to service drivers */
--		status = driver->err_handler->error_detected(
--			pcie_device->port,
--			result_data->state);
--		result_data->result =
--			merge_result(result_data->result, status);
--	}
--
--	return 0;
--}
--
- static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
- 					enum pci_channel_state error)
- {
--	struct aer_broadcast_data data = {error, PCI_ERS_RESULT_CAN_RECOVER};
--
--	/* get true return value from &data */
--	device_for_each_child(&dev->dev, &data, error_detected_iter);
--	return data.result;
--}
--
--static int mmio_enabled_iter(struct device *device, void *data)
--{
--	struct pcie_device *pcie_device;
--	struct pcie_port_service_driver *driver;
--	pci_ers_result_t status, *result;
--
--	result = (pci_ers_result_t *) data;
--
--	if (device->bus == &pcie_port_bus_type && device->driver) {
--		driver = to_service_driver(device->driver);
--		if (driver &&
--			driver->err_handler &&
--			driver->err_handler->mmio_enabled) {
--			pcie_device = to_pcie_device(device);
--
--			/* Forward error message to service drivers */
--			status = driver->err_handler->mmio_enabled(
--					pcie_device->port);
--			*result = merge_result(*result, status);
--		}
--	}
--
--	return 0;
-+	/* Root Port has no impact. Always recovers. */
-+	return PCI_ERS_RESULT_CAN_RECOVER;
- }
- 
- static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
- {
--	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
--
--	/* get true return value from &status */
--	device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
--	return status;
--}
--
--static int slot_reset_iter(struct device *device, void *data)
--{
--	struct pcie_device *pcie_device;
--	struct pcie_port_service_driver *driver;
--	pci_ers_result_t status, *result;
--
--	result = (pci_ers_result_t *) data;
--
--	if (device->bus == &pcie_port_bus_type && device->driver) {
--		driver = to_service_driver(device->driver);
--		if (driver &&
--			driver->err_handler &&
--			driver->err_handler->slot_reset) {
--			pcie_device = to_pcie_device(device);
--
--			/* Forward error message to service drivers */
--			status = driver->err_handler->slot_reset(
--					pcie_device->port);
--			*result = merge_result(*result, status);
--		}
--	}
--
--	return 0;
-+	return PCI_ERS_RESULT_RECOVERED;
- }
- 
- static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
- {
--	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
--
- 	/* If fatal, restore cfg space for possible link reset at upstream */
- 	if (dev->error_state == pci_channel_io_frozen) {
- 		dev->state_saved = true;
-@@ -287,9 +198,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
- 		pci_enable_pcie_error_reporting(dev);
- 	}
- 
--	/* get true return value from &status */
--	device_for_each_child(&dev->dev, &status, slot_reset_iter);
--	return status;
-+	return PCI_ERS_RESULT_RECOVERED;
- }
- 
- static int resume_iter(struct device *device, void *data)
-@@ -299,13 +208,11 @@ static int resume_iter(struct device *device, void *data)
- 
- 	if (device->bus == &pcie_port_bus_type && device->driver) {
- 		driver = to_service_driver(device->driver);
--		if (driver &&
--			driver->err_handler &&
--			driver->err_handler->resume) {
-+		if (driver && driver->error_resume) {
- 			pcie_device = to_pcie_device(device);
- 
- 			/* Forward error message to service drivers */
--			driver->err_handler->resume(pcie_device->port);
-+			driver->error_resume(pcie_device->port);
- 		}
- 	}
- 
-diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
-index afcd130ab3a9..18edc651c070 100644
---- a/include/linux/pcieport_if.h
-+++ b/include/linux/pcieport_if.h
-@@ -50,8 +50,8 @@ struct pcie_port_service_driver {
- 	int (*suspend) (struct pcie_device *dev);
- 	int (*resume) (struct pcie_device *dev);
- 
--	/* Service Error Recovery Handler */
--	const struct pci_error_handlers *err_handler;
-+	/* Device driver may resume normal operations */
-+	void (*error_resume)(struct pci_dev *dev);
- 
- 	/* Link Reset Capability - AER service driver specific */
- 	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
--- 
-2.11.0
+>=20
+> The driver has been tested with ntb_netdev and fully passes the
+> ntb_test script.
+>=20
+> This patchset is based off of v4.12-rc5 and can be found in this
+> git repo:
+>=20
+> https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb
+>=20
+> Thanks,
+>=20
+> Logan
+>=20
+>=20
+> Logan Gunthorpe (13):
+>   switchtec: move structure definitions into a common header
+>   switchtec: export class symbol for use in upper layer driver
+>   switchtec: add ntb hardware register definitions
+>   switchtec: add link event notifier block
+>   switchtec_ntb: introduce initial ntb driver
+>   switchtec_ntb: initialize hardware for memory windows
+>   switchtec_ntb: initialize hardware for doorbells and messages
+>   switchtec_ntb: add skeleton ntb driver
+>   switchtec_ntb: add link management
+>   switchtec_ntb: implement doorbell registers
+>   switchtec_ntb: implement scratchpad registers
+>   switchtec_ntb: add memory window support
+>   switchtec_ntb: update switchtec documentation with notes for ntb
+>=20
+>  Documentation/switchtec.txt         |   12 +
+>  MAINTAINERS                         |    2 +
+>  drivers/ntb/hw/Kconfig              |    1 +
+>  drivers/ntb/hw/Makefile             |    1 +
+>  drivers/ntb/hw/mscc/Kconfig         |    9 +
+>  drivers/ntb/hw/mscc/Makefile        |    1 +
+>  drivers/ntb/hw/mscc/switchtec_ntb.c | 1144 =
++++++++++++++++++++++++++++++++++++
+>  drivers/pci/switch/switchtec.c      |  319 ++--------
+>  include/linux/ntb.h                 |    3 +
+>  include/linux/switchtec.h           |  365 +++++++++++
+>  10 files changed, 1601 insertions(+), 256 deletions(-)
+>  create mode 100644 drivers/ntb/hw/mscc/Kconfig
+>  create mode 100644 drivers/ntb/hw/mscc/Makefile
+>  create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
+>  create mode 100644 include/linux/switchtec.h
+>=20
+> --
+> 2.11.0
