@@ -1,65 +1,93 @@
-Return-Path: <SRS0=nDxn=5Z=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=nDxn=5Z=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
-CC: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Liviu Dudau
-	<liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>, linux-pci
-	<linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, Mason
-	<slash.tmp@free.fr>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
- <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
- <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
-Message-ID: <5b0b4465-4402-e668-c744-5fb4439b34b0@sigmadesigns.com>
-Date: Tue, 20 Jun 2017 10:29:05 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:33715 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750780AbdFPRJN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Jun 2017 13:09:13 -0400
+To: Serge Semin <fancer.lancer@gmail.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+ <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
+ <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
+ <20170616163324.GA15472@mobilestation>
+Cc: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        Sergey.Semin@t-platforms.ru
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <883bdb76-972c-7de9-0208-2d0933f192d4@deltatee.com>
+Date: Fri, 16 Jun 2017 11:08:52 -0600
 MIME-Version: 1.0
-In-Reply-To: <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170616163324.GA15472@mobilestation>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/06/2017 16:50, Marc Gonzalez wrote:
 
-> On 07/06/2017 10:19, Marc Gonzalez wrote:
->=20
->> On 31/05/2017 15:33, Marc Gonzalez wrote:
->>
->>> +static int tango_pcie_probe(struct platform_device *pdev)
->>> +{
->>> +=09int ret =3D -EINVAL;
->>> +=09void __iomem *base;
->>> +=09struct resource *res;
->>> +=09struct tango_pcie *pcie;
->>> +=09struct device *dev =3D &pdev->dev;
->>> +
->>> +=09pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
->>> +=09pr_err("Tainting kernel... Use driver at your own risk\n");
->>> +=09add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
->>
->> Hello Bjorn,
->>
->> In v4, your only comment was
->> "[muxing config and mem spaces] is a major issue and possibly even
->> a security problem [which requires at least an error message and a
->> kernel taint].
->>
->> Were there any other issues with the host bridge support?
->=20
-> Hello Bjorn,
->=20
-> I imagine you are now only waiting for Marc Z's Ack of patch 3/3 ?
-> (AFAIU, all issues have been addressed as of v8 3/3.)
->=20
-> Rob has Acked patch 1/3 -- thanks Rob.
->=20
-> Assuming all issues with patch 2/3 have already been addressed,
-> then this driver can land in time for 4.13 right?
 
-Hello Bjorn, Marc,
+On 16/06/17 10:33 AM, Serge Semin wrote:
+> New NTB API is going to be merged to mainline kernel within next features
+> merge window, so it's really recommended to use that API for new hardware.
+> Could you please rabase your driver on top of the tree?
+> https://github.com/jonmason/ntb.git
 
-Patch series v9 supersedes all previously posted patches.
+Yes, Allen's already pointed this out. I'll be sure to fix it up before
+a final submission.
 
-Regards.
+> According to the NTB philosophy, it's not good to have any hardware
+> emulation within hardware driver. Hardware driver must reflect the only
+> hardware abilities, nothing else. Could you please get rid of Scratchpad
+> emulation and add messaging as new NTB API has got a proper callback
+> functions for it?
+
+I disagree completely. Practicality trumps philosophy in every case. I
+need emulated scratchpads for ntb_transport to work and I'm not getting
+rid of it (thus breaking things that work well) just because of your
+philosophical beliefs.
+
+> Hmmm, I haven't seen the actual code (see my last comment), but
+> according to my impression of API, it's impossible to have memory window
+> accessed while NTB link is down, but Scratchpads still can be used.
+> In this case, if you got Scratchpads emulated over memory windows,
+> you must have got NTB link enabled before NTB device is registered, which
+> makes ntb_link_* methods kind of being useless unless Switchtec hardware
+> supports NTB link getting up/down for individual memory windows...
+
+Nothing in-kernel actually uses the peer's scratchpads while the link is
+down and all clients seem specifically designed to wait until the link
+event to set them. So I think you're either wrong about that rule or we
+should change the rule going forward.
+
+I'm not sure what you're referring to about the link stuff; as
+implemented, our link management works just fine.
+
+> New NTB API is updated so to have access to any of peer ports. IDT driver
+> has got a special translation table to access peer functionality just by
+> providing an index to corresponding API callback. You can use it as
+> reference to have Switchtec driver accordingly altered. It would be vastly
+> useful to have one more multi-port hardware driver in the tree.
+
+Yes, I expect we will get there eventually, it doesn't sound like much
+work. However, it's client support that's really going to make this
+interesting and worthwhile. That seems like the real challenge right now.
+
+> If I'm not mistaken, these patches can be combined the way so to have
+> just two big functionally split patches:
+> 1) NTB: Microsemt Switchtec switch management driver alterations for NTB
+> 2) NTB: Add Microsemi Switchtec PCIe-switches support
+> It would really simplify the review. Could you please combine them?
+
+Seems like every time I make a submission, someone either wants patches
+to be smaller and split up more or bigger and combined. I happen to
+agree with the people who prefer smaller patches and I think these
+provide good chunks for reviewers to look at. So, no, I'm not going to
+change this. Feel free to apply the patches to a git tree or view it on
+our github branch if you want to see the code combined.
+
+Thanks,
+
+Logan
