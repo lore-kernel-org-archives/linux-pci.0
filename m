@@ -1,135 +1,174 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:56443 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751393AbdFHSSX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 8 Jun 2017 14:18:23 -0400
-Message-ID: <1496945880.17240.20.camel@pengutronix.de>
-Subject: Re: [PATCH v2 1/9] pci: adding new irq api to pci-designware
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, marc.zyngier@arm.com, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org
-Date: Thu, 08 Jun 2017 20:18:00 +0200
-In-Reply-To: <35ad0ce714dbf613f32d1fd85af78540bdb68d32.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-         <35ad0ce714dbf613f32d1fd85af78540bdb68d32.1496677911.git.jpinto@synopsys.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=oJ2I=5V=nxp.com=hongxing.zhu@kernel.org>
+Return-Path: <SRS0=oJ2I=5V=nxp.com=hongxing.zhu@kernel.org>
+From: Richard Zhu <hongxing.zhu@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Quentin Schulz
+	<quentin.schulz@free-electrons.com>
+CC: "l.stach@pengutronix.de" <l.stach@pengutronix.de>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"thomas.petazzoni@free-electrons.com" <thomas.petazzoni@free-electrons.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH] PCI: imx6: add regulator support
+Date: Fri, 16 Jun 2017 00:49:40 +0000
+Message-ID: <AM5PR0402MB28503902575D87F934F890E38CC10@AM5PR0402MB2850.eurprd04.prod.outlook.com>
+References: <20170608080742.3910-1-quentin.schulz@free-electrons.com>
+ <20170615210544.GE12735@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170615210544.GE12735@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Montag, den 05.06.2017, 17:19 +0100 schrieb Joao Pinto:
-> This patch adds the new interrupt api to pcie-designware, keeping the old
-> one. Although the old API is still available, pcie-designware initiates with
-> the new one.
-> 
-> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> ---
-> Change v1->v2:
-> - num_vectors is now not configurable by DT. Now it is 32 by default and
-> can be overiden by any specific SoC driver.
-> 
->  drivers/pci/dwc/pcie-designware-host.c | 291 +++++++++++++++++++++++++++++----
->  drivers/pci/dwc/pcie-designware.h      |  17 ++
->  2 files changed, 277 insertions(+), 31 deletions(-)
-> 
-[...]
->  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
-> @@ -279,11 +491,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  	struct device *dev = pci->dev;
->  	struct device_node *np = dev->of_node;
->  	struct platform_device *pdev = to_platform_device(dev);
-> +	struct resource_entry *win, *tmp;
->  	struct pci_bus *bus, *child;
->  	struct resource *cfg_res;
->  	int i, ret;
-> +
->  	LIST_HEAD(res);
-> -	struct resource_entry *win, *tmp;
-> +
-> +	spin_lock_init(&pci->pp.lock);
->  
->  	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
->  	if (cfg_res) {
-> @@ -377,18 +592,32 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		pci->num_viewport = 2;
->  
->  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		if (!pp->ops->msi_host_init) {
-> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
-> -						MAX_MSI_IRQS, &msi_domain_ops,
-> -						&dw_pcie_msi_chip);
-> -			if (!pp->irq_domain) {
-> -				dev_err(dev, "irq domain init failed\n");
-> -				ret = -ENXIO;
-> +		/*
-> +		 * If a specific SoC driver needs to change the
-> +		 * default number of vectors, it needs to implement
-> +		 * the set_num_vectors callback.
-> +		 */
-No need for a function to implement this. The implementation glue driver
-can just set up pcie_port.num_vectors to the correct number before
-calling dw_pcie_host_init.
 
-> +		if (!pp->ops->set_num_vectors) {
-> +			pp->num_vectors = MSI_DEF_NUM_VECTORS;
-> +		} else {
-> +			pp->ops->set_num_vectors(pp);
-> +
-> +			if (pp->num_vectors > MAX_MSI_IRQS ||
-> +			    pp->num_vectors == 0) {
-> +				dev_err(dev,
-> +					"Invalid number of vectors\n");
->  				goto error;
->  			}
-> +		}
->  
-> -			for (i = 0; i < MAX_MSI_IRQS; i++)
-> -				irq_create_mapping(pp->irq_domain, i);
-> +		if (!pp->ops->msi_host_init) {
-> +			ret = dw_pcie_allocate_domains(pci);
-> +			if (ret)
-> +				goto error;
-> +
-> +			irq_set_chained_handler_and_data(pci->pp.msi_irq,
-> +							 dw_chained_msi_isr,
-> +							 pci);
-
-So this breaks legacy PCI irqs on DWC platforms even more, as the IRQ
-line can not be shared, even if the endpoint device doesn't support
-MSIs.
-
-Do we have any solution for that? In the worst case we would need a DT
-property to enable MSI support and not register the MSI IRQ domain in
-that case.
-
-Regards,
-Lucas
-
->  		} else {
->  			ret = pp->ops->msi_host_init(pp, &dw_pcie_msi_chip);
->  			if (ret < 0)
-> @@ -400,14 +629,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
->  		pp->ops->host_init(pp);
->  
->  	pp->root_bus_nr = pp->busn->start;
-> -	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> -		bus = pci_scan_root_bus_msi(dev, pp->root_bus_nr,
-> -					    &dw_pcie_ops, pp, &res,
-> -					    &dw_pcie_msi_chip);
-> -		dw_pcie_msi_chip.dev = dev;
-> -	} else
-> -		bus = pci_scan_root_bus(dev, pp->root_bus_nr, &dw_pcie_ops,
-> -					pp, &res);
-> +
-> +	bus = pci_scan_root_bus(dev, pp->root_bus_nr, &dw_pcie_ops,
-> +				pp, &res);
->  	if (!bus) {
->  		ret = -ENOMEM;
->  		goto error;
-> @@ -579,11 +803,16 @@ static u8 dw_pcie_iatu_unroll_enabled(struct dw_pcie *pci)
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Friday, June 16, 2017 5:06 AM
+> To: Quentin Schulz <quentin.schulz@free-electrons.com>
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>; l.stach@pengutronix.de;
+> bhelgaas@google.com; robh+dt@kernel.org; mark.rutland@arm.com;
+> thomas.petazzoni@free-electrons.com; devicetree@vger.kernel.org; linux-
+> pci@vger.kernel.org; linux-kernel@vger.kernel.org; linux-arm-
+> kernel@lists.infradead.org
+> Subject: Re: [PATCH] PCI: imx6: add regulator support
+>=20
+> On Thu, Jun 08, 2017 at 10:07:42AM +0200, Quentin Schulz wrote:
+> > Some boards might require to control a regulator to power the PCIe port=
+.
+> >
+> > This adds support for an optional regulator defined in Device Tree
+> > linked in the PCIe controller under `vpcie-supply`. If present, the
+> > regulator will be disabled and then enabled as part of the PCIe host
+> > initialization process and will be disabled when shutting down.
+> >
+> > Signed-off-by: Quentin Schulz <quentin.schulz@free-electrons.com>
+>=20
+> Waiting for ack from Richard or Lucas.
+[Zhu hongxing] Sorry to replay late.
+This patch is okay for me.
+Thanks.
+Acked-by: Richard Zhu <hongxing.zhu@nxp.com>
+>=20
+> > ---
+> >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 +++
+> >  drivers/pci/dwc/pci-imx6.c                         | 34 ++++++++++++++=
++++++++-
+> >  2 files changed, 37 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > index e3d5680875b1..cf92d3ba5a26 100644
+> > --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > @@ -33,6 +33,10 @@ Optional properties:
+> >  - reset-gpio-active-high: If present then the reset sequence using the
+> GPIO
+> >    specified in the "reset-gpio" property is reversed (H=3Dreset state,
+> >    L=3Doperation state).
+> > +- vpcie-supply: Should specify the regulator in charge of PCIe port po=
+wer.
+> > +  The regulator will be enabled when initializing the PCIe host and
+> > +  disabled either as part of the init process or when shutting down
+> > +the
+> > +  host.
+> >
+> >  Additional required properties for imx6sx-pcie:
+> >  - clock names: Must include the following additional entries:
+> > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> > index 19a289b8cc94..f9b7500c9aff 100644
+> > --- a/drivers/pci/dwc/pci-imx6.c
+> > +++ b/drivers/pci/dwc/pci-imx6.c
+> > @@ -24,6 +24,7 @@
+> >  #include <linux/pci.h>
+> >  #include <linux/platform_device.h>
+> >  #include <linux/regmap.h>
+> > +#include <linux/regulator/consumer.h>
+> >  #include <linux/resource.h>
+> >  #include <linux/signal.h>
+> >  #include <linux/types.h>
+> > @@ -59,6 +60,7 @@ struct imx6_pcie {
+> >  	u32			tx_swing_full;
+> >  	u32			tx_swing_low;
+> >  	int			link_gen;
+> > +	struct regulator	*vpcie;
+> >  };
+> >
+> >  /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */ @@
+> > -310,6 +312,13 @@ static void imx6_pcie_assert_core_reset(struct
+> imx6_pcie *imx6_pcie)
+> >  				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
+> >  		break;
+> >  	}
+> > +
+> > +	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0)
+> {
+> > +		int ret =3D regulator_disable(imx6_pcie->vpcie);
+> > +
+> > +		if (ret)
+> > +			pr_err("failed to disable vpcie regulator: %d\n", ret);
+> > +	}
+> >  }
+> >
+> >  static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie) @@
+> > -376,10 +385,19 @@ static void imx6_pcie_deassert_core_reset(struct
+> imx6_pcie *imx6_pcie)
+> >  	struct device *dev =3D pci->dev;
+> >  	int ret;
+> >
+> > +	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
+> > +		ret =3D regulator_enable(imx6_pcie->vpcie);
+> > +		if (ret) {
+> > +			dev_err(dev, "failed to enable vpcie regulator: %d\n",
+> > +				ret);
+> > +			return;
+> > +		}
+> > +	}
+> > +
+> >  	ret =3D clk_prepare_enable(imx6_pcie->pcie_phy);
+> >  	if (ret) {
+> >  		dev_err(dev, "unable to enable pcie_phy clock\n");
+> > -		return;
+> > +		goto err_pcie_phy;
+> >  	}
+> >
+> >  	ret =3D clk_prepare_enable(imx6_pcie->pcie_bus);
+> > @@ -439,6 +457,13 @@ static void imx6_pcie_deassert_core_reset(struct
+> imx6_pcie *imx6_pcie)
+> >  	clk_disable_unprepare(imx6_pcie->pcie_bus);
+> >  err_pcie_bus:
+> >  	clk_disable_unprepare(imx6_pcie->pcie_phy);
+> > +err_pcie_phy:
+> > +	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0)
+> {
+> > +		ret =3D regulator_disable(imx6_pcie->vpcie);
+> > +		if (ret)
+> > +			dev_err(dev, "failed to disable vpcie regulator: %d\n",
+> > +				ret);
+> > +	}
+> >  }
+> >
+> >  static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie) @@ -802,6
+> > +827,13 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+> >  	if (ret)
+> >  		imx6_pcie->link_gen =3D 1;
+> >
+> > +	imx6_pcie->vpcie =3D devm_regulator_get_optional(&pdev->dev,
+> "vpcie");
+> > +	if (IS_ERR(imx6_pcie->vpcie)) {
+> > +		if (PTR_ERR(imx6_pcie->vpcie) =3D=3D -EPROBE_DEFER)
+> > +			return -EPROBE_DEFER;
+> > +		imx6_pcie->vpcie =3D NULL;
+> > +	}
+> > +
+> >  	platform_set_drvdata(pdev, imx6_pcie);
+> >
+> >  	ret =3D imx6_add_pcie_port(imx6_pcie, pdev);
+> > --
+> > 2.11.0
+> >
+> >
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
