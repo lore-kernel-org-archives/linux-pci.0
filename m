@@ -1,155 +1,118 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-CC: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
- devices before scanning
-Date: Tue, 13 Jun 2017 19:01:38 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
- <20170530132408.GA2556@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
- <20170606085553.GA20085@red-moon> <20170612155700.GA31930@red-moon>
- <20170613084831.GP3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
-In-Reply-To: <20170613151013.GT3187@lahna.fi.intel.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:35957 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750873AbdFPQdF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jun 2017 12:33:05 -0400
+Date: Fri, 16 Jun 2017 19:33:24 +0300
+From: Serge Semin <fancer.lancer@gmail.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        Sergey.Semin@t-platforms.ru
+Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+Message-ID: <20170616163324.GA15472@mobilestation>
+References: <20170615203729.9009-1-logang@deltatee.com>
+ <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
+ <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mika
+Hello Logan.
+Thanks for the new hardware driver. It's really great to see NTB subsystem
+being developed.
 
-> -----Original Message-----
-> From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
-> Sent: 13 June 2017 16:10
-> To: Gabriele Paoloni
-> Cc: Lorenzo Pieralisi; rafael@kernel.org; Rafael J. Wysocki;
-> catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
-> kernel@lists.infradead.org; mark.rutland@arm.com;
-> brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
-> kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
-> pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
-> Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
-> devices before scanning
+New NTB API is going to be merged to mainline kernel within next features
+merge window, so it's really recommended to use that API for new hardware.
+Could you please rabase your driver on top of the tree?
+https://github.com/jonmason/ntb.git
+
+> See what is staged in https://github.com/jonmason/ntb.git ntb-next, with
+> the addition of multi-peer support by Serge.  It would be good at this
+> stage to understand whether the api changes there would also support the
+> Switchtec driver, and what if anything must change, or be planned to change,
+> to support the Switchtec driver.
+
+My impression is that, there is no need for new NTB API changes, since it
+was specifically designed for new type of multi-port switches with
+additional message registers, which is exactly supported by switchtec
+device.
+
+> The Switchtec hardware supports doorbells, memory windows and messages.
+> Seeing there is no native scratchpad support, 128 spads are emulated
+> through the use of a pre-setup memory window.
+
+According to the NTB philosophy, it's not good to have any hardware
+emulation within hardware driver. Hardware driver must reflect the only
+hardware abilities, nothing else. Could you please get rid of Scratchpad
+emulation and add messaging as new NTB API has got a proper callback
+functions for it?
+Hmmm, I haven't seen the actual code (see my last comment), but
+according to my impression of API, it's impossible to have memory window
+accessed while NTB link is down, but Scratchpads still can be used.
+In this case, if you got Scratchpads emulated over memory windows,
+you must have got NTB link enabled before NTB device is registered, which
+makes ntb_link_* methods kind of being useless unless Switchtec hardware
+supports NTB link getting up/down for individual memory windows...
+
+> configurable set of memory windows. While the hardware supports more
+> than 2 partitions, this driver only supports the first two seeing
+> the current NTB API only supports two hosts.
+
+New NTB API is updated so to have access to any of peer ports. IDT driver
+has got a special translation table to access peer functionality just by
+providing an index to corresponding API callback. You can use it as
+reference to have Switchtec driver accordingly altered. It would be vastly
+useful to have one more multi-port hardware driver in the tree.
+
+> switchtec: move structure definitions into a common header
+> switchtec: export class symbol for use in upper layer driver
+> switchtec: add ntb hardware register definitions
+> switchtec: add link event notifier block
+> switchtec_ntb: introduce initial ntb driver
+> switchtec_ntb: initialize hardware for memory windows
+> switchtec_ntb: initialize hardware for doorbells and messages
+> switchtec_ntb: add skeleton ntb driver
+> switchtec_ntb: add link management
+> switchtec_ntb: implement doorbell registers
+> switchtec_ntb: implement scratchpad registers
+> switchtec_ntb: add memory window support
+> switchtec_ntb: update switchtec documentation with notes for ntb
+
+If I'm not mistaken, these patches can be combined the way so to have
+just two big functionally split patches:
+1) NTB: Microsemt Switchtec switch management driver alterations for NTB
+2) NTB: Add Microsemi Switchtec PCIe-switches support
+It would really simplify the review. Could you please combine them?
+
+
+Thanks for submitting the patches. We really appreciate this and looking
+forward to have it completely reviewed and added to the kernel tree.
+
+Regards
+-Sergey
+
+On Fri, Jun 16, 2017 at 08:09:55AM -0600, Logan Gunthorpe <logang@deltatee.com> wrote:
 > 
-> On Tue, Jun 13, 2017 at 02:38:26PM +0000, Gabriele Paoloni wrote:
-> > > Is there an example ASL showing how these LPC devices are
-> > > currently presented in ACPI?
-> >
-> > Please find below the asl sketch for our LPC and IPMI
-> >
-> > //
-> > // LPC
-> > //
-> >
-> > Scope(_SB) {
-> >   Device (LPC0) {
-> >     Name (_HID, "HISI0191")  // HiSi LPC
-> >     Name (_CRS, ResourceTemplate () {
-> >       Memory32Fixed (ReadWrite, 0xa01b0000, 0x1000)
-> >     })
-> >   }
-> >
-> >   Device (LPC0.IPMI) {
-> >     Name (_HID, "IPI0001")
-> >     Method (_IFT) {
-> >       Return (0x03)
-> >     }
-> >     Name (LORS, ResourceTemplate() {
-> >       QWordIO (
-> >         ResourceConsumer,
-> > 	MinNotFixed,     // _MIF
-> > 	MaxNotFixed,     // _MAF
-> > 	PosDecode,
-> > 	EntireRange,
-> > 	0x0,             // _GRA
-> > 	0xe4,            // _MIN
-> > 	0x3fff,          // _MAX
-> > 	0x0,             // _TRA
-> > 	0x04,            // _LEN
-> > 	, ,
-> > 	BTIO
-> >       )
-> >     })
-> >     CreateQWordField (LORS, BTIO._MIN, CMIN)
-> >     CreateQWordField (LORS, BTIO._MAX, CMAX)
-> >     CreateQWordField (LORS, BTIO._LEN, CLEN)
-> >
-> >     Method (_PRS, 0) {
-> >       Return (LORS)
-> >     }
-> >
-> >     Method (_CRS, 0) {
-> >       Return (LORS)
-> >     }
-> >     Method (_SRS, 1) {
-> >       CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MIN, IMIN)
-> >       Store (IMIN, CMIN)
-> >       CreateQWordField (Arg0, \_SB.LPC0.IPMI.BTIO._MAX, IMAX)
-> >       Store (IMAX, CMAX)
-> >     }
-> >   }
-> > [...]
-> > }
 > 
-> Thanks. So this looks pretty much like normal Linux MFD device which we
-> already have support for adding ACPI bindings to child devices. It
-> should also support splitting resources to child devices IIRC.
-
-I am not very familiar with Linux MFD however the main issue here is that
-1) for IPMI we want to re-use the standard IPMI driver without touching it:
-   see 
-
-   static const struct acpi_device_id acpi_ipmi_match[] = {
-         { "IPI0001", 0 },
-         { },
-   };
-
-   in "drivers/char/ipmi/ipmi_si_intf.c" (and in general any standard driver
-   of an LPC child)
-
-2) We need a way to guarantee that all LPC children are not enumerated
-   by acpi_default_enumeration() (so for example if an ipmi node is an LPC#
-   child it should not be enumerated, otherwise it should be)
-   Currently acpi_default_enumeration() skips spi/i2c slaves by checking:
-   1) if the acpi resource type is a serial bus
-   2) if the type of serial bus descriptor is I2C or SPI
-
-   For LPC we cannot leverage on any ACPI property to "recognize" that our
-   devices are LPC children; hence before I proposed for acpi_default_enumeration()
-   to skip devices that have already been enumerated (by calling 
-   acpi_device_enumerated() ).
-
-So in the current scenario, how do you think that MFD can help?
-Do you see any possible solution?
-
-Many thanks
-Gab
-  
-
-
+> On 16/06/17 07:53 AM, Allen Hubbe wrote:
+> > See what is staged in https://github.com/jonmason/ntb.git ntb-next, with the addition of multi-peer support by Serge.  It would be good at this stage to understand whether the api changes there would also support the Switchtec driver, and what if anything must change, or be planned to change, to support the Switchtec driver.
+> 
+> Ah, yes I had seen that patchset some time ago but I wasn't aware of
+> it's status or that it was queued up in ntb-next. I think it will be no
+> problem to reconcile with the switchtec driver and I'll rebase onto
+> ntb-next for the next posting of the patch set. However, I *may* save
+> full multi-host switchtec support for a follow up submission. My initial
+> impression is the new API will support the switchtec hardware well.
+> 
+> Thanks,
+> 
+> Logan
