@@ -1,114 +1,66 @@
-Return-Path: <SRS0=uXJs=52=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=uXJs=52=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=dobd=5V=dell.com=Narendra.K@kernel.org>
+Return-Path: <SRS0=dobd=5V=dell.com=Narendra.K@kernel.org>
+From: <Narendra.K@dell.com>
+Cc: <x86@kernel.org>, <linux-pci@vger.kernel.org>, <Jordan.Hargrave@dell.com>,
+	<Shyam.Iyer@dell.com>, <bhelgaas@google.com>, <Narendra.K@dell.com>
+To: <helgaas@kernel.org>, <jdelvare@suse.de>
+Subject: RE: dmi type 0xB1 record - unknown flag
+Date: Fri, 16 Jun 2017 09:36:27 +0000
+Message-ID: <fb0d720dc6c441539fb5130d2628158f@BLRX13MDC105.AMER.DELL.COM>
+References: <20170601143826.5f980444@endymion>
+ <68181b62786540ed8ca6ab877151a98b@BLRX13MDC105.AMER.DELL.COM>
+ <20170602161311.27eab72d@endymion>
+ <20170615213935.GH12735@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170615213935.GH12735@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1497855239-18560-4-git-send-email-dingtianhong@huawei.com>
-References: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com> <1497855239-18560-4-git-send-email-dingtianhong@huawei.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Wed, 21 Jun 2017 11:28:33 -0700
-Message-ID: <CAKgT0UdJ_zseo9O7SiU9U2m__OZeF_Z8eVjsA5N8ZK39rdK2fA@mail.gmail.com>
-Subject: Re: [PATCH v5 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
- flag
-To: Ding Tianhong <dingtianhong@huawei.com>
-Cc: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
-	Ganesh Goudar <ganeshgr@chelsio.com>, Asit K Mallick <asit.k.mallick@intel.com>,
-	Patrick J Cramer <patrick.j.cramer@intel.com>,
-	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Bob Shaw <Bob.Shaw@amd.com>,
-	h <l.stach@pengutronix.de>, Amir Ancel <amira@mellanox.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>, David Laight <David.Laight@aculab.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
-	Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
-	linux-arm-kernel@lists.infradead.org, Netdev <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 18, 2017 at 11:53 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
-> From: Casey Leedom <leedom@chelsio.com>
->
-> cxgb4 Ethernet driver now queries PCIe configuration space to determine
-> if it can send TLPs to it with the Relaxed Ordering Attribute set.
->
-> Signed-off-by: Casey Leedom <leedom@chelsio.com>
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> ---
->  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
->  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
->  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
->  3 files changed, 21 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-> index e88c180..478f25a 100644
-> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
->         USING_SOFT_PARAMS  = (1 << 6),
->         MASTER_PF          = (1 << 7),
->         FW_OFLD_CONN       = (1 << 9),
-> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
->  };
->
->  enum {
-> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-> index ea1bfcf..7cd4e1b 100644
-> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-> @@ -4735,6 +4735,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->         adapter->msg_enable = DFLT_MSG_ENABLE;
->         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
->
-> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-> +        * Ingress Packet Data to Free List Buffers in order to allow for
-> +        * chipset performance optimizations between the Root Complex and
-> +        * Memory Controllers.  (Messages to the associated Ingress Queue
-> +        * notifying new Packet Placement in the Free Lists Buffers will be
-> +        * send without the Relaxed Ordering Attribute thus guaranteeing that
-> +        * all preceding PCIe Transaction Layer Packets will be processed
-> +        * first.)  But some Root Complexes have various issues with Upstream
-> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-> +        * The PCIe devices which under the Root Complexes will be cleared the
-> +        * Relaxed Ordering bit in the configuration space, So we check our
-> +        * PCIe configuration space to see if it's flagged with advice against
-> +        * using Relaxed Ordering.
-> +        */
-> +       if (pcie_relaxed_ordering_supported(pdev))
-> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-> +
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Friday, June 16, 2017 3:10 AM
+> To: Jean Delvare <jdelvare@suse.de>
+> Cc: K, Narendra <Narendra_K@Dell.com>; x86@kernel.org; linux-
+> pci@vger.kernel.org; Hargrave, Jordan <Jordan_Hargrave@Dell.com>; Iyer,
+> Shyam <Shyam_Iyer@Dell.com>; bhelgaas@google.com
+> Subject: Re: dmi type 0xB1 record - unknown flag
+>=20
+> On Fri, Jun 02, 2017 at 04:13:11PM +0200, Jean Delvare wrote:
+> > ...
+> > I think the whole thing can be simplified like this:
+> >
+> > From: Jean Delvare <jdelvare@suse.de>
+> > Subject: x86/PCI: Simplify Dell DMI B1 quirk
+> >
+> > No need for such convoluted code, when all we need is to call one
+> > function in one specific case.
+> >
+> > Signed-off-by: Jean Delvare <jdelvare@suse.de>
+>=20
+> Applied to pci/misc for v4.13, thanks!
+>=20
+> As far as I can tell, the new code is functionally equivalent to the old =
+code, so
+> I don't think there's any risk here.
+>=20
 
-Looks like you have a typo here. It should be
-"!pcie_relaxed_ordering_supported(pdev)" that you are testing for to
-set this flag shouldn't it? Right now it appears the flag is getting
-set if relaxed ordering is supported.
+Hi Jean/Bjorn,
 
->         spin_lock_init(&adapter->stats_lock);
->         spin_lock_init(&adapter->tid_release_lock);
->         spin_lock_init(&adapter->win0_lock);
-> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-> index f05f0d4..ac229a3 100644
-> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
->         struct fw_iq_cmd c;
->         struct sge *s = &adap->sge;
->         struct port_info *pi = netdev_priv(dev);
-> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
->
->         /* Size needs to be multiple of 16, including status entry. */
->         iq->size = roundup(iq->size, 16);
-> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
->
->                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
->                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
-> -                                            FW_IQ_CMD_FL0FETCHRO_F |
-> -                                            FW_IQ_CMD_FL0DATARO_F |
-> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
->                                              FW_IQ_CMD_FL0PADEN_F);
->                 if (cong >= 0)
->                         c.iqns_to_fl0congen |=
-> --
-> 1.9.0
->
->
+Sorry for the delay. I applied the patch to the mainline kernel version 4.1=
+2-rc5 and performed sanity test on  a  DellEMC PowerEdge R730XD system. It =
+is working as=20
+expected.  'dmesg' shows the message that 'pci=3Dbfsort' is enabled.
+
+I also booted kernel version 4.12-rc5 with patch applied on a DellEMC Power=
+Edge 1950 system which is listed in the ' pciprobe_dmi_table' quicks table.
+It is working as expected and has not caused regression on this system. 'dm=
+esg' shows the message that 'pci=3Dbfsort' is enabled.
+
+[...]
+> >
+> > What do you think?
+=20
+Thank you for simplifying the code and for the patch.=20
+
+With regards,
+Narendra K
