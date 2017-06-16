@@ -1,49 +1,29 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46710 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750914AbdFHNGK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 09:06:10 -0400
-Date: Thu, 8 Jun 2017 07:06:09 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: kvm@vger.kernel.org, Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Stefan Assmann <sassmann@redhat.com>,
-        linux-kernel@vger.kernel.org,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] vfio/pci: Add Intel XXV710 to hidden INTx devices
-Message-ID: <20170608070609.435a7187@t450s.home>
-In-Reply-To: <20170608080017.GA12580@infradead.org>
-References: <20170607190132.22711.46831.stgit@gimli.home>
-        <20170608080017.GA12580@infradead.org>
+Return-Path: <SRS0=G+2+=5V=canonical.com=kai.heng.feng@kernel.org>
+Return-Path: <SRS0=G+2+=5V=canonical.com=kai.heng.feng@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAAd53p46piFcy+JKFi6auBLON-4tPHTAHBO_DOyZyL+xxCa4PA@mail.gmail.com>
+References: <CAAd53p4-84G=NeJMOGcL_3fd7_s6EC4udLEGTcNNSBF=4FxHyA@mail.gmail.com>
+ <Pine.LNX.4.44L0.1706151008380.1573-100000@iolanthe.rowland.org> <CAAd53p46piFcy+JKFi6auBLON-4tPHTAHBO_DOyZyL+xxCa4PA@mail.gmail.com>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Sat, 17 Jun 2017 00:18:15 +0800
+Message-ID: <CAAd53p4ntaZ48dsHG+ftDadgOnX=xwX9c3WeBr2SXZye3VL4CA@mail.gmail.com>
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
+	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-[+linux-pci]
+On Fri, Jun 16, 2017 at 11:07 AM, Kai-Heng Feng
+<kai.heng.feng@canonical.com> wrote:
+> On Thu, Jun 15, 2017 at 10:12 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>> Those documents refer to a hardware bug with a workaround in the BIOS.
+>> Have you checked to see if your BIOS is up to date?
+>
+> Yes, it's up to date.
+>
 
-On Thu, 8 Jun 2017 01:00:17 -0700
-Christoph Hellwig <hch@infradead.org> wrote:
-
-> On Wed, Jun 07, 2017 at 01:01:46PM -0600, Alex Williamson wrote:
-> > XXV710 has the same broken INTx behavior as the rest of the X/XL710
-> > series, the interrupt status register is not wired to report pending
-> > INTx interrupts, thus we never associate the interrupt to the device.
-> > Extend the device IDs to include these so that we hide that the
-> > device supports INTx at all to the user.  
-> 
-> Is vfio really the right place for the list?  Shouldn't this be
-> keyed off the core PCI quirk for these devices?
-
-I sent a separate patch to add these devices to the regular broken INTx
-quirk in pci-core:
-
-http://www.spinics.net/lists/linux-pci/msg61971.html
-
-We don't currently have a device flag to specify that INTx is broken in
-this particular way that vfio can work around, nor do I really know how
-other drivers might make use of this info.  If I'm wrong, then
-certainly let's make a common way to do this, but this patch is just a
-trivial extension to an existing mechanism.  Thanks,
-
-Alex
+Alan, I re-sent a patch but I forgot to add you to CC list:
+http://marc.info/?l=linux-pci&m=149760607914628&w=2
