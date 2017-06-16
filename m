@@ -1,61 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: bhelgaas@google.com, po.liu@nxp.com, paul.gortmaker@windriver.com,
- lorenzo.pieralisi@arm.com
-Subject: [PATCH] PCI: xilinx: make of_device_ids const.
-Date: Tue, 20 Jun 2017 11:17:48 +0530
-Message-Id: <5e1534021d712fa92cc0178313daeeb22e34798d.1497937235.git.arvind.yadav.cs@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=G+2+=5V=canonical.com=kai.heng.feng@kernel.org>
+Return-Path: <SRS0=G+2+=5V=canonical.com=kai.heng.feng@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <Pine.LNX.4.44L0.1706151008380.1573-100000@iolanthe.rowland.org>
+References: <CAAd53p4-84G=NeJMOGcL_3fd7_s6EC4udLEGTcNNSBF=4FxHyA@mail.gmail.com>
+ <Pine.LNX.4.44L0.1706151008380.1573-100000@iolanthe.rowland.org>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Fri, 16 Jun 2017 11:07:42 +0800
+Message-ID: <CAAd53p46piFcy+JKFi6auBLON-4tPHTAHBO_DOyZyL+xxCa4PA@mail.gmail.com>
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
+	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-of_device_ids are not supposed to change at runtime. All functions
-working with of_device_ids provided by <linux/of.h> work with const
-of_device_ids. So mark the non-const structs as const.
+On Thu, Jun 15, 2017 at 10:12 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Thu, 15 Jun 2017, Kai-Heng Feng wrote:
+>
+>> On Wed, Jun 14, 2017 at 1:28 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> >
+>> > The lspci output [1] shows:
+>> >
+>> >   00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD] FCH USB EHCI Controller (rev 39) (prog-if 20 [EHCI])
+>> >     Capabilities: [c0] Power Management version 2
+>> >       Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+>> >       Status: D3 NoSoftRst- PME-Enable+ DSel=0 DScale=0 PME-
+>> >       Bridge: PM- B3+
+>> >
+>> > The device claims it can assert PME# from D3hot.  If it can't, that
+>> > sounds like a hardware defect that should be addressed with a quirk.
+>> > Ideally we would also have a pointer to the AMD hardware erratum.
+>>
+>> Looks like it's pretty similar to "23 USB Wake on Connect/Disconnect
+>> with Low Speed Devices" in [1].
+>> It points to a workaround in appendix A2 from [2].
+>> However it says this bug only effects Low Speed devices, but it
+>> actually also happens on High Speed devices.
+>>
+>> [1] https://support.amd.com/TechDocs/46837.pdf
+>> [2] https://support.amd.com/TechDocs/42413.pdf
+>
+> Those documents refer to a hardware bug with a workaround in the BIOS.
+> Have you checked to see if your BIOS is up to date?
 
-File size before:
-   text	   data	    bss	    dec	    hex	filename
-    195	    600	      0	    795	    31b	drivers/pci/host/pcie-xilinx.o
+Yes, it's up to date.
 
-File size after constify xilinx_pcie_of_match:
-   text	   data	    bss	    dec	    hex	filename
-    595	    184	      0	    779	    30b	drivers/pci/host/pcie-xilinx.o
-
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/pci/host/pcie-xilinx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 2fe2df5..b621cb5 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -696,7 +696,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
--static struct of_device_id xilinx_pcie_of_match[] = {
-+static const struct of_device_id xilinx_pcie_of_match[] = {
- 	{ .compatible = "xlnx,axi-pcie-host-1.00.a", },
- 	{}
- };
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+> Alan Stern
+>
