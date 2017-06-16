@@ -1,283 +1,134 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 16 Jun 2017 16:11:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Guodong Xu <guodong.xu@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, kbuild test robot <lkp@intel.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>, kbuild-all@01.org,
-        Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Duc Dang <dhdang@apm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>, chenyao11@huawei.com,
-        Chen Feng <puck.chen@hisilicon.com>,
-        Wangbinghui <wangbinghui@hisilicon.com>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        devicetree@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v9 2/4] arm64: dts: hisi: add kirin pcie node
-Message-ID: <20170616211106.GF11129@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170531070109.81569-3-songxiaowei@hisilicon.com>
- <201706040735.pu1PIspV%fengguang.wu@intel.com>
- <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
- <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:17401 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752877AbdFPIft (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Jun 2017 04:35:49 -0400
+Date: Fri, 16 Jun 2017 11:33:13 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+Message-ID: <20170616083313.GY3187@lahna.fi.intel.com>
+References: <20170530132408.GA2556@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
+ <20170606085553.GA20085@red-moon>
+ <20170612155700.GA31930@red-moon>
+ <20170613084831.GP3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 06, 2017 at 07:19:53PM +0800, Guodong Xu wrote:
-> Hi, Arnd
+On Thu, Jun 15, 2017 at 06:01:02PM +0000, Gabriele Paoloni wrote:
+> Hi Mika
 > 
-> On Tue, Jun 6, 2017 at 5:23 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Sun, Jun 4, 2017 at 2:03 AM, kbuild test robot <lkp@intel.com> wrote:
-> >> Hi Xiaowei,
-> >>
-> >> [auto build test ERROR on pci/next]
-> >> [also build test ERROR on v4.12-rc3 next-20170602]
-> >> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> >>
-> >> url:    https://github.com/0day-ci/linux/commits/Xiaowei-Song/add-PCIe-driver-for-Kirin-PCIe/20170531-182118
-> >> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> >> config: arm64-allnoconfig (attached as .config)
-> >> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> >> reproduce:
-> >>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-> >>         chmod +x ~/bin/make.cross
-> >>         # save the attached .config to linux build tree
-> >>         make.cross ARCH=arm64
-> >>
-> >> All errors (new ones prefixed by >>):
-> >>
-> >>>> Error: arch/arm64/boot/dts/hisilicon/hi3660.dtsi:180.24-25 syntax error
-> >>>> FATAL ERROR: Unable to parse input tree
-> >
-> > We keep getting the build errors for patch submissions. Obviously the patch is
-> > still broken and can't be merged as-is. What is the plan for merging the series?
-> >
+> > -----Original Message-----
+> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> > owner@vger.kernel.org] On Behalf Of Mika Westerberg
+> > Sent: 13 June 2017 21:04
+> > To: Gabriele Paoloni
+> > Cc: Lorenzo Pieralisi; rafael@kernel.org; Rafael J. Wysocki;
+> > catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> > frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
+> > kernel@lists.infradead.org; mark.rutland@arm.com;
+> > brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
+> > kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
+> > pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
+> > Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+> > devices before scanning
+> > 
+> > On Tue, Jun 13, 2017 at 07:01:38PM +0000, Gabriele Paoloni wrote:
+> > > I am not very familiar with Linux MFD however the main issue here is
+> > that
+> > > 1) for IPMI we want to re-use the standard IPMI driver without
+> > touching it:
+> > >    see
+> > >
+> > >    static const struct acpi_device_id acpi_ipmi_match[] = {
+> > >          { "IPI0001", 0 },
+> > >          { },
+> > >    };
+> > >
+> > >    in "drivers/char/ipmi/ipmi_si_intf.c" (and in general any standard
+> > driver
+> > >    of an LPC child)
+> > >
+> > > 2) We need a way to guarantee that all LPC children are not
+> > enumerated
+> > >    by acpi_default_enumeration() (so for example if an ipmi node is
+> > an LPC#
+> > >    child it should not be enumerated, otherwise it should be)
+> > >    Currently acpi_default_enumeration() skips spi/i2c slaves by
+> > checking:
+> > >    1) if the acpi resource type is a serial bus
+> > >    2) if the type of serial bus descriptor is I2C or SPI
+> > >
+> > >    For LPC we cannot leverage on any ACPI property to "recognize"
+> > that our
+> > >    devices are LPC children; hence before I proposed for
+> > acpi_default_enumeration()
+> > >    to skip devices that have already been enumerated (by calling
+> > >    acpi_device_enumerated() ).
+> > >
+> > > So in the current scenario, how do you think that MFD can help?
+> > 
+> > If you look at Documentation/acpi/enumeration.txt there is a chapter
+> > "MFD devices". I think it pretty much maches what you have here. An LPC
+> > device (MFD device) and bunch of child devices. The driver for your LPC
+> > device can specify _HID for each child device. Those are then mached by
+> > the MFD ACPI code to the corresponding ACPI nodes from which platform
+> > devices are created including "IPI0001".
 > 
-> This dts patch can be applied to dts series [1]. For upstream review
-> purpose, hi3660-hikey960 dts patches, which don't have a related
-> driver changes, are sent in [1]. Other patches, which need driver
-> changes, like this one, are sent together with driver.
+> So I guess here in the LPC driver I would have an MFD cell for IPMI. I.e.:
 > 
-> Patchset [1] is now at its v2 review. Rob Herring already gave his ACK
-> for some of them in v1. Hopefully I can get more ACK for remaining
-> ones, and make them ready for v4.13 merging window.
+> 	static struct mfd_cell_acpi_match hisi_lpc_ipmi_acpi_match = {
+> 		.pnpid = "IPI0001",
+> 	};
 > 
-> [1], http://www.spinics.net/lists/devicetree/msg178303.html
+> correct?
 
-I don't know how you want to deal with the DTS build failure.  From a
-PCI perspective, I think I could apply patches 1 and 3 pretty easily
-by themselves.
+Yes.
 
-If/when you post these again, please incorporate the following
-incremental diff to clean up various whitespace and capitalization
-nits (these are spread across several of your patches).
+> > 
+> > It causes acpi_default_enumeration() to be called but it should be fine
+> > as we are dealing with platform device anyway.
+> 
+> I do not quite understand how declaring such MFD cell above would make sure
+> that the LPC probe is called before the IPMI device is enumerated...
 
+In fact it may be that it is not sufficient in this case because the
+ACPI core might enumerate child devices before the LPC driver even gets
+a chance to probe so you would need to add also scan handler to the
+child devices and mark them already enumerated or something like that.
 
-diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-index 68ffa0fbcd73..20357d840af1 100644
---- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
-@@ -24,8 +24,8 @@ Example based on kirin960:
- 
- 	pcie@f4000000 {
- 		compatible = "hisilicon,kirin-pcie";
--		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
--		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
-+		reg = <0x0 0xf4000000 0x0  0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
-+		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xf4000000 0x0 0x2000>;
- 		reg-names = "dbi","apb","phy", "config";
- 		bus-range = <0x0  0x1>;
- 		#address-cells = <3>;
-@@ -46,5 +46,5 @@ Example based on kirin960:
- 			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
- 		clock-names = "pcie_phy_ref", "pcie_aux",
- 			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
--		reset-gpios = <&gpio11 1 0 >;
-+		reset-gpios = <&gpio11 1 0>;
- 	};
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index e8feb2fb4d53..7bc89baa40ba 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -159,12 +159,12 @@
- 
- 		pcie@f4000000 {
- 			compatible = "hisilicon,kirin960-pcie";
--			reg = <0x0 0xf4000000 0x0 0x1000>,
--			      <0x0 0xff3fe000 0x0 0x1000>,
-+			reg = <0x0 0xf4000000 0x0  0x1000>,
-+			      <0x0 0xff3fe000 0x0  0x1000>,
- 			      <0x0 0xf3f20000 0x0 0x40000>,
--			      <0x0 0xF5000000 0x0 0x2000>;
-+			      <0x0 0xf5000000 0x0  0x2000>;
- 			reg-names = "dbi", "apb", "phy", "config";
--			bus-range = <0x0  0x1>;
-+			bus-range = <0x0 0x1>;
- 			#address-cells = <3>;
- 			#size-cells = <2>;
- 			device_type = "pci";
-@@ -173,7 +173,7 @@
- 			num-lanes = <1>;
- 			#interrupt-cells = <1>;
- 			interrupt-map-mask = <0xf800 0 0 7>;
--			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
-+			interrupt-map = <0x0 0 0 1 &gic 0 0 0  282 4>,
- 					<0x0 0 0 2 &gic 0 0 0  283 4>,
- 					<0x0 0 0 3 &gic 0 0 0  284 4>,
- 					<0x0 0 0 4 &gic 0 0 0  285 4>;
-@@ -183,8 +183,9 @@
- 				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
- 				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
- 			clock-names = "pcie_phy_ref", "pcie_aux",
--				      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
--			reset-gpios = <&gpio11 1 0 >;
-+				      "pcie_apb_phy", "pcie_apb_sys",
-+				      "pcie_aclk";
-+			reset-gpios = <&gpio11 1 0>;
- 			status = "ok";
- 		};
- 	};
-diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-index f63e6548efae..41520dd1d5e5 100644
---- a/drivers/pci/dwc/pcie-kirin.c
-+++ b/drivers/pci/dwc/pcie-kirin.c
-@@ -35,8 +35,8 @@
- #define REF_CLK_FREQ			100000000
- 
- /* PCIe ELBI registers */
--#define SOC_PCIECTRL_CTRL0_ADDR	0x000
--#define SOC_PCIECTRL_CTRL1_ADDR	0x004
-+#define SOC_PCIECTRL_CTRL0_ADDR		0x000
-+#define SOC_PCIECTRL_CTRL1_ADDR		0x004
- #define SOC_PCIEPHY_CTRL2_ADDR		0x008
- #define SOC_PCIEPHY_CTRL3_ADDR		0x00c
- #define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-@@ -48,30 +48,30 @@
- #define PCIE_APB_PHY_STATUS0		0x400
- #define PCIE_LINKUP_ENABLE		(0x8020)
- #define PCIE_LTSSM_ENABLE_BIT		(0x1 << 11)
--#define PIPE_CLK_STABLE		(0x1 << 19)
-+#define PIPE_CLK_STABLE			(0x1 << 19)
- #define PIPE_CLK_MAX_TRY_TIMES		10
--#define PHY_REF_PAD_BIT		(0x1 << 8)
-+#define PHY_REF_PAD_BIT			(0x1 << 8)
- #define PHY_PWR_DOWN_BIT		(0x1 << 22)
--#define PHY_RST_ACK_BIT		(0x1 << 16)
-+#define PHY_RST_ACK_BIT			(0x1 << 16)
- 
- /* info located in sysctrl */
- #define SCTRL_PCIE_CMOS_OFFSET		0x60
- #define SCTRL_PCIE_CMOS_BIT		0x10
- #define SCTRL_PCIE_ISO_OFFSET		0x44
- #define SCTRL_PCIE_ISO_BIT		0x30
--#define SCTRL_PCIE_HPCLK_OFFSET	0x190
-+#define SCTRL_PCIE_HPCLK_OFFSET		0x190
- #define SCTRL_PCIE_HPCLK_BIT		0x184000
- #define SCTRL_PCIE_OE_OFFSET		0x14a
--#define PCIE_DEBOUNCE_PARAM		0xF0F400
-+#define PCIE_DEBOUNCE_PARAM		0xf0f400
- #define PCIE_OE_BYPASS			(0x3 << 28)
- 
- /* peri_crg ctrl */
- #define CRGCTRL_PCIE_ASSERT_OFFSET	0x88
--#define CRGCTRL_PCIE_ASSERT_BIT	0x8c000000
-+#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
- 
- /* Time for delay */
--#define REF_2_PERST_MIN		20000
--#define REF_2_PERST_MAX		25000
-+#define REF_2_PERST_MIN			20000
-+#define REF_2_PERST_MAX			25000
- #define PERST_2_ACCESS_MIN		10000
- #define PERST_2_ACCESS_MAX		12000
- #define LINK_WAIT_MIN			900
-@@ -80,22 +80,22 @@
- #define PIPE_CLK_WAIT_MAX		600
- 
- struct kirin_pcie {
--	struct dw_pcie		*pci;
--	void __iomem		*apb_base;
--	void __iomem		*phy_base;
--	struct regmap		*crgctrl;
--	struct regmap 		*sysctrl;
--	struct clk		*apb_sys_clk;
--	struct clk		*apb_phy_clk;
--	struct clk		*phy_ref_clk;
--	struct clk		*pcie_aclk;
--	struct clk		*pcie_aux_clk;
--	int			gpio_id_reset;
-+	struct dw_pcie	*pci;
-+	void __iomem	*apb_base;
-+	void __iomem	*phy_base;
-+	struct regmap	*crgctrl;
-+	struct regmap 	*sysctrl;
-+	struct clk	*apb_sys_clk;
-+	struct clk	*apb_phy_clk;
-+	struct clk	*phy_ref_clk;
-+	struct clk	*pcie_aclk;
-+	struct clk	*pcie_aux_clk;
-+	int		gpio_id_reset;
- };
- 
- /* Registers in PCIeCTRL */
- static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
--		u32 val, u32 reg)
-+					 u32 val, u32 reg)
- {
- 	writel(val, kirin_pcie->apb_base + reg);
- }
-@@ -107,7 +107,7 @@ static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
- 
- /* Registers in PCIePHY */
- static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
--		u32 val, u32 reg)
-+					u32 val, u32 reg)
- {
- 	writel(val, kirin_pcie->phy_base + reg);
- }
-@@ -118,7 +118,7 @@ static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
- }
- 
- static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
--		struct platform_device *pdev)
-+			       struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 
-@@ -146,7 +146,7 @@ static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
- }
- 
- static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
--		struct platform_device *pdev)
-+				    struct platform_device *pdev)
- {
- 	struct resource *apb;
- 	struct resource *phy;
-@@ -184,7 +184,6 @@ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
- static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
- {
- 	u32 reg_val;
--	u32 time = PIPE_CLK_MAX_TRY_TIMES;
- 
- 	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
- 	reg_val &= ~PHY_REF_PAD_BIT;
-@@ -459,7 +458,7 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 	int ret;
- 
- 	if (!dev->of_node) {
--		dev_err(&pdev->dev, "NULL node\n");
-+		dev_err(dev, "NULL node\n");
- 		return -EINVAL;
- 	}
- 
+> Could you point me to the code that does this?
+
+Check for example drivers/mfd/intel-lpss.c.
