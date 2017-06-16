@@ -1,103 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45262 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753373AbdFVVLX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 22 Jun 2017 17:11:23 -0400
-Date: Thu, 22 Jun 2017 15:11:18 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        David Gibson <david@gibson.dropbear.id.au>
-Subject: Re: [PATCH kernel 0/3 REPOST] vfio-pci: Add support for mmapping
- MSI-X table
-Message-ID: <20170622151118.0006c3d3@w520.home>
-In-Reply-To: <20170615054845.8428-1-aik@ozlabs.ru>
-References: <20170615054845.8428-1-aik@ozlabs.ru>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170608141342.2018-4-lorenzo.pieralisi@arm.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <20170608141342.2018-4-lorenzo.pieralisi@arm.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Fri, 16 Jun 2017 11:05:02 +0200
+Message-ID: <CACRpkda-_zNf3E+we4fgGLJXhCOsKTHJ4m5Jj-hS3G05FaJ8_g@mail.gmail.com>
+Subject: Re: [RFT PATCH v2 03/42] drivers: pci: host: ftpci100: convert IRQ
+ masking to raw PCI config accessors
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 15 Jun 2017 15:48:42 +1000
-Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+On Thu, Jun 8, 2017 at 4:13 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
 
-> Here is a patchset which Yongji was working on before
-> leaving IBM LTC. Since we still want to have this functionality
-> in the kernel (DPDK is the first user), here is a rebase
-> on the current upstream.
-> 
-> 
-> Current vfio-pci implementation disallows to mmap the page
-> containing MSI-X table in case that users can write directly
-> to MSI-X table and generate an incorrect MSIs.
-> 
-> However, this will cause some performance issue when there
-> are some critical device registers in the same page as the
-> MSI-X table. We have to handle the mmio access to these
-> registers in QEMU emulation rather than in guest.
-> 
-> To solve this issue, this series allows to expose MSI-X table
-> to userspace when hardware enables the capability of interrupt
-> remapping which can ensure that a given PCI device can only
-> shoot the MSIs assigned for it. And we introduce a new bus_flags
-> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
-> for different archs.
-> 
-> The patch 3 are based on the proposed patchset[1].
-> 
-> Changelog
-> v3:
-> - rebased on the current upstream
+> Current ftpci100 driver host bridge controller driver requires struct
+> pci_bus to be created in order to mask and clear IRQs using standard
+> PCI bus config accessors.
+>
+> This struct pci_bus dependency is fictitious and burdens the driver
+> with unneeded constraints (eg to use separate APIs to create and scan
+> the root bus).
+>
+> Add PCI raw config space accessors to PCIe ftpci100 driver and remove the
+> fictitious struct pci_bus dependency.
+>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Linus Walleij <linus.walleij@linaro.org>
 
-There's something not forthcoming here, the last version I see from
-Yongji is this one:
+This makes all kind of sense so:
+Acked-by: Linus Walleij <linus.walleij@linaro.org>
 
-https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017245.html
+I'm hoping to be able to pull in your branch on my board
+tree and actually test it too. The semantic change is a bit
+scary.
 
-Which was a 6-patch series where patches 2-4 tried to apply
-PCI_BUS_FLAGS_MSI_REMAP for cases that supported other platforms.  That
-doesn't exist here, so it's not simply a rebase.  Patch 1/ seems to
-equate this new flag to the IOMMU capability IOMMU_CAP_INTR_REMAP, but
-nothing is done here to match them together.  That patch also mentions
-the work Eric has done for similar features on ARM, but again those
-patches are dropped.  It seems like an incomplete feature now.  Thanks,
+Yours,
+Linus Walleij
 
-Alex
-
-> v2:
-> - Make the commit log more clear
-> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
->   so that we could clearly know what the function does
-> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
->   of iommu_bus_notifier()
-> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
->   table so that we can know whether we allow to mmap MSI-X table
->   in QEMU
-> 
-> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-> 
-> 
-> This is based on sha1
-> 63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
-> 
-> Please comment. Thanks.
-> 
-> 
-> 
-> Yongji Xie (3):
->   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
->   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
->   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
->     remapping is enabled
-> 
->  include/linux/pci.h                       |  1 +
->  arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
->  drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
->  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
->  4 files changed, 26 insertions(+), 4 deletions(-)
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
