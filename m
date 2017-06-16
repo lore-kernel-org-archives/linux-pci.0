@@ -1,84 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:34138 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750792AbdFPTRk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:17:40 -0400
+To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20170615203729.9009-1-logang@deltatee.com>
+ <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
+ <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
+ <000101d2e6b6$0fcc2880$2f647980$@dell.com>
+ <6c2b819d-d000-38e2-29ee-d532f92909d2@deltatee.com>
+ <000201d2e6cb$9f4f4e50$ddedeaf0$@dell.com>
+Cc: 'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        'Serge Semin' <fancer.lancer@gmail.com>,
+        Sergey.Semin@t-platforms.ru
 From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 15 Jun 2017 14:37:16 -0600
-Message-Id: <20170615203729.9009-1-logang@deltatee.com>
-Subject: [RFC PATCH 00/13] Switchtec NTB Support
-Sender: linux-kernel-owner@vger.kernel.org
+Message-ID: <15f31689-bc66-81b3-9880-a8eeb9b1e9e7@deltatee.com>
+Date: Fri, 16 Jun 2017 13:17:14 -0600
+MIME-Version: 1.0
+In-Reply-To: <000201d2e6cb$9f4f4e50$ddedeaf0$@dell.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-This patchset implements Non-Transparent Bridge (NTB) support for the
-Microsemi Switchtec series of switches. We're looking for some
-review from the community at this point but hope to get it upstreamed
-for v4.14.
 
-Switchtec NTB support is configured over the same function and bar
-as the management endpoint. Thus, the new driver hooks into the
-management driver which we had merged in v4.12. We use the class
-interface API to register an NTB device for every switchtec device
-which supports NTB (not all do).
+On 16/06/17 12:08 PM, Allen Hubbe wrote:
+> Alright.  I'll leave it to you to find and reconcile common functionalities of the drivers.  What about making spad emulation optional?
 
-The Switchtec hardware supports doorbells, memory windows and messages.
-Seeing there is no native scratchpad support, 128 spads are emulated
-through the use of a pre-setup memory window. The switch has 64
-doorbells which are shared between the two partitions and a
-configurable set of memory windows. While the hardware supports more
-than 2 partitions, this driver only supports the first two seeing
-the current NTB API only supports two hosts.
+Ok.
 
-The driver has been tested with ntb_netdev and fully passes the
-ntb_test script.
-
-This patchset is based off of v4.12-rc5 and can be found in this
-git repo:
-
-https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb
-
-Thanks,
+I don't see the point of making spad emulation optional. Who would want
+to disable it and what would be the benefit?
 
 Logan
-
-
-Logan Gunthorpe (13):
-  switchtec: move structure definitions into a common header
-  switchtec: export class symbol for use in upper layer driver
-  switchtec: add ntb hardware register definitions
-  switchtec: add link event notifier block
-  switchtec_ntb: introduce initial ntb driver
-  switchtec_ntb: initialize hardware for memory windows
-  switchtec_ntb: initialize hardware for doorbells and messages
-  switchtec_ntb: add skeleton ntb driver
-  switchtec_ntb: add link management
-  switchtec_ntb: implement doorbell registers
-  switchtec_ntb: implement scratchpad registers
-  switchtec_ntb: add memory window support
-  switchtec_ntb: update switchtec documentation with notes for ntb
-
- Documentation/switchtec.txt         |   12 +
- MAINTAINERS                         |    2 +
- drivers/ntb/hw/Kconfig              |    1 +
- drivers/ntb/hw/Makefile             |    1 +
- drivers/ntb/hw/mscc/Kconfig         |    9 +
- drivers/ntb/hw/mscc/Makefile        |    1 +
- drivers/ntb/hw/mscc/switchtec_ntb.c | 1144 +++++++++++++++++++++++++++++++++++
- drivers/pci/switch/switchtec.c      |  319 ++--------
- include/linux/ntb.h                 |    3 +
- include/linux/switchtec.h           |  365 +++++++++++
- 10 files changed, 1601 insertions(+), 256 deletions(-)
- create mode 100644 drivers/ntb/hw/mscc/Kconfig
- create mode 100644 drivers/ntb/hw/mscc/Makefile
- create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
- create mode 100644 include/linux/switchtec.h
-
---
-2.11.0
