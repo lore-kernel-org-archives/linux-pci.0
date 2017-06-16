@@ -1,74 +1,202 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40602 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752153AbdFLXO0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Jun 2017 19:14:26 -0400
-Date: Mon, 12 Jun 2017 18:14:23 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: rakesh@tuxera.com, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: ensure the PCI device is locked over
- ->reset_notify calls
-Message-ID: <20170612231423.GB4379@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170601111039.8913-1-hch@lst.de>
- <20170601111039.8913-2-hch@lst.de>
- <20170606053142.GA25064@bhelgaas-glaptop.roam.corp.google.com>
- <20170606104836.GB24297@lst.de>
- <20170606211443.GB12672@bhelgaas-glaptop.roam.corp.google.com>
- <20170607182936.GA31815@lst.de>
+Return-Path: <SRS0=URTd=5V=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=URTd=5V=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v4 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
+ <1497265525-4752-3-git-send-email-dingtianhong@huawei.com>
+ <CAKgT0UfMCTjRWVnYiz-7BaV6NxK+kHm9PppgVp+_sNhfVgKviQ@mail.gmail.com>
+CC: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
+        "Bjorn Helgaas" <helgaas@kernel.org>,
+        Michael Werner <werner@chelsio.com>,
+        "Ganesh Goudar" <ganeshgr@chelsio.com>,
+        Asit K Mallick
+	<asit.k.mallick@intel.com>,
+        Patrick J Cramer <patrick.j.cramer@intel.com>,
+        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+        Bob Shaw
+	<Bob.Shaw@amd.com>, h <l.stach@pengutronix.de>,
+        Amir Ancel
+	<amira@mellanox.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        David
+ Laight <David.Laight@aculab.com>,
+        "Jeff Kirsher"
+	<jeffrey.t.kirsher@intel.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
+        Robin
+ Murphy <robin.murphy@arm.com>,
+        David Miller <davem@davemloft.net>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <5854930e-af6a-4274-2822-cf38e5967da3@huawei.com>
+Date: Fri, 16 Jun 2017 09:10:50 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170607182936.GA31815@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKgT0UfMCTjRWVnYiz-7BaV6NxK+kHm9PppgVp+_sNhfVgKviQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 07, 2017 at 08:29:36PM +0200, Christoph Hellwig wrote:
-> On Tue, Jun 06, 2017 at 04:14:43PM -0500, Bjorn Helgaas wrote:
-> > So I guess the method here is
-> > dev->driver->err_handler->reset_notify(), and the PCI core should be
-> > holding device_lock() while calling it?  That makes sense to me;
-> > thanks a lot for articulating that!
+
+
+On 2017/6/13 5:28, Alexander Duyck wrote:
+> On Mon, Jun 12, 2017 at 4:05 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+...
+>>  /**
+>> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
+>> + * @dev: PCI device to query
+>> + *
+>> + * If possible clear relaxed ordering
+>> + */
+>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
+>> +{
+>> +       return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>> +                                         PCI_EXP_DEVCTL_RELAX_EN);
+>> +}
+>> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
+>> +
+>> +/**
+>> + * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
+>> + * @dev: PCI device to query
+>> + *
+>> + * Returns true if the device support relaxed ordering attribute.
+>> + */
+>> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
+>> +{
+>> +       bool ro_supported = false;
+>> +       u16 v;
+>> +
+>> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
+>> +       if ((v & PCI_EXP_DEVCTL_RELAX_EN) >> 4)
+>> +               ro_supported = true;
 > 
-> Yes.
+> Instead of "return ro_supported" why not just "return !!(v &
+> PCIE_EXP_DEVCTL_RELAX_EN)"? You can cut out the extra steps and save
+> yourself some extra steps this way since the shift by 4 shouldn't even
+> really be needed since you are just testing for a bit anyway.
 > 
-> > 1) The current patch protects the err_handler->reset_notify() uses by
-> > adding or expanding device_lock regions in the paths that lead to
-> > pci_reset_notify().  Could we simplify it by doing the locking
-> > directly in pci_reset_notify()?  Then it would be easy to verify the
-> > locking, and we would be less likely to add new callers without the
-> > proper locking.
+
+OK.
+
+>> +
+>> +       return ro_supported;
+>> +}
+>> +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
+>> +
+>> +/**
+>>   * pcie_get_minimum_link - determine minimum link settings of a PCI device
+>>   * @dev: PCI device to query
+>>   * @speed: storage for minimum speed
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 19c8950..ed1f717 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1701,6 +1701,46 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+>>                                          PCI_EXP_DEVCTL_EXT_TAG);
+>>  }
+>>
+>> +/**
+>> + * pci_dev_should_disable_relaxed_ordering - check if the PCI device
+>> + * should disable the relaxed ordering attribute.
+>> + * @dev: PCI device
+>> + *
+>> + * Return true if any of the PCI devices above us do not support
+>> + * relaxed ordering.
+>> + */
+>> +static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
+>> +{
+>> +       bool ro_disabled = false;
+>> +
+>> +       while (dev) {
+>> +               if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
+>> +                       ro_disabled = true;
+>> +                       break;
+>> +               }
+>> +               dev = dev->bus->self;
+>> +       }
+>> +
+>> +       return ro_disabled;
 > 
-> We could do that, except that I'd rather hold the lock over a longer
-> period if we have many calls following each other.  
-
-My main concern is being able to verify the locking.  I think that is
-much easier if the locking is adjacent to the method invocation.  But
-if you just add a comment at the method invocation about where the
-locking is, that should be sufficient.
-
-> I also have
-> a patch to actually kill pci_reset_notify() later in the series as
-> well, as the calling convention for it and ->reset_notify() are
-> awkward - depending on prepare parameter they do two entirely
-> different things.  That being said I could also add new
-> pci_reset_prepare() and pci_reset_done() helpers.
-
-I like your pci_reset_notify() changes; they make that much clearer.
-I don't think new helpers are necessary.
-
-> > 2) Stating the rule explicitly helps look for other problems, and I
-> > think we have a similar problem in all the pcie_portdrv_err_handler
-> > methods.
+> Same thing here. I would suggest just returning either true or false,
+> and drop the ro_disabled value. It will return the lines of code and
+> make things a bit bit more direct.
 > 
-> Yes, I mentioned this earlier, and I also vaguely remember we got
-> bug reports from IBM on power for this a while ago.  I just don't
-> feel confident enough to touch all these without a good test plan.
 
-Hmmm.  I see your point, but I hate leaving a known bug unfixed.  I
-wonder if some enterprising soul could tickle this bug by injecting
-errors while removing and rescanning devices below the bridge?
+OK.
 
-Bjorn
+>> +}
+>> +
+>> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+>> +{
+>> +       struct pci_dev *bridge = pci_upstream_bridge(dev);
+>> +
+>> +       if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+>> +               return;
+> 
+> The pci_is_pcie check is actually redundant based on the
+> pcie_relaxed_ordering_supported check using pcie_capability_read_word.
+>
+
+Yes, pcie_capability_read_word already check it, thanks.
+
+
+> Also I am not sure what the point is of the pci_upstream_bridge()
+> check is, it seems like you should be able to catch all the same stuff
+> in your pci_dev_should_disable_relaxed_ordering() call. Though it did
+> give me a thought. I don't think we can alter this for a VF, so you
+> might want to add a check for dev->is_virtfn to the list of checks and
+> if it is a virtual function just return since I don't think there are
+> any VFs that would let you alter this bit anyway.
+> 
+If the upstream device is null, does it mean that it is in a guest OS device? maybe I miss something.
+also I will check the dev->is_virtfn to avoid trying to change the configuration space for VF.
+
+Another question: Because it looks like that maybe the Casey is too busy these days, should we
+delay the modification of the cxgb4 and instead to update the ixgbe? what do you think about it. :)
+
+Thanks.
+Ding
+
+>> +       /* If the releaxed ordering enable bit is not set, do nothing. */
+>> +       if (!pcie_relaxed_ordering_supported(dev))
+>> +               return;
+>> +
+>> +       if (pci_dev_should_disable_relaxed_ordering(dev)) {
+>> +               pcie_clear_relaxed_ordering(dev);
+>> +               dev_info(&dev->dev, "Disable Relaxed Ordering\n");
+>> +       }
+>> +}
+>> +
+>>  static void pci_configure_device(struct pci_dev *dev)
+>>  {
+>>         struct hotplug_params hpp;
+>> @@ -1708,6 +1748,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>>
+>>         pci_configure_mps(dev);
+>>         pci_configure_extended_tags(dev);
+>> +       pci_configure_relaxed_ordering(dev);
+>>
+>>         memset(&hpp, 0, sizeof(hpp));
+>>         ret = pci_get_hp_params(dev, &hpp);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index e1e8428..9870781 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1105,6 +1105,8 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>>  void pci_d3cold_enable(struct pci_dev *dev);
+>>  void pci_d3cold_disable(struct pci_dev *dev);
+>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
+>> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
+>>
+>>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>                                   bool enable)
+>> --
+>> 1.9.0
+>>
+>>
+> 
+> .
+> 
