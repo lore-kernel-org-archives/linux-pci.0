@@ -1,105 +1,283 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
- <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v4 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Mon, 12 Jun 2017 19:05:22 +0800
-Message-ID: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 16 Jun 2017 16:11:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Guodong Xu <guodong.xu@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, kbuild test robot <lkp@intel.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>, kbuild-all@01.org,
+        Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Duc Dang <dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, chenyao11@huawei.com,
+        Chen Feng <puck.chen@hisilicon.com>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        devicetree@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v9 2/4] arm64: dts: hisi: add kirin pcie node
+Message-ID: <20170616211106.GF11129@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170531070109.81569-3-songxiaowei@hisilicon.com>
+ <201706040735.pu1PIspV%fengguang.wu@intel.com>
+ <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
+ <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
+On Tue, Jun 06, 2017 at 07:19:53PM +0800, Guodong Xu wrote:
+> Hi, Arnd
+> 
+> On Tue, Jun 6, 2017 at 5:23 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Sun, Jun 4, 2017 at 2:03 AM, kbuild test robot <lkp@intel.com> wrote:
+> >> Hi Xiaowei,
+> >>
+> >> [auto build test ERROR on pci/next]
+> >> [also build test ERROR on v4.12-rc3 next-20170602]
+> >> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> >>
+> >> url:    https://github.com/0day-ci/linux/commits/Xiaowei-Song/add-PCIe-driver-for-Kirin-PCIe/20170531-182118
+> >> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
+> >> config: arm64-allnoconfig (attached as .config)
+> >> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+> >> reproduce:
+> >>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+> >>         chmod +x ~/bin/make.cross
+> >>         # save the attached .config to linux build tree
+> >>         make.cross ARCH=arm64
+> >>
+> >> All errors (new ones prefixed by >>):
+> >>
+> >>>> Error: arch/arm64/boot/dts/hisilicon/hi3660.dtsi:180.24-25 syntax error
+> >>>> FATAL ERROR: Unable to parse input tree
+> >
+> > We keep getting the build errors for patch submissions. Obviously the patch is
+> > still broken and can't be merged as-is. What is the plan for merging the series?
+> >
+> 
+> This dts patch can be applied to dts series [1]. For upstream review
+> purpose, hi3660-hikey960 dts patches, which don't have a related
+> driver changes, are sent in [1]. Other patches, which need driver
+> changes, like this one, are sent together with driver.
+> 
+> Patchset [1] is now at its v2 review. Rob Herring already gave his ACK
+> for some of them in v1. Hopefully I can get more ACK for remaining
+> ones, and make them ready for v4.13 merging window.
+> 
+> [1], http://www.spinics.net/lists/devicetree/msg178303.html
 
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
+I don't know how you want to deal with the DTS build failure.  From a
+PCI perspective, I think I could apply patches 1 and 3 pretty easily
+by themselves.
 
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
-
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
-
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.  
-
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
-    according John's suggestion, and modify the description, use the true/false
-    as the return value.
-
-    We shouldn't enable relaxed ordering attribute by the setting in the root
-    complex configuration space for PCIe device, so fix it for cxgb4.
-
-    Fix some format issues.
-
-Casey Leedom (2):
-  PCI: Add new PCIe Fabric End Node flag,
-    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (1):
-  PCI: Enable PCIe Relaxed Ordering if supported
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
- drivers/pci/pci.c                               | 32 +++++++++++++++++++
- drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
- drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
- include/linux/pci.h                             |  4 +++
- 7 files changed, 136 insertions(+), 2 deletions(-)
-
--- 
-1.9.0
+If/when you post these again, please incorporate the following
+incremental diff to clean up various whitespace and capitalization
+nits (these are spread across several of your patches).
 
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+index 68ffa0fbcd73..20357d840af1 100644
+--- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+@@ -24,8 +24,8 @@ Example based on kirin960:
+ 
+ 	pcie@f4000000 {
+ 		compatible = "hisilicon,kirin-pcie";
+-		reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+-		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
++		reg = <0x0 0xf4000000 0x0  0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
++		      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xf4000000 0x0 0x2000>;
+ 		reg-names = "dbi","apb","phy", "config";
+ 		bus-range = <0x0  0x1>;
+ 		#address-cells = <3>;
+@@ -46,5 +46,5 @@ Example based on kirin960:
+ 			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+ 		clock-names = "pcie_phy_ref", "pcie_aux",
+ 			      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+-		reset-gpios = <&gpio11 1 0 >;
++		reset-gpios = <&gpio11 1 0>;
+ 	};
+diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+index e8feb2fb4d53..7bc89baa40ba 100644
+--- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
++++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+@@ -159,12 +159,12 @@
+ 
+ 		pcie@f4000000 {
+ 			compatible = "hisilicon,kirin960-pcie";
+-			reg = <0x0 0xf4000000 0x0 0x1000>,
+-			      <0x0 0xff3fe000 0x0 0x1000>,
++			reg = <0x0 0xf4000000 0x0  0x1000>,
++			      <0x0 0xff3fe000 0x0  0x1000>,
+ 			      <0x0 0xf3f20000 0x0 0x40000>,
+-			      <0x0 0xF5000000 0x0 0x2000>;
++			      <0x0 0xf5000000 0x0  0x2000>;
+ 			reg-names = "dbi", "apb", "phy", "config";
+-			bus-range = <0x0  0x1>;
++			bus-range = <0x0 0x1>;
+ 			#address-cells = <3>;
+ 			#size-cells = <2>;
+ 			device_type = "pci";
+@@ -173,7 +173,7 @@
+ 			num-lanes = <1>;
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0xf800 0 0 7>;
+-			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
++			interrupt-map = <0x0 0 0 1 &gic 0 0 0  282 4>,
+ 					<0x0 0 0 2 &gic 0 0 0  283 4>,
+ 					<0x0 0 0 3 &gic 0 0 0  284 4>,
+ 					<0x0 0 0 4 &gic 0 0 0  285 4>;
+@@ -183,8 +183,9 @@
+ 				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+ 				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+ 			clock-names = "pcie_phy_ref", "pcie_aux",
+-				      "pcie_apb_phy", "pcie_apb_sys", "pcie_aclk";
+-			reset-gpios = <&gpio11 1 0 >;
++				      "pcie_apb_phy", "pcie_apb_sys",
++				      "pcie_aclk";
++			reset-gpios = <&gpio11 1 0>;
+ 			status = "ok";
+ 		};
+ 	};
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index f63e6548efae..41520dd1d5e5 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -35,8 +35,8 @@
+ #define REF_CLK_FREQ			100000000
+ 
+ /* PCIe ELBI registers */
+-#define SOC_PCIECTRL_CTRL0_ADDR	0x000
+-#define SOC_PCIECTRL_CTRL1_ADDR	0x004
++#define SOC_PCIECTRL_CTRL0_ADDR		0x000
++#define SOC_PCIECTRL_CTRL1_ADDR		0x004
+ #define SOC_PCIEPHY_CTRL2_ADDR		0x008
+ #define SOC_PCIEPHY_CTRL3_ADDR		0x00c
+ #define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
+@@ -48,30 +48,30 @@
+ #define PCIE_APB_PHY_STATUS0		0x400
+ #define PCIE_LINKUP_ENABLE		(0x8020)
+ #define PCIE_LTSSM_ENABLE_BIT		(0x1 << 11)
+-#define PIPE_CLK_STABLE		(0x1 << 19)
++#define PIPE_CLK_STABLE			(0x1 << 19)
+ #define PIPE_CLK_MAX_TRY_TIMES		10
+-#define PHY_REF_PAD_BIT		(0x1 << 8)
++#define PHY_REF_PAD_BIT			(0x1 << 8)
+ #define PHY_PWR_DOWN_BIT		(0x1 << 22)
+-#define PHY_RST_ACK_BIT		(0x1 << 16)
++#define PHY_RST_ACK_BIT			(0x1 << 16)
+ 
+ /* info located in sysctrl */
+ #define SCTRL_PCIE_CMOS_OFFSET		0x60
+ #define SCTRL_PCIE_CMOS_BIT		0x10
+ #define SCTRL_PCIE_ISO_OFFSET		0x44
+ #define SCTRL_PCIE_ISO_BIT		0x30
+-#define SCTRL_PCIE_HPCLK_OFFSET	0x190
++#define SCTRL_PCIE_HPCLK_OFFSET		0x190
+ #define SCTRL_PCIE_HPCLK_BIT		0x184000
+ #define SCTRL_PCIE_OE_OFFSET		0x14a
+-#define PCIE_DEBOUNCE_PARAM		0xF0F400
++#define PCIE_DEBOUNCE_PARAM		0xf0f400
+ #define PCIE_OE_BYPASS			(0x3 << 28)
+ 
+ /* peri_crg ctrl */
+ #define CRGCTRL_PCIE_ASSERT_OFFSET	0x88
+-#define CRGCTRL_PCIE_ASSERT_BIT	0x8c000000
++#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
+ 
+ /* Time for delay */
+-#define REF_2_PERST_MIN		20000
+-#define REF_2_PERST_MAX		25000
++#define REF_2_PERST_MIN			20000
++#define REF_2_PERST_MAX			25000
+ #define PERST_2_ACCESS_MIN		10000
+ #define PERST_2_ACCESS_MAX		12000
+ #define LINK_WAIT_MIN			900
+@@ -80,22 +80,22 @@
+ #define PIPE_CLK_WAIT_MAX		600
+ 
+ struct kirin_pcie {
+-	struct dw_pcie		*pci;
+-	void __iomem		*apb_base;
+-	void __iomem		*phy_base;
+-	struct regmap		*crgctrl;
+-	struct regmap 		*sysctrl;
+-	struct clk		*apb_sys_clk;
+-	struct clk		*apb_phy_clk;
+-	struct clk		*phy_ref_clk;
+-	struct clk		*pcie_aclk;
+-	struct clk		*pcie_aux_clk;
+-	int			gpio_id_reset;
++	struct dw_pcie	*pci;
++	void __iomem	*apb_base;
++	void __iomem	*phy_base;
++	struct regmap	*crgctrl;
++	struct regmap 	*sysctrl;
++	struct clk	*apb_sys_clk;
++	struct clk	*apb_phy_clk;
++	struct clk	*phy_ref_clk;
++	struct clk	*pcie_aclk;
++	struct clk	*pcie_aux_clk;
++	int		gpio_id_reset;
+ };
+ 
+ /* Registers in PCIeCTRL */
+ static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
+-		u32 val, u32 reg)
++					 u32 val, u32 reg)
+ {
+ 	writel(val, kirin_pcie->apb_base + reg);
+ }
+@@ -107,7 +107,7 @@ static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
+ 
+ /* Registers in PCIePHY */
+ static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
+-		u32 val, u32 reg)
++					u32 val, u32 reg)
+ {
+ 	writel(val, kirin_pcie->phy_base + reg);
+ }
+@@ -118,7 +118,7 @@ static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
+ }
+ 
+ static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
+-		struct platform_device *pdev)
++			       struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 
+@@ -146,7 +146,7 @@ static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
+ }
+ 
+ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+-		struct platform_device *pdev)
++				    struct platform_device *pdev)
+ {
+ 	struct resource *apb;
+ 	struct resource *phy;
+@@ -184,7 +184,6 @@ static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
+ static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
+ {
+ 	u32 reg_val;
+-	u32 time = PIPE_CLK_MAX_TRY_TIMES;
+ 
+ 	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
+ 	reg_val &= ~PHY_REF_PAD_BIT;
+@@ -459,7 +458,7 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+ 	int ret;
+ 
+ 	if (!dev->of_node) {
+-		dev_err(&pdev->dev, "NULL node\n");
++		dev_err(dev, "NULL node\n");
+ 		return -EINVAL;
+ 	}
+ 
