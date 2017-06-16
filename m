@@ -1,104 +1,101 @@
-Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v4 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Date: Mon, 12 Jun 2017 19:05:23 +0800
-Message-ID: <1497265525-4752-2-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
-References: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:34190 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752180AbdFPTfU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 16 Jun 2017 15:35:20 -0400
+To: Serge Semin <fancer.lancer@gmail.com>
+References: <20170615203729.9009-1-logang@deltatee.com>
+ <000001d2e6a7$dfc719a0$9f554ce0$@dell.com>
+ <daa95888-a786-b6d4-5e56-b9ac5b38a181@deltatee.com>
+ <20170616163324.GA15472@mobilestation>
+ <883bdb76-972c-7de9-0208-2d0933f192d4@deltatee.com>
+ <20170616183824.GA5175@mobilestation.tp-local.ru>
+Cc: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        Sergey.Semin@t-platforms.ru
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <33b6c321-c0af-7340-8e8e-e929a00005c7@deltatee.com>
+Date: Fri, 16 Jun 2017 13:34:59 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170616183824.GA5175@mobilestation.tp-local.ru>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
 
-The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
-Ordering Attribute should not be used on Transaction Layer Packets destined
-for the PCIe End Node so flagged.  Initially flagged this way are Intel
-E5-26xx Root Complex Ports which suffer from a Flow Control Credit
-Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
-don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |  2 ++
- 2 files changed, 40 insertions(+)
+On 16/06/17 12:38 PM, Serge Semin wrote:
+> On Fri, Jun 16, 2017 at 11:08:52AM -0600, Logan Gunthorpe <logang@deltatee.com> wrote:
+> It's the way the NTB API was created for, to have set of functions to access
+> NTB devices in the similar way. These aren't my beliefs, it's the way it was
+> created. I agree it can be optional, but it shouldn't be made as the basics
+> of the driver. It is called NTB "hardware" driver after all, not "emulating" or
+> "abstracting" driver.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 085fb78..58bdd23 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3999,6 +3999,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
- 			      quirk_tw686x_class);
- 
- /*
-+ * Some devices have problems with Transaction Layer Packets with the Relaxed
-+ * Ordering Attribute set.  Such devices should mark themselves and other
-+ * Device Drivers should check before sending TLPs with RO set.
-+ */
-+static void quirk_relaxedordering_disable(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
-+}
-+
-+/*
-+ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
-+ * cause performance problems with Upstream Transaction Layer Packets with
-+ * Relaxed Ordering set.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-+ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
-+ * where Upstream Transaction Layer Packets with the Relaxed Ordering
-+ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
-+ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
-+ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
-+ * November 10, 2010).  As a result, on this platform we can't use Relaxed
-+ * Ordering for Upstream TLPs.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..e1e8428 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -183,6 +183,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
- 	/* Do not use FLR even if device advertises PCI_AF_CAP */
- 	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
-+	/* Don't use Relaxed Ordering for TLPs directed at this device */
-+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
- };
- 
- enum pci_irq_reroute_variant {
--- 
-1.9.0
+Just more philosophy. You haven't given any good reason to remove the
+functionality. Vague references to the way things were created aren't
+compelling arguments. Better to cite code and point out actual problems.
+
+> ntb_transport could work without Scratchpads, if it's properly altered to
+> use NTB messaging. This should be the way to make things compatible, but not
+> making the hardware driver suitable for just one ntb_transport.
+
+Ok, well when all the NTB clients no longer require using scratchpads
+and we can all abide by the rule that clients must function without
+them. Then, I'll remove the emulation. Until then, it stays.
+
+> It's not like my whim or something, but the way it's usually done.
+> https://kernelnewbies.org/PatchPhilosophy
+
+> Cite from there:
+> "Each patch should group changes into a logical sequence. Bug fixes must
+> come first in the patchset, then new features. This is because we need to be
+> able to backport bug fixes to older kernels, and they should not depend on
+> new features."
+
+You should probably read that again because it doesn't actually support
+your point (in fact it's saying something quite unrelated). It is also
+probably a good idea to read the rest of the seciton you cite:
+
+"The idea here is that you should break changes up in such a way that it
+will be easy to review."
+
+"When creating a new feature patchset, you may need to break up your
+changes into multiple commits. "
+
+"Clean up patches that are over 200 lines long are discouraged, because
+they are hard to review. Break those patches up into smaller patches. "
+
+Also, to quote Greg Kroah-Hartman from my last series[1]:
+
+"That's one big patch to review, would you want to do that?
+
+Can you break it up into smaller parts?"
+
+> You grouped the patches in according to your logical view or development
+> progress (I don't know for sure), but it's not obvious for reviewers.
+> From my perspective your new Microsemi Switchtec NTB driver is just one
+> feature. I don't know who would think differently so to split the solid
+> driver up for review. Switchtec management driver alteration might be the
+> same - just one fix. It's much easier for you to have your commits squashed,
+> than for me to look at your git tree, than get back to your patchset looking
+> for a necessary peace of patch and commenting it there.
+
+Well you're free to think that but, in my experience, your opinion
+differs significantly from the rest of the kernel community which I
+personally agree with.
+
+Now, if you'd like to actually review the code I'd be happy to address
+any concerns you find. I won't be responding to any more philosophical
+arguments or bike-shedding over the format of the patch.
+
+Logan
+
+[1] https://lkml.org/lkml/2017/1/31/637
