@@ -1,591 +1,419 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <guodong.xu@linaro.org>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>
-CC: <songxiaowei@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 2/3] PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-Date: Mon, 19 Jun 2017 17:59:19 +0800
-Message-ID: <20170619095920.40920-3-songxiaowei@hisilicon.com>
-In-Reply-To: <20170619095920.40920-1-songxiaowei@hisilicon.com>
-References: <20170619095920.40920-1-songxiaowei@hisilicon.com>
+Date: Fri, 16 Jun 2017 17:54:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Piotr Gregor <piotrgregor@rsyncme.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org
+Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170616225446.GG11129@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170526210222.GA22204@westernst>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170526210222.GA22204@westernst>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hisilicon PCIe Driver shares the common functions for PCIe dw-host
+On Fri, May 26, 2017 at 10:02:25PM +0100, Piotr Gregor wrote:
+> The test for INTx masking via config space command performed
+> in pci_intx_mask_supported() should be performed before PCI device
+> can be used. This is to avoid reading/writing of PCI_COMMAND_INTX_DISABLE
+> register which may collide with MSI/MSI-X interrupts.
+> 
+> This patch moves test performed in pci_intx_mask_supported() to
+> 
+> static void pci_test_intx_masking(struct pci_dev *dev)
+> 
+> defined in drivers/pci/probe.c.
+> 
+> This function is called from pci_setup_device(). It skips the test
+> if the device has been already marked to have broken INTx masking
+> feature. Otherwise the test is executed and broken_intx_masking
+> field of struct pci_dev is set accordingly. broken_intx_masking
+> meaning is: if it is true then the test has been either skipped
+> because the device has been already known to have broken INTx
+> masking support, or the test's been done and it has detected INTx
+> masking support to be broken.
+> The test result can be queried at any time later from the pci_dev
+> using same interface as before (though whith changed implementation)
+> 
+> static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+> {
+>         /*
+>          * INTx masking is supported if device has not been marked
+>          * to have this feature broken and it has passed
+>          * pci_test_intx_masking() test.
+>          */
+>         return !pdev->broken_intx_masking;
+> }
+> 
+> so current users of pci_intx_mask_supported: uio and vfio, keep
+> their code unchanged.
+> 
+> Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+> ---
+>  drivers/pci/pci.c   | 42 +-----------------------------------------
+>  drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h | 13 +++++++++++--
+>  3 files changed, 56 insertions(+), 43 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b01bd5b..7c4e1aa 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_intx);
+>  
+> -/**
+> - * pci_intx_mask_supported - probe for INTx masking support
+> - * @dev: the PCI device to operate on
+> - *
+> - * Check if the device dev support INTx masking via the config space
+> - * command word.
+> - */
+> -bool pci_intx_mask_supported(struct pci_dev *dev)
+> -{
+> -	bool mask_supported = false;
+> -	u16 orig, new;
+> -
+> -	if (dev->broken_intx_masking)
+> -		return false;
+> -
+> -	pci_cfg_access_lock(dev);
+> -
+> -	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> -	pci_write_config_word(dev, PCI_COMMAND,
+> -			      orig ^ PCI_COMMAND_INTX_DISABLE);
+> -	pci_read_config_word(dev, PCI_COMMAND, &new);
+> -
+> -	/*
+> -	 * There's no way to protect against hardware bugs or detect them
+> -	 * reliably, but as long as we know what the value should be, let's
+> -	 * go ahead and check it.
+> -	 */
+> -	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+> -		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+> -			orig, new);
+> -	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+> -		mask_supported = true;
+> -		pci_write_config_word(dev, PCI_COMMAND, orig);
+> -	}
+> -
+> -	pci_cfg_access_unlock(dev);
+> -	return mask_supported;
+> -}
+> -EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
+> -
+>  static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>  {
+>  	struct pci_bus *bus = dev->bus;
+> @@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+>   * @dev: the PCI device to operate on
+>   *
+>   * Check if the device dev has its INTx line asserted, mask it and
+> - * return true in that case. False is returned if not interrupt was
+> + * return true in that case. False is returned if no interrupt was
+>   * pending.
+>   */
+>  bool pci_check_and_mask_intx(struct pci_dev *dev)
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 19c8950..ee6b55c 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1330,6 +1330,48 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+>  }
+>  
+>  /**
+> + * pci_test_intx_masking - probe for INTx masking support
+> + * @dev: the PCI device to operate on
+> + *
+> + * Check if the @dev supports INTx masking via the config space
+> + * command word. Executed when PCI device is setup. Result is saved
+> + * in broken_intx_masking field of struct pci_dev and can be checked
+> + * with pci_intx_mask_supported at any time later, after the PCI device
+> + * has been setup (this avoids testing of PCI_COMMAND_INTX_DISABLE
+> + * register at runtime).
+> + */
+> +static void pci_test_intx_masking(struct pci_dev *dev)
+> +{
+> +	u16 orig, toggle, new;
+> +
+> +	/*
+> +	 * If device doesn't support this feature though it could pass the test.
+> +	 */
+> +	if (dev->broken_intx_masking)
+> +		return;
 
-The poweron functions is developed on hi3660 SoC,
-while Others Functions are common for Kirin series SoCs.
+I don't think we need this check anymore, because broken_intx_masking
+is only set by "FINAL" quirks, which run long after this code.
 
-Low power mode (L1 sub-state and Suspend/Resume), hotplug
-and MSI feature are not supported currently.
+> +
+> +	pci_cfg_access_lock(dev);
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-Reviewed-by: Jingoo Han <jingoohan1@gmail.com>
----
- drivers/pci/dwc/Kconfig      |  10 +
- drivers/pci/dwc/Makefile     |   1 +
- drivers/pci/dwc/pcie-kirin.c | 517 +++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 528 insertions(+)
- create mode 100644 drivers/pci/dwc/pcie-kirin.c
+I don't think we need this locking either.  This lock protects against
+user-space config access, and the device isn't accessible to user
+space yet.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index d2d2ba5b8a68..afecfb2b6ff4 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -130,4 +130,14 @@ config PCIE_ARTPEC6
- 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
- 	  SoCs.  This PCIe controller uses the DesignWare core.
+> +	/*
+> +	 * Perform the test.
+> +	 */
+> +	pci_read_config_word(dev, PCI_COMMAND, &orig);
+> +	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
+> +	pci_write_config_word(dev, PCI_COMMAND, toggle);
+> +	pci_read_config_word(dev, PCI_COMMAND, &new);
+> +
+> +	/*
+> +	 * Restore initial state.
+> +	 */
+> +	pci_write_config_word(dev, PCI_COMMAND, orig);
+> +
+> +	pci_cfg_access_unlock(dev);
+> +
+> +	if (new != toggle)
+> +		dev->broken_intx_masking = 1;
+> +}
+> +
+> +/**
+>   * pci_setup_device - fill in class and map information of a device
+>   * @dev: the device structure to fill
+>   *
+> @@ -1399,6 +1441,8 @@ int pci_setup_device(struct pci_dev *dev)
+>  		}
+>  	}
+>  
+> +	pci_test_intx_masking(dev);
+
+I think it's nicer to read the code if the assignment isn't hidden
+away, e.g., something like this:
+
+  dev->broken_intx_masking = pci_test_intx_masking(dev);
+
+That's more like what we do for dev->cfg_size and similar things.
+
+I provisionally made these changes and attached the updated patch below.
+Let me know if it looks OK.
+
+This is on my pci/enumeration branch, intended for v4.13.
+
+>  	switch (dev->hdr_type) {		    /* header type */
+>  	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
+>  		if (class == PCI_CLASS_BRIDGE_PCI)
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 33c2b0b..8a307fc 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -366,7 +366,7 @@ struct pci_dev {
+>  	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+>  	unsigned int    __aer_firmware_first_valid:1;
+>  	unsigned int	__aer_firmware_first:1;
+> -	unsigned int	broken_intx_masking:1;
+> +	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
+>  	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+>  	unsigned int	irq_managed:1;
+>  	unsigned int	has_secondary_link:1;
+> @@ -1003,6 +1003,16 @@ int __must_check pci_reenable_device(struct pci_dev *);
+>  int __must_check pcim_enable_device(struct pci_dev *pdev);
+>  void pcim_pin_device(struct pci_dev *pdev);
+>  
+> +static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * INTx masking is supported if device has not been marked
+> +	 * to have this feature broken and it has passed
+> +	 * pci_test_intx_masking() test.
+> +	 */
+> +	return !pdev->broken_intx_masking;
+> +}
+> +
+>  static inline int pci_is_enabled(struct pci_dev *pdev)
+>  {
+>  	return (atomic_read(&pdev->enable_cnt) > 0);
+> @@ -1026,7 +1036,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
+>  int pci_try_set_mwi(struct pci_dev *dev);
+>  void pci_clear_mwi(struct pci_dev *dev);
+>  void pci_intx(struct pci_dev *dev, int enable);
+> -bool pci_intx_mask_supported(struct pci_dev *dev);
+>  bool pci_check_and_mask_intx(struct pci_dev *dev);
+>  bool pci_check_and_unmask_intx(struct pci_dev *dev);
+>  int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
+
+
+commit 73ab6bc006ba966e233785577a1742c6cace9c8a
+Author: Piotr Gregor <piotrgregor@rsyncme.org>
+Date:   Fri May 26 22:02:25 2017 +0100
+
+    PCI: Test INTx masking during enumeration, not at run-time
+    
+    The test for INTx masking via PCI_COMMAND_INTX_DISABLE performed in
+    pci_intx_mask_supported() should be done before the device can be used.
+    This is to avoid writing PCI_COMMAND while the driver owns the device, in
+    case that has any effect on MSI/MSI-X interrupts.
+    
+    Move the content of pci_intx_mask_supported() to pci_intx_mask_broken() and
+    call it from pci_setup_device().
+    
+    The test result can be queried at any time later using the same
+    pci_intx_mask_supported() interface as before (though with changed
+    implementation), so callers (uio, vfio) should be unaffected.
+    
+    Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
+    [bhelgaas: changelog, remove quirk check, remove locking, move
+    dev->broken_intx_masking assignment to caller]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+    Acked-by: Michael S. Tsirkin <mst@redhat.com>
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b01bd5bba8e6..7c4e1aa67c67 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3708,46 +3708,6 @@ void pci_intx(struct pci_dev *pdev, int enable)
+ }
+ EXPORT_SYMBOL_GPL(pci_intx);
  
-+config PCIE_KIRIN
-+	depends on OF && ARM64
-+	bool "HiSilicon Kirin series SoCs PCIe controllers"
-+	depends on PCI
-+	select PCIEPORTBUS
-+	select PCIE_DW_HOST
-+	help
-+	  Say Y here if you want PCIe controller support
-+	  on HiSilicon Kirin series SoCs.
-+
- endmenu
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index a2df13c28798..4bd69bacd4ab 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -10,6 +10,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
- obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
-+obj-$(CONFIG_PCIE_KIRIN) += pcie-kirin.o
+-/**
+- * pci_intx_mask_supported - probe for INTx masking support
+- * @dev: the PCI device to operate on
+- *
+- * Check if the device dev support INTx masking via the config space
+- * command word.
+- */
+-bool pci_intx_mask_supported(struct pci_dev *dev)
+-{
+-	bool mask_supported = false;
+-	u16 orig, new;
+-
+-	if (dev->broken_intx_masking)
+-		return false;
+-
+-	pci_cfg_access_lock(dev);
+-
+-	pci_read_config_word(dev, PCI_COMMAND, &orig);
+-	pci_write_config_word(dev, PCI_COMMAND,
+-			      orig ^ PCI_COMMAND_INTX_DISABLE);
+-	pci_read_config_word(dev, PCI_COMMAND, &new);
+-
+-	/*
+-	 * There's no way to protect against hardware bugs or detect them
+-	 * reliably, but as long as we know what the value should be, let's
+-	 * go ahead and check it.
+-	 */
+-	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
+-		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
+-			orig, new);
+-	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
+-		mask_supported = true;
+-		pci_write_config_word(dev, PCI_COMMAND, orig);
+-	}
+-
+-	pci_cfg_access_unlock(dev);
+-	return mask_supported;
+-}
+-EXPORT_SYMBOL_GPL(pci_intx_mask_supported);
+-
+ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+ {
+ 	struct pci_bus *bus = dev->bus;
+@@ -3798,7 +3758,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
+  * @dev: the PCI device to operate on
+  *
+  * Check if the device dev has its INTx line asserted, mask it and
+- * return true in that case. False is returned if not interrupt was
++ * return true in that case. False is returned if no interrupt was
+  * pending.
+  */
+ bool pci_check_and_mask_intx(struct pci_dev *dev)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950c6c38..28c57b31261c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1329,6 +1329,34 @@ static void pci_msi_setup_pci_dev(struct pci_dev *dev)
+ 		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+ }
  
- # The following drivers are for devices that use the generic ACPI
- # pci_root.c driver but don't support standard ECAM config access.
-diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
-new file mode 100644
-index 000000000000..96aa097e0ceb
---- /dev/null
-+++ b/drivers/pci/dwc/pcie-kirin.c
-@@ -0,0 +1,517 @@
-+/*
-+ * PCIe host controller driver for Kirin Phone SoCs
++/**
++ * pci_intx_mask_broken - test PCI_COMMAND_INTX_DISABLE writability
++ * @dev: PCI device
 + *
-+ * Copyright (C) 2017 Hilisicon Electronics Co., Ltd.
-+ *		http://www.huawei.com
-+ *
-+ * Author: Xiaowei Song <songxiaowei@huawei.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
++ * Test whether PCI_COMMAND_INTX_DISABLE is writable for @dev.  Check this
++ * at enumeration-time to avoid modifying PCI_COMMAND at run-time.
 + */
-+
-+#include <asm/compiler.h>
-+#include <linux/compiler.h>
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/err.h>
-+#include <linux/gpio.h>
-+#include <linux/interrupt.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/of_address.h>
-+#include <linux/of_gpio.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci.h>
-+#include <linux/pci_regs.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <linux/resource.h>
-+#include <linux/types.h>
-+#include "pcie-designware.h"
-+
-+#define to_kirin_pcie(x) dev_get_drvdata((x)->dev)
-+
-+#define REF_CLK_FREQ			100000000
-+
-+/* PCIe ELBI registers */
-+#define SOC_PCIECTRL_CTRL0_ADDR		0x000
-+#define SOC_PCIECTRL_CTRL1_ADDR		0x004
-+#define SOC_PCIEPHY_CTRL2_ADDR		0x008
-+#define SOC_PCIEPHY_CTRL3_ADDR		0x00c
-+#define PCIE_ELBI_SLV_DBI_ENABLE	(0x1 << 21)
-+
-+/* info located in APB */
-+#define PCIE_APP_LTSSM_ENABLE	0x01c
-+#define PCIE_APB_PHY_CTRL0	0x0
-+#define PCIE_APB_PHY_CTRL1	0x4
-+#define PCIE_APB_PHY_STATUS0	0x400
-+#define PCIE_LINKUP_ENABLE	(0x8020)
-+#define PCIE_LTSSM_ENABLE_BIT	(0x1 << 11)
-+#define PIPE_CLK_STABLE		(0x1 << 19)
-+#define PHY_REF_PAD_BIT		(0x1 << 8)
-+#define PHY_PWR_DOWN_BIT	(0x1 << 22)
-+#define PHY_RST_ACK_BIT		(0x1 << 16)
-+
-+/* info located in sysctrl */
-+#define SCTRL_PCIE_CMOS_OFFSET	0x60
-+#define SCTRL_PCIE_CMOS_BIT	0x10
-+#define SCTRL_PCIE_ISO_OFFSET	0x44
-+#define SCTRL_PCIE_ISO_BIT	0x30
-+#define SCTRL_PCIE_HPCLK_OFFSET	0x190
-+#define SCTRL_PCIE_HPCLK_BIT	0x184000
-+#define SCTRL_PCIE_OE_OFFSET	0x14a
-+#define PCIE_DEBOUNCE_PARAM	0xF0F400
-+#define PCIE_OE_BYPASS		(0x3 << 28)
-+
-+/* peri_crg ctrl */
-+#define CRGCTRL_PCIE_ASSERT_OFFSET	0x88
-+#define CRGCTRL_PCIE_ASSERT_BIT		0x8c000000
-+
-+/* Time for delay */
-+#define REF_2_PERST_MIN		20000
-+#define REF_2_PERST_MAX		25000
-+#define PERST_2_ACCESS_MIN	10000
-+#define PERST_2_ACCESS_MAX	12000
-+#define LINK_WAIT_MIN		900
-+#define LINK_WAIT_MAX		1000
-+#define PIPE_CLK_WAIT_MIN	550
-+#define PIPE_CLK_WAIT_MAX	600
-+#define TIME_CMOS_MIN		100
-+#define TIME_CMOS_MAX		105
-+#define TIME_PHY_PD_MIN		10
-+#define TIME_PHY_PD_MAX		11
-+
-+struct kirin_pcie {
-+	struct dw_pcie	*pci;
-+	void __iomem	*apb_base;
-+	void __iomem	*phy_base;
-+	struct regmap	*crgctrl;
-+	struct regmap	*sysctrl;
-+	struct clk	*apb_sys_clk;
-+	struct clk	*apb_phy_clk;
-+	struct clk	*phy_ref_clk;
-+	struct clk	*pcie_aclk;
-+	struct clk	*pcie_aux_clk;
-+	int		gpio_id_reset;
-+};
-+
-+/* Registers in PCIeCTRL */
-+static inline void kirin_apb_ctrl_writel(struct kirin_pcie *kirin_pcie,
-+					 u32 val, u32 reg)
++static int pci_intx_mask_broken(struct pci_dev *dev)
 +{
-+	writel(val, kirin_pcie->apb_base + reg);
-+}
++	u16 orig, toggle, new;
 +
-+static inline u32 kirin_apb_ctrl_readl(struct kirin_pcie *kirin_pcie, u32 reg)
-+{
-+	return readl(kirin_pcie->apb_base + reg);
-+}
++	pci_read_config_word(dev, PCI_COMMAND, &orig);
++	toggle = orig ^ PCI_COMMAND_INTX_DISABLE;
++	pci_write_config_word(dev, PCI_COMMAND, toggle);
++	pci_read_config_word(dev, PCI_COMMAND, &new);
 +
-+/* Registers in PCIePHY */
-+static inline void kirin_apb_phy_writel(struct kirin_pcie *kirin_pcie,
-+					u32 val, u32 reg)
-+{
-+	writel(val, kirin_pcie->phy_base + reg);
-+}
++	pci_write_config_word(dev, PCI_COMMAND, orig);
 +
-+static inline u32 kirin_apb_phy_readl(struct kirin_pcie *kirin_pcie, u32 reg)
-+{
-+	return readl(kirin_pcie->phy_base + reg);
-+}
-+
-+static long kirin_pcie_get_clk(struct kirin_pcie *kirin_pcie,
-+			       struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+
-+	kirin_pcie->phy_ref_clk = devm_clk_get(dev, "pcie_phy_ref");
-+	if (IS_ERR(kirin_pcie->phy_ref_clk))
-+		return PTR_ERR(kirin_pcie->phy_ref_clk);
-+
-+	kirin_pcie->pcie_aux_clk = devm_clk_get(dev, "pcie_aux");
-+	if (IS_ERR(kirin_pcie->pcie_aux_clk))
-+		return PTR_ERR(kirin_pcie->pcie_aux_clk);
-+
-+	kirin_pcie->apb_phy_clk = devm_clk_get(dev, "pcie_apb_phy");
-+	if (IS_ERR(kirin_pcie->apb_phy_clk))
-+		return PTR_ERR(kirin_pcie->apb_phy_clk);
-+
-+	kirin_pcie->apb_sys_clk = devm_clk_get(dev, "pcie_apb_sys");
-+	if (IS_ERR(kirin_pcie->apb_sys_clk))
-+		return PTR_ERR(kirin_pcie->apb_sys_clk);
-+
-+	kirin_pcie->pcie_aclk = devm_clk_get(dev, "pcie_aclk");
-+	if (IS_ERR(kirin_pcie->pcie_aclk))
-+		return PTR_ERR(kirin_pcie->pcie_aclk);
-+
-+	return 0;
-+}
-+
-+static long kirin_pcie_get_resource(struct kirin_pcie *kirin_pcie,
-+				    struct platform_device *pdev)
-+{
-+	struct resource *apb;
-+	struct resource *phy;
-+	struct resource *dbi;
-+	struct device *dev = &pdev->dev;
-+
-+	apb = platform_get_resource_byname(pdev, IORESOURCE_MEM, "apb");
-+	kirin_pcie->apb_base = devm_ioremap_resource(dev, apb);
-+	if (IS_ERR(kirin_pcie->apb_base))
-+		return PTR_ERR(kirin_pcie->apb_base);
-+
-+	phy = platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-+	kirin_pcie->phy_base = devm_ioremap_resource(dev, phy);
-+	if (IS_ERR(kirin_pcie->phy_base))
-+		return PTR_ERR(kirin_pcie->phy_base);
-+
-+	dbi = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
-+	kirin_pcie->pci->dbi_base = devm_ioremap_resource(dev, dbi);
-+	if (IS_ERR(kirin_pcie->pci->dbi_base))
-+		return PTR_ERR(kirin_pcie->pci->dbi_base);
-+
-+	kirin_pcie->crgctrl =
-+		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-crgctrl");
-+	if (IS_ERR(kirin_pcie->crgctrl))
-+		return PTR_ERR(kirin_pcie->crgctrl);
-+
-+	kirin_pcie->sysctrl =
-+		syscon_regmap_lookup_by_compatible("hisilicon,hi3660-sctrl");
-+	if (IS_ERR(kirin_pcie->sysctrl))
-+		return PTR_ERR(kirin_pcie->sysctrl);
-+
-+	return 0;
-+}
-+
-+static int kirin_pcie_phy_init(struct kirin_pcie *kirin_pcie)
-+{
-+	u32 reg_val;
-+	struct device *dev = kirin_pcie->pci->dev;
-+
-+	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
-+	reg_val &= ~PHY_REF_PAD_BIT;
-+	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
-+
-+	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL0);
-+	reg_val &= ~PHY_PWR_DOWN_BIT;
-+	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL0);
-+	usleep_range(TIME_PHY_PD_MIN, TIME_PHY_PD_MAX);
-+
-+	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_CTRL1);
-+	reg_val &= ~PHY_RST_ACK_BIT;
-+	kirin_apb_phy_writel(kirin_pcie, reg_val, PCIE_APB_PHY_CTRL1);
-+
-+	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
-+	reg_val = kirin_apb_phy_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
-+	if (reg_val & PIPE_CLK_STABLE) {
-+		dev_err(dev, "PIPE clk is not stable\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static void kirin_pcie_oe_enable(struct kirin_pcie *kirin_pcie)
-+{
-+	u32 val;
-+
-+	regmap_read(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, &val);
-+	val |= PCIE_DEBOUNCE_PARAM;
-+	val &= ~PCIE_OE_BYPASS;
-+	regmap_write(kirin_pcie->sysctrl, SCTRL_PCIE_OE_OFFSET, val);
-+}
-+
-+static int kirin_pcie_clk_ctrl(struct kirin_pcie *kirin_pcie, bool enable)
-+{
-+	int ret = 0;
-+
-+	if (!enable)
-+		goto close_clk;
-+
-+	ret = clk_set_rate(kirin_pcie->phy_ref_clk, REF_CLK_FREQ);
-+	if (ret)
-+		return ret;
-+
-+	ret = clk_prepare_enable(kirin_pcie->phy_ref_clk);
-+	if (ret)
-+		return ret;
-+
-+	ret = clk_prepare_enable(kirin_pcie->apb_sys_clk);
-+	if (ret)
-+		goto apb_sys_fail;
-+
-+	ret = clk_prepare_enable(kirin_pcie->apb_phy_clk);
-+	if (ret)
-+		goto apb_phy_fail;
-+
-+	ret = clk_prepare_enable(kirin_pcie->pcie_aclk);
-+	if (ret)
-+		goto aclk_fail;
-+
-+	ret = clk_prepare_enable(kirin_pcie->pcie_aux_clk);
-+	if (ret)
-+		goto aux_clk_fail;
-+
-+	return 0;
-+
-+close_clk:
-+	clk_disable_unprepare(kirin_pcie->pcie_aux_clk);
-+aux_clk_fail:
-+	clk_disable_unprepare(kirin_pcie->pcie_aclk);
-+aclk_fail:
-+	clk_disable_unprepare(kirin_pcie->apb_phy_clk);
-+apb_phy_fail:
-+	clk_disable_unprepare(kirin_pcie->apb_sys_clk);
-+apb_sys_fail:
-+	clk_disable_unprepare(kirin_pcie->phy_ref_clk);
-+
-+	return ret;
-+}
-+
-+static int kirin_pcie_power_on(struct kirin_pcie *kirin_pcie)
-+{
-+	int ret;
-+
-+	/* Power supply for Host */
-+	regmap_write(kirin_pcie->sysctrl,
-+		     SCTRL_PCIE_CMOS_OFFSET, SCTRL_PCIE_CMOS_BIT);
-+	usleep_range(TIME_CMOS_MIN, TIME_CMOS_MAX);
-+	kirin_pcie_oe_enable(kirin_pcie);
-+
-+	ret = kirin_pcie_clk_ctrl(kirin_pcie, true);
-+	if (ret)
-+		return ret;
-+
-+	/* ISO disable, PCIeCtrl, PHY assert and clk gate clear */
-+	regmap_write(kirin_pcie->sysctrl,
-+		     SCTRL_PCIE_ISO_OFFSET, SCTRL_PCIE_ISO_BIT);
-+	regmap_write(kirin_pcie->crgctrl,
-+		     CRGCTRL_PCIE_ASSERT_OFFSET, CRGCTRL_PCIE_ASSERT_BIT);
-+	regmap_write(kirin_pcie->sysctrl,
-+		     SCTRL_PCIE_HPCLK_OFFSET, SCTRL_PCIE_HPCLK_BIT);
-+
-+	ret = kirin_pcie_phy_init(kirin_pcie);
-+	if (ret)
-+		goto close_clk;
-+
-+	/* perst assert Endpoint */
-+	if (!gpio_request(kirin_pcie->gpio_id_reset, "pcie_perst")) {
-+		usleep_range(REF_2_PERST_MIN, REF_2_PERST_MAX);
-+		ret = gpio_direction_output(kirin_pcie->gpio_id_reset, 1);
-+		if (ret)
-+			goto close_clk;
-+		usleep_range(PERST_2_ACCESS_MIN, PERST_2_ACCESS_MAX);
-+
-+		return 0;
-+	}
-+
-+close_clk:
-+	kirin_pcie_clk_ctrl(kirin_pcie, false);
-+	return ret;
-+}
-+
-+static void kirin_pcie_sideband_dbi_w_mode(struct kirin_pcie *kirin_pcie,
-+					   bool on)
-+{
-+	u32 val;
-+
-+	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL0_ADDR);
-+	if (on)
-+		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
-+	else
-+		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
-+
-+	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL0_ADDR);
-+}
-+
-+static void kirin_pcie_sideband_dbi_r_mode(struct kirin_pcie *kirin_pcie,
-+					   bool on)
-+{
-+	u32 val;
-+
-+	val = kirin_apb_ctrl_readl(kirin_pcie, SOC_PCIECTRL_CTRL1_ADDR);
-+	if (on)
-+		val = val | PCIE_ELBI_SLV_DBI_ENABLE;
-+	else
-+		val = val & ~PCIE_ELBI_SLV_DBI_ENABLE;
-+
-+	kirin_apb_ctrl_writel(kirin_pcie, val, SOC_PCIECTRL_CTRL1_ADDR);
-+}
-+
-+static int kirin_pcie_rd_own_conf(struct pcie_port *pp,
-+				  int where, int size, u32 *val)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-+	int ret;
-+
-+	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
-+	ret = dw_pcie_read(pci->dbi_base + where, size, val);
-+	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
-+
-+	return ret;
-+}
-+
-+static int kirin_pcie_wr_own_conf(struct pcie_port *pp,
-+				  int where, int size, u32 val)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-+	int ret;
-+
-+	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
-+	ret = dw_pcie_write(pci->dbi_base + where, size, val);
-+	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
-+
-+	return ret;
-+}
-+
-+static u32 kirin_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
-+			       u32 reg, size_t size)
-+{
-+	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-+	u32 ret;
-+
-+	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, true);
-+	dw_pcie_read(base + reg, size, &ret);
-+	kirin_pcie_sideband_dbi_r_mode(kirin_pcie, false);
-+
-+	return ret;
-+}
-+
-+static void kirin_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
-+				 u32 reg, size_t size, u32 val)
-+{
-+	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-+
-+	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, true);
-+	dw_pcie_write(base + reg, size, val);
-+	kirin_pcie_sideband_dbi_w_mode(kirin_pcie, false);
-+}
-+
-+static int kirin_pcie_link_up(struct dw_pcie *pci)
-+{
-+	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-+	u32 val = kirin_apb_ctrl_readl(kirin_pcie, PCIE_APB_PHY_STATUS0);
-+
-+	if ((val & PCIE_LINKUP_ENABLE) == PCIE_LINKUP_ENABLE)
++	/*
++	 * PCI_COMMAND_INTX_DISABLE was reserved and read-only prior to PCI
++	 * r2.3, so strictly speaking, a device is not *broken* if it's not
++	 * writable.
++	 */
++	if (new == toggle)
 +		return 1;
-+
 +	return 0;
 +}
 +
-+static int kirin_pcie_establish_link(struct pcie_port *pp)
+ /**
+  * pci_setup_device - fill in class and map information of a device
+  * @dev: the device structure to fill
+@@ -1399,6 +1427,8 @@ int pci_setup_device(struct pci_dev *dev)
+ 		}
+ 	}
+ 
++	dev->broken_intx_masking = pci_intx_mask_broken(dev);
++
+ 	switch (dev->hdr_type) {		    /* header type */
+ 	case PCI_HEADER_TYPE_NORMAL:		    /* standard header */
+ 		if (class == PCI_CLASS_BRIDGE_PCI)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 33c2b0b77429..4f0613d5d2d9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -366,7 +366,7 @@ struct pci_dev {
+ 	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+ 	unsigned int    __aer_firmware_first_valid:1;
+ 	unsigned int	__aer_firmware_first:1;
+-	unsigned int	broken_intx_masking:1;
++	unsigned int	broken_intx_masking:1; /* INTx masking can't be used */
+ 	unsigned int	io_window_1k:1;	/* Intel P2P bridge 1K I/O windows */
+ 	unsigned int	irq_managed:1;
+ 	unsigned int	has_secondary_link:1;
+@@ -1003,6 +1003,15 @@ int __must_check pci_reenable_device(struct pci_dev *);
+ int __must_check pcim_enable_device(struct pci_dev *pdev);
+ void pcim_pin_device(struct pci_dev *pdev);
+ 
++static inline bool pci_intx_mask_supported(struct pci_dev *pdev)
 +{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct kirin_pcie *kirin_pcie = to_kirin_pcie(pci);
-+	int count = 0;
-+
-+	if (kirin_pcie_link_up(pci))
-+		return 0;
-+
-+	dw_pcie_setup_rc(pp);
-+
-+	/* assert LTSSM enable */
-+	kirin_apb_ctrl_writel(kirin_pcie, PCIE_LTSSM_ENABLE_BIT,
-+			      PCIE_APP_LTSSM_ENABLE);
-+
-+	/* check if the link is up or not */
-+	while (!kirin_pcie_link_up(pci)) {
-+		usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
-+		count++;
-+		if (count == 1000) {
-+			dev_err(dev, "Link Fail\n");
-+			return -EINVAL;
-+		}
-+	}
-+
-+	return 0;
++	/*
++	 * INTx masking is supported if PCI_COMMAND_INTX_DISABLE is
++	 * writable and no quirk has marked the feature broken.
++	 */
++	return !pdev->broken_intx_masking;
 +}
 +
-+static void kirin_pcie_host_init(struct pcie_port *pp)
-+{
-+	kirin_pcie_establish_link(pp);
-+}
-+
-+static struct dw_pcie_ops kirin_dw_pcie_ops = {
-+	.read_dbi = kirin_pcie_read_dbi,
-+	.write_dbi = kirin_pcie_write_dbi,
-+	.link_up = kirin_pcie_link_up,
-+};
-+
-+static struct dw_pcie_host_ops kirin_pcie_host_ops = {
-+	.rd_own_conf = kirin_pcie_rd_own_conf,
-+	.wr_own_conf = kirin_pcie_wr_own_conf,
-+	.host_init = kirin_pcie_host_init,
-+};
-+
-+static int __init kirin_add_pcie_port(struct dw_pcie *pci,
-+				      struct platform_device *pdev)
-+{
-+	pci->pp.ops = &kirin_pcie_host_ops;
-+
-+	return dw_pcie_host_init(&pci->pp);
-+}
-+
-+static int kirin_pcie_probe(struct platform_device *pdev)
-+{
-+	struct kirin_pcie *kirin_pcie;
-+	struct dw_pcie *pci;
-+	struct device *dev = &pdev->dev;
-+	int ret;
-+
-+	if (!dev->of_node) {
-+		dev_err(dev, "NULL node\n");
-+		return -EINVAL;
-+	}
-+
-+	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
-+	if (!kirin_pcie)
-+		return -ENOMEM;
-+
-+	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	pci->dev = dev;
-+	pci->ops = &kirin_dw_pcie_ops;
-+	kirin_pcie->pci = pci;
-+
-+	ret = kirin_pcie_get_clk(kirin_pcie, pdev);
-+	if (ret)
-+		return ret;
-+
-+	ret = kirin_pcie_get_resource(kirin_pcie, pdev);
-+	if (ret)
-+		return ret;
-+
-+	kirin_pcie->gpio_id_reset = of_get_named_gpio(dev->of_node,
-+						      "reset-gpio", 0);
-+	if (kirin_pcie->gpio_id_reset < 0)
-+		return -ENODEV;
-+
-+	ret = kirin_pcie_power_on(kirin_pcie);
-+	if (ret)
-+		return ret;
-+
-+	platform_set_drvdata(pdev, kirin_pcie);
-+
-+	return kirin_add_pcie_port(pci, pdev);
-+}
-+
-+static const struct of_device_id kirin_pcie_match[] = {
-+	{ .compatible = "hisilicon,kirin960-pcie" },
-+	{},
-+};
-+
-+struct platform_driver kirin_pcie_driver = {
-+	.probe			= kirin_pcie_probe,
-+	.driver			= {
-+		.name			= "kirin-pcie",
-+		.of_match_table = kirin_pcie_match,
-+		.suppress_bind_attrs = true,
-+	},
-+};
-+
-+builtin_platform_driver(kirin_pcie_driver);
--- 
-2.11.GIT
+ static inline int pci_is_enabled(struct pci_dev *pdev)
+ {
+ 	return (atomic_read(&pdev->enable_cnt) > 0);
+@@ -1026,7 +1035,6 @@ int __must_check pci_set_mwi(struct pci_dev *dev);
+ int pci_try_set_mwi(struct pci_dev *dev);
+ void pci_clear_mwi(struct pci_dev *dev);
+ void pci_intx(struct pci_dev *dev, int enable);
+-bool pci_intx_mask_supported(struct pci_dev *dev);
+ bool pci_check_and_mask_intx(struct pci_dev *dev);
+ bool pci_check_and_unmask_intx(struct pci_dev *dev);
+ int pci_wait_for_pending(struct pci_dev *dev, int pos, u16 mask);
