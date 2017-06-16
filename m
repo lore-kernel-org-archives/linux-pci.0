@@ -1,96 +1,38 @@
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Thu, 22 Jun 2017 20:15:18 +0800
-Message-ID: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=Od1n=5V=rowland.harvard.edu=stern+5952b05e@kernel.org>
+Return-Path: <SRS0=Od1n=5V=rowland.harvard.edu=stern+5952b05e@kernel.org>
+Date: Fri, 16 Jun 2017 13:30:15 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+     <gregkh@linuxfoundation.org>, USB list <linux-usb@vger.kernel.org>,
+     <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+     <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
+In-Reply-To: <CAAd53p4ntaZ48dsHG+ftDadgOnX=xwX9c3WeBr2SXZye3VL4CA@mail.gmail.com>
+Message-ID: <Pine.LNX.4.44L0.1706161327410.1715-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
+On Sat, 17 Jun 2017, Kai-Heng Feng wrote:
 
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
+> On Fri, Jun 16, 2017 at 11:07 AM, Kai-Heng Feng
+> <kai.heng.feng@canonical.com> wrote:
+> > On Thu, Jun 15, 2017 at 10:12 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> >> Those documents refer to a hardware bug with a workaround in the BIOS.
+> >> Have you checked to see if your BIOS is up to date?
+> >
+> > Yes, it's up to date.
+> >
+> 
+> Alan, I re-sent a patch but I forgot to add you to CC list:
+> http://marc.info/?l=linux-pci&m=149760607914628&w=2
 
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
+Thanks for letting me know.  The patch seems reasonable.
 
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
+Have you tested it with system suspend?  That is, if you suspend the 
+whole computer, does plugging or unplugging a USB device cause the 
+system to wake up?
 
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.  
-
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
-    according John's suggestion, and modify the description, use the true/false
-    as the return value.
-
-    We shouldn't enable relaxed ordering attribute by the setting in the root
-    complex configuration space for PCIe device, so fix it for cxgb4.
-
-    Fix some format issues.
-
-v5: Removed the unnecessary code for some function which only return the bool
-    value, and add the check for VF device.
-
-    Make this patch set base on 4.12-rc5.
-
-v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
- 
-Casey Leedom (2):
-  PCI: Add new PCIe Fabric End Node flag,
-    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (1):
-  PCI: Enable PCIe Relaxed Ordering if supported
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
- drivers/pci/pci.c                               | 32 +++++++++++++++++++
- drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
- drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
- include/linux/pci.h                             |  4 +++
- 7 files changed, 136 insertions(+), 2 deletions(-)
-
--- 
-1.9.0
+Alan Stern
