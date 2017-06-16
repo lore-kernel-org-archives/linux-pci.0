@@ -1,88 +1,77 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 8 Jun 2017 10:42:02 +0200
-From: Dominik Brodowski <linux@dominikbrodowski.net>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Hans De Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 0/6] ACPI / PM: Suspend-to-idle rework to deal with
- spurious ACPI wakeups
-Message-ID: <20170608084202.GA1609@light.dominikbrodowski.net>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
-In-Reply-To: <8918199.uo13RZ8hZk@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:59933 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752900AbdFPIU0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 16 Jun 2017 04:20:26 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Heiko Stuebner <heiko@sntech.de>,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 1/2] phy-rockchip-pcie: add set_mode callback
+Date: Fri, 16 Jun 2017 16:17:47 +0800
+Message-Id: <1497601068-181656-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+phy_mode was added for switching USB mode purposely as
+well as phy_set_mode API. However other types of PHY could
+also have some miscellaneous setting/modes need to be
+handled. This patch is gonna support this callback for
+phy-rockchip-pcie and do some power-saving work there.
+Note that we just stuff in some other values other that the
+existing phy_mode and convert it in the coressponding driver
+instead, otherwise we should extend the phy_mode again which
+it doesn't make sense to add in new driver's specificed value.
+Overall it looks fine to me as the controller's driver and the
+phy's driver are paired so that the caller and the consumer should
+be able to keep the value(mode) in consistent.
 
---PNTmBPCT7hxwcZjr
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Rafael,
+ drivers/phy/rockchip/phy-rockchip-pcie.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-On Thu, Jun 08, 2017 at 02:00:40AM +0200, Rafael J. Wysocki wrote:
-> Hi All,
->=20
-> This series is a replacement for commit eed4d47efe95 (ACPI / sleep: Ignore
-> spurious SCI wakeups from suspend-to-idle) which is still there in 4.12-r=
-c4 but
-> will be reverted shortly, because it triggered issues on quite a few syst=
-ems.
->=20
-> The last patch in the series is a counterpart of the above commit with a =
-few
-> modifications, mostly to avoid affecting suspend-to-RAM and to reorder me=
-ssages
-> printed to kernel logs to make them somewhat less confusing.
->=20
-> The previous patches are pre-requisite changes plus some cleanups.  The m=
-ajor
-> ones are [1-2/6] and [4/6] that are really needed for things to work as e=
-xpected
-> after [6/6].
->=20
-> In addition to that, this patch from Hans: https://patchwork.kernel.org/p=
-atch/9762815/
-> is needed for USB wakeup on Bay Trail and Cherry Trail systems to work in=
- general.
-
-with eed4d47efe95 reverted and this patch series applied, suspend-to-mem
-works as expected. Thanks!
-
-	Dominik
-
---PNTmBPCT7hxwcZjr
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEmgXaWKgmjrvkPhLCmpdgiUyNow0FAlk5DdYACgkQmpdgiUyN
-ow09iBAAmGePWAkgKbG/WUruF0gtdYq30TPk4ZePBWmvyRtTGkAB4tqtsA8xhQZU
-SkIvSDgtL/R+a3jkPTxL6ay4iu5WUJfa7ZwU9JCFKK0CcIBqx1jLwTq8oT3LZw1J
-X6nMrLPDd3h+NznSsoTEwfFE5J8vDN99nUoaDaiO9eYmyeU0ZLkesaauFzEDot5e
-Rhv8uyYry4KMwO6Pk4hGpukRTHZmeo8x/DJPCE8kID+7dNtON1HTz66K9Pr3c0+G
-pUACUeGJ50pNaOdv8O82HQp5D534tfA+/5kebC6C7e/aRHC2FRd+Wpf2rXYmdMW8
-nt/s61+hZyyLmiN3iUGPGhFQ+dpr5/zPMHwYhx7RVxRDlGxdXSg6lKaBOwlIxHGD
-hNf5M3lL6Z++oDSTzsQhVMIDapmCx5fTE0vsZp+WfcwwrMnLrcHIU3BxMA/z9M6H
-og7NG6Lp5sJe157qaZQJTUcfH6C2Q2JTNAEgsEjt1BMx0ecRZyiGcCQAmRCmL/45
-627yxeOLf/5/OyZBWJn7Ggzie30CLr+KvyCLA89oJXZcGgN+HZ+IPpcUoWVzR8aC
-TdNHaJdDKW5kdw3bDYbLclZapCzO4aJGaGpd/Rn2HQisHgwkZbjr2Lmu+bVKc8Kg
-SRIzMzleFiouf/BUTA+gyctekpC/B6u9NQrqxSQ10i95R/m+ioI=
-=SpuP
------END PGP SIGNATURE-----
-
---PNTmBPCT7hxwcZjr--
+diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
+index 6904633..9ffad15 100644
+--- a/drivers/phy/rockchip/phy-rockchip-pcie.c
++++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
+@@ -255,11 +255,33 @@ static int rockchip_pcie_phy_exit(struct phy *phy)
+ 	return 0;
+ }
+ 
++static int rockchip_pcie_phy_set_mode(struct phy *phy, enum phy_mode mode)
++{
++	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
++	u8 map = (u8)mode;
++	int i;
++
++	for (i = 0; i < PHY_MAX_LANE_NUM; i++) {
++		if (map & BIT(i))
++			continue;
++
++		dev_dbg(&phy->dev, "idling lane %d\n", i);
++		regmap_write(rk_phy->reg_base,
++			     rk_phy->phy_data->pcie_laneoff,
++			     HIWORD_UPDATE(PHY_LANE_IDLE_OFF,
++			     PHY_LANE_IDLE_MASK,
++			     PHY_LANE_IDLE_A_SHIFT + i));
++	}
++
++	return 0;
++}
++
+ static const struct phy_ops ops = {
+ 	.init		= rockchip_pcie_phy_init,
+ 	.exit		= rockchip_pcie_phy_exit,
+ 	.power_on	= rockchip_pcie_phy_power_on,
+ 	.power_off	= rockchip_pcie_phy_power_off,
++	.set_mode	= rockchip_pcie_phy_set_mode,
+ 	.owner		= THIS_MODULE,
+ };
+ 
+-- 
+1.9.1
