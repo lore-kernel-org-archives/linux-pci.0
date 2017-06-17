@@ -1,147 +1,202 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:50373 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751453AbdF0AeC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 20:34:02 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5] PCI: use IDA to manage domain number if not getting it from DT
-Date: Tue, 27 Jun 2017 08:31:13 +0800
-Message-Id: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:57566 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751969AbdFQNjf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 17 Jun 2017 09:39:35 -0400
+Date: Sat, 17 Jun 2017 08:39:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: songxiaowei <songxiaowei@hisilicon.com>
+Cc: Guodong Xu <guodong.xu@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+        kbuild test robot <lkp@intel.com>,
+        "kbuild-all@01.org" <kbuild-all@01.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Duc Dang <dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "chenyao (F)" <chenyao11@huawei.com>,
+        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: =?utf-8?B?562U5aSN?= =?utf-8?Q?=3A?= [PATCH v9 2/4] arm64: dts:
+ hisi: add kirin pcie node
+Message-ID: <20170617133931.GJ11129@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170531070109.81569-3-songxiaowei@hisilicon.com>
+ <201706040735.pu1PIspV%fengguang.wu@intel.com>
+ <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
+ <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
+ <20170616211106.GF11129@bhelgaas-glaptop.roam.corp.google.com>
+ <99B4C6BADD9E3241B25E52B02BA737C5411788ED@DGGEMA505-MBX.china.huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <99B4C6BADD9E3241B25E52B02BA737C5411788ED@DGGEMA505-MBX.china.huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If not getting domain number from DT, the domain number will
-keep increasing once doing unbind/bind RC drivers. This could
-introduce pointless tree view of lspci as shows below:
+On Sat, Jun 17, 2017 at 08:33:08AM +0000, songxiaowei wrote:
+> Hi Bjorn,
+> 
+> There are serval comments I can not understand, please help me to give more details.
 
--+-[0001:00]---00.0-[01]----00.0
-  \-[0000:00]-
+Sure.  BTW, for some reason your response is all double-spaced, which
+makes it a little hard to read.  Also, it includes HTML and an image,
+which means the mailing list probably rejected it:
+http://vger.kernel.org/majordomo-info.html#taboo
 
-The more test we do, the lengthier it would be. The more serious
-issue is that if attaching two hierarchies for two different domains
-belonging to two root bridges, so when doing unbind/bind test for one
-of them and keep the other, then the domain number would finally
-overflow and make the two hierarchies of devices share the some domain
-number but actually they shouldn't. So it looks like we need to invent
-a new indexing ID mechanism to manage domain number. This patch
-introduces idr to achieve our purpose.
+> diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+> 
+> index 68ffa0fbcd73..20357d840af1 100644
+> 
+> --- a/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+> 
+> +++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+> 
+> @@ -24,8 +24,8 @@ Example based on kirin960:
+> 
+>         pcie@f4000000 {
+> 
+>                 compatible = "hisilicon,kirin-pcie";
+> 
+> -                 reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+> 
+> -                       <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
+> 
+> +                reg = <0x0 0xf4000000 0x0  0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+> 
+> +                      <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xf4000000 0x0 0x2000>;
+> 
+> [songxiaowei] The difference is add one more space between "0x0" and "0x1000" in the first element.
+> 
+>              But, I can't get your mind.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+It changes from this:
 
----
+        reg = <0x0 0xf4000000 0x0 0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+              <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xF4000000 0 0x2000>;
 
-Changes in v5:
-- fix Bjorn's comments for v3 as actually I didn't address his comments
-  for v3 when posted my v4.
-  v3: https://patchwork.kernel.org/patch/9742003/
-  For ACPI case, we never use DT or IDA to get domain numbers and
-  acpi_pci_bus_find_domain_nr would return the proper value we need
-  whether _SEG exist or not. For DT or IDA, we hope bridges use one of
-  them consistently, and this is actually what the pre-existing code
-  did. So I remove ida_domain now since it complicated the logic of the
-  code and we could just make use_dt_domains global instead to slightly
-  achieve our purpose.
+to this:
 
-Changes in v4:
-- make domain_nr depends on CONFIG_PCI_DOMAINS instead of
-CONFIG_PCI_DOMAINS_GENERIC.
+        reg = <0x0 0xf4000000 0x0  0x1000>, <0x0 0xff3fe000 0x0 0x1000>,
+              <0x0 0xf3f20000 0x0 0x40000>, <0x0 0xf4000000 0x0 0x2000>;
 
-Changes in v3:
-- make ida_domain a system-wide property and check it in the code to
-combine with use_dt_domains. Also update the comment there.
+The extra space makes the elements align vertically.  Columns of
+numbers are conventionally right-aligned, which makes it easier to
+compare their sizes.
 
-Changes in v2:
-- add a remove wrapper
-- rename use_dt_domains to ida_domain and set this bit
-in pci_get_new_domain_nr and test it in the remove wrapper.
+This hunk also changed 0xF4000000 to 0xf4000000 in the second line, so
+hex constants use lower-case consistently.
 
- drivers/pci/pci.c    | 13 ++++++++++---
- drivers/pci/remove.c |  2 ++
- include/linux/pci.h  |  7 +++++--
- 3 files changed, 17 insertions(+), 5 deletions(-)
+> --- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> 
+> +++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
+> 
+> @@ -159,12 +159,12 @@
+> 
+>                  pcie@f4000000 {
+> 
+>                           compatible = "hisilicon,kirin960-pcie";
+> 
+> -                           reg = <0x0 0xf4000000 0x0 0x1000>,
+> 
+> -                                 <0x0 0xff3fe000 0x0 0x1000>,
+> 
+> +                          reg = <0x0 0xf4000000 0x0  0x1000>,
+> 
+> +                                <0x0 0xff3fe000 0x0  0x1000>,
+> 
+> [songxiaowei] Can your tell why using two spaces? Reg is listed as <addr_hi addr_lo size_hi size_lo>.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b58a6b3..9953eaf 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -11,6 +11,7 @@
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/dmi.h>
-+#include <linux/idr.h>
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_pci.h>
-@@ -5305,17 +5306,23 @@ static void pci_no_domains(void)
- }
- 
- #ifdef CONFIG_PCI_DOMAINS
--static atomic_t __domain_nr = ATOMIC_INIT(-1);
-+static DEFINE_IDA(__domain_nr);
- 
- int pci_get_new_domain_nr(void)
- {
--	return atomic_inc_return(&__domain_nr);
-+	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
-+}
-+
-+static int use_dt_domains = -1;
-+void pci_put_domain_nr(struct pci_bus *bus)
-+{
-+	if (acpi_disabled && use_dt_domains != 1)
-+		ida_simple_remove(&__domain_nr, bus->domain_nr);
- }
- 
- #ifdef CONFIG_PCI_DOMAINS_GENERIC
- static int of_pci_bus_find_domain_nr(struct device *parent)
- {
--	static int use_dt_domains = -1;
- 	int domain = -1;
- 
- 	if (parent)
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 73a03d3..01dd1b4 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
- 	list_for_each_entry_safe(child, tmp,
- 				 &bus->devices, bus_list)
- 		pci_remove_bus_device(child);
-+
-+	pci_put_domain_nr(bus);
- 	pci_remove_bus(bus);
- 	host_bridge->bus = NULL;
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 18cc70a..d6be9596 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -523,7 +523,7 @@ struct pci_bus {
- 	unsigned char	primary;	/* number of primary bridge */
- 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
- 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
--#ifdef CONFIG_PCI_DOMAINS_GENERIC
-+#ifdef CONFIG_PCI_DOMAINS
- 	int		domain_nr;
- #endif
- 
-@@ -1466,11 +1466,14 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
- #ifdef CONFIG_PCI_DOMAINS
- extern int pci_domains_supported;
- int pci_get_new_domain_nr(void);
-+void pci_put_domain_nr(struct pci_bus *bus);
- #else
- enum { pci_domains_supported = 0 };
- static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
- static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
--static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-+static inline int pci_get_new_domain_nr(void)
-+{ return -ENOSYS; }
-+static inline void pci_put_domain_nr(struct pci_bus *bus) { }
- #endif /* CONFIG_PCI_DOMAINS */
- 
- /*
--- 
-1.9.1
+Again, just to make the sizes right-aligned so it's easier to compare
+the sizes.
+
+You can ignore this one if you want.  There are lots of examples in
+the tree that don't align these.  I just think it looks sloppy when
+things are almost but not quite aligned.
+
+> -                                 <0x0 0xF5000000 0x0 0x2000>;
+> +                                <0x0 0xf5000000 0x0  0x2000>;
+
+Another case of making hex constants consistently lower-case.
+
+> diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c index f63e6548efae..41520dd1d5e5 100644
+> 
+> --- a/drivers/pci/dwc/pcie-kirin.c
+> 
+> +++ b/drivers/pci/dwc/pcie-kirin.c
+> 
+> @@ -35,8 +35,8 @@
+> 
+> #define REF_CLK_FREQ                    100000000
+> 
+>  /* PCIe ELBI registers */
+> 
+> -#define SOC_PCIECTRL_CTRL0_ADDR   0x000
+> 
+> -#define SOC_PCIECTRL_CTRL1_ADDR   0x004
+> 
+> +#define SOC_PCIECTRL_CTRL0_ADDR            0x000
+> 
+> +#define SOC_PCIECTRL_CTRL1_ADDR            0x004
+> 
+> #define SOC_PCIEPHY_CTRL2_ADDR             0x008
+> 
+> #define SOC_PCIEPHY_CTRL3_ADDR             0x00c
+> ... 
+> [songxiaowei] The space of the name of these macro definition and
+> 
+> the value are really different from 1 to 3 Tab, but it seem likes as bellow opened by vim.
+> 
+> [cid:image001.png@01D2E786.14883370]
+
+The image shows this:
+
+  +#define REF_CLK_FREQ                   100000000
+  +
+  +/* PCIe ELBI registers */
+  +#define SOC_PCIECTRL_CTRL0_ADDR        0x000
+  +#define SOC_PCIECTRL_CTRL1_ADDR        0x004
+  +#define SOC_PCIEPHY_CTRL2_ADDR         0x008
+  +#define SOC_PCIEPHY_CTRL3_ADDR         0x00c
+
+So things are nicely aligned in the *patch*.  But we don't care about
+alignment in the patch.  What we want is alignment in the *file*,
+which ends up looking like this with your original patch:
+
+  #define REF_CLK_FREQ                    100000000
+
+  /* PCIe ELBI registers */
+  #define SOC_PCIECTRL_CTRL0_ADDR 0x000
+  #define SOC_PCIECTRL_CTRL1_ADDR 0x004
+  #define SOC_PCIEPHY_CTRL2_ADDR          0x008
+  #define SOC_PCIEPHY_CTRL3_ADDR          0x00c
+
+My incremental diff probably makes the patch look ugly, but the
+resulting file looks nicer.
+
+>  struct kirin_pcie {
+> 
+> -        struct dw_pcie                   *pci;
+> 
+> -        void __iomem           *apb_base;
+> ...
+> +       struct dw_pcie          *pci;
+> 
+> +       void __iomem  *apb_base;
+> ...
+> [songxiaowei] it seems the variables list in the same coloumn with vim.
+
+Yes, these variables were aligned in your original patch; it's just
+that they used two or three tabs, when one or two was sufficient.  So
+there's extra separation.  Not a big deal.
+
+Bjorn
