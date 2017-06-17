@@ -1,140 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:48922 "EHLO ale.deltatee.com"
+Received: from ale.deltatee.com ([207.54.116.67]:37089 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751716AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 23:27:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        id S1751882AbdFQQjr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 17 Jun 2017 12:39:47 -0400
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <20170615203729.9009-1-logang@deltatee.com>
+ <20170615203729.9009-7-logang@deltatee.com> <20170617051658.GG6040@kroah.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
         Allen Hubbe <Allen.Hubbe@emc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:35 -0600
-Message-Id: <20170629032648.3073-4-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
-References: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 03/16] switchtec: add ntb hardware register definitions
+        Stephen Bates <sbates@raithlin.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <5294be8f-5547-0cd8-2e1d-a9bbfe06dc6f@deltatee.com>
+Date: Sat, 17 Jun 2017 10:39:35 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170617051658.GG6040@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC PATCH 06/13] switchtec_ntb: initialize hardware for memory
+ windows
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two additional regions: ctrl and dbmsg. The first is
-for generic ntb control and memory windows. The second for doorbells
-and message registers. This patch also adds a number of related
-constants for using these registers.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- include/linux/switchtec.h | 84 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
 
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 24e598ebbcf7..a75f3d7e6876 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -147,6 +147,12 @@ struct flash_info_regs {
- 	struct partition_info vendor[8];
- };
- 
-+enum {
-+	SWITCHTEC_NTB_REG_INFO_OFFSET   = 0x0000,
-+	SWITCHTEC_NTB_REG_CTRL_OFFSET   = 0x4000,
-+	SWITCHTEC_NTB_REG_DBMSG_OFFSET  = 0x64000,
-+};
-+
- struct ntb_info_regs {
- 	u8  partition_count;
- 	u8  partition_id;
-@@ -182,6 +188,84 @@ struct part_cfg_regs {
- } __packed;
- 
- enum {
-+	NTB_CTRL_PART_OP_LOCK = 0x1,
-+	NTB_CTRL_PART_OP_CFG = 0x2,
-+	NTB_CTRL_PART_OP_RESET = 0x3,
-+
-+	NTB_CTRL_PART_STATUS_NORMAL = 0x1,
-+	NTB_CTRL_PART_STATUS_LOCKED = 0x2,
-+	NTB_CTRL_PART_STATUS_LOCKING = 0x3,
-+	NTB_CTRL_PART_STATUS_CONFIGURING = 0x4,
-+	NTB_CTRL_PART_STATUS_RESETTING = 0x5,
-+
-+	NTB_CTRL_BAR_VALID = 1 << 0,
-+	NTB_CTRL_BAR_DIR_WIN_EN = 1 << 4,
-+	NTB_CTRL_BAR_LUT_WIN_EN = 1 << 5,
-+
-+	NTB_CTRL_REQ_ID_EN = 1 << 0,
-+
-+	NTB_CTRL_LUT_EN = 1 << 0,
-+
-+	NTB_PART_CTRL_ID_PROT_DIS = 1 << 0,
-+};
-+
-+struct ntb_ctrl_regs {
-+	u32 partition_status;
-+	u32 partition_op;
-+	u32 partition_ctrl;
-+	u32 bar_setup;
-+	u32 bar_error;
-+	u16 lut_table_entries;
-+	u16 lut_table_offset;
-+	u32 lut_error;
-+	u16 req_id_table_size;
-+	u16 req_id_table_offset;
-+	u32 req_id_error;
-+	u32 reserved1[7];
-+	struct {
-+		u32 ctl;
-+		u32 win_size;
-+		u64 xlate_addr;
-+	} bar_entry[6];
-+	u32 reserved2[216];
-+	u32 req_id_table[256];
-+	u32 reserved3[512];
-+	u64 lut_entry[512];
-+} __packed;
-+
-+#define NTB_DBMSG_IMSG_STATUS BIT_ULL(32)
-+#define NTB_DBMSG_IMSG_MASK   BIT_ULL(40)
-+
-+struct ntb_dbmsg_regs {
-+	u32 reserved1[1024];
-+	u64 odb;
-+	u64 odb_mask;
-+	u64 idb;
-+	u64 idb_mask;
-+	u8  idb_vec_map[64];
-+	u32 msg_map;
-+	u32 reserved2;
-+	struct {
-+		u32 msg;
-+		u32 status;
-+	} omsg[4];
-+
-+	struct {
-+		u32 msg;
-+		u8  status;
-+		u8  mask;
-+		u8  src;
-+		u8  reserved;
-+	} imsg[4];
-+
-+	u8 reserved3[3928];
-+	u8 msix_table[1024];
-+	u8 reserved4[3072];
-+	u8 pba[24];
-+	u8 reserved5[4072];
-+} __packed;
-+
-+enum {
- 	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
- 	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
- 	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
--- 
-2.11.0
+On 16/06/17 11:16 PM, Greg Kroah-Hartman wrote:
+>> +#ifndef ioread64
+>> +#ifdef readq
+>> +#define ioread64 readq
+>> +#else
+>> +#define ioread64 _ioread64
+>> +static inline u64 _ioread64(void __iomem *mmio)
+>> +{
+>> +	u64 low, high;
+>> +
+>> +	low = ioread32(mmio);
+>> +	high = ioread32(mmio + sizeof(u32));
+>> +	return low | (high << 32);
+>> +}
+>> +#endif
+>> +#endif
+> 
+> Really?  Don't we have ioread64 in generic code for all arches?  If not,
+> that should be fixed, don't hide this in a random driver please.  Or
+> just restrict your driver to only building on those arches that does
+> provide this api.
+
+Yes, I know these are _very_ ugly. Unfortunately, the other ntb drivers
+each have the exact same thing. ioread64 is not provided universally at
+this time and I did spend a bit of time digging and things are a bit
+messy so I wasn't at all sure of the correct solution.
+
+For starters, ioread64 is only defined on 64 bit machines. They are
+surrounded by ifdef CONFIG_64BIT and it's not clear to me if the above
+wrapper (around two ioread32s) would be acceptable universally.
+
+Second, the x86_64 version doesn't even compile. This is because the
+arch doesn't provide any ioread64 implementation anywhere and the macro
+in io.h isn't used because CONFIG_GENERIC_IOMAP is defined.
+
+The only arch where I _think_ ioread64 would work is powerpc or any that
+define CONFIG_64BIT and not CONFIG_GENERIC_IOMAP.
+
+If you have any guidance on this I'd be happy to try and make a patch or
+two for it.
+
+Thanks,
+
+Logan
