@@ -1,56 +1,71 @@
-Return-Path: <SRS0=38Fo=6B=mediatek.com=ryder.lee@kernel.org>
-Return-Path: <SRS0=38Fo=6B=mediatek.com=ryder.lee@kernel.org>
-Message-ID: <1498612886.20242.12.camel@mtkswgap22>
-Subject: Re: [PATCH] PCI: mediatek: change to use the new host bridge
- interface
-From: Ryder Lee <ryder.lee@mediatek.com>
+Return-Path: <SRS0=U8Bn=5W=imgtec.com=Paul.Burton@kernel.org>
+Return-Path: <SRS0=U8Bn=5W=imgtec.com=Paul.Burton@kernel.org>
+From: Paul Burton <paul.burton@imgtec.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell
-	<sfr@canb.auug.org.au>, Bjorn Helgaas <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Date: Wed, 28 Jun 2017 09:21:26 +0800
-In-Reply-To: <20170627232057.GK17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
-	 <1498555451-55073-2-git-send-email-ryder.lee@mediatek.com>
-	 <20170627223039.GE17844@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170627232057.GK17844@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "Michal
+ Simek" <michal.simek@xilinx.com>, Bharat Kumar Gogada <bharatku@xilinx.com>,
+	Ravikiran Gummaluri <rgummal@xilinx.com>
+Subject: Re: [PATCH v4 0/4] PCI: xilinx: Fixes, optimisation & MIPS support
+Date: Sat, 17 Jun 2017 13:01:11 -0700
+Message-ID: <136169243.oaJPRDUV91@np-p-burton>
+In-Reply-To: <20170615213505.GG12735@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170602185420.22281-1-paul.burton@imgtec.com> <20170615213505.GG12735@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart1537183.C4uXkd0vjk";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-06-27 at 18:20 -0500, Bjorn Helgaas wrote:
-> On Tue, Jun 27, 2017 at 05:30:40PM -0500, Bjorn Helgaas wrote:
-> > On Tue, Jun 27, 2017 at 05:24:11PM +0800, Ryder Lee wrote:
-> > > With the introduction of pci_scan_root_bus_bridge() there is no need to
-> > > export pci_register_host_bridge() to other kernel subsystems other than the
-> > > PCI compilation unit that needs it.
-> > > 
-> > > Make pci_register_host_bridge() static to its compilation unit and convert
-> > > the existing drivers usage over to pci_scan_root_bus_bridge().
-> > > 
-> > > Also, when probing the PCI host controller driver, if an error occurs, the probe
-> > > function code does not free memory allocated for the struct pci_host_bridge
-> > > resulting in memory leakage.
-> > > 
-> > > This patch fixes them by using the methods that introduces by Lorenzo.
-> > > 
-> > > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+--nextPart1537183.C4uXkd0vjk
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+On Thursday, 15 June 2017 14:35:05 PDT Bjorn Helgaas wrote:
+> On Fri, Jun 02, 2017 at 11:54:15AM -0700, Paul Burton wrote:
+> > This series fixes an issue found using INTx interrupts with the Xilinx
+> > AXI PCIe Host Bridge IP on the Imagination Technologies MIPS Boston
+> > development board, performs a couple of optimisations to interrupt
+> > handling & allows the driver to be used on MIPS systems.
 > > 
-> > I rebased my pci/host-mediatek branch on top of pci/enumeration (which
-> > contains the series from Lorenzo), and folded this into the initial
-> > MediaTek driver commit.
+> > Applies atop v4.12-rc3.
 > > 
-> > This branch:
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-mediatek&id=b6ca15d18881b784dc9efc5d81989be26ecd9fc8
-> > 
-> > should have all the MediaTek bits I know about.  Can you double-check
-> > it, please?
+> > Paul Burton (4):
+> >   PCI: xilinx: Fix INTX irq dispatch
+> >   PCI: xilinx: Unify INTx & MSI interrupt decode
+> >   PCI: xilinx: Don't enable config completion interrupts
+> >   PCI: xilinx: Allow build on MIPS platforms
+> >  
+> >  drivers/pci/host/Kconfig       |  2 +-
+> >  drivers/pci/host/pcie-xilinx.c | 57
+> >  +++++++++++++++--------------------------- 2 files changed, 21
+> >  insertions(+), 38 deletions(-)
 > 
-> Sorry, that's wrong; I see your controller powerup stuff in patchwork, and
-> that's *not* included yet.
+> Hi Paul, et al.,
+> 
+> Waiting for resolution on patch 1 and ack from maintainers.
 
-Yes, that should be folded into the initial commit if possible.
-Thanks for your help!
+Thanks Bjorn, hopefully v5 will pass muster.
 
-Ryder
+Paul
+--nextPart1537183.C4uXkd0vjk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEELIGR03D5+Fg+69wPgiDZ+mk8HGUFAllFiocACgkQgiDZ+mk8
+HGUHtg//Tdc49pwCMNDk2LsHtly4xktqbL5KCW6TwRv4ypW/BrIhM//x2Jv9cPyb
+ULEWLD7wKMv0y64awoWmeiUf38L7Nk6XmOd01Vtx9rRAxOmMb71+JZKYvRiwbk9z
+z1a2WyRKMFJ13ASRFz1x2tZy83LsEWQbkP+KXZaORp9Yq9xbS7skFVfFFT3io+4W
+VGtpkTj85zYW6VcMIM0wl7mloCqbXudYJ0moJozGaWa/mWcp1FpNLYaaoKZnDoM2
+/horp56BepjSEz03jEntqLV58fDzpKSiLDID71RTIcYHKPApauuW+pW/Si9ZtwQa
+v4af5QFvwFuuZciKFxWgSr1KIUybNH2NwFDKw8L5yofpGYgnHAQDM0SfQCQPOoOi
++tpLsB1wkdWwVRvPgyciPfxvyeYt3BUGh7H8MIYtfbNP0D0AjE1+X5ZehxJG5oqQ
+R8dQvQA/aTYcPBRBwP1lzGzkEGr1io/gE682NDs3HYPp/P6wbtI5ebimONsYhvUQ
+0qGl7Chf9037FnX3DNoExm2kyBWJ3zDv0Ckf2WdTgxUtOR8AjTN5VxYOmsTSoEyx
+Ec+SXERnDMXzoWX8jb8xGswBRDMr9q2AsaLpQjH9BdQ4QmsfJ1hVmGv8bVntvkRb
+taVKGVdtwDRaAi/yE6lRR1deC/V4VquBTQVcMdbOVNbcS0QvNBA=
+=rmCy
+-----END PGP SIGNATURE-----
+
+--nextPart1537183.C4uXkd0vjk--
