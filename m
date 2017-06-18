@@ -1,48 +1,60 @@
-Return-Path: <SRS0=4+uB=5M=lst.de=hch@kernel.org>
-Return-Path: <SRS0=4+uB=5M=lst.de=hch@kernel.org>
-Date: Wed, 7 Jun 2017 20:29:36 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, rakesh@tuxera.com,
-	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] PCI: ensure the PCI device is locked over
-	->reset_notify calls
-Message-ID: <20170607182936.GA31815@lst.de>
-References: <20170601111039.8913-1-hch@lst.de> <20170601111039.8913-2-hch@lst.de> <20170606053142.GA25064@bhelgaas-glaptop.roam.corp.google.com> <20170606104836.GB24297@lst.de> <20170606211443.GB12672@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59268 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751068AbdFRBOk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 17 Jun 2017 21:14:40 -0400
+Date: Sat, 17 Jun 2017 20:14:33 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Piotr Gregor <piotrgregor@rsyncme.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Neo Jia <cjia@nvidia.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kvm@vger.kernel.org
+Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170618011433.GK11129@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170526210222.GA22204@westernst>
+ <20170616225446.GG11129@bhelgaas-glaptop.roam.corp.google.com>
+ <20170617174543.GA1723@westernst>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170606211443.GB12672@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170617174543.GA1723@westernst>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 06, 2017 at 04:14:43PM -0500, Bjorn Helgaas wrote:
-> So I guess the method here is
-> dev->driver->err_handler->reset_notify(), and the PCI core should be
-> holding device_lock() while calling it?  That makes sense to me;
-> thanks a lot for articulating that!
+On Sat, Jun 17, 2017 at 06:45:44PM +0100, Piotr Gregor wrote:
+> Hi Bjorn,
+> 
+> The pci_cfg_access_lock is most likely not needed there.
+> The assignment by return type is indeed preferred in this case.
+> 
+> However, you have changed the meaning of returned boolean information
+> by pci_intx_mask_broken leaving pci_intx_mask_supported unchanged.
+> The test should be: 
+> 
+>     if (new != toggle) /* the test failed */
+> 	        return 1;
+> 	return 0;
 
-Yes.
+Oh, you're absolutely right, thanks for catching that!  I updated my
+pci/enumeration branch.
 
-> 1) The current patch protects the err_handler->reset_notify() uses by
-> adding or expanding device_lock regions in the paths that lead to
-> pci_reset_notify().  Could we simplify it by doing the locking
-> directly in pci_reset_notify()?  Then it would be easy to verify the
-> locking, and we would be less likely to add new callers without the
-> proper locking.
+> Regarding v2.3 - do you think it is worth to apply the check
+> so we would have something like
+> 
+>     if ((new == toggle) || PCI_VERSION_PRIOR_TO_23) /* test OK or PCI prior to r2.3 */
+> 	        return 0;
+> 	return 1;
 
-We could do that, except that I'd rather hold the lock over a longer
-period if we have many calls following each other.  I also have
-a patch to actually kill pci_reset_notify() later in the series as
-well, as the calling convention for it and ->reset_notify() are
-awkward - depending on prepare parameter they do two entirely
-different things.  That being said I could also add new
-pci_reset_prepare() and pci_reset_done() helpers.
+I'm not sure how to test for r2.3 compliance.  But even if we could, I
+guess I think the current code is probably better because it actually
+checks the property we care about, not a spec revision that is one
+step removed from the property.
 
-> 2) Stating the rule explicitly helps look for other problems, and I
-> think we have a similar problem in all the pcie_portdrv_err_handler
-> methods.
-
-Yes, I mentioned this earlier, and I also vaguely remember we got
-bug reports from IBM on power for this a while ago.  I just don't
-feel confident enough to touch all these without a good test plan.
+Bjorn
