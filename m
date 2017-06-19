@@ -1,64 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:52946 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750883AbdFSQcF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 12:32:05 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <marc.zyngier@arm.com>
+CC: <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+Date: Mon, 19 Jun 2017 17:31:57 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170608141342.2018-8-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
- <20170608141342.2018-8-lorenzo.pieralisi@arm.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Fri, 16 Jun 2017 11:02:13 +0200
-Message-ID: <CACRpkdZEV50hZ6kiHmg+=PjFPMHgb2CVFoMMsk1M0DG97sq7KA@mail.gmail.com>
-Subject: Re: [RFT PATCH v2 07/42] drivers: pci: host: ftpci100: Fix host
- bridge memory leakage
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <593F0533.4010106@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 8, 2017 at 4:13 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
 
-> When probing the PCI host controller driver, if an error condition
-> is trigger the probe function code does not free memory allocated
-> for the struct pci_host_bridge resulting in memory leakage.
->
-> Move the struct pci_host_bridge allocation over to the respective
-> devm interface to fix the issue.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
+Hi Murali,
 
-Acked-by: Linus Walleij <linus.walleij@linaro.org>
+Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+> Joao,
+> 
+> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>> This patch series adds the new interrupt api to pcie-designware
+>> make it possible to use features like MSIX.
+>>
+>> The work consisted of adapting the pcie-designware-host and each SoC
+>> specific driver.
+>>
+>> The patch set was made against the Bjorn' next branch.
+>>
+>> Joao Pinto (9):
+>>   pci: adding new irq api to pci-designware
+>>   pci: exynos SoC driver adapted to new irq API
+>>   pci: imx6 SoC driver adapted to new irq API
+>>   pci: artpec6 SoC driver adapted to new irq API
+>>   pci: generic PCIe DW driver adapted to new irq API
+>>   pci: qcom SoC driver adapted to new irq API
+>>   pci: keystone SoC driver adapted to new irq API
+>>   pci: removing old irq api from pcie-designware
+>>   pci: remove limitation of the number of the available IRQs
+>>
+>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>
+> 
+> I gave this a try today and it failed. Logs at
+> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+> 
+> The first part of the log is with your patch series.
+> The second part is before applying the patch. You will see
+> that there is qc timeout log that shows the issue
+> 
+> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> 
+> Is there any DT change I need to make for this? I didn't have a
+> chance to review your patch w.r.t Keystone. But I see you have change
+> the MSI IRq handling.
+> 
 
-Yours,
-Linus Walleij
+There is no need to change your DT. I think I will need to debug this issue
+further. Could you please advice a board containing this SoC?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks.
