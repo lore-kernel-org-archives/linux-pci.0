@@ -1,69 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:10643 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751007AbdFBSzw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 14:55:52 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v4 3/4] PCI: xilinx: Don't enable config completion interrupts
-Date: Fri, 2 Jun 2017 11:54:18 -0700
-Message-ID: <20170602185420.22281-4-paul.burton@imgtec.com>
-In-Reply-To: <20170602185420.22281-1-paul.burton@imgtec.com>
-References: <20170602185420.22281-1-paul.burton@imgtec.com>
+Received: from mail.kernel.org ([198.145.29.99]:36372 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752419AbdFSVwR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Jun 2017 17:52:17 -0400
+Date: Mon, 19 Jun 2017 16:52:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: bhelgaas@google.com, marc.zyngier@arm.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        David Daney <david.daney@cavium.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] PCI/MSI: Improve MSI alias detection
+Message-ID: <20170619215214.GB554@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170531175230.16529-2-robin.murphy@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170531175230.16529-2-robin.murphy@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Xilinx AXI bridge for PCI Express device provides interrupts
-indicating the completion of config space accesses. We have previously
-enabled/unmasked them but do nothing with them besides acknowledge them.
+[+cc David, Alex]
 
-Leave the interrupts masked in order to avoid servicing a large number
-of pointless interrupts during boot.
+On Wed, May 31, 2017 at 06:52:28PM +0100, Robin Murphy wrote:
+> Currently, we consider all DMA aliases when calculating MSI requester
+> IDs. This turns out to be the wrong thing to do in the face of pure DMA
+> quirks like those of Marvell SATA cards, where we can end up configuring
+> the MSI doorbell to expect the phantom function alias, such that it then
+> goes on to happily ignore actual MSI writes coming from the card on the
+> real RID.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
----
+I guess you're making the assumption that DMA might use phantom
+function aliases (aliases on the same bus as the actual device), but
+MSI writes will not?
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+> Improve the alias walk to only account for the topological aliases that
+> matter, based on the logic from the Intel IRQ remapping code.
 
- drivers/pci/host/pcie-xilinx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Can you include a specific function reference here?  It sounds like
+it'd be useful to compare this with the Intel IRQ remapping code.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 0c0ecc463f6b..f3018c1c8a59 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -60,6 +60,7 @@
- #define XILINX_PCIE_INTR_MST_SLVERR	BIT(27)
- #define XILINX_PCIE_INTR_MST_ERRP	BIT(28)
- #define XILINX_PCIE_IMR_ALL_MASK	0x1FF30FED
-+#define XILINX_PCIE_IMR_ENABLE_MASK	0x1FF30F0D
- #define XILINX_PCIE_IDR_ALL_MASK	0xFFFFFFFF
- 
- /* Root Port Error FIFO Read Register definitions */
-@@ -553,8 +554,8 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
- 			 XILINX_PCIE_IMR_ALL_MASK,
- 		   XILINX_PCIE_REG_IDR);
- 
--	/* Enable all interrupts */
--	pcie_write(port, XILINX_PCIE_IMR_ALL_MASK, XILINX_PCIE_REG_IMR);
-+	/* Enable all interrupts we handle */
-+	pcie_write(port, XILINX_PCIE_IMR_ENABLE_MASK, XILINX_PCIE_REG_IMR);
- 
- 	/* Enable the Bridge enable bit */
- 	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_RPSC) |
--- 
-2.13.0
+> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+> ---
+>  drivers/pci/msi.c | 18 +++++++++++++-----
+>  1 file changed, 13 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index ba44fdfda66b..7b34c434970e 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1468,13 +1468,21 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+>  
+> +/*
+> + * If the alias device/RID is on a different bus, it's a topological alias
+> + * we should care about; otherwise, it's a DMA quirk and we don't.
+> + */
+>  static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+>  {
+>  	u32 *pa = data;
+> +	u8 bus = PCI_BUS_NUM(*pa);
+> +
+> +	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
+> +		*pa = alias;
+>  
+> -	*pa = alias;
+
+Aliases can arise both because of device defects, e.g., the phantom
+function quirks, and because of bridges, e.g., all the stuff in
+pci_for_each_dma_alias().
+
+Why is it that the users of get_msi_id_cb() can get away with
+collapsing any of these bridge aliases into the last one that
+pci_for_each_dma_alias() finds?  I guess this is another question
+about exactly why DMA and MSI are different here.
+
+>  	return 0;
+>  }
+> +
+>  /**
+>   * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+>   * @domain:	The interrupt domain
+> @@ -1488,7 +1496,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+>  u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>  {
+>  	struct device_node *of_node;
+> -	u32 rid = 0;
+> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+>  
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+>  
+> @@ -1504,14 +1512,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>   * @pdev:	The PCI device
+>   *
+>   * Use the firmware data to find a device-specific MSI domain
+> - * (i.e. not one that is ste as a default).
+> + * (i.e. not one that is set as a default).
+>   *
+> - * Returns: The coresponding MSI domain or NULL if none has been found.
+> + * Returns: The corresponding MSI domain or NULL if none has been found.
+>   */
+>  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+>  {
+>  	struct irq_domain *dom;
+> -	u32 rid = 0;
+> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+>  
+>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+>  	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
+> -- 
+> 2.12.2.dirty
+> 
