@@ -1,57 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59599 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752724AbdFLVEU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 17:04:20 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH v2 3/8] ACPI / PM: Change log level of wakeup-related message
-Date: Mon, 12 Jun 2017 22:50:24 +0200
-Message-ID: <1783355.A64TiuK6yP@aspire.rjw.lan>
-In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
+Received: from mail.kernel.org ([198.145.29.99]:47666 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752289AbdFSXQp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Jun 2017 19:16:45 -0400
+Date: Mon, 19 Jun 2017 18:16:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: vmd: Correct comment: VMD domains start at 0x10000,
+ not 0x1000
+Message-ID: <20170619231642.GF554@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170619203601.2396.80335.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170619203601.2396.80335.stgit@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Mon, Jun 19, 2017 at 03:36:01PM -0500, Bjorn Helgaas wrote:
+> VMD domains are allocated starting at 0x10000, not 0x1000 as the comment
+> said.  Correct the comment and add a reference to the ACPI spec for _SEG.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Change the log level of the "System wakeup enabled/disabled by ACPI"
-message in acpi_pm_device_sleep_wake() to "debug" to reduce to log
-noise level.
+Applied with Keith's reviewed-by to pci/host-vmd for v4.13.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -756,8 +756,8 @@ int acpi_pm_device_sleep_wake(struct dev
- 
- 	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
- 	if (!error)
--		dev_info(dev, "System wakeup %s by ACPI\n",
--				enable ? "enabled" : "disabled");
-+		dev_dbg(dev, "System wakeup %s by ACPI\n",
-+			enable ? "enabled" : "disabled");
- 
- 	return error;
- }
+> ---
+>  drivers/pci/host/vmd.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> index e27ad2a3bd33..53aa1d4b17e8 100644
+> --- a/drivers/pci/host/vmd.c
+> +++ b/drivers/pci/host/vmd.c
+> @@ -539,7 +539,10 @@ static void vmd_detach_resources(struct vmd_dev *vmd)
+>  }
+>  
+>  /*
+> - * VMD domains start at 0x1000 to not clash with ACPI _SEG domains.
+> + * VMD domains start at 0x10000 to not clash with ACPI _SEG domains.
+> + * Per ACPI r6.0, sec 6.5.6,  _SEG returns an integer, of which the lower
+> + * 16 bits are the PCI Segment Group (domain) number.  Other bits are
+> + * currently reserved.
+>   */
+>  static int vmd_find_free_domain(void)
+>  {
+> 
