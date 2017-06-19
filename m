@@ -1,133 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 23 Jun 2017 09:17:23 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        David Gibson <david@gibson.dropbear.id.au>
-Subject: Re: [PATCH kernel 0/3 REPOST] vfio-pci: Add support for mmapping
- MSI-X table
-Message-ID: <20170623091723.1f122800@w520.home>
-In-Reply-To: <82b2e63c-0a39-303c-f255-b857764fc412@ozlabs.ru>
-References: <20170615054845.8428-1-aik@ozlabs.ru>
-        <20170622151118.0006c3d3@w520.home>
-        <82b2e63c-0a39-303c-f255-b857764fc412@ozlabs.ru>
+Return-Path: <SRS0=I39A=5Y=rowland.harvard.edu=stern+5952b05e@kernel.org>
+Return-Path: <SRS0=I39A=5Y=rowland.harvard.edu=stern+5952b05e@kernel.org>
+Date: Mon, 19 Jun 2017 14:32:57 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Kai-Heng Feng <kai.heng.feng@canonical.com>,
+    Bjorn Helgaas <bhelgaas@google.com>,  <gregkh@linuxfoundation.org>,
+    USB list <linux-usb@vger.kernel.org>,  <linux-pci@vger.kernel.org>,
+    LKML <linux-kernel@vger.kernel.org>,
+    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+     <linux-pm@vger.kernel.org>
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
+In-Reply-To: <20170619174533.GA20550@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 23 Jun 2017 15:06:37 +1000
-Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+On Mon, 19 Jun 2017, Bjorn Helgaas wrote:
 
-> On 23/06/17 07:11, Alex Williamson wrote:
-> > On Thu, 15 Jun 2017 15:48:42 +1000
-> > Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
-> >   
-> >> Here is a patchset which Yongji was working on before
-> >> leaving IBM LTC. Since we still want to have this functionality
-> >> in the kernel (DPDK is the first user), here is a rebase
-> >> on the current upstream.
-> >>
-> >>
-> >> Current vfio-pci implementation disallows to mmap the page
-> >> containing MSI-X table in case that users can write directly
-> >> to MSI-X table and generate an incorrect MSIs.
-> >>
-> >> However, this will cause some performance issue when there
-> >> are some critical device registers in the same page as the
-> >> MSI-X table. We have to handle the mmio access to these
-> >> registers in QEMU emulation rather than in guest.
-> >>
-> >> To solve this issue, this series allows to expose MSI-X table
-> >> to userspace when hardware enables the capability of interrupt
-> >> remapping which can ensure that a given PCI device can only
-> >> shoot the MSIs assigned for it. And we introduce a new bus_flags
-> >> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
-> >> for different archs.
-> >>
-> >> The patch 3 are based on the proposed patchset[1].
-> >>
-> >> Changelog
-> >> v3:
-> >> - rebased on the current upstream  
+> > > Have you tested it with system suspend?  That is, if you suspend the
+> > > whole computer, does plugging or unplugging a USB device cause the
+> > > system to wake up?
 > > 
-> > There's something not forthcoming here, the last version I see from
-> > Yongji is this one:
-> > 
-> > https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017245.html
-> > 
-> > Which was a 6-patch series where patches 2-4 tried to apply
-> > PCI_BUS_FLAGS_MSI_REMAP for cases that supported other platforms.  That
-> > doesn't exist here, so it's not simply a rebase.  Patch 1/ seems to
-> > equate this new flag to the IOMMU capability IOMMU_CAP_INTR_REMAP, but
-> > nothing is done here to match them together.  That patch also mentions
-> > the work Eric has done for similar features on ARM, but again those
-> > patches are dropped.  It seems like an incomplete feature now.  Thanks,  
+> > No, the system will not wake up when plugging or unplugging.
+> > Tried several times, nether runtime PM enabled nor runtime PM disabled
+> > will wake up the system under S3, when (un)plugging USB devices.
 > 
+> Alan, I don't know what this test means for the patch
+> (http://marc.info/?l=linux-pci&m=149760607914628&w=2).
 > 
-> Thanks! I suspected this is not the latest but could not find anything
-> better than we use internally for tests, and I could not reach Yongji for
-> comments whether this was the latest update.
+> pci_target_state() is documented as "return the deepest state from
+> which the device can generate wake events."  For this device, I guess
+> that means D2, and the patch should accomplish that.
 > 
-> As I am reading the patches, I notice that the "msi remap" term is used all
-> over the place. While this remapping capability may be the case for x86/arm
-> (and therefore the IOMMU_CAP_INTR_REMAP flag makes sense), powernv does not
-> do remapping but provides hardware isolation. When we are allowing MSIX BAR
-> mapping to the userspace - the isolation is what we really care about. Will
-> it make sense to rename PCI_BUS_FLAGS_MSI_REMAP to
-> PCI_BUS_FLAGS_MSI_ISOLATED ?
+> I don't know what's supposed to happen to this device when the system
+> is in S3.  I assume that if the system is in S3, most devices are in
+> D3.  If this device is in D3, we won't get PMEs, which I guess is what
+> Kai-Heng is seeing.  Is that the desired behavior?  Or do we want the
+> PMEs enough that we should leave the device in D2 (if that's even
+> possible)?
 
-I don't have a strong opinion either way, so long as it's fully
-described what the flag indicates.
+It's possible that the test was invalid.  Kai-Heng did not say whether
+/sys/.../power/wakeup was set to "enabled" for both the EHCI controller
+and the USB root hub beneath it, before the test was started.  If
+either of them was set to "disabled" then we would not expect a plug or
+unplug event to wake up the system.
 
-> Another thing - the patchset enables PCI_BUS_FLAGS_MSI_REMAP when IOMMU
-> just advertises IOMMU_CAP_INTR_REMAP, not necessarily uses it, should the
-> patchset actually look at something like irq_remapping_enabled in
-> drivers/iommu/amd_iommu.c instead?
+In any case, the controller should be set to the lowest power setting 
+that is consistent with the desired wakeup behavior.  If wakeup is set 
+to "enabled" then the state should be D2 -- if possible.  That's the 
+theory, anyway.  If the system supports putting devices only into D3 
+during S3 sleep then there's no choice, but if we do have a choice then 
+we should take it.
 
-Interrupt remapping being enabled is implicit in IOMMU_CAP_INTR_REMAP,
-neither intel or amd iommu export the capability unless enabled.
-Nobody cares if it's supported but not enabled.  Thanks,
+BTW, I just noticed that pci_target_state() uses device_may_wakeup() to
+get the desired wakeup behavior.  That is correct for system sleep, but
+it is wrong for runtime PM.  For runtime PM, wakeup should be enabled
+whenever the hardware allows it, so the test should be
+device_can_wakeup().
 
-Alex
+This means that pci_target_state() should behave differently depending
+on whether it is called from pci_prepare_to_sleep() or from
+pci_finish_runtime_suspend().  Probably nobody noticed this before 
+because it usually doesn't make any difference.
 
-> >> v2:
-> >> - Make the commit log more clear
-> >> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
-> >>   so that we could clearly know what the function does
-> >> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
-> >>   of iommu_bus_notifier()
-> >> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
-> >>   table so that we can know whether we allow to mmap MSI-X table
-> >>   in QEMU
-> >>
-> >> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-> >>
-> >>
-> >> This is based on sha1
-> >> 63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
-> >>
-> >> Please comment. Thanks.
-> >>
-> >>
-> >>
-> >> Yongji Xie (3):
-> >>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-> >>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-> >>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
-> >>     remapping is enabled
-> >>
-> >>  include/linux/pci.h                       |  1 +
-> >>  arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
-> >>  drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
-> >>  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
-> >>  4 files changed, 26 insertions(+), 4 deletions(-)
-> >>  
-> >   
-> 
-> 
+Alan Stern
