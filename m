@@ -1,221 +1,251 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 14 Jun 2017 13:09:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 1/8] ACPI / PM: Run wakeup notify handlers
- synchronously
-Message-ID: <20170614180943.GA20778@bhelgaas-glaptop.roam.corp.google.com>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
- <1615075.mBkoKApGGc@aspire.rjw.lan>
- <5652844.yCt16F1gBo@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5652844.yCt16F1gBo@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:51389 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751118AbdFSSFM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 14:05:12 -0400
+Received: from clnet-p099-196.ikbnet.co.at ([83.175.99.196] helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.87 #1 (Red Hat Linux))
+        id 1dN12r-0001OP-Mo
+        for linux-pci@vger.kernel.org; Mon, 19 Jun 2017 18:05:02 +0000
+From: Christoph Hellwig <hch@lst.de>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/pcieport: move EH methods to struct pcie_port_service_driver
+Date: Mon, 19 Jun 2017 20:04:58 +0200
+Message-Id: <20170619180458.28377-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 10:48:41PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The work functions provided by the users of acpi_add_pm_notifier()
-> should be run synchronously before re-enabling the wakeup GPE in
-> case they are used to clear the status and/or disable the wakeup
-> signaling at the source.  Otherwise, which is the case currently in
-> the PCI bus type code, the same wakeup event may be signaled for
-> multiple times while the execution of the work function in response
-> to it has already been queued up.
-> 
-> Fortunately, acpi_add_pm_notifier() is only used by PCI and by
-> ACPI device PM code internally, so the change is relatively
-> straightforward to make.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+And avoid the detour throught the mostly unused pci_error_handlers
+structure.
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
 
-> ---
->  drivers/acpi/device_pm.c |   27 +++++++++++----------------
->  drivers/pci/pci-acpi.c   |   17 +++++++----------
->  include/acpi/acpi_bus.h  |    4 ++--
->  3 files changed, 20 insertions(+), 28 deletions(-)
-> 
-> Index: linux-pm/drivers/acpi/device_pm.c
-> ===================================================================
-> --- linux-pm.orig/drivers/acpi/device_pm.c
-> +++ linux-pm/drivers/acpi/device_pm.c
-> @@ -400,8 +400,8 @@ static void acpi_pm_notify_handler(acpi_
->  
->  	if (adev->wakeup.flags.notifier_present) {
->  		__pm_wakeup_event(adev->wakeup.ws, 0);
-> -		if (adev->wakeup.context.work.func)
-> -			queue_pm_work(&adev->wakeup.context.work);
-> +		if (adev->wakeup.context.func)
-> +			adev->wakeup.context.func(&adev->wakeup.context);
->  	}
->  
->  	mutex_unlock(&acpi_pm_notifier_lock);
-> @@ -413,7 +413,7 @@ static void acpi_pm_notify_handler(acpi_
->   * acpi_add_pm_notifier - Register PM notify handler for given ACPI device.
->   * @adev: ACPI device to add the notify handler for.
->   * @dev: Device to generate a wakeup event for while handling the notification.
-> - * @work_func: Work function to execute when handling the notification.
-> + * @func: Work function to execute when handling the notification.
->   *
->   * NOTE: @adev need not be a run-wake or wakeup device to be a valid source of
->   * PM wakeup events.  For example, wakeup events may be generated for bridges
-> @@ -421,11 +421,11 @@ static void acpi_pm_notify_handler(acpi_
->   * bridge itself doesn't have a wakeup GPE associated with it.
->   */
->  acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
-> -				 void (*work_func)(struct work_struct *work))
-> +			void (*func)(struct acpi_device_wakeup_context *context))
->  {
->  	acpi_status status = AE_ALREADY_EXISTS;
->  
-> -	if (!dev && !work_func)
-> +	if (!dev && !func)
->  		return AE_BAD_PARAMETER;
->  
->  	mutex_lock(&acpi_pm_notifier_lock);
-> @@ -435,8 +435,7 @@ acpi_status acpi_add_pm_notifier(struct
->  
->  	adev->wakeup.ws = wakeup_source_register(dev_name(&adev->dev));
->  	adev->wakeup.context.dev = dev;
-> -	if (work_func)
-> -		INIT_WORK(&adev->wakeup.context.work, work_func);
-> +	adev->wakeup.context.func = func;
->  
->  	status = acpi_install_notify_handler(adev->handle, ACPI_SYSTEM_NOTIFY,
->  					     acpi_pm_notify_handler, NULL);
-> @@ -469,10 +468,7 @@ acpi_status acpi_remove_pm_notifier(stru
->  	if (ACPI_FAILURE(status))
->  		goto out;
->  
-> -	if (adev->wakeup.context.work.func) {
-> -		cancel_work_sync(&adev->wakeup.context.work);
-> -		adev->wakeup.context.work.func = NULL;
-> -	}
-> +	adev->wakeup.context.func = NULL;
->  	adev->wakeup.context.dev = NULL;
->  	wakeup_source_unregister(adev->wakeup.ws);
->  
-> @@ -658,16 +654,15 @@ EXPORT_SYMBOL(acpi_pm_device_sleep_state
->  
->  /**
->   * acpi_pm_notify_work_func - ACPI devices wakeup notification work function.
-> - * @work: Work item to handle.
-> + * @context: Device wakeup context.
->   */
-> -static void acpi_pm_notify_work_func(struct work_struct *work)
-> +static void acpi_pm_notify_work_func(struct acpi_device_wakeup_context *context)
->  {
-> -	struct device *dev;
-> +	struct device *dev = context->dev;
->  
-> -	dev = container_of(work, struct acpi_device_wakeup_context, work)->dev;
->  	if (dev) {
->  		pm_wakeup_event(dev, 0);
-> -		pm_runtime_resume(dev);
-> +		pm_request_resume(dev);
->  	}
->  }
->  
-> Index: linux-pm/include/acpi/acpi_bus.h
-> ===================================================================
-> --- linux-pm.orig/include/acpi/acpi_bus.h
-> +++ linux-pm/include/acpi/acpi_bus.h
-> @@ -319,7 +319,7 @@ struct acpi_device_wakeup_flags {
->  };
->  
->  struct acpi_device_wakeup_context {
-> -	struct work_struct work;
-> +	void (*func)(struct acpi_device_wakeup_context *context);
->  	struct device *dev;
->  };
->  
-> @@ -599,7 +599,7 @@ static inline bool acpi_device_always_pr
->  
->  #ifdef CONFIG_PM
->  acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
-> -				 void (*work_func)(struct work_struct *work));
-> +			void (*func)(struct acpi_device_wakeup_context *context));
->  acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
->  int acpi_pm_device_sleep_state(struct device *, int *, int);
->  int acpi_pm_device_run_wake(struct device *, bool);
-> Index: linux-pm/drivers/pci/pci-acpi.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci-acpi.c
-> +++ linux-pm/drivers/pci/pci-acpi.c
-> @@ -395,29 +395,26 @@ bool pciehp_is_native(struct pci_dev *pd
->  
->  /**
->   * pci_acpi_wake_bus - Root bus wakeup notification fork function.
-> - * @work: Work item to handle.
-> + * @context: Device wakeup context.
->   */
-> -static void pci_acpi_wake_bus(struct work_struct *work)
-> +static void pci_acpi_wake_bus(struct acpi_device_wakeup_context *context)
->  {
->  	struct acpi_device *adev;
->  	struct acpi_pci_root *root;
->  
-> -	adev = container_of(work, struct acpi_device, wakeup.context.work);
-> +	adev = container_of(context, struct acpi_device, wakeup.context);
->  	root = acpi_driver_data(adev);
->  	pci_pme_wakeup_bus(root->bus);
->  }
->  
->  /**
->   * pci_acpi_wake_dev - PCI device wakeup notification work function.
-> - * @handle: ACPI handle of a device the notification is for.
-> - * @work: Work item to handle.
-> + * @context: Device wakeup context.
->   */
-> -static void pci_acpi_wake_dev(struct work_struct *work)
-> +static void pci_acpi_wake_dev(struct acpi_device_wakeup_context *context)
->  {
-> -	struct acpi_device_wakeup_context *context;
->  	struct pci_dev *pci_dev;
->  
-> -	context = container_of(work, struct acpi_device_wakeup_context, work);
->  	pci_dev = to_pci_dev(context->dev);
->  
->  	if (pci_dev->pme_poll)
-> @@ -425,7 +422,7 @@ static void pci_acpi_wake_dev(struct wor
->  
->  	if (pci_dev->current_state == PCI_D3cold) {
->  		pci_wakeup_event(pci_dev);
-> -		pm_runtime_resume(&pci_dev->dev);
-> +		pm_request_resume(&pci_dev->dev);
->  		return;
->  	}
->  
-> @@ -434,7 +431,7 @@ static void pci_acpi_wake_dev(struct wor
->  		pci_check_pme_status(pci_dev);
->  
->  	pci_wakeup_event(pci_dev);
-> -	pm_runtime_resume(&pci_dev->dev);
-> +	pm_request_resume(&pci_dev->dev);
->  
->  	pci_pme_wakeup_bus(pci_dev->subordinate);
->  }
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Note: this is based on the pci/virtualization branch.
+
+ drivers/pci/pcie/aer/aerdrv.c  |  25 +---------
+ drivers/pci/pcie/portdrv_pci.c | 105 +++--------------------------------------
+ include/linux/pcieport_if.h    |   4 +-
+ 3 files changed, 9 insertions(+), 125 deletions(-)
+
+diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+index dea186a9d6b6..6ff5f5b4f5e6 100644
+--- a/drivers/pci/pcie/aer/aerdrv.c
++++ b/drivers/pci/pcie/aer/aerdrv.c
+@@ -32,16 +32,9 @@
+ 
+ static int aer_probe(struct pcie_device *dev);
+ static void aer_remove(struct pcie_device *dev);
+-static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
+-	enum pci_channel_state error);
+ static void aer_error_resume(struct pci_dev *dev);
+ static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
+ 
+-static const struct pci_error_handlers aer_error_handlers = {
+-	.error_detected = aer_error_detected,
+-	.resume		= aer_error_resume,
+-};
+-
+ static struct pcie_port_service_driver aerdriver = {
+ 	.name		= "aer",
+ 	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+@@ -49,9 +42,7 @@ static struct pcie_port_service_driver aerdriver = {
+ 
+ 	.probe		= aer_probe,
+ 	.remove		= aer_remove,
+-
+-	.err_handler	= &aer_error_handlers,
+-
++	.error_resume	= aer_error_resume,
+ 	.reset_link	= aer_root_reset,
+ };
+ 
+@@ -350,20 +341,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+ }
+ 
+ /**
+- * aer_error_detected - update severity status
+- * @dev: pointer to Root Port's pci_dev data structure
+- * @error: error severity being notified by port bus
+- *
+- * Invoked by Port Bus driver during error recovery.
+- */
+-static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
+-			enum pci_channel_state error)
+-{
+-	/* Root Port has no impact. Always recovers. */
+-	return PCI_ERS_RESULT_CAN_RECOVER;
+-}
+-
+-/**
+  * aer_error_resume - clean up corresponding error status bits
+  * @dev: pointer to Root Port's pci_dev data structure
+  *
+diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+index 8aa3f14bc87d..be635f017756 100644
+--- a/drivers/pci/pcie/portdrv_pci.c
++++ b/drivers/pci/pcie/portdrv_pci.c
+@@ -21,7 +21,6 @@
+ 
+ #include "../pci.h"
+ #include "portdrv.h"
+-#include "aer/aerdrv.h"
+ 
+ /* If this switch is set, PCIe port native services should not be enabled. */
+ bool pcie_ports_disabled;
+@@ -177,108 +176,20 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
+ 	pcie_port_device_remove(dev);
+ }
+ 
+-static int error_detected_iter(struct device *device, void *data)
+-{
+-	struct pcie_device *pcie_device;
+-	struct pcie_port_service_driver *driver;
+-	struct aer_broadcast_data *result_data;
+-	pci_ers_result_t status;
+-
+-	result_data = (struct aer_broadcast_data *) data;
+-
+-	if (device->bus == &pcie_port_bus_type && device->driver) {
+-		driver = to_service_driver(device->driver);
+-		if (!driver ||
+-			!driver->err_handler ||
+-			!driver->err_handler->error_detected)
+-			return 0;
+-
+-		pcie_device = to_pcie_device(device);
+-
+-		/* Forward error detected message to service drivers */
+-		status = driver->err_handler->error_detected(
+-			pcie_device->port,
+-			result_data->state);
+-		result_data->result =
+-			merge_result(result_data->result, status);
+-	}
+-
+-	return 0;
+-}
+-
+ static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+ 					enum pci_channel_state error)
+ {
+-	struct aer_broadcast_data data = {error, PCI_ERS_RESULT_CAN_RECOVER};
+-
+-	/* get true return value from &data */
+-	device_for_each_child(&dev->dev, &data, error_detected_iter);
+-	return data.result;
+-}
+-
+-static int mmio_enabled_iter(struct device *device, void *data)
+-{
+-	struct pcie_device *pcie_device;
+-	struct pcie_port_service_driver *driver;
+-	pci_ers_result_t status, *result;
+-
+-	result = (pci_ers_result_t *) data;
+-
+-	if (device->bus == &pcie_port_bus_type && device->driver) {
+-		driver = to_service_driver(device->driver);
+-		if (driver &&
+-			driver->err_handler &&
+-			driver->err_handler->mmio_enabled) {
+-			pcie_device = to_pcie_device(device);
+-
+-			/* Forward error message to service drivers */
+-			status = driver->err_handler->mmio_enabled(
+-					pcie_device->port);
+-			*result = merge_result(*result, status);
+-		}
+-	}
+-
+-	return 0;
++	/* Root Port has no impact. Always recovers. */
++	return PCI_ERS_RESULT_CAN_RECOVER;
+ }
+ 
+ static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+ {
+-	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+-
+-	/* get true return value from &status */
+-	device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
+-	return status;
+-}
+-
+-static int slot_reset_iter(struct device *device, void *data)
+-{
+-	struct pcie_device *pcie_device;
+-	struct pcie_port_service_driver *driver;
+-	pci_ers_result_t status, *result;
+-
+-	result = (pci_ers_result_t *) data;
+-
+-	if (device->bus == &pcie_port_bus_type && device->driver) {
+-		driver = to_service_driver(device->driver);
+-		if (driver &&
+-			driver->err_handler &&
+-			driver->err_handler->slot_reset) {
+-			pcie_device = to_pcie_device(device);
+-
+-			/* Forward error message to service drivers */
+-			status = driver->err_handler->slot_reset(
+-					pcie_device->port);
+-			*result = merge_result(*result, status);
+-		}
+-	}
+-
+-	return 0;
++	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+ {
+-	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+-
+ 	/* If fatal, restore cfg space for possible link reset at upstream */
+ 	if (dev->error_state == pci_channel_io_frozen) {
+ 		dev->state_saved = true;
+@@ -287,9 +198,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+ 		pci_enable_pcie_error_reporting(dev);
+ 	}
+ 
+-	/* get true return value from &status */
+-	device_for_each_child(&dev->dev, &status, slot_reset_iter);
+-	return status;
++	return PCI_ERS_RESULT_RECOVERED;
+ }
+ 
+ static int resume_iter(struct device *device, void *data)
+@@ -299,13 +208,11 @@ static int resume_iter(struct device *device, void *data)
+ 
+ 	if (device->bus == &pcie_port_bus_type && device->driver) {
+ 		driver = to_service_driver(device->driver);
+-		if (driver &&
+-			driver->err_handler &&
+-			driver->err_handler->resume) {
++		if (driver && driver->error_resume) {
+ 			pcie_device = to_pcie_device(device);
+ 
+ 			/* Forward error message to service drivers */
+-			driver->err_handler->resume(pcie_device->port);
++			driver->error_resume(pcie_device->port);
+ 		}
+ 	}
+ 
+diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+index afcd130ab3a9..18edc651c070 100644
+--- a/include/linux/pcieport_if.h
++++ b/include/linux/pcieport_if.h
+@@ -50,8 +50,8 @@ struct pcie_port_service_driver {
+ 	int (*suspend) (struct pcie_device *dev);
+ 	int (*resume) (struct pcie_device *dev);
+ 
+-	/* Service Error Recovery Handler */
+-	const struct pci_error_handlers *err_handler;
++	/* Device driver may resume normal operations */
++	void (*error_resume)(struct pci_dev *dev);
+ 
+ 	/* Link Reset Capability - AER service driver specific */
+ 	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
+-- 
+2.11.0
