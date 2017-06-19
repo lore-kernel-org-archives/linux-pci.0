@@ -1,71 +1,71 @@
-Return-Path: <SRS0=U8Bn=5W=imgtec.com=Paul.Burton@kernel.org>
-Return-Path: <SRS0=U8Bn=5W=imgtec.com=Paul.Burton@kernel.org>
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "Michal
- Simek" <michal.simek@xilinx.com>, Bharat Kumar Gogada <bharatku@xilinx.com>,
-	Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v4 0/4] PCI: xilinx: Fixes, optimisation & MIPS support
-Date: Sat, 17 Jun 2017 13:01:11 -0700
-Message-ID: <136169243.oaJPRDUV91@np-p-burton>
-In-Reply-To: <20170615213505.GG12735@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170602185420.22281-1-paul.burton@imgtec.com> <20170615213505.GG12735@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:61567 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754001AbdFSKAO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:00:14 -0400
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 3/3] PCI: mediatek: make some properties optioanl
+Date: Mon, 19 Jun 2017 18:00:00 +0800
+Message-ID: <1497866400-41844-4-git-send-email-ryder.lee@mediatek.com>
+In-Reply-To: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
+References: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1537183.C4uXkd0vjk";
-	micalg=pgp-sha256; protocol="application/pgp-signature"
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---nextPart1537183.C4uXkd0vjk
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Some properties for PCIe controller are optional and therefore change
+to use *optional* function.
 
-On Thursday, 15 June 2017 14:35:05 PDT Bjorn Helgaas wrote:
-> On Fri, Jun 02, 2017 at 11:54:15AM -0700, Paul Burton wrote:
-> > This series fixes an issue found using INTx interrupts with the Xilinx
-> > AXI PCIe Host Bridge IP on the Imagination Technologies MIPS Boston
-> > development board, performs a couple of optimisations to interrupt
-> > handling & allows the driver to be used on MIPS systems.
-> > 
-> > Applies atop v4.12-rc3.
-> > 
-> > Paul Burton (4):
-> >   PCI: xilinx: Fix INTX irq dispatch
-> >   PCI: xilinx: Unify INTx & MSI interrupt decode
-> >   PCI: xilinx: Don't enable config completion interrupts
-> >   PCI: xilinx: Allow build on MIPS platforms
-> >  
-> >  drivers/pci/host/Kconfig       |  2 +-
-> >  drivers/pci/host/pcie-xilinx.c | 57
-> >  +++++++++++++++--------------------------- 2 files changed, 21
-> >  insertions(+), 38 deletions(-)
-> 
-> Hi Paul, et al.,
-> 
-> Waiting for resolution on patch 1 and ack from maintainers.
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
 
-Thanks Bjorn, hopefully v5 will pass muster.
-
-Paul
---nextPart1537183.C4uXkd0vjk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEELIGR03D5+Fg+69wPgiDZ+mk8HGUFAllFiocACgkQgiDZ+mk8
-HGUHtg//Tdc49pwCMNDk2LsHtly4xktqbL5KCW6TwRv4ypW/BrIhM//x2Jv9cPyb
-ULEWLD7wKMv0y64awoWmeiUf38L7Nk6XmOd01Vtx9rRAxOmMb71+JZKYvRiwbk9z
-z1a2WyRKMFJ13ASRFz1x2tZy83LsEWQbkP+KXZaORp9Yq9xbS7skFVfFFT3io+4W
-VGtpkTj85zYW6VcMIM0wl7mloCqbXudYJ0moJozGaWa/mWcp1FpNLYaaoKZnDoM2
-/horp56BepjSEz03jEntqLV58fDzpKSiLDID71RTIcYHKPApauuW+pW/Si9ZtwQa
-v4af5QFvwFuuZciKFxWgSr1KIUybNH2NwFDKw8L5yofpGYgnHAQDM0SfQCQPOoOi
-+tpLsB1wkdWwVRvPgyciPfxvyeYt3BUGh7H8MIYtfbNP0D0AjE1+X5ZehxJG5oqQ
-R8dQvQA/aTYcPBRBwP1lzGzkEGr1io/gE682NDs3HYPp/P6wbtI5ebimONsYhvUQ
-0qGl7Chf9037FnX3DNoExm2kyBWJ3zDv0Ckf2WdTgxUtOR8AjTN5VxYOmsTSoEyx
-Ec+SXERnDMXzoWX8jb8xGswBRDMr9q2AsaLpQjH9BdQ4QmsfJ1hVmGv8bVntvkRb
-taVKGVdtwDRaAi/yE6lRR1deC/V4VquBTQVcMdbOVNbcS0QvNBA=
-=rmCy
------END PGP SIGNATURE-----
-
---nextPart1537183.C4uXkd0vjk--
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index d256263..91a6328 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -306,18 +306,15 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
+ 	}
+ 
+ 	snprintf(name, sizeof(name), "pcie-rst%d", index);
+-	port->reset = devm_reset_control_get(dev, name);
+-	if (IS_ERR(port->reset)) {
+-		dev_err(dev, "failed to get port%d reset\n", index);
++	port->reset = devm_reset_control_get_optional(dev, name);
++	if (PTR_ERR(port->reset) == -EPROBE_DEFER)
+ 		return PTR_ERR(port->reset);
+-	}
+ 
++	/* some platforms may use default PHY setting */
+ 	snprintf(name, sizeof(name), "pcie-phy%d", index);
+-	port->phy = devm_phy_get(dev, name);
+-	if (IS_ERR(port->phy)) {
+-		dev_err(dev, "failed to get port%d phy\n", index);
++	port->phy = devm_phy_optional_get(dev, name);
++	if (IS_ERR(port->phy))
+ 		return PTR_ERR(port->phy);
+-	}
+ 
+ 	port->index = index;
+ 	port->pcie = pcie;
+@@ -345,8 +342,10 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ 
+ 	pcie->free_ck = devm_clk_get(dev, "free_ck");
+ 	if (IS_ERR(pcie->free_ck)) {
+-		dev_err(dev, "failed to get free_ck\n");
+-		return PTR_ERR(pcie->free_ck);
++		if (PTR_ERR(pcie->free_ck) == -EPROBE_DEFER)
++			return -EPROBE_DEFER;
++
++		pcie->free_ck = NULL;
+ 	}
+ 
+ 	if (dev->pm_domain) {
+-- 
+1.9.1
