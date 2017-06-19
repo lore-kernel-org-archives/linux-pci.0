@@ -1,116 +1,173 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:34028 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750993AbdFTQ20 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 12:28:26 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Murali Karicheri <m-karicheri2@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
- <5949445C.3010706@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
-Date: Tue, 20 Jun 2017 17:28:18 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+ <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v5 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Date: Mon, 19 Jun 2017 14:53:58 +0800
+Message-ID: <1497855239-18560-3-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com>
+References: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <5949445C.3010706@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
-> On 06/19/2017 12:31 PM, Joao Pinto wrote:
->>
->> Hi Murali,
->>
->> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->>> Joao,
->>>
->>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>>> This patch series adds the new interrupt api to pcie-designware
->>>> make it possible to use features like MSIX.
->>>>
->>>> The work consisted of adapting the pcie-designware-host and each SoC
->>>> specific driver.
->>>>
->>>> The patch set was made against the Bjorn' next branch.
->>>>
->>>> Joao Pinto (9):
->>>>   pci: adding new irq api to pci-designware
->>>>   pci: exynos SoC driver adapted to new irq API
->>>>   pci: imx6 SoC driver adapted to new irq API
->>>>   pci: artpec6 SoC driver adapted to new irq API
->>>>   pci: generic PCIe DW driver adapted to new irq API
->>>>   pci: qcom SoC driver adapted to new irq API
->>>>   pci: keystone SoC driver adapted to new irq API
->>>>   pci: removing old irq api from pcie-designware
->>>>   pci: remove limitation of the number of the available IRQs
->>>>
->>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>>
->>>
->>> I gave this a try today and it failed. Logs at
->>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>>
->>> The first part of the log is with your patch series.
->>> The second part is before applying the patch. You will see
->>> that there is qc timeout log that shows the issue
->>>
->>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>
->>> Is there any DT change I need to make for this? I didn't have a
->>> chance to review your patch w.r.t Keystone. But I see you have change
->>> the MSI IRq handling.
->>>
->>
->> There is no need to change your DT. I think I will need to debug this issue
->> further. Could you please advice a board containing this SoC?
->>
-> I think I may be able to work with you on this. Keystone has different 
-> register set for MSI IRQ. It is in application space. Also there are
-> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
-> please review the original code vs the changed one w.r.t to this. I haven't
-> had a chance to review the code as I am in the middle of a release.
-> But will be able to spend some time after two weeks. Meanwhile please
-> spend some time reviewing the code and exchange email to identify
-> the issue. I can add specific debug prints for you as well and provide
-> you the log for analysis.
+The PCIe Device Control Register use the bit 4 to indicate that
+whether the device is permitted to enable relaxed ordering or not.
+But relaxed ordering is not safe for some platform which could only
+use strong write ordering, so devices are allowed (but not required)
+to enable relaxed ordering bit by default.
 
-Ok, I agree! Thanks!
+If a PCIe device didn't enable the relaxed ordering attribute default,
+we should not do anything in the PCIe configuration, otherwise we
+should check if any of the devices above us do not support relaxed
+ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+the result if we get a return that indicate that the relaxed ordering
+is not supported we should update our device to disable relaxed ordering
+in configuration space. If the device above us doesn't exist or isn't
+the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+because we are probably running in a guest machine.
 
-> 
-> Let me know.
-> 
-> Murali
->> Thanks.
->>
->>
->>
->>
-> 
-> 
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+ drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 ++
+ 3 files changed, 68 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 563901c..c773e0d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4879,6 +4879,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+ EXPORT_SYMBOL(pcie_set_mps);
+ 
+ /**
++ * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
++ * @dev: PCI device to query
++ *
++ * If possible clear relaxed ordering
++ */
++int pcie_clear_relaxed_ordering(struct pci_dev *dev)
++{
++	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
++					  PCI_EXP_DEVCTL_RELAX_EN);
++}
++EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
++
++/**
++ * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
++ * @dev: PCI device to query
++ *
++ * Returns true if the device support relaxed ordering attribute.
++ */
++bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
++{
++	u16 v;
++
++	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
++
++	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
++}
++EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
++
++/**
+  * pcie_get_minimum_link - determine minimum link settings of a PCI device
+  * @dev: PCI device to query
+  * @speed: storage for minimum speed
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950..2615299 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1701,6 +1701,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+ 					 PCI_EXP_DEVCTL_EXT_TAG);
+ }
+ 
++/**
++ * pci_dev_should_disable_relaxed_ordering - check if the PCI device
++ * should disable the relaxed ordering attribute.
++ * @dev: PCI device
++ *
++ * Return true if any of the PCI devices above us do not support
++ * relaxed ordering.
++ */
++static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
++{
++	while (dev) {
++		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
++			return true;
++
++		dev = dev->bus->self;
++	}
++
++	return false;
++}
++
++static void pci_configure_relaxed_ordering(struct pci_dev *dev)
++{
++	/* We should not alter the relaxed ordering bit for the VF */
++	if (dev->is_virtfn)
++		return;
++
++	/* If the releaxed ordering enable bit is not set, do nothing. */
++	if (!pcie_relaxed_ordering_supported(dev))
++		return;
++
++	if (pci_dev_should_disable_relaxed_ordering(dev)) {
++		pcie_clear_relaxed_ordering(dev);
++		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
++	}
++}
++
+ static void pci_configure_device(struct pci_dev *dev)
+ {
+ 	struct hotplug_params hpp;
+@@ -1708,6 +1744,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ 
+ 	pci_configure_mps(dev);
+ 	pci_configure_extended_tags(dev);
++	pci_configure_relaxed_ordering(dev);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+ 	ret = pci_get_hp_params(dev, &hpp);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index ce77690..f5f200f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1110,6 +1110,8 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
++int pcie_clear_relaxed_ordering(struct pci_dev *dev);
++bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
+ 
+ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 				  bool enable)
+-- 
+1.9.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
