@@ -1,163 +1,227 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:34487 "EHLO
-        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751215AbdFBQAp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 2 Jun 2017 12:00:45 -0400
-Received: by mail-pf0-f181.google.com with SMTP id 9so51599643pfj.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 Jun 2017 09:00:39 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v2 2/2] PCI: iproc: add device shutdown for PCI RC
-Date: Fri,  2 Jun 2017 21:30:16 +0530
-Message-Id: <1496419216-9987-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1496419216-9987-1-git-send-email-oza.oza@broadcom.com>
-References: <1496419216-9987-1-git-send-email-oza.oza@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=6s0/=5Y=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=6s0/=5Y=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v4 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1497265525-4752-1-git-send-email-dingtianhong@huawei.com>
+ <1497265525-4752-3-git-send-email-dingtianhong@huawei.com>
+ <CAKgT0UfMCTjRWVnYiz-7BaV6NxK+kHm9PppgVp+_sNhfVgKviQ@mail.gmail.com>
+ <5854930e-af6a-4274-2822-cf38e5967da3@huawei.com>
+ <CAKgT0UfefJ8E6m215Caxekd-OugOuZxyS5N3t_q07OTEHHd0xw@mail.gmail.com>
+CC: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
+        "Bjorn Helgaas" <helgaas@kernel.org>,
+        Michael Werner <werner@chelsio.com>,
+        "Ganesh Goudar" <ganeshgr@chelsio.com>,
+        Asit K Mallick
+	<asit.k.mallick@intel.com>,
+        Patrick J Cramer <patrick.j.cramer@intel.com>,
+        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+        Bob Shaw
+	<Bob.Shaw@amd.com>, h <l.stach@pengutronix.de>,
+        Amir Ancel
+	<amira@mellanox.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        David
+ Laight <David.Laight@aculab.com>,
+        "Jeff Kirsher"
+	<jeffrey.t.kirsher@intel.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
+        Robin
+ Murphy <robin.murphy@arm.com>,
+        David Miller <davem@davemloft.net>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <627799c4-7086-b2bb-eda9-1ea14a1a4bc1@huawei.com>
+Date: Mon, 19 Jun 2017 14:12:22 +0800
+MIME-Version: 1.0
+In-Reply-To: <CAKgT0UfefJ8E6m215Caxekd-OugOuZxyS5N3t_q07OTEHHd0xw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-PERST# must be asserted around ~500ms before
-the reboot is applied.
 
-During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
-LCPLL clock and PERST both goes off simultaneously.
-This will cause certain Endpoints Intel NVMe not get detected, upon
-next boot sequence.
 
-This happens because; Endpoint is expecting the clock for some amount of
-time after PERST is asserted, which is not happening in our case
-(Compare to Intel X86 boards, will have clocks running).
-this cause NVMe to behave in undefined way.
+On 2017/6/16 22:39, Alexander Duyck wrote:
+> On Thu, Jun 15, 2017 at 6:10 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+>>
+>>
+>> On 2017/6/13 5:28, Alexander Duyck wrote:
+>>> On Mon, Jun 12, 2017 at 4:05 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+>> ...
+>>>>  /**
+>>>> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
+>>>> + * @dev: PCI device to query
+>>>> + *
+>>>> + * If possible clear relaxed ordering
+>>>> + */
+>>>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
+>>>> +{
+>>>> +       return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+>>>> +                                         PCI_EXP_DEVCTL_RELAX_EN);
+>>>> +}
+>>>> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
+>>>> +
+>>>> +/**
+>>>> + * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
+>>>> + * @dev: PCI device to query
+>>>> + *
+>>>> + * Returns true if the device support relaxed ordering attribute.
+>>>> + */
+>>>> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
+>>>> +{
+>>>> +       bool ro_supported = false;
+>>>> +       u16 v;
+>>>> +
+>>>> +       pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
+>>>> +       if ((v & PCI_EXP_DEVCTL_RELAX_EN) >> 4)
+>>>> +               ro_supported = true;
+>>>
+>>> Instead of "return ro_supported" why not just "return !!(v &
+>>> PCIE_EXP_DEVCTL_RELAX_EN)"? You can cut out the extra steps and save
+>>> yourself some extra steps this way since the shift by 4 shouldn't even
+>>> really be needed since you are just testing for a bit anyway.
+>>>
+>>
+>> OK.
+>>
+>>>> +
+>>>> +       return ro_supported;
+>>>> +}
+>>>> +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
+>>>> +
+>>>> +/**
+>>>>   * pcie_get_minimum_link - determine minimum link settings of a PCI device
+>>>>   * @dev: PCI device to query
+>>>>   * @speed: storage for minimum speed
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index 19c8950..ed1f717 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -1701,6 +1701,46 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+>>>>                                          PCI_EXP_DEVCTL_EXT_TAG);
+>>>>  }
+>>>>
+>>>> +/**
+>>>> + * pci_dev_should_disable_relaxed_ordering - check if the PCI device
+>>>> + * should disable the relaxed ordering attribute.
+>>>> + * @dev: PCI device
+>>>> + *
+>>>> + * Return true if any of the PCI devices above us do not support
+>>>> + * relaxed ordering.
+>>>> + */
+>>>> +static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
+>>>> +{
+>>>> +       bool ro_disabled = false;
+>>>> +
+>>>> +       while (dev) {
+>>>> +               if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
+>>>> +                       ro_disabled = true;
+>>>> +                       break;
+>>>> +               }
+>>>> +               dev = dev->bus->self;
+>>>> +       }
+>>>> +
+>>>> +       return ro_disabled;
+>>>
+>>> Same thing here. I would suggest just returning either true or false,
+>>> and drop the ro_disabled value. It will return the lines of code and
+>>> make things a bit bit more direct.
+>>>
+>>
+>> OK.
+>>
+>>>> +}
+>>>> +
+>>>> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+>>>> +{
+>>>> +       struct pci_dev *bridge = pci_upstream_bridge(dev);
+>>>> +
+>>>> +       if (!pci_is_pcie(dev) || !bridge || !pci_is_pcie(bridge))
+>>>> +               return;
+>>>
+>>> The pci_is_pcie check is actually redundant based on the
+>>> pcie_relaxed_ordering_supported check using pcie_capability_read_word.
+>>>
+>>
+>> Yes, pcie_capability_read_word already check it, thanks.
+>>
+>>
+>>> Also I am not sure what the point is of the pci_upstream_bridge()
+>>> check is, it seems like you should be able to catch all the same stuff
+>>> in your pci_dev_should_disable_relaxed_ordering() call. Though it did
+>>> give me a thought. I don't think we can alter this for a VF, so you
+>>> might want to add a check for dev->is_virtfn to the list of checks and
+>>> if it is a virtual function just return since I don't think there are
+>>> any VFs that would let you alter this bit anyway.
+>>>
+>> If the upstream device is null, does it mean that it is in a guest OS device? maybe I miss something.
+>> also I will check the dev->is_virtfn to avoid trying to change the configuration space for VF.
+> 
+> Yes, usually the upstream device is NULL in guest setups where all the
+> devices are hung off of a single PCI bus.
+> 
 
-Essentially clock will remain alive for 500ms with PERST# = 0
-before reboot.
+OK,  no need for the pci_upstream_bridge, the pci_dev_should_disable_relaxed_ordering() will check and return result
+as we need.
 
-This patch adds platform shutdown where it should be
-called in device_shutdown while reboot command is issued.
+>> Another question: Because it looks like that maybe the Casey is too busy these days, should we
+>> delay the modification of the cxgb4 and instead to update the ixgbe? what do you think about it. :)
+> 
+> I would still submit the cxgb4 changes with the one change we have
+> made. It should work as is. We can just leave any follow-up work to
+> Casey in terms of enabling the peer-to-peer mode if the bits related
+> to relaxed ordering are cleared.
+> 
 
-So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-followed by RC shutdown is called, which issues safe PERST
-assertion.
+OK, thanks.
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index 90d2bdd..9512960 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	return iproc_pcie_remove(pcie);
- }
- 
-+static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-+{
-+	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	iproc_pcie_shutdown(pcie);
-+}
-+
- static struct platform_driver iproc_pcie_pltfm_driver = {
- 	.driver = {
- 		.name = "iproc-pcie",
-@@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	},
- 	.probe = iproc_pcie_pltfm_probe,
- 	.remove = iproc_pcie_pltfm_remove,
-+	.shutdown = iproc_pcie_pltfm_shutdown,
- };
- module_platform_driver(iproc_pcie_pltfm_driver);
- 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 05a3647..bb61376 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	.write = iproc_pcie_config_write32,
- };
- 
--static void iproc_pcie_reset(struct iproc_pcie *pcie)
-+static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
- {
- 	u32 val;
- 
- 	/*
--	 * PAXC and the internal emulated endpoint device downstream should not
--	 * be reset.  If firmware has been loaded on the endpoint device at an
--	 * earlier boot stage, reset here causes issues.
-+	 * The internal emulated endpoints (such as PAXC) device downstream
-+	 * should not be reset. If firmware has been loaded on the endpoint
-+	 * device at an earlier boot stage, reset here causes issues.
- 	 */
- 	if (pcie->ep_is_internal)
- 		return;
- 
--	/*
--	 * Select perst_b signal as reset source. Put the device into reset,
--	 * and then bring it out of reset
--	 */
--	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
--	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
--		~RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	udelay(250);
--
--	val |= RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	msleep(100);
-+	if (assert) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-+			~RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(250);
-+	} else {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val |= RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		msleep(100);
-+	}
-+}
-+
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-+{
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	msleep(500);
-+
-+	return 0;
- }
-+EXPORT_SYMBOL(iproc_pcie_shutdown);
- 
- static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- {
-@@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		goto err_exit_phy;
- 	}
- 
--	iproc_pcie_reset(pcie);
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	iproc_pcie_perst_ctrl(pcie, false);
- 
- 	if (pcie->need_ob_cfg) {
- 		ret = iproc_pcie_map_ranges(pcie, res);
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 0bbe2ea..a6b55ce 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -110,6 +110,7 @@ struct iproc_pcie {
- 
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie);
- 
- #ifdef CONFIG_PCIE_IPROC_MSI
- int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
--- 
-1.9.1
+>> Thanks.
+>> Ding
+>>
+>>>> +       /* If the releaxed ordering enable bit is not set, do nothing. */
+>>>> +       if (!pcie_relaxed_ordering_supported(dev))
+>>>> +               return;
+>>>> +
+>>>> +       if (pci_dev_should_disable_relaxed_ordering(dev)) {
+>>>> +               pcie_clear_relaxed_ordering(dev);
+>>>> +               dev_info(&dev->dev, "Disable Relaxed Ordering\n");
+>>>> +       }
+>>>> +}
+>>>> +
+>>>>  static void pci_configure_device(struct pci_dev *dev)
+>>>>  {
+>>>>         struct hotplug_params hpp;
+>>>> @@ -1708,6 +1748,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>>>>
+>>>>         pci_configure_mps(dev);
+>>>>         pci_configure_extended_tags(dev);
+>>>> +       pci_configure_relaxed_ordering(dev);
+>>>>
+>>>>         memset(&hpp, 0, sizeof(hpp));
+>>>>         ret = pci_get_hp_params(dev, &hpp);
+>>>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>>>> index e1e8428..9870781 100644
+>>>> --- a/include/linux/pci.h
+>>>> +++ b/include/linux/pci.h
+>>>> @@ -1105,6 +1105,8 @@ int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>>>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>>>>  void pci_d3cold_enable(struct pci_dev *dev);
+>>>>  void pci_d3cold_disable(struct pci_dev *dev);
+>>>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
+>>>> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
+>>>>
+>>>>  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+>>>>                                   bool enable)
+>>>> --
+>>>> 1.9.0
+>>>>
+>>>>
+>>>
+>>> .
+>>>
+>>
+> 
+> .
+> 
