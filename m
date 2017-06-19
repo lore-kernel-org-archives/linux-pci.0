@@ -1,246 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:48937 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751747AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 23:27:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:44 -0600
-Message-Id: <20170629032648.3073-13-logang@deltatee.com>
-In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
-References: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 12/16] switchtec_ntb: add link management
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
+ hi3660 mmc
+To: Ulf Hansson <ulf.hansson@linaro.org>, Guodong Xu <guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+ <20170614082338.15673-20-guodong.xu@linaro.org>
+ <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com>
+From: Wei Xu <xuwei5@hisilicon.com>
+Message-ID: <5947CAD8.4040607@hisilicon.com>
+Date: Mon, 19 Jun 2017 14:00:08 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ wangkefeng.wang@huawei.com, Arnd Bergmann <arnd@arndb.de>,
+ Linux PCI <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Peter Griffin <peter.griffin@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>, Li Wei <liwei213@huawei.com>,
+ puck.chen@hisilicon.com, xuejiancheng@hisilicon.com,
+ zhangfei <zhangfei.gao@linaro.org>, Lee Jones <lee.jones@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-switchtec_ntb checks for a link by looking at the shared memory
-window. If the magic number is correct and the otherside indicates
-their link is enabled then we take the link to be up.
+Hi Ulf,
 
-Whenever we change our local link status we send a msg to the
-otherside to check whether it's up and change their status.
+On 2017/6/19 13:43, Ulf Hansson wrote:
+> On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
+>> Add bindings for hi3660 mmc support
+>>
+>> Signed-off-by: Li Wei <liwei213@huawei.com>
+>> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+>> ---
+>>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>> index df37058..8af1afc 100644
+>> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
+>>  Required Properties:
+>>
+>>  * compatible: should be one of the following.
+>> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
+>>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
+>>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
+>>
+>> --
+>> 2.10.2
+>>
+> 
+> Thanks, applied for next!
 
-The current status is maintained in a flag so ntb_is_link_up
-can return quickly.
+Thanks!
+Last week I had applied the v4 patch set[1]
+and this patch is included.
+But it should be fine for the upper gatekeeper to merge
+since these 2 patch are same.
 
-We utilize switchtec's link status notifier to also check link changes
-when the switch notices a port changes state.
+[1]:https://lkml.org/lkml/2017/6/14/1053
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 130 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 129 insertions(+), 1 deletion(-)
+Best Regards,
+Wei
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 0587b2380bcc..8ef84d45bda6 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -64,6 +64,7 @@ static inline void _iowrite64(u64 val, void __iomem *mmio)
- 
- struct shared_mw {
- 	u32 magic;
-+	u32 link_sta;
- 	u32 partition_id;
- 	u16 nr_direct_mw;
- 	u16 nr_lut_mw;
-@@ -102,8 +103,17 @@ struct switchtec_ntb {
- 	int nr_direct_mw;
- 	int nr_lut_mw;
- 	int direct_mw_to_bar[MAX_DIRECT_MW];
-+
-+	bool link_is_up;
-+	enum ntb_speed link_speed;
-+	enum ntb_width link_width;
- };
- 
-+static struct switchtec_ntb *ntb_sndev(struct ntb_dev *ntb)
-+{
-+	return container_of(ntb, struct switchtec_ntb, ntb);
-+}
-+
- static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 				 struct ntb_ctrl_regs __iomem *ctl,
- 				 u32 op, int wait_status)
-@@ -161,6 +171,17 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 	return -EIO;
- }
- 
-+static int switchtec_ntb_send_msg(struct switchtec_ntb *sndev, int idx,
-+				  u32 val)
-+{
-+	if (idx < 0 || idx >= ARRAY_SIZE(sndev->mmio_self_dbmsg->omsg))
-+		return -EINVAL;
-+
-+	iowrite32(val, &sndev->mmio_self_dbmsg->omsg[idx].msg);
-+
-+	return 0;
-+}
-+
- static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
- {
- 	return 0;
-@@ -192,22 +213,124 @@ static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
- 	return 0;
- }
- 
-+static void switchtec_ntb_part_link_speed(struct switchtec_ntb *sndev,
-+					  int partition,
-+					  enum ntb_speed *speed,
-+					  enum ntb_width *width)
-+{
-+	struct switchtec_dev *stdev = sndev->stdev;
-+
-+	u32 pff = ioread32(&stdev->mmio_part_cfg[partition].vep_pff_inst_id);
-+	u32 linksta = ioread32(&stdev->mmio_pff_csr[pff].pci_cap_region[13]);
-+
-+	if (speed)
-+		*speed = (linksta >> 16) & 0xF;
-+
-+	if (width)
-+		*width = (linksta >> 20) & 0x3F;
-+}
-+
-+static void switchtec_ntb_set_link_speed(struct switchtec_ntb *sndev)
-+{
-+	enum ntb_speed self_speed, peer_speed;
-+	enum ntb_width self_width, peer_width;
-+
-+	if (!sndev->link_is_up) {
-+		sndev->link_speed = NTB_SPEED_NONE;
-+		sndev->link_width = NTB_WIDTH_NONE;
-+		return;
-+	}
-+
-+	switchtec_ntb_part_link_speed(sndev, sndev->self_partition,
-+				      &self_speed, &self_width);
-+	switchtec_ntb_part_link_speed(sndev, sndev->peer_partition,
-+				      &peer_speed, &peer_width);
-+
-+	sndev->link_speed = min(self_speed, peer_speed);
-+	sndev->link_width = min(self_width, peer_width);
-+}
-+
-+enum {
-+	LINK_MESSAGE = 0,
-+	MSG_LINK_UP = 1,
-+	MSG_LINK_DOWN = 2,
-+	MSG_CHECK_LINK = 3,
-+};
-+
-+static void switchtec_ntb_check_link(struct switchtec_ntb *sndev)
-+{
-+	int link_sta;
-+	int old = sndev->link_is_up;
-+
-+	link_sta = sndev->self_shared->link_sta;
-+	if (link_sta) {
-+		u64 peer = ioread64(&sndev->peer_shared->magic);
-+
-+		if ((peer & 0xFFFFFFFF) == SWITCHTEC_NTB_MAGIC)
-+			link_sta = peer >> 32;
-+		else
-+			link_sta = 0;
-+	}
-+
-+	sndev->link_is_up = link_sta;
-+	switchtec_ntb_set_link_speed(sndev);
-+
-+	if (link_sta != old) {
-+		switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_CHECK_LINK);
-+		ntb_link_event(&sndev->ntb);
-+		dev_info(&sndev->stdev->dev, "ntb link %s",
-+			 link_sta ? "up" : "down");
-+	}
-+}
-+
-+static void switchtec_ntb_link_notification(struct switchtec_dev *stdev)
-+{
-+	struct switchtec_ntb *sndev = stdev->sndev;
-+
-+	switchtec_ntb_check_link(sndev);
-+}
-+
- static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
- 				    enum ntb_speed *speed,
- 				    enum ntb_width *width)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (speed)
-+		*speed = sndev->link_speed;
-+	if (width)
-+		*width = sndev->link_width;
-+
-+	return sndev->link_is_up;
- }
- 
- static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
- 				     enum ntb_speed max_speed,
- 				     enum ntb_width max_width)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	dev_dbg(&sndev->stdev->dev, "enabling link");
-+
-+	sndev->self_shared->link_sta = 1;
-+	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
-+
-+	switchtec_ntb_check_link(sndev);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	dev_dbg(&sndev->stdev->dev, "disabling link");
-+
-+	sndev->self_shared->link_sta = 0;
-+	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
-+
-+	switchtec_ntb_check_link(sndev);
-+
- 	return 0;
- }
- 
-@@ -555,6 +678,9 @@ static irqreturn_t switchtec_ntb_message_isr(int irq, void *dev)
- 			dev_dbg(&sndev->stdev->dev, "message: %d %08x\n", i,
- 				(u32)msg);
- 			iowrite8(1, &sndev->mmio_self_dbmsg->imsg[i].status);
-+
-+			if (i == LINK_MESSAGE)
-+				switchtec_ntb_check_link(sndev);
- 		}
- 	}
- 
-@@ -659,6 +785,7 @@ static int switchtec_ntb_add(struct device *dev,
- 		goto deinit_and_exit;
- 
- 	stdev->sndev = sndev;
-+	stdev->link_notifier = switchtec_ntb_link_notification;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
-@@ -682,6 +809,7 @@ void switchtec_ntb_remove(struct device *dev,
- 	if (!sndev)
- 		return;
- 
-+	stdev->link_notifier = NULL;
- 	stdev->sndev = NULL;
- 	ntb_unregister_device(&sndev->ntb);
- 	switchtec_ntb_deinit_db_msg_irq(sndev);
--- 
-2.11.0
+> 
+> Kind regards
+> Uffe
+> 
+> .
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
