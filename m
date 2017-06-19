@@ -1,96 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51776 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751466AbdFHOPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:15:53 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:36561 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751113AbdFSVJf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 17:09:35 -0400
+Received: by mail-ua0-f196.google.com with SMTP id g40so195687uaa.3
+        for <linux-pci@vger.kernel.org>; Mon, 19 Jun 2017 14:09:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <c8ef3317-37cb-f43b-3422-fae89fdc1d0e@deltatee.com>
+References: <20170615203729.9009-1-logang@deltatee.com> <20170619200659.GA20437@kudzu.us>
+ <c8ef3317-37cb-f43b-3422-fae89fdc1d0e@deltatee.com>
+From: Jon Mason <jdmason@kudzu.us>
+Date: Mon, 19 Jun 2017 17:09:33 -0400
+Message-ID: <CAPoiz9yFyUT1gTmZ_WcG5SyyjHcyFpte0FyrryDffrdLFnJWBA@mail.gmail.com>
+Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Russell King <linux@armlinux.org.uk>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Simon Horman <horms@verge.net.au>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Matthew Minter <matt@masarand.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [RFT PATCH v2 42/42] ARM64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()
-Date: Thu,  8 Jun 2017 15:13:42 +0100
-Message-Id: <20170608141342.2018-43-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the introduction of struct pci_host_bridge.map_irq pointer it is
-possible to assign IRQs for all devices originating from a PCI host
-bridge at probe time; this is implemented through pci_assign_irq() that
-relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
-given device.
+On Mon, Jun 19, 2017 at 4:27 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 19/06/17 02:07 PM, Jon Mason wrote:
+>> I think this code is of quality enough to go from an RFC to a standard
+>> patch, and we can nit pick it to death there ;-)
+>
+> Thanks!
+>
+>> Please rebase on ntb-next (which I believe you are already doing), and
+>> resbutmit.
+>
+> I'll try to get the rebase done and all the feedback so far applied by
+> the end of the week and resend a v1.
+>
+>> I'm thinking that we'll want to keep this series all in one place.
+>> So, #2 sounds like the best option.  But, I need Bjorns $0.02 on this.
+>
+> I was thinking #2 was the best choice as well but really it's for you
+> maintainers to decide. And, yes, we'd want to get Bjorn's ack.
 
-The benefits this brings are twofold:
+Bjorn is a busy guy, but I'm sure he'll get to it soon enough.
 
-- the IRQ for a device is assigned once at probe time
-- the IRQ assignment works also for hotplugged devices
+>> FYI, I ran smatch on the patches and got this.  Please correct them in
+>> v2 (or v1 of the non-RFC...however you want to think of it).
+>> drivers/pci/switch/switchtec.c:484 switchtec_dev_read() error: double unlock 'mutex:&stdev->mrpc_mutex'
+>> drivers/pci/switch/switchtec.c:506 switchtec_dev_read() error: double unlock 'mutex:&stdev->mrpc_mutex'
+>> drivers/pci/switch/switchtec.c:513 switchtec_dev_read() warn: inconsistent returns 'mutex:&stdev->mrpc_mutex'.
+>
+> This looks like a false positive to me. The code looks correct. smatch
+> may have been confused by the fact that the lock is taken by two calls
+> to the static function 'lock_mutex_and_test_alive'.
+>
+> This is also part of the switchtec management driver that's already in
+> the kernel and not part of the NTB related patches I sent.
 
-With all DT based PCI host bridges converted to the struct
-pci_host_bridge.{map/swizzle}_irq hooks mechanism the DT IRQ
-allocation in ARM64 pcibios_alloc_irq() is now redundant and can
-be removed.
+Ah, no problem.  I'm not a master user of smatch, but I do find it
+very useful.  So, I do not know of a way to run it against only the
+patches being applied, and I'm not sure that is possible to do so.
+Either way, I'm sure someone will address that then, given that it is
+already in the kernel.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/arm64/kernel/pci.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+BTW, I don't think I said so, but I'm really excited to have another
+piece of NTB HW supported in the kernel.
 
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 4f0e3eb..efcc351 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -39,20 +39,18 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return res->start;
- }
- 
-+#ifdef CONFIG_ACPI
- /*
-  * Try to assign the IRQ number when probing a new device
-  */
- int pcibios_alloc_irq(struct pci_dev *dev)
- {
--	if (acpi_disabled)
--		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
--#ifdef CONFIG_ACPI
--	else
--		return acpi_pci_irq_enable(dev);
--#endif
-+	if (!acpi_disabled)
-+		acpi_pci_irq_enable(dev);
- 
- 	return 0;
- }
-+#endif
- 
- /*
-  * raw_pci_read/write - Platform-specific PCI config space access.
--- 
-2.10.0
+Thanks,
+Jon
+
+>
+> Logan
