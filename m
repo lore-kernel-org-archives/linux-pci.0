@@ -1,60 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 28 Jun 2017 14:53:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Subject: Re: [PATCH v5 1/2] PCI: mediatek: Add Mediatek PCIe host controller
- support
-Message-ID: <20170628195325.GR17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
- <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
+Return-Path: <SRS0=zZ1W=5Y=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=zZ1W=5Y=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH v3] PCI: dwc: dra7xx: Fix compilation warning.
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>,
+        Bjorn Helgaas
+	<helgaas@kernel.org>
+References: <a2736e3907827e7b39dd85381101c1080012584c.1497514167.git.arvind.yadav.cs@gmail.com>
+ <20170615204951.GD12735@bhelgaas-glaptop.roam.corp.google.com>
+ <16817169-9f2e-5406-f61c-b2d683559815@gmail.com>
+CC: <bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <277fbefd-cbd8-47ee-2707-937c2b014b89@ti.com>
+Date: Mon, 19 Jun 2017 14:49:25 +0530
 MIME-Version: 1.0
-In-Reply-To: <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <16817169-9f2e-5406-f61c-b2d683559815@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, May 21, 2017 at 11:42:24AM +0800, Ryder Lee wrote:
-> Add support for the Mediatek PCIe Gen2 controller which can
-> be found on MT7623 series SoCs.
+Hi,
+
+On Friday 16 June 2017 01:48 PM, Arvind Yadav wrote:
+> Hi Kishon/Bjorn,
 > 
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  drivers/pci/host/Kconfig         |  11 +
->  drivers/pci/host/Makefile        |   1 +
->  drivers/pci/host/pcie-mediatek.c | 553 +++++++++++++++++++++++++++++++++++++++
->  3 files changed, 565 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-mediatek.c
->...
+> What is correct Setting for these two PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI and
+> PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN register.
+> 
+> Value of register After change:
+>  register[PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI] = LEG_EP_INTERRUPTS |  MSI
+>                                           = 0x1f
+> register[PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN] =  INTERRUPTS
+>                   =  0x1fff
+> Is this correct?
 
-> +static int mtk_pcie_register_host(struct pci_host_bridge *host)
-> +{
-> +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
-> +	struct pci_bus *child;
-> +	int err;
-> +
-> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+That's correct. That patch as such is correct but the changelog and subject has
+to be fixed. You can use something like below for subject and changelog.
 
-Do you really need the PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS
-flags?  I'd like to get rid of them because we should automatically
-assign resources if the firmware hasn't done it.
+"PCI: dwc: dra7xx: Fix incorrect usage of IRQSTATUS_* registers
 
-Bjorn
+commit 47ff3de911 ("PCI: dra7xx: Add TI DRA7xx PCIe driver") in order to clear
+MSI and MAIN interrupts requests wrote '0' to PCIECTRL_TI_CONF_IRQSTATUS_MSI
+and PCIECTRL_TI_CONF_IRQSTATUS_MAIN registers. However the TRM has mentioned to
+write '1' to clear pending event in these two registers. Fix it here.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This also helps to get rid of the following compilation warning:
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_msi_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:177:7: warning: large integer implicitly truncated
+to unsigned type [-Woverflow]
+       ~LEG_EP_INTERRUPTS & ~MSI);
+       ^
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_wrapper_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:187:7: warning: large integer implicitly truncated
+to unsigned type [-Woverflow]
+       ~INTERRUPTS);"
+
+For the patch itself
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+
+Thanks
+Kishon
