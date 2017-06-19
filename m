@@ -1,156 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 16 Jun 2017 11:58:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Quentin Schulz <quentin.schulz@free-electrons.com>
-Subject: Re: [PATCH] PCI: imx6: add regulator support
-Message-ID: <20170616165818.GC11129@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170608080742.3910-1-quentin.schulz@free-electrons.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:8752 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753724AbdFSKsr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:48:47 -0400
+Subject: Re: [PATCH v11 1/3] PCI: hisi: Add DT binding for PCIe of Kirin SoC
+ series
+To: Xiaowei Song <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <bhelgaas@google.com>, <robh+dt@kernel.org>
+References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
+ <20170619102349.50652-2-songxiaowei@hisilicon.com>
+CC: <suzhuangluan@hisilicon.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Wei Xu <xuwei5@hisilicon.com>
+Message-ID: <5947AB23.20402@hisilicon.com>
+Date: Mon, 19 Jun 2017 11:44:51 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170608080742.3910-1-quentin.schulz@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, thomas.petazzoni@free-electrons.com,
- hongxing.zhu@nxp.com, devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, robh+dt@kernel.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170619102349.50652-2-songxiaowei@hisilicon.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 08, 2017 at 10:07:42AM +0200, Quentin Schulz wrote:
-> Some boards might require to control a regulator to power the PCIe port.
-> 
-> This adds support for an optional regulator defined in Device Tree
-> linked in the PCIe controller under `vpcie-supply`. If present, the
-> regulator will be disabled and then enabled as part of the PCIe host
-> initialization process and will be disabled when shutting down.
-> 
-> Signed-off-by: Quentin Schulz <quentin.schulz@free-electrons.com>
+Hi Xiaowei,
 
-Applied with acks from Rob & Richard to pci/host-imx6 for v4.13, thanks!
+On 2017/6/19 11:23, Xiaowei Song wrote:
 
-I converted the pr_err() in imx6_pcie_assert_core_reset() to a dev_err().
+Please add some commit message.
 
+> Cc: Guodong Xu <guodong.xu@linaro.org>
+> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+> Acked-by: Rob Herring <robh@kernel.org>
 > ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  4 +++
->  drivers/pci/dwc/pci-imx6.c                         | 34 +++++++++++++++++++++-
->  2 files changed, 37 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index e3d5680875b1..cf92d3ba5a26 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -33,6 +33,10 @@ Optional properties:
->  - reset-gpio-active-high: If present then the reset sequence using the GPIO
->    specified in the "reset-gpio" property is reversed (H=reset state,
->    L=operation state).
-> +- vpcie-supply: Should specify the regulator in charge of PCIe port power.
-> +  The regulator will be enabled when initializing the PCIe host and
-> +  disabled either as part of the init process or when shutting down the
-> +  host.
->  
->  Additional required properties for imx6sx-pcie:
->  - clock names: Must include the following additional entries:
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> index 19a289b8cc94..f9b7500c9aff 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -24,6 +24,7 @@
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/regmap.h>
-> +#include <linux/regulator/consumer.h>
->  #include <linux/resource.h>
->  #include <linux/signal.h>
->  #include <linux/types.h>
-> @@ -59,6 +60,7 @@ struct imx6_pcie {
->  	u32			tx_swing_full;
->  	u32			tx_swing_low;
->  	int			link_gen;
-> +	struct regulator	*vpcie;
->  };
->  
->  /* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
-> @@ -310,6 +312,13 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
->  				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 0 << 16);
->  		break;
->  	}
-> +
-> +	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
-> +		int ret = regulator_disable(imx6_pcie->vpcie);
-> +
-> +		if (ret)
-> +			pr_err("failed to disable vpcie regulator: %d\n", ret);
-> +	}
->  }
->  
->  static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
-> @@ -376,10 +385,19 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
->  	struct device *dev = pci->dev;
->  	int ret;
->  
-> +	if (imx6_pcie->vpcie && !regulator_is_enabled(imx6_pcie->vpcie)) {
-> +		ret = regulator_enable(imx6_pcie->vpcie);
-> +		if (ret) {
-> +			dev_err(dev, "failed to enable vpcie regulator: %d\n",
-> +				ret);
-> +			return;
-> +		}
-> +	}
-> +
->  	ret = clk_prepare_enable(imx6_pcie->pcie_phy);
->  	if (ret) {
->  		dev_err(dev, "unable to enable pcie_phy clock\n");
-> -		return;
-> +		goto err_pcie_phy;
->  	}
->  
->  	ret = clk_prepare_enable(imx6_pcie->pcie_bus);
-> @@ -439,6 +457,13 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
->  	clk_disable_unprepare(imx6_pcie->pcie_bus);
->  err_pcie_bus:
->  	clk_disable_unprepare(imx6_pcie->pcie_phy);
-> +err_pcie_phy:
-> +	if (imx6_pcie->vpcie && regulator_is_enabled(imx6_pcie->vpcie) > 0) {
-> +		ret = regulator_disable(imx6_pcie->vpcie);
-> +		if (ret)
-> +			dev_err(dev, "failed to disable vpcie regulator: %d\n",
-> +				ret);
-> +	}
->  }
->  
->  static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
-> @@ -802,6 +827,13 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  	if (ret)
->  		imx6_pcie->link_gen = 1;
->  
-> +	imx6_pcie->vpcie = devm_regulator_get_optional(&pdev->dev, "vpcie");
-> +	if (IS_ERR(imx6_pcie->vpcie)) {
-> +		if (PTR_ERR(imx6_pcie->vpcie) == -EPROBE_DEFER)
-> +			return -EPROBE_DEFER;
-> +		imx6_pcie->vpcie = NULL;
-> +	}
-> +
->  	platform_set_drvdata(pdev, imx6_pcie);
->  
->  	ret = imx6_add_pcie_port(imx6_pcie, pdev);
-> -- 
-> 2.11.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I have picked up the patch from [1] and
+the pull request has been merged into ARM SoC tree.
+Please do not resend the same patch.
+Thanks!
+
+[1]:https://lkml.org/lkml/2017/6/14/1055
+
+Best Regards,
+Wei
+
+>  .../devicetree/bindings/pci/kirin-pcie.txt         | 55 ++++++++++++++++++++++
+>  1 file changed, 55 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+> new file mode 100644
+> index 000000000000..c2be01270ec5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+> @@ -0,0 +1,55 @@
+> +HiSilicon Kirin SoCs PCIe host DT description
+> +
+> +Kirin PCIe host controller is based on Designware PCI core.
+> +It shares common functions with PCIe Designware core driver
+> +and inherits common properties defined in
+> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+> +
+> +Additional properties are described here:
+> +
+> +Required properties
+> +- compatible:
+> +	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
+> +- reg: Should contain rc_dbi, apb, phy, config registers location and length.
+> +- reg-names: Must include the following entries:
+> +  "dbi": controller configuration registers;
+> +  "apb": apb Ctrl register defined by Kirin;
+> +  "phy": apb PHY register defined by Kirin;
+> +  "config": PCIe configuration space registers.
+> +- reset-gpios: The gpio to generate PCIe perst assert and deassert signal.
+> +
+> +Optional properties:
+> +
+> +Example based on kirin960:
+> +
+> +	pcie@f4000000 {
+> +		compatible = "hisilicon,kirin960-pcie";
+> +		reg = <0x0 0xf4000000 0x0 0x1000>,
+> +		      <0x0 0xff3fe000 0x0 0x1000>,
+> +		      <0x0 0xf3f20000 0x0 0x40000>,
+> +		      <0x0 0xf4000000 0x0  0x2000>;
+> +		reg-names = "dbi","apb","phy", "config";
+> +		bus-range = <0x0  0x1>;
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		device_type = "pci";
+> +		ranges = <0x02000000 0x0 0x0
+> +			  0x0 0xf5000000
+> +			  0x0 0x2000000>;
+> +		num-lanes = <1>;
+> +		#interrupt-cells = <1>;
+> +		interrupt-map-mask = <0xf800 0 0 7>;
+> +		interrupt-map = <0x0 0 0 1 &gic 0 282 4>,
+> +				<0x0 0 0 2 &gic 0 283 4>,
+> +				<0x0 0 0 3 &gic 0 284 4>,
+> +				<0x0 0 0 4 &gic 0 285 4>;
+> +		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+> +			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+> +			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+> +			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+> +			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+> +		clock-names = "pcie_phy_ref", "pcie_aux",
+> +			      "pcie_apb_phy", "pcie_apb_sys",
+> +			      "pcie_aclk";
+> +		reset-gpios = <&gpio11 1 0>;
+> +	};
+> 
