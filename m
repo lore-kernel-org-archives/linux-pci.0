@@ -1,56 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:51742 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752454AbdF2Sdd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jun 2017 14:33:33 -0400
-To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170629032648.3073-1-logang@deltatee.com>
- <20170629032648.3073-15-logang@deltatee.com>
- <000001d2f103$291602f0$7b4208d0$@dell.com>
-Cc: 'Jon Mason' <jdmason@kudzu.us>,
-        'Dave Jiang' <dave.jiang@intel.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
-        'Stephen Bates' <sbates@raithlin.com>,
-        'Serge Semin' <fancer.lancer@gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <bc717da6-0bac-b198-3047-293165e65925@deltatee.com>
-Date: Thu, 29 Jun 2017 12:33:21 -0600
+Return-Path: <SRS0=/uOW=5Y=sigmadesigns.com=marc_gonzalez@kernel.org>
+Return-Path: <SRS0=/uOW=5Y=sigmadesigns.com=marc_gonzalez@kernel.org>
+Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+	Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
+	<david.laight@aculab.com>, linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
+	<thibaud_cornic@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, Mason
+	<slash.tmp@free.fr>
+References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
+ <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
+ <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
+Message-ID: <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
+Date: Mon, 19 Jun 2017 16:50:15 +0200
 MIME-Version: 1.0
-In-Reply-To: <000001d2f103$291602f0$7b4208d0$@dell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Subject: Re: [PATCH 14/16] switchtec_ntb: implement scratchpad registers
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/29/2017 12:11 PM, Allen Hubbe wrote:
-> This could get in the way of letting the driver support more than two ports later on.  Is there already a plan to change this to support more than two ports?
+On 07/06/2017 10:19, Marc Gonzalez wrote:
 
-Well, as I mentioned this patchset is only to support 2 ports. Future 
-work will expand this and remove the restriction. The core concept of 
-the emulated spads doesn't get in the way but will need some further 
-consideration.
+> On 31/05/2017 15:33, Marc Gonzalez wrote:
+>=20
+>> +static int tango_pcie_probe(struct platform_device *pdev)
+>> +{
+>> +=09int ret =3D -EINVAL;
+>> +=09void __iomem *base;
+>> +=09struct resource *res;
+>> +=09struct tango_pcie *pcie;
+>> +=09struct device *dev =3D &pdev->dev;
+>> +
+>> +=09pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
+>> +=09pr_err("Tainting kernel... Use driver at your own risk\n");
+>> +=09add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+>=20
+> Hello Bjorn,
+>=20
+> In v4, your only comment was
+> "[muxing config and mem spaces] is a major issue and possibly even
+> a security problem [which requires at least an error message and a
+> kernel taint].
+>=20
+> Were there any other issues with the host bridge support?
 
-But multi-port support will need a lot more work in the ntb clients 
-anyway. There's no sense having support in my driver until I can 
-actually test things. And I'll probably be fine doing some of the client 
-work once we get there.
+Hello Bjorn,
 
-> This is also not the only hardware to lack scratchpads, but does have memory windows.  Wouldn't it be better for a software substitute like this to be done in a way that it is not tied to a specific hardware driver?
+I imagine you are now only waiting for Marc Z's Ack of patch 3/3 ?
+(AFAIU, all issues have been addressed as of v8 3/3.)
 
-Yeah, we discussed this previously. Some of this is kind of hardware 
-dependent though. In this case we are using a small fixed size LUT 
-window. If the other hardware doesn't have similar support, using up one 
-of the BAR memory windows (which are a very limited resource) for this 
-might not make sense.
+Rob has Acked patch 1/3 -- thanks Rob.
 
-The switchtec driver also uses this special memory window to negotiate 
-link status.
+Assuming all issues with patch 2/3 have already been addressed,
+then this driver can land in time for 4.13 right?
 
-Anyway, I'm happy to collaborate to making what common parts we can 
-possible with the IDT driver but Serge seemed against the whole concept 
-of emulation.
-
-Logan
+Regards.
