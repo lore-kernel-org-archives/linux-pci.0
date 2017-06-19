@@ -1,109 +1,100 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Hans De Goede <hdegoede@redhat.com>
-Subject: [PATCH 4/6] ACPI / PM: Clean up device wakeup enable/disable code
-Date: Thu, 08 Jun 2017 02:04:21 +0200
-Message-ID: <1592199.UEskShOjr9@aspire.rjw.lan>
-In-Reply-To: <8918199.uo13RZ8hZk@aspire.rjw.lan>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:35723 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753227AbdFSCgQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 18 Jun 2017 22:36:16 -0400
+Received: by mail-pg0-f66.google.com with SMTP id f127so13743347pgc.2
+        for <linux-pci@vger.kernel.org>; Sun, 18 Jun 2017 19:36:16 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org
+Cc: Daniel Axtens <dja@axtens.net>,
+        Xinliang Liu <z.liuxinliang@hisilicon.com>,
+        Rongrong Zou <zourongrong@gmail.com>
+Subject: [PATCH] PCI: Support hibmc VGA cards behind a misbehaving HiSilicon bridge
+Date: Mon, 19 Jun 2017 12:35:28 +1000
+Message-Id: <20170619023528.11532-1-dja@axtens.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610) that
+are not spec-compliant: they do not set the VGA Enable bit when a VGA
+card is behind the bridge. This breaks Xorg auto-detection.
 
-The wakeup.flags.enabled flag in struct acpi_device is not used
-consistently, as there is no reason why it should only apply
-to the enabling/disabling of the wakeup GPE, so put the invocation
-of acpi_enable_wakeup_device_power() under it too.
+Despite this, the hibmc VGA card (PCI ID 19e5:1711) is known to work
+when behind these bridges.
 
-Moreover, it is not necessary to call
-acpi_enable_wakeup_devices() and acpi_disable_wakeup_devices() for
-suspend-to-idle, so don't do that.
+Provide a quirk so that this combination of bridge and card is eligible
+to be the default VGA card.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This fixes Xorg auto-detection.
+
+Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
+Cc: Rongrong Zou <zourongrong@gmail.com>
+Signed-off-by: Daniel Axtens <dja@axtens.net>
 ---
- drivers/acpi/device_pm.c |   19 ++++++++-----------
- drivers/acpi/sleep.c     |    4 ++--
- 2 files changed, 10 insertions(+), 13 deletions(-)
+ drivers/pci/quirks.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
 
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -688,26 +688,23 @@ static int acpi_device_wakeup(struct acp
- 		acpi_status res;
- 		int error;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 16e6cd86ad71..9475d6056dd3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched.h>
+ #include <linux/ktime.h>
+ #include <linux/mm.h>
++#include <linux/vgaarb.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
  
-+		if (adev->wakeup.flags.enabled)
-+			return 0;
-+
- 		error = acpi_enable_wakeup_device_power(adev, target_state);
- 		if (error)
- 			return error;
- 
--		if (adev->wakeup.flags.enabled)
--			return 0;
--
- 		res = acpi_enable_gpe(wakeup->gpe_device, wakeup->gpe_number);
--		if (ACPI_SUCCESS(res)) {
--			adev->wakeup.flags.enabled = 1;
--		} else {
-+		if (ACPI_FAILURE(res)) {
- 			acpi_disable_wakeup_device_power(adev);
- 			return -EIO;
- 		}
--	} else {
--		if (adev->wakeup.flags.enabled) {
--			acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
--			adev->wakeup.flags.enabled = 0;
--		}
-+		adev->wakeup.flags.enabled = 1;
-+	} else if (adev->wakeup.flags.enabled) {
-+		acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
- 		acpi_disable_wakeup_device_power(adev);
-+		adev->wakeup.flags.enabled = 0;
- 	}
- 	return 0;
+@@ -4664,3 +4665,48 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
  }
-Index: linux-pm/drivers/acpi/sleep.c
-===================================================================
---- linux-pm.orig/drivers/acpi/sleep.c
-+++ linux-pm/drivers/acpi/sleep.c
-@@ -658,19 +658,19 @@ static int acpi_freeze_begin(void)
- 
- static int acpi_freeze_prepare(void)
- {
--	acpi_enable_wakeup_devices(ACPI_STATE_S0);
- 	acpi_enable_all_wakeup_gpes();
- 	acpi_os_wait_events_complete();
- 	if (acpi_sci_irq_valid())
- 		enable_irq_wake(acpi_sci_irq);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
 +
- 	return 0;
- }
- 
- static void acpi_freeze_restore(void)
- {
--	acpi_disable_wakeup_devices(ACPI_STATE_S0);
- 	if (acpi_sci_irq_valid())
- 		disable_irq_wake(acpi_sci_irq);
++/*
++ * The hibmc card on a HiSilicon D05 board sits behind a non-compliant
++ * bridge. The bridge doesn't advertise the PCI_BRIDGE_CTL_VGA bit in
++ * its config space. This prevents the vgaarb from marking a card
++ * behind it as boot VGA device.
++ *
++ * However, the hibmc card is known to still work, so if we have that
++ * card behind that particular bridge (19e5:1610), mark it as the
++ * default device if none has been detected.
++ */
++static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
++{
++	struct pci_dev *bridge;
++	struct pci_bus *bus;
++	u16 config;
 +
- 	acpi_enable_all_runtime_gpes();
- }
- 
-
++	bus = pdev->bus;
++	bridge = bus->self;
++	if (!bridge)
++		return;
++
++	if (!pci_is_bridge(bridge))
++		return;
++
++	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
++	    bridge->device != 0x1610)
++		return;
++
++	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
++			     &config);
++	if (config & PCI_BRIDGE_CTL_VGA) {
++		/*
++		 * Weirdly, this bridge *is* spec compliant, so bail
++		 * and let vgaarb do its job
++		 */
++		return;
++	}
++
++	if (vga_default_device())
++		return;
++
++	vga_set_default_device(pdev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
+-- 
+2.11.0
