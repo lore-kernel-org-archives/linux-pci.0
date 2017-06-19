@@ -1,50 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53906 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751078AbdFAQuo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 1 Jun 2017 12:50:44 -0400
-Date: Thu, 1 Jun 2017 11:50:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Waldemar Rymarkiewicz <waldemar.rymarkiewicz@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: How to trace down if PCIe link went into L1 state
-Message-ID: <20170601165025.GA12257@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAHKzcENL1px=zS8QspSX3WZ_z1PWjWBEcNBKTb00cfVushd9XQ@mail.gmail.com>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:8751 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752165AbdFSKFN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:05:13 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+CC: "Rafael J. Wysocki" <rafael@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+ devices before scanning
+Date: Mon, 19 Jun 2017 10:04:41 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+ <20170616083313.GY3187@lahna.fi.intel.com>
+ <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+ <20170616120048.GC629@lahna.fi.intel.com>
+ <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
+ <20170619100209.GC629@lahna.fi.intel.com>
+In-Reply-To: <20170619100209.GC629@lahna.fi.intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAHKzcENL1px=zS8QspSX3WZ_z1PWjWBEcNBKTb00cfVushd9XQ@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pm]
+Hi Mika
 
-On Wed, May 31, 2017 at 11:00:16PM +0200, Waldemar Rymarkiewicz wrote:
-> Hi,
+> -----Original Message-----
+> From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
+> Sent: 19 June 2017 11:02
+> To: Gabriele Paoloni
+> Cc: Rafael J. Wysocki; Lorenzo Pieralisi; Rafael J. Wysocki;
+> catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
+> kernel@lists.infradead.org; mark.rutland@arm.com;
+> brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
+> kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
+> pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
+> Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+> devices before scanning
 > 
-> I am not really familiar with pci subsystem but I need to check if the
-> pcie link went into L1 state after suspend.
+> On Mon, Jun 19, 2017 at 09:50:49AM +0000, Gabriele Paoloni wrote:
+> > Many thanks for your response and your help here.
+> >
+> > I guess that as conclusion with respect to the current v9 patchset we
+> can
+> > disregard the idea of MFD and modify the current v9 so that it
+> doesn't
+> > touch directly ACPI resources.
+> > Instead as I proposed before we can have the scan handler to
+> enumerate
+> > the children devices and translate its addresses filling dev-
+> >resources[] and
+> > at the same time we can modify acpi_default_enumeration to check
+> > acpi_device_enumerated() before continuing with device
+> enumeration...?
+> >
+> > Do you think it as a viable solution?
 > 
-> I use a wifi card with M2 connector with pcie interface. I suspend the
-> system and would like to verify if the link state went really into
-> L1/L2 as I see quite a big current on the power lines when it's in a
-> suspend.
+> No, I think MFD + scan handler inside the MFD driver is the way to go.
+> We don't want to trash ACPI core with stuff that does not belong there
+> IMHO.
 
-If I understand correctly, no Linux code is executing while the system
-is suspended, so I think you would need a hardware analyzer to verify
-the link state directly.
+Ok Many thanks I will investigate this direction 
 
-Per sec 5.3.2 of the PCIe spec r3.1, the power management state of a
-link is determined by the D-state of its downstream component, and the
-config write to PMCSR to change the D-state is what starts the
-transition of the downstream component to D1, D2, etc., and transition
-of the link to L1, L2, etc.  So you may be able to instrument the
-kernel to log those writes and infer that the link *should* be in
-L1/L2.  Of course, you're suspending the system, so you're probably
-going to suspend your console device, too.  I don't know what
-techniques people use to debug things in this area, other than using a
-serial console.
+> 
+> Also you don't need to modify acpi_default_enumeration() because you
+> can
+> mark your device enumerated in the MFD driver. So all the dirty details
+> will be in the MFD driver and not in ACPI core.
 
-Maybe the wifi card is a wakeup device and that prevents it from
-sleeping as deeply as you expect?
+Ok got it :)
 
-Bjorn
+Cheers
+Gab
