@@ -1,52 +1,52 @@
-Return-Path: <SRS0=G+2+=5V=canonical.com=kai.heng.feng@kernel.org>
-Return-Path: <SRS0=G+2+=5V=canonical.com=kai.heng.feng@kernel.org>
+Return-Path: <SRS0=HzMw=5Y=ginzinger.com=Stefan.Schoefegger@kernel.org>
+Return-Path: <SRS0=HzMw=5Y=ginzinger.com=Stefan.Schoefegger@kernel.org>
+From: =?iso-8859-1?Q?Sch=F6fegger_Stefan?= <Stefan.Schoefegger@ginzinger.com>
+To: Fabio Estevam <festevam@gmail.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>, "Arnd
+ Bergmann" <arnd@arndb.de>, open list <linux-kernel@vger.kernel.org>, "Kishon
+ Vijay Abraham I" <kishon@ti.com>, Jingoo Han <jingoohan1@gmail.com>, "Bjorn
+ Helgaas" <bhelgaas@google.com>, "moderated list:PCI DRIVER FOR IMX6"
+	<linux-arm-kernel@lists.infradead.org>, Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
+Date: Mon, 19 Jun 2017 06:43:58 +0000
+Message-ID: <1552752.riIkOpKaxW@en-pc05>
+References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
+ <1923573.HjpiSnITgW@en-pc05>
+ <CAOMZO5C03MwGkQSrJr-AeG98q84iyWnKj2GSvveJ6xKL+Y-9EQ@mail.gmail.com>
+In-Reply-To: <CAOMZO5C03MwGkQSrJr-AeG98q84iyWnKj2GSvveJ6xKL+Y-9EQ@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <Pine.LNX.4.44L0.1706151008380.1573-100000@iolanthe.rowland.org>
-References: <CAAd53p4-84G=NeJMOGcL_3fd7_s6EC4udLEGTcNNSBF=4FxHyA@mail.gmail.com>
- <Pine.LNX.4.44L0.1706151008380.1573-100000@iolanthe.rowland.org>
-From: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date: Fri, 16 Jun 2017 11:07:42 +0800
-Message-ID: <CAAd53p46piFcy+JKFi6auBLON-4tPHTAHBO_DOyZyL+xxCa4PA@mail.gmail.com>
-Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
-	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 15, 2017 at 10:12 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Thu, 15 Jun 2017, Kai-Heng Feng wrote:
->
->> On Wed, Jun 14, 2017 at 1:28 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> >
->> > The lspci output [1] shows:
->> >
->> >   00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD] FCH USB EHCI Controller (rev 39) (prog-if 20 [EHCI])
->> >     Capabilities: [c0] Power Management version 2
->> >       Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
->> >       Status: D3 NoSoftRst- PME-Enable+ DSel=0 DScale=0 PME-
->> >       Bridge: PM- B3+
->> >
->> > The device claims it can assert PME# from D3hot.  If it can't, that
->> > sounds like a hardware defect that should be addressed with a quirk.
->> > Ideally we would also have a pointer to the AMD hardware erratum.
->>
->> Looks like it's pretty similar to "23 USB Wake on Connect/Disconnect
->> with Low Speed Devices" in [1].
->> It points to a workaround in appendix A2 from [2].
->> However it says this bug only effects Low Speed devices, but it
->> actually also happens on High Speed devices.
->>
->> [1] https://support.amd.com/TechDocs/46837.pdf
->> [2] https://support.amd.com/TechDocs/42413.pdf
->
-> Those documents refer to a hardware bug with a workaround in the BIOS.
-> Have you checked to see if your BIOS is up to date?
+On Wednesday, June 14, 2017 4:11:29 PM CEST Fabio Estevam wrote:
+> On Wed, Jun 14, 2017 at 2:52 AM, Sch=F6fegger Stefan
+>=20
+> <Stefan.Schoefegger@ginzinger.com> wrote:
+> > device). The bitrate and de-emphasis must be switched. The driver (with=
+out
+> > this patches) does not allow to switch to gen2 because it falls back to
+> > gen1. It is impossible to generate the gen2 test pattern.
+>=20
+> If you pass 'fsl,max-link-speed =3D <2>;' in your device tree, then it
+> will allow gen2.
+>=20
+> From Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt:
+>=20
+> "- fsl,max-link-speed: Specify PCI gen for link capability. Must be '2' f=
+or
+>   gen2, otherwise will default to gen1. Note that the IMX6 LVDS clock
+> outputs do not meet gen2 jitter requirements and thus for gen2 capability=
+ a
+> gen2 compliant clock generator should be used and configured."
+>=20
+> Wouldn't this solve the problem?
 
-Yes, it's up to date.
+No, it only sets the maximum allowed link speed but it is forced to gen1=20
+before.
 
->
-> Alan Stern
->
+During compliance test there is no real link established and there is no li=
+nk=20
+speed negotiation, the phy is in a special compliance test state.
+
+Stefan
