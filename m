@@ -1,175 +1,154 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 19 Jun 2017 18:12:17 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
-Message-ID: <20170619231217.GE554@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Return-Path: <SRS0=7S1B=5Y=hisilicon.com=songxiaowei@kernel.org>
+Return-Path: <SRS0=7S1B=5Y=hisilicon.com=songxiaowei@kernel.org>
+From: songxiaowei <songxiaowei@hisilicon.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Guodong Xu <guodong.xu@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
+        "kbuild test robot" <lkp@intel.com>,
+        "kbuild-all@01.org" <kbuild-all@01.org>,
+        "Bjorn Helgaas" <bhelgaas@google.com>, Kishon <kishon@ti.com>,
+        Jingoo Han
+	<jingoohan1@gmail.com>, Tomasz Nowicki <tn@semihalf.com>,
+        Keith Busch
+	<keith.busch@intel.com>,
+        Niklas Cassel <niklas.cassel@axis.com>, Duc Dang
+	<dhdang@apm.com>,
+        "liudongdong (C)" <liudongdong3@huawei.com>,
+        "Gabriele
+ Paoloni" <gabriele.paoloni@huawei.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        "Mark Rutland" <mark.rutland@arm.com>,
+        Catalin Marinas
+	<catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        "chenyao (F)"
+	<chenyao11@huawei.com>,
+        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
+        Wangbinghui <wangbinghui@hisilicon.com>,
+        Suzhuangluan
+	<suzhuangluan@hisilicon.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        Linux Kernel
+ Mailing List <linux-kernel@vger.kernel.org>
+Subject: =?gb2312?B?tPC4tDogtPC4tDogW1BBVENIIHY5IDIvNF0gYXJtNjQ6IGR0czogaGlzaTog?=
+ =?gb2312?Q?add_kirin_pcie_node?=
+Date: Mon, 19 Jun 2017 01:02:53 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54117BB07@DGGEMA505-MBX.china.huawei.com>
+References: <20170531070109.81569-3-songxiaowei@hisilicon.com>
+ <201706040735.pu1PIspV%fengguang.wu@intel.com>
+ <CAK8P3a0K2jwiSQUVQWwebBEwXPVa04egcS_7q7gLgs-qt+J-sw@mail.gmail.com>
+ <CAFGCpxxuboZJJS=zExmhDBLbb86zyN7me=dfnGKaf+LAPvCRGg@mail.gmail.com>
+ <20170616211106.GF11129@bhelgaas-glaptop.roam.corp.google.com>
+ <99B4C6BADD9E3241B25E52B02BA737C5411788ED@DGGEMA505-MBX.china.huawei.com>
+ <20170617133931.GJ11129@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170617133931.GJ11129@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 08, 2017 at 03:13:00PM +0100, Lorenzo Pieralisi wrote:
-> v1 -> v2
-> 
-> - Split pci_fixup_irqs() removal in several patches
-> - Embedded pci_register_host_bridge() in pci_scan_root_bus_bridge()
-> - Refactored iproc, faraday and xilinx-nwl host bridges in preparation
->   for irq fixup removal
-> - Converted all DT PCI host bridge drivers to pci_scan_root_bus_bridge()
-> - Dropped RFC tag
-> - Added devm_pci_alloc_host_bridge() interface
-> - Rebased against v4.12-rc3
-> 
-> v1: http://marc.info/?l=linux-pci&m=149320545522205&w=2
-> 
-> Current pci_fixup_irqs() usage on ARM/ARM64 host controller drivers is
-> flawed in that pci_fixup_irqs() allocates IRQs for all PCI devices present
-> in a system; those PCI devices possibly belong to different PCI bus trees
-> (and possibly rooted at different host bridges) and may well be enabled
-> (ie probed and bound to a driver) by the time pci_fixup_irqs() is called
-> when probing a given host bridge driver.
-> 
-> Furthermore, current kernel code relying on pci_fixup_irqs() to
-> assign legacy PCI IRQs to devices does not work at all for
-> hotplugged devices in that the code carrying out the IRQ fixup
-> is called at host bridge driver probe time, which just cannot take
-> into account devices hotplugged after system has booted.
-> 
-> By leveraging Matthew Minter's patch series (and its purpose):
-> 
-> http://lkml.kernel.org/r/1445576642-29624-2-git-send-email-matt@masarand.com
-> 
-> this series[1] adds IRQs mapping and swizzling primitives to
-> the struct pci_host_bridge which allows IRQs to be allocated for
-> for a device at probe time with host bridge specific functions,
-> fixing the aforementioned limitations.
-> 
-> Current series remove pci_fixup_irqs() usage on ARM/ARM64; removal
-> can be extended to other architectures provided the IRQs map/swizzle
-> functions are set-up properly in the respective host bridges
-> set-up/probe paths.
-> 
-> Tested on kvmtool with PCI host generic.
-> 
-> [1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal-v2
-> 
-> Lorenzo Pieralisi (37):
->   PCI: xilinx-nwl: Remove nwl_pcie_enable_msi() unused bus parameter
->   drivers: pci: host: iproc: Convert link check to raw PCI config
->     accessors
->   drivers: pci: host: ftpci100: convert IRQ masking to raw PCI config
->     accessors
->   PCI: Initialize bridge release function at bridge allocation
->   PCI: Add pci_free_host_bridge interface
->   PCI: Add devm_pci_alloc_host_bridge() interface
->   drivers: pci: host: ftpci100: Fix host bridge memory leakage
->   drivers: pci: host: tegra: Fix host bridge memory leakage
->   PCI: Introduce pci_scan_root_bus_bridge()
->   PCI: Make pci_register_host_bridge() PCI core internal
->   ARM: PCI: bios32: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: designware: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: aardvark: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: rcar: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: iproc: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: versatile: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: altera: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: xilinx: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: xgene: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: host-common: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: rockchip: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: xilinx-nwl: Convert PCI scan API to pci_scan_root_bus_bridge()
->   PCI: Remove pci_scan_root_bus_msi()
->   ARM: PCI: Remove pci_fixup_irqs() call for bios32 host controllers
->   PCI: tegra: Drop pci_fixup_irqs()
->   PCI: xilinx: Drop pci_fixup_irqs()
->   PCI: rcar: Drop pci_fixup_irqs()
->   PCI: iproc: Drop pci_fixup_irqs()
->   PCI: designware-host: Drop pci_fixup_irqs()
->   PCI: ftpci100: Drop pci_fixup_irqs()
->   PCI: host-common: Drop pci_fixup_irqs()
->   PCI: versatile: Drop pci_fixup_irqs()
->   PCI: altera: Drop pci_fixup_irqs()
->   PCI: xgene: Move to struct pci_host_bridge IRQ mapping functions
->   PCI: rockchip: Move to struct pci_host_bridge IRQ mapping functions
->   PCI: xilinx-nwl: Move to struct pci_host_bridge IRQ mapping functions
->   ARM64: PCI: Drop DT IRQ allocation from pcibios_alloc_irq()
-> 
-> Matthew Minter (5):
->   PCI: Build setup-irq.o on all arches
->   PCI: Add IRQ mapping function pointers to pci_host_bridge struct
->   PCI: Add pci_assign_irq() function and have pci_fixup_irqs() use it
->   OF/PCI: Update of_irq_parse_and_map_pci() comment
->   PCI: Add a call to pci_assign_irq() in pci_device_probe()
-> 
->  Documentation/driver-model/devres.txt  |   1 +
->  arch/arm/include/asm/mach/pci.h        |   3 +-
->  arch/arm/kernel/bios32.c               |  43 +++++++----
->  arch/arm/mach-dove/pcie.c              |  33 +++++---
->  arch/arm/mach-iop13xx/pci.c            |  31 +++++---
->  arch/arm/mach-iop13xx/pci.h            |   3 +-
->  arch/arm/mach-mv78xx0/pcie.c           |   8 +-
->  arch/arm/mach-orion5x/common.h         |   3 +-
->  arch/arm/mach-orion5x/pci.c            |  39 ++++++----
->  arch/arm64/kernel/pci.c                |  10 +--
->  drivers/of/of_pci_irq.c                |   3 +-
->  drivers/pci/Makefile                   |  17 +----
->  drivers/pci/dwc/pcie-designware-host.c |  43 ++++++-----
->  drivers/pci/host/pci-aardvark.c        |  21 +++--
->  drivers/pci/host/pci-ftpci100.c        |  50 +++++++-----
->  drivers/pci/host/pci-host-common.c     |  27 +++++--
->  drivers/pci/host/pci-tegra.c           |   9 +--
->  drivers/pci/host/pci-versatile.c       |  22 +++++-
->  drivers/pci/host/pci-xgene.c           |  23 ++++--
->  drivers/pci/host/pcie-altera.c         |  24 ++++--
->  drivers/pci/host/pcie-iproc-bcma.c     |   7 +-
->  drivers/pci/host/pcie-iproc-platform.c |   7 +-
->  drivers/pci/host/pcie-iproc.c          | 135 +++++++++++++++++++++++----------
->  drivers/pci/host/pcie-rcar.c           |  40 ++++++----
->  drivers/pci/host/pcie-rockchip.c       |  24 ++++--
->  drivers/pci/host/pcie-xilinx-nwl.c     |  34 ++++++---
->  drivers/pci/host/pcie-xilinx.c         |  34 +++++----
->  drivers/pci/pci-driver.c               |   2 +
->  drivers/pci/probe.c                    | 105 ++++++++++++++++++-------
->  drivers/pci/setup-irq.c                |  45 ++++++++---
->  include/linux/pci.h                    |  12 +--
->  31 files changed, 565 insertions(+), 293 deletions(-)
-
-This is awesome!  I put these on pci/enumeration with the acks received so
-far.  I hope we can merge these for v4.13, so please take a look at your
-drivers and test if possible.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgQmpvcm4sDQoNClRoYW5rIHlvdSBzbyBtdWNoLCBhbmQgSSdsbCBmaXggdGhlc2UgaXNzdWVz
+IGFzIHNvb24gYXMgcG9zc2libGUuDQoNCkJlc3Qgd2lzaGVzLA0KDQpYaWFvd2VpLg0KDQotLS0t
+LdPKvP7Urbz+LS0tLS0NCreivP7IyzogQmpvcm4gSGVsZ2FhcyBbbWFpbHRvOmhlbGdhYXNAa2Vy
+bmVsLm9yZ10gDQq3osvNyrG85DogMjAxN8TqNtTCMTfI1SAyMTo0MA0KytW8/sjLOiBzb25neGlh
+b3dlaQ0Ks63LzTogR3VvZG9uZyBYdTsgQXJuZCBCZXJnbWFubjsga2J1aWxkIHRlc3Qgcm9ib3Q7
+IGtidWlsZC1hbGxAMDEub3JnOyBCam9ybiBIZWxnYWFzOyBLaXNob247IEppbmdvbyBIYW47IFRv
+bWFzeiBOb3dpY2tpOyBLZWl0aCBCdXNjaDsgTmlrbGFzIENhc3NlbDsgRHVjIERhbmc7IGxpdWRv
+bmdkb25nIChDKTsgR2FicmllbGUgUGFvbG9uaTsgUm9iIEhlcnJpbmc7IE1hcmsgUnV0bGFuZDsg
+Q2F0YWxpbiBNYXJpbmFzOyBXaWxsIERlYWNvbjsgY2hlbnlhbyAoRik7IENoZW5mZW5nIChwdWNr
+KTsgV2FuZ2JpbmdodWk7IFN1emh1YW5nbHVhbjsgbGludXgtcGNpOyBkZXZpY2V0cmVlQHZnZXIu
+a2VybmVsLm9yZzsgTGludXggS2VybmVsIE1haWxpbmcgTGlzdA0K1vfM4jogUmU6ILTwuLQ6IFtQ
+QVRDSCB2OSAyLzRdIGFybTY0OiBkdHM6IGhpc2k6IGFkZCBraXJpbiBwY2llIG5vZGUNCg0KT24g
+U2F0LCBKdW4gMTcsIDIwMTcgYXQgMDg6MzM6MDhBTSArMDAwMCwgc29uZ3hpYW93ZWkgd3JvdGU6
+DQo+IEhpIEJqb3JuLA0KPiANCj4gVGhlcmUgYXJlIHNlcnZhbCBjb21tZW50cyBJIGNhbiBub3Qg
+dW5kZXJzdGFuZCwgcGxlYXNlIGhlbHAgbWUgdG8gZ2l2ZSBtb3JlIGRldGFpbHMuDQoNClN1cmUu
+ICBCVFcsIGZvciBzb21lIHJlYXNvbiB5b3VyIHJlc3BvbnNlIGlzIGFsbCBkb3VibGUtc3BhY2Vk
+LCB3aGljaCBtYWtlcyBpdCBhIGxpdHRsZSBoYXJkIHRvIHJlYWQuICBBbHNvLCBpdCBpbmNsdWRl
+cyBIVE1MIGFuZCBhbiBpbWFnZSwgd2hpY2ggbWVhbnMgdGhlIG1haWxpbmcgbGlzdCBwcm9iYWJs
+eSByZWplY3RlZCBpdDoNCmh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
+bCN0YWJvbw0KDQo+IGRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGlu
+Z3MvcGNpL2tpcmluLXBjaWUudHh0IA0KPiBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5k
+aW5ncy9wY2kva2lyaW4tcGNpZS50eHQNCj4gDQo+IGluZGV4IDY4ZmZhMGZiY2Q3My4uMjAzNTdk
+ODQwYWYxIDEwMDY0NA0KPiANCj4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3BjaS9raXJpbi1wY2llLnR4dA0KPiANCj4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0
+cmVlL2JpbmRpbmdzL3BjaS9raXJpbi1wY2llLnR4dA0KPiANCj4gQEAgLTI0LDggKzI0LDggQEAg
+RXhhbXBsZSBiYXNlZCBvbiBraXJpbjk2MDoNCj4gDQo+ICAgICAgICAgcGNpZUBmNDAwMDAwMCB7
+DQo+IA0KPiAgICAgICAgICAgICAgICAgY29tcGF0aWJsZSA9ICJoaXNpbGljb24sa2lyaW4tcGNp
+ZSI7DQo+IA0KPiAtICAgICAgICAgICAgICAgICByZWcgPSA8MHgwIDB4ZjQwMDAwMDAgMHgwIDB4
+MTAwMD4sIDwweDAgMHhmZjNmZTAwMCAweDAgMHgxMDAwPiwNCj4gDQo+IC0gICAgICAgICAgICAg
+ICAgICAgICAgIDwweDAgMHhmM2YyMDAwMCAweDAgMHg0MDAwMD4sIDwweDAgMHhGNDAwMDAwMCAw
+IDB4MjAwMD47DQo+IA0KPiArICAgICAgICAgICAgICAgIHJlZyA9IDwweDAgMHhmNDAwMDAwMCAw
+eDAgIDB4MTAwMD4sIDwweDAgMHhmZjNmZTAwMCANCj4gKyAweDAgMHgxMDAwPiwNCj4gDQo+ICsg
+ICAgICAgICAgICAgICAgICAgICAgPDB4MCAweGYzZjIwMDAwIDB4MCAweDQwMDAwPiwgPDB4MCAw
+eGY0MDAwMDAwIA0KPiArIDB4MCAweDIwMDA+Ow0KPiANCj4gW3Nvbmd4aWFvd2VpXSBUaGUgZGlm
+ZmVyZW5jZSBpcyBhZGQgb25lIG1vcmUgc3BhY2UgYmV0d2VlbiAiMHgwIiBhbmQgIjB4MTAwMCIg
+aW4gdGhlIGZpcnN0IGVsZW1lbnQuDQo+IA0KPiAgICAgICAgICAgICAgQnV0LCBJIGNhbid0IGdl
+dCB5b3VyIG1pbmQuDQoNCkl0IGNoYW5nZXMgZnJvbSB0aGlzOg0KDQogICAgICAgIHJlZyA9IDww
+eDAgMHhmNDAwMDAwMCAweDAgMHgxMDAwPiwgPDB4MCAweGZmM2ZlMDAwIDB4MCAweDEwMDA+LA0K
+ICAgICAgICAgICAgICA8MHgwIDB4ZjNmMjAwMDAgMHgwIDB4NDAwMDA+LCA8MHgwIDB4RjQwMDAw
+MDAgMCAweDIwMDA+Ow0KDQp0byB0aGlzOg0KDQogICAgICAgIHJlZyA9IDwweDAgMHhmNDAwMDAw
+MCAweDAgIDB4MTAwMD4sIDwweDAgMHhmZjNmZTAwMCAweDAgMHgxMDAwPiwNCiAgICAgICAgICAg
+ICAgPDB4MCAweGYzZjIwMDAwIDB4MCAweDQwMDAwPiwgPDB4MCAweGY0MDAwMDAwIDB4MCAweDIw
+MDA+Ow0KDQpUaGUgZXh0cmEgc3BhY2UgbWFrZXMgdGhlIGVsZW1lbnRzIGFsaWduIHZlcnRpY2Fs
+bHkuICBDb2x1bW5zIG9mIG51bWJlcnMgYXJlIGNvbnZlbnRpb25hbGx5IHJpZ2h0LWFsaWduZWQs
+IHdoaWNoIG1ha2VzIGl0IGVhc2llciB0byBjb21wYXJlIHRoZWlyIHNpemVzLg0KDQpUaGlzIGh1
+bmsgYWxzbyBjaGFuZ2VkIDB4RjQwMDAwMDAgdG8gMHhmNDAwMDAwMCBpbiB0aGUgc2Vjb25kIGxp
+bmUsIHNvIGhleCBjb25zdGFudHMgdXNlIGxvd2VyLWNhc2UgY29uc2lzdGVudGx5Lg0KDQo+IC0t
+LSBhL2FyY2gvYXJtNjQvYm9vdC9kdHMvaGlzaWxpY29uL2hpMzY2MC5kdHNpDQo+IA0KPiArKysg
+Yi9hcmNoL2FybTY0L2Jvb3QvZHRzL2hpc2lsaWNvbi9oaTM2NjAuZHRzaQ0KPiANCj4gQEAgLTE1
+OSwxMiArMTU5LDEyIEBADQo+IA0KPiAgICAgICAgICAgICAgICAgIHBjaWVAZjQwMDAwMDAgew0K
+PiANCj4gICAgICAgICAgICAgICAgICAgICAgICAgICBjb21wYXRpYmxlID0gImhpc2lsaWNvbixr
+aXJpbjk2MC1wY2llIjsNCj4gDQo+IC0gICAgICAgICAgICAgICAgICAgICAgICAgICByZWcgPSA8
+MHgwIDB4ZjQwMDAwMDAgMHgwIDB4MTAwMD4sDQo+IA0KPiAtICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgPDB4MCAweGZmM2ZlMDAwIDB4MCAweDEwMDA+LA0KPiANCj4gKyAgICAgICAg
+ICAgICAgICAgICAgICAgICAgcmVnID0gPDB4MCAweGY0MDAwMDAwIDB4MCAgMHgxMDAwPiwNCj4g
+DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwweDAgMHhmZjNmZTAwMCAweDAg
+IDB4MTAwMD4sDQo+IA0KPiBbc29uZ3hpYW93ZWldIENhbiB5b3VyIHRlbGwgd2h5IHVzaW5nIHR3
+byBzcGFjZXM/IFJlZyBpcyBsaXN0ZWQgYXMgPGFkZHJfaGkgYWRkcl9sbyBzaXplX2hpIHNpemVf
+bG8+Lg0KDQpBZ2FpbiwganVzdCB0byBtYWtlIHRoZSBzaXplcyByaWdodC1hbGlnbmVkIHNvIGl0
+J3MgZWFzaWVyIHRvIGNvbXBhcmUgdGhlIHNpemVzLg0KDQpZb3UgY2FuIGlnbm9yZSB0aGlzIG9u
+ZSBpZiB5b3Ugd2FudC4gIFRoZXJlIGFyZSBsb3RzIG9mIGV4YW1wbGVzIGluIHRoZSB0cmVlIHRo
+YXQgZG9uJ3QgYWxpZ24gdGhlc2UuICBJIGp1c3QgdGhpbmsgaXQgbG9va3Mgc2xvcHB5IHdoZW4g
+dGhpbmdzIGFyZSBhbG1vc3QgYnV0IG5vdCBxdWl0ZSBhbGlnbmVkLg0KDQo+IC0gICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICA8MHgwIDB4RjUwMDAwMDAgMHgwIDB4MjAwMD47DQo+ICsg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwweDAgMHhmNTAwMDAwMCAweDAgIDB4MjAw
+MD47DQoNCkFub3RoZXIgY2FzZSBvZiBtYWtpbmcgaGV4IGNvbnN0YW50cyBjb25zaXN0ZW50bHkg
+bG93ZXItY2FzZS4NCg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4u
+YyANCj4gYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jIGluZGV4IGY2M2U2NTQ4ZWZhZS4u
+NDE1MjBkZDFkNWU1IDEwMDY0NA0KPiANCj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2ly
+aW4uYw0KPiANCj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uYw0KPiANCj4gQEAg
+LTM1LDggKzM1LDggQEANCj4gDQo+ICNkZWZpbmUgUkVGX0NMS19GUkVRICAgICAgICAgICAgICAg
+ICAgICAxMDAwMDAwMDANCj4gDQo+ICAvKiBQQ0llIEVMQkkgcmVnaXN0ZXJzICovDQo+IA0KPiAt
+I2RlZmluZSBTT0NfUENJRUNUUkxfQ1RSTDBfQUREUiAgIDB4MDAwDQo+IA0KPiAtI2RlZmluZSBT
+T0NfUENJRUNUUkxfQ1RSTDFfQUREUiAgIDB4MDA0DQo+IA0KPiArI2RlZmluZSBTT0NfUENJRUNU
+UkxfQ1RSTDBfQUREUiAgICAgICAgICAgIDB4MDAwDQo+IA0KPiArI2RlZmluZSBTT0NfUENJRUNU
+UkxfQ1RSTDFfQUREUiAgICAgICAgICAgIDB4MDA0DQo+IA0KPiAjZGVmaW5lIFNPQ19QQ0lFUEhZ
+X0NUUkwyX0FERFIgICAgICAgICAgICAgMHgwMDgNCj4gDQo+ICNkZWZpbmUgU09DX1BDSUVQSFlf
+Q1RSTDNfQUREUiAgICAgICAgICAgICAweDAwYw0KPiAuLi4gDQo+IFtzb25neGlhb3dlaV0gVGhl
+IHNwYWNlIG9mIHRoZSBuYW1lIG9mIHRoZXNlIG1hY3JvIGRlZmluaXRpb24gYW5kDQo+IA0KPiB0
+aGUgdmFsdWUgYXJlIHJlYWxseSBkaWZmZXJlbnQgZnJvbSAxIHRvIDMgVGFiLCBidXQgaXQgc2Vl
+bSBsaWtlcyBhcyBiZWxsb3cgb3BlbmVkIGJ5IHZpbS4NCj4gDQo+IFtjaWQ6aW1hZ2UwMDEucG5n
+QDAxRDJFNzg2LjE0ODgzMzcwXQ0KDQpUaGUgaW1hZ2Ugc2hvd3MgdGhpczoNCg0KICArI2RlZmlu
+ZSBSRUZfQ0xLX0ZSRVEgICAgICAgICAgICAgICAgICAgMTAwMDAwMDAwDQogICsNCiAgKy8qIFBD
+SWUgRUxCSSByZWdpc3RlcnMgKi8NCiAgKyNkZWZpbmUgU09DX1BDSUVDVFJMX0NUUkwwX0FERFIg
+ICAgICAgIDB4MDAwDQogICsjZGVmaW5lIFNPQ19QQ0lFQ1RSTF9DVFJMMV9BRERSICAgICAgICAw
+eDAwNA0KICArI2RlZmluZSBTT0NfUENJRVBIWV9DVFJMMl9BRERSICAgICAgICAgMHgwMDgNCiAg
+KyNkZWZpbmUgU09DX1BDSUVQSFlfQ1RSTDNfQUREUiAgICAgICAgIDB4MDBjDQoNClNvIHRoaW5n
+cyBhcmUgbmljZWx5IGFsaWduZWQgaW4gdGhlICpwYXRjaCouICBCdXQgd2UgZG9uJ3QgY2FyZSBh
+Ym91dCBhbGlnbm1lbnQgaW4gdGhlIHBhdGNoLiAgV2hhdCB3ZSB3YW50IGlzIGFsaWdubWVudCBp
+biB0aGUgKmZpbGUqLCB3aGljaCBlbmRzIHVwIGxvb2tpbmcgbGlrZSB0aGlzIHdpdGggeW91ciBv
+cmlnaW5hbCBwYXRjaDoNCg0KICAjZGVmaW5lIFJFRl9DTEtfRlJFUSAgICAgICAgICAgICAgICAg
+ICAgMTAwMDAwMDAwDQoNCiAgLyogUENJZSBFTEJJIHJlZ2lzdGVycyAqLw0KICAjZGVmaW5lIFNP
+Q19QQ0lFQ1RSTF9DVFJMMF9BRERSIDB4MDAwDQogICNkZWZpbmUgU09DX1BDSUVDVFJMX0NUUkwx
+X0FERFIgMHgwMDQNCiAgI2RlZmluZSBTT0NfUENJRVBIWV9DVFJMMl9BRERSICAgICAgICAgIDB4
+MDA4DQogICNkZWZpbmUgU09DX1BDSUVQSFlfQ1RSTDNfQUREUiAgICAgICAgICAweDAwYw0KDQpN
+eSBpbmNyZW1lbnRhbCBkaWZmIHByb2JhYmx5IG1ha2VzIHRoZSBwYXRjaCBsb29rIHVnbHksIGJ1
+dCB0aGUgcmVzdWx0aW5nIGZpbGUgbG9va3MgbmljZXIuDQoNCj4gIHN0cnVjdCBraXJpbl9wY2ll
+IHsNCj4gDQo+IC0gICAgICAgIHN0cnVjdCBkd19wY2llICAgICAgICAgICAgICAgICAgICpwY2k7
+DQo+IA0KPiAtICAgICAgICB2b2lkIF9faW9tZW0gICAgICAgICAgICphcGJfYmFzZTsNCj4gLi4u
+DQo+ICsgICAgICAgc3RydWN0IGR3X3BjaWUgICAgICAgICAgKnBjaTsNCj4gDQo+ICsgICAgICAg
+dm9pZCBfX2lvbWVtICAqYXBiX2Jhc2U7DQo+IC4uLg0KPiBbc29uZ3hpYW93ZWldIGl0IHNlZW1z
+IHRoZSB2YXJpYWJsZXMgbGlzdCBpbiB0aGUgc2FtZSBjb2xvdW1uIHdpdGggdmltLg0KDQpZZXMs
+IHRoZXNlIHZhcmlhYmxlcyB3ZXJlIGFsaWduZWQgaW4geW91ciBvcmlnaW5hbCBwYXRjaDsgaXQn
+cyBqdXN0IHRoYXQgdGhleSB1c2VkIHR3byBvciB0aHJlZSB0YWJzLCB3aGVuIG9uZSBvciB0d28g
+d2FzIHN1ZmZpY2llbnQuICBTbyB0aGVyZSdzIGV4dHJhIHNlcGFyYXRpb24uICBOb3QgYSBiaWcg
+ZGVhbC4NCg0KQmpvcm4NCg==
