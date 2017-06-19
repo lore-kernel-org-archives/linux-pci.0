@@ -1,79 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51524 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751572AbdFHOP3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:15:29 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will.deacon@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Simon Horman <horms@verge.net.au>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Matthew Minter <matt@masarand.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [RFT PATCH v2 37/42] PCI: versatile: Drop pci_fixup_irqs()
-Date: Thu,  8 Jun 2017 15:13:37 +0100
-Message-Id: <20170608141342.2018-38-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:30472 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754001AbdFSKAR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:00:17 -0400
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 1/3] PCI: mediatek: modify controller powerup logic
+Date: Mon, 19 Jun 2017 17:59:58 +0800
+Message-ID: <1497866400-41844-2-git-send-email-ryder.lee@mediatek.com>
+In-Reply-To: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
+References: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since, through struct pci_host_bridge.map/swizzle_irq hooks, IRQs
-are now allocated in the pci_assign_irq() callback automatically,
-PCI host bridge drivers can stop relying on pci_fixup_irqs()
-for IRQ allocation.
+The current powerup logic may lead to unbalanced pm_runtime_enable() if
+the earlier probe failed due to -EPROBE_DEFER. Hence we do a little flow
+adjustment to avoid that:
 
-Drop pci_fixup_irqs() usage from PCI versatile host bridge driver.
+Parse standard PCI resources firstly, then check properties for each port,
+power on controller finally.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>
+Also, this patch removes unused registers and renames funtions properly.
+
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
- drivers/pci/host/pci-versatile.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-mediatek.c | 51 +++++++++++++++++-----------------------
+ 1 file changed, 21 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-index a67cf0b..3be25a9 100644
---- a/drivers/pci/host/pci-versatile.c
-+++ b/drivers/pci/host/pci-versatile.c
-@@ -209,6 +209,8 @@ static int versatile_pci_probe(struct platform_device *pdev)
- 	bridge->sysdata = NULL;
- 	bridge->busnr = 0;
- 	bridge->ops = &pci_versatile_ops;
-+	host->map_irq = of_irq_parse_and_map_pci;
-+	host->swizzle_irq = pci_common_swizzle;
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 3baafa8..165d82d 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -34,8 +34,6 @@
  
- 	ret = pci_scan_root_bus_bridge(bridge);
- 	if (ret < 0)
-@@ -216,8 +218,6 @@ static int versatile_pci_probe(struct platform_device *pdev)
+ /* PCIe per port registers */
+ #define PCIE_BAR0_SETUP		0x10
+-#define PCIE_BAR1_SETUP		0x14
+-#define PCIE_BAR0_MEM_BASE	0x18
+ #define PCIE_CLASS		0x34
+ #define PCIE_LINK_STATUS	0x50
  
- 	bus = bridge->bus;
+@@ -224,7 +222,7 @@ static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
+ 	msleep(100);
+ }
  
--	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+-static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
++static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ {
+ 	struct device *dev = port->pcie->dev;
+ 	int err;
+@@ -249,7 +247,7 @@ static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ 	/* if link up, then setup root port configuration space */
+ 	if (mtk_pcie_link_is_up(port)) {
+ 		mtk_pcie_configure_rc(port);
+-		return 0;
++		return;
+ 	}
+ 
+ 	dev_info(dev, "Port%d link down\n", port->index);
+@@ -257,13 +255,13 @@ static int mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ 	phy_power_off(port->phy);
+ err_phy_on:
+ 	clk_disable_unprepare(port->sys_ck);
+-	mtk_pcie_port_free(port);
+ err_sys_clk:
+-	return err;
++	mtk_pcie_port_free(port);
++
++	return;
+ }
+ 
+ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
+-				struct mtk_pcie_port **p,
+ 				struct device_node *node,
+ 				int index)
+ {
+@@ -274,12 +272,10 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
+ 	char name[10];
+ 	int err;
+ 
+-	*p = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+-	if (!*p)
++	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
++	if (!port)
+ 		return -ENOMEM;
+ 
+-	port = *p;
 -
- 	pci_assign_unassigned_bus_resources(bus);
- 	list_for_each_entry(child, &bus->children, node)
- 		pcie_bus_configure_settings(child);
+ 	err = of_property_read_u32(node, "num-lanes", &port->lane);
+ 	if (err) {
+ 		dev_err(dev, "missing num-lanes property\n");
+@@ -323,7 +319,7 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
+ 	return 0;
+ }
+ 
+-static int mtk_pcie_handle_shared_resource(struct mtk_pcie *pcie)
++static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+@@ -366,20 +362,16 @@ static int mtk_pcie_handle_shared_resource(struct mtk_pcie *pcie)
+ 	return err;
+ }
+ 
+-static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
++static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct device_node *node = dev->of_node, *child;
+ 	struct of_pci_range_parser parser;
+ 	struct of_pci_range range;
+ 	struct resource res;
++	struct mtk_pcie_port *port, *tmp;
+ 	int err;
+ 
+-	/* parse shared resources */
+-	err = mtk_pcie_handle_shared_resource(pcie);
+-	if (err)
+-		return err;
+-
+ 	if (of_pci_range_parser_init(&parser, node)) {
+ 		dev_err(dev, "missing \"ranges\" property\n");
+ 		return -EINVAL;
+@@ -423,8 +415,7 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
+ 		pcie->busn.flags = IORESOURCE_BUS;
+ 	}
+ 
+-	for_each_child_of_node(node, child) {
+-		struct mtk_pcie_port *port;
++	for_each_available_child_of_node(node, child) {
+ 		int index;
+ 
+ 		err = of_pci_get_devfn(child);
+@@ -435,19 +426,19 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
+ 
+ 		index = PCI_SLOT(err);
+ 
+-		if (!of_device_is_available(child))
+-			continue;
+-
+-		err = mtk_pcie_parse_ports(pcie, &port, child, index);
+-		if (err)
+-			return err;
+-
+-		/* enable each port, and then check link status */
+-		err = mtk_pcie_enable_ports(port);
++		err = mtk_pcie_parse_ports(pcie, child, index);
+ 		if (err)
+ 			return err;
+ 	}
+ 
++	err = mtk_pcie_subsys_powerup(pcie);
++	if (err)
++		return err;
++
++	/* enable each port, and then check link status */
++	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
++		mtk_pcie_enable_ports(port);
++
+ 	return 0;
+ }
+ 
+@@ -516,7 +507,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	platform_set_drvdata(pdev, pcie);
+ 	INIT_LIST_HEAD(&pcie->ports);
+ 
+-	err = mtk_pcie_parse_and_add_res(pcie);
++	err = mtk_pcie_setup(pcie);
+ 	if (err)
+ 		return err;
+ 
 -- 
-2.10.0
+1.9.1
