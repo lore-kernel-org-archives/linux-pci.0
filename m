@@ -1,129 +1,208 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:7902 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753711AbdFSKIr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:08:47 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <guodong.xu@linaro.org>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>
-CC: <songxiaowei@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 0/3] add PCIe driver for Kirin PCIe
-Date: Mon, 19 Jun 2017 18:08:31 +0800
-Message-ID: <20170619100834.43321-1-songxiaowei@hisilicon.com>
+Return-Path: <SRS0=tCss=5Y=broadcom.com=srinath.mannam@kernel.org>
+Return-Path: <SRS0=tCss=5Y=broadcom.com=srinath.mannam@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170615222729.GJ12735@bhelgaas-glaptop.roam.corp.google.com>
+References: <1496135297-19680-1-git-send-email-srinath.mannam@broadcom.com> <20170615222729.GJ12735@bhelgaas-glaptop.roam.corp.google.com>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+Date: Mon, 19 Jun 2017 22:32:11 +0530
+Message-ID: <CABe79T7Y2G8F2vwNXuy_T8j5R+PvyF9+UkVC6ezabYwPqucn6A@mail.gmail.com>
+Subject: Re: [RFC PATCH v2] pci: Concurrency issue in NVMe Init through PCIe switch
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Before Version Patches
-======================
-patch v9
-http://www.spinics.net/lists/linux-pci/msg61821.html
-patch V8
-http://www.spinics.net/lists/linux-pci/msg61715.html
-patch V7
-https://www.spinics.net/lists/linux-pci/msg61664.html
-patch V6
-https://www.spinics.net/lists/linux-pci/msg61610.html
+Hi Bjorn,
 
-patch V4
-https://www.spinics.net/lists/linux-pci/msg61406.html
+Thank you for the feedback.
 
-patch V3
-https://www.spinics.net/lists/linux-pci/msg61399.html
+On Fri, Jun 16, 2017 at 3:57 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> Hi Srinath,
+>
+> On Tue, May 30, 2017 at 02:38:17PM +0530, Srinath Mannam wrote:
+>> We found a concurrency issue in NVMe Init when we initialize
+>> multiple NVMe connected over PCIe switch.
+>>
+>> Setup details:
+>>  - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+>>  - Two NVMe cards are connected to PCIe RC through bridge as shown
+>>    in the below figure.
+>>
+>>                    [RC]
+>>                     |
+>>                  [BRIDGE]
+>>                     |
+>>                -----------
+>>               |           |
+>>             [NVMe]      [NVMe]
+>>
+>> Issue description:
+>> After PCIe enumeration completed NVMe driver probe function called
+>> for both the devices from two CPUS simultaneously.
+>> From nvme_probe, pci_enable_device_mem called for both the EPs. This
+>> function called pci_enable_bridge enable recursively until RC.
+>
+> Let's refine the changelog a little bit by removing details that
+> aren't pertinent.  The fact that this happens with NVMe on ARMv8 is
+> irrelevant.  It could happen on any SMP system.  The critical thing is
+> that drivers for two devices, both below the same disabled bridge,
+> called pci_enable_device() about the same time, and both tried to
+> enable the bridge simultaneously.
+>
+I will modify the changelog as generic.
 
-Changes between V8 and V7
-========================
-1. Fix the indent issues according to the review comments from Bjorn:
-   (1) The value of reg is right-aligned in both dtsi file and Documentation file.
-   (2) Re-indent the space of macro defination pointed out by Bjorn.
-   (3) Adjust the space in 'struct kirin_pcie' defination.
-   (4) Use dev replace of pdev->dev in function  kirin_pcie_get_clk and kirin_pcie_get_resource.
-   (5) Aligned params with '(' in function kirin_apb_ctrl_writel and several others.
-2. Fix the issues that compitable value in Documentation was different with .dtsi file.
-3. For dependance during compiling, the dtsi patch is deleted, and it was merged in patch[1].
-4. The indent style issues will be pull with MSI-patch in the next weeks;
+>> Inside pci_enable_bridge function, at two places concurrency issue is
+>> observed.
+>>
+>> Place 1:
+>>   CPU 0:
+>>     1. Done Atomic increment dev->enable_cnt
+>>        in pci_enable_device_flags
+>>     2. Inside pci_enable_resources
+>>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+>>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>   CPU 1:
+>>     1. Check pci_is_enabled in function pci_enable_bridge
+>>        and it is true
+>>     2. Check (!dev->is_busmaster) also true
+>>     3. Gone into pci_set_master
+>>     4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+>>     5. Ready to set PCI_COMMAND_MASTER (0x4) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>
+>> By the time of last point for both the CPUs are read value 0 and
+>> ready to write 2 and 4.
+>> After last point final value in PCI_COMMAND register is 4 instead of 6.
+>>
+>> Place 2:
+>>   CPU 0:
+>>     1. Done Atomic increment dev->enable_cnt in
+>>        pci_enable_device_flags
+>>
+>> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+>> ---
+>> Changes since v1:
+>>  - Used mutex to syncronize pci_enable_bridge
+>>
+>>  drivers/pci/pci.c   | 4 ++++
+>>  drivers/pci/probe.c | 1 +
+>>  include/linux/pci.h | 1 +
+>>  3 files changed, 6 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index b01bd5b..5bff3e7 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -1347,7 +1347,9 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>>  {
+>>       struct pci_dev *bridge;
+>>       int retval;
+>> +     struct mutex *lock = &dev->bridge_lock;
+>>
+>> +     mutex_lock(lock);
+>
+> I don't think it's necessary to hold the lock until we call
+> pci_set_master() or pci_enable_device(), is it?  E.g., we shouldn't
+> need to hold the lock for "dev" while we call pci_enable_bridge() for
+> its upstream bridge.
+We see the issue because of pci_set_master() and pci_enable_device()
+are not syncronous. So we must take the lock for both pci_set_master() and
+pci_enable_device(). As per your suggestion given in previous patch to avoid
+concurrency using mutex in the struct pci_host_bridge causes dead lock,
+because pci_enable_device_flags is calling recursively through pci_host_bridge.
+So I have taken separate lock for each pcie bridge. In the case of common bridge
+enable only this bridge lock will be taken by more than one CPUs.
 
-patch[1]: https://www.spinics.net/lists/arm-kernel/msg588944.html
+We can take lock after pci_enable_bridge function call also.
 
-=========================
-Changes between V8 and V7
-=========================
-1. Fix the indent issues in Documentation, dtsi file and macro defination.
-2. Replace pdev->dev with dev in kirin_pcie_get_resource and 
-   kirin_pcie_get_clk functions.
-3. Put variables "pci" and "kirin_pcie" to be initialized at first
-   in kirin_pcie_wr_own_config, kirin_pcie_read_dbi and other functions.
-4. Add space before blankets in "Low power mode(L1 ".
-5. Short the Makefile sentence to lower than 80 characters
-   and delete reduntant words.
-6. Use word 'located' instead of the wrong one 'lacated'.
-7. Fix the problem of return value type.
+             [BR0] (Host bridge)
+                 |
+              [BR1]
+                 |
+              [BR2]
+                |
+       -----------------
+      |                    |
+  [BR3]               [BR4]
+     |                     |
+  [DEV1]           [DEV2]
 
-Changes between V8 and V7
-=========================
-1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
+In the above case, lock tried by both cpus only at BR2, BR1 and BR0 because
+they are common for both the devices. If we take the lock before
+pci_enable_bridge
+one CPU say CPU0 get the lock and CPU1 is waiting until first CPU completes
+all the pci_set_master() and pci_enable_device() completed for all the remaining
+common bridges.
+If we take lock after pci_enable_bridge both CPUs traverse until BR0.
+one CPU say
+CPU0 get the lock CPU1 wait for the lock until bridge initialization completes.
+after bridge enable both CPUs return back to pci_enable_bridge function
+to enable BR1, then CPU0 will take the lock CPU1 will wait and both CPUs
+return to BR2 then CPU0 will take the lock and CPU1 will wait for the lock.
+this case little CPU1 execution is more except everything is fine.
 
-Changes between V7 and V6
-=========================
-1. add enumeration log Based on Hikey960 Board with these patches.
-2. fix issues as fellows:
-   (1) delete reduntant blankets in macro defination,
-   (2) add blank line in  kirin_pcie_clk_ctrl function.
-   (3) Fix compitable property in DT with the SoC name,
-       for example "hisilicon,kirin960-pcie".
+>
+>>       bridge = pci_upstream_bridge(dev);
+>>       if (bridge)
+>>               pci_enable_bridge(bridge);
+>> @@ -1355,6 +1357,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>>       if (pci_is_enabled(dev)) {
+>>               if (!dev->is_busmaster)
+>>                       pci_set_master(dev);
+>> +             mutex_unlock(lock);
+>
+> It's not a big deal either way, but I probably would write this with a
+> single unlock at the end and a goto here.
+I will add goto here.
+>
+>>               return;
+>>       }
+>>
+>> @@ -1363,6 +1366,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>>               dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+>>                       retval);
+>>       pci_set_master(dev);
+>> +     mutex_unlock(lock);
+>>  }
+>>
+>>  static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 19c8950..1c25d1c 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -880,6 +880,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+>>       child->dev.parent = child->bridge;
+>>       pci_set_bus_of_node(child);
+>>       pci_set_bus_speed(child);
+>> +     mutex_init(&bridge->bridge_lock);
+>>
+>>       /* Set up default resource pointers and names.. */
+>>       for (i = 0; i < PCI_BRIDGE_RESOURCE_NUM; i++) {
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 33c2b0b..7e88f41 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -266,6 +266,7 @@ struct pci_dev {
+>>       void            *sysdata;       /* hook for sys-specific extension */
+>>       struct proc_dir_entry *procent; /* device entry in /proc/bus/pci */
+>>       struct pci_slot *slot;          /* Physical slot this device is in */
+>> +     struct mutex bridge_lock;
+>
+> I don't really like adding a per-device lock just for this unusual
+> case.  Can you use the existing device_lock() instead?
+>
+Yes using device_lock is good idea.
+with this lock we don't have issues of nexted locking in this context.
+I will update the code.
 
-Changes between V6 and V4
-=========================
-1. seperate Document from .dtsi patch.
-2. fix issues according to review comments
-   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
-   patch post method and so on.
+>>       unsigned int    devfn;          /* encoded device & function index */
+>>       unsigned short  vendor;
+>> --
+>> 2.7.4
+>>
 
-Enumeration log
-===============
-These test logs come from patches running on Hikey960 Board
-(1) Connect with Atheros Communications WIFI
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
-	pci 0000:01:00.0: supports D1
-	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
-	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276	
-
-
-*** BLURB HERE ***
-
-Xiaowei Song (4):
-  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-  ARM4: defconfig: Enable  Kirin PCIe
-
- .../devicetree/bindings/pci/kirin-pcie.txt         |  55 +++
- arch/arm64/configs/defconfig                       |   1 +
- drivers/pci/dwc/Kconfig                            |  10 +
- drivers/pci/dwc/Makefile                           |   1 +
- drivers/pci/dwc/pcie-kirin.c                       | 517 +++++++++++++++++++++
- 6 files changed, 617 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
- create mode 100644 drivers/pci/dwc/pcie-kirin.c
-
--- 
-2.11.GIT
+Regards,
+srinath
