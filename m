@@ -1,144 +1,220 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 4/6] PCI / PM: Simplify device wakeup settings code
+Date: Mon, 19 Jun 2017 23:35:34 +0200
+Message-ID: <6082855.gb7lhtNroi@aspire.rjw.lan>
+In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170531064340.0dcec477@w520.home>
-References: <1496230412-19028-1-git-send-email-gakula@caviumnetworks.com>
- <20170531064340.0dcec477@w520.home>
-From: Geetha Akula <geethasowjanya.akula@gmail.com>
-Date: Fri, 2 Jun 2017 11:14:27 +0530
-Message-ID: <CANHdaiYhosBfcUdtQT5pJN2bc93eqRJeaFSYHBmLjsFPHzLfvw@mail.gmail.com>
-Subject: Re: [PATCH] PCI/PM: Set D3 power state only if the end device
- supports it.
-To: Alex Williamson <alex.williamson@redhat.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Geetha sowjanya <gakula@caviumnetworks.com>,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- jcm@redhat.com, bhelgaas@google.com, Sunil Goutham <sgoutham@cavium.com>,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 31, 2017 at 6:13 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Wed, 31 May 2017 17:03:32 +0530
-> Geetha sowjanya <gakula@caviumnetworks.com> wrote:
->
->> Pci driver doesn't check if the device supports D3hot/D3cold power states
->> while setting these power states. The device that doesn't support these
->> states will fail when a driver like vfio try to do D0->D3 power transition.
->
->
-> That's because support for D0 and D3 device states is REQUIRED by the
-> PCIe spec (Rev 3.1a, 7.6).  Is this yet more non-spec compliance?
-> Thanks,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Hi Alex,
+After previous changes it is not necessary to distinguish between
+device wakeup for run time and device wakeup from system sleep states
+any more, so rework the PCI device wakeup settings code accordingly.
 
-The issue is seen with the LSI sata cards SAS3008 SAS-3 and SAS-2
- (vendor id: 1000 device id: 0087/0097). Both cards only support D1, D2
-power state. This device fails when vfio driver tries to set the power
-state to D3hot. The issue is seen across platforms.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-acpi.c   |    3 +--
+ drivers/pci/pci-driver.c |    2 +-
+ drivers/pci/pci.c        |   36 ++++++++++--------------------------
+ drivers/pci/pci.h        |    9 ++-------
+ include/linux/pci.h      |    9 +--------
+ 5 files changed, 15 insertions(+), 44 deletions(-)
 
-Do you recommend to implement quirk for these devices?
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -616,8 +616,7 @@ static const struct pci_platform_pm_ops
+ 	.set_state = acpi_pci_set_power_state,
+ 	.get_state = acpi_pci_get_power_state,
+ 	.choose_state = acpi_pci_choose_state,
+-	.sleep_wake = acpi_pci_wakeup,
+-	.run_wake = acpi_pci_wakeup,
++	.set_wakeup = acpi_pci_wakeup,
+ 	.need_resume = acpi_pci_need_resume,
+ };
+ 
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -574,8 +574,7 @@ static const struct pci_platform_pm_ops
+ int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+ {
+ 	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
+-	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
+-	    !ops->need_resume)
++	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
+ 		return -EINVAL;
+ 	pci_platform_pm = ops;
+ 	return 0;
+@@ -603,16 +602,10 @@ static inline pci_power_t platform_pci_c
+ 			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
+ }
+ 
+-static inline int platform_pci_sleep_wake(struct pci_dev *dev, bool enable)
++static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
+ {
+ 	return pci_platform_pm ?
+-			pci_platform_pm->sleep_wake(dev, enable) : -ENODEV;
+-}
+-
+-static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable)
+-{
+-	return pci_platform_pm ?
+-			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
++			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
+ }
+ 
+ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+@@ -1889,10 +1882,9 @@ void pci_pme_active(struct pci_dev *dev,
+ EXPORT_SYMBOL(pci_pme_active);
+ 
+ /**
+- * __pci_enable_wake - enable PCI device as wakeup event source
++ * pci_enable_wake - enable PCI device as wakeup event source
+  * @dev: PCI device affected
+  * @state: PCI state from which device will issue wakeup events
+- * @runtime: True if the events are to be generated at run time
+  * @enable: True to enable event generation; false to disable
+  *
+  * This enables the device as a wakeup event source, or disables it.
+@@ -1908,14 +1900,10 @@ EXPORT_SYMBOL(pci_pme_active);
+  * Error code depending on the platform is returned if both the platform and
+  * the native mechanism fail to enable the generation of wake-up events
+  */
+-int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+-		      bool runtime, bool enable)
++int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
+ {
+ 	int ret = 0;
+ 
+-	if (enable && !runtime && !device_may_wakeup(&dev->dev))
+-		return -EINVAL;
+-
+ 	/*
+ 	 * Don't do the same thing twice in a row for one device, but restore
+ 	 * PME Enable in case it has been updated by config space restoration.
+@@ -1938,24 +1926,20 @@ int __pci_enable_wake(struct pci_dev *de
+ 			pci_pme_active(dev, true);
+ 		else
+ 			ret = 1;
+-		error = runtime ? platform_pci_run_wake(dev, true) :
+-					platform_pci_sleep_wake(dev, true);
++		error = platform_pci_set_wakeup(dev, true);
+ 		if (ret)
+ 			ret = error;
+ 		if (!ret)
+ 			dev->wakeup_prepared = true;
+ 	} else {
+-		if (runtime)
+-			platform_pci_run_wake(dev, false);
+-		else
+-			platform_pci_sleep_wake(dev, false);
++		platform_pci_set_wakeup(dev, false);
+ 		pci_pme_active(dev, false);
+ 		dev->wakeup_prepared = false;
+ 	}
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL(__pci_enable_wake);
++EXPORT_SYMBOL(pci_enable_wake);
+ 
+ /**
+  * pci_wake_from_d3 - enable/disable device to wake up from D3_hot or D3_cold
+@@ -2097,12 +2081,12 @@ int pci_finish_runtime_suspend(struct pc
+ 
+ 	dev->runtime_d3cold = target_state == PCI_D3cold;
+ 
+-	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
++	pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
+ 
+ 	error = pci_set_power_state(dev, target_state);
+ 
+ 	if (error) {
+-		__pci_enable_wake(dev, target_state, true, false);
++		pci_enable_wake(dev, target_state, false);
+ 		dev->runtime_d3cold = false;
+ 	}
+ 
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -1097,8 +1097,7 @@ int pci_set_power_state(struct pci_dev *
+ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
+ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
+ void pci_pme_active(struct pci_dev *dev, bool enable);
+-int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+-		      bool runtime, bool enable);
++int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
+ int pci_wake_from_d3(struct pci_dev *dev, bool enable);
+ int pci_prepare_to_sleep(struct pci_dev *dev);
+ int pci_back_from_sleep(struct pci_dev *dev);
+@@ -1108,12 +1107,6 @@ void pci_pme_wakeup_bus(struct pci_bus *
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
+ 
+-static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+-				  bool enable)
+-{
+-	return __pci_enable_wake(dev, state, false, enable);
+-}
+-
+ /* PCI Virtual Channel */
+ int pci_save_vc_state(struct pci_dev *dev);
+ void pci_restore_vc_state(struct pci_dev *dev);
+Index: linux-pm/drivers/pci/pci.h
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.h
++++ linux-pm/drivers/pci/pci.h
+@@ -47,11 +47,7 @@ int pci_probe_reset_function(struct pci_
+  *                platform; to be used during system-wide transitions from a
+  *                sleeping state to the working state and vice versa
+  *
+- * @sleep_wake: enables/disables the system wake up capability of given device
+- *
+- * @run_wake: enables/disables the platform to generate run-time wake-up events
+- *		for given device (the device's wake-up capability has to be
+- *		enabled by @sleep_wake for this feature to work)
++ * @set_wakeup: enables/disables wakeup capability for the device
+  *
+  * @need_resume: returns 'true' if the given device (which is currently
+  *		suspended) needs to be resumed to be configured for system
+@@ -65,8 +61,7 @@ struct pci_platform_pm_ops {
+ 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
+ 	pci_power_t (*get_state)(struct pci_dev *dev);
+ 	pci_power_t (*choose_state)(struct pci_dev *dev);
+-	int (*sleep_wake)(struct pci_dev *dev, bool enable);
+-	int (*run_wake)(struct pci_dev *dev, bool enable);
++	int (*set_wakeup)(struct pci_dev *dev, bool enable);
+ 	bool (*need_resume)(struct pci_dev *dev);
+ };
+ 
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -1216,7 +1216,7 @@ static int pci_pm_runtime_resume(struct
+ 
+ 	pci_restore_standard_config(pci_dev);
+ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+-	__pci_enable_wake(pci_dev, PCI_D0, true, false);
++	pci_enable_wake(pci_dev, PCI_D0, false);
+ 	pci_fixup_device(pci_fixup_resume, pci_dev);
+ 
+ 	rc = pm->runtime_resume(dev);
 
-
-Kernel crash when LSI card attached to vfio driver.
-
-[74259.180968] Unhandled fault: synchronous external abort
-(0x96000610) at 0x0000000033a80008
-[74259.189223] Internal error: : 96000610 [#1] SMP
-[74259.193740] Modules linked in: vfio_pci irqbypass vfio_virqfd
-vfio_iommu_type1 vfio
-[74259.201389] CPU: 104 PID: 2714 Comm: bash Not tainted 4.11.0+ #1
-[74259.207382] Hardware name: www.cavium.com Cavium CN99XX/CN99XX,
-BIOS 00:03:23 May 30 2017
-[74259.215545] task: ffff800ec6680000 task.stack: ffff800ec0e00000
-[74259.221454] PC is at pci_generic_config_read+0xa0/0xf0
-[74259.226579] LR is at pci_generic_config_read+0x48/0xf0
-[74259.231704] pc : [<ffff0000085a5a60>] lr : [<ffff0000085a5a08>]
-pstate: 604001c9
-[74259.239084] sp : ffff800ec0e03900
-[74259.242386] x29: ffff800ec0e03900 x28: ffff800ec6680000
-[74259.247685] x27: 0000000000001000 x26: 0000000000000097
-[74259.252984] x25: 0000000000000140 x24: ffff000009466000
-[74259.258283] x23: 0000000000000054 x22: 0000000000000000
-[74259.263581] x21: ffff800ec0e03994 x20: 0000000000000002
-[74259.268880] x19: ffff800f4c913800 x18: ffff0000091d3c10
-[74259.274179] x17: 0000fffee43373d0 x16: ffff000008289c68
-[74259.279477] x15: ffff800ec56b991c x14: 0000000000000000
-[74259.284776] x13: 0000000000000040 x12: 0000000000000000
-[74259.290074] x11: 0000000000000220 x10: 00000000000009b0
-[74259.295373] x9 : ffff800ec0e03800 x8 : ffff800ec6680a10
-[74259.300671] x7 : 0000000000000002 x6 : 0000000000000000
-[74259.305970] x5 : 0000000000000013 x4 : ffff800f4c920500
-[74259.311269] x3 : 0000000001300054 x2 : 0000000000000014
-[74259.316567] x1 : ffff000010000000 x0 : ffff000011300054
-[74259.321866] [.......]
-
-[74259.860266] [<ffff0000085a5a60>] pci_generic_config_read+0xa0/0xf0
-[74259.866434] [<ffff0000085a583c>] pci_bus_read_config_word+0xb4/0xd8
-[74259.872688] [<ffff0000085ad048>] pci_raw_set_power_state+0x108/0x250
-[74259.879028] [<ffff0000085b02ec>] pci_set_power_state+0xc4/0x160
-[74259.884939] [<ffff000000dc0e88>] vfio_pci_probe+0xf0/0x1c8 [vfio_pci]
-[74259.891367] [<ffff0000085b42f4>] local_pci_probe+0x44/0xb0
-[74259.896839] [<ffff0000085b50c0>] pci_device_probe+0x140/0x170
-[74259.902574] [<ffff0000086f0dac>] driver_probe_device+0x2bc/0x450
-[74259.908568] [<ffff0000086f1064>] __driver_attach+0x124/0x128
-[74259.914214] [<ffff0000086ee610>] bus_for_each_dev+0x88/0xe8
-[74259.919773] [<ffff0000086f0500>] driver_attach+0x30/0x40
-[74259.925072] [<ffff0000085b3af0>] pci_add_dynid+0xa8/0xd0
-[74259.930370] [<ffff0000085b472c>] store_new_id+0x144/0x198
-[74259.935756] [<ffff0000086ee0a8>] drv_attr_store+0x40/0x58
-[74259.941143] [<ffff000008310ea4>] sysfs_kf_write+0x5c/0x78
-[74259.946528] [<ffff000008310094>] kernfs_fop_write+0xbc/0x1e8
-[74259.952176] [<ffff0000082877d8>] __vfs_write+0x60/0x168
-[74259.957387] [<ffff000008288b20>] vfs_write+0xa8/0x1b8
-[74259.962426] [<ffff000008289cd4>] SyS_write+0x6c/0xd8
-[74259.967378] [<ffff0000080833b0>] el0_svc_naked+0x24/0x28
-[74259.972677] Code: a9425bf5 f9401bf7 a8c47bfd d65f03c0 (79400000)
-[74259.978794] ---[ end trace e0cfdf3c1d94e7aa ]---
-
-
-Thank you,
-Geetha.
-
->
-> Alex
->
->
->> This patch adds a check that allows to set D3 power state only
->> for the supported devices.
->>
->> Signed-off-by: Geetha sowjanya <gakula@caviumnetworks.com>
->> ---
->>  drivers/pci/pci.c |    3 ++-
->>  1 files changed, 2 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 563901c..cadd046 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -661,7 +661,8 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
->>
->>       /* check if this device supports the desired state */
->>       if ((state == PCI_D1 && !dev->d1_support)
->> -        || (state == PCI_D2 && !dev->d2_support))
->> +        || (state == PCI_D2 && !dev->d2_support)
->> +        || (state == PCI_D3hot && !pci_pme_capable(dev, state)))
->>               return -EIO;
->>
->>       pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
->
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
