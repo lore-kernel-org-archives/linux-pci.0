@@ -1,70 +1,32 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Jun 2017 17:49:57 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 3/4] PCI: versatile: fix typo
-Message-ID: <20170627224957.GG17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170621215323.3921382-1-arnd@arndb.de>
- <20170621215323.3921382-3-arnd@arndb.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:40292 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751919AbdFSPGD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 11:06:03 -0400
+Date: Mon, 19 Jun 2017 08:05:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-pci@vger.kernel.org
+Subject: Re: PCI endpoint API question
+Message-ID: <20170619150547.GA22227@infradead.org>
+References: <20170618140530.GA22519@infradead.org>
+ <f7596eb9-cb96-7b82-699a-c8a1f7e85b6e@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170621215323.3921382-3-arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Brian Norris <briannorris@chromium.org>, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f7596eb9-cb96-7b82-699a-c8a1f7e85b6e@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 21, 2017 at 11:53:01PM +0200, Arnd Bergmann wrote:
-> There is no 'dev' variable in this function:
+On Mon, Jun 19, 2017 at 03:20:29PM +0530, Kishon Vijay Abraham I wrote:
+> > for writes to BARs - is this and intentional omission?  It seems
+> > like the only current option is to poll for changes.
 > 
-> drivers/pci/host/pci-versatile.c: In function 'versatile_pci_probe':
-> drivers/pci/host/pci-versatile.c:131:38: error: 'dev' undeclared (first use in this function); did you mean 'pdev'?
+> You mean write to the address that's mapped to BAR in the EP side?
 > 
-> This passes the device embedded in the platform_device instead.
-> 
-> Fixes: 433d2671da1b ("PCI: versatile: Convert PCI scan API to pci_scan_root_bus_bridge()")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> PCI doesn't allow hosts to interrupt the EP (AFAIK), so we have to poll for any
+> writes by the host to EP memory.
 
-Folded into Lorenzo's series on pci/enumeration, thanks!
-
-> ---
->  drivers/pci/host/pci-versatile.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-> index 3be25a9dd29a..f572c921cdd4 100644
-> --- a/drivers/pci/host/pci-versatile.c
-> +++ b/drivers/pci/host/pci-versatile.c
-> @@ -128,7 +128,7 @@ static int versatile_pci_probe(struct platform_device *pdev)
->  	struct pci_host_bridge *bridge;
->  	LIST_HEAD(pci_res);
->  
-> -	bridge = devm_pci_alloc_host_bridge(dev, 0);
-> +	bridge = devm_pci_alloc_host_bridge(&pdev->dev, 0);
->  	if (!bridge)
->  		return -ENOMEM;
->  
-> -- 
-> 2.9.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+At least out on the bus each MMIO access translates to PCIe Memory
+Read/Write TLPs, so the EP itself for sure gets a notification.  I don't
+really know enough about existing programmable endpoint IP to know
+how that could be forwarded to software, though.
