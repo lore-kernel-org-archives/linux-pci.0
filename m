@@ -1,259 +1,216 @@
-Return-Path: <SRS0=q0Pu=5Z=intel.com=ley.foon.tan@kernel.org>
-Return-Path: <SRS0=q0Pu=5Z=intel.com=ley.foon.tan@kernel.org>
-Message-ID: <1497924151.42572.10.camel@intel.com>
-Subject: Re: [PATCH v5 1/4] PCI: xilinx: Create legacy IRQ domain with size 5
-From: Ley Foon Tan <ley.foon.tan@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Paul Burton <paul.burton@imgtec.com>, linux-pci@vger.kernel.org, Bharat
- Kumar Gogada <bharatku@xilinx.com>, Ravikiran Gummaluri
- <rgummal@xilinx.com>, Bjorn Helgaas <bhelgaas@google.com>, Michal Simek
- <michal.simek@xilinx.com>,  linux-mips@linux-mips.org, Thomas Gleixner
- <tglx@linutronix.de>, Ley Foon Tan <lftan@altera.com>, Marc Zyngier
- <marc.zyngier@arm.com>
-Date: Tue, 20 Jun 2017 10:02:31 +0800
-In-Reply-To: <1497923734.42572.8.camel@intel.com>
-References: <20170617195741.12757-1-paul.burton@imgtec.com>
-	 <20170617195741.12757-2-paul.burton@imgtec.com>
-	 <20170619234708.GG554@bhelgaas-glaptop.roam.corp.google.com>
-	 <1497919094.42572.3.camel@intel.com>
-	 <20170620014903.GI554@bhelgaas-glaptop.roam.corp.google.com>
-	 <1497923734.42572.8.camel@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59953 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750903AbdFSVps (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 17:45:48 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 6/6] PM / core: Drop run_wake flag from struct dev_pm_info
+Date: Mon, 19 Jun 2017 23:37:33 +0200
+Message-ID: <1831898.nt9pKhSvh2@aspire.rjw.lan>
+In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-06-20 at 09:55 +0800, Ley Foon Tan wrote:
-> On Mon, 2017-06-19 at 20:49 -0500, Bjorn Helgaas wrote:
-> >=20
-> > [+cc Marc]
-> >=20
-> > On Tue, Jun 20, 2017 at 08:38:14AM +0800, Ley Foon Tan wrote:
-> > >=20
-> > >=20
-> > > On Mon, 2017-06-19 at 18:47 -0500, Bjorn Helgaas wrote:
-> > > >=20
-> > > >=20
-> > > > [+cc Thomas, Ley Foon]
-> > > >=20
-> > > > On Sat, Jun 17, 2017 at 12:57:38PM -0700, Paul Burton wrote:
-> > > > >=20
-> > > > >=20
-> > > > >=20
-> > > > > The driver expects to use hardware IRQ numbers 1 through 4
-> > > > > for
-> > > > > INTX
-> > > > > interrupts, but only creates an IRQ domain of size 4 (ie. IRQ
-> > > > > numbers 0
-> > > > > through 3). This results in a warning from
-> > > > > irq_domain_associate
-> > > > > when it
-> > > > > is called with hwirq=3D4:
-> > > > >=20
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0WARNING: CPU: 0 PID: 1 at kernel/ir=
-q/irqdomain.c:365
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0irq_domain_=
-associate+0x170/0x220
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0error: hwirq 0x4 is too large for d=
-ummy
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Modules linked in:
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0CPU: 0 PID: 1 Comm: swapper/0 Taint=
-ed: G=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0W
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A04.12.0-rc5-=
-00126-g19e1b3a10aad-dirty #427
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Stack : 0000000000000000 0000000000=
-000004
-> > > > > 0000000000000006
-> > > > > ffffffff8092c78a
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A00000000000000061 ffffffff8018bf60
-> > > > > 0000000000000000
-> > > > > 0000000000000000
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0ffffffff8088c287 ffffffff80811d18
-> > > > > a8000000ffc60000
-> > > > > ffffffff80926678
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A00000000000000001 0000000000000000
-> > > > > ffffffff80887880
-> > > > > ffffffff80960000
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0ffffffff80920000 ffffffff801e6744
-> > > > > ffffffff80887880
-> > > > > a8000000ffc4f8f8
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0000000000000089c ffffffff8018d260
-> > > > > 0000000000010000
-> > > > > ffffffff80811d18
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A00000000000000000 0000000000000001
-> > > > > 0000000000000000
-> > > > > 0000000000000000
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A00000000000000000 a8000000ffc4f840
-> > > > > 0000000000000000
-> > > > > ffffffff8042cf34
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A00000000000000000 0000000000000000
-> > > > > 0000000000000000
-> > > > > 0000000000040c00
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A00000000000000000 ffffffff8010d1c8
-> > > > > 0000000000000000
-> > > > > ffffffff8042cf34
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0...
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Call Trace:
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff8010d1c8>] show_stack+0x8=
-0/0xa0
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff8042cf34>] dump_stack+0xd=
-4/0x110
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff8013ea98>] __warn+0xf0/0x=
-108
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff8013eb14>] warn_slowpath_=
-fmt+0x3c/0x48
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff80196528>] irq_domain_ass=
-ociate+0x170/0x220
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff80196bf0>] irq_create_map=
-ping+0x88/0x118
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff801976a8>]
-> > > > > irq_create_fwspec_mapping+0xb8/0x320
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff80197970>] irq_create_of_=
-mapping+0x60/0x70
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff805d1318>] of_irq_parse_a=
-nd_map_pci+0x20/0x38
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff8049c210>] pci_fixup_irqs=
-+0x60/0xe0
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff8049cd64>] xilinx_pcie_pr=
-obe+0x28c/0x478
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff804e8ca8>] platform_drv_p=
-robe+0x50/0xd0
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff804e73a4>] driver_probe_d=
-evice+0x2c4/0x3a0
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff804e7544>] __driver_attac=
-h+0xc4/0xd0
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff804e5254>] bus_for_each_d=
-ev+0x64/0xa8
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff804e5e40>] bus_add_driver=
-+0x1f0/0x268
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff804e8000>] driver_registe=
-r+0x68/0x118
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff801001a4>] do_one_initcal=
-l+0x4c/0x178
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff808d3ca8>] kernel_init_fr=
-eeable+0x204/0x2b0
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff80730b68>] kernel_init+0x=
-10/0xf8
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0[<ffffffff80106218>] ret_from_kerne=
-l_thread+0x14/0x1c
-> > > > >=20
-> > > > > This patch avoids that warning by creating the legacy IRQ
-> > > > > domain
-> > > > > with
-> > > > > size 5 rather than 4, allowing it to cover the hwirq=3D4/INTD
-> > > > > case.
-> > > > >=20
-> > > > > Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-> > > > > Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > > > Cc: Michal Simek <michal.simek@xilinx.com>
-> > > > > Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-> > > > > Cc: linux-pci@vger.kernel.org
-> > > > >=20
-> > > > > ---
-> > > > >=20
-> > > > > Changes in v5:
-> > > > > - New patch; replacing "PCI: xilinx: Fix INTX irq dispatch".
-> > > > >=20
-> > > > > Changes in v4: None
-> > > > > Changes in v3: None
-> > > > > Changes in v2: None
-> > > > >=20
-> > > > > =C2=A0drivers/pci/host/pcie-xilinx.c | 2 +-
-> > > > > =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
-> > > > >=20
-> > > > > diff --git a/drivers/pci/host/pcie-xilinx.c
-> > > > > b/drivers/pci/host/pcie-xilinx.c
-> > > > > index 2fe2df51f9f8..94c71fb91648 100644
-> > > > > --- a/drivers/pci/host/pcie-xilinx.c
-> > > > > +++ b/drivers/pci/host/pcie-xilinx.c
-> > > > > @@ -524,7 +524,7 @@ static int
-> > > > > xilinx_pcie_init_irq_domain(struct
-> > > > > xilinx_pcie_port *port)
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return -ENODEV;
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
-> > > > >=20
-> > > > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0port->leg_domain =3D
-> > > > > irq_domain_add_linear(pcie_intc_node,
-> > > > > 4,
-> > > > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0port->leg_domain =3D
-> > > > > irq_domain_add_linear(pcie_intc_node,
-> > > > > 1 +
-> > > > > 4,
-> > > > I don't understand this.=C2=A0=C2=A0Several drivers call
-> > > > irq_domain_add_linear() with
-> > > > a size of 4:
-> > > >=20
-> > > > =C2=A0 dra7xx_pcie_init_irq_domain
-> > > > =C2=A0 ks_dw_pcie_host_init
-> > > > =C2=A0 advk_pcie_init_irq_domain
-> > > > =C2=A0 faraday_pci_setup_cascaded_irq
-> > > > =C2=A0 rockchip_pcie_init_irq_domain
-> > > > =C2=A0 nwl_pcie_init_irq_domain
-> > > >=20
-> > > > Only one other in drivers/pci uses a size of 5:
-> > > >=20
-> > > > =C2=A0 altera_pcie_init_irq_domain
-> > > >=20
-> > > > Why can't we use a size of 4 for all of them?=C2=A0=C2=A0We only ha=
-ve
-> > > > INTA-
-> > > > INTD.=C2=A0=C2=A0Are
-> > > > altera and xilinx missing something to apply an offset from the
-> > > > 0-3
-> > > > space
-> > > > to the 1-4 space?
-> > > We have the same discussion before in 2016: https://lkml.org/lkml
-> > > /2
-> > > 016/
-> > > 8/30/198
-> > Thanks for digging that out.=C2=A0=C2=A0I knew we'd discussed this befo=
-re,
-> > but
-> > I
-> > couldn't find it in the archives.=C2=A0=C2=A0I don't think anybody was =
-really
-> > satisfied with the outcome, but we accepted it to make forward
-> > progress.
-> >=20
-> > >=20
-> > >=20
-> > > This is because legacy interrupt is start with index 1 instead of
-> > > 0.
-> > I'm not buying this.=C2=A0=C2=A0Your argument was that "the hwirq for l=
-egacy
-> > interrupts will start at 0x1 to 0x4 (INTA to INTD) and these values
-> > are as per PCIe specification for legacy interrupts.=C2=A0=C2=A0So thes=
-e
-> > cannot
-> > be numbered from 0."
-> >=20
-> > But all the other drivers I mentioned get along with the 0-3 range
-> > somehow.=C2=A0=C2=A0If there's something different about altera and xil=
-inx
-> > that
-> > means they can't use the same solution the others do, I'd like to
-> > know
-> > what it is.
-> I'm not sure those drivers with index 0-3 range tested with 4 legacy
-> interrupts or not. It will not has error until someone requesting 4
-> legacy interrupts. We see this error when we enabling multi-function
-> endpoint (4 functions). I believe this is not altera or xilinx
-> specific.
->=20
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-It is broken in=C2=A0dra7xx too.
-https://lkml.org/lkml/2016/9/14/241
+The run_wake flag in struct dev_pm_info is used to indicate whether
+or not the device is capable of generating remote wakeup signals at
+run time (or in the system working state), but the distinction
+between runtime remote wakeup and system wakeup signaling has always
+been rather artificial.  The only practical reason for it to exist
+at the core level was that ACPI and PCI treated those two cases
+differently, but that's not the case any more after recent changes.
 
-Regards
-Ley Foon
+For this reason, get rid of the run_wake flag and, when applicable,
+use device_set_wakeup_capable() and device_can_wakeup() instead of
+device_set_run_wake() and device_run_wake(), respectively.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/pci_root.c     |    5 ++---
+ drivers/pci/pci-acpi.c      |    5 +----
+ drivers/pci/pci.c           |    6 +++---
+ drivers/pci/pcie/pme.c      |    2 +-
+ drivers/usb/dwc3/dwc3-pci.c |    3 +--
+ drivers/usb/host/uhci-pci.c |    2 +-
+ include/linux/pm.h          |    1 -
+ include/linux/pm_runtime.h  |   12 ------------
+ 8 files changed, 9 insertions(+), 27 deletions(-)
+
+Index: linux-pm/include/linux/pm.h
+===================================================================
+--- linux-pm.orig/include/linux/pm.h
++++ linux-pm/include/linux/pm.h
+@@ -584,7 +584,6 @@ struct dev_pm_info {
+ 	unsigned int		idle_notification:1;
+ 	unsigned int		request_pending:1;
+ 	unsigned int		deferred_resume:1;
+-	unsigned int		run_wake:1;
+ 	unsigned int		runtime_auto:1;
+ 	bool			ignore_children:1;
+ 	unsigned int		no_callbacks:1;
+Index: linux-pm/include/linux/pm_runtime.h
+===================================================================
+--- linux-pm.orig/include/linux/pm_runtime.h
++++ linux-pm/include/linux/pm_runtime.h
+@@ -76,16 +76,6 @@ static inline void pm_runtime_put_noidle
+ 	atomic_add_unless(&dev->power.usage_count, -1, 0);
+ }
+ 
+-static inline bool device_run_wake(struct device *dev)
+-{
+-	return dev->power.run_wake;
+-}
+-
+-static inline void device_set_run_wake(struct device *dev, bool enable)
+-{
+-	dev->power.run_wake = enable;
+-}
+-
+ static inline bool pm_runtime_suspended(struct device *dev)
+ {
+ 	return dev->power.runtime_status == RPM_SUSPENDED
+@@ -163,8 +153,6 @@ static inline void pm_runtime_forbid(str
+ static inline void pm_suspend_ignore_children(struct device *dev, bool enable) {}
+ static inline void pm_runtime_get_noresume(struct device *dev) {}
+ static inline void pm_runtime_put_noidle(struct device *dev) {}
+-static inline bool device_run_wake(struct device *dev) { return false; }
+-static inline void device_set_run_wake(struct device *dev, bool enable) {}
+ static inline bool pm_runtime_suspended(struct device *dev) { return false; }
+ static inline bool pm_runtime_active(struct device *dev) { return true; }
+ static inline bool pm_runtime_status_suspended(struct device *dev) { return false; }
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -608,8 +608,7 @@ static int acpi_pci_root_add(struct acpi
+ 		pcie_no_aspm();
+ 
+ 	pci_acpi_add_bus_pm_notifier(device);
+-	if (device->wakeup.flags.valid)
+-		device_set_run_wake(root->bus->bridge, true);
++	device_set_wakeup_capable(root->bus->bridge, device->wakeup.flags.valid);
+ 
+ 	if (hotadd) {
+ 		pcibios_resource_survey_bus(root->bus);
+@@ -649,7 +648,7 @@ static void acpi_pci_root_remove(struct
+ 	pci_stop_root_bus(root->bus);
+ 
+ 	pci_ioapic_remove(root);
+-	device_set_run_wake(root->bus->bridge, false);
++	device_set_wakeup_capable(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+ 	pci_remove_root_bus(root->bus);
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -739,7 +739,6 @@ static void pci_acpi_setup(struct device
+ 		return;
+ 
+ 	device_set_wakeup_capable(dev, true);
+-	device_set_run_wake(dev, true);
+ 	acpi_pci_wakeup(pci_dev, false);
+ }
+ 
+@@ -751,10 +750,8 @@ static void pci_acpi_cleanup(struct devi
+ 		return;
+ 
+ 	pci_acpi_remove_pm_notifier(adev);
+-	if (adev->wakeup.flags.valid) {
++	if (adev->wakeup.flags.valid)
+ 		device_set_wakeup_capable(dev, false);
+-		device_set_run_wake(dev, false);
+-	}
+ }
+ 
+ static bool pci_acpi_bus_match(struct device *dev)
+Index: linux-pm/drivers/pci/pcie/pme.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pcie/pme.c
++++ linux-pm/drivers/pci/pcie/pme.c
+@@ -300,7 +300,7 @@ static irqreturn_t pcie_pme_irq(int irq,
+  */
+ static int pcie_pme_can_wakeup(struct pci_dev *dev, void *ign)
+ {
+-	device_set_run_wake(&dev->dev, true);
++	device_set_wakeup_capable(&dev->dev, true);
+ 	return 0;
+ }
+ 
+Index: linux-pm/drivers/usb/dwc3/dwc3-pci.c
+===================================================================
+--- linux-pm.orig/drivers/usb/dwc3/dwc3-pci.c
++++ linux-pm/drivers/usb/dwc3/dwc3-pci.c
+@@ -230,7 +230,6 @@ static int dwc3_pci_probe(struct pci_dev
+ 	}
+ 
+ 	device_init_wakeup(dev, true);
+-	device_set_run_wake(dev, true);
+ 	pci_set_drvdata(pci, dwc);
+ 	pm_runtime_put(dev);
+ 
+@@ -310,7 +309,7 @@ static int dwc3_pci_runtime_suspend(stru
+ {
+ 	struct dwc3_pci		*dwc = dev_get_drvdata(dev);
+ 
+-	if (device_run_wake(dev))
++	if (device_can_wakeup(dev))
+ 		return dwc3_pci_dsm(dwc, PCI_INTEL_BXT_STATE_D3);
+ 
+ 	return -EBUSY;
+Index: linux-pm/drivers/usb/host/uhci-pci.c
+===================================================================
+--- linux-pm.orig/drivers/usb/host/uhci-pci.c
++++ linux-pm/drivers/usb/host/uhci-pci.c
+@@ -131,7 +131,7 @@ static int uhci_pci_init(struct usb_hcd
+ 
+ 	/* Intel controllers use non-PME wakeup signalling */
+ 	if (to_pci_dev(uhci_dev(uhci))->vendor == PCI_VENDOR_ID_INTEL)
+-		device_set_run_wake(uhci_dev(uhci), 1);
++		device_set_wakeup_capable(uhci_dev(uhci), true);
+ 
+ 	/* Set up pointers to PCI-specific functions */
+ 	uhci->reset_hc = uhci_pci_reset_hc;
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -2105,7 +2105,7 @@ bool pci_dev_run_wake(struct pci_dev *de
+ {
+ 	struct pci_bus *bus = dev->bus;
+ 
+-	if (device_run_wake(&dev->dev))
++	if (device_can_wakeup(&dev->dev))
+ 		return true;
+ 
+ 	if (!dev->pme_support)
+@@ -2118,7 +2118,7 @@ bool pci_dev_run_wake(struct pci_dev *de
+ 	while (bus->parent) {
+ 		struct pci_dev *bridge = bus->self;
+ 
+-		if (device_run_wake(&bridge->dev))
++		if (device_can_wakeup(&bridge->dev))
+ 			return true;
+ 
+ 		bus = bus->parent;
+@@ -2126,7 +2126,7 @@ bool pci_dev_run_wake(struct pci_dev *de
+ 
+ 	/* We have reached the root bus. */
+ 	if (bus->bridge)
+-		return device_run_wake(bus->bridge);
++		return device_can_wakeup(bus->bridge);
+ 
+ 	return false;
+ }
