@@ -1,124 +1,72 @@
-Return-Path: <SRS0=QdUY=6D=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=QdUY=6D=vodafone.de=deathsimple@kernel.org>
-Subject: Re: Resizeable PCI BAR support V5
-To: =?UTF-8?Q?Dieter_N=c3=bctzel?= <Dieter@nuetzel-hh.de>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
- dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org,
- linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
- <b71010ca149411909076e83d1c22b2b8@nuetzel-hh.de>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <92b1fd57-2ad0-ab7b-33e3-3f4227dcc2db@vodafone.de>
-Date: Fri, 30 Jun 2017 14:55:41 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <b71010ca149411909076e83d1c22b2b8@nuetzel-hh.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20170614082338.15673-20-guodong.xu@linaro.org>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+ <20170614082338.15673-20-guodong.xu@linaro.org>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 19 Jun 2017 14:43:43 +0200
+Message-ID: <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com>
+Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
+ hi3660 mmc
+To: Guodong Xu <guodong.xu@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ wangkefeng.wang@huawei.com, Arnd Bergmann <arnd@arndb.de>,
+ Linux PCI <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Wei Xu <xuwei5@hisilicon.com>, Peter Griffin <peter.griffin@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Li Wei <liwei213@huawei.com>, puck.chen@hisilicon.com,
+ xuejiancheng@hisilicon.com, zhangfei <zhangfei.gao@linaro.org>,
+ Lee Jones <lee.jones@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dieter,
-
-thanks a lot for testing that.
-
-> But I think my poor little FUJITSU PRIMERGY TX150 S7, Xeon X3470 
-> (Nehalem), PCIe 2.0, 24 GB is to old for this stuff... 
-Well, actually you only need to figure out how to enable a PCIe window 
-above the 4GB limit.
-
-Could be that the BIOS supports this with the ACPI tables (totally 
-unlikely) or you could try to dig up the Northbridge documentation for 
-this CPU from Intel and use my patch for the AMD CPUs as blueprint how 
-to do this on an Intel CPU as well.
-
-Fact is you GFX hardware is perfectly capable of doing this, it's just 
-that the BIOS/Motherboard didn't enabled a PCIe window per default to 
-avoid problems with 32bit OSes.
-
-Regards,
-Christian.
-
-Am 30.06.2017 um 01:51 schrieb Dieter Nützel:
-> Hello Christian,
+On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
+> Add bindings for hi3660 mmc support
 >
-> I've running this since you've sent it on-top of amd-staging-4.11. But 
-> I think my poor little FUJITSU PRIMERGY TX150 S7, Xeon X3470 
-> (Nehalem), PCIe 2.0, 24 GB is to old for this stuff...
+> Signed-off-by: Li Wei <liwei213@huawei.com>
+> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+> ---
+>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
+>  1 file changed, 1 insertion(+)
 >
-> [    1.066475] pci 0000:05:00.0: VF(n) BAR0 space: [mem 
-> 0x00000000-0x0003ffff 64bit] (contains BAR0 for 16 VFs)
-> [    1.066489] pci 0000:05:00.0: VF(n) BAR2 space: [mem 
-> 0x00000000-0x003fffff 64bit] (contains BAR2 for 16 VFs)
-> [    1.121656] pci 0000:00:1c.0: BAR 15: assigned [mem 
-> 0x80000000-0x801fffff 64bit pref]
-> [    1.121659] pci 0000:00:1c.6: BAR 15: assigned [mem 
-> 0x80200000-0x803fffff 64bit pref]
-> [    1.121662] pci 0000:01:00.0: BAR 6: assigned [mem 
-> 0xb0120000-0xb013ffff pref]
-> [    1.121681] pci 0000:05:00.0: BAR 6: assigned [mem 
-> 0xb0280000-0xb02fffff pref]
-> [    1.121683] pci 0000:05:00.0: BAR 9: no space for [mem size 
-> 0x00400000 64bit]
-> [    1.121684] pci 0000:05:00.0: BAR 9: failed to assign [mem size 
-> 0x00400000 64bit]
-> [    1.121685] pci 0000:05:00.0: BAR 7: no space for [mem size 
-> 0x00040000 64bit]
-> [    1.121687] pci 0000:05:00.0: BAR 7: failed to assign [mem size 
-> 0x00040000 64bit]
-> [    3.874180] amdgpu 0000:01:00.0: BAR 0: releasing [mem 
-> 0xc0000000-0xcfffffff 64bit pref]
-> [    3.874182] amdgpu 0000:01:00.0: BAR 2: releasing [mem 
-> 0xb0400000-0xb05fffff 64bit pref]
-> [    3.874198] pcieport 0000:00:03.0: BAR 15: releasing [mem 
-> 0xb0400000-0xcfffffff 64bit pref]
-> [    3.874215] pcieport 0000:00:03.0: BAR 15: no space for [mem size 
-> 0x300000000 64bit pref]
-> [    3.874217] pcieport 0000:00:03.0: BAR 15: failed to assign [mem 
-> size 0x300000000 64bit pref]
-> [    3.874221] amdgpu 0000:01:00.0: BAR 0: no space for [mem size 
-> 0x200000000 64bit pref]
-> [    3.874223] amdgpu 0000:01:00.0: BAR 0: failed to assign [mem size 
-> 0x200000000 64bit pref]
-> [    3.874226] amdgpu 0000:01:00.0: BAR 2: no space for [mem size 
-> 0x00200000 64bit pref]
-> [    3.874227] amdgpu 0000:01:00.0: BAR 2: failed to assign [mem size 
-> 0x00200000 64bit pref]
-> [    3.874258] [drm] Not enough PCI address space for a large BAR.
-> [    3.874261] amdgpu 0000:01:00.0: BAR 0: assigned [mem 
-> 0xc0000000-0xcfffffff 64bit pref]
-> [    3.874269] amdgpu 0000:01:00.0: BAR 2: assigned [mem 
-> 0xb0400000-0xb05fffff 64bit pref]
-> [    3.874288] [drm] Detected VRAM RAM=8192M, BAR=256M
+> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+> index df37058..8af1afc 100644
+> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
+>  Required Properties:
 >
-> Anyway rebase for current amd-staging-4.11 needed.
-> Find attached dmesg-amd-staging-4.11-1.g7262353-default+.log.xz
+>  * compatible: should be one of the following.
+> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
+>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
+>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
 >
-> Greetings,
-> Dieter
+> --
+> 2.10.2
 >
-> Am 09.06.2017 10:59, schrieb Christian König:
->> Hi everyone,
->>
->> This is the fith incarnation of this set of patches. It enables device
->> drivers to resize and most likely also relocate the PCI BAR of devices
->> they manage to allow the CPU to access all of the device local memory 
->> at once.
->>
->> This is very useful for GFX device drivers where the default PCI BAR 
->> is only
->> about 256MB in size for compatibility reasons, but the device easily 
->> have
->> multiple gigabyte of local memory.
->>
->> Some changes since V4:
->> 1. Rebased on 4.11.
->> 2. added the rb from Andy Shevchenko to patches which look complete now.
->> 3. Move releasing the BAR and reallocating it on error to the driver 
->> side.
->> 4. Add amdgpu support for GMC V6 hardware generation as well.
->>
->> Please review and/or comment,
->> Christian.
->>
->> _______________________________________________
->> dri-devel mailing list
->> dri-devel@lists.freedesktop.org
->> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+
+Thanks, applied for next!
+
+Kind regards
+Uffe
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
