@@ -1,69 +1,110 @@
-Return-Path: <SRS0=viw0=5Y=rsyncme.org=piotrgregor@kernel.org>
-Return-Path: <SRS0=viw0=5Y=rsyncme.org=piotrgregor@kernel.org>
-Date: Mon, 19 Jun 2017 01:26:52 +0100
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Neo Jia <cjia@nvidia.com>, Kirti Wankhede <kwankhede@nvidia.com>,
-	Vlad Tsyrklevich <vlad@tsyrklevich.net>,
-	Arvind Yadav <arvind.yadav.cs@gmail.com>,
-	Yongji Xie <xyjxie@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
-Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
-Message-ID: <20170619002651.GA29796@westernst>
-References: <20170526210222.GA22204@westernst>
- <20170616225446.GG11129@bhelgaas-glaptop.roam.corp.google.com>
- <20170617174543.GA1723@westernst>
- <20170618011433.GK11129@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+ <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v5 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Mon, 19 Jun 2017 14:53:56 +0800
+Message-ID: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170618011433.GK11129@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 17, 2017 at 08:14:33PM -0500, Bjorn Helgaas wrote:
-> On Sat, Jun 17, 2017 at 06:45:44PM +0100, Piotr Gregor wrote:
-> > Hi Bjorn,
-> > 
-> > The pci_cfg_access_lock is most likely not needed there.
-> > The assignment by return type is indeed preferred in this case.
-> > 
-> > However, you have changed the meaning of returned boolean information
-> > by pci_intx_mask_broken leaving pci_intx_mask_supported unchanged.
-> > The test should be: 
-> > 
-> >     if (new != toggle) /* the test failed */
-> > 	        return 1;
-> > 	return 0;
-> 
-> Oh, you're absolutely right, thanks for catching that!  I updated my
-> pci/enumeration branch.
-> 
-> > Regarding v2.3 - do you think it is worth to apply the check
-> > so we would have something like
-> > 
-> >     if ((new == toggle) || PCI_VERSION_PRIOR_TO_23) /* test OK or PCI prior to r2.3 */
-> > 	        return 0;
-> > 	return 1;
-> 
-> I'm not sure how to test for r2.3 compliance.  But even if we could, I
-> guess I think the current code is probably better because it actually
-> checks the property we care about, not a spec revision that is one
-> step removed from the property.
-> 
-> Bjorn
+Some devices have problems with Transaction Layer Packets with the Relaxed
+Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+devices with Relaxed Ordering issues, and a use of this new flag by the
+cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+Ports.
 
-Hi Bjorn,
+It's been years since I've submitted kernel.org patches, I appolgise for the
+almost certain submission errors.
 
-You are right, having
+v2: Alexander point out that the v1 was only a part of the whole solution,
+    some platform which has some issues could use the new flag to indicate
+    that it is not safe to enable relaxed ordering attribute, then we need
+    to clear the relaxed ordering enable bits in the PCI configuration when
+    initializing the device. So add a new second patch to modify the PCI
+    initialization code to clear the relaxed ordering enable bit in the
+    event that the root complex doesn't want relaxed ordering enabled.
 
-        if ((new == toggle) || PCI_VERSION_PRIOR_TO_23) /* test OK or PCI prior to r2.3 */
-		        return 0;
-        return 1;
+    The third patch was base on the v1's second patch and only be changed
+    to query the relaxed ordering enable bit in the PCI configuration space
+    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
+    set.
 
-would be incorrect, as if new != toggle then PCI_COMMAND_INTX_DISABLE is not writable
-so INTx masking support should be considered broken (regardless of PCI version).
+    This version didn't plan to drop the defines for Intel Drivers to use the
+    new checking way to enable relaxed ordering because it is not the hardest
+    part of the moment, we could fix it in next patchset when this patches
+    reach the goal.  
 
-Piotr
+v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
+    If a PCIe device didn't enable the relaxed ordering attribute default,
+    we should not do anything in the PCIe configuration, otherwise we
+    should check if any of the devices above us do not support relaxed
+    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+    the result if we get a return that indicate that the relaxed ordering
+    is not supported we should update our device to disable relaxed ordering
+    in configuration space. If the device above us doesn't exist or isn't
+    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+    because we are probably running in a guest.
+
+v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
+    according John's suggestion, and modify the description, use the true/false
+    as the return value.
+
+    We shouldn't enable relaxed ordering attribute by the setting in the root
+    complex configuration space for PCIe device, so fix it for cxgb4.
+
+    Fix some format issues.
+
+v5: Removed the unnecessary code for some function which only return the bool
+    value, and add the check for VF device.
+
+    Make this patch set base on 4.12-rc5.
+
+Casey Leedom (2):
+  PCI: Add new PCIe Fabric End Node flag,
+    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+
+Ding Tianhong (1):
+  PCI: Enable PCIe Relaxed Ordering if supported
+
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
+ drivers/pci/pci.c                               | 32 +++++++++++++++++++
+ drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
+ drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
+ include/linux/pci.h                             |  4 +++
+ 7 files changed, 136 insertions(+), 2 deletions(-)
+
+-- 
+1.9.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
