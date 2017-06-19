@@ -1,60 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Dominik Brodowski <linux@dominikbrodowski.net>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 0/8] ACPI / PM: Suspend-to-idle rework to deal with spurious ACPI wakeups
-Date: Tue, 13 Jun 2017 13:14 +0200
-Message-ID: <2234878.06ThIWXpcP@aspire.rjw.lan>
-In-Reply-To: <20170613055422.GA1911@light.dominikbrodowski.net>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan> <20170613055422.GA1911@light.dominikbrodowski.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35478 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753795AbdFSJwN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 05:52:13 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: kishon@ti.com, bhelgaas@google.com
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v4] PCI: dwc: dra7xx: Fix incorrect usage of IRQSTATUS_* registers
+Date: Mon, 19 Jun 2017 15:21:36 +0530
+Message-Id: <9ebe7f77c2fd10219f78ecbae3c672064102444d.1497865713.git.arvind.yadav.cs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 13, 2017 07:54:22 AM Dominik Brodowski wrote:
-> Rafael,
-> 
-> On Mon, Jun 12, 2017 at 10:46:47PM +0200, Rafael J. Wysocki wrote:
-> > Hi All,
-> > 
-> > On Thursday, June 08, 2017 02:00:40 AM Rafael J. Wysocki wrote:
-> > > Hi All,
-> > > 
-> > > This series is a replacement for commit eed4d47efe95 (ACPI / sleep: Ignore
-> > > spurious SCI wakeups from suspend-to-idle) which is still there in 4.12-rc4 but
-> > > will be reverted shortly, because it triggered issues on quite a few systems.
-> > > 
-> > > The last patch in the series is a counterpart of the above commit with a few
-> > > modifications, mostly to avoid affecting suspend-to-RAM and to reorder messages
-> > > printed to kernel logs to make them somewhat less confusing.
-> > 
-> > Here's a v2 which is very similar to the previous one, except for 3 things:
-> > - There are few build fixes in the last patch.
-> > - The patch from Hans mentioned previously is included now (as [7/8]).
-> > - There is an additional PCI change related to config space saving/restoring
-> >   and PME.
-> > 
-> > If anyone has any objections or concerns regarding this, please speak up now,
-> > as I'm going to put it into linux-next shortly to allow it to receive some more
-> > testing than commit eed4d47efe95 had had before it went it.
-> 
-> suspend-to-mem works as expected, also with this v2 applied. Thanks!
+'commit 47ff3de911a7 ("PCI: dra7xx: Add TI DRA7xx PCIe driver")' in order to clear
+MSI and MAIN interrupts requests wrote '0' to PCIECTRL_TI_CONF_IRQSTATUS_MSI
+and PCIECTRL_TI_CONF_IRQSTATUS_MAIN registers. However the TRM has mentioned to
+write '1' to clear pending event in these two registers. Fix it here.
 
-Thanks for the confirmation!
+This also helps to get rid of the following compilation warning:
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_msi_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:177:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+       ~LEG_EP_INTERRUPTS & ~MSI);
+       ^
+drivers/pci/dwc/pci-dra7xx.c: In function ‘dra7xx_pcie_enable_wrapper_interrupts’:
+drivers/pci/dwc/pci-dra7xx.c:187:7: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+       ~INTERRUPTS);
 
-Rafael
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 8decf46..668dc15 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -174,7 +174,7 @@ static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+-			   ~LEG_EP_INTERRUPTS & ~MSI);
++			   LEG_EP_INTERRUPTS | MSI);
+ 
+ 	dra7xx_pcie_writel(dra7xx,
+ 			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+@@ -184,7 +184,7 @@ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-			   ~INTERRUPTS);
++			   INTERRUPTS);
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
+ 			   INTERRUPTS);
+ }
+-- 
+1.9.1
