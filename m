@@ -1,49 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:29204 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751513AbdF0JYT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jun 2017 05:24:19 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Andrew Morton <akpm@linux-foundation.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [RESEND PATCH] critical patch to fix pci-tree build bot failure
-Date: Tue, 27 Jun 2017 17:24:10 +0800
-Message-ID: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+Received: from szxga03-in.huawei.com ([45.249.212.189]:7896 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752280AbdFSJ7f (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 05:59:35 -0400
+From: Xiaowei Song <songxiaowei@hisilicon.com>
+To: <guodong.xu@linaro.org>, <bhelgaas@google.com>,
+        <robh+dt@kernel.org>
+CC: <songxiaowei@hisilicon.com>, <suzhuangluan@hisilicon.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v10 0/3] add PCIe driver for Kirin PCIe
+Date: Mon, 19 Jun 2017 17:59:17 +0800
+Message-ID: <20170619095920.40920-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Stephen and Andrew,
+Before Version Patches
+======================
+patch v9
+http://www.spinics.net/lists/linux-pci/msg61821.html
+patch V8
+http://www.spinics.net/lists/linux-pci/msg61715.html
+patch V7
+https://www.spinics.net/lists/linux-pci/msg61664.html
+patch V6
+https://www.spinics.net/lists/linux-pci/msg61610.html
 
-Could you help to apply this patch? Seems Bjorn didn't response it these days.
+patch V4
+https://www.spinics.net/lists/linux-pci/msg61406.html
 
-This patch(based on pci-next tree) will fix the following build bot failure:
->> On Mon, Jun 26, 2017 at 09:47:36AM +0100, Build bot for Mark Brown wrote:
->>
->> This build failure is still present in -next:
->>
->> >     arm-allmodconfig
->> > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit 
->> > declaration of function 'pci_register_host_bridge' 
->> > [-Werror=implicit-function-declaration]
->>
->> and we're at -rc7 now.
+patch V3
+https://www.spinics.net/lists/linux-pci/msg61399.html
 
-This is because pci/host-mediatek is a seperate branch in pci-tree, but merge together without proper modifications(eg. some API changes).
+Changes between V8 and V7
+========================
+1. Fix the indent issues according to the review comments from Bjorn:
+   (1) The value of reg is right-aligned in both dtsi file and Documentation file.
+   (2) Re-indent the space of macro defination pointed out by Bjorn.
+   (3) Adjust the space in 'struct kirin_pcie' defination.
+   (4) Use dev replace of pdev->dev in function  kirin_pcie_get_clk and kirin_pcie_get_resource.
+   (5) Aligned params with '(' in function kirin_apb_ctrl_writel and several others.
+2. Fix the issues that compitable value in Documentation was different with .dtsi file.
+3. For dependance during compiling, the dtsi patch is deleted, and it was merged in patch[1].
+4. The indent style issues will be pull with MSI-patch in the next weeks;
 
-Hi Bjorn,
-I rewrote commit message. Please ignore my previous one, sorry for inconvenience.
+patch[1]: https://www.spinics.net/lists/arm-kernel/msg588944.html
 
-Thanks a lot!
+=========================
+Changes between V8 and V7
+=========================
+1. Fix the indent issues in Documentation, dtsi file and macro defination.
+2. Replace pdev->dev with dev in kirin_pcie_get_resource and 
+   kirin_pcie_get_clk functions.
+3. Put variables "pci" and "kirin_pcie" to be initialized at first
+   in kirin_pcie_wr_own_config, kirin_pcie_read_dbi and other functions.
+4. Add space before blankets in "Low power mode(L1 ".
+5. Short the Makefile sentence to lower than 80 characters
+   and delete reduntant words.
+6. Use word 'located' instead of the wrong one 'lacated'.
+7. Fix the problem of return value type.
 
-Ryder Lee (1):
-  PCI: mediatek: change to use the new host bridge interface
+Changes between V8 and V7
+=========================
+1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
 
- drivers/pci/host/pcie-mediatek.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Changes between V7 and V6
+=========================
+1. add enumeration log Based on Hikey960 Board with these patches.
+2. fix issues as fellows:
+   (1) delete reduntant blankets in macro defination,
+   (2) add blank line in  kirin_pcie_clk_ctrl function.
+   (3) Fix compitable property in DT with the SoC name,
+       for example "hisilicon,kirin960-pcie".
+
+Changes between V6 and V4
+=========================
+1. seperate Document from .dtsi patch.
+2. fix issues according to review comments
+   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
+   patch post method and so on.
+
+Enumeration log
+===============
+These test logs come from patches running on Hikey960 Board
+(1) Connect with Atheros Communications WIFI
+	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
+	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
+	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
+	pci_bus 0000:00: root bus resource [bus 00-01]
+	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
+	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
+	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: supports D1 D2
+	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
+	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
+	pci 0000:01:00.0: supports D1
+	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
+	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
+	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
+	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
+	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
+	pci 0000:00:00.0: PCI bridge to [bus 01]
+	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
+	pcieport 0000:00:00.0: Signaling PME with IRQ 276
+	pcieport 0000:00:00.0: AER enabled with IRQ 276	
+
+
+*** BLURB HERE ***
+
+Xiaowei Song (4):
+  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
+  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
+  ARM4: defconfig: Enable  Kirin PCIe
+
+ .../devicetree/bindings/pci/kirin-pcie.txt         |  55 +++
+ arch/arm64/configs/defconfig                       |   1 +
+ drivers/pci/dwc/Kconfig                            |  10 +
+ drivers/pci/dwc/Makefile                           |   1 +
+ drivers/pci/dwc/pcie-kirin.c                       | 517 +++++++++++++++++++++
+ 6 files changed, 617 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+ create mode 100644 drivers/pci/dwc/pcie-kirin.c
 
 -- 
-1.9.1
+2.11.GIT
