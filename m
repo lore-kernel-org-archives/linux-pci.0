@@ -1,72 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33583 "EHLO
-        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751271AbdFXJlo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 24 Jun 2017 05:41:44 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:8753 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753650AbdFSKxt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:53:49 -0400
+Subject: Re: [PATCH v11 1/3] PCI: hisi: Add DT binding for PCIe of Kirin SoC
+ series
+To: Xiaowei Song <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
+        <bhelgaas@google.com>, <robh+dt@kernel.org>
+References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
+ <20170619102349.50652-2-songxiaowei@hisilicon.com>
+ <5947AB23.20402@hisilicon.com>
+CC: <suzhuangluan@hisilicon.com>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Wei Xu <xuwei5@hisilicon.com>
+Message-ID: <5947AC61.1030600@hisilicon.com>
+Date: Mon, 19 Jun 2017 11:50:09 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170624015044.16746-3-palmer@dabbelt.com>
-References: <20170624015044.16746-1-palmer@dabbelt.com> <20170624015044.16746-3-palmer@dabbelt.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Sat, 24 Jun 2017 11:41:42 +0200
-Message-ID: <CAMuHMdWrn4C5nwRSrA8i_8sFtpRbuQH9vtNWjq5rM5_Si15kbw@mail.gmail.com>
-Subject: Re: [PATCH 2/3] pci: Add a generic, weakly-linked pcibios_align_resource
-To: Palmer Dabbelt <palmer@dabbelt.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        arcml <linux-snps-arc@lists.infradead.org>,
-        Cris <linux-cris-kernel@axis.com>,
-        "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        Linux-sh list <linux-sh@vger.kernel.org>,
-        sparclinux <sparclinux@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <5947AB23.20402@hisilicon.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Palmer,
+Hi Xiaowei,
 
-On Sat, Jun 24, 2017 at 3:50 AM, Palmer Dabbelt <palmer@dabbelt.com> wrote:
-> Multiple architectures define this as trivial function, and I'm adding
-> another one as part of the RISC-V port.  This adds a __weak version of
-> pcibios_align_resource and deletes the now obselete ones in a handful of
-> ports.
->
-> The only functional change should be that a handful of ports used to
-> export pcibios_fixup_bus.  Only some architectures export this, so I
-> just dropped it.
->
-> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+On 2017/6/19 11:44, Wei Xu wrote:
+> Hi Xiaowei,
+> 
+> On 2017/6/19 11:23, Xiaowei Song wrote:
+> 
+> Please add some commit message.
+> 
+>> Cc: Guodong Xu <guodong.xu@linaro.org>
+>> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+>> Acked-by: Rob Herring <robh@kernel.org>
+>> ---
+> 
+> I have picked up the patch from [1] and
+> the pull request has been merged into ARM SoC tree.
+> Please do not resend the same patch.
+> Thanks!
+> 
+> [1]:https://lkml.org/lkml/2017/6/14/1055
 
-This function is only ever used as a pointer passed to
-pci_bus_alloc_resource()?
+Sorry, the above link is wrong.
+It should be https://lkml.org/lkml/2017/6/14/1056
 
-What about having
+BR,
+Wei
 
-    #ifndef pcibios_fixup_bus
-    #define pcibios_fixup_bus NULL
-    #endif
-
-in asm-generic/pci.h, letting the architecture with a non-trivial
-implementation predefine the preprocessor symbol, and teaching
-pci_bus_alloc_resource() to handle NULL?
-
-[...]
-
-Oh, the latter eventually calls into allocate_resource(), which already falls
-back to simple_align_resource() if the alignment function is NULL, which
-does the same thing.
-So NULL should already work.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> 
+> Best Regards,
+> Wei
+> 
+>>  .../devicetree/bindings/pci/kirin-pcie.txt         | 55 ++++++++++++++++++++++
+>>  1 file changed, 55 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/kirin-pcie.txt b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+>> new file mode 100644
+>> index 000000000000..c2be01270ec5
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/pci/kirin-pcie.txt
+>> @@ -0,0 +1,55 @@
+>> +HiSilicon Kirin SoCs PCIe host DT description
+>> +
+>> +Kirin PCIe host controller is based on Designware PCI core.
+>> +It shares common functions with PCIe Designware core driver
+>> +and inherits common properties defined in
+>> +Documentation/devicetree/bindings/pci/designware-pci.txt.
+>> +
+>> +Additional properties are described here:
+>> +
+>> +Required properties
+>> +- compatible:
+>> +	"hisilicon,kirin960-pcie" for PCIe of Kirin960 SoC
+>> +- reg: Should contain rc_dbi, apb, phy, config registers location and length.
+>> +- reg-names: Must include the following entries:
+>> +  "dbi": controller configuration registers;
+>> +  "apb": apb Ctrl register defined by Kirin;
+>> +  "phy": apb PHY register defined by Kirin;
+>> +  "config": PCIe configuration space registers.
+>> +- reset-gpios: The gpio to generate PCIe perst assert and deassert signal.
+>> +
+>> +Optional properties:
+>> +
+>> +Example based on kirin960:
+>> +
+>> +	pcie@f4000000 {
+>> +		compatible = "hisilicon,kirin960-pcie";
+>> +		reg = <0x0 0xf4000000 0x0 0x1000>,
+>> +		      <0x0 0xff3fe000 0x0 0x1000>,
+>> +		      <0x0 0xf3f20000 0x0 0x40000>,
+>> +		      <0x0 0xf4000000 0x0  0x2000>;
+>> +		reg-names = "dbi","apb","phy", "config";
+>> +		bus-range = <0x0  0x1>;
+>> +		#address-cells = <3>;
+>> +		#size-cells = <2>;
+>> +		device_type = "pci";
+>> +		ranges = <0x02000000 0x0 0x0
+>> +			  0x0 0xf5000000
+>> +			  0x0 0x2000000>;
+>> +		num-lanes = <1>;
+>> +		#interrupt-cells = <1>;
+>> +		interrupt-map-mask = <0xf800 0 0 7>;
+>> +		interrupt-map = <0x0 0 0 1 &gic 0 282 4>,
+>> +				<0x0 0 0 2 &gic 0 283 4>,
+>> +				<0x0 0 0 3 &gic 0 284 4>,
+>> +				<0x0 0 0 4 &gic 0 285 4>;
+>> +		clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
+>> +			 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
+>> +			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
+>> +			 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
+>> +			 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
+>> +		clock-names = "pcie_phy_ref", "pcie_aux",
+>> +			      "pcie_apb_phy", "pcie_apb_sys",
+>> +			      "pcie_aclk";
+>> +		reset-gpios = <&gpio11 1 0>;
+>> +	};
+>>
