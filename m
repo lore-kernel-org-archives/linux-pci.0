@@ -1,200 +1,69 @@
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: [PATCH v5 2/6] PCI: add resizeable BAR infrastructure v5
-Date: Fri,  9 Jun 2017 10:59:43 +0200
-Message-Id: <1496998787-6371-3-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <SRS0=viw0=5Y=rsyncme.org=piotrgregor@kernel.org>
+Return-Path: <SRS0=viw0=5Y=rsyncme.org=piotrgregor@kernel.org>
+Date: Mon, 19 Jun 2017 01:26:52 +0100
+From: Piotr Gregor <piotrgregor@rsyncme.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Neo Jia <cjia@nvidia.com>, Kirti Wankhede <kwankhede@nvidia.com>,
+	Vlad Tsyrklevich <vlad@tsyrklevich.net>,
+	Arvind Yadav <arvind.yadav.cs@gmail.com>,
+	Yongji Xie <xyjxie@linux.vnet.ibm.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kvm@vger.kernel.org
+Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
+Message-ID: <20170619002651.GA29796@westernst>
+References: <20170526210222.GA22204@westernst>
+ <20170616225446.GG11129@bhelgaas-glaptop.roam.corp.google.com>
+ <20170617174543.GA1723@westernst>
+ <20170618011433.GK11129@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170618011433.GK11129@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Sat, Jun 17, 2017 at 08:14:33PM -0500, Bjorn Helgaas wrote:
+> On Sat, Jun 17, 2017 at 06:45:44PM +0100, Piotr Gregor wrote:
+> > Hi Bjorn,
+> > 
+> > The pci_cfg_access_lock is most likely not needed there.
+> > The assignment by return type is indeed preferred in this case.
+> > 
+> > However, you have changed the meaning of returned boolean information
+> > by pci_intx_mask_broken leaving pci_intx_mask_supported unchanged.
+> > The test should be: 
+> > 
+> >     if (new != toggle) /* the test failed */
+> > 	        return 1;
+> > 	return 0;
+> 
+> Oh, you're absolutely right, thanks for catching that!  I updated my
+> pci/enumeration branch.
+> 
+> > Regarding v2.3 - do you think it is worth to apply the check
+> > so we would have something like
+> > 
+> >     if ((new == toggle) || PCI_VERSION_PRIOR_TO_23) /* test OK or PCI prior to r2.3 */
+> > 	        return 0;
+> > 	return 1;
+> 
+> I'm not sure how to test for r2.3 compliance.  But even if we could, I
+> guess I think the current code is probably better because it actually
+> checks the property we care about, not a spec revision that is one
+> step removed from the property.
+> 
+> Bjorn
 
-Just the defines and helper functions to read the possible sizes of a BAR and
-update it's size.
+Hi Bjorn,
 
-See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf
-and PCIe r3.1, sec 7.22.
+You are right, having
 
-This is useful for hardware with large local storage (mostly GFX) which only
-expose 256MB BARs initially to be compatible with 32bit systems.
+        if ((new == toggle) || PCI_VERSION_PRIOR_TO_23) /* test OK or PCI prior to r2.3 */
+		        return 0;
+        return 1;
 
-v2: provide read helper as well
-v3: improve function names, use unsigned values, add better comments.
-v4: move definition, improve commit message, s/bar/BAR/
-v5: split out helper to find ctrl reg pos, style fixes, comment fixes,
-    add pci_rbar_size_to_bytes as well
+would be incorrect, as if new != toggle then PCI_COMMAND_INTX_DISABLE is not writable
+so INTx masking support should be considered broken (regardless of PCI version).
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- drivers/pci/pci.c             | 104 ++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |   8 ++++
- include/uapi/linux/pci_regs.h |  11 ++++-
- 3 files changed, 121 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02..d91ec39 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2940,6 +2940,110 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- }
- 
- /**
-+ * pci_rbar_find_pos - find position of resize ctrl reg for BAR
-+ * @dev: PCI device
-+ * @bar: BAR to find
-+ *
-+ * Helper to find the postion of the ctrl register for a BAR.
-+ * Returns -ENOTSUPP of resizeable BARs are not supported at all.
-+ * Returns -ENOENT if not ctrl register for the BAR could be found.
-+ */
-+static int pci_rbar_find_pos(struct pci_dev *pdev, int bar)
-+{
-+	unsigned int pos, nbars;
-+	unsigned int i;
-+	u32 ctrl;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return -ENOTSUPP;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
-+
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx == bar)
-+			return pos;
-+	}
-+
-+	return -ENOENT;
-+}
-+
-+/**
-+ * pci_rbar_get_possible_sizes - get possible sizes for BAR
-+ * @dev: PCI device
-+ * @bar: BAR to query
-+ *
-+ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
-+ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
-+ */
-+u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
-+{
-+	u32 cap;
-+	int pos;
-+
-+	pos = pci_rbar_find_pos(pdev, bar);
-+	if (pos < 0)
-+		return 0;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
-+	return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
-+		PCI_REBAR_CTRL_SIZES_SHIFT;
-+}
-+
-+/**
-+ * pci_rbar_get_current_size - get the current size of a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ *
-+ * Read the size of a BAR from the resizeable BAR config.
-+ * Returns size if found or negative error code.
-+ */
-+int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
-+{
-+	u32 ctrl;
-+	int pos;
-+
-+	pos = pci_rbar_find_pos(pdev, bar);
-+	if (pos < 0)
-+		return pos;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
-+		PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+}
-+
-+/**
-+ * pci_rbar_set_size - set a new size for a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ * @size: new size as defined in the spec (0=1MB, 19=512GB)
-+ *
-+ * Set the new size of a BAR as defined in the spec.
-+ * Returns zero if resizing was successful, error code otherwise.
-+ */
-+int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
-+{
-+	u32 ctrl;
-+	int pos;
-+
-+	pos = pci_rbar_find_pos(pdev, bar);
-+	if (pos < 0)
-+		return pos;
-+
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
-+	ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+	pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-+	return 0;
-+}
-+
-+/**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index b3da553..23b75e8 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -357,4 +357,12 @@ int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
- 			  struct resource *res);
- #endif
- 
-+u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
-+int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
-+int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
-+static inline u64 pci_rbar_size_to_bytes(int size)
-+{
-+	return 1ULL << (size + 20);
-+}
-+
- #endif /* DRIVERS_PCI_H */
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 634c9c4..b6bd6e5 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -941,9 +941,16 @@
- #define PCI_SATA_SIZEOF_LONG	16
- 
- /* Resizable BARs */
-+#define PCI_REBAR_CAP		4	/* capability register */
-+#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
-+#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
- #define PCI_REBAR_CTRL		8	/* control register */
--#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
--#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
-+#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for BAR index */
-+#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for BAR index */
-+#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # BARs */
-+#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # BARs */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for BAR size */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for BAR size */
- 
- /* Dynamic Power Allocation */
- #define PCI_DPA_CAP		4	/* capability register */
--- 
-2.7.4
+Piotr
