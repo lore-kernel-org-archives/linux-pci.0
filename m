@@ -1,76 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-yb0-f179.google.com ([209.85.213.179]:33866 "EHLO
-        mail-yb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750823AbdFUMrr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2017 08:47:47 -0400
-Received: by mail-yb0-f179.google.com with SMTP id e201so42160215ybb.1
-        for <linux-pci@vger.kernel.org>; Wed, 21 Jun 2017 05:47:47 -0700 (PDT)
+Return-Path: <SRS0=HkhX=5Y=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=HkhX=5Y=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
+ <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
+ <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
+ <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
+ <7d9bfb52-b33a-79ea-dccf-fff1f849bd15@arm.com>
+ <e45533a7-e469-7faf-4b30-acf6889b982c@sigmadesigns.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy
+ <robin.murphy@arm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <0d84a5fc-9549-5fef-837b-4102d2e1f1d2@arm.com>
+Date: Mon, 19 Jun 2017 17:16:21 +0100
 MIME-Version: 1.0
-In-Reply-To: <201706192108.j0gmKdUJ%fengguang.wu@intel.com>
-References: <20170619100834.43321-3-songxiaowei@hisilicon.com> <201706192108.j0gmKdUJ%fengguang.wu@intel.com>
-From: Guodong Xu <guodong.xu@linaro.org>
-Date: Wed, 21 Jun 2017 20:47:45 +0800
-Message-ID: <CAFGCpxzJJGyhJWFe9J5f34e-etsF=0AC4+y9sKeVxWRD8L0tPw@mail.gmail.com>
-Subject: Re: [PATCH v10 2/3] PCI: dwc: kirin: add PCIe Driver for HiSilicon
- Kirin SoC
-To: kbuild test robot <lkp@intel.com>
-Cc: Xiaowei Song <songxiaowei@hisilicon.com>, kbuild-all@01.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        devicetree@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e45533a7-e469-7faf-4b30-acf6889b982c@sigmadesigns.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 19, 2017 at 10:02 PM, kbuild test robot <lkp@intel.com> wrote:
-> Hi Xiaowei,
->
-> [auto build test ERROR on pci/next]
-> [also build test ERROR on v4.12-rc5 next-20170619]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Xiaowei-Song/PCI-hisi-Add-DT-binding-for-PCIe-of-Kirin-SoC-series/20170619-194535
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git next
-> config: arm64-defconfig (attached as .config)
-> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> reproduce:
->         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=arm64
->
-> All errors (new ones prefixed by >>):
+On 19/06/17 17:01, Marc Gonzalez wrote:
+> On 19/06/2017 17:58, Marc Zyngier wrote:
+>> On 19/06/17 15:50, Marc Gonzalez wrote:
+>>> On 07/06/2017 10:19, Marc Gonzalez wrote:
+>>>
+>>>> On 31/05/2017 15:33, Marc Gonzalez wrote:
+>>>>
+>>>>> +static int tango_pcie_probe(struct platform_device *pdev)
+>>>>> +{
+>>>>> +	int ret = -EINVAL;
+>>>>> +	void __iomem *base;
+>>>>> +	struct resource *res;
+>>>>> +	struct tango_pcie *pcie;
+>>>>> +	struct device *dev = &pdev->dev;
+>>>>> +
+>>>>> +	pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
+>>>>> +	pr_err("Tainting kernel... Use driver at your own risk\n");
+>>>>> +	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+>>>>
+>>>> Hello Bjorn,
+>>>>
+>>>> In v4, your only comment was
+>>>> "[muxing config and mem spaces] is a major issue and possibly even
+>>>> a security problem [which requires at least an error message and a
+>>>> kernel taint].
+>>>>
+>>>> Were there any other issues with the host bridge support?
+>>>
+>>> Hello Bjorn,
+>>>
+>>> I imagine you are now only waiting for Marc Z's Ack of patch 3/3 ?
+>>> (AFAIU, all issues have been addressed as of v8 3/3.)
+>>
+>> Posting partial series is really not ideal, specially as you posted 3 of
+>> them in less than 24 hours (and the latest was only 5 days ago).
+>>
+>> The maintainer is not going to chase you about potentially missing
+>> patches...
+> 
+> So the best course would be posting a new series with all patches
+> bumped to v8 then?
 
+No, because there is still the ambiguity of *which* v8 that is. Post a
+v9 that supersedes all the previously posted patches.
 
-Thanks for the finding. Sorry about this.
-
-v10 patchset should be ignored. Xiaowei sent v11 yesterday.
-
--Guodong
-
->
->    drivers/pci/dwc/pcie-kirin.c: In function 'kirin_pcie_establish_link':
->>> drivers/pci/dwc/pcie-kirin.c:424:12: error: 'dev' undeclared (first use in this function)
->        dev_err(dev, "Link Fail\n");
->                ^~~
->    drivers/pci/dwc/pcie-kirin.c:424:12: note: each undeclared identifier is reported only once for each function it appears in
->
-> vim +/dev +424 drivers/pci/dwc/pcie-kirin.c
->
->    418
->    419          /* check if the link is up or not */
->    420          while (!kirin_pcie_link_up(pci)) {
->    421                  usleep_range(LINK_WAIT_MIN, LINK_WAIT_MAX);
->    422                  count++;
->    423                  if (count == 1000) {
->  > 424                          dev_err(dev, "Link Fail\n");
->    425                          return -EINVAL;
->    426                  }
->    427          }
->
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+	M.
+-- 
+Jazz is not dead. It just smells funny...
