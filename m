@@ -1,70 +1,120 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:59653 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751474AbdFEQU3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:29 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 5/9] pci: generic PCIe DW driver adapted to new irq API
-Date: Mon,  5 Jun 2017 17:19:52 +0100
-Message-Id: <b3f369f5275bf25044b374b5f0c8834916e8ebed.1496677911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
+Subject: [PATCH 2/3] PCI: mediatek: turn off subsys power if no link up detected
+Date: Mon, 19 Jun 2017 17:59:59 +0800
+Message-ID: <1497866400-41844-3-git-send-email-ryder.lee@mediatek.com>
+In-Reply-To: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
+References: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts the generic PCIe DW driver to use the new interrupt api
-available in pcie-designware.
+There is no need to keep controller power on if slots are all empty,
+so a check is added to turn it off. Besides, host controllers may not
+need PM domain in some SoCs, thus we add dev->pm_domain to check that.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
+ drivers/pci/host/pcie-mediatek.c | 40 ++++++++++++++++++++++++++++------------
+ 1 file changed, 28 insertions(+), 12 deletions(-)
 
- drivers/pci/dwc/pcie-designware-plat.c | 15 ---------------
- 1 file changed, 15 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 32091b3..3b9717b 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -28,13 +28,6 @@ struct dw_plat_pcie {
- 	struct dw_pcie		*pci;
- };
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 165d82d..d256263 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -118,6 +118,18 @@ static inline bool mtk_pcie_link_is_up(struct mtk_pcie_port *port)
+ 	return !!(readl(port->base + PCIE_LINK_STATUS) & PCIE_PORT_LINKUP);
+ }
  
--static irqreturn_t dw_plat_pcie_msi_irq_handler(int irq, void *arg)
--{
--	struct pcie_port *pp = arg;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static void dw_plat_pcie_host_init(struct pcie_port *pp)
++static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++
++	clk_disable_unprepare(pcie->free_ck);
++
++	if (dev->pm_domain) {
++		pm_runtime_put_sync(dev);
++		pm_runtime_disable(dev);
++	}
++}
++
+ static void mtk_pcie_port_free(struct mtk_pcie_port *port)
  {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -64,14 +57,6 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
- 		pp->msi_irq = platform_get_irq(pdev, 0);
- 		if (pp->msi_irq < 0)
- 			return pp->msi_irq;
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--					dw_plat_pcie_msi_irq_handler,
--					IRQF_SHARED, "dw-plat-pcie-msi", pp);
--		if (ret) {
--			dev_err(dev, "failed to request MSI IRQ\n");
--			return ret;
--		}
+ 	struct mtk_pcie *pcie = port->pcie;
+@@ -130,7 +142,6 @@ static void mtk_pcie_port_free(struct mtk_pcie_port *port)
+ 
+ static void mtk_pcie_put_resources(struct mtk_pcie *pcie)
+ {
+-	struct device *dev = pcie->dev;
+ 	struct mtk_pcie_port *port, *tmp;
+ 
+ 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+@@ -139,9 +150,7 @@ static void mtk_pcie_put_resources(struct mtk_pcie *pcie)
+ 		mtk_pcie_port_free(port);
  	}
  
- 	pp->root_bus_nr = -1;
+-	clk_disable_unprepare(pcie->free_ck);
+-	pm_runtime_put_sync(dev);
+-	pm_runtime_disable(dev);
++	mtk_pcie_subsys_powerdown(pcie);
+ }
+ 
+ static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+@@ -340,10 +349,10 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ 		return PTR_ERR(pcie->free_ck);
+ 	}
+ 
+-	pm_runtime_enable(dev);
+-	err = pm_runtime_get_sync(dev);
+-	if (err)
+-		goto err_pm;
++	if (dev->pm_domain) {
++		pm_runtime_enable(dev);
++		pm_runtime_get_sync(dev);
++	}
+ 
+ 	/* enable top level clock */
+ 	err = clk_prepare_enable(pcie->free_ck);
+@@ -355,9 +364,10 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ 	return 0;
+ 
+ err_free_ck:
+-	pm_runtime_put_sync(dev);
+-err_pm:
+-	pm_runtime_disable(dev);
++	if (dev->pm_domain) {
++		pm_runtime_put_sync(dev);
++		pm_runtime_disable(dev);
++	}
+ 
+ 	return err;
+ }
+@@ -439,6 +449,10 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ 	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+ 		mtk_pcie_enable_ports(port);
+ 
++	/* power down PCIe subsys if slots are all empty(link down) */
++	if (list_empty(&pcie->ports))
++		mtk_pcie_subsys_powerdown(pcie);
++
+ 	return 0;
+ }
+ 
+@@ -522,7 +536,9 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ put_resources:
+-	mtk_pcie_put_resources(pcie);
++	if (!list_empty(&pcie->ports))
++		mtk_pcie_put_resources(pcie);
++
+ 	return err;
+ }
+ 
 -- 
-2.9.3
+1.9.1
