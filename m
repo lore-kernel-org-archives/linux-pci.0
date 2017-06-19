@@ -1,133 +1,126 @@
-Return-Path: <SRS0=l13N=54=rjwysocki.net=rjw@kernel.org>
-Return-Path: <SRS0=l13N=54=rjwysocki.net=rjw@kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: linux-pci@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>, Bjorn Helgaas <helgaas@kernel.org>, Kai-Heng Feng <kai.heng.feng@canonical.com>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org, USB list <linux-usb@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org, Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v2] PCI / PM: Avoid using device_may_wakeup() for runtime PM
-Date: Fri, 23 Jun 2017 14:58:11 +0200
-Message-ID: <2677722.OnHOCzR3UZ@aspire.rjw.lan>
-In-Reply-To: <2883450.A8OIi7Gmb8@aspire.rjw.lan>
-References: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org> <2883450.A8OIi7Gmb8@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42994 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750925AbdFSSBO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 19 Jun 2017 14:01:14 -0400
+Date: Mon, 19 Jun 2017 13:01:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] PCI: Workaround AMD EHCI controller PME bug
+Message-ID: <20170619180111.GL11129@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170616094054.8044-1-kai.heng.feng@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170616094054.8044-1-kai.heng.feng@canonical.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+[+cc Alan]
 
-pci_target_state() calls device_may_wakeup() which checks whether
-or not the device may wake up the system from sleep states, but
-pci_target_state() is used for runtime PM too.
+On Fri, Jun 16, 2017 at 05:40:54PM +0800, Kai-Heng Feng wrote:
+> On an AMD Carrizo laptop, when EHCI runtime PM is enabled, EHCI ports do
+> not respond to any device plugging event.
+> 
+> As Alan Stern points out [1], the PME signal is not enabled when
+> controller is in D3, therefore it's not being woken up when new deivces
+> get plugged in.
+> 
+> Testing shows PME signal works when the EHCI power state is D2.
+> 
+> Bjorn Helgaas suggests to flip bits PCI_PM_CAP_PME_D3 and
+> PCI_PM_CAP_PME_D3cold in PCI fixup.
+> 
+> Link: https://bugzilla.kernel.org/show_bug.cgi?id=196091
+> Link: https://support.amd.com/TechDocs/46837.pdf (Section 23)
+> Link: https://support.amd.com/TechDocs/42413.pdf (Appendix A2)
+> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
 
-Since runtime PM is expected to always enable remote wakeup if
-possible, modify pci_target_state() to take additional argument
-indicating whether or not it should look for a state from which
-the device can signal wakeup and pass either the return value
-of device_can_wakeup(), or "false" (if the device itself is not
-wakeup-capable) to it from the code related to runtime PM.
+Applied (patch below) to pci/pm for v4.13, thanks!
 
-While at it, fix the comment in pci_dev_run_wake() which is not
-about sleep states.
+Note that I added parens because bitwise NOT is higher precedence than
+bitwise shift right, and I think we want the shift before the NOT.  Please
+double-check.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
+> ---
+>  arch/x86/pci/fixup.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 6d52b94f4bb9..0f71a908e262 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -571,3 +571,18 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
+> +
+> +/*
+> + * Device [1022:7808]
+> + * 23. USB Wake on Connect/Disconnect with Low Speed Devices
+> + * https://support.amd.com/TechDocs/46837.pdf
+> + * Appendix A2
+> + * https://support.amd.com/TechDocs/42413.pdf
+> + */
+> +static void pci_fixup_amd_ehci_pme(struct pci_dev *dev)
+> +{
+> +	dev_info(&dev->dev, "PME# does not work under D3, disabling it\n");
+> +	dev->pme_support &= ~(PCI_PM_CAP_PME_D3 | PCI_PM_CAP_PME_D3cold)
+> +		>> PCI_PM_CAP_PME_SHIFT;
+> +}
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x7808, pci_fixup_amd_ehci_pme);
 
--> v2:
 
-Passing "true" as the second argument to pci_target_state() for runtime PM
-might trigger suboptimal state choices to be made, so pass the return value
-of device_can_wakeup() to it instead and pass "false" to it in pci_dev_run_wake(),
-because that assumes device_can_wakeup() to return "false" already.
 
----
- drivers/pci/pci.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+commit dd263935a118821257b793a847e6837c2ac6bc84
+Author: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Fri Jun 16 17:40:54 2017 +0800
 
-Index: linux-pm/drivers/pci/pci.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci.c
-+++ linux-pm/drivers/pci/pci.c
-@@ -1982,12 +1982,13 @@ EXPORT_SYMBOL(pci_wake_from_d3);
- /**
-  * pci_target_state - find an appropriate low power state for a given PCI dev
-  * @dev: PCI device
-+ * @wakeup: Whether or not wakeup functionality will be enabled for the device.
-  *
-  * Use underlying platform code to find a supported low power state for @dev.
-  * If the platform can't manage @dev, return the deepest state from which it
-  * can generate wake events, based on any available PME info.
-  */
--static pci_power_t pci_target_state(struct pci_dev *dev)
-+static pci_power_t pci_target_state(struct pci_dev *dev, bool wakeup)
- {
- 	pci_power_t target_state = PCI_D3hot;
- 
-@@ -2024,7 +2025,7 @@ static pci_power_t pci_target_state(stru
- 	if (dev->current_state == PCI_D3cold)
- 		target_state = PCI_D3cold;
- 
--	if (device_may_wakeup(&dev->dev)) {
-+	if (wakeup) {
- 		/*
- 		 * Find the deepest state from which the device can generate
- 		 * wake-up events, make it the target state and enable device
-@@ -2050,13 +2051,14 @@ static pci_power_t pci_target_state(stru
-  */
- int pci_prepare_to_sleep(struct pci_dev *dev)
- {
--	pci_power_t target_state = pci_target_state(dev);
-+	bool wakeup = device_may_wakeup(&dev->dev);
-+	pci_power_t target_state = pci_target_state(dev, wakeup);
- 	int error;
- 
- 	if (target_state == PCI_POWER_ERROR)
- 		return -EIO;
- 
--	pci_enable_wake(dev, target_state, device_may_wakeup(&dev->dev));
-+	pci_enable_wake(dev, target_state, wakeup);
- 
- 	error = pci_set_power_state(dev, target_state);
- 
-@@ -2089,9 +2091,10 @@ EXPORT_SYMBOL(pci_back_from_sleep);
-  */
- int pci_finish_runtime_suspend(struct pci_dev *dev)
- {
--	pci_power_t target_state = pci_target_state(dev);
-+	pci_power_t target_state;
- 	int error;
- 
-+	target_state = pci_target_state(dev, device_can_wakeup(&dev->dev));
- 	if (target_state == PCI_POWER_ERROR)
- 		return -EIO;
- 
-@@ -2127,8 +2130,8 @@ bool pci_dev_run_wake(struct pci_dev *de
- 	if (!dev->pme_support)
- 		return false;
- 
--	/* PME-capable in principle, but not from the intended sleep state */
--	if (!pci_pme_capable(dev, pci_target_state(dev)))
-+	/* PME-capable in principle, but not from the target power state */
-+	if (!pci_pme_capable(dev, pci_target_state(dev, false)))
- 		return false;
- 
- 	while (bus->parent) {
-@@ -2163,9 +2166,10 @@ EXPORT_SYMBOL_GPL(pci_dev_run_wake);
- bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
- {
- 	struct device *dev = &pci_dev->dev;
-+	bool wakeup = device_may_wakeup(dev);
- 
- 	if (!pm_runtime_suspended(dev)
--	    || pci_target_state(pci_dev) != pci_dev->current_state
-+	    || pci_target_state(pci_dev, wakeup) != pci_dev->current_state
- 	    || platform_pci_need_resume(pci_dev)
- 	    || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
- 		return false;
-@@ -2183,7 +2187,7 @@ bool pci_dev_keep_suspended(struct pci_d
- 	spin_lock_irq(&dev->power.lock);
- 
- 	if (pm_runtime_suspended(dev) && pci_dev->current_state < PCI_D3cold &&
--	    !device_may_wakeup(dev))
-+	    !wakeup)
- 		__pci_pme_active(pci_dev, false);
- 
- 	spin_unlock_irq(&dev->power.lock);
+    x86/PCI: Avoid AMD SB7xx EHCI USB wakeup defect
+    
+    On an AMD Carrizo laptop, when EHCI runtime PM is enabled, EHCI ports do
+    not assert PME# for device plug/unplug events while in D3.
+    
+    As Alan Stern points out [1], the PME signal is not enabled when controller
+    is in D3, therefore it's not being woken up when new devices get plugged
+    in.
+    
+    Testing shows PME signal works when the EHCI power state is D2.
+    
+    Clear the PCI_PM_CAP_PME_D3 and PCI_PM_CAP_PME_D3cold bits in
+    dev->pme_support to indicate the device will not assert PME# from those
+    states.
+    
+    [1] http://lkml.kernel.org/r/Pine.LNX.4.44L0.1706121010010.2092-100000@iolanthe.rowland.org
+    Link: https://bugzilla.kernel.org/show_bug.cgi?id=196091
+    Link: https://support.amd.com/TechDocs/46837.pdf (Section 23)
+    Link: https://support.amd.com/TechDocs/42413.pdf (Appendix A2)
+    Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+    [bhelgaas: changelog, add parens in quirk]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 6d52b94f4bb9..2259acdcede5 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -571,3 +571,18 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
++
++/*
++ * Device [1022:7808]
++ * 23. USB Wake on Connect/Disconnect with Low Speed Devices
++ * https://support.amd.com/TechDocs/46837.pdf
++ * Appendix A2
++ * https://support.amd.com/TechDocs/42413.pdf
++ */
++static void pci_fixup_amd_ehci_pme(struct pci_dev *dev)
++{
++	dev_info(&dev->dev, "PME# does not work under D3, disabling it\n");
++	dev->pme_support &= ~((PCI_PM_CAP_PME_D3 | PCI_PM_CAP_PME_D3cold)
++		>> PCI_PM_CAP_PME_SHIFT);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_AMD, 0x7808, pci_fixup_amd_ehci_pme);
