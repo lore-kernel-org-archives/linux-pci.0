@@ -1,163 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:36058 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbdFKEGI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 11 Jun 2017 00:06:08 -0400
-Received: by mail-wr0-f174.google.com with SMTP id v111so65536598wrc.3
-        for <linux-pci@vger.kernel.org>; Sat, 10 Jun 2017 21:06:08 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
-Date: Sun, 11 Jun 2017 09:35:38 +0530
-Message-Id: <1497153938-26074-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
-References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:58117 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751015AbdFTPvn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 11:51:43 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <marc.zyngier@arm.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+CC: <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <5949445C.3010706@ti.com>
+Date: Tue, 20 Jun 2017 11:50:52 -0400
+MIME-Version: 1.0
+In-Reply-To: <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PERST# must be asserted around ~500ms before
-the reboot is applied.
+On 06/19/2017 12:31 PM, Joao Pinto wrote:
+> 
+> Hi Murali,
+> 
+> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+>> Joao,
+>>
+>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>>> This patch series adds the new interrupt api to pcie-designware
+>>> make it possible to use features like MSIX.
+>>>
+>>> The work consisted of adapting the pcie-designware-host and each SoC
+>>> specific driver.
+>>>
+>>> The patch set was made against the Bjorn' next branch.
+>>>
+>>> Joao Pinto (9):
+>>>   pci: adding new irq api to pci-designware
+>>>   pci: exynos SoC driver adapted to new irq API
+>>>   pci: imx6 SoC driver adapted to new irq API
+>>>   pci: artpec6 SoC driver adapted to new irq API
+>>>   pci: generic PCIe DW driver adapted to new irq API
+>>>   pci: qcom SoC driver adapted to new irq API
+>>>   pci: keystone SoC driver adapted to new irq API
+>>>   pci: removing old irq api from pcie-designware
+>>>   pci: remove limitation of the number of the available IRQs
+>>>
+>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>>
+>>
+>> I gave this a try today and it failed. Logs at
+>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+>>
+>> The first part of the log is with your patch series.
+>> The second part is before applying the patch. You will see
+>> that there is qc timeout log that shows the issue
+>>
+>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>
+>> Is there any DT change I need to make for this? I didn't have a
+>> chance to review your patch w.r.t Keystone. But I see you have change
+>> the MSI IRq handling.
+>>
+> 
+> There is no need to change your DT. I think I will need to debug this issue
+> further. Could you please advice a board containing this SoC?
+> 
+I think I may be able to work with you on this. Keystone has different 
+register set for MSI IRQ. It is in application space. Also there are
+8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
+please review the original code vs the changed one w.r.t to this. I haven't
+had a chance to review the code as I am in the middle of a release.
+But will be able to spend some time after two weeks. Meanwhile please
+spend some time reviewing the code and exchange email to identify
+the issue. I can add specific debug prints for you as well and provide
+you the log for analysis.
 
-During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
-LCPLL clock and PERST both goes off simultaneously.
-This will cause certain Endpoints Intel NVMe not get detected, upon
-next boot sequence.
+Let me know.
 
-This happens because; Endpoint is expecting the clock for some amount of
-time after PERST is asserted, which is not happening in our case
-(Compare to Intel X86 boards, will have clocks running).
-this cause NVMe to behave in undefined way.
+Murali
+> Thanks.
+> 
+> 
+> 
+> 
 
-Essentially clock will remain alive for 500ms with PERST# = 0
-before reboot.
 
-This patch adds platform shutdown where it should be
-called in device_shutdown while reboot command is issued.
-
-So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-followed by RC shutdown is called, which issues safe PERST
-assertion.
-
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index 90d2bdd..9512960 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	return iproc_pcie_remove(pcie);
- }
- 
-+static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-+{
-+	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	iproc_pcie_shutdown(pcie);
-+}
-+
- static struct platform_driver iproc_pcie_pltfm_driver = {
- 	.driver = {
- 		.name = "iproc-pcie",
-@@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	},
- 	.probe = iproc_pcie_pltfm_probe,
- 	.remove = iproc_pcie_pltfm_remove,
-+	.shutdown = iproc_pcie_pltfm_shutdown,
- };
- module_platform_driver(iproc_pcie_pltfm_driver);
- 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 05a3647..bb61376 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	.write = iproc_pcie_config_write32,
- };
- 
--static void iproc_pcie_reset(struct iproc_pcie *pcie)
-+static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
- {
- 	u32 val;
- 
- 	/*
--	 * PAXC and the internal emulated endpoint device downstream should not
--	 * be reset.  If firmware has been loaded on the endpoint device at an
--	 * earlier boot stage, reset here causes issues.
-+	 * The internal emulated endpoints (such as PAXC) device downstream
-+	 * should not be reset. If firmware has been loaded on the endpoint
-+	 * device at an earlier boot stage, reset here causes issues.
- 	 */
- 	if (pcie->ep_is_internal)
- 		return;
- 
--	/*
--	 * Select perst_b signal as reset source. Put the device into reset,
--	 * and then bring it out of reset
--	 */
--	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
--	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
--		~RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	udelay(250);
--
--	val |= RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	msleep(100);
-+	if (assert) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-+			~RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(250);
-+	} else {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val |= RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		msleep(100);
-+	}
-+}
-+
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-+{
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	msleep(500);
-+
-+	return 0;
- }
-+EXPORT_SYMBOL(iproc_pcie_shutdown);
- 
- static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- {
-@@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		goto err_exit_phy;
- 	}
- 
--	iproc_pcie_reset(pcie);
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	iproc_pcie_perst_ctrl(pcie, false);
- 
- 	if (pcie->need_ob_cfg) {
- 		ret = iproc_pcie_map_ranges(pcie, res);
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 0bbe2ea..a6b55ce 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -110,6 +110,7 @@ struct iproc_pcie {
- 
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie);
- 
- #ifdef CONFIG_PCIE_IPROC_MSI
- int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
 -- 
-1.9.1
+Murali Karicheri
+Linux Kernel, Keystone
