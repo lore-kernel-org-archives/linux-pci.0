@@ -1,159 +1,49 @@
-Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=y3L3=5R=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v3 3/3] net/cxgb4: Use new
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
- <1496826968-10152-4-git-send-email-dingtianhong@huawei.com>
- <CAKgT0UeN7BK94wgU=LiD9CAo0ihrFgv2bZLFrTtr_+bgSbswxQ@mail.gmail.com>
-CC: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
-        "Bjorn Helgaas" <helgaas@kernel.org>,
-        Michael Werner <werner@chelsio.com>,
-        "Ganesh Goudar" <ganeshgr@chelsio.com>,
-        Asit K Mallick
-	<asit.k.mallick@intel.com>,
-        Patrick J Cramer <patrick.j.cramer@intel.com>,
-        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
-        Bob Shaw
-	<Bob.Shaw@amd.com>, h <l.stach@pengutronix.de>,
-        Amir Ancel
-	<amira@mellanox.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        David
- Laight <David.Laight@aculab.com>,
-        "Jeff Kirsher"
-	<jeffrey.t.kirsher@intel.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
-        Robin
- Murphy <robin.murphy@arm.com>,
-        David Miller <davem@davemloft.net>,
-        <linux-arm-kernel@lists.infradead.org>,
-        Netdev <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <2805c6bb-9d1d-0216-60ef-48cb7c377c4b@huawei.com>
-Date: Mon, 12 Jun 2017 14:53:29 +0800
+Return-Path: <SRS0=Mkam=5Z=canonical.com=kai.heng.feng@kernel.org>
+Return-Path: <SRS0=Mkam=5Z=canonical.com=kai.heng.feng@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0UeN7BK94wgU=LiD9CAo0ihrFgv2bZLFrTtr_+bgSbswxQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org>
+References: <20170619174533.GA20550@bhelgaas-glaptop.roam.corp.google.com> <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Tue, 20 Jun 2017 10:36:59 +0800
+Message-ID: <CAAd53p6Dc2skx1sjDcwG_5VLGOHo_bQK9h3UOJN7o9OuZXDqbA@mail.gmail.com>
+Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
+	USB list <linux-usb@vger.kernel.org>, linux-pci@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jun 20, 2017 at 2:32 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
+>
+> It's possible that the test was invalid.  Kai-Heng did not say whether
+> /sys/.../power/wakeup was set to "enabled" for both the EHCI controller
+> and the USB root hub beneath it, before the test was started.  If
+> either of them was set to "disabled" then we would not expect a plug or
+> unplug event to wake up the system.
 
+You are right, it's "disabled" on USB root hub.
+Changed it to "enabled", the test result remains the same.
 
-On 2017/6/8 7:24, Alexander Duyck wrote:
-> On Wed, Jun 7, 2017 at 2:16 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
->> From: Casey Leedom <leedom@chelsio.com>
->>
->> cxgb4 Ethernet driver now queries Root Complex Port to determine if it can
->> send TLPs to it with the Relaxed Ordering Attribute set.
->>
->> Signed-off-by: Casey Leedom <leedom@chelsio.com>
->> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> 
-> So I am pretty sure this patch doesn't work with patch 2. We need to
-> update it so that it doesn't check the root complex but instead checks
-> itself to see if it is allowed to use relaxed ordering.
-> 
-
-Right, we should check the End Point PCIe device configuration space, not RC.
-
-> What we need here is the ability to detect if relaxed ordering is
-> disabled, and if so take the steps needed to enable peer to peer
-> relaxed ordering without enabling relaxed ordering to the root
-> complex. Do I have that right Casey?
-> 
-
-I am not very clear to this driver about how to enable peer to peer
-relaxed ordering without enabling relaxed ordering to the RC, need
-some help from Casey, so I will still focus on this patch and only
-fix the peer to RC relaxed ordering problem, I hope Casey could send
-another patch to fix it later.
-
-Thanks
-Ding
-
->> ---
->>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
->>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
->>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
->>  3 files changed, 21 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
->> index e88c180..478f25a 100644
->> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
->> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
->> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
->>         USING_SOFT_PARAMS  = (1 << 6),
->>         MASTER_PF          = (1 << 7),
->>         FW_OFLD_CONN       = (1 << 9),
->> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
->>  };
->>
->>  enum {
->> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
->> index 38a5c67..fbfe341 100644
->> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
->> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
->> @@ -4628,6 +4628,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>  #ifdef CONFIG_PCI_IOV
->>         u32 v, port_vec;
->>  #endif
->> +       struct pci_dev *root;
->>
->>         printk_once(KERN_INFO "%s - version %s\n", DRV_DESC, DRV_VERSION);
->>
->> @@ -4726,6 +4727,22 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->>         adapter->msg_enable = DFLT_MSG_ENABLE;
->>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
->>
->> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
->> +        * Ingress Packet Data to Free List Buffers in order to allow for
->> +        * chipset performance optimizations between the Root Complex and
->> +        * Memory Controllers.  (Messages to the associated Ingress Queue
->> +        * notifying new Packet Placement in the Free Lists Buffers will be
->> +        * send without the Relaxed Ordering Attribute thus guaranteing that
->> +        * all preceding PCIe Transaction Layer Packets will be processed
->> +        * first.)  But some Root Complexes have various issues with Upstream
->> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
->> +        * So we check our Root Complex to see if it's flaged with advice
->> +        * against using Relaxed Ordering.
->> +        */
->> +       root = pci_find_pcie_root_port(adapter->pdev);
->> +       if (pcie_get_relaxed_ordering(root))
->> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
->> +
->>         spin_lock_init(&adapter->stats_lock);
->>         spin_lock_init(&adapter->tid_release_lock);
->>         spin_lock_init(&adapter->win0_lock);
->> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
->> index f05f0d4..ac229a3 100644
->> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
->> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
->> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
->>         struct fw_iq_cmd c;
->>         struct sge *s = &adap->sge;
->>         struct port_info *pi = netdev_priv(dev);
->> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
->>
->>         /* Size needs to be multiple of 16, including status entry. */
->>         iq->size = roundup(iq->size, 16);
->> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
->>
->>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
->>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
->> -                                            FW_IQ_CMD_FL0FETCHRO_F |
->> -                                            FW_IQ_CMD_FL0DATARO_F |
->> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
->> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
->>                                              FW_IQ_CMD_FL0PADEN_F);
->>                 if (cong >= 0)
->>                         c.iqns_to_fl0congen |=
->> --
->> 1.9.0
->>
->>
-> 
-> .
-> 
+>
+> In any case, the controller should be set to the lowest power setting
+> that is consistent with the desired wakeup behavior.  If wakeup is set
+> to "enabled" then the state should be D2 -- if possible.  That's the
+> theory, anyway.  If the system supports putting devices only into D3
+> during S3 sleep then there's no choice, but if we do have a choice then
+> we should take it.
+>
+> BTW, I just noticed that pci_target_state() uses device_may_wakeup() to
+> get the desired wakeup behavior.  That is correct for system sleep, but
+> it is wrong for runtime PM.  For runtime PM, wakeup should be enabled
+> whenever the hardware allows it, so the test should be
+> device_can_wakeup().
+>
+> This means that pci_target_state() should behave differently depending
+> on whether it is called from pci_prepare_to_sleep() or from
+> pci_finish_runtime_suspend().  Probably nobody noticed this before
+> because it usually doesn't make any difference.
+>
+> Alan Stern
+>
