@@ -1,97 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:36433 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754664AbdFNIZB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:25:01 -0400
-Received: by mail-pg0-f50.google.com with SMTP id a70so72552124pge.3
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:25:01 -0700 (PDT)
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
-        peter.griffin@linaro.org, puck.chen@hisilicon.com,
-        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
-        arnd@arndb.de
-Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
-        Guodong Xu <guodong.xu@linaro.org>
-Subject: [PATCH v3 11/21] arm64: dts: hikey960: add LED nodes
-Date: Wed, 14 Jun 2017 16:23:28 +0800
-Message-Id: <20170614082338.15673-12-guodong.xu@linaro.org>
-In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=nDxn=5Z=sigmadesigns.com=marc_gonzalez@kernel.org>
+Return-Path: <SRS0=nDxn=5Z=sigmadesigns.com=marc_gonzalez@kernel.org>
+Subject: [PATCH v9 1/3] PCI: Add DT binding for tango PCIe controller
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, LKML <linux-kernel@vger.kernel.org>,
+	DT <devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>, Thibaud Cornic
+	<thibaud_cornic@sigmadesigns.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+Message-ID: <0e6ef385-7634-cde5-198f-ea16267bf5c2@sigmadesigns.com>
+Date: Tue, 20 Jun 2017 10:14:33 +0200
+MIME-Version: 1.0
+In-Reply-To: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-HiKey960 has four user LEDs, and two special purpose LEDs: WiFi and BT
-respectively.
+Binding for the Sigma Designs SMP8759 SoC.
 
-All of them are implemented as GPIO.
-
-Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
 ---
- arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts | 48 +++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
+ .../devicetree/bindings/pci/tango-pcie.txt         | 29 ++++++++++++++++++=
+++++
+ 1 file changed, 29 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-index 7aac35b..9ecf6c6 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660-hikey960.dts
-@@ -49,6 +49,54 @@
- 			linux,code = <KEY_POWER>;
- 		};
- 	};
+diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documen=
+tation/devicetree/bindings/pci/tango-pcie.txt
+new file mode 100644
+index 000000000000..244683836a79
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
+@@ -0,0 +1,29 @@
++Sigma Designs Tango PCIe controller
 +
-+	leds {
-+		compatible = "gpio-leds";
++Required properties:
 +
-+		user_led1 {
-+			label = "user_led1";
-+			/* gpio_150_user_led1 */
-+			gpios = <&gpio18 6 0>;
-+			linux,default-trigger = "heartbeat";
-+		};
++- compatible: "sigma,smp8759-pcie"
++- reg: address/size of PCI configuration space, address/size of register a=
+rea
++- bus-range: defined by size of PCI configuration space
++- device_type: "pci"
++- #size-cells: <2>
++- #address-cells: <3>
++- msi-controller
++- ranges: translation from system to bus addresses
++- interrupts: spec for misc interrupts, spec for MSI
 +
-+		user_led2 {
-+			label = "user_led2";
-+			/* gpio_151_user_led2 */
-+			gpios = <&gpio18 7 0>;
-+			linux,default-trigger = "mmc0";
-+		};
++Example:
 +
-+		user_led3 {
-+			label = "user_led3";
-+			/* gpio_189_user_led3 */
-+			gpios = <&gpio23 5 0>;
-+			default-state = "off";
-+		};
-+
-+		user_led4 {
-+			label = "user_led4";
-+			/* gpio_190_user_led4 */
-+			gpios = <&gpio23 6 0>;
-+			linux,default-trigger = "cpu0";
-+		};
-+
-+		wlan_active_led {
-+			label = "wifi_active";
-+			/* gpio_205_wifi_active */
-+			gpios = <&gpio25 5 0>;
-+			linux,default-trigger = "phy0tx";
-+			default-state = "off";
-+		};
-+
-+		bt_active_led {
-+			label = "bt_active";
-+			gpios = <&gpio25 7 0>;
-+			/* gpio_207_user_led1 */
-+			linux,default-trigger = "hci0-power";
-+			default-state = "off";
-+		};
-+	};
- };
- 
- &i2c0 {
--- 
-2.10.2
++=09pcie@2e000 {
++=09=09compatible =3D "sigma,smp8759-pcie";
++=09=09reg =3D <0x50000000 0x400000>, <0x2e000 0x100>;
++=09=09bus-range =3D <0 3>;
++=09=09device_type =3D "pci";
++=09=09#size-cells =3D <2>;
++=09=09#address-cells =3D <3>;
++=09=09msi-controller;
++=09=09ranges =3D <0x02000000 0x0 0x00400000  0x50400000  0x0 0x3c00000>;
++=09=09interrupts =3D
++=09=09=09<54 IRQ_TYPE_LEVEL_HIGH>, /* misc interrupts */
++=09=09=09<55 IRQ_TYPE_LEVEL_HIGH>; /* MSI */
++=09};
+--=20
+2.11.0
