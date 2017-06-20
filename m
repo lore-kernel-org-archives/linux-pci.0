@@ -1,120 +1,116 @@
-Return-Path: <SRS0=F1XN=5G=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=F1XN=5G=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 1 Jun 2017 17:15:11 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
- configuration to be preserved
-Message-ID: <20170601161511.GB19003@red-moon>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
- <20170518154708.GA30182@red-moon>
- <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
- <20170518174612.GA31373@red-moon>
- <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:34028 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750993AbdFTQ20 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 12:28:26 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <marc.zyngier@arm.com>
+CC: <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+ <5949445C.3010706@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
+Date: Tue, 20 Jun 2017 17:28:18 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
+In-Reply-To: <5949445C.3010706@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 03:04:09PM +0000, Ard Biesheuvel wrote:
-> On 18 May 2017 at 18:46, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> > On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
-> >> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> >> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
-> >> >
-> >> > [...]
-> >> >
-> >> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
-> >> >> >> allocation under the control of the firmware, which completely removes
-> >> >> >> the burden of having to reason about a policy in the kernel. That
-> >> >> >> leaves the question which will be the default, but that is of minor
-> >> >> >> importance IMO.
-> >> >> >
-> >> >> > I agree; we should try to follow the spec unless we have a good reason
-> >> >> > not to, which argues for honoring the _DSM, so I think it's worth a
-> >> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
-> >> >> > kernel (because we don't know the effect of reassigning something the
-> >> >> > firmware told us not to touch).
-> >> >> >
-> >> >>
-> >> >> I'd like to hear Lorenzo's view on this first, but I can certainly
-> >> >> respin my _DSM patch to take pci=realloc into account, and move the
-> >> >> handling to generic code as well.
-> >> >
-> >> > I agree with both of you on _DSM implementation and interpretation.
-> >> >
-> >> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
-> >> > are going to trigger regressions, that's certain (ie we can then boot
-> >> > with pci=realloc - still, we are breaking systems), that's the reason
-> >> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
-> >> > ACPI testing before queuing it (either I can set-up a testing branch
-> >> > or we ask Bjorn to do it - as you guys prefer - as long as we have
-> >> > a branch for people to test patch(2) on ARM64 ACPI systems).
-> >> >
-> >> > You still need to assign resources that could not be claimed though
-> >> > so patch(2) still needs updating:
-> >> >
-> >> > PCI FW spec 3.1 - 4.6.5
-> >> >
-> >> > "...However, the operating system is free to configure the devices in this
-> >> > hierarchy that have not been configured by the firmware."
-> >> >
-> >> > Which in kernel-speak it means that you have to assign resources that
-> >> > could not be claimed.
-> >> >
-> >>
-> >> Right. AFAICT this is the part that is typically handled by
-> >> pcibios_resource_survey() et al, whose default __weak implementations
-> >> are empty functions. Shall I override those for arm64 to host this
-> >> logic?
-> >
-> > I think it makes sense yes unless Bjorn spots something wrong with that
-> > but you should also call it in ARM64 pci_acpi_scan_root() since it is
-> > not called by PCI core on non-hot-added bridges, I reckon you figured
-> > that out already though.
-> >
-> 
-> Another data point for this discussion: currently, when booting arm64
-> via DT, we set PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS (unless
-> PCI_PROBE_ONLY is requested), which forces not only resource
-> allocations but also the bus numbering to be reconfigured from
-> scratch.
-> 
-> On arm64/ACPI, we never set those flags, which will cause
-> pci_scan_bridge() to preserve the secondary and subordinate bridge
-> numbers if they are non-zero. This actually prevents log messages like
-> 
-> pci_bus 0000:02: busn_res: can not insert [bus 02-ff] under [bus
-> 00-7f] (conflicts with (null) [bus 00-7f])
-> 
-> which I see on AMD Seattle as well as QEMU when booting via DT (and I
-> suspect on any DT PCI root whose bus range != {0x0 0xff>). However, it
-> also means that we already have different behavior between ACPI and DT
-> boot on arm64, which makes it ambiguous what the behavior should be if
-> _DSM indicates that the configuration should not be preserved. IOW,
-> 'reconfigure everything' currently means different things between DT
-> and ACPI boot.
+Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
+> On 06/19/2017 12:31 PM, Joao Pinto wrote:
+>>
+>> Hi Murali,
+>>
+>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+>>> Joao,
+>>>
+>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>>>> This patch series adds the new interrupt api to pcie-designware
+>>>> make it possible to use features like MSIX.
+>>>>
+>>>> The work consisted of adapting the pcie-designware-host and each SoC
+>>>> specific driver.
+>>>>
+>>>> The patch set was made against the Bjorn' next branch.
+>>>>
+>>>> Joao Pinto (9):
+>>>>   pci: adding new irq api to pci-designware
+>>>>   pci: exynos SoC driver adapted to new irq API
+>>>>   pci: imx6 SoC driver adapted to new irq API
+>>>>   pci: artpec6 SoC driver adapted to new irq API
+>>>>   pci: generic PCIe DW driver adapted to new irq API
+>>>>   pci: qcom SoC driver adapted to new irq API
+>>>>   pci: keystone SoC driver adapted to new irq API
+>>>>   pci: removing old irq api from pcie-designware
+>>>>   pci: remove limitation of the number of the available IRQs
+>>>>
+>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>>>
+>>>
+>>> I gave this a try today and it failed. Logs at
+>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+>>>
+>>> The first part of the log is with your patch series.
+>>> The second part is before applying the patch. You will see
+>>> that there is qc timeout log that shows the issue
+>>>
+>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>
+>>> Is there any DT change I need to make for this? I didn't have a
+>>> chance to review your patch w.r.t Keystone. But I see you have change
+>>> the MSI IRq handling.
+>>>
+>>
+>> There is no need to change your DT. I think I will need to debug this issue
+>> further. Could you please advice a board containing this SoC?
+>>
+> I think I may be able to work with you on this. Keystone has different 
+> register set for MSI IRQ. It is in application space. Also there are
+> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
+> please review the original code vs the changed one w.r.t to this. I haven't
+> had a chance to review the code as I am in the middle of a release.
+> But will be able to spend some time after two weeks. Meanwhile please
+> spend some time reviewing the code and exchange email to identify
+> the issue. I can add specific debug prints for you as well and provide
+> you the log for analysis.
 
-IMO they should mean the same thing which implies setting those flags
-(ie PCI_REASSIGN_ALL_RSRC has no effect though on ARM64) on ARM64
-ACPI systems as a starting point and then changes in this thread can
-be applied on top.
+Ok, I agree! Thanks!
 
-Having said that, I am not sure the message you get above is really
-effective (not sure I undestand the net effect of that resource
-conflict) so I should look into this.
-
-Thanks,
-Lorenzo
+> 
+> Let me know.
+> 
+> Murali
+>> Thanks.
+>>
+>>
+>>
+>>
+> 
+> 
