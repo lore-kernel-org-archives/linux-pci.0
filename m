@@ -1,81 +1,205 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:51270 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751478AbdFHOPB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:15:01 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will.deacon@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Simon Horman <horms@verge.net.au>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Matthew Minter <matt@masarand.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [RFT PATCH v2 31/42] PCI: xilinx: Drop pci_fixup_irqs()
-Date: Thu,  8 Jun 2017 15:13:31 +0100
-Message-Id: <20170608141342.2018-32-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=g1d7=5Z=imgtec.com=Paul.Burton@kernel.org>
+Return-Path: <SRS0=g1d7=5Z=imgtec.com=Paul.Burton@kernel.org>
+From: Paul Burton <paul.burton@imgtec.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Ley Foon Tan <ley.foon.tan@intel.com>, <linux-pci@vger.kernel.org>,
+	"Bharat Kumar Gogada" <bharatku@xilinx.com>, Ravikiran Gummaluri
+	<rgummal@xilinx.com>, Bjorn Helgaas <bhelgaas@google.com>, Michal Simek
+	<michal.simek@xilinx.com>, <linux-mips@linux-mips.org>, Thomas Gleixner
+	<tglx@linutronix.de>, "Ley Foon Tan" <lftan@altera.com>, Marc Zyngier
+	<marc.zyngier@arm.com>
+Subject: Re: [PATCH v5 1/4] PCI: xilinx: Create legacy IRQ domain with size 5
+Date: Mon, 19 Jun 2017 19:07:05 -0700
+Message-ID: <1626229.99f7PaUVIa@np-p-burton>
+In-Reply-To: <20170620014903.GI554@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170617195741.12757-1-paul.burton@imgtec.com> <1497919094.42572.3.camel@intel.com> <20170620014903.GI554@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart8323385.GBbBlfq9dn";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 List-ID: <linux-pci.vger.kernel.org>
 
-Since, through struct pci_host_bridge.map/swizzle_irq hooks, IRQs
-are now allocated in the pci_assign_irq() callback automatically,
-PCI host bridge drivers can stop relying on pci_fixup_irqs()
-for IRQ allocation.
+--nextPart8323385.GBbBlfq9dn
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Drop pci_fixup_irqs() usage from PCI xilinx host bridge driver.
+Hi Bjorn,
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
----
- drivers/pci/host/pcie-xilinx.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+On Monday, 19 June 2017 18:49:03 PDT Bjorn Helgaas wrote:
+> [+cc Marc]
+> 
+> On Tue, Jun 20, 2017 at 08:38:14AM +0800, Ley Foon Tan wrote:
+> > On Mon, 2017-06-19 at 18:47 -0500, Bjorn Helgaas wrote:
+> > > [+cc Thomas, Ley Foon]
+> > > 
+> > > On Sat, Jun 17, 2017 at 12:57:38PM -0700, Paul Burton wrote:
+> > > > The driver expects to use hardware IRQ numbers 1 through 4 for INTX
+> > > > interrupts, but only creates an IRQ domain of size 4 (ie. IRQ
+> > > > numbers 0
+> > > > through 3). This results in a warning from irq_domain_associate
+> > > > when it
+> > > > is called with hwirq=4:
+> > > > 
+> > > >      WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:365
+> > > >          irq_domain_associate+0x170/0x220
+> > > >      error: hwirq 0x4 is too large for dummy
+> > > >      Modules linked in:
+> > > >      CPU: 0 PID: 1 Comm: swapper/0 Tainted: G        W
+> > > >          4.12.0-rc5-00126-g19e1b3a10aad-dirty #427
+> > > >      Stack : 0000000000000000 0000000000000004 0000000000000006
+> > > > ffffffff8092c78a
+> > > >              0000000000000061 ffffffff8018bf60 0000000000000000
+> > > > 0000000000000000
+> > > >              ffffffff8088c287 ffffffff80811d18 a8000000ffc60000
+> > > > ffffffff80926678
+> > > >              0000000000000001 0000000000000000 ffffffff80887880
+> > > > ffffffff80960000
+> > > >              ffffffff80920000 ffffffff801e6744 ffffffff80887880
+> > > > a8000000ffc4f8f8
+> > > >              000000000000089c ffffffff8018d260 0000000000010000
+> > > > ffffffff80811d18
+> > > >              0000000000000000 0000000000000001 0000000000000000
+> > > > 0000000000000000
+> > > >              0000000000000000 a8000000ffc4f840 0000000000000000
+> > > > ffffffff8042cf34
+> > > >              0000000000000000 0000000000000000 0000000000000000
+> > > > 0000000000040c00
+> > > >              0000000000000000 ffffffff8010d1c8 0000000000000000
+> > > > ffffffff8042cf34
+> > > >              ...
+> > > >      Call Trace:
+> > > >      [<ffffffff8010d1c8>] show_stack+0x80/0xa0
+> > > >      [<ffffffff8042cf34>] dump_stack+0xd4/0x110
+> > > >      [<ffffffff8013ea98>] __warn+0xf0/0x108
+> > > >      [<ffffffff8013eb14>] warn_slowpath_fmt+0x3c/0x48
+> > > >      [<ffffffff80196528>] irq_domain_associate+0x170/0x220
+> > > >      [<ffffffff80196bf0>] irq_create_mapping+0x88/0x118
+> > > >      [<ffffffff801976a8>] irq_create_fwspec_mapping+0xb8/0x320
+> > > >      [<ffffffff80197970>] irq_create_of_mapping+0x60/0x70
+> > > >      [<ffffffff805d1318>] of_irq_parse_and_map_pci+0x20/0x38
+> > > >      [<ffffffff8049c210>] pci_fixup_irqs+0x60/0xe0
+> > > >      [<ffffffff8049cd64>] xilinx_pcie_probe+0x28c/0x478
+> > > >      [<ffffffff804e8ca8>] platform_drv_probe+0x50/0xd0
+> > > >      [<ffffffff804e73a4>] driver_probe_device+0x2c4/0x3a0
+> > > >      [<ffffffff804e7544>] __driver_attach+0xc4/0xd0
+> > > >      [<ffffffff804e5254>] bus_for_each_dev+0x64/0xa8
+> > > >      [<ffffffff804e5e40>] bus_add_driver+0x1f0/0x268
+> > > >      [<ffffffff804e8000>] driver_register+0x68/0x118
+> > > >      [<ffffffff801001a4>] do_one_initcall+0x4c/0x178
+> > > >      [<ffffffff808d3ca8>] kernel_init_freeable+0x204/0x2b0
+> > > >      [<ffffffff80730b68>] kernel_init+0x10/0xf8
+> > > >      [<ffffffff80106218>] ret_from_kernel_thread+0x14/0x1c
+> > > > 
+> > > > This patch avoids that warning by creating the legacy IRQ domain
+> > > > with
+> > > > size 5 rather than 4, allowing it to cover the hwirq=4/INTD case.
+> > > > 
+> > > > Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+> > > > Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+> > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > Cc: Michal Simek <michal.simek@xilinx.com>
+> > > > Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+> > > > Cc: linux-pci@vger.kernel.org
+> > > > 
+> > > > ---
+> > > > 
+> > > > Changes in v5:
+> > > > - New patch; replacing "PCI: xilinx: Fix INTX irq dispatch".
+> > > > 
+> > > > Changes in v4: None
+> > > > Changes in v3: None
+> > > > Changes in v2: None
+> > > > 
+> > > >  drivers/pci/host/pcie-xilinx.c | 2 +-
+> > > >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/drivers/pci/host/pcie-xilinx.c
+> > > > b/drivers/pci/host/pcie-xilinx.c
+> > > > index 2fe2df51f9f8..94c71fb91648 100644
+> > > > --- a/drivers/pci/host/pcie-xilinx.c
+> > > > +++ b/drivers/pci/host/pcie-xilinx.c
+> > > > @@ -524,7 +524,7 @@ static int xilinx_pcie_init_irq_domain(struct
+> > > > xilinx_pcie_port *port)
+> > > >               return -ENODEV;
+> > > >       }
+> > > > 
+> > > > -     port->leg_domain = irq_domain_add_linear(pcie_intc_node, 4,
+> > > > +     port->leg_domain = irq_domain_add_linear(pcie_intc_node, 1 +
+> > > > 4,
+> > > 
+> > > I don't understand this.  Several drivers call
+> > > irq_domain_add_linear() with
+> > > a size of 4:
+> > > 
+> > >   dra7xx_pcie_init_irq_domain
+> > >   ks_dw_pcie_host_init
+> > >   advk_pcie_init_irq_domain
+> > >   faraday_pci_setup_cascaded_irq
+> > >   rockchip_pcie_init_irq_domain
+> > >   nwl_pcie_init_irq_domain
+> > > 
+> > > Only one other in drivers/pci uses a size of 5:
+> > > 
+> > >   altera_pcie_init_irq_domain
+> > > 
+> > > Why can't we use a size of 4 for all of them?  We only have INTA-
+> > > INTD.  Are
+> > > altera and xilinx missing something to apply an offset from the 0-3
+> > > space
+> > > to the 1-4 space?
+> > 
+> > We have the same discussion before in 2016: https://lkml.org/lkml/2016/
+> > 8/30/198
+> 
+> Thanks for digging that out.  I knew we'd discussed this before, but I
+> couldn't find it in the archives.  I don't think anybody was really
+> satisfied with the outcome, but we accepted it to make forward
+> progress.
+> 
+> > This is because legacy interrupt is start with index 1 instead of 0.
+> 
+> I'm not buying this.  Your argument was that "the hwirq for legacy
+> interrupts will start at 0x1 to 0x4 (INTA to INTD) and these values
+> are as per PCIe specification for legacy interrupts.  So these cannot
+> be numbered from 0."
+> 
+> But all the other drivers I mentioned get along with the 0-3 range
+> somehow.  If there's something different about altera and xilinx that
+> means they can't use the same solution the others do, I'd like to know
+> what it is.
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 761f048..d09b005 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -680,6 +680,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	bridge->sysdata = port;
- 	bridge->busnr = 0;
- 	bridge->ops = &xilinx_pcie_ops;
-+	bridge->map_irq = of_irq_parse_and_map_pci;
-+	bridge->swizzle_irq = pci_common_swizzle;
- 
- #ifdef CONFIG_PCI_MSI
- 	xilinx_pcie_msi_chip.dev = dev;
-@@ -692,9 +694,6 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
- 	bus = bridge->bus;
- 
- 	pci_assign_unassigned_bus_resources(bus);
--#ifndef CONFIG_MICROBLAZE
--	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
--#endif
- 	list_for_each_entry(child, &bus->children, node)
- 		pcie_bus_configure_settings(child);
- 	pci_bus_add_devices(bus);
--- 
-2.10.0
+Note that with v4 of this patchset[1] I was using hwirq numbers 0-3 with pcie-
+xilinx just fine, however:
+
+1) Bharat complained.
+
+2) It does require that the DT interrupt-map property be set accordingly, 
+which I guess may mean we're stuck with hwirq 1-4 for drivers that already use 
+them.
+
+Thanks,
+    Paul
+
+[1] https://patchwork.kernel.org/patch/9763191/
+--nextPart8323385.GBbBlfq9dn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEELIGR03D5+Fg+69wPgiDZ+mk8HGUFAllIg0kACgkQgiDZ+mk8
+HGUWkA/9H6R74L+AAW9cL6qfHIKxNXT2LdY0EEq9GhvrYUbhAMvDwBqDYqjDLEIu
+0C7n7mAbTKMLUe5tQgIUtiawuzwGc9nQ9yTgjXq1RxMQEn7qchOOpNLid9kvdFRE
+5o3HaQlkrZK2UNxp6Yr9+KnidUL88PLPamOSa8Z1PKHooJFG7/1TAlkvxnX7QdY3
+59SRe58yWfljCoB+/FZeyLSikQFvhpsuIy/WdBHT3GXeZvkIIUErlvPVuOnAd3WW
+WOZCvoO9jBuX9nd3n3xAp778hmleqoeKiXDwGZet950ezbKOjaRAqBcLSVtiZShE
+edB8jSqT2BWCloynT2Ty9FchL95StizBRA5/WEBJNbbORNYssYtuxBpJoKUqBs0g
+kKUfIboxoy3/XfPLyaH0ODwi2cQzaF3cboJqSajLiisBPRUxA4NOzeR4uTgjm1Lj
+P5iPRRdXFPwO4wYw5LJ7r8Qth+NhroyFuBLMIorEFbL5kPAfzbQMByVCBPbJERbY
+cQ3Aagj1J/bHAn83zoBSLHaS9zSJ7JwNDjRYnLzDuKwv6v6NmnqTadTDoVTnOneN
+zY5EHy4hwryvOeFp6XEdY4pu4ciFSkZvDXIZfJRZCgugnFl3W8zAiDEVdG8Fg4v2
+EdO50Zf/y1CfDcDcbGYtwkbie3yenFFaPNIsi3qqwYRYinQ2jH4=
+=e+69
+-----END PGP SIGNATURE-----
+
+--nextPart8323385.GBbBlfq9dn--
