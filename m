@@ -1,73 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 13 Jun 2017 11:48:31 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-Message-ID: <20170613084831.GP3187@lahna.fi.intel.com>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495712248-5232-6-git-send-email-gabriele.paoloni@huawei.com>
- <20170530132408.GA2556@red-moon>
- <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
- <20170606085553.GA20085@red-moon> <20170612155700.GA31930@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f179.google.com ([209.85.216.179]:34541 "EHLO
+        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751018AbdFTIgz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 04:36:55 -0400
+Received: by mail-qt0-f179.google.com with SMTP id v20so12285685qtg.1
+        for <linux-pci@vger.kernel.org>; Tue, 20 Jun 2017 01:36:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170612155700.GA31930@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>, "minyard@acm.org" <minyard@acm.org>,
- "arnd@arndb.de" <arnd@arndb.de>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, rafael@kernel.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- John Garry <john.garry@huawei.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
- "olof@lixom.net" <olof@lixom.net>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <5947CAD8.4040607@hisilicon.com>
+References: <20170614082338.15673-1-guodong.xu@linaro.org> <20170614082338.15673-20-guodong.xu@linaro.org>
+ <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com> <5947CAD8.4040607@hisilicon.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 20 Jun 2017 10:36:53 +0200
+Message-ID: <CAPDyKFo=hqp=j=nWpO8uf_0pGTSKjN0T-ZKqD8cuKp1C3Q2_hA@mail.gmail.com>
+Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
+ hi3660 mmc
+To: Wei Xu <xuwei5@hisilicon.com>
+Cc: Guodong Xu <guodong.xu@linaro.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, wangkefeng.wang@huawei.com,
+        xuejiancheng@hisilicon.com,
+        Peter Griffin <peter.griffin@linaro.org>,
+        puck.chen@hisilicon.com, Lee Jones <lee.jones@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        zhangfei <zhangfei.gao@linaro.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Li Wei <liwei213@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 04:57:00PM +0100, Lorenzo Pieralisi wrote:
-> I had a more in-depth look at this series and from my understanding
-> the problem are the following to manage the LPC bindings in ACPI.
-> 
-> (1) Child devices of an LPC controller require special handling when
->     filling their resources (ie they need to be translated - in DT
->     that's guaranteed by the "isa" binding, in ACPI it has to be
->     done by new code)
-> (2) In DT systems, LPC child devices are created by the LPC bus
->     controller driver through an of_platform_populate() call with
->     the LPC controller node as the fwnode root. For ACPI to work
->     the same way there must be a way to prevent LPC children to
->     be enumerated in acpi_default_enumeration() something like
->     I2C does (and then the LPC driver would enumerate its children as
->     DT does)
-> 
-> I am not sure how (1) and (2) can be managed with current ACPI bindings
-> and kernel code - I suspect it may be done by mirroring what's done
-> for I2C but I am not sure, that's why I CC'ed Mika (ie the LPC adapter
-> is matched as a platform device and it takes care of enumerating its
-> children - problem though is preventing enumeration from core ACPI code).
+Hi Wei,
 
-Is there an example ASL showing how these LPC devices are
-currently presented in ACPI?
+On 19 June 2017 at 15:00, Wei Xu <xuwei5@hisilicon.com> wrote:
+> Hi Ulf,
+>
+> On 2017/6/19 13:43, Ulf Hansson wrote:
+>> On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
+>>> Add bindings for hi3660 mmc support
+>>>
+>>> Signed-off-by: Li Wei <liwei213@huawei.com>
+>>> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+>>> ---
+>>>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
+>>>  1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>>> index df37058..8af1afc 100644
+>>> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>>> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>>> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
+>>>  Required Properties:
+>>>
+>>>  * compatible: should be one of the following.
+>>> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
+>>>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
+>>>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
+>>>
+>>> --
+>>> 2.10.2
+>>>
+>>
+>> Thanks, applied for next!
+>
+> Thanks!
+> Last week I had applied the v4 patch set[1]
+> and this patch is included.
+> But it should be fine for the upper gatekeeper to merge
+> since these 2 patch are same.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+No, that's not how git works.
+
+If the patch has the same hash, that would be fine, but that isn't the
+case here as we have two different hashes for the same change.
+
+To deal with this, I have just dropped the change from my tree and
+leave it to you to carry the patch. Feel free to add my ack for it.
+
+Kind regards
+Uffe
