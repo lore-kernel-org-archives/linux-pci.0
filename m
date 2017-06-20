@@ -1,98 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36078 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750749AbdFOVsn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 17:48:43 -0400
-Date: Thu, 15 Jun 2017 16:48:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: shawn.lin@rock-chips.com, wenrui.li@rock-chips.com,
-        heiko@sntech.de, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: rockchip: Handle return value of clk_prepare_enable
-Message-ID: <20170615214840.GI12735@bhelgaas-glaptop.roam.corp.google.com>
-References: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5948F1F9.90903@hisilicon.com>
+References: <20170614082338.15673-1-guodong.xu@linaro.org>
+ <20170614082338.15673-20-guodong.xu@linaro.org>
+ <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com>
+ <5947CAD8.4040607@hisilicon.com>
+ <CAPDyKFo=hqp=j=nWpO8uf_0pGTSKjN0T-ZKqD8cuKp1C3Q2_hA@mail.gmail.com>
+ <5948F1F9.90903@hisilicon.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Tue, 20 Jun 2017 12:28:46 +0200
+Message-ID: <CAPDyKFozmMED7ytofXTgHhWH=Ro_38r4iCCdoO6+rq-AznrSDQ@mail.gmail.com>
+Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
+ hi3660 mmc
+To: Wei Xu <xuwei5@hisilicon.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ wangkefeng.wang@huawei.com, Arnd Bergmann <arnd@arndb.de>,
+ Guodong Xu <guodong.xu@linaro.org>, Linux PCI <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Peter Griffin <peter.griffin@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>, Li Wei <liwei213@huawei.com>,
+ puck.chen@hisilicon.com, xuejiancheng@hisilicon.com,
+ zhangfei <zhangfei.gao@linaro.org>, Lee Jones <lee.jones@linaro.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 01, 2017 at 03:51:45PM +0530, Arvind Yadav wrote:
-> clk_prepare_enable() can fail here and we must check its return value.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+On 20 June 2017 at 11:59, Wei Xu <xuwei5@hisilicon.com> wrote:
+> Hi Uffe,
+>
+> On 2017/6/20 9:36, Ulf Hansson wrote:
+>> Hi Wei,
+>>
+>> On 19 June 2017 at 15:00, Wei Xu <xuwei5@hisilicon.com> wrote:
+>>> Hi Ulf,
+>>>
+>>> On 2017/6/19 13:43, Ulf Hansson wrote:
+>>>> On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
+>>>>> Add bindings for hi3660 mmc support
+>>>>>
+>>>>> Signed-off-by: Li Wei <liwei213@huawei.com>
+>>>>> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
+>>>>> ---
+>>>>>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
+>>>>>  1 file changed, 1 insertion(+)
+>>>>>
+>>>>> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>>>>> index df37058..8af1afc 100644
+>>>>> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>>>>> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
+>>>>> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
+>>>>>  Required Properties:
+>>>>>
+>>>>>  * compatible: should be one of the following.
+>>>>> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
+>>>>>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
+>>>>>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
+>>>>>
+>>>>> --
+>>>>> 2.10.2
+>>>>>
+>>>>
+>>>> Thanks, applied for next!
+>>>
+>>> Thanks!
+>>> Last week I had applied the v4 patch set[1]
+>>> and this patch is included.
+>>> But it should be fine for the upper gatekeeper to merge
+>>> since these 2 patch are same.
+>>
+>> No, that's not how git works.
+>>
+>> If the patch has the same hash, that would be fine, but that isn't the
+>> case here as we have two different hashes for the same change.
+>
+> Got it. Thanks for your explaining!
+>
+>>
+>> To deal with this, I have just dropped the change from my tree and
+>> leave it to you to carry the patch. Feel free to add my ack for it.
+>
+> Thanks!
+> But the pull request I sent last week has been merged.
 
-Applied with ack/reviewed-by from Shawn and Heiko to pci/host-rockchip for
-v4.13, thanks!
+No worries, it's fine even without my ack this time.
 
-I had to apply it manually because of other changes in the same area, so it
-would be good if you could check it over.
+Kind regards
+Uffe
 
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-rockchip&id=45f8ce937bc2e06e040f1118f64783b54ade7363
-
-> ---
->  drivers/pci/host/pcie-rockchip.c | 34 ++++++++++++++++++++++++++++------
->  1 file changed, 28 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 0e020b6..0a248cd 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -1259,24 +1259,46 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
->  	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
->  	int err;
->  
-> -	clk_prepare_enable(rockchip->clk_pcie_pm);
-> -	clk_prepare_enable(rockchip->hclk_pcie);
-> -	clk_prepare_enable(rockchip->aclk_perf_pcie);
-> -	clk_prepare_enable(rockchip->aclk_pcie);
-> +	err = clk_prepare_enable(rockchip->clk_pcie_pm);
-> +	if (err)
-> +		goto err_pcie_pm;
-> +
-> +	err = clk_prepare_enable(rockchip->hclk_pcie);
-> +	if (err)
-> +		goto err_hclk_pcie;
-> +
-> +	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
-> +	if (err)
-> +		goto err_aclk_perf_pcie;
-> +
-> +	err = clk_prepare_enable(rockchip->aclk_pcie);
-> +	if (err)
-> +		goto err_aclk_pcie;
->  
->  	err = rockchip_pcie_init_port(rockchip);
->  	if (err)
-> -		return err;
-> +		goto err_pcie_resume;
->  
->  	err = rockchip_cfg_atu(rockchip);
->  	if (err)
-> -		return err;
-> +		goto err_pcie_resume;
->  
->  	/* Need this to enter L1 again */
->  	rockchip_pcie_update_txcredit_mui(rockchip);
->  	rockchip_pcie_enable_interrupts(rockchip);
->  
->  	return 0;
-> +
-> +err_pcie_resume:
-> +	clk_disable_unprepare(rockchip->aclk_pcie);
-> +err_aclk_pcie:
-> +	clk_disable_unprepare(rockchip->aclk_perf_pcie);
-> +err_aclk_perf_pcie:
-> +	clk_disable_unprepare(rockchip->hclk_pcie);
-> +err_hclk_pcie:
-> +	clk_disable_unprepare(rockchip->clk_pcie_pm);
-> +err_pcie_pm:
-> +	return err;
->  }
->  
->  static int rockchip_pcie_probe(struct platform_device *pdev)
-> -- 
-> 1.9.1
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
