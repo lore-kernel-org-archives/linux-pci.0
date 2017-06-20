@@ -1,70 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:22214 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752373AbdFQT6z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jun 2017 15:58:55 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v5 3/4] PCI: xilinx: Don't enable config completion interrupts
-Date: Sat, 17 Jun 2017 12:57:40 -0700
-Message-ID: <20170617195741.12757-4-paul.burton@imgtec.com>
-In-Reply-To: <20170617195741.12757-1-paul.burton@imgtec.com>
-References: <20170617195741.12757-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=Vl7K=5Z=axtens.net=dja@kernel.org>
+Return-Path: <SRS0=Vl7K=5Z=axtens.net=dja@kernel.org>
+From: Daniel Axtens <dja@axtens.net>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Xinliang Liu <z.liuxinliang@hisilicon.com>, Rongrong Zou <zourongrong@gmail.com>
+Subject: Re: [PATCH] PCI: Support hibmc VGA cards behind a misbehaving HiSilicon bridge
+In-Reply-To: <20170619235535.GH554@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170619023528.11532-1-dja@axtens.net> <20170619235535.GH554@bhelgaas-glaptop.roam.corp.google.com>
+Date: Tue, 20 Jun 2017 10:28:41 +1000
+Message-ID: <87k247pkna.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Xilinx AXI bridge for PCI Express device provides interrupts
-indicating the completion of config space accesses. We have previously
-enabled/unmasked them but do nothing with them besides acknowledge them.
+Hi Bjorn,
 
-Leave the interrupts masked in order to avoid servicing a large number
-of pointless interrupts during boot.
+> On Mon, Jun 19, 2017 at 12:35:28PM +1000, Daniel Axtens wrote:
+>> The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610) that
+>> are not spec-compliant: they do not set the VGA Enable bit when a VGA
+>> card is behind the bridge. This breaks Xorg auto-detection.
+>
+> I don't understand what is not spec-compliant about this.  The VGA
+> Enable bit (PCI_BRIDGE_CTL_VGA) is a read/write bit, and the bridge
+> itself is not responsible for figuring out whether it has a VGA card
+> below it.
+>
+> Some software (firmware/OS/etc) that enumerates the hierarchy is
+> responsible for setting PCI_BRIDGE_CTL_VGA if desired.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
----
+Ah sorry, this was poorly understood/expressed on my part. The bit is
+fixed in hardware: I wrote a 1 to it, read it back immediately, and got
+a 0. I'll respin with a corrected comment and commit message.
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/host/pcie-xilinx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 5436657d142d..176ad1608d88 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -60,6 +60,7 @@
- #define XILINX_PCIE_INTR_MST_SLVERR	BIT(27)
- #define XILINX_PCIE_INTR_MST_ERRP	BIT(28)
- #define XILINX_PCIE_IMR_ALL_MASK	0x1FF30FED
-+#define XILINX_PCIE_IMR_ENABLE_MASK	0x1FF30F0D
- #define XILINX_PCIE_IDR_ALL_MASK	0xFFFFFFFF
- 
- /* Root Port Error FIFO Read Register definitions */
-@@ -553,8 +554,8 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
- 			 XILINX_PCIE_IMR_ALL_MASK,
- 		   XILINX_PCIE_REG_IDR);
- 
--	/* Enable all interrupts */
--	pcie_write(port, XILINX_PCIE_IMR_ALL_MASK, XILINX_PCIE_REG_IMR);
-+	/* Enable all interrupts we handle */
-+	pcie_write(port, XILINX_PCIE_IMR_ENABLE_MASK, XILINX_PCIE_REG_IMR);
- 
- 	/* Enable the Bridge enable bit */
- 	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_RPSC) |
--- 
-2.13.1
+Regards,
+Daniel
+>
+>> Despite this, the hibmc VGA card (PCI ID 19e5:1711) is known to work
+>> when behind these bridges.
+>> 
+>> Provide a quirk so that this combination of bridge and card is eligible
+>> to be the default VGA card.
+>> 
+>> This fixes Xorg auto-detection.
+>> 
+>> Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
+>> Cc: Rongrong Zou <zourongrong@gmail.com>
+>> Signed-off-by: Daniel Axtens <dja@axtens.net>
+>> ---
+>>  drivers/pci/quirks.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 46 insertions(+)
+>> 
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 16e6cd86ad71..9475d6056dd3 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -25,6 +25,7 @@
+>>  #include <linux/sched.h>
+>>  #include <linux/ktime.h>
+>>  #include <linux/mm.h>
+>> +#include <linux/vgaarb.h>
+>>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>>  #include "pci.h"
+>>  
+>> @@ -4664,3 +4665,48 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+>>  }
+>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+>> +
+>> +/*
+>> + * The hibmc card on a HiSilicon D05 board sits behind a non-compliant
+>> + * bridge. The bridge doesn't advertise the PCI_BRIDGE_CTL_VGA bit in
+>> + * its config space. This prevents the vgaarb from marking a card
+>> + * behind it as boot VGA device.
+>> + *
+>> + * However, the hibmc card is known to still work, so if we have that
+>> + * card behind that particular bridge (19e5:1610), mark it as the
+>> + * default device if none has been detected.
+>> + */
+>> +static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
+>> +{
+>> +	struct pci_dev *bridge;
+>> +	struct pci_bus *bus;
+>> +	u16 config;
+>> +
+>> +	bus = pdev->bus;
+>> +	bridge = bus->self;
+>> +	if (!bridge)
+>> +		return;
+>> +
+>> +	if (!pci_is_bridge(bridge))
+>> +		return;
+>> +
+>> +	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
+>> +	    bridge->device != 0x1610)
+>> +		return;
+>> +
+>> +	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+>> +			     &config);
+>> +	if (config & PCI_BRIDGE_CTL_VGA) {
+>> +		/*
+>> +		 * Weirdly, this bridge *is* spec compliant, so bail
+>> +		 * and let vgaarb do its job
+>> +		 */
+>> +		return;
+>> +	}
+>> +
+>> +	if (vga_default_device())
+>> +		return;
+>> +
+>> +	vga_set_default_device(pdev);
+>> +}
+>> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
+>> -- 
+>> 2.11.0
+>> 
