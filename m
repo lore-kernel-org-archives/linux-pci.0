@@ -1,252 +1,51 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 2/6] ACPI / PM: Consolidate device wakeup settings code
-Date: Mon, 19 Jun 2017 23:33:52 +0200
-Message-ID: <4424061.UyS4hGnq0F@aspire.rjw.lan>
-In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH] PCI: Enable ECRC only if device supports it
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: John Mazzie <john_mazzie@dell.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Tue, 20 Jun 2017 14:02:07 -0500
+Message-ID: <20170620190207.9292.39574.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+John reported that an Intel QuickAssist crypto accelerator didn't work in a
+Dell PowerEdge R730.  The problem seems to be that we enabled ECRC when the
+device doesn't support it:
 
-Currently, there are two separate ways of handling device wakeup
-settings in the ACPI core, depending on whether this is runtime
-wakeup or system wakeup (from sleep states).  However, after the
-previous commit eliminating the run_wake ACPI device wakeup flag,
-there is no difference between the two any more at the ACPI level,
-so they can be combined.
+  85:00.0 Co-processor [0b40]: Intel Corporation DH895XCC Series QAT [8086:0435]
+    Capabilities: [100 v1] Advanced Error Reporting
+      AERCap: First Error Pointer: 00, GenCap- CGenEn+ ChkCap- ChkEn+
 
-For this reason, introduce acpi_pm_device_wakeup() to replace both
-acpi_pm_device_run_wake() and acpi_pm_device_sleep_wake() and make it
-check the ACPI device object's wakeup.valid flag to determine whether
-or not the device can be set up to generate wakeup signals.
+1302fcf0d03e ("PCI: Configure *all* devices, not just hot-added ones")
+exposed the problem because it applies settings from the _HPX method to all
+devices, not just hot-added ones.  The R730 supplies an _HPX method that
+allows the kernel to enable ECRC.
 
-Also notice that zpodd_enable/disable_run_wake() only call
-device_set_run_wake() because acpi_pm_device_run_wake() called
-device_run_wake(), which is not done by acpi_pm_device_wakeup(),
-so drop the now redundant device_set_run_wake() calls from there.
+Only enable ECRC if the device advertises support for it.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1571798
+Fixes: 1302fcf0d03e ("PCI: Configure *all* devices, not just hot-added ones")
+Reported-by: John Mazzie <john_mazzie@dell.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/acpi/device_pm.c   |   39 ++++++++-------------------------------
- drivers/ata/libata-zpodd.c |    9 +++------
- drivers/pci/pci-acpi.c     |   12 ++++++------
- drivers/pnp/pnpacpi/core.c |    6 +++---
- include/acpi/acpi_bus.h    |   13 ++-----------
- 5 files changed, 22 insertions(+), 57 deletions(-)
+ drivers/pci/probe.c |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -717,55 +717,32 @@ static int acpi_device_wakeup(struct acp
- }
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 31001017b3c4..c31310db0404 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1730,6 +1730,11 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	/* Initialize Advanced Error Capabilities and Control Register */
+ 	pci_read_config_dword(dev, pos + PCI_ERR_CAP, &reg32);
+ 	reg32 = (reg32 & hpp->adv_err_cap_and) | hpp->adv_err_cap_or;
++	/* Don't enable ECRC generation or checking if unsupported */
++	if (!(reg32 & PCI_ERR_CAP_ECRC_GENC))
++		reg32 &= ~PCI_ERR_CAP_ECRC_GENE;
++	if (!(reg32 & PCI_ERR_CAP_ECRC_CHKC))
++		reg32 &= ~PCI_ERR_CAP_ECRC_CHKE;
+ 	pci_write_config_dword(dev, pos + PCI_ERR_CAP, reg32);
  
- /**
-- * acpi_pm_device_run_wake - Enable/disable remote wakeup for given device.
-- * @dev: Device to enable/disable the platform to wake up.
-+ * acpi_pm_device_wakeup - Enable/disable remote wakeup for given device.
-+ * @dev: Device to enable/disable to generate wakeup events.
-  * @enable: Whether to enable or disable the wakeup functionality.
-  */
--int acpi_pm_device_run_wake(struct device *phys_dev, bool enable)
--{
--	struct acpi_device *adev;
--
--	if (!device_run_wake(phys_dev))
--		return -EINVAL;
--
--	adev = ACPI_COMPANION(phys_dev);
--	if (!adev) {
--		dev_dbg(phys_dev, "ACPI companion missing in %s!\n", __func__);
--		return -ENODEV;
--	}
--
--	return acpi_device_wakeup(adev, ACPI_STATE_S0, enable);
--}
--EXPORT_SYMBOL(acpi_pm_device_run_wake);
--
--#ifdef CONFIG_PM_SLEEP
--/**
-- * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
-- * @dev: Device to enable/desible to wake up the system from sleep states.
-- * @enable: Whether to enable or disable @dev to wake up the system.
-- */
--int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
-+int acpi_pm_device_wakeup(struct device *dev, bool enable)
- {
- 	struct acpi_device *adev;
- 	int error;
- 
--	if (!device_can_wakeup(dev))
--		return -EINVAL;
--
- 	adev = ACPI_COMPANION(dev);
- 	if (!adev) {
- 		dev_dbg(dev, "ACPI companion missing in %s!\n", __func__);
- 		return -ENODEV;
- 	}
- 
-+	if (!acpi_device_can_wakeup(adev))
-+		return -EINVAL;
-+
- 	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
- 	if (!error)
--		dev_dbg(dev, "System wakeup %s by ACPI\n",
-+		dev_dbg(dev, "Wakeup %s by ACPI\n",
- 			enable ? "enabled" : "disabled");
- 
- 	return error;
- }
--#endif /* CONFIG_PM_SLEEP */
-+EXPORT_SYMBOL(acpi_pm_device_wakeup);
- 
- /**
-  * acpi_dev_pm_low_power - Put ACPI device into a low-power state.
-Index: linux-pm/drivers/ata/libata-zpodd.c
-===================================================================
---- linux-pm.orig/drivers/ata/libata-zpodd.c
-+++ linux-pm/drivers/ata/libata-zpodd.c
-@@ -174,8 +174,7 @@ void zpodd_enable_run_wake(struct ata_de
- 	sdev_disable_disk_events(dev->sdev);
- 
- 	zpodd->powered_off = true;
--	device_set_run_wake(&dev->tdev, true);
--	acpi_pm_device_run_wake(&dev->tdev, true);
-+	acpi_pm_device_wakeup(&dev->tdev, true);
- }
- 
- /* Disable runtime wake capability if it is enabled */
-@@ -183,10 +182,8 @@ void zpodd_disable_run_wake(struct ata_d
- {
- 	struct zpodd *zpodd = dev->zpodd;
- 
--	if (zpodd->powered_off) {
--		acpi_pm_device_run_wake(&dev->tdev, false);
--		device_set_run_wake(&dev->tdev, false);
--	}
-+	if (zpodd->powered_off)
-+		acpi_pm_device_wakeup(&dev->tdev, false);
- }
- 
- /*
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -579,20 +579,20 @@ static bool acpi_pci_can_wakeup(struct p
- static void acpi_pci_propagate_wakeup_enable(struct pci_bus *bus, bool enable)
- {
- 	while (bus->parent) {
--		if (!acpi_pm_device_sleep_wake(&bus->self->dev, enable))
-+		if (!acpi_pm_device_wakeup(&bus->self->dev, enable))
- 			return;
- 		bus = bus->parent;
- 	}
- 
- 	/* We have reached the root bus. */
- 	if (bus->bridge)
--		acpi_pm_device_sleep_wake(bus->bridge, enable);
-+		acpi_pm_device_wakeup(bus->bridge, enable);
- }
- 
- static int acpi_pci_sleep_wake(struct pci_dev *dev, bool enable)
- {
- 	if (acpi_pci_can_wakeup(dev))
--		return acpi_pm_device_sleep_wake(&dev->dev, enable);
-+		return acpi_pm_device_wakeup(&dev->dev, enable);
- 
- 	acpi_pci_propagate_wakeup_enable(dev->bus, enable);
- 	return 0;
-@@ -605,14 +605,14 @@ static void acpi_pci_propagate_run_wake(
- 
- 		if (bridge->pme_interrupt)
- 			return;
--		if (!acpi_pm_device_run_wake(&bridge->dev, enable))
-+		if (!acpi_pm_device_wakeup(&bridge->dev, enable))
- 			return;
- 		bus = bus->parent;
- 	}
- 
- 	/* We have reached the root bus. */
- 	if (bus->bridge)
--		acpi_pm_device_run_wake(bus->bridge, enable);
-+		acpi_pm_device_wakeup(bus->bridge, enable);
- }
- 
- static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
-@@ -626,7 +626,7 @@ static int acpi_pci_run_wake(struct pci_
- 	if (dev->pme_interrupt && !dev->runtime_d3cold)
- 		return 0;
- 
--	if (!acpi_pm_device_run_wake(&dev->dev, enable))
-+	if (!acpi_pm_device_wakeup(&dev->dev, enable))
- 		return 0;
- 
- 	acpi_pci_propagate_run_wake(dev->bus, enable);
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -602,7 +602,7 @@ acpi_status acpi_add_pm_notifier(struct
- 			void (*func)(struct acpi_device_wakeup_context *context));
- acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
- int acpi_pm_device_sleep_state(struct device *, int *, int);
--int acpi_pm_device_run_wake(struct device *, bool);
-+int acpi_pm_device_wakeup(struct device *dev, bool enable);
- #else
- static inline void acpi_pm_wakeup_event(struct device *dev)
- {
-@@ -625,16 +625,7 @@ static inline int acpi_pm_device_sleep_s
- 	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3_COLD) ?
- 		m : ACPI_STATE_D0;
- }
--static inline int acpi_pm_device_run_wake(struct device *dev, bool enable)
--{
--	return -ENODEV;
--}
--#endif
--
--#ifdef CONFIG_PM_SLEEP
--int acpi_pm_device_sleep_wake(struct device *, bool);
--#else
--static inline int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
-+static inline int acpi_pm_device_wakeup(struct device *dev, bool enable)
- {
- 	return -ENODEV;
- }
-Index: linux-pm/drivers/pnp/pnpacpi/core.c
-===================================================================
---- linux-pm.orig/drivers/pnp/pnpacpi/core.c
-+++ linux-pm/drivers/pnp/pnpacpi/core.c
-@@ -149,8 +149,8 @@ static int pnpacpi_suspend(struct pnp_de
- 	}
- 
- 	if (device_can_wakeup(&dev->dev)) {
--		error = acpi_pm_device_sleep_wake(&dev->dev,
--				device_may_wakeup(&dev->dev));
-+		error = acpi_pm_device_wakeup(&dev->dev,
-+					      device_may_wakeup(&dev->dev));
- 		if (error)
- 			return error;
- 	}
-@@ -185,7 +185,7 @@ static int pnpacpi_resume(struct pnp_dev
- 	}
- 
- 	if (device_may_wakeup(&dev->dev))
--		acpi_pm_device_sleep_wake(&dev->dev, false);
-+		acpi_pm_device_wakeup(&dev->dev, false);
- 
- 	if (acpi_device_power_manageable(acpi_dev))
- 		error = acpi_device_set_power(acpi_dev, ACPI_STATE_D0);
-
+ 	/*
