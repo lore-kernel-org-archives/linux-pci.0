@@ -1,134 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:34160 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751079AbdFSUHL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 16:07:11 -0400
-Received: by mail-qk0-f195.google.com with SMTP id d14so8300661qkb.1
-        for <linux-pci@vger.kernel.org>; Mon, 19 Jun 2017 13:07:11 -0700 (PDT)
-Date: Mon, 19 Jun 2017 16:07:02 -0400
-From: Jon Mason <jdmason@kudzu.us>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>
-Subject: Re: [RFC PATCH 00/13] Switchtec NTB Support
-Message-ID: <20170619200659.GA20437@kudzu.us>
-References: <20170615203729.9009-1-logang@deltatee.com>
+Return-Path: <SRS0=+qiU=5Z=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=+qiU=5Z=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH] PCI/MSI: Improve MSI alias detection
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: bhelgaas@google.com, marc.zyngier@arm.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>,
+ Alex Williamson <alex.williamson@redhat.com>
+References: <20170531175230.16529-2-robin.murphy@arm.com>
+ <20170619215214.GB554@bhelgaas-glaptop.roam.corp.google.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <a9f7292e-1bce-fd38-b146-b530dfce38d1@arm.com>
+Date: Tue, 20 Jun 2017 12:03:25 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170615203729.9009-1-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170619215214.GB554@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 15, 2017 at 02:37:16PM -0600, Logan Gunthorpe wrote:
-> Hi,
+On 19/06/17 22:52, Bjorn Helgaas wrote:
+> [+cc David, Alex]
 > 
-> This patchset implements Non-Transparent Bridge (NTB) support for the
-> Microsemi Switchtec series of switches. We're looking for some
-> review from the community at this point but hope to get it upstreamed
-> for v4.14.
+> On Wed, May 31, 2017 at 06:52:28PM +0100, Robin Murphy wrote:
+>> Currently, we consider all DMA aliases when calculating MSI requester
+>> IDs. This turns out to be the wrong thing to do in the face of pure DMA
+>> quirks like those of Marvell SATA cards, where we can end up configuring
+>> the MSI doorbell to expect the phantom function alias, such that it then
+>> goes on to happily ignore actual MSI writes coming from the card on the
+>> real RID.
 > 
-> Switchtec NTB support is configured over the same function and bar
-> as the management endpoint. Thus, the new driver hooks into the
-> management driver which we had merged in v4.12. We use the class
-> interface API to register an NTB device for every switchtec device
-> which supports NTB (not all do).
-> 
-> The Switchtec hardware supports doorbells, memory windows and messages.
-> Seeing there is no native scratchpad support, 128 spads are emulated
-> through the use of a pre-setup memory window. The switch has 64
-> doorbells which are shared between the two partitions and a
-> configurable set of memory windows. While the hardware supports more
-> than 2 partitions, this driver only supports the first two seeing
-> the current NTB API only supports two hosts.
-> 
-> The driver has been tested with ntb_netdev and fully passes the
-> ntb_test script.
-> 
-> This patchset is based off of v4.12-rc5 and can be found in this
-> git repo:
-> 
-> https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb
+> I guess you're making the assumption that DMA might use phantom
+> function aliases (aliases on the same bus as the actual device), but
+> MSI writes will not?
 
-I think this code is of quality enough to go from an RFC to a standard
-patch, and we can nit pick it to death there ;-)
+Indeed - that's certainly the case for the Marvell 88SE9128 that I have
+here (and it was a report involving a similar Marvell SATA card that
+first brought this to our attention). I appreciate that there's not
+necessarily a general right answer, but the generic MSI infrastructure
+is rather built around the notion of a device having a single ID, so
+this is really a case of picking the most likely compromise to cover the
+greatest number of cases.
 
-Please rebase on ntb-next (which I believe you are already doing), and
-resbutmit.
-
-Also, we'll need to decide how to handle the patches to
-drivers/pci/switches
-We have 2 options here.
-1.  We can split it up into 2 separate series, and have Bjorn take the
-drivers/pci/switches in his, and I'll take the NTB portions.  The down
-side of this is that I'll have to wait for his to get pulled in first,
-which will push this back a full kernel release (which based on your
-comment above doesn't seem your prefered choice)
-2.  I can pull in the drivers/pci/switches patches into my NTB tree,
-but I'll want Bjorn's ack on those patches before I'll pull them in.  
-
-I'm thinking that we'll want to keep this series all in one place.
-So, #2 sounds like the best option.  But, I need Bjorns $0.02 on this.
-
-
-FYI, I ran smatch on the patches and got this.  Please correct them in
-v2 (or v1 of the non-RFC...however you want to think of it).
-drivers/pci/switch/switchtec.c:484 switchtec_dev_read() error: double unlock 'mutex:&stdev->mrpc_mutex'
-drivers/pci/switch/switchtec.c:506 switchtec_dev_read() error: double unlock 'mutex:&stdev->mrpc_mutex'
-drivers/pci/switch/switchtec.c:513 switchtec_dev_read() warn: inconsistent returns 'mutex:&stdev->mrpc_mutex'.
-
-
-Thanks,
-Jon
-
-
+>> Improve the alias walk to only account for the topological aliases that
+>> matter, based on the logic from the Intel IRQ remapping code.
 > 
-> Thanks,
+> Can you include a specific function reference here?  It sounds like
+> it'd be useful to compare this with the Intel IRQ remapping code.
+
+set_msi_sid() in drivers/iommu/intel_irq_remapping.c - one small
+difference from VT-d is that here we don't have an equivalent of the
+"verify bus" option, only of considering the full ID.
+
+>> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+>> ---
+>>  drivers/pci/msi.c | 18 +++++++++++++-----
+>>  1 file changed, 13 insertions(+), 5 deletions(-)
+>>
+>> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+>> index ba44fdfda66b..7b34c434970e 100644
+>> --- a/drivers/pci/msi.c
+>> +++ b/drivers/pci/msi.c
+>> @@ -1468,13 +1468,21 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+>>  }
+>>  EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+>>  
+>> +/*
+>> + * If the alias device/RID is on a different bus, it's a topological alias
+>> + * we should care about; otherwise, it's a DMA quirk and we don't.
+>> + */
+>>  static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+>>  {
+>>  	u32 *pa = data;
+>> +	u8 bus = PCI_BUS_NUM(*pa);
+>> +
+>> +	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
+>> +		*pa = alias;
+>>  
+>> -	*pa = alias;
 > 
-> Logan
+> Aliases can arise both because of device defects, e.g., the phantom
+> function quirks, and because of bridges, e.g., all the stuff in
+> pci_for_each_dma_alias().
 > 
-> 
-> Logan Gunthorpe (13):
->   switchtec: move structure definitions into a common header
->   switchtec: export class symbol for use in upper layer driver
->   switchtec: add ntb hardware register definitions
->   switchtec: add link event notifier block
->   switchtec_ntb: introduce initial ntb driver
->   switchtec_ntb: initialize hardware for memory windows
->   switchtec_ntb: initialize hardware for doorbells and messages
->   switchtec_ntb: add skeleton ntb driver
->   switchtec_ntb: add link management
->   switchtec_ntb: implement doorbell registers
->   switchtec_ntb: implement scratchpad registers
->   switchtec_ntb: add memory window support
->   switchtec_ntb: update switchtec documentation with notes for ntb
-> 
->  Documentation/switchtec.txt         |   12 +
->  MAINTAINERS                         |    2 +
->  drivers/ntb/hw/Kconfig              |    1 +
->  drivers/ntb/hw/Makefile             |    1 +
->  drivers/ntb/hw/mscc/Kconfig         |    9 +
->  drivers/ntb/hw/mscc/Makefile        |    1 +
->  drivers/ntb/hw/mscc/switchtec_ntb.c | 1144 +++++++++++++++++++++++++++++++++++
->  drivers/pci/switch/switchtec.c      |  319 ++--------
->  include/linux/ntb.h                 |    3 +
->  include/linux/switchtec.h           |  365 +++++++++++
->  10 files changed, 1601 insertions(+), 256 deletions(-)
->  create mode 100644 drivers/ntb/hw/mscc/Kconfig
->  create mode 100644 drivers/ntb/hw/mscc/Makefile
->  create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
->  create mode 100644 include/linux/switchtec.h
-> 
-> --
-> 2.11.0
-> 
-> -- 
-> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
-> To post to this group, send email to linux-ntb@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/20170615203729.9009-1-logang%40deltatee.com.
-> For more options, visit https://groups.google.com/d/optout.
+> Why is it that the users of get_msi_id_cb() can get away with
+> collapsing any of these bridge aliases into the last one that
+> pci_for_each_dma_alias() finds?  I guess this is another question
+> about exactly why DMA and MSI are different here.
+
+As before, it's mostly just a case of trying to pick the least-worst
+option to fit the constraints of the generic MSI layer (assuming a
+bridge in the PCI->PCIe direction that is always going to introduce an
+alias) - based on the assumption that the VT-d code has presumably
+worked well enough in practice doing a similar thing - even if that
+doesn't quite seem to match my reading of the bridge spec (AFAICS it may
+be true for reads, but writes are somewhat murkier).
+
+>From the DMA angle[1], we do have the ability to simply consider every
+alias for translation at the IOMMU, since the IOMMU layer already has
+provisions for devices having multiple IDs. Indeed in the Marvell case
+it is certainly necessary to consider both the real and phantom
+functions so that both DMA and MSIs even get through in the first place.
+
+Robin.
+
+[1]:https://www.mail-archive.com/iommu@lists.linux-foundation.org/msg17979.html
+
+>>  	return 0;
+>>  }
+>> +
+>>  /**
+>>   * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+>>   * @domain:	The interrupt domain
+>> @@ -1488,7 +1496,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+>>  u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>>  {
+>>  	struct device_node *of_node;
+>> -	u32 rid = 0;
+>> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+>>  
+>>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+>>  
+>> @@ -1504,14 +1512,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+>>   * @pdev:	The PCI device
+>>   *
+>>   * Use the firmware data to find a device-specific MSI domain
+>> - * (i.e. not one that is ste as a default).
+>> + * (i.e. not one that is set as a default).
+>>   *
+>> - * Returns: The coresponding MSI domain or NULL if none has been found.
+>> + * Returns: The corresponding MSI domain or NULL if none has been found.
+>>   */
+>>  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+>>  {
+>>  	struct irq_domain *dom;
+>> -	u32 rid = 0;
+>> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+>>  
+>>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+>>  	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
+>> -- 
+>> 2.12.2.dirty
+>>
