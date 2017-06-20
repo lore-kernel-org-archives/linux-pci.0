@@ -1,69 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI: mediatek: fix error handling in
- mtk_pcie_parse_and_add_res()
-Date: Mon, 5 Jun 2017 14:27:58 +0800
-Message-ID: <1496644078-27122-1-git-send-email-ryder.lee@mediatek.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [PATCH 2/7] dt-bindings: PCI: Describe ATS property for root
+ complex nodes
+To: Rob Herring <robh@kernel.org>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org,
+        linux-pci@vger.kernel.org, thunder.leizhen@huawei.com,
+        rjw@rjwysocki.net, will.deacon@arm.com, okaya@codeaurora.org,
+        linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
+        sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
+        sunil.kovvuri@gmail.com, linux-arm-kernel@lists.infradead.org,
+        lenb@kernel.org
+References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+ <20170524180143.19855-3-jean-philippe.brucker@arm.com>
+ <20170531172320.3u6bdctv44aqighy@rob-hp-laptop>
+ <cd63a2dc-8259-482d-19e9-9db60be866f7@arm.com>
+ <20170605172025.qgnocl5ytexnklue@rob-hp-laptop>
+ <65aea93f-d516-f045-f216-3f56e96bdeb6@arm.com>
+Message-ID: <1754b317-767e-7afd-5608-6ef6ea80a162@arm.com>
+Date: Tue, 20 Jun 2017 12:38:26 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Ryder Lee <ryder.lee@mediatek.com>,
- linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <65aea93f-d516-f045-f216-3f56e96bdeb6@arm.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The 'linkup' variable would always increment by one whether the link
-status is true or not. Therefore, this patch fixes the return value in
-mtk_pcie_parse_and_add_res() and removes unnecessary 'linkup' variable.
+On 06/06/2017 12:11 PM, Jean-Philippe Brucker wrote:
+> On 05/06/17 18:20, Rob Herring wrote:
+>> pci-host-{e,}cam-generic is a special case. I'm okay with having a 
+>> property for that I suppose. We should not require this property though 
+>> and allow for it to be implied by the SoC specific compatible as well.
+> 
+> The property isn't useful for host-generic since a host like Qemu can
+> easily disable ATS in the IOMMU. It would only be here for consistency.
+> Changing IOMMU registers wouldn't be as simple for a firmware running on
+> real hardware.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Sorry I was mistaken here. AMD Seattle hardware, for instance, implements
+a pure host-ecam-generic. So it's not exclusively used by Qemu. A quick
+search in the kernel also brings up alpine and thunder2. So I guess I'll
+move ats-supported documentation to host-generic-pci.txt.
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 8ec8fa8..3baafa8 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -373,7 +373,7 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
- 	struct of_pci_range_parser parser;
- 	struct of_pci_range range;
- 	struct resource res;
--	int err, linkup = 0;
-+	int err;
- 
- 	/* parse shared resources */
- 	err = mtk_pcie_handle_shared_resource(pcie);
-@@ -444,11 +444,11 @@ static int mtk_pcie_parse_and_add_res(struct mtk_pcie *pcie)
- 
- 		/* enable each port, and then check link status */
- 		err = mtk_pcie_enable_ports(port);
--		if (!err)
--			linkup++;
-+		if (err)
-+			return err;
- 	}
- 
--	return !linkup;
-+	return 0;
- }
- 
- static int mtk_pcie_request_resources(struct mtk_pcie *pcie)
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Jean
