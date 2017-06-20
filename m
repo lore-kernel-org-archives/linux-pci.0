@@ -1,76 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 21 Jun 2017 11:04:40 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>
-Message-ID: <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
-References: <E1dNcMp-0005RN-1w@optimist>
+Return-Path: <SRS0=YWk+=5Z=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=YWk+=5Z=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <E1dNcMp-0005RN-1w@optimist>
-Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linaro-kernel@lists.linaro.org,
- linux-next@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- kernel-build-reports@lists.linaro.org
-Content-Type: multipart/mixed; boundary="===============6041666503269359164=="
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170619223907.GD554@bhelgaas-glaptop.roam.corp.google.com>
+References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+ <1497153938-26074-2-git-send-email-oza.oza@broadcom.com> <20170612233039.GC4379@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPchnNBnKmeXvhcWTM0Kzdb4b9mvTKXJsHe4KzJ=kk8M=Q@mail.gmail.com> <20170619223907.GD554@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Tue, 20 Jun 2017 18:14:35 +0530
+Message-ID: <CAMSpPPfTA+DWxzZNxL94O-rHQQvp4DOsfMwtNXtLzi2=tHBSOw@mail.gmail.com>
+Subject: Re: [PATCH v3 1/2] PCI: iproc: Retry request when CRS returned from EP
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Jun 20, 2017 at 4:09 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Tue, Jun 13, 2017 at 09:58:22AM +0530, Oza Oza wrote:
+>> On Tue, Jun 13, 2017 at 5:00 AM, Bjorn Helgaas <helgaas@kernel.org> wrot=
+e:
+>> > Please wrap your changelogs to use 75 columns.  "git log" indents the
+>> > changelog by four spaces, so if your text is 75 wide, it will still
+>> > fit without wrapping.
+>> >
+>> > On Sun, Jun 11, 2017 at 09:35:37AM +0530, Oza Pawandeep wrote:
+>> >> For Configuration Requests only, following reset
+>> >> it is possible for a device to terminate the request
+>> >> but indicate that it is temporarily unable to process
+>> >> the Request, but will be able to process the Request
+>> >> in the future =E2=80=93 in this case, the Configuration Request
+>> >> Retry Status 10 (CRS) Completion Status is used
+>> >
+>> > How does this relate to the CRS support we already have in the core,
+>> > e.g., pci_bus_read_dev_vendor_id()?  It looks like your root complex
+>> > already returns 0xffff0001 (CFG_RETRY_STATUS) in some cases.
+>> >
+>> > Also, per spec (PCIe r3.1, sec 2.3.2), CRS Software Visibility only
+>> > affects config reads of the Vendor ID, but you call
+>> > iproc_pcie_cfg_retry() for all config offsets.
+>>
+>> Yes, as per Spec, CRS Software Visibility only affects config read of
+>> the Vendor ID.
+>> For config write or any other config read the Root must automatically
+>> re-issue configuration
+>> request again as a new request, and our PCIe RC fails to do so.
+>
+> OK, if this is a workaround for a hardware defect, let's make that
+> explicit in the changelog (and probably a comment in the code, too).
+>
+> I'm actually not sure the spec *requires* the CRS retries to be done
+> directly in hardware, so it's conceivable the hardware could be
+> working as designed.  But a comment would go a long way toward making
+> this understandable by differentiating it from the generic CRS
+> handling in the core.
+>
+> Bjorn
 
---===============6041666503269359164==
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="h7r4ugs5xtkgfvxs"
-Content-Disposition: inline
+Sure, I will update the commit message and also will add explicit
+comment in the code.
 
-
---h7r4ugs5xtkgfvxs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
-
-Today's -next fails to build an arm allmodconfig due to:
-
-> 	arm-allmodconfig
-> ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
-
-caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
-controller support).
-
---h7r4ugs5xtkgfvxs
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAllKRLcACgkQJNaLcl1U
-h9A55gf9GWoU0Nl57Ta9i1zMX0Fzhlxsrusbd6tN8qkFLcZRjDb1i7ifDVmhezQ4
-nQ7p49Al+wdQhIVMmwUk2WyOW5JDsqwCZg0j0Oy7VGUmP0LHLtDZ946WhpQeFrrn
-w5IRyQEMx9v+UfvvZ81tW6AGXNhsJpbDR6WJ7sVXmjQWTJ8QgZlhimEBHXzaGSDI
-dDQjQ6oVB0AGeLuUkIhpA4cu0aDwNUI9bkjJyPnNTv+ubrKPbBl9jfbo+zD9pmG4
-aCZRfc6igcfxOlKxHnBZpWEYFn9eRGLv4AUT+qc7WGdbvXS2FS0C8OZ3Q3ZGpPux
-G4XWNut79PaDJMlOY0rJZN6yJWbk8Q==
-=wUFQ
------END PGP SIGNATURE-----
-
---h7r4ugs5xtkgfvxs--
-
-
---===============6041666503269359164==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---===============6041666503269359164==--
+Regards,
+Oza.
