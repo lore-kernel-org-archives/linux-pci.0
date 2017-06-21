@@ -1,315 +1,207 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:59685 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751613AbdFEQUx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 5 Jun 2017 12:20:53 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 8/9] pci: removing old irq api from pcie-designware
-Date: Mon,  5 Jun 2017 17:19:55 +0100
-Message-Id: <72a68cf02a7021f8d9a9052ab93e13d501a6ab71.1496677911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496677911.git.jpinto@synopsys.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 21 Jun 2017 11:30:42 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
+Message-ID: <20170621103042.GA1712@red-moon>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <CACRpkdZ1rBq9eLJkz_gRuXAG=if+xXf-jPzDEPCfG8EgUmUG3A@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CACRpkdZ1rBq9eLJkz_gRuXAG=if+xXf-jPzDEPCfG8EgUmUG3A@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch removes the old interrupt API.
+On Wed, Jun 21, 2017 at 10:39:31AM +0200, Linus Walleij wrote:
+> On Thu, Jun 8, 2017 at 4:13 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> 
+> I pulled this into the Gemini tree:
+> > [1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal-v2
+> 
+> And then this happens:
+> 
+> OF: PCI: host bridge /soc/pci@50000000 ranges:
+> OF: PCI:    IO 0x50000000..0x500fffff -> 0x00000000
+> OF: PCI:   MEM 0x58000000..0x5fffffff -> 0x58000000
+> Unable to handle kernel NULL pointer dereference at virtual address 00000070
+> pgd = c0004000
+> [00000070] *pgd=00000000
+> Internal error: Oops: 17 [#1] PREEMPT ARM
+> CPU: 0 PID: 254 Comm: kworker/0:1 Not tainted 4.12.0-rc3+ #888
+> Hardware name: Gemini (Device Tree)
+> Workqueue: events deferred_probe_work_func
+> task: c38c3a40 task.stack: c390a000
+> PC is at faraday_pci_probe+0x274/0x65c
+> LR is at __irq_put_desc_unlock+0x18/0x70
+> pc : [<c0232648>]    lr : [<c004be48>]    psr: 80000013
+> sp : c390bdf0  ip : c3424274  fp : c3ac2ee0
+> r10: c3f77718  r9 : c3ad49b0  r8 : c3907800
+> r7 : 00000004  r6 : c390be18  r5 : c3907810  r4 : c3ad4810
+> r3 : 00000000  r2 : 00000000  r1 : 00000001  r0 : c3ac2de0
+> Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+> Control: 0000397f  Table: 03a9c000  DAC: 00000053
+> Process kworker/0:1 (pid: 254, stack limit = 0xc390a190)
+> Stack: (0xc390bdf0 to 0xc390c000)
+> bde0:                                     c0534a60 c3ad49b0 00000003 c024cb68
+> be00: 00000001 20000013 00000000 50000000 00000007 000020dd c3ae2680 c3ae2740
+> be20: c07c861f c0134328 00000000 c3ad5fa0 c3910a50 c3910a50 00000001 00000000
+> be40: 00000000 c01344ec c3910a50 c3910a50 00000001 00000000 c3910a50 c39d76e0
+> be60: c3ad5fa0 c05f6f58 c3910a50 c3907810 c3907810 c07cba88 fffffdfb 00000003
+> be80: 00000000 c07c5040 c386e420 c02bbbe0 c3907810 c081c6c4 00000000 c07cba88
+> bea0: 00000003 c02ba9dc 00000000 c390bee0 c02bab30 00000001 c07bf660 00000000
+> bec0: c07c5040 c02b93dc c382829c c39886f4 c3907810 c3907844 c3907810 c02ba674
+> bee0: c3907810 00000001 c390bf0c c3907810 c07d3a80 c3907810 c07d38e4 c02b961c
+> bf00: c3907810 c07d38d0 c07d38d0 c02ba210 c07d38ec c386e420 00000000 c3f6b100
+> bf20: c07bf660 c002dac0 00000008 c07bf660 c07bf660 c386e438 c390a000 c07bf674
+> bf40: 00000008 c07bf660 c07c5040 c002e044 c390a000 00000001 00000000 00000000
+> bf60: c3901518 c3901500 ffffe000 c38e2700 00000000 c3901518 c386e420 c002ddb4
+> bf80: c3839ee4 c00335ec c390a000 c38e2700 c003350c 00000000 00000000 00000000
+> bfa0: 00000000 00000000 00000000 c000a270 00000000 00000000 00000000 00000000
+> bfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> bfe0: 00000000 00000000 00000000 00000000 00000013 00000000 ffffffff ffffffff
+> [<c0232648>] (faraday_pci_probe) from [<c02bbbe0>]
+> (platform_drv_probe+0x50/0xb4)
+> [<c02bbbe0>] (platform_drv_probe) from [<c02ba9dc>]
+> (driver_probe_device+0x248/0x2dc)
+> [<c02ba9dc>] (driver_probe_device) from [<c02b93dc>]
+> (bus_for_each_drv+0x68/0x98)
+> [<c02b93dc>] (bus_for_each_drv) from [<c02ba674>] (__device_attach+0xa8/0x110)
+> [<c02ba674>] (__device_attach) from [<c02b961c>] (bus_probe_device+0x88/0x90)
+> [<c02b961c>] (bus_probe_device) from [<c02ba210>]
+> (deferred_probe_work_func+0x54/0x80)
+> [<c02ba210>] (deferred_probe_work_func) from [<c002dac0>]
+> (process_one_work+0x13c/0x430)
+> [<c002dac0>] (process_one_work) from [<c002e044>] (worker_thread+0x290/0x5f4)
+> [<c002e044>] (worker_thread) from [<c00335ec>] (kthread+0xe0/0x120)
+> [<c00335ec>] (kthread) from [<c000a270>] (ret_from_fork+0x14/0x24)
+> Code: e59401b0 e3700a01 8a00001d e59421ac (e5d23070)
+> ---[ end trace 1e313b1ea11e101c ]---
+> 
+> I'm trying to figure out what is causing it.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
-Change v1->v2:
-- Nothing changed, just to follow the patch set version.
+Mind trying this patch please on top of my branch (compile tested, that's
+all I can do)
 
- drivers/pci/dwc/pci-keystone-dw.c      |   2 +-
- drivers/pci/dwc/pci-keystone.h         |   2 +-
- drivers/pci/dwc/pci-layerscape.c       |   3 +-
- drivers/pci/dwc/pcie-designware-host.c | 192 +--------------------------------
- drivers/pci/dwc/pcie-designware.h      |   2 +-
- 5 files changed, 6 insertions(+), 195 deletions(-)
+-- >8 --
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 9cfc90a..316ee50 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -178,12 +178,11 @@ static int faraday_res_to_memcfg(resource_size_t mem_base,
+ 	return 0;
+ }
+ 
+-static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
+-				   int config, int size, u32 *value)
++static int faraday_raw_pci_read_config(struct faraday_pci *p, int bus_number,
++				       unsigned int fn, int config, int size,
++				       u32 *value)
+ {
+-	struct faraday_pci *p = bus->sysdata;
+-
+-	writel(PCI_CONF_BUS(bus->number) |
++	writel(PCI_CONF_BUS(bus_number) |
+ 			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
+ 			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
+ 			PCI_CONF_WHERE(config) |
+@@ -197,11 +196,19 @@ static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
+ 	else if (size == 2)
+ 		*value = (*value >> (8 * (config & 3))) & 0xFFFF;
+ 
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
++				   int config, int size, u32 *value)
++{
++	struct faraday_pci *p = bus->sysdata;
++
+ 	dev_dbg(&bus->dev,
+ 		"[read]  slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
+ 		PCI_SLOT(fn), PCI_FUNC(fn), config, size, *value);
+ 
+-	return PCIBIOS_SUCCESSFUL;
++	return faraday_raw_pci_read_config(p, bus->number, fn, config, size, value);
+ }
+ 
+ static int faraday_raw_pci_write_config(struct faraday_pci *p, int bus_number,
+@@ -257,10 +264,10 @@ static void faraday_pci_ack_irq(struct irq_data *d)
+ 	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
+ 	unsigned int reg;
+ 
+-	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+ 	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
+ 	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTSTS_SHIFT);
+-	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
++	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, reg);
+ }
+ 
+ static void faraday_pci_mask_irq(struct irq_data *d)
+@@ -268,10 +275,10 @@ static void faraday_pci_mask_irq(struct irq_data *d)
+ 	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
+ 	unsigned int reg;
+ 
+-	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+ 	reg &= ~((0xF << PCI_CTRL2_INTSTS_SHIFT)
+ 		 | BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT));
+-	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
++	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, reg);
+ }
+ 
+ static void faraday_pci_unmask_irq(struct irq_data *d)
+@@ -279,10 +286,10 @@ static void faraday_pci_unmask_irq(struct irq_data *d)
+ 	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
+ 	unsigned int reg;
+ 
+-	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+ 	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
+ 	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT);
+-	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
++	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, reg);
+ }
+ 
+ static void faraday_pci_irq_handler(struct irq_desc *desc)
+@@ -291,7 +298,7 @@ static void faraday_pci_irq_handler(struct irq_desc *desc)
+ 	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+ 	unsigned int irq_stat, reg, i;
+ 
+-	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+ 	irq_stat = reg >> PCI_CTRL2_INTSTS_SHIFT;
+ 
+ 	chained_irq_enter(irqchip, desc);
 
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index 1b7314d..776f8a2 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -162,7 +162,7 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
- 			 BIT(bit_pos));
- }
- 
--int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip)
-+int ks_dw_pcie_msi_host_init(struct dw_pcie *pci)
- {
- 	return dw_pcie_allocate_domains(pci);
- }
-diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
-index 83179382..89119271 100644
---- a/drivers/pci/dwc/pci-keystone.h
-+++ b/drivers/pci/dwc/pci-keystone.h
-@@ -59,5 +59,5 @@ void ks_dw_pcie_msi_irq_ack(int i, struct pcie_port *pp);
- void ks_dw_pcie_msi_set_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq);
- void ks_dw_pcie_v3_65_scan_bus(struct pcie_port *pp);
--int ks_dw_pcie_msi_host_init(struct dw_pcie *pci, struct msi_controller *chip);
-+int ks_dw_pcie_msi_host_init(struct dw_pcie *pci);
- int ks_dw_pcie_link_up(struct dw_pcie *pci);
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 4fb491b..231ea75 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -162,8 +162,7 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- }
- 
--static int ls_pcie_msi_host_init(struct dw_pcie *pci,
--				 struct msi_controller *chip)
-+static int ls_pcie_msi_host_init(struct dw_pcie *pci)
- {
- 	struct device *dev = pci->dev;
- 	struct device_node *np = dev->of_node;
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index feeee6a..6c771cc 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -46,14 +46,6 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	return dw_pcie_write(pci->dbi_base + where, size, val);
- }
- 
--static struct irq_chip dw_msi_irq_chip = {
--	.name = "PCI-MSI",
--	.irq_enable = pci_msi_unmask_irq,
--	.irq_disable = pci_msi_mask_irq,
--	.irq_mask = pci_msi_mask_irq,
--	.irq_unmask = pci_msi_unmask_irq,
--};
--
- static void dw_msi_mask_irq(struct irq_data *d)
- {
- 	pci_msi_mask_irq(d);
-@@ -315,186 +307,6 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 			    upper_32_bits(msi_target));
- }
- 
--static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
--{
--	unsigned int res, bit, ctrl;
--
--	ctrl = irq / 32;
--	res = ctrl * 12;
--	bit = irq % 32;
--	pp->irq_status[ctrl] &= ~(1 << bit);
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
--			    pp->irq_status[ctrl]);
--}
--
--static void clear_irq_range(struct pcie_port *pp, unsigned int irq_base,
--			    unsigned int nvec, unsigned int pos)
--{
--	unsigned int i;
--
--	for (i = 0; i < nvec; i++) {
--		irq_set_msi_desc_off(irq_base, i, NULL);
--		/* Disable corresponding interrupt on MSI controller */
--		if (pp->ops->msi_clear_irq)
--			pp->ops->msi_clear_irq(pp, pos + i);
--		else
--			dw_pcie_msi_clear_irq(pp, pos + i);
--	}
--
--	bitmap_release_region(pp->msi_irq_in_use, pos, order_base_2(nvec));
--}
--
--static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
--{
--	unsigned int res, bit, ctrl;
--
--	ctrl = irq / 32;
--	res = ctrl * 12;
--	bit = irq % 32;
--	pp->irq_status[ctrl] |= 1 << bit;
--	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4,
--			    pp->irq_status[ctrl]);
--}
--
--static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
--{
--	int irq, pos0, i;
--	struct pcie_port *pp;
--
--	pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
--	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
--				       order_base_2(no_irqs));
--	if (pos0 < 0)
--		goto no_valid_irq;
--
--	irq = irq_find_mapping(pp->irq_domain, pos0);
--	if (!irq)
--		goto no_valid_irq;
--
--	/*
--	 * irq_create_mapping (called from dw_pcie_host_init) pre-allocates
--	 * descs so there is no need to allocate descs here. We can therefore
--	 * assume that if irq_find_mapping above returns non-zero, then the
--	 * descs are also successfully allocated.
--	 */
--
--	for (i = 0; i < no_irqs; i++) {
--		if (irq_set_msi_desc_off(irq, i, desc) != 0) {
--			clear_irq_range(pp, irq, i, pos0);
--			goto no_valid_irq;
--		}
--		/*Enable corresponding interrupt in MSI interrupt controller */
--		if (pp->ops->msi_set_irq)
--			pp->ops->msi_set_irq(pp, pos0 + i);
--		else
--			dw_pcie_msi_set_irq(pp, pos0 + i);
--	}
--
--	*pos = pos0;
--	desc->nvec_used = no_irqs;
--	desc->msi_attrib.multiple = order_base_2(no_irqs);
--
--	return irq;
--
--no_valid_irq:
--	*pos = pos0;
--	return -ENOSPC;
--}
--
--static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
--{
--	struct msi_msg msg;
--	u64 msi_target;
--
--	if (pp->ops->get_msi_addr)
--		msi_target = pp->ops->get_msi_addr(pp);
--	else
--		msi_target = virt_to_phys((void *)pp->msi_data);
--
--	msg.address_lo = (u32)(msi_target & 0xffffffff);
--	msg.address_hi = (u32)(msi_target >> 32 & 0xffffffff);
--
--	if (pp->ops->get_msi_data)
--		msg.data = pp->ops->get_msi_data(pp, pos);
--	else
--		msg.data = pos;
--
--	pci_write_msi_msg(irq, &msg);
--}
--
--static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
--			    struct msi_desc *desc)
--{
--	int irq, pos;
--	struct pcie_port *pp = pdev->bus->sysdata;
--
--	if (desc->msi_attrib.is_msix)
--		return -EINVAL;
--
--	irq = assign_irq(1, desc, &pos);
--	if (irq < 0)
--		return irq;
--
--	dw_msi_setup_msg(pp, irq, pos);
--
--	return 0;
--}
--
--static int dw_msi_setup_irqs(struct msi_controller *chip, struct pci_dev *pdev,
--			     int nvec, int type)
--{
--#ifdef CONFIG_PCI_MSI
--	int irq, pos;
--	struct msi_desc *desc;
--	struct pcie_port *pp = pdev->bus->sysdata;
--
--	/* MSI-X interrupts are not supported */
--	if (type == PCI_CAP_ID_MSIX)
--		return -EINVAL;
--
--	WARN_ON(!list_is_singular(&pdev->dev.msi_list));
--	desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
--
--	irq = assign_irq(nvec, desc, &pos);
--	if (irq < 0)
--		return irq;
--
--	dw_msi_setup_msg(pp, irq, pos);
--
--	return 0;
--#else
--	return -EINVAL;
--#endif
--}
--
--static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
--{
--	struct irq_data *data = irq_get_irq_data(irq);
--	struct msi_desc *msi = irq_data_get_msi_desc(data);
--	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(msi);
--
--	clear_irq_range(pp, irq, 1, data->hwirq);
--}
--
--static struct msi_controller dw_pcie_msi_chip = {
--	.setup_irq = dw_msi_setup_irq,
--	.setup_irqs = dw_msi_setup_irqs,
--	.teardown_irq = dw_msi_teardown_irq,
--};
--
--static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
--			   irq_hw_number_t hwirq)
--{
--	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
--	irq_set_chip_data(irq, domain->host_data);
--
--	return 0;
--}
--
--static const struct irq_domain_ops msi_domain_ops = {
--	.map = dw_pcie_msi_map,
--};
--
- int dw_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -504,7 +316,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	struct resource_entry *win, *tmp;
- 	struct pci_bus *bus, *child;
- 	struct resource *cfg_res;
--	int i, ret;
-+	int ret;
- 
- 	LIST_HEAD(res);
- 
-@@ -629,7 +441,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 							 dw_chained_msi_isr,
- 							 pci);
- 		} else {
--			ret = pp->ops->msi_host_init(pci, &dw_pcie_msi_chip);
-+			ret = pp->ops->msi_host_init(pci);
- 			if (ret < 0)
- 				goto error;
- 		}
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 7385b4e..f95c086 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -142,7 +142,7 @@ struct dw_pcie_host_ops {
- 	u32 (*get_msi_data)(struct pcie_port *pp, int pos);
- 	void (*scan_bus)(struct pcie_port *pp);
- 	void (*set_num_vectors)(struct pcie_port *pp);
--	int (*msi_host_init)(struct dw_pcie *pci, struct msi_controller *chip);
-+	int (*msi_host_init)(struct dw_pcie *pci);
- 	void (*msi_irq_ack)(int irq, struct pcie_port *pp);
- };
- 
--- 
-2.9.3
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
