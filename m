@@ -1,168 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43932 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753653AbdF0Vjs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jun 2017 17:39:48 -0400
-Message-ID: <5952D144.8060609@oracle.com>
-Date: Tue, 27 Jun 2017 17:42:28 -0400
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
-MIME-Version: 1.0
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH v4] PCI: Workaround wrong flags completions for IDT switch
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mail-lf0-f52.google.com ([209.85.215.52]:35172 "EHLO
+        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751736AbdFUI5i (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2017 04:57:38 -0400
+Received: by mail-lf0-f52.google.com with SMTP id p189so89917618lfe.2
+        for <linux-pci@vger.kernel.org>; Wed, 21 Jun 2017 01:57:37 -0700 (PDT)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH v2] pci: ftpci100: Make clocks compulsory
+Date: Wed, 21 Jun 2017 10:57:30 +0200
+Message-Id: <20170621085730.28804-1-linus.walleij@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+This fixes a regression on the FTPCI100 PCI driver.
 
-The IDT switch incorrectly flags an ACS source violation on a read config
-request to an end point device on the completion (IDT 89H32H8G3-YC,
-errata #36) even though the PCI Express spec states that completions are
-never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
+When the clock controller was augmented to probe clocks
+from the platform device except to the most basic clocks
+pertaining to timers, clocks may return an error pointer
+containing -EPROBE_DEFER.
 
-The suggested workaround by IDT is to issue a configuration write to the
-downstream device before issuing the first config read. This allows the
-downstream device to capture its bus number, thus avoiding the ACS
-violation on the completion.
+This hit the PCI driver which would try to continue
+without the clocks, but the actual clocks appeared later,
+so we did not pick them up properly, and in the end of
+the boot, these clocks get gated off if no users register,
+so the PCI host became numbed off and silently nonworking.
 
-The patch does the following -
+The clocks for this PCI bus are defined properly for all
+platforms implementing it, so we should make them compulsory
+before new users arrive so we have our resources under
+control.
 
-1. Disable ACS source violation if enabled
-2. Wait for config space access to become available by reading vendor id
-3. Do a config write to the end point (errata workaround)
-4. Enable ACS source validation (if it was enabled to begin with)
+This makes the driver bail out of probe with any error
+code from the clock, including -EPROBE_DEFER so that we
+again have a clean boot.
 
--v2: move workaround to pci_bus_read_dev_vendor_id() from 
-pci_bus_check_dev()
-      and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
--v3: add bus->self check for root bus and virtual bus for sriov vfs.
--v4: only do workaround for IDT switches
+Fixes: cea186ac1e45 ("pci: ftpci100: Add clock handling")
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ChangeLog v1->v2:
+- Inadvertedly managed to switch PTR_ERR() for ERR_PTR()
+  in the code, and the compile screamed.
+---
+ drivers/pci/host/pci-ftpci100.c | 28 ++++++++++++----------------
+ 1 file changed, 12 insertions(+), 16 deletions(-)
 
-Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
---
-
-  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
-  drivers/pci/pci.h   |  1 +
-  drivers/pci/probe.c | 38 ++++++++++++++++++++++++++++++++++++--
-  3 files changed, 70 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 563901c..a7a2e2b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2835,6 +2835,39 @@ static bool pci_acs_flags_enabled(struct pci_dev 
-*pdev, u16 acs_flags)
-  }
-
-  /**
-+ *  pci_std_enable_acs_sv - enable/disable ACS source validation if 
-supported by the switch
-+ *  @dev - pcie switch/RP
-+ *  @enable - enable (1) or disable (0) source validation
-+ *
-+ *  Returns : < 0 on failure
-+ *           previous acs_sv state
-+ */
-+int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable)
-+{
-+	int pos;
-+	u16 cap;
-+	u16 ctrl;
-+	int retval;
-+
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-+	if (!pos)
-+		return -ENODEV;
-+
-+	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
-+	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-+
-+	retval = !!(ctrl & cap & PCI_ACS_SV);
-+	if (enable)
-+		ctrl |= (cap & PCI_ACS_SV);
-+	else
-+		ctrl &= ~(cap & PCI_ACS_SV);
-+
-+	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-+
-+	return retval;
-+}
-+
-+/**
-   * pci_acs_enabled - test ACS against required flags for a given device
-   * @pdev: device to test
-   * @acs_flags: required PCI ACS flags
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f8113e5..3960c2a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -343,6 +343,7 @@ static inline resource_size_t 
-pci_resource_alignment(struct pci_dev *dev,
-  }
-
-  void pci_enable_acs(struct pci_dev *dev);
-+int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable);
-
-  #ifdef CONFIG_PCIE_PTM
-  void pci_ptm_init(struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 19c8950..c154a90 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1763,8 +1763,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
-  }
-  EXPORT_SYMBOL(pci_alloc_dev);
-
--bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
--				int crs_timeout)
-+static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn,
-+					 u32 *l, int crs_timeout)
-  {
-  	int delay = 1;
-
-@@ -1801,6 +1801,40 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus 
-*bus, int devfn, u32 *l,
-
-  	return true;
-  }
-+
-+bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-+				int crs_timeout)
-+{
-+	int found;
-+	int enable = -1;
-+	int idt_workaround = (bus->self && (bus->self->vendor == 
-PCI_VENDOR_ID_IDT));
-+	/*
-+	 * Some IDT switches flag an ACS violation for config reads
-+	 * even though the PCI spec allows for it (PCIe 3.1, 6.1.12.1)
-+	 * It flags it because the bus number is not properly set in the
-+	 * completion. The workaround is to do a dummy write to properly
-+	 * latch number once the device is ready for config operations
-+	 */
-+
-+	if (idt_workaround)
-+		enable = pci_std_enable_acs_sv(bus->self, false);
-+
-+	found = __pci_bus_read_dev_vendor_id(bus, devfn, l, crs_timeout);
-+
-+	/*
-+	 * The fact that we can read the vendor id indicates that the device
-+	 * is ready for config operations. Do the write as part of the errata
-+	 * workaround.
-+	 */
-+	if (idt_workaround) {
-+		if (found)
-+			pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
-+		if (enable > 0)
-+			pci_std_enable_acs_sv(bus->self, enable);
-+	}
-+
-+	return found;
-+}
-  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index d3bf153a2ab2..db31ab21884e 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -463,24 +463,20 @@ static int faraday_pci_probe(struct platform_device *pdev)
+ 
+ 	/* Retrieve and enable optional clocks */
+ 	clk = devm_clk_get(dev, "PCLK");
+-	if (IS_ERR(clk)) {
+-		dev_err(dev, "no PCLK available\n");
+-	} else {
+-		ret = clk_prepare_enable(clk);
+-		if (ret) {
+-			dev_err(dev, "could not prepare PCLK\n");
+-			return ret;
+-		}
++	if (IS_ERR(clk))
++		return PTR_ERR(clk);
++	ret = clk_prepare_enable(clk);
++	if (ret) {
++		dev_err(dev, "could not prepare PCLK\n");
++		return ret;
+ 	}
+ 	p->bus_clk = devm_clk_get(dev, "PCICLK");
+-	if (IS_ERR(p->bus_clk)) {
+-		dev_err(dev, "no PCICLK available\n");
+-	} else {
+-		ret = clk_prepare_enable(p->bus_clk);
+-		if (ret) {
+-			dev_err(dev, "could not prepare PCICLK\n");
+-			return ret;
+-		}
++	if (IS_ERR(p->bus_clk))
++		return PTR_ERR(clk);
++	ret = clk_prepare_enable(p->bus_clk);
++	if (ret) {
++		dev_err(dev, "could not prepare PCICLK\n");
++		return ret;
+ 	}
+ 
+ 	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-- 
+2.9.4
