@@ -1,24 +1,11 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
- <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
- flag
-Date: Sat, 3 Jun 2017 12:04:07 +0800
-Message-ID: <1496462647-7632-4-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1496462647-7632-1-git-send-email-dingtianhong@huawei.com>
-References: <1496462647-7632-1-git-send-email-dingtianhong@huawei.com>
-MIME-Version: 1.0
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 1/4] ARM/PCI: iop13xx: address uninitialized variable warning
+Date: Wed, 21 Jun 2017 23:52:59 +0200
+Message-Id: <20170621215323.3921382-1-arnd@arndb.de>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -26,98 +13,44 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+The last rework returned a variable that the compiler cannot prove
+to be initialized:
 
-cxgb4 Ethernet driver now queries Root Complex Port to determine if it can
-send TLPs to it with the Relaxed Ordering Attribute set.
+arch/arm/mach-iop13xx/pci.c: In function 'iop13xx_scan_bus':
+arch/arm/mach-iop13xx/pci.c:509:17: error: 'ret' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+In the switch statement that sets the return value, this adds
+a default returning an error.
+
+Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
- 3 files changed, 21 insertions(+), 2 deletions(-)
+ arch/arm/mach-iop13xx/pci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index e88c180..478f25a 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
- 	USING_SOFT_PARAMS  = (1 << 6),
- 	MASTER_PF          = (1 << 7),
- 	FW_OFLD_CONN       = (1 << 9),
-+	ROOT_NO_RELAXED_ORDERING = (1 << 10),
- };
+diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
+index b97879bfb81a..3c51a9bb9b49 100644
+--- a/arch/arm/mach-iop13xx/pci.c
++++ b/arch/arm/mach-iop13xx/pci.c
+@@ -553,6 +553,8 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 		if (!ret)
+ 			pci_bus_atue = bridge->bus;
+ 		break;
++	default:
++		ret = -EINVAL;
+ 	}
  
- enum {
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 38a5c67..fbfe341 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -4628,6 +4628,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- #ifdef CONFIG_PCI_IOV
- 	u32 v, port_vec;
- #endif
-+	struct pci_dev *root;
- 
- 	printk_once(KERN_INFO "%s - version %s\n", DRV_DESC, DRV_VERSION);
- 
-@@ -4726,6 +4727,22 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
- 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
- 
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * So we check our Root Complex to see if it's flaged with advice
-+	 * against using Relaxed Ordering.
-+	 */
-+	root = pci_find_pcie_root_port(adapter->pdev);
-+	if (pcie_get_relaxed_ordering(root))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	spin_lock_init(&adapter->stats_lock);
- 	spin_lock_init(&adapter->tid_release_lock);
- 	spin_lock_init(&adapter->win0_lock);
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-index f05f0d4..ac229a3 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 	struct fw_iq_cmd c;
- 	struct sge *s = &adap->sge;
- 	struct port_info *pi = netdev_priv(dev);
-+	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/* Size needs to be multiple of 16, including status entry. */
- 	iq->size = roundup(iq->size, 16);
-@@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 
- 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
- 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
--					     FW_IQ_CMD_FL0FETCHRO_F |
--					     FW_IQ_CMD_FL0DATARO_F |
-+					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 					     FW_IQ_CMD_FL0PADEN_F);
- 		if (cong >= 0)
- 			c.iqns_to_fl0congen |=
+ 	return ret;
 -- 
-1.9.0
-
+2.9.0
 
 
 _______________________________________________
