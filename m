@@ -1,209 +1,114 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH v2 1/8] ACPI / PM: Run wakeup notify handlers synchronously
-Date: Mon, 12 Jun 2017 22:48:41 +0200
-Message-ID: <5652844.yCt16F1gBo@aspire.rjw.lan>
-In-Reply-To: <1615075.mBkoKApGGc@aspire.rjw.lan>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan> <1615075.mBkoKApGGc@aspire.rjw.lan>
+Return-Path: <SRS0=uXJs=52=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=uXJs=52=gmail.com=alexander.duyck@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1497855239-18560-4-git-send-email-dingtianhong@huawei.com>
+References: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com> <1497855239-18560-4-git-send-email-dingtianhong@huawei.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 21 Jun 2017 11:28:33 -0700
+Message-ID: <CAKgT0UdJ_zseo9O7SiU9U2m__OZeF_Z8eVjsA5N8ZK39rdK2fA@mail.gmail.com>
+Subject: Re: [PATCH v5 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+ flag
+To: Ding Tianhong <dingtianhong@huawei.com>
+Cc: Casey Leedom <leedom@chelsio.com>, Ashok Raj <ashok.raj@intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
+	Ganesh Goudar <ganeshgr@chelsio.com>, Asit K Mallick <asit.k.mallick@intel.com>,
+	Patrick J Cramer <patrick.j.cramer@intel.com>,
+	Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Bob Shaw <Bob.Shaw@amd.com>,
+	h <l.stach@pengutronix.de>, Amir Ancel <amira@mellanox.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>, David Laight <David.Laight@aculab.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>, Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>, Mark Rutland <mark.rutland@arm.com>,
+	Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
+	linux-arm-kernel@lists.infradead.org, Netdev <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Sun, Jun 18, 2017 at 11:53 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+> From: Casey Leedom <leedom@chelsio.com>
+>
+> cxgb4 Ethernet driver now queries PCIe configuration space to determine
+> if it can send TLPs to it with the Relaxed Ordering Attribute set.
+>
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> ---
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+>  3 files changed, 21 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> index e88c180..478f25a 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
+>         USING_SOFT_PARAMS  = (1 << 6),
+>         MASTER_PF          = (1 << 7),
+>         FW_OFLD_CONN       = (1 << 9),
+> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
+>  };
+>
+>  enum {
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> index ea1bfcf..7cd4e1b 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> @@ -4735,6 +4735,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>         adapter->msg_enable = DFLT_MSG_ENABLE;
+>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+>
+> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
+> +        * Ingress Packet Data to Free List Buffers in order to allow for
+> +        * chipset performance optimizations between the Root Complex and
+> +        * Memory Controllers.  (Messages to the associated Ingress Queue
+> +        * notifying new Packet Placement in the Free Lists Buffers will be
+> +        * send without the Relaxed Ordering Attribute thus guaranteeing that
+> +        * all preceding PCIe Transaction Layer Packets will be processed
+> +        * first.)  But some Root Complexes have various issues with Upstream
+> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
+> +        * The PCIe devices which under the Root Complexes will be cleared the
+> +        * Relaxed Ordering bit in the configuration space, So we check our
+> +        * PCIe configuration space to see if it's flagged with advice against
+> +        * using Relaxed Ordering.
+> +        */
+> +       if (pcie_relaxed_ordering_supported(pdev))
+> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+> +
 
-The work functions provided by the users of acpi_add_pm_notifier()
-should be run synchronously before re-enabling the wakeup GPE in
-case they are used to clear the status and/or disable the wakeup
-signaling at the source.  Otherwise, which is the case currently in
-the PCI bus type code, the same wakeup event may be signaled for
-multiple times while the execution of the work function in response
-to it has already been queued up.
+Looks like you have a typo here. It should be
+"!pcie_relaxed_ordering_supported(pdev)" that you are testing for to
+set this flag shouldn't it? Right now it appears the flag is getting
+set if relaxed ordering is supported.
 
-Fortunately, acpi_add_pm_notifier() is only used by PCI and by
-ACPI device PM code internally, so the change is relatively
-straightforward to make.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |   27 +++++++++++----------------
- drivers/pci/pci-acpi.c   |   17 +++++++----------
- include/acpi/acpi_bus.h  |    4 ++--
- 3 files changed, 20 insertions(+), 28 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -400,8 +400,8 @@ static void acpi_pm_notify_handler(acpi_
- 
- 	if (adev->wakeup.flags.notifier_present) {
- 		__pm_wakeup_event(adev->wakeup.ws, 0);
--		if (adev->wakeup.context.work.func)
--			queue_pm_work(&adev->wakeup.context.work);
-+		if (adev->wakeup.context.func)
-+			adev->wakeup.context.func(&adev->wakeup.context);
- 	}
- 
- 	mutex_unlock(&acpi_pm_notifier_lock);
-@@ -413,7 +413,7 @@ static void acpi_pm_notify_handler(acpi_
-  * acpi_add_pm_notifier - Register PM notify handler for given ACPI device.
-  * @adev: ACPI device to add the notify handler for.
-  * @dev: Device to generate a wakeup event for while handling the notification.
-- * @work_func: Work function to execute when handling the notification.
-+ * @func: Work function to execute when handling the notification.
-  *
-  * NOTE: @adev need not be a run-wake or wakeup device to be a valid source of
-  * PM wakeup events.  For example, wakeup events may be generated for bridges
-@@ -421,11 +421,11 @@ static void acpi_pm_notify_handler(acpi_
-  * bridge itself doesn't have a wakeup GPE associated with it.
-  */
- acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
--				 void (*work_func)(struct work_struct *work))
-+			void (*func)(struct acpi_device_wakeup_context *context))
- {
- 	acpi_status status = AE_ALREADY_EXISTS;
- 
--	if (!dev && !work_func)
-+	if (!dev && !func)
- 		return AE_BAD_PARAMETER;
- 
- 	mutex_lock(&acpi_pm_notifier_lock);
-@@ -435,8 +435,7 @@ acpi_status acpi_add_pm_notifier(struct
- 
- 	adev->wakeup.ws = wakeup_source_register(dev_name(&adev->dev));
- 	adev->wakeup.context.dev = dev;
--	if (work_func)
--		INIT_WORK(&adev->wakeup.context.work, work_func);
-+	adev->wakeup.context.func = func;
- 
- 	status = acpi_install_notify_handler(adev->handle, ACPI_SYSTEM_NOTIFY,
- 					     acpi_pm_notify_handler, NULL);
-@@ -469,10 +468,7 @@ acpi_status acpi_remove_pm_notifier(stru
- 	if (ACPI_FAILURE(status))
- 		goto out;
- 
--	if (adev->wakeup.context.work.func) {
--		cancel_work_sync(&adev->wakeup.context.work);
--		adev->wakeup.context.work.func = NULL;
--	}
-+	adev->wakeup.context.func = NULL;
- 	adev->wakeup.context.dev = NULL;
- 	wakeup_source_unregister(adev->wakeup.ws);
- 
-@@ -658,16 +654,15 @@ EXPORT_SYMBOL(acpi_pm_device_sleep_state
- 
- /**
-  * acpi_pm_notify_work_func - ACPI devices wakeup notification work function.
-- * @work: Work item to handle.
-+ * @context: Device wakeup context.
-  */
--static void acpi_pm_notify_work_func(struct work_struct *work)
-+static void acpi_pm_notify_work_func(struct acpi_device_wakeup_context *context)
- {
--	struct device *dev;
-+	struct device *dev = context->dev;
- 
--	dev = container_of(work, struct acpi_device_wakeup_context, work)->dev;
- 	if (dev) {
- 		pm_wakeup_event(dev, 0);
--		pm_runtime_resume(dev);
-+		pm_request_resume(dev);
- 	}
- }
- 
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -319,7 +319,7 @@ struct acpi_device_wakeup_flags {
- };
- 
- struct acpi_device_wakeup_context {
--	struct work_struct work;
-+	void (*func)(struct acpi_device_wakeup_context *context);
- 	struct device *dev;
- };
- 
-@@ -599,7 +599,7 @@ static inline bool acpi_device_always_pr
- 
- #ifdef CONFIG_PM
- acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
--				 void (*work_func)(struct work_struct *work));
-+			void (*func)(struct acpi_device_wakeup_context *context));
- acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
- int acpi_pm_device_sleep_state(struct device *, int *, int);
- int acpi_pm_device_run_wake(struct device *, bool);
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -395,29 +395,26 @@ bool pciehp_is_native(struct pci_dev *pd
- 
- /**
-  * pci_acpi_wake_bus - Root bus wakeup notification fork function.
-- * @work: Work item to handle.
-+ * @context: Device wakeup context.
-  */
--static void pci_acpi_wake_bus(struct work_struct *work)
-+static void pci_acpi_wake_bus(struct acpi_device_wakeup_context *context)
- {
- 	struct acpi_device *adev;
- 	struct acpi_pci_root *root;
- 
--	adev = container_of(work, struct acpi_device, wakeup.context.work);
-+	adev = container_of(context, struct acpi_device, wakeup.context);
- 	root = acpi_driver_data(adev);
- 	pci_pme_wakeup_bus(root->bus);
- }
- 
- /**
-  * pci_acpi_wake_dev - PCI device wakeup notification work function.
-- * @handle: ACPI handle of a device the notification is for.
-- * @work: Work item to handle.
-+ * @context: Device wakeup context.
-  */
--static void pci_acpi_wake_dev(struct work_struct *work)
-+static void pci_acpi_wake_dev(struct acpi_device_wakeup_context *context)
- {
--	struct acpi_device_wakeup_context *context;
- 	struct pci_dev *pci_dev;
- 
--	context = container_of(work, struct acpi_device_wakeup_context, work);
- 	pci_dev = to_pci_dev(context->dev);
- 
- 	if (pci_dev->pme_poll)
-@@ -425,7 +422,7 @@ static void pci_acpi_wake_dev(struct wor
- 
- 	if (pci_dev->current_state == PCI_D3cold) {
- 		pci_wakeup_event(pci_dev);
--		pm_runtime_resume(&pci_dev->dev);
-+		pm_request_resume(&pci_dev->dev);
- 		return;
- 	}
- 
-@@ -434,7 +431,7 @@ static void pci_acpi_wake_dev(struct wor
- 		pci_check_pme_status(pci_dev);
- 
- 	pci_wakeup_event(pci_dev);
--	pm_runtime_resume(&pci_dev->dev);
-+	pm_request_resume(&pci_dev->dev);
- 
- 	pci_pme_wakeup_bus(pci_dev->subordinate);
- }
-
+>         spin_lock_init(&adapter->stats_lock);
+>         spin_lock_init(&adapter->tid_release_lock);
+>         spin_lock_init(&adapter->win0_lock);
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> index f05f0d4..ac229a3 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>         struct fw_iq_cmd c;
+>         struct sge *s = &adap->sge;
+>         struct port_info *pi = netdev_priv(dev);
+> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+>
+>         /* Size needs to be multiple of 16, including status entry. */
+>         iq->size = roundup(iq->size, 16);
+> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>
+>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+> -                                            FW_IQ_CMD_FL0FETCHRO_F |
+> -                                            FW_IQ_CMD_FL0DATARO_F |
+> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
+> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
+>                                              FW_IQ_CMD_FL0PADEN_F);
+>                 if (cong >= 0)
+>                         c.iqns_to_fl0congen |=
+> --
+> 1.9.0
+>
+>
