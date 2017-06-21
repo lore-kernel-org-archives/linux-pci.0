@@ -1,99 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39656 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750780AbdFPUIX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Jun 2017 16:08:23 -0400
-Date: Fri, 16 Jun 2017 15:08:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Myron Stowe <mstowe@redhat.com>
-Cc: David Miller <davem@davemloft.net>, myron.stowe@redhat.com,
-        linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        bhelgaas@google.com, saeedm@mellanox.com, noaos@mellanox.com,
-        tariqt@mellanox.com
-Subject: Re: [PATCH 0/2] Replace driver's usage of hard-coded device IDs to
- #defines
-Message-ID: <20170616200820.GE11129@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170524224734.24221.33787.stgit@amt.stowe>
- <20170524.200249.1492095559302424098.davem@davemloft.net>
- <20170525095655.3a577ea2@zim>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525095655.3a577ea2@zim>
+Received: from mout.kundenserver.de ([217.72.192.73]:56647 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751789AbdFUVyX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 21 Jun 2017 17:54:23 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+        Rob Herring <robh@kernel.org>,
+        Brian Norris <briannorris@chromium.org>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] PCI: versatile: fix another typo
+Date: Wed, 21 Jun 2017 23:53:02 +0200
+Message-Id: <20170621215323.3921382-4-arnd@arndb.de>
+In-Reply-To: <20170621215323.3921382-1-arnd@arndb.de>
+References: <20170621215323.3921382-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 25, 2017 at 09:56:55AM -0600, Myron Stowe wrote:
-> On Wed, 24 May 2017 20:02:49 -0400 (EDT)
-> David Miller <davem@davemloft.net> wrote:
-> 
-> > From: Myron Stowe <myron.stowe@redhat.com>
-> > Date: Wed, 24 May 2017 16:47:34 -0600
-> > 
-> > > Noa Osherovich introduced a series of new Mellanox device ID
-> > > definitions to help differentiate specific controllers that needed
-> > > INTx masking quirks [1].
-> > > 
-> > > Bjorn Helgaas followed on, using the device ID definitions Noa
-> > > provided to replace hard-coded values within the mxl4 ID table [2].
-> > >     
-> > > This patch continues along similar lines, adding a few additional
-> > > Mellanox device ID definitions and converting the net/mlx5e
-> > > driver's mlx5 ID table to use the defines so tools like 'grep' and
-> > > 'cscope' can be used to help identify relationships with other
-> > > aspects (such as INTx masking).  
-> > 
-> > If you're adding pci_ids.h defines, it's only valid to do so if you
-> > actually use the defines in more than one location.
-> > 
-> > This patch series is not doing that.
-> 
-> Hi David,
-> 
-> Yes, now that you mention that again I do vaguely remember past
-> conversations stating similar constraints which is a little odd as
-> Noa's series did exactly that.  It was Bjorn, in a separate patch, that
-> made the connection to the driver with commit c19e4b9037f
-> ("net/mlx4_core: Use device ID defines") [1] and even after such, some
-> of the introduced #defines are still currently singular in usage.
-> 
-> Anyway, the part I'm interested in is creating a more transparent
-> association between the Mellanox controllers that need the INTx masking
-> quirk and their drivers, something that remains very opaque currently
-> for a few of the remaining instances (PCI_DEVICE_ID_MELLANOX_CONNECTIB,
-> PCI_DEVICE_ID_MELLANOX_CONNECTX4, and
-> PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX).
+The struct members were added to the wrong variable:
 
-I think what you want is the patch below (your patch 2, after removing
-CONNECTX5, CONNECTX5_EX, and CONNECTX6 since they're only used in one
-place).
+drivers/pci/host/pci-versatile.c: In function 'versatile_pci_probe':
+drivers/pci/host/pci-versatile.c:212:2: error: 'host' undeclared (first use in this function)
 
-We added definitions for CONNECTIB, CONNECTX4, and CONNECTX4_LX and uses of
-them in a quirk via:
+Fixes: 997995e1722a ("PCI: versatile: Drop pci_fixup_irqs()")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/host/pci-versatile.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-  7254383341bc ("PCI: Add Mellanox device IDs")
-  d76d2fe05fd9 ("PCI: Convert Mellanox broken INTx quirks to be for listed
-  devices only")
-
-But somehow we missed using those in mlx5/core/main.c.
-
-The patch below doesn't touch PCI, so it would be just for netdev.
-
-diff --git a/drivers/net/ethernet/mellanox/mlx5/core/main.c b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-index 0c123d571b4c..8a4e292f26b8 100644
---- a/drivers/net/ethernet/mellanox/mlx5/core/main.c
-+++ b/drivers/net/ethernet/mellanox/mlx5/core/main.c
-@@ -1508,11 +1508,11 @@ static void shutdown(struct pci_dev *pdev)
- }
+diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+index f572c921cdd4..f6fcec6b5578 100644
+--- a/drivers/pci/host/pci-versatile.c
++++ b/drivers/pci/host/pci-versatile.c
+@@ -209,8 +209,8 @@ static int versatile_pci_probe(struct platform_device *pdev)
+ 	bridge->sysdata = NULL;
+ 	bridge->busnr = 0;
+ 	bridge->ops = &pci_versatile_ops;
+-	host->map_irq = of_irq_parse_and_map_pci;
+-	host->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = of_irq_parse_and_map_pci;
++	bridge->swizzle_irq = pci_common_swizzle;
  
- static const struct pci_device_id mlx5_core_pci_table[] = {
--	{ PCI_VDEVICE(MELLANOX, 0x1011) },			/* Connect-IB */
-+	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTIB) },
- 	{ PCI_VDEVICE(MELLANOX, 0x1012), MLX5_PCI_DEV_IS_VF},	/* Connect-IB VF */
--	{ PCI_VDEVICE(MELLANOX, 0x1013) },			/* ConnectX-4 */
-+	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX4) },
- 	{ PCI_VDEVICE(MELLANOX, 0x1014), MLX5_PCI_DEV_IS_VF},	/* ConnectX-4 VF */
--	{ PCI_VDEVICE(MELLANOX, 0x1015) },			/* ConnectX-4LX */
-+	{ PCI_VDEVICE(MELLANOX, PCI_DEVICE_ID_MELLANOX_CONNECTX4_LX) },
- 	{ PCI_VDEVICE(MELLANOX, 0x1016), MLX5_PCI_DEV_IS_VF},	/* ConnectX-4LX VF */
- 	{ PCI_VDEVICE(MELLANOX, 0x1017) },			/* ConnectX-5, PCIe 3.0 */
- 	{ PCI_VDEVICE(MELLANOX, 0x1018), MLX5_PCI_DEV_IS_VF},	/* ConnectX-5 VF */
+ 	ret = pci_scan_root_bus_bridge(bridge);
+ 	if (ret < 0)
+-- 
+2.9.0
