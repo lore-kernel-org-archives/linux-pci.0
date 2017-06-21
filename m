@@ -1,83 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38518 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750841AbdFQFRD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jun 2017 01:17:03 -0400
-Date: Sat, 17 Jun 2017 07:16:58 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>
-Subject: Re: [RFC PATCH 06/13] switchtec_ntb: initialize hardware for memory
- windows
-Message-ID: <20170617051658.GG6040@kroah.com>
-References: <20170615203729.9009-1-logang@deltatee.com>
- <20170615203729.9009-7-logang@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170615203729.9009-7-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170621154136.GA1362@red-moon>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <CACRpkdZ1rBq9eLJkz_gRuXAG=if+xXf-jPzDEPCfG8EgUmUG3A@mail.gmail.com>
+ <20170621103042.GA1712@red-moon> <20170621104538.GA8477@red-moon>
+ <CACRpkda_6=qWRQDpTy67MFc=-fYRhqWDPx0NnNG5mjXQLyAAkw@mail.gmail.com>
+ <20170621154136.GA1362@red-moon>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Wed, 21 Jun 2017 18:28:39 +0200
+Message-ID: <CACRpkdY7tyXZKekyOnXfh8sQuqywHtmZkuK1k55pGXo5Q84nmw@mail.gmail.com>
+Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 15, 2017 at 02:37:22PM -0600, Logan Gunthorpe wrote:
-> This commit adds the code to initialize the memory windows in the
-> hardware. This includes setting up the requester ID table, and
-> figuring out which bar corresponds to which memory window. (Seeing
-> the switch can be configured with any number of bars.)
-> 
-> Also, seeing the device doesn't have hardware for scratchpads or
-> determining the link status, we create a shared memory window that has
-> these features. A magic number with a version copmonent will be used
-> to determine if the otherside's driver is actually up.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Stephen Bates <sbates@raithlin.com>
-> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-> ---
->  drivers/ntb/hw/mscc/switchtec_ntb.c | 296 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 296 insertions(+)
-> 
-> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-> index 1f094216aa1c..756307d1a8a3 100644
-> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-> @@ -15,37 +15,332 @@
->  
->  #include <linux/switchtec.h>
->  #include <linux/module.h>
-> +#include <linux/delay.h>
->  
->  MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
->  MODULE_VERSION("0.1");
->  MODULE_LICENSE("GPL");
->  MODULE_AUTHOR("Microsemi Corporation");
->  
-> +#ifndef ioread64
-> +#ifdef readq
-> +#define ioread64 readq
-> +#else
-> +#define ioread64 _ioread64
-> +static inline u64 _ioread64(void __iomem *mmio)
-> +{
-> +	u64 low, high;
-> +
-> +	low = ioread32(mmio);
-> +	high = ioread32(mmio + sizeof(u32));
-> +	return low | (high << 32);
-> +}
-> +#endif
-> +#endif
+On Wed, Jun 21, 2017 at 5:41 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
 
-Really?  Don't we have ioread64 in generic code for all arches?  If not,
-that should be fixed, don't hide this in a random driver please.  Or
-just restrict your driver to only building on those arches that does
-provide this api.
+> Is the ftpci100.c clock handling being queued for this merge window ?
 
-thanks,
+Yups, it's in Bjorn's tree and visible in linux-next.
 
-greg k-h
+> This patch:
+>
+> https://patchwork.ozlabs.org/patch/778716/
+>
+> fixes a commit that is not in v4.12-rc6, I need some input to understand
+> how to proceed.
+
+Yeah that is just a fix I had to do when fixing this other issue.
+
+It's cool, I just sent a patch. If Bjorn applied your series he can just
+apply this on top and all will be fine (for me).
+
+Yours,
+Linus Walleij
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
