@@ -1,312 +1,132 @@
-Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v5 3/3] PCI: Add tango MSI controller support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
-Date: Tue, 13 Jun 2017 13:09:47 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 21 Jun 2017 10:50:53 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [RFT PATCH v2 00/42] PCI: ARM/ARM64: remove pci_fixup_irqs() usage
+Message-ID: <20170621095053.GB31599@red-moon>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <CACRpkdZ1rBq9eLJkz_gRuXAG=if+xXf-jPzDEPCfG8EgUmUG3A@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <CACRpkdZ1rBq9eLJkz_gRuXAG=if+xXf-jPzDEPCfG8EgUmUG3A@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/17 14:35, Marc Gonzalez wrote:
-> The MSI controller in Tango supports 256 message-signaled interrupts,
-> and a single doorbell address.
+On Wed, Jun 21, 2017 at 10:39:31AM +0200, Linus Walleij wrote:
+> On Thu, Jun 8, 2017 at 4:13 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
 > 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> ---
->  drivers/pci/host/pcie-tango.c | 222 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 222 insertions(+)
+> I pulled this into the Gemini tree:
+> > [1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal-v2
 > 
-> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-> index 67aaadcc1c5e..7d99ef26173f 100644
-> --- a/drivers/pci/host/pcie-tango.c
-> +++ b/drivers/pci/host/pcie-tango.c
-> @@ -1,16 +1,225 @@
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/irqdomain.h>
->  #include <linux/pci-ecam.h>
->  #include <linux/delay.h>
-> +#include <linux/msi.h>
->  #include <linux/of.h>
->  
->  #define MSI_MAX 256
->  
->  #define SMP8759_MUX		0x48
->  #define SMP8759_TEST_OUT	0x74
-> +#define SMP8759_STATUS		0x80
-> +#define SMP8759_ENABLE		0xa0
-> +#define SMP8759_DOORBELL	0xa002e07c
->  
->  struct tango_pcie {
-> +	DECLARE_BITMAP(used, MSI_MAX);
-> +	spinlock_t lock;
 
-These two fields have pretty generic names. Consider naming them in a
-way that indicates their purpose (used_msi? used_msi_lock?).
+Thank you Linus for helping me out.
 
->  	void __iomem *mux;
-> +	void __iomem *msi_status;
-> +	void __iomem *msi_enable;
-> +	phys_addr_t msi_doorbell;
-> +	struct irq_domain *irq_dom;
-> +	struct irq_domain *msi_dom;
-> +	int irq;
->  };
->  
-> +/*** MSI CONTROLLER SUPPORT ***/
-> +
-> +static void tango_msi_isr(struct irq_desc *desc)
-> +{
-> +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
-> +	unsigned long status, base, virq, idx, pos = 0;
-> +
-> +	chained_irq_enter(chip, desc);
-> +
-> +	while ((pos = find_next_bit(pcie->used, MSI_MAX, pos)) < MSI_MAX) {
-
-The pcie->used bitmap read can race against another CPU accessing this
-bitmap in the alloc/free paths.
-
-> +		base = round_down(pos, 32);
-> +		status = readl_relaxed(pcie->msi_status + base / 8);
-> +		for_each_set_bit(idx, &status, 32) {
-> +			virq = irq_find_mapping(pcie->irq_dom, base + idx);
-> +			generic_handle_irq(virq);
-> +		}
-> +		pos = base + 32;
-> +	}
-> +
-> +	chained_irq_exit(chip, desc);
-> +}
-> +
-> +static void tango_ack(struct irq_data *d)
-> +{
-> +	struct tango_pcie *pcie = d->chip_data;
-> +	u32 offset = (d->hwirq / 32) * 4;
-> +	u32 bit = BIT(d->hwirq % 32);
-> +
-> +	writel_relaxed(bit, pcie->msi_status + offset);
-> +}
-> +
-> +static void update_msi_enable(struct irq_data *d, bool unmask)
-> +{
-> +	unsigned long flags;
-> +	struct tango_pcie *pcie = d->chip_data;
-> +	u32 offset = (d->hwirq / 32) * 4;
-> +	u32 bit = BIT(d->hwirq % 32);
-> +	u32 val;
-> +
-> +	spin_lock_irqsave(&pcie->lock, flags);
-> +	val = readl_relaxed(pcie->msi_enable + offset);
-> +	val = unmask ? val | bit : val & ~bit;
-> +	writel_relaxed(val, pcie->msi_enable + offset);
-> +	spin_unlock_irqrestore(&pcie->lock, flags);
-> +}
-> +
-> +static void tango_mask(struct irq_data *d)
-> +{
-> +	update_msi_enable(d, false);
-> +}
-> +
-> +static void tango_unmask(struct irq_data *d)
-> +{
-> +	update_msi_enable(d, true);
-> +}
-> +
-> +static int tango_set_affinity(struct irq_data *d,
-> +		const struct cpumask *mask, bool force)
-> +{
-> +	return -EINVAL;
-> +}
-> +
-> +static void tango_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
-> +{
-> +	struct tango_pcie *pcie = d->chip_data;
-> +	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
-> +	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
-> +	msg->data = d->hwirq;
-> +}
-> +
-> +static struct irq_chip tango_chip = {
-> +	.irq_ack		= tango_ack,
-> +	.irq_mask		= tango_mask,
-> +	.irq_unmask		= tango_unmask,
-> +	.irq_set_affinity	= tango_set_affinity,
-> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
-> +};
-> +
-> +static void msi_ack(struct irq_data *d)
-> +{
-> +	irq_chip_ack_parent(d);
-> +}
-> +
-> +static void msi_mask(struct irq_data *d)
-> +{
-> +	pci_msi_mask_irq(d);
-> +	irq_chip_mask_parent(d);
-> +}
-> +
-> +static void msi_unmask(struct irq_data *d)
-> +{
-> +	pci_msi_unmask_irq(d);
-> +	irq_chip_unmask_parent(d);
-> +}
-> +
-> +static struct irq_chip msi_chip = {
-> +	.name = "MSI",
-> +	.irq_ack = msi_ack,
-> +	.irq_mask = msi_mask,
-> +	.irq_unmask = msi_unmask,
-> +};
-> +
-> +static struct msi_domain_info msi_dom_info = {
-> +	.flags	= MSI_FLAG_PCI_MSIX
-> +		| MSI_FLAG_USE_DEF_DOM_OPS
-> +		| MSI_FLAG_USE_DEF_CHIP_OPS,
-> +	.chip	= &msi_chip,
-> +};
-> +
-> +static int tango_irq_domain_alloc(struct irq_domain *dom,
-> +		unsigned int virq, unsigned int nr_irqs, void *args)
-> +{
-> +	unsigned long flags;
-> +	int pos, err = -ENOSPC;
-> +	struct tango_pcie *pcie = dom->host_data;
-> +
-> +	spin_lock_irqsave(&pcie->lock, flags);
-> +	pos = find_first_zero_bit(pcie->used, MSI_MAX);
-> +	if (pos < MSI_MAX) {
-> +		err = 0;
-> +		__set_bit(pos, pcie->used);
-> +		irq_domain_set_info(dom, virq, pos,
-> +				&tango_chip, pcie, handle_edge_irq, NULL, NULL);
-> +	}
-> +	spin_unlock_irqrestore(&pcie->lock, flags);
-> +
-> +	return err;
-> +}
-> +
-> +static void tango_irq_domain_free(struct irq_domain *dom,
-> +		unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	unsigned long flags;
-> +	struct irq_data *d = irq_domain_get_irq_data(dom, virq);
-> +	struct tango_pcie *pcie = d->chip_data;
-> +
-> +	spin_lock_irqsave(&pcie->lock, flags);
-> +	__clear_bit(d->hwirq, pcie->used);
-> +	spin_unlock_irqrestore(&pcie->lock, flags);
-> +}
-> +
-> +static const struct irq_domain_ops irq_dom_ops = {
-> +	.alloc	= tango_irq_domain_alloc,
-> +	.free	= tango_irq_domain_free,
-> +};
-> +
-> +static int tango_msi_remove(struct platform_device *pdev)
-> +{
-> +	struct tango_pcie *pcie = platform_get_drvdata(pdev);
-> +
-> +	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-> +	irq_domain_remove(pcie->msi_dom);
-> +	irq_domain_remove(pcie->irq_dom);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
-> +{
-> +	int i, virq;
-> +	struct irq_domain *msi_dom, *irq_dom;
-> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +
-> +	spin_lock_init(&pcie->lock);
-> +	for (i = 0; i < MSI_MAX / 32; ++i)
-> +		writel_relaxed(0, pcie->msi_enable + i * 4);
-> +
-> +	virq = platform_get_irq(pdev, 1);
-> +	if (virq <= 0) {
-> +		pr_err("Failed to map IRQ\n");
-> +		return -ENXIO;
-> +	}
-> +
-> +	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pcie);
-> +	if (!irq_dom) {
-> +		pr_err("Failed to create IRQ domain\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
-> +	if (!msi_dom) {
-> +		pr_err("Failed to create MSI domain\n");
-> +		return -ENOMEM;
-
-You're now leaking irq_dom.
-
-> +	}
-> +
-> +	pcie->irq_dom = irq_dom;
-> +	pcie->msi_dom = msi_dom;
-> +	pcie->irq = virq;
-> +
-> +	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
-> +
-> +	return 0;
-> +}
-> +
->  /*** HOST BRIDGE SUPPORT ***/
->  
->  static int smp8759_config_read(struct pci_bus *bus,
-> @@ -88,6 +297,9 @@ static int tango_check_pcie_link(void __iomem *test_out)
->  static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
->  {
->  	pcie->mux		= base + SMP8759_MUX;
-> +	pcie->msi_status	= base + SMP8759_STATUS;
-> +	pcie->msi_enable	= base + SMP8759_ENABLE;
-> +	pcie->msi_doorbell	= SMP8759_DOORBELL;
->  
->  	return tango_check_pcie_link(base + SMP8759_TEST_OUT);
->  }
-> @@ -121,11 +333,21 @@ static int tango_pcie_probe(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
->  
-> +	ret = tango_msi_probe(pdev, pcie);
-> +	if (ret)
-> +		return ret;
-> +
->  	return pci_host_common_probe(pdev, &smp8759_ecam_ops);
->  }
->  
-> +static int tango_pcie_remove(struct platform_device *pdev)
-> +{
-> +	return tango_msi_remove(pdev);
-> +}
-> +
->  static struct platform_driver tango_pcie_driver = {
->  	.probe	= tango_pcie_probe,
-> +	.remove	= tango_pcie_remove,
->  	.driver	= {
->  		.name = KBUILD_MODNAME,
->  		.of_match_table = tango_pcie_ids,
+> And then this happens:
 > 
+> OF: PCI: host bridge /soc/pci@50000000 ranges:
+> OF: PCI:    IO 0x50000000..0x500fffff -> 0x00000000
+> OF: PCI:   MEM 0x58000000..0x5fffffff -> 0x58000000
+> Unable to handle kernel NULL pointer dereference at virtual address 00000070
+> pgd = c0004000
+> [00000070] *pgd=00000000
+> Internal error: Oops: 17 [#1] PREEMPT ARM
+> CPU: 0 PID: 254 Comm: kworker/0:1 Not tainted 4.12.0-rc3+ #888
+> Hardware name: Gemini (Device Tree)
+> Workqueue: events deferred_probe_work_func
+> task: c38c3a40 task.stack: c390a000
+> PC is at faraday_pci_probe+0x274/0x65c
+> LR is at __irq_put_desc_unlock+0x18/0x70
+> pc : [<c0232648>]    lr : [<c004be48>]    psr: 80000013
+
+I think I see what it is. faraday_pci_irq_handler() relies on
+struct faraday_pci->bus to access config space and with this
+series it can't be set till pci_scan_root_bus_bridge() returns.
+
+If that's the case we will have to update the config accessors in
+faraday_pci_irq_handler() to raw ones (ie ones that do not depend on the
+struct pci_bus), code is already there, patch coming, sorry about this
+but it is extremely complicated for me to untangle these drivers inner
+workings.
 
 Thanks,
+Lorenzo
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> sp : c390bdf0  ip : c3424274  fp : c3ac2ee0
+> r10: c3f77718  r9 : c3ad49b0  r8 : c3907800
+> r7 : 00000004  r6 : c390be18  r5 : c3907810  r4 : c3ad4810
+> r3 : 00000000  r2 : 00000000  r1 : 00000001  r0 : c3ac2de0
+> Flags: Nzcv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment none
+> Control: 0000397f  Table: 03a9c000  DAC: 00000053
+> Process kworker/0:1 (pid: 254, stack limit = 0xc390a190)
+> Stack: (0xc390bdf0 to 0xc390c000)
+> bde0:                                     c0534a60 c3ad49b0 00000003 c024cb68
+> be00: 00000001 20000013 00000000 50000000 00000007 000020dd c3ae2680 c3ae2740
+> be20: c07c861f c0134328 00000000 c3ad5fa0 c3910a50 c3910a50 00000001 00000000
+> be40: 00000000 c01344ec c3910a50 c3910a50 00000001 00000000 c3910a50 c39d76e0
+> be60: c3ad5fa0 c05f6f58 c3910a50 c3907810 c3907810 c07cba88 fffffdfb 00000003
+> be80: 00000000 c07c5040 c386e420 c02bbbe0 c3907810 c081c6c4 00000000 c07cba88
+> bea0: 00000003 c02ba9dc 00000000 c390bee0 c02bab30 00000001 c07bf660 00000000
+> bec0: c07c5040 c02b93dc c382829c c39886f4 c3907810 c3907844 c3907810 c02ba674
+> bee0: c3907810 00000001 c390bf0c c3907810 c07d3a80 c3907810 c07d38e4 c02b961c
+> bf00: c3907810 c07d38d0 c07d38d0 c02ba210 c07d38ec c386e420 00000000 c3f6b100
+> bf20: c07bf660 c002dac0 00000008 c07bf660 c07bf660 c386e438 c390a000 c07bf674
+> bf40: 00000008 c07bf660 c07c5040 c002e044 c390a000 00000001 00000000 00000000
+> bf60: c3901518 c3901500 ffffe000 c38e2700 00000000 c3901518 c386e420 c002ddb4
+> bf80: c3839ee4 c00335ec c390a000 c38e2700 c003350c 00000000 00000000 00000000
+> bfa0: 00000000 00000000 00000000 c000a270 00000000 00000000 00000000 00000000
+> bfc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> bfe0: 00000000 00000000 00000000 00000000 00000013 00000000 ffffffff ffffffff
+> [<c0232648>] (faraday_pci_probe) from [<c02bbbe0>]
+> (platform_drv_probe+0x50/0xb4)
+> [<c02bbbe0>] (platform_drv_probe) from [<c02ba9dc>]
+> (driver_probe_device+0x248/0x2dc)
+> [<c02ba9dc>] (driver_probe_device) from [<c02b93dc>]
+> (bus_for_each_drv+0x68/0x98)
+> [<c02b93dc>] (bus_for_each_drv) from [<c02ba674>] (__device_attach+0xa8/0x110)
+> [<c02ba674>] (__device_attach) from [<c02b961c>] (bus_probe_device+0x88/0x90)
+> [<c02b961c>] (bus_probe_device) from [<c02ba210>]
+> (deferred_probe_work_func+0x54/0x80)
+> [<c02ba210>] (deferred_probe_work_func) from [<c002dac0>]
+> (process_one_work+0x13c/0x430)
+> [<c002dac0>] (process_one_work) from [<c002e044>] (worker_thread+0x290/0x5f4)
+> [<c002e044>] (worker_thread) from [<c00335ec>] (kthread+0xe0/0x120)
+> [<c00335ec>] (kthread) from [<c000a270>] (ret_from_fork+0x14/0x24)
+> Code: e59401b0 e3700a01 8a00001d e59421ac (e5d23070)
+> ---[ end trace 1e313b1ea11e101c ]---
+> 
+> I'm trying to figure out what is causing it.
+> 
+> Yours,
+> Linus Walleij
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
