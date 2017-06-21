@@ -1,269 +1,234 @@
-Return-Path: <SRS0=8kpE=5M=gateworks.com=tharvey@kernel.org>
-Return-Path: <SRS0=8kpE=5M=gateworks.com=tharvey@kernel.org>
+Return-Path: <SRS0=GGy7=52=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=GGy7=52=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdZ8byO6=rWS-TJDJ21-duvyau_EQpN2hWj27DF8ur6fnQ@mail.gmail.com>
-References: <1491931269-15650-1-git-send-email-david.daney@cavium.com>
- <1491931269-15650-4-git-send-email-david.daney@cavium.com> <CACRpkdZ8byO6=rWS-TJDJ21-duvyau_EQpN2hWj27DF8ur6fnQ@mail.gmail.com>
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Wed, 7 Jun 2017 09:09:29 -0700
-Message-ID: <CAJ+vNU2ejbQUTBGnJsLr+pYdJsUc=yHZvbrKNm0bo5nZL=DhBw@mail.gmail.com>
-Subject: Re: [PATCH v6 3/6] irqdomain: Add irq_domain_{push,pop}_irq() functions.
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: David Daney <david.daney@cavium.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>, Alexandre Courbot <gnurou@gmail.com>,
-	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20170615134124.GK20778@bhelgaas-glaptop.roam.corp.google.com>
+References: <1497153938-26074-1-git-send-email-oza.oza@broadcom.com>
+ <1497153938-26074-3-git-send-email-oza.oza@broadcom.com> <20170612234344.GD4379@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPfVeN-RVHtLMLmduo+S8dNFMB0mn7sZRGSpJsfka+bu2w@mail.gmail.com> <20170615134124.GK20778@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Wed, 21 Jun 2017 13:34:58 +0530
+Message-ID: <CAMSpPPfXar6j0rPv1xOfPMroVzfuKYk1Lv502eAZyCENSP-4Cg@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] PCI: iproc: add device shutdown for PCI RC
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 24, 2017 at 6:05 AM, Linus Walleij <linus.walleij@linaro.org> wrote:
-> Sorry for top posting but we need to loop in Bjorn Helgass and the
-> linux-pci mailing list on this patch, at least so they see it, and can
-> recognize similar cases in the future.
+On Thu, Jun 15, 2017 at 7:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Jun 14, 2017 at 10:24:11AM +0530, Oza Oza wrote:
+>> On Tue, Jun 13, 2017 at 5:13 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> > On Sun, Jun 11, 2017 at 09:35:38AM +0530, Oza Pawandeep wrote:
+>> >> PERST# must be asserted around ~500ms before
+>> >> the reboot is applied.
+>> >>
+>> >> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
+>> >> LCPLL clock and PERST both goes off simultaneously.
+>> >> This will cause certain Endpoints Intel NVMe not get detected, upon
+>> >> next boot sequence.
+>> >>
+>> >> This happens because; Endpoint is expecting the clock for some amount of
+>> >> time after PERST is asserted, which is not happening in our case
+>> >> (Compare to Intel X86 boards, will have clocks running).
+>> >> this cause NVMe to behave in undefined way.
+>> >
+>> > This doesn't smell right.  The description makes this sound like a
+>> > band-aid that happens to "solve" a problem with one particular device.
+>> > It doesn't sound like this is making iProc adhere to something in the
+>> > PCIe spec.
+>> >
+>> > Is there some PCIe spec timing requirement that tells you about this
+>> > 500ms number?  Please include the reference if so.
+>>
+>> On chip PLL which sources the reference clock to the device gets reset
+>> when soft reset is applied; the soft reset also asserts PERST#.
+>> This simultaneous assertion of reset and clock being lost is a problem
+>> with some NVME cards.
+>> The delay is added to keep clock alive while PERST gets asserted.
+>> The time delay number can be set to a number that will allow the NVME
+>> device to go into reset state.
+>> 500 ms delay is picked for that reason only, which is long enough to
+>> get EP into reset correctly.
 >
-> (The patch set if very nice.)
+> This doesn't really tell me anything new.
 >
-> Yours,
-> Linus Walleij
+> We're talking about the protocol on the link between the RC and the
+> endpoint.  That *should* be completely specified by the PCIe spec.  If
+> there's some requirement that the clock keep running after PERST is
+> asserted, that should be in the spec.
 >
-> On Tue, Apr 11, 2017 at 7:21 PM, David Daney <david.daney@cavium.com> wrote:
->> For an already existing irqdomain hierarchy, as might be obtained via
->> a call to pci_enable_msix_range(), a PCI driver wishing to add an
->> additional irqdomain to the hierarchy needs to be able to insert the
->> irqdomain to that already initialized hierarchy.  Calling
->> irq_domain_create_hierarchy() allows the new irqdomain to be created,
->> but no existing code allows for initializing the associated irq_data.
->>
->> Add a couple of helper functions (irq_domain_push_irq() and
->> irq_domain_pop_irq()) to initialize the irq_data for the new
->> irqdomain added to an existing hierarchy.
->>
->> Signed-off-by: David Daney <david.daney@cavium.com>
->> ---
->>  include/linux/irqdomain.h |   3 +
->>  kernel/irq/irqdomain.c    | 178 ++++++++++++++++++++++++++++++++++++++++++++++
->>  2 files changed, 181 insertions(+)
->>
->> diff --git a/include/linux/irqdomain.h b/include/linux/irqdomain.h
->> index 9f36160..0316846 100644
->> --- a/include/linux/irqdomain.h
->> +++ b/include/linux/irqdomain.h
->> @@ -425,6 +425,9 @@ extern void irq_domain_free_irqs_common(struct irq_domain *domain,
->>  extern void irq_domain_free_irqs_top(struct irq_domain *domain,
->>                                      unsigned int virq, unsigned int nr_irqs);
->>
->> +extern int irq_domain_push_irq(struct irq_domain *domain, int virq, void *arg);
->> +extern int irq_domain_pop_irq(struct irq_domain *domain, int virq);
->> +
->>  extern int irq_domain_alloc_irqs_parent(struct irq_domain *domain,
->>                                         unsigned int irq_base,
->>                                         unsigned int nr_irqs, void *arg);
->> diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
->> index 31805f2..ea9d30d 100644
->> --- a/kernel/irq/irqdomain.c
->> +++ b/kernel/irq/irqdomain.c
->> @@ -1304,6 +1304,184 @@ int __irq_domain_alloc_irqs(struct irq_domain *domain, int irq_base,
->>         return ret;
->>  }
->>
->> +/* The irq_data was moved, fix the revmap to refer to the new location */
->> +static void irq_domain_fix_revmap(struct irq_data *d)
->> +{
->> +       void **slot;
->> +
->> +       if (d->hwirq < d->domain->revmap_size)
->> +               return; /* Not using radix tree. */
->> +
->> +       /* Fix up the revmap. */
->> +       mutex_lock(&revmap_trees_mutex);
->> +       slot = radix_tree_lookup_slot(&d->domain->revmap_tree, d->hwirq);
->> +       if (slot)
->> +               radix_tree_replace_slot(&d->domain->revmap_tree, slot, d);
->> +       mutex_unlock(&revmap_trees_mutex);
->> +}
->> +
->> +/**
->> + * irq_domain_push_irq() - Push a domain in to the top of a hierarchy.
->> + * @domain:    Domain to push.
->> + * @virq:      Irq to push the domain in to.
->> + * @arg:       Passed to the irq_domain_ops alloc() function.
->> + *
->> + * For an already existing irqdomain hierarchy, as might be obtained
->> + * via a call to pci_enable_msix(), add an additional domain to the
->> + * head of the processing chain.  Must be called before request_irq()
->> + * has been called.
->> + */
->> +int irq_domain_push_irq(struct irq_domain *domain, int virq, void *arg)
->> +{
->> +       struct irq_data *child_irq_data;
->> +       struct irq_data *root_irq_data = irq_get_irq_data(virq);
->> +       struct irq_desc *desc;
->> +       int rv = 0;
->> +
->> +       /*
->> +        * Check that no action has been set, which indicates the virq
->> +        * is in a state where this function doesn't have to deal with
->> +        * races between interrupt handling and maintaining the
->> +        * hierarchy.  This will catch gross misuse.  Attempting to
->> +        * make the check race free would require holding locks across
->> +        * calls to struct irq_domain_ops->alloc(), which could lead
->> +        * to deadlock, so we just do a simple check before starting.
->> +        */
->> +       desc = irq_to_desc(virq);
->> +       if (!desc)
->> +               return -EINVAL;
->> +       if (WARN_ON(desc->action))
->> +               return -EBUSY;
->> +
->> +       if (domain == NULL)
->> +               return -EINVAL;
->> +
->> +       if (WARN_ON(!domain->ops->alloc))
->> +               return -EINVAL;
->> +
->> +       if (!root_irq_data)
->> +               return -EINVAL;
->> +
->> +       child_irq_data = kzalloc_node(sizeof(*child_irq_data), GFP_KERNEL,
->> +                                     irq_data_get_node(root_irq_data));
->> +       if (!child_irq_data)
->> +               return -ENOMEM;
->> +
->> +       mutex_lock(&irq_domain_mutex);
->> +
->> +       /* Copy the original irq_data. */
->> +       *child_irq_data = *root_irq_data;
->> +
->> +       irq_domain_fix_revmap(child_irq_data);
->> +
->> +       /*
->> +        * Overwrite the root_irq_data, which is embedded in struct
->> +        * irq_desc, with values for this domain.
->> +        */
->> +       root_irq_data->parent_data = child_irq_data;
->> +       root_irq_data->domain = domain;
->> +       root_irq_data->mask = 0;
->> +       root_irq_data->hwirq = 0;
->> +       root_irq_data->chip = NULL;
->> +       root_irq_data->chip_data = NULL;
->> +       rv = domain->ops->alloc(domain, virq, 1, arg);
->> +       if (rv) {
->> +               /* Restore the original irq_data. */
->> +               *root_irq_data = *child_irq_data;
->> +               irq_domain_fix_revmap(root_irq_data);
->> +               goto error;
->> +       }
->> +
->> +       if (root_irq_data->hwirq < domain->revmap_size) {
->> +               domain->linear_revmap[root_irq_data->hwirq] = virq;
->> +       } else {
->> +               mutex_lock(&revmap_trees_mutex);
->> +               radix_tree_insert(&domain->revmap_tree,
->> +                                 root_irq_data->hwirq, root_irq_data);
->> +               mutex_unlock(&revmap_trees_mutex);
->> +       }
->> +error:
->> +       mutex_unlock(&irq_domain_mutex);
->> +
->> +       return rv;
->> +}
->> +EXPORT_SYMBOL_GPL(irq_domain_push_irq);
->> +
->> +/**
->> + * irq_domain_pop_irq() - Remove a domain from the top of a hierarchy.
->> + * @domain:    Domain to remove.
->> + * @virq:      Irq to remove the domain from.
->> + *
->> + * Undo the effects of a call to irq_domain_push_irq().  Must be
->> + * called either before request_irq() or after free_irq().
->> + */
->> +int irq_domain_pop_irq(struct irq_domain *domain, int virq)
->> +{
->> +       struct irq_data *root_irq_data = irq_get_irq_data(virq);
->> +       struct irq_data *child_irq_data;
->> +       struct irq_data *tmp_irq_data;
->> +       struct irq_desc *desc;
->> +
->> +       /*
->> +        * Check that no action is set, which indicates the virq is in
->> +        * a state where this function doesn't have to deal with races
->> +        * between interrupt handling and maintaining the hierarchy.
->> +        * This will catch gross misuse.  Attempting to make the check
->> +        * race free would require holding locks across calls to
->> +        * struct irq_domain_ops->free(), which could lead to
->> +        * deadlock, so we just do a simple check before starting.
->> +        */
->> +       desc = irq_to_desc(virq);
->> +       if (!desc)
->> +               return -EINVAL;
->> +       if (WARN_ON(desc->action))
->> +               return -EBUSY;
->> +
->> +       if (domain == NULL)
->> +               return -EINVAL;
->> +
->> +       if (!root_irq_data)
->> +               return -EINVAL;
->> +
->> +       tmp_irq_data = irq_domain_get_irq_data(domain, virq);
->> +
->> +       /* We can only "pop" if this domain is at the top of the list */
->> +       if (WARN_ON(root_irq_data != tmp_irq_data))
->> +               return -EINVAL;
->> +
->> +       if (WARN_ON(root_irq_data->domain != domain))
->> +               return -EINVAL;
->> +
->> +       child_irq_data = root_irq_data->parent_data;
->> +       if (WARN_ON(!child_irq_data))
->> +               return -EINVAL;
->> +
->> +       mutex_lock(&irq_domain_mutex);
->> +
->> +       root_irq_data->parent_data = NULL;
->> +
->> +       if (root_irq_data->hwirq >= domain->revmap_size) {
->> +               mutex_lock(&revmap_trees_mutex);
->> +               radix_tree_delete(&domain->revmap_tree, root_irq_data->hwirq);
->> +               mutex_unlock(&revmap_trees_mutex);
->> +       }
->> +
->> +       if (domain->ops->free)
->> +               domain->ops->free(domain, virq, 1);
->> +
->> +       /* Restore the original irq_data. */
->> +       *root_irq_data = *child_irq_data;
->> +
->> +       irq_domain_fix_revmap(root_irq_data);
->> +
->> +       mutex_unlock(&irq_domain_mutex);
->> +
->> +       kfree(child_irq_data);
->> +
->> +       return 0;
->> +}
->> +EXPORT_SYMBOL_GPL(irq_domain_pop_irq);
->> +
->>  /**
->>   * irq_domain_free_irqs - Free IRQ number and associated data structures
->>   * @virq:      base IRQ number
->> --
->> 1.8.3.1
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-gpio" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> If it's not in the spec, and an endpoint relies on it, the endpoint is
+> non-compliant, and we'll likely see similar issues with that endpoint
+> on other platforms.
+>
+> If we need a workaround for a specific endpoint, that might be OK; the
+> world isn't perfect.  But if that's the case, we should include more
+> specifics about the device, e.g., vendor/device IDs and "lspci -vv"
+> output.
+>
 
-Linus,
+This is specifically happening with Intel P3700 400 gb series.
+http://ark.intel.com/products/79625/Intel-SSD-DC-P3700-Series-400GB-2_5in-PCIe-3_0-20nm-MLC
 
-It looks like we are still waiting on ACK's for this from the IRQ
-folk. Are the right people cc'd? Seem's like there's been an adequate
-review period with no response.
+but on Intel board you will not find this problem, because ref clock
+is supplied by
+on-board oscillator.
 
-Regards,
+But our board(s) do not have clock coming from on-board,
+rather it is derived from PLL coming from SOC.
 
-Tim
+Besides, PCI spec does not stipulate about such timings.
+In-fact it does not tell us, whether PCIe device should consider
+refclk to be available or not to be.
+500 ms is just based on the observation and taken as safe margin.
+
+So, this is partly because of the Endpoint behavior and partly due to the
+way our boards are designed.
+
+with the same SSD, we will not see this issue on x86 boards, or
+even any other ARM based boards, who supplies there ref clock by
+on-bard oscillator,
+so in case of reboot, ref clock does not go off.
+
+please also refer to the link below which stipulate on clk being
+active after PERST being asserted.
+http://www.eetimes.com/document.asp?doc_id=1279299
+
+Product: Intel P3700 400 gb SSD
+Vendor ID: 8086
+Device ID: 0953.
+
+I am sorry, but we have made replacement order of those disks, so I
+dont have lspci -vv output.
+but hope that above information is sufficient.
+
+>> >> Essentially clock will remain alive for 500ms with PERST# = 0
+>> >> before reboot.
+>> >
+>> >> This patch adds platform shutdown where it should be
+>> >> called in device_shutdown while reboot command is issued.
+>> >>
+>> >> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+>> >> followed by RC shutdown is called, which issues safe PERST
+>> >> assertion.
+>> >>
+>> >> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+>> >> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+>> >> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>> >>
+>> >> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+>> >> index 90d2bdd..9512960 100644
+>> >> --- a/drivers/pci/host/pcie-iproc-platform.c
+>> >> +++ b/drivers/pci/host/pcie-iproc-platform.c
+>> >> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>> >>       return iproc_pcie_remove(pcie);
+>> >>  }
+>> >>
+>> >> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+>> >> +{
+>> >> +     struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+>> >> +
+>> >> +     iproc_pcie_shutdown(pcie);
+>> >> +}
+>> >> +
+>> >>  static struct platform_driver iproc_pcie_pltfm_driver = {
+>> >>       .driver = {
+>> >>               .name = "iproc-pcie",
+>> >> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>> >>       },
+>> >>       .probe = iproc_pcie_pltfm_probe,
+>> >>       .remove = iproc_pcie_pltfm_remove,
+>> >> +     .shutdown = iproc_pcie_pltfm_shutdown,
+>> >>  };
+>> >>  module_platform_driver(iproc_pcie_pltfm_driver);
+>> >>
+>> >> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+>> >> index 05a3647..bb61376 100644
+>> >> --- a/drivers/pci/host/pcie-iproc.c
+>> >> +++ b/drivers/pci/host/pcie-iproc.c
+>> >> @@ -608,32 +608,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+>> >>       .write = iproc_pcie_config_write32,
+>> >>  };
+>> >>
+>> >> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
+>> >> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+>> >>  {
+>> >>       u32 val;
+>> >>
+>> >>       /*
+>> >> -      * PAXC and the internal emulated endpoint device downstream should not
+>> >> -      * be reset.  If firmware has been loaded on the endpoint device at an
+>> >> -      * earlier boot stage, reset here causes issues.
+>> >> +      * The internal emulated endpoints (such as PAXC) device downstream
+>> >> +      * should not be reset. If firmware has been loaded on the endpoint
+>> >> +      * device at an earlier boot stage, reset here causes issues.
+>> >>        */
+>> >>       if (pcie->ep_is_internal)
+>> >>               return;
+>> >>
+>> >> -     /*
+>> >> -      * Select perst_b signal as reset source. Put the device into reset,
+>> >> -      * and then bring it out of reset
+>> >> -      */
+>> >> -     val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+>> >> -     val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+>> >> -             ~RC_PCIE_RST_OUTPUT;
+>> >> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> >> -     udelay(250);
+>> >> -
+>> >> -     val |= RC_PCIE_RST_OUTPUT;
+>> >> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> >> -     msleep(100);
+>> >> +     if (assert) {
+>> >> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+>> >> +             val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+>> >> +                     ~RC_PCIE_RST_OUTPUT;
+>> >> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> >> +             udelay(250);
+>> >> +     } else {
+>> >> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+>> >> +             val |= RC_PCIE_RST_OUTPUT;
+>> >> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+>> >> +             msleep(100);
+>> >> +     }
+>> >> +}
+>> >> +
+>> >> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+>> >> +{
+>> >> +     iproc_pcie_perst_ctrl(pcie, true);
+>> >> +     msleep(500);
+>> >> +
+>> >> +     return 0;
+>> >>  }
+>> >> +EXPORT_SYMBOL(iproc_pcie_shutdown);
+>> >>
+>> >>  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+>> >>  {
+>> >> @@ -1310,7 +1318,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>> >>               goto err_exit_phy;
+>> >>       }
+>> >>
+>> >> -     iproc_pcie_reset(pcie);
+>> >> +     iproc_pcie_perst_ctrl(pcie, true);
+>> >> +     iproc_pcie_perst_ctrl(pcie, false);
+>> >>
+>> >>       if (pcie->need_ob_cfg) {
+>> >>               ret = iproc_pcie_map_ranges(pcie, res);
+>> >> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+>> >> index 0bbe2ea..a6b55ce 100644
+>> >> --- a/drivers/pci/host/pcie-iproc.h
+>> >> +++ b/drivers/pci/host/pcie-iproc.h
+>> >> @@ -110,6 +110,7 @@ struct iproc_pcie {
+>> >>
+>> >>  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>> >>  int iproc_pcie_remove(struct iproc_pcie *pcie);
+>> >> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+>> >>
+>> >>  #ifdef CONFIG_PCIE_IPROC_MSI
+>> >>  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+>> >> --
+>> >> 1.9.1
+>> >>
