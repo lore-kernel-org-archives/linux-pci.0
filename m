@@ -1,71 +1,146 @@
-Return-Path: <SRS0=Gfpc=5S=gmail.com=yhlu.kernel@kernel.org>
-Return-Path: <SRS0=Gfpc=5S=gmail.com=yhlu.kernel@kernel.org>
+Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v5 3/3] net/cxgb4: Use new
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1497855239-18560-1-git-send-email-dingtianhong@huawei.com>
+ <1497855239-18560-4-git-send-email-dingtianhong@huawei.com>
+ <CAKgT0UdJ_zseo9O7SiU9U2m__OZeF_Z8eVjsA5N8ZK39rdK2fA@mail.gmail.com>
+CC: Mark Rutland <mark.rutland@arm.com>,
+        Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>,
+        Asit K Mallick <asit.k.mallick@intel.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>, Ashok Raj <ashok.raj@intel.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Jeff
+ Kirsher" <jeffrey.t.kirsher@intel.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        Ganesh Goudar <ganeshgr@chelsio.com>, Bob Shaw
+	<Bob.Shaw@amd.com>,
+        Casey Leedom <leedom@chelsio.com>,
+        Patrick J Cramer
+	<patrick.j.cramer@intel.com>,
+        Michael Werner <werner@chelsio.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        Amir Ancel <amira@mellanox.com>, Netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        David Laight <David.Laight@aculab.com>,
+        Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+        Robin Murphy
+	<robin.murphy@arm.com>,
+        David Miller <davem@davemloft.net>, h
+	<l.stach@pengutronix.de>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <3aa59c4a-62ad-dcb0-14d0-e0955b0005d2@huawei.com>
+Date: Thu, 22 Jun 2017 09:10:38 +0800
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170609231617.20243-1-yinghai@kernel.org> <20170612214848.GC28578@bhelgaas-glaptop.roam.corp.google.com>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Tue, 13 Jun 2017 10:00:33 -0700
-Message-ID: <CAE9FiQU_Hfsn-_tJSQ2NbqMV-rtaiFsX1FWfe_fADbd8TnKhBA@mail.gmail.com>
-Subject: Re: [PATCH v3] PCI: Workaround wrong flags completions for IDT switch
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	James Puthukattukaran <james.puthukattukaran@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <CAKgT0UdJ_zseo9O7SiU9U2m__OZeF_Z8eVjsA5N8ZK39rdK2fA@mail.gmail.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 2:48 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Jun 09, 2017 at 04:16:17PM -0700, Yinghai Lu wrote:
->> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+
+
+On 2017/6/22 2:28, Alexander Duyck wrote:
+> On Sun, Jun 18, 2017 at 11:53 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+>> From: Casey Leedom <leedom@chelsio.com>
 >>
->> The IDT switch incorrectly flags an ACS source violation on a read config
->> request to an end point device on the completion (IDT 89H32H8G3-YC,
->> errata #36) even though the PCI Express spec states that completions are
->> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
->
-> Can you include a URL where this erratum is published?  If not, can
-> you include the actual erratum text here?
+>> cxgb4 Ethernet driver now queries PCIe configuration space to determine
+>> if it can send TLPs to it with the Relaxed Ordering Attribute set.
+>>
+>> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+>> ---
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
+>>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+>>  3 files changed, 21 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+>> index e88c180..478f25a 100644
+>> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+>> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+>> @@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
+>>         USING_SOFT_PARAMS  = (1 << 6),
+>>         MASTER_PF          = (1 << 7),
+>>         FW_OFLD_CONN       = (1 << 9),
+>> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
+>>  };
+>>
+>>  enum {
+>> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+>> index ea1bfcf..7cd4e1b 100644
+>> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+>> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+>> @@ -4735,6 +4735,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>         adapter->msg_enable = DFLT_MSG_ENABLE;
+>>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+>>
+>> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
+>> +        * Ingress Packet Data to Free List Buffers in order to allow for
+>> +        * chipset performance optimizations between the Root Complex and
+>> +        * Memory Controllers.  (Messages to the associated Ingress Queue
+>> +        * notifying new Packet Placement in the Free Lists Buffers will be
+>> +        * send without the Relaxed Ordering Attribute thus guaranteeing that
+>> +        * all preceding PCIe Transaction Layer Packets will be processed
+>> +        * first.)  But some Root Complexes have various issues with Upstream
+>> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
+>> +        * The PCIe devices which under the Root Complexes will be cleared the
+>> +        * Relaxed Ordering bit in the configuration space, So we check our
+>> +        * PCIe configuration space to see if it's flagged with advice against
+>> +        * using Relaxed Ordering.
+>> +        */
+>> +       if (pcie_relaxed_ordering_supported(pdev))
+>> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+>> +
+> 
+> Looks like you have a typo here. It should be
+> "!pcie_relaxed_ordering_supported(pdev)" that you are testing for to
+> set this flag shouldn't it? Right now it appears the flag is getting
+> set if relaxed ordering is supported.
+> 
 
-Ok.
+Yes, I made a mistake here, thanks for correcting.
 
->
-> Have you considered ways to make this patch apply only to the affected
-> IDT switches?  Currently it applies to *all* devices.
+Ding
 
-But we need to apply that workaround before we know vendorid/deviceid
-under that root port or downstream port.
-
->
-> The purpose of the pci_bus_read_dev_vendor_id() path is to support the
-> Configuration Request Retry Status feature (see PCIe r3.1, sec 2.3.2),
-> which works by special handling of config reads of the Vendor ID after
-> a reset.  Normally, that Vendor ID read would be the first access to
-> a device when we enumerate it.
->
-> This patch adds config reads and writes of the ACS capability *before*
-> the Vendor ID read.  At that point we don't even know whether the
-> device exists.  If it doesn't exist, pci_find_ext_capability() would
-> read 0xffffffff data, and it probably fails reasonably gracefully.
->
-> But if the device *does* exist, I think this patch breaks the CRS
-> Software Visibility feature.  Without this patch, we try to read
-> Vendor ID, and the device may return a CRS Completion Status.  If CRS
-> visibility is enabled, the root complex may complete the request by
-> returning 0x0001 for the Vendor ID, in which case we sleep and try
-> again later.
->
-> With this patch, we first try to read the ACS capability.  If the
-> device returns a CRS Completion Status, the root complex is required
-> to reissue the config request.  This is the required behavior
-> regardless of whether CRS Software Visibility is enabled, so I think
-> this effectively disables that feature.
-
-The workaround (acs reading etc) is applied to root port or downstream port.
-and pci_bus_read_dev_vendor_id() is for reading vendorid of device
-under that root port or downstream port.
-
-Thanks
-
-Yinghai
+>>         spin_lock_init(&adapter->stats_lock);
+>>         spin_lock_init(&adapter->tid_release_lock);
+>>         spin_lock_init(&adapter->win0_lock);
+>> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+>> index f05f0d4..ac229a3 100644
+>> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
+>> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+>> @@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>>         struct fw_iq_cmd c;
+>>         struct sge *s = &adap->sge;
+>>         struct port_info *pi = netdev_priv(dev);
+>> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+>>
+>>         /* Size needs to be multiple of 16, including status entry. */
+>>         iq->size = roundup(iq->size, 16);
+>> @@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>>
+>>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+>>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+>> -                                            FW_IQ_CMD_FL0FETCHRO_F |
+>> -                                            FW_IQ_CMD_FL0DATARO_F |
+>> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
+>> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
+>>                                              FW_IQ_CMD_FL0PADEN_F);
+>>                 if (cong >= 0)
+>>                         c.iqns_to_fl0congen |=
+>> --
+>> 1.9.0
+>>
+>>
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> .
+> 
