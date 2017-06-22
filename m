@@ -1,111 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Wed, 28 Jun 2017 21:26:32 -0600
-Message-Id: <20170629032648.3073-1-logang@deltatee.com>
-Subject: [PATCH 00/16]
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 22 Jun 2017 09:47:05 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/4] ARM/PCI: iop13xx: address uninitialized variable
+ warning
+Message-ID: <20170622084704.GA22996@red-moon>
+References: <20170621215323.3921382-1-arnd@arndb.de>
+MIME-Version: 1.0
+In-Reply-To: <20170621215323.3921382-1-arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since the rfc:
+On Wed, Jun 21, 2017 at 11:52:59PM +0200, Arnd Bergmann wrote:
+> The last rework returned a variable that the compiler cannot prove
+> to be initialized:
+> 
+> arch/arm/mach-iop13xx/pci.c: In function 'iop13xx_scan_bus':
+> arch/arm/mach-iop13xx/pci.c:509:17: error: 'ret' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> In the switch statement that sets the return value, this adds
+> a default returning an error.
+> 
+> Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  arch/arm/mach-iop13xx/pci.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
+> index b97879bfb81a..3c51a9bb9b49 100644
+> --- a/arch/arm/mach-iop13xx/pci.c
+> +++ b/arch/arm/mach-iop13xx/pci.c
+> @@ -553,6 +553,8 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
+>  		if (!ret)
+>  			pci_bus_atue = bridge->bus;
+>  		break;
+> +	default:
+> +		ret = -EINVAL;
+>  	}
+>  
+>  	return ret;
 
-- Rebased on ntb-next
-- Switched ntb_part_op to use sleep instead of delay
-- Dropped a number of useless dbg __func__ prints
-- Went back to the dynamic instead of the static class
-- Swapped the notifier block for a simple callback
-- Modified the new ntb api so that a couple functions with pidx
-  now must be called after link up. Per our discussion on the list.
+Ok I managed to miss these ones somehow, apologies. This series can be
+squashed into the initial series but there is also Linus' fix for faraday
+to address:
 
-Also, please note, the first patch in the series will conflict with
-switchtec patches that are queued up for 4.13. So this shouldn't
-be merged until I can rebase it onto a later kernel. However, it
-is suitable for review.
+https://patchwork.ozlabs.org/patch/778999/
 
-@Bjorn: per the discussion on the RFC, I think it's best if
-this series goes through the NTB tree. Therefore, we just need an ack
-from you when you have time.
+I can respin a v3 but I am off the radar next week so timing for the
+pci_fixup_irqs() removal looks bad, I am not sure what's the next course
+of action but I think it is better to drop it for this cycle and wait
+for 4.14 (hopefully there are not many PCI host bridges updates to
+rebase but I will cope with that anyway - that's the best I can do).
 
 Thanks,
+Lorenzo
 
-Logan
-
---
-
-This patchset implements Non-Transparent Bridge (NTB) support for the
-Microsemi Switchtec series of switches. We're looking for some
-review from the community at this point but hope to get it upstreamed
-for v4.14.
-
-Switchtec NTB support is configured over the same function and bar
-as the management endpoint. Thus, the new driver hooks into the
-management driver which we had merged in v4.12. We use the class
-interface API to register an NTB device for every switchtec device
-which supports NTB (not all do).
-
-The Switchtec hardware supports doorbells, memory windows and messages.
-Seeing there is no native scratchpad support, 128 spads are emulated
-through the use of a pre-setup memory window. The switch has 64
-doorbells which are shared between the two partitions and a
-configurable set of memory windows. While the hardware supports more
-than 2 partitions, this driver only supports the first two seeing
-the current NTB API only supports two hosts.
-
-The driver has been tested with ntb_netdev and fully passes the
-ntb_test script.
-
-This patchset is based off of ntb-next and can be found in this
-git repo:
-
-https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb_next
-
-Logan Gunthorpe (16):
-  switchtec: move structure definitions into a common header
-  switchtec: export class symbol for use in upper layer driver
-  switchtec: add ntb hardware register definitions
-  switchtec: add link event notifier callback
-  ntb: ensure ntb_mw_get_align is only called when the link is up
-  ntb: add check and comment for link up to mw_count and mw_get_align
-  ntb: ntb_test: ensure the link is up before trying to configure the
-    mws
-  switchtec_ntb: introduce initial ntb driver
-  switchtec_ntb: initialize hardware for memory windows
-  switchtec_ntb: initialize hardware for doorbells and messages
-  switchtec_ntb: add skeleton ntb driver
-  switchtec_ntb: add link management
-  switchtec_ntb: implement doorbell registers
-  switchtec_ntb: implement scratchpad registers
-  switchtec_ntb: add memory window support
-  switchtec_ntb: update switchtec documentation with notes for ntb
-
- Documentation/switchtec.txt             |   12 +
- MAINTAINERS                             |    2 +
- drivers/ntb/hw/Kconfig                  |    1 +
- drivers/ntb/hw/Makefile                 |    1 +
- drivers/ntb/hw/mscc/Kconfig             |    9 +
- drivers/ntb/hw/mscc/Makefile            |    1 +
- drivers/ntb/hw/mscc/switchtec_ntb.c     | 1188 +++++++++++++++++++++++++++++++
- drivers/ntb/ntb_transport.c             |   20 +-
- drivers/ntb/test/ntb_perf.c             |   18 +-
- drivers/ntb/test/ntb_tool.c             |    6 +-
- drivers/pci/switch/switchtec.c          |  304 ++------
- include/linux/ntb.h                     |   14 +-
- include/linux/switchtec.h               |  364 ++++++++++
- tools/testing/selftests/ntb/ntb_test.sh |    4 +
- 14 files changed, 1670 insertions(+), 274 deletions(-)
- create mode 100644 drivers/ntb/hw/mscc/Kconfig
- create mode 100644 drivers/ntb/hw/mscc/Makefile
- create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
- create mode 100644 include/linux/switchtec.h
-
---
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
