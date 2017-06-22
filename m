@@ -1,83 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0040.outbound.protection.outlook.com ([104.47.34.40]:26986
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751262AbdFEFrV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 5 Jun 2017 01:47:21 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Paul Burton <paul.burton@imgtec.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: RE: [PATCH v4 1/4] PCI: xilinx: Fix INTX irq dispatch
-Date: Mon, 5 Jun 2017 05:47:13 +0000
-Message-ID: <8520D5D51A55D047800579B0941471982646ABC2@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <20170602185420.22281-1-paul.burton@imgtec.com>
- <20170602185420.22281-2-paul.burton@imgtec.com>
-In-Reply-To: <20170602185420.22281-2-paul.burton@imgtec.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=s5AE=53=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v6 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Thu, 22 Jun 2017 20:15:19 +0800
+Message-ID: <1498133721-21152-2-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-> The IRQ domain for INTX interrupts has 4 entries, numbered 0 to 3. This m=
-atches
-> what the hardware reports from the interrupt FIFO exactly, but
-> xilinx_pcie_intr_handler was adding 1 to that value to convert to the ran=
-ge 1 to
-> 4. Stop adding 1, such that all of INTA through to INTD fall within the r=
-ange of
-> the IRQ domain.
->=20
-Paul, this change is not required.
-hwirq for legacy domain is being assigned by kernel PCIe subsystem based on=
- PCI_INTERRUPT_PIN, which as per
-protocol starts from 1 and not zero, due to this 1 is being added.
+From: Casey Leedom <leedom@chelsio.com>
 
-Regards,
-Bharat
+The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
+Ordering Attribute should not be used on Transaction Layer Packets destined
+for the PCIe End Node so flagged.  Initially flagged this way are Intel
+E5-26xx Root Complex Ports which suffer from a Flow Control Credit
+Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
+don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
 
-> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-> Fixes: 8961def56845 ("PCI: xilinx: Add Xilinx AXI PCIe Host Bridge IP dri=
-ver")
-> Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Michal Simek <michal.simek@xilinx.com>
-> Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-> Cc: linux-pci@vger.kernel.org
->=20
-> ---
->=20
-> Changes in v4: None
->=20
-> Changes in v3:
-> - Split out from Boston patchset.
->=20
-> Changes in v2:
-> - Add Fixes tag.
->=20
->  drivers/pci/host/pcie-xilinx.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilin=
-x.c index
-> 2fe2df51f9f8..6be2e5ee44f1 100644
-> --- a/drivers/pci/host/pcie-xilinx.c
-> +++ b/drivers/pci/host/pcie-xilinx.c
-> @@ -440,8 +440,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, =
-void
-> *data)
->  				   XILINX_PCIE_REG_RPIFR1);
->=20
->  			/* Handle INTx Interrupt */
-> -			val =3D ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
-> -				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
-> +			val =3D (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
-> +				XILINX_PCIE_RPIFR1_INTR_SHIFT;
->  			generic_handle_irq(irq_find_mapping(port-
-> >leg_domain,
->  							    val));
->  		}
-> --
-> 2.13.0
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |  2 ++
+ 2 files changed, 40 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 085fb78..58bdd23 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3999,6 +3999,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
+ 			      quirk_tw686x_class);
+ 
+ /*
++ * Some devices have problems with Transaction Layer Packets with the Relaxed
++ * Ordering Attribute set.  Such devices should mark themselves and other
++ * Device Drivers should check before sending TLPs with RO set.
++ */
++static void quirk_relaxedordering_disable(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
++}
++
++/*
++ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
++ * cause performance problems with Upstream Transaction Layer Packets with
++ * Relaxed Ordering set.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
++ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
++ * where Upstream Transaction Layer Packets with the Relaxed Ordering
++ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
++ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
++ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
++ * November 10, 2010).  As a result, on this platform we can't use Relaxed
++ * Ordering for Upstream TLPs.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
+  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+  * values for the Attribute as were supplied in the header of the
+  * corresponding Request, except as explicitly allowed when IDO is used."
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8039f9f..ce77690 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -188,6 +188,8 @@ enum pci_dev_flags {
+ 	 * the direct_complete optimization.
+ 	 */
+ 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
++	/* Don't use Relaxed Ordering for TLPs directed at this device */
++	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
+ };
+ 
+ enum pci_irq_reroute_variant {
+-- 
+1.9.0
