@@ -1,46 +1,103 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Thu, 8 Jun 2017 01:12:28 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Palmer Dabbelt <palmer@dabbelt.com>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>,
-        albert@sifive.com, patches@groups.riscv.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 06/17] pci: Add generic pcibios_{fixup_bus,align_resource}
-Message-ID: <20170608081228.GA26932@infradead.org>
-References: <20170523004107.536-1-palmer@dabbelt.com>
- <20170606230007.19101-1-palmer@dabbelt.com>
- <20170606230007.19101-7-palmer@dabbelt.com>
- <CAMuHMdUiuqB3vPYkAJfP5+qotcH=o1gJnH8Mosr9VSKxAQGJMQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45262 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753373AbdFVVLX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 22 Jun 2017 17:11:23 -0400
+Date: Thu, 22 Jun 2017 15:11:18 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>
+Subject: Re: [PATCH kernel 0/3 REPOST] vfio-pci: Add support for mmapping
+ MSI-X table
+Message-ID: <20170622151118.0006c3d3@w520.home>
+In-Reply-To: <20170615054845.8428-1-aik@ozlabs.ru>
+References: <20170615054845.8428-1-aik@ozlabs.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAMuHMdUiuqB3vPYkAJfP5+qotcH=o1gJnH8Mosr9VSKxAQGJMQ@mail.gmail.com>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 07, 2017 at 09:19:49AM +0200, Geert Uytterhoeven wrote:
-> CC pci folks
+On Thu, 15 Jun 2017 15:48:42 +1000
+Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
 
-Ok, replying with pci folks in Cc then :)
+> Here is a patchset which Yongji was working on before
+> leaving IBM LTC. Since we still want to have this functionality
+> in the kernel (DPDK is the first user), here is a rebase
+> on the current upstream.
+> 
+> 
+> Current vfio-pci implementation disallows to mmap the page
+> containing MSI-X table in case that users can write directly
+> to MSI-X table and generate an incorrect MSIs.
+> 
+> However, this will cause some performance issue when there
+> are some critical device registers in the same page as the
+> MSI-X table. We have to handle the mmio access to these
+> registers in QEMU emulation rather than in guest.
+> 
+> To solve this issue, this series allows to expose MSI-X table
+> to userspace when hardware enables the capability of interrupt
+> remapping which can ensure that a given PCI device can only
+> shoot the MSIs assigned for it. And we introduce a new bus_flags
+> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+> for different archs.
+> 
+> The patch 3 are based on the proposed patchset[1].
+> 
+> Changelog
+> v3:
+> - rebased on the current upstream
 
-Weak symbols have (rightly) gotten a bad reputation, so maybe
-we should approach this without them.
+There's something not forthcoming here, the last version I see from
+Yongji is this one:
 
-It seems we have a large number of emptry pcibios_fixup_bus calls
-alreayd, so I think we should simply have the architectures
-that do define it define a Kconfig or header symbol and not call
-it at all otherwise.
+https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017245.html
 
-For the ones that exist as lot just seem to call pci_read_bridge_bases
-and/or pcibios_fixup_device_resources in one form or another,
-and I wonder why we even need the arch indirection for that.
+Which was a 6-patch series where patches 2-4 tried to apply
+PCI_BUS_FLAGS_MSI_REMAP for cases that supported other platforms.  That
+doesn't exist here, so it's not simply a rebase.  Patch 1/ seems to
+equate this new flag to the IOMMU capability IOMMU_CAP_INTR_REMAP, but
+nothing is done here to match them together.  That patch also mentions
+the work Eric has done for similar features on ARM, but again those
+patches are dropped.  It seems like an incomplete feature now.  Thanks,
 
-Similarly for pcibios_align_resource: a lot of architetures seem
-to have a noop, and the once that don't mostly seem copy and
-paste code, so we should again have a symbol for architectures
-to opt into it, and we probably should have a generic helper
-for the VGA window mirroring code instead of duplicating it multiple
-times.
+Alex
+
+> v2:
+> - Make the commit log more clear
+> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+>   so that we could clearly know what the function does
+> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+>   of iommu_bus_notifier()
+> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+>   table so that we can know whether we allow to mmap MSI-X table
+>   in QEMU
+> 
+> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+> 
+> 
+> This is based on sha1
+> 63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
+> 
+> Please comment. Thanks.
+> 
+> 
+> 
+> Yongji Xie (3):
+>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
+>     remapping is enabled
+> 
+>  include/linux/pci.h                       |  1 +
+>  arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
+>  drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
+>  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
+>  4 files changed, 26 insertions(+), 4 deletions(-)
+> 
