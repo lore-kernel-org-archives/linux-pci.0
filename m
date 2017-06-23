@@ -1,72 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 24 Jun 2017 10:13:28 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Palmer Dabbelt <palmer@dabbelt.com>
-Subject: Re: [PATCH] pci:  Add and use PCI_GENERIC_SETUP Kconfig entry
-Message-ID: <20170624091328.GY4902@n2100.armlinux.org.uk>
-References: <20170623214538.25967-1-palmer@dabbelt.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v2 0/5] PM: Unify the handling of device wakeup settings
+Date: Sat, 24 Jun 2017 01:50:55 +0200
+Message-ID: <2524735.NRzn8A9HAf@aspire.rjw.lan>
+In-Reply-To: <12296383.UdE5HVtyng@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170623214538.25967-1-palmer@dabbelt.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-mips@linux-mips.org, dalias@libc.org, linux-sh@vger.kernel.org,
- catalin.marinas@arm.com, will.deacon@arm.com, sparclinux@vger.kernel.org,
- gxt@mprc.pku.edu.cn, ysato@users.sourceforge.jp, hch@infradead.org,
- geert@linux-m68k.org, linux-pci@vger.kernel.org, mattst88@gmail.com,
- linux-snps-arc@lists.infradead.org, cmetcalf@mellanox.com,
- linux-m68k@lists.linux-m68k.org, ink@jurassic.park.msu.ru,
- viro@zeniv.linux.org.uk, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org, rth@twiddle.net, vgupta@synopsys.com,
- linux-kernel@vger.kernel.org, ralf@linux-mips.org, linux-alpha@vger.kernel.org,
- akpm@linux-foundation.org, davem@davemloft.net
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 23, 2017 at 02:45:38PM -0700, Palmer Dabbelt wrote:
-> We wanted to add RISC-V to the list of architectures that used the
-> generic PCI setup-irq.o inside the Makefile and it was suggested that
-> instead we define a Kconfig entry and use that.
+On Monday, June 19, 2017 11:31:58 PM Rafael J. Wysocki wrote:
+> Hi All,
 > 
-> I've done very minimal testing on this: I just checked to see that
-> an aarch64 defconfig still build setup-irq.o with the patch applied.
-> The intention is that this patch doesn't change the behavior of any
-> build.
+> The handling of device wakeup settings, especially in the ACPI core and the PCI
+> bus type, depends on whether it is about system wakeup from sleep states or
+> remote wakeup in the working state (runtime).  However, that distinction is
+> mostly based on the ACPI concept of "wakeup" and "runtime" GPEs, which is
+> somewhat artificial, because the underlying hardware mechanism is basically
+> the same in both cases.
 > 
-> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+> Moreover, suspend-to-idle is now supported as a sleep state and wakeup from it
+> is based on exactly the same hardware capabilities as the working-state
+> (runtime) remote wakeup.
+> 
+> The following patch series removes that distinction and unifies the handling of
+> device wakeup settings between system sleep and runtime.  It also fixes one
+> issue related to wakeup signaling through PCI bridges.
+> 
+> [1/6]: Get rid of the "runtime wakeup" concept from the ACPI core.
+> [2/6]: Unify device wakeup settings code paths in the ACPI core.
+> [3-4/6]: Unify device wakeup settings code paths in the PCI bus type code.
+> [5/6]: Fix wakeup-related issue with bridges in the PCI bus type code.
+> [6/6]: Get rid of the "runtime wakeup" concept from the driver core.
+> 
+> The series is based on current linux-next and will be made available for
+> testing in the linux-pm.git tree in a couple of days.
 
-Looks fine from an ARM point of view, thanks.
+Here's a v2 with tentatively added Reviewed-by tags from Mika.
 
-Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+I've dropped patch [5/6] from the previous iteration as it didn't really belong
+here and the issue it attempted to fix is rather theoretical.  I'm going to
+take a different approach there.
 
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index e0cacb7b8563..658c9f95ab3f 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -131,6 +131,9 @@ config PCI_HYPERV
->            The PCI device frontend driver allows the kernel to import arbitrary
->            PCI devices from a PCI backend to support PCI driver domains.
->  
-> +config PCI_GENERIC_SETUP
-> +	def_bool n
+Apart from this, the function previously called acpi_pm_device_wakeup() has
+a different name now: acpi_pm_set_device_wakeup(), to possibly avoid
+confusion about its purpose.
 
-	bool
+Also the changelog of patch [3/5] has been modified slightly.
 
-would be sufficient here - the default is 'n' for all options.
+Thanks,
+Rafael
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
