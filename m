@@ -1,56 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 16 Jun 2017 15:00:48 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-Message-ID: <20170616120048.GC629@lahna.fi.intel.com>
-References: <20170606085553.GA20085@red-moon>
- <20170612155700.GA31930@red-moon>
- <20170613084831.GP3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
- <20170613200339.GX3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
- <20170616083313.GY3187@lahna.fi.intel.com>
- <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1498209196.26313.71.camel@mtkswgap22>
+Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Mark Brown <broonie@kernel.org>, LorenzoPieralisi
+ <lorenzo.pieralisi@arm.com>
+Date: Fri, 23 Jun 2017 17:13:16 +0800
+In-Reply-To: <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
+References: <E1dNcMp-0005RN-1w@optimist>
+ <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+ "kernel-build-reports@lists.linaro.org"
+ <kernel-build-reports@lists.linaro.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 16, 2017 at 01:24:32PM +0200, Rafael J. Wysocki wrote:
-> > In fact it may be that it is not sufficient in this case because the
-> > ACPI core might enumerate child devices before the LPC driver even gets
-> > a chance to probe so you would need to add also scan handler to the
-> > child devices and mark them already enumerated or something like that.
-> 
-> Or extend the special I2C/SPI handling to them.
+Sorry for late reply, 
 
-Sure but those have I2c/SpiSerialBus() resources which we can use to
-identify them but for the ipmi thing there is nothing else than _HID so
-we would need to keep a list of such devices in ACPI core.
++Lorenzo
+
+On Wed, 2017-06-21 at 18:04 +0800, Mark Brown wrote:
+> On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
+> 
+> Today's -next fails to build an arm allmodconfig due to:
+> 
+> > 	arm-allmodconfig
+> > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
+> 
+> caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
+> controller support).
+
+
+Hi Lorenzo,
+
+I picked up your changes and had some modifications like what you did
+for other platforms:
+
+9f8e3a5 PCI: Add devm_pci_alloc_host_bridge() interface 
+35a1a84 PCI: Add pci_free_host_bridge() interface
+e33aafd PCI: Initialize bridge release function at bridge allocation
+
+...and it looks Okay.
+
+I have also noticed that you continue sending patches for other
+platforms but I have not yet had a look in detail. I'm quite busy these
+days and don't have time to dig it, hence it is becoming a little
+unmanageable for me.
+
+Did you have a chance to send the same patches for MediaTek?  I
+appreciate that and I can help to test it on our platforms.
+
+
+Ryder.
+
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
