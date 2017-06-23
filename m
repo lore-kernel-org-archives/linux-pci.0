@@ -1,69 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43246 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751623AbdFIJDu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 9 Jun 2017 05:03:50 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [PATCH 03/11] PCI: pci-driver: convert to use DRIVER_ATTR_WO
-Date: Fri,  9 Jun 2017 11:03:06 +0200
-Message-Id: <20170609090314.13991-3-gregkh@linuxfoundation.org>
-In-Reply-To: <20170609090314.13991-1-gregkh@linuxfoundation.org>
-References: <20170609090314.13991-1-gregkh@linuxfoundation.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v2 1/5] ACPI / PM: Drop run_wake from struct acpi_device_wakeup_flags
+Date: Sat, 24 Jun 2017 01:53:14 +0200
+Message-ID: <2229106.sCO2LvC1ax@aspire.rjw.lan>
+In-Reply-To: <2524735.NRzn8A9HAf@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan> <2524735.NRzn8A9HAf@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We are trying to get rid of DRIVER_ATTR(), and all of the pci-driver
-core driver attributes can be trivially changed to use DRIVER_ATTR_WO().
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: <linux-pci@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+The run_wake flag in struct acpi_device_wakeup_flags stores the
+information on whether or not the device can generate wakeup
+signals at run time, but in ACPI that really is equivalent to
+being able to generate wakeup signals at all.
+
+In fact, run_wake will always be set after successful executeion of
+acpi_setup_gpe_for_wake(), but if that fails, the device will not be
+able to use a wakeup GPE at all, so it won't be able to wake up the
+systems from sleep states too.  Hence, run_wake actually means that
+the device is capable of triggering wakeup and so it is equivalent
+to the valid flag.
+
+For this reason, drop run_wake from struct acpi_device_wakeup_flags
+and make sure that the valid flag is only set if
+acpi_setup_gpe_for_wake() has been successful.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/pci/pci-driver.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index 192e7b681b96..934a78a2fbef 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -96,7 +96,7 @@ static void pci_free_dynids(struct pci_driver *drv)
-  *
-  * Allow PCI IDs to be added to an existing driver via sysfs.
-  */
--static ssize_t store_new_id(struct device_driver *driver, const char *buf,
-+static ssize_t new_id_store(struct device_driver *driver, const char *buf,
- 			    size_t count)
- {
- 	struct pci_driver *pdrv = to_pci_driver(driver);
-@@ -154,7 +154,7 @@ static ssize_t store_new_id(struct device_driver *driver, const char *buf,
- 		return retval;
- 	return count;
+-> v2: No changes.
+
+---
+ drivers/acpi/pci_root.c |    2 +-
+ drivers/acpi/proc.c     |    4 ++--
+ drivers/acpi/scan.c     |   23 ++++++++---------------
+ drivers/pci/pci-acpi.c  |    3 +--
+ include/acpi/acpi_bus.h |    1 -
+ 5 files changed, 12 insertions(+), 21 deletions(-)
+
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -835,7 +835,7 @@ static int acpi_bus_extract_wakeup_devic
+ 	return err;
  }
--static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
-+static DRIVER_ATTR_WO(new_id);
  
- /**
-  * store_remove_id - remove a PCI device ID from this driver
-@@ -164,7 +164,7 @@ static DRIVER_ATTR(new_id, S_IWUSR, NULL, store_new_id);
-  *
-  * Removes a dynamic pci device ID to this driver.
-  */
--static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
-+static ssize_t remove_id_store(struct device_driver *driver, const char *buf,
- 			       size_t count)
+-static void acpi_wakeup_gpe_init(struct acpi_device *device)
++static bool acpi_wakeup_gpe_init(struct acpi_device *device)
  {
- 	struct pci_dynid *dynid, *n;
-@@ -198,7 +198,7 @@ static ssize_t store_remove_id(struct device_driver *driver, const char *buf,
+ 	static const struct acpi_device_id button_device_ids[] = {
+ 		{"PNP0C0C", 0},
+@@ -845,13 +845,11 @@ static void acpi_wakeup_gpe_init(struct
+ 	};
+ 	struct acpi_device_wakeup *wakeup = &device->wakeup;
+ 	acpi_status status;
+-	acpi_event_status event_status;
  
- 	return retval;
+ 	wakeup->flags.notifier_present = 0;
+ 
+ 	/* Power button, Lid switch always enable wakeup */
+ 	if (!acpi_match_device_ids(device, button_device_ids)) {
+-		wakeup->flags.run_wake = 1;
+ 		if (!acpi_match_device_ids(device, &button_device_ids[1])) {
+ 			/* Do not use Lid/sleep button for S5 wakeup */
+ 			if (wakeup->sleep_state == ACPI_STATE_S5)
+@@ -859,17 +857,12 @@ static void acpi_wakeup_gpe_init(struct
+ 		}
+ 		acpi_mark_gpe_for_wake(wakeup->gpe_device, wakeup->gpe_number);
+ 		device_set_wakeup_capable(&device->dev, true);
+-		return;
++		return true;
+ 	}
+ 
+-	acpi_setup_gpe_for_wake(device->handle, wakeup->gpe_device,
+-				wakeup->gpe_number);
+-	status = acpi_get_gpe_status(wakeup->gpe_device, wakeup->gpe_number,
+-				     &event_status);
+-	if (ACPI_FAILURE(status))
+-		return;
+-
+-	wakeup->flags.run_wake = !!(event_status & ACPI_EVENT_FLAG_HAS_HANDLER);
++	status = acpi_setup_gpe_for_wake(device->handle, wakeup->gpe_device,
++					 wakeup->gpe_number);
++	return ACPI_SUCCESS(status);
  }
--static DRIVER_ATTR(remove_id, S_IWUSR, NULL, store_remove_id);
-+static DRIVER_ATTR_WO(remove_id);
  
- static struct attribute *pci_drv_attrs[] = {
- 	&driver_attr_new_id.attr,
--- 
-2.13.1
+ static void acpi_bus_get_wakeup_device_flags(struct acpi_device *device)
+@@ -887,10 +880,10 @@ static void acpi_bus_get_wakeup_device_f
+ 		return;
+ 	}
+ 
+-	device->wakeup.flags.valid = 1;
++	device->wakeup.flags.valid = acpi_wakeup_gpe_init(device);
+ 	device->wakeup.prepare_count = 0;
+-	acpi_wakeup_gpe_init(device);
+-	/* Call _PSW/_DSW object to disable its ability to wake the sleeping
++	/*
++	 * Call _PSW/_DSW object to disable its ability to wake the sleeping
+ 	 * system for the ACPI device with the _PRW object.
+ 	 * The _PSW object is depreciated in ACPI 3.0 and is replaced by _DSW.
+ 	 * So it is necessary to call _DSW object first. Only when it is not
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -314,7 +314,6 @@ struct acpi_device_perf {
+ /* Wakeup Management */
+ struct acpi_device_wakeup_flags {
+ 	u8 valid:1;		/* Can successfully enable wakeup? */
+-	u8 run_wake:1;		/* Run-Wake GPE devices */
+ 	u8 notifier_present:1;  /* Wake-up notify handler has been installed */
+ 	u8 enabled:1;		/* Enabled for wakeup */
+ };
+Index: linux-pm/drivers/acpi/pci_root.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/pci_root.c
++++ linux-pm/drivers/acpi/pci_root.c
+@@ -608,7 +608,7 @@ static int acpi_pci_root_add(struct acpi
+ 		pcie_no_aspm();
+ 
+ 	pci_acpi_add_bus_pm_notifier(device);
+-	if (device->wakeup.flags.run_wake)
++	if (device->wakeup.flags.valid)
+ 		device_set_run_wake(root->bus->bridge, true);
+ 
+ 	if (hotadd) {
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -777,9 +777,8 @@ static void pci_acpi_setup(struct device
+ 		return;
+ 
+ 	device_set_wakeup_capable(dev, true);
++	device_set_run_wake(dev, true);
+ 	acpi_pci_sleep_wake(pci_dev, false);
+-	if (adev->wakeup.flags.run_wake)
+-		device_set_run_wake(dev, true);
+ }
+ 
+ static void pci_acpi_cleanup(struct device *dev)
+Index: linux-pm/drivers/acpi/proc.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/proc.c
++++ linux-pm/drivers/acpi/proc.c
+@@ -42,7 +42,7 @@ acpi_system_wakeup_device_seq_show(struc
+ 
+ 		if (!dev->physical_node_count) {
+ 			seq_printf(seq, "%c%-8s\n",
+-				dev->wakeup.flags.run_wake ? '*' : ' ',
++				dev->wakeup.flags.valid ? '*' : ' ',
+ 				device_may_wakeup(&dev->dev) ?
+ 					"enabled" : "disabled");
+ 		} else {
+@@ -58,7 +58,7 @@ acpi_system_wakeup_device_seq_show(struc
+ 					seq_printf(seq, "\t\t");
+ 
+ 				seq_printf(seq, "%c%-8s  %s:%s\n",
+-					dev->wakeup.flags.run_wake ? '*' : ' ',
++					dev->wakeup.flags.valid ? '*' : ' ',
+ 					(device_may_wakeup(&dev->dev) ||
+ 					device_may_wakeup(ldev)) ?
+ 					"enabled" : "disabled",
+
