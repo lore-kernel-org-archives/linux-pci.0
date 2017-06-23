@@ -1,74 +1,133 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 23 Jun 2017 09:17:23 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>
+Subject: Re: [PATCH kernel 0/3 REPOST] vfio-pci: Add support for mmapping
+ MSI-X table
+Message-ID: <20170623091723.1f122800@w520.home>
+In-Reply-To: <82b2e63c-0a39-303c-f255-b857764fc412@ozlabs.ru>
+References: <20170615054845.8428-1-aik@ozlabs.ru>
+        <20170622151118.0006c3d3@w520.home>
+        <82b2e63c-0a39-303c-f255-b857764fc412@ozlabs.ru>
 MIME-Version: 1.0
-In-Reply-To: <20170608081228.GA26932@infradead.org>
-References: <20170523004107.536-1-palmer@dabbelt.com> <20170606230007.19101-1-palmer@dabbelt.com>
- <20170606230007.19101-7-palmer@dabbelt.com> <CAMuHMdUiuqB3vPYkAJfP5+qotcH=o1gJnH8Mosr9VSKxAQGJMQ@mail.gmail.com>
- <20170608081228.GA26932@infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 8 Jun 2017 10:35:29 +0200
-Message-ID: <CAK8P3a1Q=LoAPU_6X_z1=4Yp-Q=TCYpVz3R2MOv_UikX-tPDQg@mail.gmail.com>
-Subject: Re: [PATCH 06/17] pci: Add generic pcibios_{fixup_bus,align_resource}
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Linux-Arch <linux-arch@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Olof Johansson <olof@lixom.net>, albert@sifive.com,
-        patches@groups.riscv.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 8, 2017 at 10:12 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Jun 07, 2017 at 09:19:49AM +0200, Geert Uytterhoeven wrote:
->> CC pci folks
->
-> Ok, replying with pci folks in Cc then :)
->
-> Weak symbols have (rightly) gotten a bad reputation, so maybe
-> we should approach this without them.
+On Fri, 23 Jun 2017 15:06:37 +1000
+Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
 
-Agreed, I would almost never recommend using a __weak symbol,
-but they are already widely used in the PCI subsystem, so I suggested
-using them here for consistency.
+> On 23/06/17 07:11, Alex Williamson wrote:
+> > On Thu, 15 Jun 2017 15:48:42 +1000
+> > Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+> >   
+> >> Here is a patchset which Yongji was working on before
+> >> leaving IBM LTC. Since we still want to have this functionality
+> >> in the kernel (DPDK is the first user), here is a rebase
+> >> on the current upstream.
+> >>
+> >>
+> >> Current vfio-pci implementation disallows to mmap the page
+> >> containing MSI-X table in case that users can write directly
+> >> to MSI-X table and generate an incorrect MSIs.
+> >>
+> >> However, this will cause some performance issue when there
+> >> are some critical device registers in the same page as the
+> >> MSI-X table. We have to handle the mmio access to these
+> >> registers in QEMU emulation rather than in guest.
+> >>
+> >> To solve this issue, this series allows to expose MSI-X table
+> >> to userspace when hardware enables the capability of interrupt
+> >> remapping which can ensure that a given PCI device can only
+> >> shoot the MSIs assigned for it. And we introduce a new bus_flags
+> >> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+> >> for different archs.
+> >>
+> >> The patch 3 are based on the proposed patchset[1].
+> >>
+> >> Changelog
+> >> v3:
+> >> - rebased on the current upstream  
+> > 
+> > There's something not forthcoming here, the last version I see from
+> > Yongji is this one:
+> > 
+> > https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017245.html
+> > 
+> > Which was a 6-patch series where patches 2-4 tried to apply
+> > PCI_BUS_FLAGS_MSI_REMAP for cases that supported other platforms.  That
+> > doesn't exist here, so it's not simply a rebase.  Patch 1/ seems to
+> > equate this new flag to the IOMMU capability IOMMU_CAP_INTR_REMAP, but
+> > nothing is done here to match them together.  That patch also mentions
+> > the work Eric has done for similar features on ARM, but again those
+> > patches are dropped.  It seems like an incomplete feature now.  Thanks,  
+> 
+> 
+> Thanks! I suspected this is not the latest but could not find anything
+> better than we use internally for tests, and I could not reach Yongji for
+> comments whether this was the latest update.
+> 
+> As I am reading the patches, I notice that the "msi remap" term is used all
+> over the place. While this remapping capability may be the case for x86/arm
+> (and therefore the IOMMU_CAP_INTR_REMAP flag makes sense), powernv does not
+> do remapping but provides hardware isolation. When we are allowing MSIX BAR
+> mapping to the userspace - the isolation is what we really care about. Will
+> it make sense to rename PCI_BUS_FLAGS_MSI_REMAP to
+> PCI_BUS_FLAGS_MSI_ISOLATED ?
 
-We have a struct pci_host_bridge now, and we should eventually
-move most of the 38 pci specific weak  per-architecture symbols
-into per-host driver callbacks, but that I think that would be too much
-to ask for when adding an architecture port.
+I don't have a strong opinion either way, so long as it's fully
+described what the flag indicates.
 
-> It seems we have a large number of emptry pcibios_fixup_bus calls
-> alreayd, so I think we should simply have the architectures
-> that do define it define a Kconfig or header symbol and not call
-> it at all otherwise.
+> Another thing - the patchset enables PCI_BUS_FLAGS_MSI_REMAP when IOMMU
+> just advertises IOMMU_CAP_INTR_REMAP, not necessarily uses it, should the
+> patchset actually look at something like irq_remapping_enabled in
+> drivers/iommu/amd_iommu.c instead?
 
-I would argue that most of them should not be per-architecture
-in the first place, the current state is mostly an artifact of the
-times when each architecture had just one PCI implementation.
+Interrupt remapping being enabled is implicit in IOMMU_CAP_INTR_REMAP,
+neither intel or amd iommu export the capability unless enabled.
+Nobody cares if it's supported but not enabled.  Thanks,
 
-The ones that have multiple implementations (arm, powerpc, ...)
-tend to actually override the weak functions with their own
-per-host multiplexers again.
+Alex
 
-> For the ones that exist as lot just seem to call pci_read_bridge_bases
-> and/or pcibios_fixup_device_resources in one form or another,
-> and I wonder why we even need the arch indirection for that.
->
-> Similarly for pcibios_align_resource: a lot of architetures seem
-> to have a noop, and the once that don't mostly seem copy and
-> paste code, so we should again have a symbol for architectures
-> to opt into it, and we probably should have a generic helper
-> for the VGA window mirroring code instead of duplicating it multiple
-> times.
-
-I now remember that we already have a host_bridge->align_resource
-callback pointer, so the generic function should definitely try
-to use that.
-
-We could just use the version from arch/mips/pci/pci-generic.c
-and remove that in the process. I'm not sure about why mips calls
-pci_read_bridge_bases() in pcibios_fixup_bus() though, or whether
-this make sense to put in the generic version.
-
-       Arnd
+> >> v2:
+> >> - Make the commit log more clear
+> >> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+> >>   so that we could clearly know what the function does
+> >> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+> >>   of iommu_bus_notifier()
+> >> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+> >>   table so that we can know whether we allow to mmap MSI-X table
+> >>   in QEMU
+> >>
+> >> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+> >>
+> >>
+> >> This is based on sha1
+> >> 63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
+> >>
+> >> Please comment. Thanks.
+> >>
+> >>
+> >>
+> >> Yongji Xie (3):
+> >>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+> >>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+> >>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
+> >>     remapping is enabled
+> >>
+> >>  include/linux/pci.h                       |  1 +
+> >>  arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
+> >>  drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
+> >>  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
+> >>  4 files changed, 26 insertions(+), 4 deletions(-)
+> >>  
+> >   
+> 
+> 
