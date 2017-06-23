@@ -1,74 +1,46 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 22 Jun 2017 09:47:05 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/4] ARM/PCI: iop13xx: address uninitialized variable
- warning
-Message-ID: <20170622084704.GA22996@red-moon>
-References: <20170621215323.3921382-1-arnd@arndb.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/6] ACPI / PM: Consolidate device wakeup settings code
+Date: Fri, 23 Jun 2017 03:05:57 +0200
+Message-ID: <8111646.zzkDnlQnPE@aspire.rjw.lan>
+In-Reply-To: <4634255.ux8TmyfYTx@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan> <20170622073937.GR629@lahna.fi.intel.com> <4634255.ux8TmyfYTx@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170621215323.3921382-1-arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 21, 2017 at 11:52:59PM +0200, Arnd Bergmann wrote:
-> The last rework returned a variable that the compiler cannot prove
-> to be initialized:
+On Thursday, June 22, 2017 04:38:49 PM Rafael J. Wysocki wrote:
+> On Thursday, June 22, 2017 10:39:37 AM Mika Westerberg wrote:
+> > On Mon, Jun 19, 2017 at 11:33:52PM +0200, Rafael J. Wysocki wrote:
+> > > -#ifdef CONFIG_PM_SLEEP
+> > > -/**
+> > > - * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
+> > > - * @dev: Device to enable/desible to wake up the system from sleep states.
+> > > - * @enable: Whether to enable or disable @dev to wake up the system.
+> > > - */
+> > > -int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
+> > > +int acpi_pm_device_wakeup(struct device *dev, bool enable)
+> > 
+> > Can we call it acpi_pm_device_enable_wakeup() and then provide
+> > corresponding acpi_pm_device_disable_wakeup()? I find those easier to
+> > understand than acpi_pm_device_wakeup() that sounds like the device
+> > should be woken up now.
 > 
-> arch/arm/mach-iop13xx/pci.c: In function 'iop13xx_scan_bus':
-> arch/arm/mach-iop13xx/pci.c:509:17: error: 'ret' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> 
-> In the switch statement that sets the return value, this adds
-> a default returning an error.
-> 
-> Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  arch/arm/mach-iop13xx/pci.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
-> index b97879bfb81a..3c51a9bb9b49 100644
-> --- a/arch/arm/mach-iop13xx/pci.c
-> +++ b/arch/arm/mach-iop13xx/pci.c
-> @@ -553,6 +553,8 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
->  		if (!ret)
->  			pci_bus_atue = bridge->bus;
->  		break;
-> +	default:
-> +		ret = -EINVAL;
->  	}
->  
->  	return ret;
+> OK, fair enough.  I'll change it this way.
 
-Ok I managed to miss these ones somehow, apologies. This series can be
-squashed into the initial series but there is also Linus' fix for faraday
-to address:
+Well, sorry, I'd rather not to, or we'll have to add a wrapper around them in
+pci-acpi.c. :-)
 
-https://patchwork.ozlabs.org/patch/778999/
-
-I can respin a v3 but I am off the radar next week so timing for the
-pci_fixup_irqs() removal looks bad, I am not sure what's the next course
-of action but I think it is better to drop it for this cycle and wait
-for 4.14 (hopefully there are not many PCI host bridges updates to
-rebase but I will cope with that anyway - that's the best I can do).
+I can rename it to acpi_pm_device_set_wakeup(), though.
 
 Thanks,
-Lorenzo
+Rafael
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
