@@ -1,119 +1,254 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38726 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751079AbdFPTqM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 16 Jun 2017 15:46:12 -0400
-Date: Fri, 16 Jun 2017 14:45:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Chen Yu <yu.c.chen@intel.com>
-Cc: "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Len Brown <len.brown@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Rui Zhang <rui.zhang@intel.com>,
-        Ying Huang <ying.huang@intel.com>, linux-pci@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI / PM: Restore the status of PCI devices across
- hibernation
-Message-ID: <20170616194559.GD11129@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495702147-31427-1-git-send-email-yu.c.chen@intel.com>
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v2 4/5] PCI / PM: Simplify device wakeup settings code
+Date: Sat, 24 Jun 2017 01:57:35 +0200
+Message-ID: <1822244.KrTDatnU8u@aspire.rjw.lan>
+In-Reply-To: <2524735.NRzn8A9HAf@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan> <2524735.NRzn8A9HAf@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495702147-31427-1-git-send-email-yu.c.chen@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 25, 2017 at 04:49:07PM +0800, Chen Yu wrote:
-> Currently we saw a lot of "No irq handler" errors during hibernation,
-> which caused the system hang finally:
-> 
-> [  710.141581] ata4.00: qc timeout (cmd 0xec)
-> [  710.147135] ata4.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [  710.154593] ata4.00: revalidation failed (errno=-5)
-> [  710.468124] ata4: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> [  710.477746] do_IRQ: 31.151 No irq handler for vector
-> 
-> According to above logs, there is an interrupt triggered and it is
-> dispatched to CPU31 with a vector number 151, but there is no handler
-> for it, thus this irq will not get acked and caused irq flood which kill
-> the system. To be more specific, the 31.151 is an interrupt from the ahci
-> host controller.
-> 
-> After some investigation, the reason why this issue is triggered is
-> because the thaw_noirq() function does not restore the MSI/MSIX settings
-> across hibernation.
-> 
-> The scenario is illustrated below:
-> 
-> 1. Before the hibernation starts, the irq 34 is the handler for the ahci device,
->    which is binded on cpu31.
-> 2. Hibernation starts, the ahci device is put into low power state.
-> 3. All the nonboot CPUs are put offline, so the irq 34 has to be migrated to
->    the last alive one - CPU0.
-> 4. After the snapshot has been created, all the nonboot CPUs are brought up again,
->    the CPU affinity for IRQ 34 remains to be 0.
-> 5. ahci device are put into D0.
-> 6. The snapshot is written to the disk.
-> 
-> The issue is triggered in step 6, in theory the ahci interrupt should be
-> delivered to CPU0, however the actually result is that this interrupt is
-> delivered to the original CPU31 instead, which cause the "No irq handler" issue.
-> 
-> Ying Huang has has provided a clue that, in step 3 it is possible that the writing
-> to the register might not take effect as the PCI devices have been put suspended.
-> Actually it is true:
-> In step 3, the irq 34 affinity is supposed to be modified from 31 to 0,
-> but actually it did not. In __pci_write_msi_msg(), if the device is already
-> in low power state, the low level msi message entry will not be updated
-> but cached. So in theory during the device restore process, the cached msi
-> modification information should be written back to the hardware, and this
-> is what pci_restore_msi_state() do during normal suspend-resume.
-> But this is not the case for hibernation, pci_restore_msi_state() is not
-> invoked currently, to be more specific, pci_restore_state() is not invoked
-> in pci_pm_thaw_noirq(), although pci_save_state() has saved the necessary
-> pci cached information in pci_pm_freeze_noirq().
-> 
-> This patch tries to restore the pci status for the device during hibernation,
-> otherwise the status might be lost across hibernation(for example, the MSI/MSIX
-> message settings), which might cause problems during hibernation.
-> 
-> Suggested-by: Ying Huang <ying.huang@intel.com>
-> Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Len Brown <len.brown@intel.com>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Rui Zhang <rui.zhang@intel.com>
-> Cc: Ying Huang <ying.huang@intel.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-pm@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Added a stable tag and applied with Rafael's reviewed-by to pci/pm for
-v4.13, thanks!
+After previous changes it is not necessary to distinguish between
+device wakeup for run time and device wakeup from system sleep states
+any more, so rework the PCI device wakeup settings code accordingly.
 
-pci_restore_state() restores a lot of stuff besides MSI/MSI-X: PCIe
-device, link, slot control, ATS, VC, BARs, ACS, IOV.  I guess I'm a
-little surprised that we haven't noticed more issues if all these
-things were broken.
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
 
-> ---
->  drivers/pci/pci-driver.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 192e7b6..b399fa3 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -964,6 +964,7 @@ static int pci_pm_thaw_noirq(struct device *dev)
->  		return pci_legacy_resume_early(dev);
->  
->  	pci_update_current_state(pci_dev, PCI_D0);
-> +	pci_restore_state(pci_dev);
->  
->  	if (drv && drv->pm && drv->pm->thaw_noirq)
->  		error = drv->pm->thaw_noirq(dev);
-> -- 
-> 2.7.4
-> 
+-> v2: No changes.
+
+---
+ drivers/pci/pci-acpi.c   |    3 +--
+ drivers/pci/pci-driver.c |    2 +-
+ drivers/pci/pci-mid.c    |   10 ++--------
+ drivers/pci/pci.c        |   36 ++++++++++--------------------------
+ drivers/pci/pci.h        |    9 ++-------
+ include/linux/pci.h      |    9 +--------
+ 6 files changed, 17 insertions(+), 52 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -615,8 +615,7 @@ static const struct pci_platform_pm_ops
+ 	.set_state = acpi_pci_set_power_state,
+ 	.get_state = acpi_pci_get_power_state,
+ 	.choose_state = acpi_pci_choose_state,
+-	.sleep_wake = acpi_pci_wakeup,
+-	.run_wake = acpi_pci_wakeup,
++	.set_wakeup = acpi_pci_wakeup,
+ 	.need_resume = acpi_pci_need_resume,
+ };
+ 
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -574,8 +574,7 @@ static const struct pci_platform_pm_ops
+ int pci_set_platform_pm(const struct pci_platform_pm_ops *ops)
+ {
+ 	if (!ops->is_manageable || !ops->set_state  || !ops->get_state ||
+-	    !ops->choose_state  || !ops->sleep_wake || !ops->run_wake  ||
+-	    !ops->need_resume)
++	    !ops->choose_state  || !ops->set_wakeup || !ops->need_resume)
+ 		return -EINVAL;
+ 	pci_platform_pm = ops;
+ 	return 0;
+@@ -603,16 +602,10 @@ static inline pci_power_t platform_pci_c
+ 			pci_platform_pm->choose_state(dev) : PCI_POWER_ERROR;
+ }
+ 
+-static inline int platform_pci_sleep_wake(struct pci_dev *dev, bool enable)
++static inline int platform_pci_set_wakeup(struct pci_dev *dev, bool enable)
+ {
+ 	return pci_platform_pm ?
+-			pci_platform_pm->sleep_wake(dev, enable) : -ENODEV;
+-}
+-
+-static inline int platform_pci_run_wake(struct pci_dev *dev, bool enable)
+-{
+-	return pci_platform_pm ?
+-			pci_platform_pm->run_wake(dev, enable) : -ENODEV;
++			pci_platform_pm->set_wakeup(dev, enable) : -ENODEV;
+ }
+ 
+ static inline bool platform_pci_need_resume(struct pci_dev *dev)
+@@ -1889,10 +1882,9 @@ void pci_pme_active(struct pci_dev *dev,
+ EXPORT_SYMBOL(pci_pme_active);
+ 
+ /**
+- * __pci_enable_wake - enable PCI device as wakeup event source
++ * pci_enable_wake - enable PCI device as wakeup event source
+  * @dev: PCI device affected
+  * @state: PCI state from which device will issue wakeup events
+- * @runtime: True if the events are to be generated at run time
+  * @enable: True to enable event generation; false to disable
+  *
+  * This enables the device as a wakeup event source, or disables it.
+@@ -1908,14 +1900,10 @@ EXPORT_SYMBOL(pci_pme_active);
+  * Error code depending on the platform is returned if both the platform and
+  * the native mechanism fail to enable the generation of wake-up events
+  */
+-int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+-		      bool runtime, bool enable)
++int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable)
+ {
+ 	int ret = 0;
+ 
+-	if (enable && !runtime && !device_may_wakeup(&dev->dev))
+-		return -EINVAL;
+-
+ 	/*
+ 	 * Don't do the same thing twice in a row for one device, but restore
+ 	 * PME Enable in case it has been updated by config space restoration.
+@@ -1938,24 +1926,20 @@ int __pci_enable_wake(struct pci_dev *de
+ 			pci_pme_active(dev, true);
+ 		else
+ 			ret = 1;
+-		error = runtime ? platform_pci_run_wake(dev, true) :
+-					platform_pci_sleep_wake(dev, true);
++		error = platform_pci_set_wakeup(dev, true);
+ 		if (ret)
+ 			ret = error;
+ 		if (!ret)
+ 			dev->wakeup_prepared = true;
+ 	} else {
+-		if (runtime)
+-			platform_pci_run_wake(dev, false);
+-		else
+-			platform_pci_sleep_wake(dev, false);
++		platform_pci_set_wakeup(dev, false);
+ 		pci_pme_active(dev, false);
+ 		dev->wakeup_prepared = false;
+ 	}
+ 
+ 	return ret;
+ }
+-EXPORT_SYMBOL(__pci_enable_wake);
++EXPORT_SYMBOL(pci_enable_wake);
+ 
+ /**
+  * pci_wake_from_d3 - enable/disable device to wake up from D3_hot or D3_cold
+@@ -2097,12 +2081,12 @@ int pci_finish_runtime_suspend(struct pc
+ 
+ 	dev->runtime_d3cold = target_state == PCI_D3cold;
+ 
+-	__pci_enable_wake(dev, target_state, true, pci_dev_run_wake(dev));
++	pci_enable_wake(dev, target_state, pci_dev_run_wake(dev));
+ 
+ 	error = pci_set_power_state(dev, target_state);
+ 
+ 	if (error) {
+-		__pci_enable_wake(dev, target_state, true, false);
++		pci_enable_wake(dev, target_state, false);
+ 		dev->runtime_d3cold = false;
+ 	}
+ 
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -1097,8 +1097,7 @@ int pci_set_power_state(struct pci_dev *
+ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
+ bool pci_pme_capable(struct pci_dev *dev, pci_power_t state);
+ void pci_pme_active(struct pci_dev *dev, bool enable);
+-int __pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+-		      bool runtime, bool enable);
++int pci_enable_wake(struct pci_dev *dev, pci_power_t state, bool enable);
+ int pci_wake_from_d3(struct pci_dev *dev, bool enable);
+ int pci_prepare_to_sleep(struct pci_dev *dev);
+ int pci_back_from_sleep(struct pci_dev *dev);
+@@ -1108,12 +1107,6 @@ void pci_pme_wakeup_bus(struct pci_bus *
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
+ 
+-static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+-				  bool enable)
+-{
+-	return __pci_enable_wake(dev, state, false, enable);
+-}
+-
+ /* PCI Virtual Channel */
+ int pci_save_vc_state(struct pci_dev *dev);
+ void pci_restore_vc_state(struct pci_dev *dev);
+Index: linux-pm/drivers/pci/pci.h
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.h
++++ linux-pm/drivers/pci/pci.h
+@@ -47,11 +47,7 @@ int pci_probe_reset_function(struct pci_
+  *                platform; to be used during system-wide transitions from a
+  *                sleeping state to the working state and vice versa
+  *
+- * @sleep_wake: enables/disables the system wake up capability of given device
+- *
+- * @run_wake: enables/disables the platform to generate run-time wake-up events
+- *		for given device (the device's wake-up capability has to be
+- *		enabled by @sleep_wake for this feature to work)
++ * @set_wakeup: enables/disables wakeup capability for the device
+  *
+  * @need_resume: returns 'true' if the given device (which is currently
+  *		suspended) needs to be resumed to be configured for system
+@@ -65,8 +61,7 @@ struct pci_platform_pm_ops {
+ 	int (*set_state)(struct pci_dev *dev, pci_power_t state);
+ 	pci_power_t (*get_state)(struct pci_dev *dev);
+ 	pci_power_t (*choose_state)(struct pci_dev *dev);
+-	int (*sleep_wake)(struct pci_dev *dev, bool enable);
+-	int (*run_wake)(struct pci_dev *dev, bool enable);
++	int (*set_wakeup)(struct pci_dev *dev, bool enable);
+ 	bool (*need_resume)(struct pci_dev *dev);
+ };
+ 
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -1216,7 +1216,7 @@ static int pci_pm_runtime_resume(struct
+ 
+ 	pci_restore_standard_config(pci_dev);
+ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+-	__pci_enable_wake(pci_dev, PCI_D0, true, false);
++	pci_enable_wake(pci_dev, PCI_D0, false);
+ 	pci_fixup_device(pci_fixup_resume, pci_dev);
+ 
+ 	rc = pm->runtime_resume(dev);
+Index: linux-pm/drivers/pci/pci-mid.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-mid.c
++++ linux-pm/drivers/pci/pci-mid.c
+@@ -39,12 +39,7 @@ static pci_power_t mid_pci_choose_state(
+ 	return PCI_D3hot;
+ }
+ 
+-static int mid_pci_sleep_wake(struct pci_dev *dev, bool enable)
+-{
+-	return 0;
+-}
+-
+-static int mid_pci_run_wake(struct pci_dev *dev, bool enable)
++static int mid_pci_wakeup(struct pci_dev *dev, bool enable)
+ {
+ 	return 0;
+ }
+@@ -59,8 +54,7 @@ static const struct pci_platform_pm_ops
+ 	.set_state	= mid_pci_set_power_state,
+ 	.get_state	= mid_pci_get_power_state,
+ 	.choose_state	= mid_pci_choose_state,
+-	.sleep_wake	= mid_pci_sleep_wake,
+-	.run_wake	= mid_pci_run_wake,
++	.set_wakeup	= mid_pci_wakeup,
+ 	.need_resume	= mid_pci_need_resume,
+ };
+ 
+
