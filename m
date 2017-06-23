@@ -1,121 +1,263 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 2 Jun 2017 14:56:19 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC/RFT PATCH 08/18] PCI: designware: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-Message-ID: <20170602135619.GA10491@red-moon>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
- <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
- <20170602114956.GA20004@red-moon>
- <CAK8P3a0DRFxz_yjCeFZJ8Zukuy8gi9hPbWEfp29TaF2TMjrnTQ@mail.gmail.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v2 3/5] PCI / PM: Drop pme_interrupt flag from struct pci_dev
+Date: Sat, 24 Jun 2017 01:56:13 +0200
+Message-ID: <2331413.7usz8IdcnZ@aspire.rjw.lan>
+In-Reply-To: <2524735.NRzn8A9HAf@aspire.rjw.lan>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan> <2524735.NRzn8A9HAf@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a0DRFxz_yjCeFZJ8Zukuy8gi9hPbWEfp29TaF2TMjrnTQ@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 02, 2017 at 03:12:48PM +0200, Arnd Bergmann wrote:
-> On Fri, Jun 2, 2017 at 1:49 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > On Fri, Apr 28, 2017 at 03:13:04PM +0200, Arnd Bergmann wrote:
-> >> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
-> >> <lorenzo.pieralisi@arm.com> wrote:
-> >> > The introduction of pci_scan_root_bus_bridge() provides a PCI core
-> >> > API to scan a PCI root bus backed by an already initialized
-> >> > struct pci_host_bridge object, which simplifies the bus scan
-> >> > interface and makes the PCI scan root bus interface easier to
-> >> > generalize as members are added to the struct pci_host_bridge().
-> >> >
-> >> > Convert PCI designware host code to pci_scan_root_bus_bridge() to
-> >> > improve the PCI root bus scanning interface.
-> >> >
-> >> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> >> > Cc: Jingoo Han <jingoohan1@gmail.com>
-> >> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> > Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-> >> > ---
-> >> >  drivers/pci/dwc/pcie-designware-host.c | 36 +++++++++++++++++++++-------------
-> >> >  1 file changed, 22 insertions(+), 14 deletions(-)
-> >> >
-> >> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> >> > index 5ba3349..e43c21a 100644
-> >> > --- a/drivers/pci/dwc/pcie-designware-host.c
-> >> > +++ b/drivers/pci/dwc/pcie-designware-host.c
-> >> > @@ -294,16 +294,21 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >> >                 dev_err(dev, "missing *config* reg space\n");
-> >> >         }
-> >> >
-> >> > -       ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
-> >> > +       bridge = pci_alloc_host_bridge(0);
-> >> > +       if (!bridge)
-> >> > +               return  -ENOMEM;
-> >> > +
-> >>
-> >> I think here we warn to have the pci_alloc_host_bridge() called in the
-> >> individual
-> >> drivers, to have them allocate the dw_pcie structure as part of the host
-> >> bridge allocation, before calling hisi_add_pcie_port().
-> >
-> > I am almost done refactoring this series and this is the last review to
-> > address. What you suggest above makes sense but:
-> >
-> > 1) it means patching ALL dw_pcie_host_init() callers and allocate the
-> >    host bridge there, not sure it simplifies, certainly it complicates
-> >    the error handling path (given that the host bridge memory is
-> >    probably the only memory that is allocated with kzalloc instead of
-> >    devm interface so it needs unwinding)
-> >
-> > 2) I noticed that allocating the host bridge in the caller complicates
-> >    error handling, in particular code in the mainline (ie tegra and
-> >    ftpci100) using pci_alloc_host_bridge() needs already patching since it
-> >    may leak memory if PCI host bridge drivers probing fails.
-> >
-> > I can implement (1) and (2) but I wanted to ask first to understand if
-> > that's the direction we want to take.
-> 
-> Good question. Maybe we should add a devm_pci_alloc_host_bridge()
-> instead? Would that solve these problems without creating bigger ones?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-It would be yet another PCI core call (ie unfortunately we still need
-pci_alloc_host_bridge() for bridges with no parent device eg bios32) but
-I think that's the only option we have if we do not want to clutter the
-host bridges error paths with host bridge free calls.
+The pme_interrupt flag in struct pci_dev is set when PMEs generated
+by the device are going to be signaled via root port PME interrupts.
 
-Implementing it should be relatively simple by reshuffling functions.
+Ironically enough, that information is only used by the code setting
+up device wakeup through ACPI which returns as soon as it sees the
+pme_interrupt flag set while setting up "remote runtime wakeup".
+That is questionable, however, because in theory there may be PCIe
+devices using out-of-band PME signaling under root ports handled
+by the native PME code or devices requiring wakeup power setup to be
+carried out by AML.  For such devices, ACPI wakeup should be invoked
+regardless of whether or not native PME signaling is used in general.
 
-Thoughts ?
+For this reason, drop the pme_interrupt flag and rework the code
+using it which then allows the ACPI-based device wakeup handling
+in PCI to be consolidated to use one code path for both "runtime
+remote wakeup" and system wakeup (from sleep states).
 
-Lorenzo
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-> v2: Rename acpi_pm_device_wakeup() to acpi_pm_set_device_wakeup(),
+          update the changelog.
+
+---
+ drivers/acpi/device_pm.c |   10 +++++-
+ drivers/pci/pci-acpi.c   |   68 ++++++++++-------------------------------------
+ drivers/pci/pcie/pme.c   |   14 ++++-----
+ include/acpi/acpi_bus.h  |    5 +++
+ include/linux/pci.h      |    1 
+ 5 files changed, 34 insertions(+), 64 deletions(-)
+
+Index: linux-pm/include/linux/pci.h
+===================================================================
+--- linux-pm.orig/include/linux/pci.h
++++ linux-pm/include/linux/pci.h
+@@ -307,7 +307,6 @@ struct pci_dev {
+ 	u8		pm_cap;		/* PM capability offset */
+ 	unsigned int	pme_support:5;	/* Bitmask of states from which PME#
+ 					   can be generated */
+-	unsigned int	pme_interrupt:1;
+ 	unsigned int	pme_poll:1;	/* Poll device's PME status bit */
+ 	unsigned int	d1_support:1;	/* Low power state D1 is supported */
+ 	unsigned int	d2_support:1;	/* Low power state D2 is supported */
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -569,67 +569,29 @@ static pci_power_t acpi_pci_get_power_st
+ 	return state_conv[state];
+ }
+ 
+-static bool acpi_pci_can_wakeup(struct pci_dev *dev)
+-{
+-	struct acpi_device *adev = ACPI_COMPANION(&dev->dev);
+-	return adev ? acpi_device_can_wakeup(adev) : false;
+-}
+-
+-static void acpi_pci_propagate_wakeup_enable(struct pci_bus *bus, bool enable)
++static int acpi_pci_propagate_wakeup(struct pci_bus *bus, bool enable)
+ {
+ 	while (bus->parent) {
+-		if (!acpi_pm_set_device_wakeup(&bus->self->dev, enable))
+-			return;
+-		bus = bus->parent;
+-	}
++		if (acpi_pm_device_can_wakeup(&bus->self->dev))
++			return acpi_pm_set_device_wakeup(&bus->self->dev, enable);
+ 
+-	/* We have reached the root bus. */
+-	if (bus->bridge)
+-		acpi_pm_set_device_wakeup(bus->bridge, enable);
+-}
+-
+-static int acpi_pci_sleep_wake(struct pci_dev *dev, bool enable)
+-{
+-	if (acpi_pci_can_wakeup(dev))
+-		return acpi_pm_set_device_wakeup(&dev->dev, enable);
+-
+-	acpi_pci_propagate_wakeup_enable(dev->bus, enable);
+-	return 0;
+-}
+-
+-static void acpi_pci_propagate_run_wake(struct pci_bus *bus, bool enable)
+-{
+-	while (bus->parent) {
+-		struct pci_dev *bridge = bus->self;
+-
+-		if (bridge->pme_interrupt)
+-			return;
+-		if (!acpi_pm_set_device_wakeup(&bridge->dev, enable))
+-			return;
+ 		bus = bus->parent;
+ 	}
+ 
+ 	/* We have reached the root bus. */
+-	if (bus->bridge)
+-		acpi_pm_set_device_wakeup(bus->bridge, enable);
++	if (bus->bridge) {
++		if (acpi_pm_device_can_wakeup(bus->bridge))
++			return acpi_pm_set_device_wakeup(bus->bridge, enable);
++	}
++	return 0;
+ }
+ 
+-static int acpi_pci_run_wake(struct pci_dev *dev, bool enable)
++static int acpi_pci_wakeup(struct pci_dev *dev, bool enable)
+ {
+-	/*
+-	 * Per PCI Express Base Specification Revision 2.0 section
+-	 * 5.3.3.2 Link Wakeup, platform support is needed for D3cold
+-	 * waking up to power on the main link even if there is PME
+-	 * support for D3cold
+-	 */
+-	if (dev->pme_interrupt && !dev->runtime_d3cold)
+-		return 0;
+-
+-	if (!acpi_pm_set_device_wakeup(&dev->dev, enable))
+-		return 0;
++	if (acpi_pm_device_can_wakeup(&dev->dev))
++		return acpi_pm_set_device_wakeup(&dev->dev, enable);
+ 
+-	acpi_pci_propagate_run_wake(dev->bus, enable);
+-	return 0;
++	return acpi_pci_propagate_wakeup(dev->bus, enable);
+ }
+ 
+ static bool acpi_pci_need_resume(struct pci_dev *dev)
+@@ -653,8 +615,8 @@ static const struct pci_platform_pm_ops
+ 	.set_state = acpi_pci_set_power_state,
+ 	.get_state = acpi_pci_get_power_state,
+ 	.choose_state = acpi_pci_choose_state,
+-	.sleep_wake = acpi_pci_sleep_wake,
+-	.run_wake = acpi_pci_run_wake,
++	.sleep_wake = acpi_pci_wakeup,
++	.run_wake = acpi_pci_wakeup,
+ 	.need_resume = acpi_pci_need_resume,
+ };
+ 
+@@ -778,7 +740,7 @@ static void pci_acpi_setup(struct device
+ 
+ 	device_set_wakeup_capable(dev, true);
+ 	device_set_run_wake(dev, true);
+-	acpi_pci_sleep_wake(pci_dev, false);
++	acpi_pci_wakeup(pci_dev, false);
+ }
+ 
+ static void pci_acpi_cleanup(struct device *dev)
+Index: linux-pm/drivers/pci/pcie/pme.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pcie/pme.c
++++ linux-pm/drivers/pci/pcie/pme.c
+@@ -294,31 +294,29 @@ static irqreturn_t pcie_pme_irq(int irq,
+ }
+ 
+ /**
+- * pcie_pme_set_native - Set the PME interrupt flag for given device.
++ * pcie_pme_can_wakeup - Set the wakeup capability flag.
+  * @dev: PCI device to handle.
+  * @ign: Ignored.
+  */
+-static int pcie_pme_set_native(struct pci_dev *dev, void *ign)
++static int pcie_pme_can_wakeup(struct pci_dev *dev, void *ign)
+ {
+ 	device_set_run_wake(&dev->dev, true);
+-	dev->pme_interrupt = true;
+ 	return 0;
+ }
+ 
+ /**
+- * pcie_pme_mark_devices - Set the PME interrupt flag for devices below a port.
++ * pcie_pme_mark_devices - Set the wakeup flag for devices below a port.
+  * @port: PCIe root port or event collector to handle.
+  *
+  * For each device below given root port, including the port itself (or for each
+  * root complex integrated endpoint if @port is a root complex event collector)
+- * set the flag indicating that it can signal run-time wake-up events via PCIe
+- * PME interrupts.
++ * set the flag indicating that it can signal run-time wake-up events.
+  */
+ static void pcie_pme_mark_devices(struct pci_dev *port)
+ {
+-	pcie_pme_set_native(port, NULL);
++	pcie_pme_can_wakeup(port, NULL);
+ 	if (port->subordinate)
+-		pci_walk_bus(port->subordinate, pcie_pme_set_native, NULL);
++		pci_walk_bus(port->subordinate, pcie_pme_can_wakeup, NULL);
+ }
+ 
+ /**
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -496,6 +496,13 @@ bool acpi_bus_can_wakeup(acpi_handle han
+ }
+ EXPORT_SYMBOL(acpi_bus_can_wakeup);
+ 
++bool acpi_pm_device_can_wakeup(struct device *dev)
++{
++	struct acpi_device *adev = ACPI_COMPANION(dev);
++
++	return adev ? acpi_device_can_wakeup(adev) : false;
++}
++
+ /**
+  * acpi_dev_pm_get_state - Get preferred power state of ACPI device.
+  * @dev: Device whose preferred target power state to return.
+@@ -737,8 +744,7 @@ int acpi_pm_set_device_wakeup(struct device
+ 
+ 	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
+ 	if (!error)
+-		dev_dbg(dev, "Wakeup %s by ACPI\n",
+-			enable ? "enabled" : "disabled");
++		dev_dbg(dev, "Wakeup %s by ACPI\n", enable ? "enabled" : "disabled");
+ 
+ 	return error;
+ }
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -602,6 +602,7 @@ void acpi_pm_wakeup_event(struct device
+ acpi_status acpi_add_pm_notifier(struct acpi_device *adev, struct device *dev,
+ 			void (*func)(struct acpi_device_wakeup_context *context));
+ acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
++bool acpi_pm_device_can_wakeup(struct device *dev);
+ int acpi_pm_device_sleep_state(struct device *, int *, int);
+ int acpi_pm_set_device_wakeup(struct device *dev, bool enable);
+ #else
+@@ -618,6 +619,10 @@ static inline acpi_status acpi_remove_pm
+ {
+ 	return AE_SUPPORT;
+ }
++static inline bool acpi_pm_device_can_wakeup(struct device *dev)
++{
++	return false;
++}
+ static inline int acpi_pm_device_sleep_state(struct device *d, int *p, int m)
+ {
+ 	if (p)
+
