@@ -1,227 +1,133 @@
-Return-Path: <SRS0=qceG=5T=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=qceG=5T=linuxfoundation.org=gregkh@kernel.org>
-Date: Wed, 14 Jun 2017 07:00:49 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	kernel test robot <fengguang.wu@intel.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
-	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	wfg@linux.intel.com, Alan Cox <alan@linux.intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	David Airlie <airlied@linux.ie>,
-	David Herrmann <dh.herrmann@gmail.com>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
- to handle kernel NULL pointer dereference at 00000000000000a8
-Message-ID: <20170614050049.GA11630@kroah.com>
-References: <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
- <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
- <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
- <20170613041842.GA13308@kroah.com>
- <f6322f70-7ca7-abf6-b947-4cbbfd598948@deltatee.com>
- <20170613043416.GB14217@kroah.com>
- <20170613043518.GA14621@kroah.com>
- <8462abee-0a7f-00fb-6111-1f78362ea3f7@deltatee.com>
- <20170613163508.GA31961@kroah.com>
- <f848a5fb-096c-a025-cc3b-314cc3899f9e@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-it0-f67.google.com ([209.85.214.67]:35762 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751409AbdFWFGq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jun 2017 01:06:46 -0400
+Received: by mail-it0-f67.google.com with SMTP id f20so6102800itb.2
+        for <linux-pci@vger.kernel.org>; Thu, 22 Jun 2017 22:06:45 -0700 (PDT)
+Subject: Re: [PATCH kernel 0/3 REPOST] vfio-pci: Add support for mmapping
+ MSI-X table
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>
+References: <20170615054845.8428-1-aik@ozlabs.ru>
+ <20170622151118.0006c3d3@w520.home>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <82b2e63c-0a39-303c-f255-b857764fc412@ozlabs.ru>
+Date: Fri, 23 Jun 2017 15:06:37 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f848a5fb-096c-a025-cc3b-314cc3899f9e@deltatee.com>
+In-Reply-To: <20170622151118.0006c3d3@w520.home>
+Content-Type: text/plain; charset=koi8-r
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 11:47:30AM -0600, Logan Gunthorpe wrote:
+On 23/06/17 07:11, Alex Williamson wrote:
+> On Thu, 15 Jun 2017 15:48:42 +1000
+> Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
 > 
+>> Here is a patchset which Yongji was working on before
+>> leaving IBM LTC. Since we still want to have this functionality
+>> in the kernel (DPDK is the first user), here is a rebase
+>> on the current upstream.
+>>
+>>
+>> Current vfio-pci implementation disallows to mmap the page
+>> containing MSI-X table in case that users can write directly
+>> to MSI-X table and generate an incorrect MSIs.
+>>
+>> However, this will cause some performance issue when there
+>> are some critical device registers in the same page as the
+>> MSI-X table. We have to handle the mmio access to these
+>> registers in QEMU emulation rather than in guest.
+>>
+>> To solve this issue, this series allows to expose MSI-X table
+>> to userspace when hardware enables the capability of interrupt
+>> remapping which can ensure that a given PCI device can only
+>> shoot the MSIs assigned for it. And we introduce a new bus_flags
+>> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+>> for different archs.
+>>
+>> The patch 3 are based on the proposed patchset[1].
+>>
+>> Changelog
+>> v3:
+>> - rebased on the current upstream
 > 
-> On 13/06/17 10:35 AM, Greg Kroah-Hartman wrote:
-> > For char devices, I doubt it, but we can't take the chance, which is why
-> > you make it an option.  Then, it's enabled for 'allmodconfig' builds,
-> > which helps testers out.
+> There's something not forthcoming here, the last version I see from
+> Yongji is this one:
 > 
-> Well I took a look at this and it looks like a lot of work to modify all
-> the drivers to support a possible dynamic allocation and I'm not really
-> able to do all that right now.
+> https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017245.html
+> 
+> Which was a 6-patch series where patches 2-4 tried to apply
+> PCI_BUS_FLAGS_MSI_REMAP for cases that supported other platforms.  That
+> doesn't exist here, so it's not simply a rebase.  Patch 1/ seems to
+> equate this new flag to the IOMMU capability IOMMU_CAP_INTR_REMAP, but
+> nothing is done here to match them together.  That patch also mentions
+> the work Eric has done for similar features on ARM, but again those
+> patches are dropped.  It seems like an incomplete feature now.  Thanks,
 
-No, don't modify any drivers, do this in the core chardev code.
 
-> However, correct me if I'm missing something, but it looks fairly
-> straightforward to extend the dynamic region above 256 in cases like
-> this. There are already fixed major numbers above 255 and the
-> infrastructure appears to support it. So what are your thoughts on the
-> change below? I'd be happy to clean it up into a proper patch if you
-> agree it's a workable option.
+Thanks! I suspected this is not the latest but could not find anything
+better than we use internally for tests, and I could not reach Yongji for
+comments whether this was the latest update.
+
+As I am reading the patches, I notice that the "msi remap" term is used all
+over the place. While this remapping capability may be the case for x86/arm
+(and therefore the IOMMU_CAP_INTR_REMAP flag makes sense), powernv does not
+do remapping but provides hardware isolation. When we are allowing MSIX BAR
+mapping to the userspace - the isolation is what we really care about. Will
+it make sense to rename PCI_BUS_FLAGS_MSI_REMAP to
+PCI_BUS_FLAGS_MSI_ISOLATED ?
+
+Another thing - the patchset enables PCI_BUS_FLAGS_MSI_REMAP when IOMMU
+just advertises IOMMU_CAP_INTR_REMAP, not necessarily uses it, should the
+patchset actually look at something like irq_remapping_enabled in
+drivers/iommu/amd_iommu.c instead?
+
+
+
 > 
-> Thanks,
+> Alex
 > 
-> Logan
-> 
-> 
-> 
-> diff --git a/fs/char_dev.c b/fs/char_dev.c
-> index fb8507f521b2..539352425d95 100644
-> --- a/fs/char_dev.c
-> +++ b/fs/char_dev.c
-> @@ -59,6 +59,29 @@ void chrdev_show(struct seq_file *f, off_t offset)
-> 
->  #endif /* CONFIG_PROC_FS */
-> 
-> +static int find_dynamic_major(void)
-> +{
-> +	int i;
-> +	struct char_device_struct **cp;
-> +
-> +	for (i = ARRAY_SIZE(chrdevs)-1; i > CHRDEV_MAJOR_DYN_END; i--) {
-> +		if (chrdevs[i] == NULL)
-> +			return i;
-> +	}
-> +
-> +	for (i = CHRDEV_MAJOR_DYN_EXT_START;
-> +	     i > CHRDEV_MAJOR_DYN_EXT_END; i--) {
-> +		for (cp = &chrdevs[major_to_index(i)]; *cp; cp = &(*cp)->next)
-> +			if ((*cp)->major == i)
-> +				break;
-> +
-> +		if (*cp == NULL || (*cp)->major != i)
-> +			return i;
-> +	}
-> +
-> +	return -EBUSY;
-> +}
-> +
->  /*
->   * Register a single major with a specified minor range.
->   *
-> @@ -84,22 +107,11 @@ __register_chrdev_region(unsigned int major,
-> unsigned int baseminor,
-> 
->  	mutex_lock(&chrdevs_lock);
-> 
-> -	/* temporary */
->  	if (major == 0) {
-> -		for (i = ARRAY_SIZE(chrdevs)-1; i > 0; i--) {
-> -			if (chrdevs[i] == NULL)
-> -				break;
-> -		}
-> -
-> -		if (i < CHRDEV_MAJOR_DYN_END)
-> -			pr_warn("CHRDEV \"%s\" major number %d goes below the dynamic
-> allocation range\n",
-> -				name, i);
-> -
-> -		if (i == 0) {
-> -			ret = -EBUSY;
-> +		ret = find_dynamic_major();
-> +		if (ret < 0)
->  			goto out;
-> -		}
-> -		major = i;
-> +		major = ret;
->  	}
-> 
->  	cd->major = major;
-> diff --git a/include/linux/fs.h b/include/linux/fs.h
-> index 249dad4e8d26..5780d69034ca 100644
-> --- a/include/linux/fs.h
-> +++ b/include/linux/fs.h
-> @@ -2448,6 +2448,9 @@ static inline void bd_unlink_disk_holder(struct
-> block_device *bdev,
->  #define CHRDEV_MAJOR_HASH_SIZE	255
->  /* Marks the bottom of the first segment of free char majors */
->  #define CHRDEV_MAJOR_DYN_END 234
-> +#define CHRDEV_MAJOR_DYN_EXT_START 511
-> +#define CHRDEV_MAJOR_DYN_EXT_END 384
-> +
->  extern int alloc_chrdev_region(dev_t *, unsigned, unsigned, const char *);
->  extern int register_chrdev_region(dev_t, unsigned, const char *);
->  extern int __register_chrdev(unsigned int major, unsigned int baseminor,
-> 
-> 
-> 
-> ----
-> 
-> This results in char devices like this (another patch might be prudent
-> to fix the ordering):
-> 
-> Character devices:
-> 510 ttySLM
->   1 mem
-> 511 noz
->   4 /dev/vc/0
->   4 tty
->   4 ttyS
->   5 /dev/tty
->   5 /dev/console
->   5 /dev/ptmx
->   7 vcs
->   9 st
->  10 misc
->  13 input
->  21 sg
->  29 fb
->  43 ttyI
->  45 isdn
->  68 capi20
->  86 ch
->  90 mtd
->  99 ppdev
-> 108 ppp
-> 128 ptm
-> 136 pts
-> 152 aoechr
-> 153 spi
-> 161 ircomm
-> 172 ttyMX
-> 174 ttyMI
-> 202 cpu/msr
-> 203 cpu/cpuid
-> 204 ttyJ
-> 204 ttyMAX
-> 206 osst
-> 226 drm
-> 235 ttyS
-> 236 ttyRP
-> 237 ttyARC
-> 238 ttyPS
-> 239 ttyIFX
-> 494 rio_cm
-> 240 ttySC
-> 495 cros_ec
-> 241 ipmidev
-> 496 hidraw
-> 242 rio_mport
-> 497 ttySDIO
-> 243 xz_dec_test
-> 498 uio
-> 244 bsg
-> 499 firewire
-> 245 pvfs2-req
-> 500 nvme
-> 246 watchdog
-> 501 aac
-> 247 iio
-> 502 mei
-> 248 ptp
-> 503 phantom
-> 249 pps
-> 504 aux
-> 250 dax
-> 505 cmx
-> 251 dimmctl
-> 506 cmm
-> 252 ndctl
-> 507 ttySLP
-> 253 tpm
-> 508 ttyIPWp
-> 254 gpiochip
-> 509 ttySL
+>> v2:
+>> - Make the commit log more clear
+>> - Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
+>>   so that we could clearly know what the function does
+>> - Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
+>>   of iommu_bus_notifier()
+>> - Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
+>>   table so that we can know whether we allow to mmap MSI-X table
+>>   in QEMU
+>>
+>> [1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
+>>
+>>
+>> This is based on sha1
+>> 63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
+>>
+>> Please comment. Thanks.
+>>
+>>
+>>
+>> Yongji Xie (3):
+>>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
+>>     remapping is enabled
+>>
+>>  include/linux/pci.h                       |  1 +
+>>  arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
+>>  drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
+>>  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
+>>  4 files changed, 26 insertions(+), 4 deletions(-)
+>>
 > 
 
-At quick glance, ooks good to me, care to clean it up and make it behind
-a config option?
 
-thanks,
-
-greg k-h
+-- 
+Alexey
