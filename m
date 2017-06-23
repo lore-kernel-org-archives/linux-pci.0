@@ -1,198 +1,114 @@
-Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=2JBi=5G=bombadil.srs.infradead.org=BATV+3f8466ecba02b60e8dcb+5030+infradead.org+hch@kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: helgaas@kernel.org
-Cc: rakesh@tuxera.com,
-	linux-pci@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Subject: [PATCH 3/3] PCI: remove __pci_dev_reset and pci_dev_reset
-Date: Thu,  1 Jun 2017 13:10:39 +0200
-Message-Id: <20170601111039.8913-4-hch@lst.de>
-In-Reply-To: <20170601111039.8913-1-hch@lst.de>
-References: <20170601111039.8913-1-hch@lst.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1498213333.2190.24.camel@mtkswgap22>
+Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date: Fri, 23 Jun 2017 18:22:13 +0800
+In-Reply-To: <20170623094356.GA5337@red-moon>
+References: <E1dNcMp-0005RN-1w@optimist>
+ <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
+ <1498209196.26313.71.camel@mtkswgap22> <20170623094356.GA5337@red-moon>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>,
+ "kernel-build-reports@lists.linaro.org"
+ <kernel-build-reports@lists.linaro.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Mark Brown <broonie@kernel.org>,
+ "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-And instead implement the reset probing / reset chain in
-__pci_probe_reset_function and __pci_reset_function_locked respectively.
+On Fri, 2017-06-23 at 10:43 +0100, Lorenzo Pieralisi wrote:
+> On Fri, Jun 23, 2017 at 05:13:16PM +0800, Ryder Lee wrote:
+> > Sorry for late reply, 
+> > 
+> > +Lorenzo
+> > 
+> > On Wed, 2017-06-21 at 18:04 +0800, Mark Brown wrote:
+> > > On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
+> > > 
+> > > Today's -next fails to build an arm allmodconfig due to:
+> > > 
+> > > > 	arm-allmodconfig
+> > > > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
+> > > 
+> > > caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
+> > > controller support).
+> > 
+> > 
+> > Hi Lorenzo,
+> > 
+> > I picked up your changes and had some modifications like what you did
+> > for other platforms:
+> > 
+> > 9f8e3a5 PCI: Add devm_pci_alloc_host_bridge() interface 
+> > 35a1a84 PCI: Add pci_free_host_bridge() interface
+> > e33aafd PCI: Initialize bridge release function at bridge allocation
+> > 
+> > ...and it looks Okay.
+> > 
+> > I have also noticed that you continue sending patches for other
+> > platforms but I have not yet had a look in detail. I'm quite busy these
+> > days and don't have time to dig it, hence it is becoming a little
+> > unmanageable for me.
+> 
+> If it is unmanageable you don't add yourself as a maintainer of that
+> PCI host bridge driver, you know, we are all busy.
+> 
+> Your driver in the PCI tree as it stands contains already two bugs:
+> 
+> 1) It leaks memory on the probe failure path
+> 2) pci_fixup_irqs() is broken on configurations with multiple host
+>    bridges
+> 
+> And we keep copy'n'pasting that code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/pci.c | 108 ++++++++++++++++++++++++++----------------------------
- 1 file changed, 52 insertions(+), 56 deletions(-)
+Sure, I have already tested it, and I'll send a patch with your new
+methods :)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b3f9ae7a4e21..20be3b87124a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4069,40 +4069,6 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, int probe)
- 	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
- }
- 
--static int __pci_dev_reset(struct pci_dev *dev, int probe)
--{
--	int rc;
--
--	might_sleep();
--
--	rc = pci_dev_specific_reset(dev, probe);
--	if (rc != -ENOTTY)
--		goto done;
--
--	if (pcie_has_flr(dev)) {
--		if (!probe)
--			pcie_flr(dev);
--		rc = 0;
--		goto done;
--	}
--
--	rc = pci_af_flr(dev, probe);
--	if (rc != -ENOTTY)
--		goto done;
--
--	rc = pci_pm_reset(dev, probe);
--	if (rc != -ENOTTY)
--		goto done;
--
--	rc = pci_dev_reset_slot_function(dev, probe);
--	if (rc != -ENOTTY)
--		goto done;
--
--	rc = pci_parent_bus_reset(dev, probe);
--done:
--	return rc;
--}
--
- static void pci_dev_lock(struct pci_dev *dev)
- {
- 	pci_cfg_access_lock(dev);
-@@ -4164,21 +4130,6 @@ static void pci_dev_restore(struct pci_dev *dev)
- 		err_handler->reset_done(dev);
- }
- 
--static int pci_dev_reset(struct pci_dev *dev, int probe)
--{
--	int rc;
--
--	if (!probe)
--		pci_dev_lock(dev);
--
--	rc = __pci_dev_reset(dev, probe);
--
--	if (!probe)
--		pci_dev_unlock(dev);
--
--	return rc;
--}
--
- /**
-  * __pci_reset_function - reset a PCI device function
-  * @dev: PCI device to reset
-@@ -4198,7 +4149,13 @@ static int pci_dev_reset(struct pci_dev *dev, int probe)
-  */
- int __pci_reset_function(struct pci_dev *dev)
- {
--	return pci_dev_reset(dev, 0);
-+	int ret;
-+
-+	pci_dev_lock(dev);
-+	ret = __pci_reset_function_locked(dev);
-+	pci_dev_unlock(dev);
-+
-+	return ret;
- }
- EXPORT_SYMBOL_GPL(__pci_reset_function);
- 
-@@ -4223,7 +4180,27 @@ EXPORT_SYMBOL_GPL(__pci_reset_function);
-  */
- int __pci_reset_function_locked(struct pci_dev *dev)
- {
--	return __pci_dev_reset(dev, 0);
-+	int rc;
-+
-+	might_sleep();
-+
-+	rc = pci_dev_specific_reset(dev, 0);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	if (pcie_has_flr(dev)) {
-+		pcie_flr(dev);
-+		return 0;
-+	}
-+	rc = pci_af_flr(dev, 0);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	rc = pci_pm_reset(dev, 0);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	rc = pci_dev_reset_slot_function(dev, 0);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	return pci_parent_bus_reset(dev, 0);
- }
- EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
- 
-@@ -4240,7 +4217,26 @@ EXPORT_SYMBOL_GPL(__pci_reset_function_locked);
-  */
- int pci_probe_reset_function(struct pci_dev *dev)
- {
--	return pci_dev_reset(dev, 1);
-+	int rc;
-+
-+	might_sleep();
-+
-+	rc = pci_dev_specific_reset(dev, 1);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	if (pcie_has_flr(dev))
-+		return 0;
-+	rc = pci_af_flr(dev, 1);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	rc = pci_pm_reset(dev, 1);
-+	if (rc != -ENOTTY)
-+		return rc;
-+	rc = pci_dev_reset_slot_function(dev, 1);
-+	if (rc != -ENOTTY)
-+		return rc;
-+
-+	return pci_parent_bus_reset(dev, 1);
- }
- 
- /**
-@@ -4263,14 +4259,14 @@ int pci_reset_function(struct pci_dev *dev)
- {
- 	int rc;
- 
--	rc = pci_dev_reset(dev, 1);
-+	rc = pci_probe_reset_function(dev);
- 	if (rc)
- 		return rc;
- 
- 	pci_dev_lock(dev);
- 	pci_dev_save_and_disable(dev);
- 
--	rc = __pci_dev_reset(dev, 0);
-+	rc = __pci_reset_function_locked(dev);
- 
- 	pci_dev_restore(dev);
- 	pci_dev_unlock(dev);
-@@ -4289,7 +4285,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- {
- 	int rc;
- 
--	rc = pci_dev_reset(dev, 1);
-+	rc = pci_probe_reset_function(dev);
- 	if (rc)
- 		return rc;
- 
-@@ -4297,7 +4293,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- 		return -EAGAIN;
- 
- 	pci_dev_save_and_disable(dev);
--	rc = __pci_dev_reset(dev, 0);
-+	rc = __pci_reset_function_locked(dev);
- 	pci_dev_unlock(dev);
- 
- 	pci_dev_restore(dev);
--- 
-2.11.0
+
+> > Did you have a chance to send the same patches for MediaTek?  I
+> > appreciate that and I can help to test it on our platforms.
+> 
+> No, how could I have sent them ? It is not upstream and it is a separate
+> branch in the PCI tree. As I mentioned in another thread it is probably
+> best to drop my pci_fixup_irqs() removal patches since it is impossible
+> to work on them without a stable branch to apply them against, in the
+> interim we keep adding PCI host bridges that use the wrong interfaces by
+> copy'n'pasting code that I have been trying to remove.
+> 
+> I think the best solution is to repost my series when v4.13-rc1 appears
+> and ask all new crop of host bridge drivers to rebase against it.
+> 
+> I won't be able to follow mailing lists till end of next week, which
+> is bad timing.
+
+I meant I'm also not sure how to do it in separate branch. I didn't
+notice what you discussed in another thread. Sorry about that.
+
+> Bjorn, is the plan above ok ? Please let me know how you want to
+> proceed.
+> 
+> Thanks,
+> Lorenzo
+
+Ryder
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
