@@ -1,157 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34370 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752489AbdFMR2v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 13 Jun 2017 13:28:51 -0400
-Date: Tue, 13 Jun 2017 12:28:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        gregkh@linuxfoundation.org, USB list <linux-usb@vger.kernel.org>,
-        linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pm@vger.kernel.org
-Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI
- controller
-Message-ID: <20170613172849.GA7012@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAAd53p6S9NPBD=qGP419mhBgSgn-s1dc=adued8Y+Y0=GDsHKg@mail.gmail.com>
- <Pine.LNX.4.44L0.1706121010010.2092-100000@iolanthe.rowland.org>
- <CAAd53p580X5_G6a05aAueHVxEoy5hpQrs6s2gtJA+gPEf2PqLg@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 24 Jun 2017 10:13:28 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Palmer Dabbelt <palmer@dabbelt.com>
+Subject: Re: [PATCH] pci:  Add and use PCI_GENERIC_SETUP Kconfig entry
+Message-ID: <20170624091328.GY4902@n2100.armlinux.org.uk>
+References: <20170623214538.25967-1-palmer@dabbelt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAAd53p580X5_G6a05aAueHVxEoy5hpQrs6s2gtJA+gPEf2PqLg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170623214538.25967-1-palmer@dabbelt.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, dalias@libc.org, linux-sh@vger.kernel.org,
+ catalin.marinas@arm.com, will.deacon@arm.com, sparclinux@vger.kernel.org,
+ gxt@mprc.pku.edu.cn, ysato@users.sourceforge.jp, hch@infradead.org,
+ geert@linux-m68k.org, linux-pci@vger.kernel.org, mattst88@gmail.com,
+ linux-snps-arc@lists.infradead.org, cmetcalf@mellanox.com,
+ linux-m68k@lists.linux-m68k.org, ink@jurassic.park.msu.ru,
+ viro@zeniv.linux.org.uk, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, rth@twiddle.net, vgupta@synopsys.com,
+ linux-kernel@vger.kernel.org, ralf@linux-mips.org, linux-alpha@vger.kernel.org,
+ akpm@linux-foundation.org, davem@davemloft.net
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Rafael, linux-pm]
-
-On Tue, Jun 13, 2017 at 12:21:15PM +0800, Kai-Heng Feng wrote:
-> On Mon, Jun 12, 2017 at 10:18 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > Let's get some help from people who understand PCI well.
-> >
-> > Here's the general problem: Kai-Heng has a PCI-based USB host
-> > controller that advertises wakeup capability from D3, but it doesn't
-> > assert PME# from D3 when it should.  For "lspci -vv" output, see
-> >
-> >         http://marc.info/?l=linux-usb&m=149570231732519&w=2
-> >
-> > On Mon, 12 Jun 2017, Kai-Heng Feng wrote:
-> >
-> >> On Mon, Jun 12, 2017 at 3:04 PM, Kai-Heng Feng
-> >> <kai.heng.feng@canonical.com> wrote:
-> >> > On Fri, Jun 9, 2017 at 10:43 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> >> >> On Fri, 9 Jun 2017, Kai-Heng Feng wrote:
-> >> >>
-> >> >> Is this really the right solution?  Maybe it would be better to allow
-> >> >> the controller to go into D3 provided no wakeup signal is needed.  You
-> >> >> could do:
-> >> >>
-> >> >>                 device_set_wakeup_capable(&pdev->dev, 0);
-> >> >
-> >> > This doesn't work.
-> >> > After applying this function, still nothing happens when devices get plugged in.
-> >> > IIUC this function disable the wakeup function, but what I want to do
-> >> > here is to have PME signal works even when runtime PM is enabled.
-> >
-> > This may indicate a bug in either the PCI or USB stacks (or both!).  If
-> > a driver requires wakeup capability from runtime suspend but the device
-> > does not provide it, the PCI core should not allow the device to go
-> > into runtime suspend.  Or is that the driver's responsibility?
-> >
-> >> > I also saw some legacy PCI PM stuff, so I also tried:
-> >> > device_set_wakeup_capable(&pdev->dev, 1);
-> >> > ...doesn't work either.
-> >> >
-> >> >>
-> >> >> Another alternative is to put the controller into D2 instead of D3, but
-> >> >> (1) I don't know how to do that, and (2) we don't know if wakeup
-> >> >> signalling works any better in D2 than it does in D3.
-> >> >
-> >> > I'll try if D2 works.
-> >>
-> >> Put the device into D2 instead of D3 can make the wakeup signaling
-> >> work, i.e. USB devices can be correctly detected after plugged into
-> >> EHCI port.
-> >>
-> >> Do you think this alternative an acceptable workaround?
-> >
-> > Yes, it is.  The difficulty is that I don't know how to tell the PCI
-> > core that the device should go in D2 during runtime suspend instead of
-> > D3.  Some sort of quirk may be needed -- perhaps Bjorn can help.
-> >
+On Fri, Jun 23, 2017 at 02:45:38PM -0700, Palmer Dabbelt wrote:
+> We wanted to add RISC-V to the list of architectures that used the
+> generic PCI setup-irq.o inside the Makefile and it was suggested that
+> instead we define a Kconfig entry and use that.
 > 
-> FWIW, this is the diff I used to make the controller transits to D2
-> instead of D3:
+> I've done very minimal testing on this: I just checked to see that
+> an aarch64 defconfig still build setup-irq.o with the patch applied.
+> The intention is that this patch doesn't change the behavior of any
+> build.
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 563901cd9c06..36663688404a 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -922,6 +922,9 @@ int pci_set_power_state(struct pci_dev *dev,
-> pci_power_t state)
->         if (dev->current_state == state)
->                 return 0;
-> 
-> +       if (state > PCI_D2 && (dev->dev_flags & PCI_DEV_FLAGS_MAX_D2))
-> +               state = PCI_D2;
-> +
->         __pci_start_power_transition(dev, state);
-> 
->         /* This device is quirked not to be put into D3, so
-> diff --git a/drivers/usb/host/ehci-pci.c b/drivers/usb/host/ehci-pci.c
-> index 93326974ff4b..a2c1fe62974a 100644
-> --- a/drivers/usb/host/ehci-pci.c
-> +++ b/drivers/usb/host/ehci-pci.c
-> @@ -181,6 +181,8 @@ static int ehci_pci_setup(struct usb_hcd *hcd)
->                 if (pdev->device == 0x7808) {
->                         ehci->use_dummy_qh = 1;
->                         ehci_info(ehci, "applying AMD
-> SB700/SB800/Hudson-2/3 EHCI dummy qh workaround\n");
-> +
-> +                       pdev->dev_flags |= PCI_DEV_FLAGS_MAX_D2;
->                 }
->                 break;
->         case PCI_VENDOR_ID_VIA:
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8039f9f0ca05..6f86f2aa8548 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -188,6 +188,7 @@ enum pci_dev_flags {
->          * the direct_complete optimization.
->          */
->         PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-> +       PCI_DEV_FLAGS_MAX_D2 = (__force pci_dev_flags_t) (1 << 12),
->  };
-> 
->  enum pci_irq_reroute_variant {
+> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
 
-The lspci output [1] shows:
+Looks fine from an ARM point of view, thanks.
 
-  00:12.0 USB controller: Advanced Micro Devices, Inc. [AMD] FCH USB EHCI Controller (rev 39) (prog-if 20 [EHCI])
-    Capabilities: [c0] Power Management version 2
-      Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-      Status: D3 NoSoftRst- PME-Enable+ DSel=0 DScale=0 PME-
-      Bridge: PM- B3+
+Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-The device claims it can assert PME# from D3hot.  If it can't, that
-sounds like a hardware defect that should be addressed with a quirk.
-Ideally we would also have a pointer to the AMD hardware erratum.
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index e0cacb7b8563..658c9f95ab3f 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -131,6 +131,9 @@ config PCI_HYPERV
+>            The PCI device frontend driver allows the kernel to import arbitrary
+>            PCI devices from a PCI backend to support PCI driver domains.
+>  
+> +config PCI_GENERIC_SETUP
+> +	def_bool n
 
-Is the following path involved here?
+	bool
 
-  pci_finish_runtime_suspend
-    target_state = pci_target_state()
-      if (device_may_wakup())
-	if (dev->pme_support)
-	  ...
-    pci_set_power_state(..., target_state)
+would be sufficient here - the default is 'n' for all options.
 
-If so, I would naively expect that a quirk could clear the
-PCI_PM_CAP_PME_D3 and PCI_PM_CAP_PME_D3cold bits in dev->pme_support,
-and pci_target_state() would then avoid selecting D3 or D3cold.  But
-I'm not an expert in power management.
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
 
-Bjorn
-
-[1] http://marc.info/?l=linux-usb&m=149570231732519&w=2
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
