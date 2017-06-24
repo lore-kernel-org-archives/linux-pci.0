@@ -1,95 +1,259 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 0/7] Add PCI ATS support to SMMUv3
-To: Nate Watterson <nwatters@codeaurora.org>, linux-pci@vger.kernel.org,
- devicetree@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, iommu@lists.linux-foundation.org
-References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
- <2ae88519-7dbb-97ee-1ef9-8a92c31472d5@codeaurora.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <d95b6094-0c10-3669-00f4-6a365b2697b9@arm.com>
-Date: Thu, 1 Jun 2017 13:23:41 +0100
+Return-Path: <SRS0=qc0z=55=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=qc0z=55=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Dongdong Liu
+	<liudongdong3@huawei.com>
+Subject: [PATCH] PCI/DPC: Add eDPC support
+Date: Sat, 24 Jun 2017 17:04:26 +0800
+Message-ID: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <2ae88519-7dbb-97ee-1ef9-8a92c31472d5@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, will.deacon@arm.com, sudeep.holla@arm.com,
- rjw@rjwysocki.net, okaya@codeaurora.org, robh+dt@kernel.org,
- thunder.leizhen@huawei.com, bhelgaas@google.com, tn@semihalf.com,
- sunil.kovvuri@gmail.com, lenb@kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/17 16:27, Nate Watterson wrote:
-> Hi Jean-Philippe,
-> 
-> On 5/24/2017 2:01 PM, Jean-Philippe Brucker wrote:
->> PCIe devices can implement their own TLB, named Address Translation Cache
->> (ATC). In order to support Address Translation Service (ATS), the
->> following changes are needed in software:
->>
->> * Enable ATS on endpoints when the system supports it. Both PCI root
->>    complex and associated SMMU must implement the ATS protocol.
->>
->> * When unmapping an IOVA, send an ATC invalidate request to the endpoint
->>    in addition to the usual SMMU IOTLB invalidations.
->>
->> I previously sent this as part of a lengthy RFC [1] adding SVM (ATS +
->> PASID + PRI) support to SMMUv3. The next PASID/PRI version is almost
->> ready, but isn't likely to get merged because it needs hardware testing,
->> so I will send it later. PRI depends on ATS, but ATS should be useful on
->> its own.
->>
->> Without PASID and PRI, ATS is used for accelerating transactions. Instead
->> of having all memory accesses go through SMMU translation, the endpoint
->> can translate IOVA->PA once, store the result in its ATC, then issue
->> subsequent transactions using the PA, partially bypassing the SMMU. So in
->> theory it should be faster while keeping the advantages of an IOMMU,
->> namely scatter-gather and access control.
->>
->> The ATS patches can now be tested on some hardware, even though the lack
->> of compatible PCI endpoints makes it difficult to assess what performance
->> optimizations we need. That's why the ATS implementation is a bit rough at
->> the moment, and we will work on optimizing things like invalidation ranges
->> later.
-> 
-> Sinan and I have tested this series on a QDF2400 development platform
-> using a PCIe exerciser card as the ATS capable endpoint. We were able
-> to verify that ATS requests complete with a valid translated address
-> and that DMA transactions using the pre-translated address "bypass"
-> the SMMU. Testing ATC invalidations was a bit more difficult as we
-> could not figure out how to get the exerciser card to automatically
-> send the completion message. We ended up having to write a debugger
-> script that would monitor the CMDQ and tell the exerciser to send
-> the completion when a hanging CMD_SYNC following a CMD_ATC_INV was
-> detected. Hopefully we'll get some real ATS capable endpoints to
-> test with soon.
+This code is to add eDPC support. Get and print the RP PIO error
+information when the trigger condition is RP PIO error.
 
-That's still a big step forward from my software tests, thanks a lot for
-the report. If you get around testing a real endpoint, there are a few
-data points that would be really useful to compare, if only to see whether
-enabling ATS is at all viable, or if we end up getting stuck in
-queue_poll_cons in normal conditions:
+For more information on eDPC, view the PCI-SIG eDPC ECN here:
+https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
 
-* ATS enabled/disabled in endpoint
-* ATSCHK enabled/disabled in SMMU
-* Invalidation duration when ATC entry is present/absent, and the range is
-big/small
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ drivers/pci/pcie/pcie-dpc.c   | 161 ++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/pci_regs.h |  10 +++
+ 2 files changed, 171 insertions(+)
 
-Knowing this would indicate if more work is needed on invalidation sizing,
-batching, postponing or if we can optimize later.
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 77d2ca9..00fdf87 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -16,11 +16,55 @@
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
+ 
++struct rp_pio_header_log_regs {
++	u32 dw0;
++	u32 dw1;
++	u32 dw2;
++	u32 dw3;
++};
++
++struct dpc_rp_pio_regs {
++	u32 status;
++	u32 mask;
++	u32 severity;
++	u32 syserror;
++	u32 exception;
++
++	struct rp_pio_header_log_regs header_log;
++	u32 impspec_log;
++	u32 tlp_prefix_log[4];
++	u32 log_size;
++	u16 first_error;
++};
++
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+ 	int			cap_pos;
+ 	bool			rp;
++	struct dpc_rp_pio_regs	*rp_pio;
++};
++
++static const char * const rp_pio_error_string[] = {
++	"Configuration Request received UR Completion",	 /* Bit Position 0  */
++	"Configuration Request received CA Completion",	 /* Bit Position 1  */
++	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	"I/O Request received UR Completion",		 /* Bit Position 8  */
++	"I/O Request received CA Completion",		 /* Bit Position 9  */
++	"I/O Request Completion Timeout",		 /* Bit Position 10 */
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	"Memory Request received UR Completion",	 /* Bit Position 16 */
++	"Memory Request received CA Completion",	 /* Bit Position 17 */
++	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+@@ -79,10 +123,117 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	dpc_wait_link_inactive(pdev);
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+ 		return;
++	if (dpc->rp && dpc->rp_pio->status)
++		pci_write_config_dword(pdev,
++				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++				      dpc->rp_pio->status);
++
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+ }
+ 
++static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
++			       struct rp_pio_header_log_regs *t)
++{
++	dev_err(&dev->dev, "TLP Header: %08x %08x %08x %08x\n",
++		t->dw0, t->dw1, t->dw2, t->dw3);
++}
++
++static void dpc_rp_pio_print_error(struct dpc_dev *dpc)
++{
++	struct pci_dev *pdev = dpc->dev->port;
++	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
++	int i;
++	u32 status;
++
++	dev_err(&pdev->dev, "rp_pio_status: 0x%08x, rp_pio_mask: 0x%08x\n",
++			    rp_pio->status, rp_pio->mask);
++
++	dev_err(&pdev->dev, "RP PIO severity=0x%08x, syserror=0x%08x, exception=0x%08x\n",
++		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
++
++	status = (rp_pio->status & ~rp_pio->mask);
++
++	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
++		if (!(status & (1 << i)))
++			continue;
++
++		dev_err(&pdev->dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
++			rp_pio->first_error == i ? " (First)" : "");
++	}
++
++	dpc_rp_pio_print_tlp_header(pdev, &rp_pio->header_log);
++	if (rp_pio->log_size == 4)
++		return;
++	dev_err(&pdev->dev, "RP PIO ImpSpec Log %08x\n", rp_pio->impspec_log);
++
++	for (i = 0; i < rp_pio->log_size - 5; i++)
++		dev_err(&pdev->dev, "TLP Prefix Header: dw%d, %08x\n", i,
++			rp_pio->tlp_prefix_log[i]);
++}
++
++static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
++{
++	struct pci_dev *pdev = dpc->dev->port;
++	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
++	int i;
++	u16 cap;
++	u16 status;
++
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++			      &rp_pio->status);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
++			      &rp_pio->mask);
++
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
++			      &rp_pio->severity);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
++			      &rp_pio->syserror);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
++			      &rp_pio->exception);
++
++	/* Get First Error Pointer */
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	rp_pio->first_error = (status & 0x1f00) >> 8;
++
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
++	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
++	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
++		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
++			rp_pio->log_size);
++		return;
++	}
++
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
++			      &rp_pio->header_log.dw0);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
++			      &rp_pio->header_log.dw1);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
++			      &rp_pio->header_log.dw2);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
++			      &rp_pio->header_log.dw3);
++	if (rp_pio->log_size == 4)
++		return;
++
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
++			      &rp_pio->impspec_log);
++	for (i = 0; i < rp_pio->log_size - 5; i++)
++		pci_read_config_dword(pdev,
++			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
++			&rp_pio->tlp_prefix_log[i]);
++}
++
++static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
++{
++	dpc_rp_pio_get_info(dpc);
++	dpc_rp_pio_print_error(dpc);
++}
++
+ static irqreturn_t dpc_irq(int irq, void *context)
+ {
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+@@ -109,6 +260,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 			 (ext_reason == 0) ? "RP PIO error" :
+ 			 (ext_reason == 1) ? "software trigger" :
+ 					     "reserved error");
++		/* show RP PIO error detail information */
++		if (ext_reason == 0)
++			dpc_precess_rp_pio_error(dpc);
++
+ 		schedule_work(&dpc->work);
+ 	}
+ 	return IRQ_HANDLED;
+@@ -144,6 +299,12 @@ static int dpc_probe(struct pcie_device *dev)
+ 
+ 	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+ 
++	if (dpc->rp) {
++		dpc->rp_pio = devm_kzalloc(&pdev->dev, sizeof(*dpc->rp_pio),
++					   GFP_KERNEL);
++		if (!dpc->rp_pio)
++			return -ENOMEM;
++	}
+ 	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index d56bb00..12dbbe4 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -966,6 +966,7 @@
+ #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+ #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+ #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
++#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0xF00	/* RP PIO log size */
+ #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+ 
+ #define PCI_EXP_DPC_CTL			6	/* DPC control */
+@@ -979,6 +980,15 @@
+ 
+ #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
+ 
++#define PCI_EXP_DPC_RP_PIO_STATUS	 0x0C	/* RP PIO Status */
++#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO MASK */
++#define PCI_EXP_DPC_RP_PIO_SEVERITY	 0x14	/* RP PIO Severity */
++#define PCI_EXP_DPC_RP_PIO_SYSERROR	 0x18	/* RP PIO SysError */
++#define PCI_EXP_DPC_RP_PIO_EXCEPTION	 0x1C	/* RP PIO Exception */
++#define PCI_EXP_DPC_RP_PIO_HEADER_LOG	 0x20	/* RP PIO Header Log */
++#define PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG	 0x30	/* RP PIO ImpSpec Log */
++#define PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG 0x34	/* RP PIO TLP Prefix Log */
++
+ /* Precision Time Measurement */
+ #define PCI_PTM_CAP			0x04	    /* PTM Capability */
+ #define  PCI_PTM_CAP_REQ		0x00000001  /* Requester capable */
+-- 
+1.9.1
