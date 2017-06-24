@@ -1,72 +1,214 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        David Gibson <david@gibson.dropbear.id.au>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@ozlabs.org>
-Subject: [PATCH kernel 1/3] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-Date: Thu, 15 Jun 2017 15:06:40 +1000
-Message-Id: <20170615050642.8197-2-aik@ozlabs.ru>
-In-Reply-To: <20170615050642.8197-1-aik@ozlabs.ru>
-References: <20170615050642.8197-1-aik@ozlabs.ru>
+From: Palmer Dabbelt <palmer@dabbelt.com>
+To: linux-pci@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+To: bhelgaas@google.com
+To: hch@infradead.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-snps-arc@lists.infradead.org
+Cc: linux-cris-kernel@axis.com
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-s390@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+Cc: sparclinux@vger.kernel.org
+Cc: Palmer Dabbelt <palmer@dabbelt.com>
+Subject: [PATCH 1/3] pci: Add a generic, weakly-linked pcibios_fixup_bus
+Date: Fri, 23 Jun 2017 18:50:42 -0700
+Message-Id: <20170624015044.16746-2-palmer@dabbelt.com>
+In-Reply-To: <20170624015044.16746-1-palmer@dabbelt.com>
+References: <20170624015044.16746-1-palmer@dabbelt.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Multiple architectures define this as an empty function, and I'm adding
+another one as part of the RISC-V port.  This adds a __weak version of
+pci_fixup_bios and deletes the now obselete ones in a handful of ports.
 
-We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
-which indicates interrupts of all devices on the bus are
-managed by the hardware enabling IRQ remapping(intel naming).
-When the capability is enabled, a given PCI device can only
-shoot the MSIs assigned for it. In other words, the hardware
-can protect system from invalid MSIs of the device by checking
-the target address and data when there is something wrong
-with MSI part in device or device driver.
+The only functional change should be that microblaze used to export
+pcibios_fixup_bus.  None of the other architectures export this, so I
+just dropped it.
 
-There is a existing flag for this capability in the IOMMU space:
-
-enum iommu_cap {
-	IOMMU_CAP_CACHE_COHERENCY,
---->	IOMMU_CAP_INTR_REMAP,
-	IOMMU_CAP_NOEXEC,
-};
-
-and Eric also posted a patchset [1] to abstract it on MSI
-controller side for ARM. But it would make sense to have a
-more common flag like PCI_BUS_FLAGS_MSI_REMAP so that we can
-use a universal flag to test this capability on PCI side for
-different archs.
-
-With this flag enabled, we can easily know whether it's safe
-to expose MSI-X tables of PCI BARs to userspace. Some usespace
-drivers such as VFIO may benefit from this.
-
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Signed-off-by: Paul Mackerras <paulus@ozlabs.org>
+Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
 ---
- include/linux/pci.h | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arc/kernel/pcibios.c             |  4 ----
+ arch/arm64/kernel/pci.c               |  8 --------
+ arch/cris/arch-v32/drivers/pci/bios.c |  4 ----
+ arch/microblaze/pci/pci-common.c      |  6 ------
+ arch/s390/pci/pci.c                   |  4 ----
+ arch/sh/drivers/pci/pci.c             |  8 --------
+ arch/sparc/kernel/pci.c               |  4 ----
+ arch/tile/kernel/pci.c                |  8 --------
+ arch/tile/kernel/pci_gx.c             |  5 -----
+ drivers/pci/probe.c                   | 10 ++++++++++
+ 10 files changed, 10 insertions(+), 51 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8039f9f0ca05..2c6dbb3dd0da 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -200,6 +200,7 @@ enum pci_bus_flags {
- 	PCI_BUS_FLAGS_NO_MSI	= (__force pci_bus_flags_t) 1,
- 	PCI_BUS_FLAGS_NO_MMRBC	= (__force pci_bus_flags_t) 2,
- 	PCI_BUS_FLAGS_NO_AERSID	= (__force pci_bus_flags_t) 4,
-+	PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 8,
- };
+diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
+index 72e1d73d0bd6..1c8df8fd5fed 100644
+--- a/arch/arc/kernel/pcibios.c
++++ b/arch/arc/kernel/pcibios.c
+@@ -16,7 +16,3 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ {
+ 	return res->start;
+ }
+-
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-}
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index c7e3e6387a49..4c7f451aca05 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -23,14 +23,6 @@
+ #include <linux/slab.h>
  
- /* These values come from the PCI Express Spec */
+ /*
+- * Called after each bus is probed, but before its children are examined
+- */
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-	/* nothing to do, expected to be removed in the future */
+-}
+-
+-/*
+  * We don't have to worry about legacy ISA devices, so nothing to do here
+  */
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+index 394c2a73d5e2..5cc622c0225e 100644
+--- a/arch/cris/arch-v32/drivers/pci/bios.c
++++ b/arch/cris/arch-v32/drivers/pci/bios.c
+@@ -2,10 +2,6 @@
+ #include <linux/kernel.h>
+ #include <hwregs/intr_vect.h>
+ 
+-void pcibios_fixup_bus(struct pci_bus *b)
+-{
+-}
+-
+ void pcibios_set_master(struct pci_dev *dev)
+ {
+ 	u8 lat;
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 404fb38d06b7..940f266e5d5c 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -810,12 +810,6 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
+ 	}
+ }
+ 
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-	/* nothing to do */
+-}
+-EXPORT_SYMBOL(pcibios_fixup_bus);
+-
+ /*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 8051df109db3..98a54dd63483 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -234,10 +234,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
+ 	return rc;
+ }
+ 
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-}
+-
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				       resource_size_t size,
+ 				       resource_size_t align)
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index c99ee286b69f..749642e1272e 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -155,14 +155,6 @@ static int __init pcibios_init(void)
+ subsys_initcall(pcibios_init);
+ 
+ /*
+- *  Called after each bus is probed, but before its children
+- *  are examined.
+- */
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-}
+-
+-/*
+  * We need to avoid collisions with `mirrored' VGA ports
+  * and other strange ISA hardware, so we always want the
+  * addresses to be allocated in the 0x000-0x0ff region
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 7eceaa10836f..78d3dc25e126 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -690,10 +690,6 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
+ 	return bus;
+ }
+ 
+-void pcibios_fixup_bus(struct pci_bus *pbus)
+-{
+-}
+-
+ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 				resource_size_t size, resource_size_t align)
+ {
+diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
+index bc6656b5708b..3113d4d5c329 100644
+--- a/arch/tile/kernel/pci.c
++++ b/arch/tile/kernel/pci.c
+@@ -369,14 +369,6 @@ int __init pcibios_init(void)
+ }
+ subsys_initcall(pcibios_init);
+ 
+-/*
+- * No bus fixups needed.
+- */
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-	/* Nothing needs to be done. */
+-}
+-
+ void pcibios_set_master(struct pci_dev *dev)
+ {
+ 	/* No special bus mastering setup handling. */
+diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
+index b554a68eea1b..b89172b592cc 100644
+--- a/arch/tile/kernel/pci_gx.c
++++ b/arch/tile/kernel/pci_gx.c
+@@ -1038,11 +1038,6 @@ int __init pcibios_init(void)
+ }
+ subsys_initcall(pcibios_init);
+ 
+-/* No bus fixups needed. */
+-void pcibios_fixup_bus(struct pci_bus *bus)
+-{
+-}
+-
+ /* Process any "pci=" kernel boot arguments. */
+ char *__init pcibios_setup(char *str)
+ {
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950c6c38..1ff44dde7164 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2227,6 +2227,16 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
+ 
++/*
++ * Called after each bus is probed, but before its children are examined.  This
++ * is marked as __weak because multiple architectures define it
++ */
++__attribute__ ((weak))
++void pcibios_fixup_bus(struct pci_bus *bus)
++{
++       /* nothing to do, expected to be removed in the future */
++}
++
+ unsigned int pci_scan_child_bus(struct pci_bus *bus)
+ {
+ 	unsigned int devfn, pass, max = bus->busn_res.start;
 -- 
-2.11.0
+2.13.0
