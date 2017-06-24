@@ -1,64 +1,64 @@
-Return-Path: <SRS0=HkhX=5Y=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=HkhX=5Y=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
- <654acba8-68b9-fb4c-4681-35af94b6bd74@sigmadesigns.com>
- <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>, Robin Murphy
- <robin.murphy@arm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <7d9bfb52-b33a-79ea-dccf-fff1f849bd15@arm.com>
-Date: Mon, 19 Jun 2017 16:58:16 +0100
-MIME-Version: 1.0
-In-Reply-To: <6abfe9ce-5c32-9be0-e276-ed14253aa773@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32898 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754913AbdFXCB6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 23 Jun 2017 22:01:58 -0400
+Received: by mail-pf0-f193.google.com with SMTP id w12so9738989pfk.0
+        for <linux-pci@vger.kernel.org>; Fri, 23 Jun 2017 19:01:58 -0700 (PDT)
+From: Palmer Dabbelt <palmer@dabbelt.com>
+To: linux-pci@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+To: bhelgaas@google.com
+To: hch@infradead.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-snps-arc@lists.infradead.org
+Cc: linux-cris-kernel@axis.com
+Cc: linux-ia64@vger.kernel.org
+Cc: linux-s390@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+Cc: sparclinux@vger.kernel.org
+Cc: Palmer Dabbelt <palmer@dabbelt.com>
+Subject: [PATCH 3/3] arc: kernel/pcibios.c is empty, delete it
+Date: Fri, 23 Jun 2017 18:50:44 -0700
+Message-Id: <20170624015044.16746-4-palmer@dabbelt.com>
+In-Reply-To: <20170624015044.16746-1-palmer@dabbelt.com>
+References: <20170624015044.16746-1-palmer@dabbelt.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/06/17 15:50, Marc Gonzalez wrote:
-> On 07/06/2017 10:19, Marc Gonzalez wrote:
-> 
->> On 31/05/2017 15:33, Marc Gonzalez wrote:
->>
->>> +static int tango_pcie_probe(struct platform_device *pdev)
->>> +{
->>> +	int ret = -EINVAL;
->>> +	void __iomem *base;
->>> +	struct resource *res;
->>> +	struct tango_pcie *pcie;
->>> +	struct device *dev = &pdev->dev;
->>> +
->>> +	pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
->>> +	pr_err("Tainting kernel... Use driver at your own risk\n");
->>> +	add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
->>
->> Hello Bjorn,
->>
->> In v4, your only comment was
->> "[muxing config and mem spaces] is a major issue and possibly even
->> a security problem [which requires at least an error message and a
->> kernel taint].
->>
->> Were there any other issues with the host bridge support?
-> 
-> Hello Bjorn,
-> 
-> I imagine you are now only waiting for Marc Z's Ack of patch 3/3 ?
-> (AFAIU, all issues have been addressed as of v8 3/3.)
+Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+---
+ arch/arc/kernel/Makefile  | 1 -
+ arch/arc/kernel/pcibios.c | 9 ---------
+ 2 files changed, 10 deletions(-)
+ delete mode 100644 arch/arc/kernel/pcibios.c
 
-Posting partial series is really not ideal, specially as you posted 3 of
-them in less than 24 hours (and the latest was only 5 days ago).
-
-The maintainer is not going to chase you about potentially missing
-patches...
-
-	M.
+diff --git a/arch/arc/kernel/Makefile b/arch/arc/kernel/Makefile
+index 8942c5c3b4c5..2dc5f4296d44 100644
+--- a/arch/arc/kernel/Makefile
++++ b/arch/arc/kernel/Makefile
+@@ -12,7 +12,6 @@ obj-y	:= arcksyms.o setup.o irq.o reset.o ptrace.o process.o devtree.o
+ obj-y	+= signal.o traps.o sys.o troubleshoot.o stacktrace.o disasm.o
+ obj-$(CONFIG_ISA_ARCOMPACT)		+= entry-compact.o intc-compact.o
+ obj-$(CONFIG_ISA_ARCV2)			+= entry-arcv2.o intc-arcv2.o
+-obj-$(CONFIG_PCI)  			+= pcibios.o
+ 
+ obj-$(CONFIG_MODULES)			+= arcksyms.o module.o
+ obj-$(CONFIG_SMP) 			+= smp.o
+diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
+deleted file mode 100644
+index 05aba5a7b5d2..000000000000
+--- a/arch/arc/kernel/pcibios.c
++++ /dev/null
+@@ -1,9 +0,0 @@
+-/*
+- * Copyright (C) 2014-2015 Synopsys, Inc. (www.synopsys.com)
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-#include <linux/pci.h>
 -- 
-Jazz is not dead. It just smells funny...
+2.13.0
