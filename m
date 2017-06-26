@@ -1,67 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:19053 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751569AbdF0JYU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jun 2017 05:24:20 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Andrew Morton <akpm@linux-foundation.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] PCI: mediatek: change to use the new host bridge interface
-Date: Tue, 27 Jun 2017 17:24:11 +0800
-Message-ID: <1498555451-55073-2-git-send-email-ryder.lee@mediatek.com>
-In-Reply-To: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
-References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 26 Jun 2017 16:29:41 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 2/6] ACPI / PM: Consolidate device wakeup settings code
+Message-ID: <20170626132941.GD629@lahna.fi.intel.com>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan>
+ <20170622073937.GR629@lahna.fi.intel.com>
+ <4634255.ux8TmyfYTx@aspire.rjw.lan>
+ <8111646.zzkDnlQnPE@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8111646.zzkDnlQnPE@aspire.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With the introduction of pci_scan_root_bus_bridge() there is no need to
-export pci_register_host_bridge() to other kernel subsystems other than the
-PCI compilation unit that needs it.
+On Fri, Jun 23, 2017 at 03:05:57AM +0200, Rafael J. Wysocki wrote:
+> On Thursday, June 22, 2017 04:38:49 PM Rafael J. Wysocki wrote:
+> > On Thursday, June 22, 2017 10:39:37 AM Mika Westerberg wrote:
+> > > On Mon, Jun 19, 2017 at 11:33:52PM +0200, Rafael J. Wysocki wrote:
+> > > > -#ifdef CONFIG_PM_SLEEP
+> > > > -/**
+> > > > - * acpi_pm_device_sleep_wake - Enable or disable device to wake up the system.
+> > > > - * @dev: Device to enable/desible to wake up the system from sleep states.
+> > > > - * @enable: Whether to enable or disable @dev to wake up the system.
+> > > > - */
+> > > > -int acpi_pm_device_sleep_wake(struct device *dev, bool enable)
+> > > > +int acpi_pm_device_wakeup(struct device *dev, bool enable)
+> > > 
+> > > Can we call it acpi_pm_device_enable_wakeup() and then provide
+> > > corresponding acpi_pm_device_disable_wakeup()? I find those easier to
+> > > understand than acpi_pm_device_wakeup() that sounds like the device
+> > > should be woken up now.
+> > 
+> > OK, fair enough.  I'll change it this way.
+> 
+> Well, sorry, I'd rather not to, or we'll have to add a wrapper around them in
+> pci-acpi.c. :-)
+> 
+> I can rename it to acpi_pm_device_set_wakeup(), though.
 
-Make pci_register_host_bridge() static to its compilation unit and convert
-the existing drivers usage over to pci_scan_root_bus_bridge().
-
-Also, when probing the PCI host controller driver, if an error occurs, the probe
-function code does not free memory allocated for the struct pci_host_bridge
-resulting in memory leakage.
-
-This patch fixes them by using the methods that introduces by Lorenzo.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 3baafa8..514ef34 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -482,12 +482,10 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 	host->dev.parent = pcie->dev;
- 	host->ops = &mtk_pcie_ops;
- 
--	err = pci_register_host_bridge(host);
-+	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0)
- 		return err;
- 
--	pci_scan_child_bus(host->bus);
--
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 	pci_bus_size_bridges(host->bus);
- 	pci_bus_assign_resources(host->bus);
-@@ -506,7 +504,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	struct pci_host_bridge *host;
- 	int err;
- 
--	host = pci_alloc_host_bridge(sizeof(*pcie));
-+	host = devm_pci_alloc_host_bridge(&pdev->dev, sizeof(*pcie));
- 	if (!host)
- 		return -ENOMEM;
- 
--- 
-1.9.1
+Works for me :)
