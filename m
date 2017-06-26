@@ -1,56 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59696 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752286AbdFLUs3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 12 Jun 2017 16:48:29 -0400
-Date: Mon, 12 Jun 2017 15:48:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH] pci: endpoint: fix endpoint test build error
-Message-ID: <20170612204825.GB28578@bhelgaas-glaptop.roam.corp.google.com>
-References: <89a5b4f8-69bb-a5bc-5400-06c24050595d@infradead.org>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:35903 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751485AbdFZMwB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 08:52:01 -0400
+Message-ID: <1498481507.6075.10.camel@mtkswgap22>
+Subject: Re: next-20170626 build: 1 failures 1 warnings (next-20170626)
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Mark Brown <broonie@kernel.org>
+CC: <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        <kernel-build-reports@lists.linaro.org>,
+        <linaro-kernel@lists.linaro.org>, <linux-next@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
+Date: Mon, 26 Jun 2017 20:51:47 +0800
+In-Reply-To: <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
+References: <E1dPPgG-0002pe-3A@optimist>
+         <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <89a5b4f8-69bb-a5bc-5400-06c24050595d@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jun 11, 2017 at 07:10:38PM -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@infradead.org>
+On Mon, 2017-06-26 at 12:56 +0100, Mark Brown wrote:
+> On Mon, Jun 26, 2017 at 09:47:36AM +0100, Build bot for Mark Brown wrote:
 > 
-> PCI endpoint test driver uses crc32_le() so it should select
-> CRC32. Fixes this build error (when CRC32=m):
+> This build failure is still present in -next:
 > 
->   drivers/built-in.o: In function `pci_epf_test_cmd_handler':
->   pci-epf-test.c:(.text+0x2d98d): undefined reference to `crc32_le'
+> > 	arm-allmodconfig
+> > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
 > 
-> Fixes 349e7a85b25f (PCI: endpoint: functions: Add an EP function to test PCI).
-> 
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> and we're at -rc7 now.
 
-Applied with Kishon's ack to for-linus for v4.12 (since 349e7a85b25f first
-appeared in v4.12-rc1), thanks!
+Hi Mark,
+ 
+This is due to we are in different branch but merge together...
 
-> Cc: Kishon Vijay Abraham I <kishon@ti.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/endpoint/functions/Kconfig |    1 +
->  1 file changed, 1 insertion(+)
-> 
-> --- lnx-412-rc4.orig/drivers/pci/endpoint/functions/Kconfig
-> +++ lnx-412-rc4/drivers/pci/endpoint/functions/Kconfig
-> @@ -5,6 +5,7 @@
->  config PCI_EPF_TEST
->  	tristate "PCI Endpoint Test driver"
->  	depends on PCI_ENDPOINT
-> +	select CRC32
->  	help
->  	   Enable this configuration option to enable the test driver
->  	   for PCI Endpoint.
-> 
-> 
+Anyway, I could send a critical patch, but I need Bjorn help to apply to
+-next. Seems he didn't response these days.
+
+Not sure how could I send it?
+
+Ryder.
