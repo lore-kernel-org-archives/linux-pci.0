@@ -1,108 +1,77 @@
-Return-Path: <SRS0=Oisb=5G=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=Oisb=5G=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:33391 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751353AbdFZJPo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 05:15:44 -0400
+Received: by mail-ot0-f194.google.com with SMTP id q16so10633050otb.0
+        for <linux-pci@vger.kernel.org>; Mon, 26 Jun 2017 02:15:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170518174612.GA31373@red-moon>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
- <20170518154708.GA30182@red-moon> <CAKv+Gu-NDR1PYUfOs4z-T9WoeBrYvFTTBt3XMiMg+AU76MbYBg@mail.gmail.com>
- <20170518174612.GA31373@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 1 Jun 2017 15:04:09 +0000
-Message-ID: <CAKv+Gu8hVhpNrXG+JUQu8XYZtQE86d0O66J8AORWDC6Ttcp3iA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR configuration
- to be preserved
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>, Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
-	Tomasz Nowicki <tn@semihalf.com>
+In-Reply-To: <20170624073539.GE14580@lst.de>
+References: <1497645290-31041-1-git-send-email-alan.adamson@oracle.com>
+ <20170617115703.GA13002@lst.de> <6a32f30b-433a-9857-164f-1717405a6082@oracle.com>
+ <20170624073539.GE14580@lst.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Mon, 26 Jun 2017 11:15:43 +0200
+Message-ID: <CAK8P3a0itukwNkPk-Yui6juJXt5QiQT6+FYxP12or2wt5jDhLw@mail.gmail.com>
+Subject: Re: DMA_ATTR_WEAK_ORDERING defintion, was Re: [PATCH] nvme: set
+ DMA_ATTR_WEAK_ORDERING attribute on dma buffers
+To: Christoph Hellwig <hch@lst.de>
+Cc: Alan Adamson <alan.adamson@oracle.com>,
+        Keith Busch <keith.busch@intel.com>, Jens Axboe <axboe@fb.com>,
+        linux-nvme@lists.infradead.org, Sagi Grimberg <sagi@grimberg.me>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Mark Nelson <markn@au1.ibm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
 Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18 May 2017 at 18:46, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> On Thu, May 18, 2017 at 05:51:44PM +0100, Ard Biesheuvel wrote:
->> On 18 May 2017 at 16:47, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->> > On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
->> >
->> > [...]
->> >
->> >> >> Re _DSM: I think it makes sense to honour it, because it puts the
->> >> >> allocation under the control of the firmware, which completely removes
->> >> >> the burden of having to reason about a policy in the kernel. That
->> >> >> leaves the question which will be the default, but that is of minor
->> >> >> importance IMO.
->> >> >
->> >> > I agree; we should try to follow the spec unless we have a good reason
->> >> > not to, which argues for honoring the _DSM, so I think it's worth a
->> >> > try.  Booting with "pci=realloc" could override the _DSM and taint the
->> >> > kernel (because we don't know the effect of reassigning something the
->> >> > firmware told us not to touch).
->> >> >
->> >>
->> >> I'd like to hear Lorenzo's view on this first, but I can certainly
->> >> respin my _DSM patch to take pci=realloc into account, and move the
->> >> handling to generic code as well.
->> >
->> > I agree with both of you on _DSM implementation and interpretation.
->> >
->> > Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
->> > are going to trigger regressions, that's certain (ie we can then boot
->> > with pci=realloc - still, we are breaking systems), that's the reason
->> > why for patch(2) I'd like to create a branch and send a CFT for ARM64
->> > ACPI testing before queuing it (either I can set-up a testing branch
->> > or we ask Bjorn to do it - as you guys prefer - as long as we have
->> > a branch for people to test patch(2) on ARM64 ACPI systems).
->> >
->> > You still need to assign resources that could not be claimed though
->> > so patch(2) still needs updating:
->> >
->> > PCI FW spec 3.1 - 4.6.5
->> >
->> > "...However, the operating system is free to configure the devices in this
->> > hierarchy that have not been configured by the firmware."
->> >
->> > Which in kernel-speak it means that you have to assign resources that
->> > could not be claimed.
->> >
->>
->> Right. AFAICT this is the part that is typically handled by
->> pcibios_resource_survey() et al, whose default __weak implementations
->> are empty functions. Shall I override those for arm64 to host this
->> logic?
+On Sat, Jun 24, 2017 at 9:35 AM, Christoph Hellwig <hch@lst.de> wrote:
+> I always assumed that our streaming mappings are relaxed order for
+> TLP anyway.  And at very least Documentation/DMA-attributes.txt seems
+> to imply something different:
 >
-> I think it makes sense yes unless Bjorn spots something wrong with that
-> but you should also call it in ARM64 pci_acpi_scan_root() since it is
-> not called by PCI core on non-hot-added bridges, I reckon you figured
-> that out already though.
 >
+>   DMA_ATTR_WEAK_ORDERING
+>   ----------------------
+>
+>   DMA_ATTR_WEAK_ORDERING specifies that reads and writes to the mapping
+>   may be weakly ordered, that is that reads and writes may pass each other.
+>
+> Which to me suggest host reads, which also makes me wonder why these
+> would even apply to our streaming mappings.
+>
+> Adding the powerpc folks that added the DMA_ATTR_WEAK_ORDERING flag
+> originally back in 2008, but not actual users as far as I can tell -
+> those are all new and from the sparc gang, except for the noveau
+> driver, which is a bit older but only uses for dma_alloc_attrs, where
+> the original description makes sense to me.
 
-Another data point for this discussion: currently, when booting arm64
-via DT, we set PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS (unless
-PCI_PROBE_ONLY is requested), which forces not only resource
-allocations but also the bus numbering to be reconfigured from
-scratch.
+I suspect people have applied the same name for different things over time.
 
-On arm64/ACPI, we never set those flags, which will cause
-pci_scan_bridge() to preserve the secondary and subordinate bridge
-numbers if they are non-zero. This actually prevents log messages like
+When we added it in 2008, there was one specific use case, improving
+throughput on infiniband, iirc using the mthca device driver. In the Cell
+IOMMU, this attribute causes concurrent DMA transfers on PCIe
+devices to disregard the stricter PCI ordering rules: multiple transfers
+could be initiated together and complete in an arbitrary order depending
+on e.g. I/O page faults in the IOMMU. Using the dma attributes, this
+could be controlled to apply only to certain transfers, so a completion
+queue DMA would still be ordered with regard to other transfers, as it would
+not come with that attribute.
 
-pci_bus 0000:02: busn_res: can not insert [bus 02-ff] under [bus
-00-7f] (conflicts with (null) [bus 00-7f])
+There are two things that I don't remember unfortunately.
 
-which I see on AMD Seattle as well as QEMU when booting via DT (and I
-suspect on any DT PCI root whose bus range != {0x0 0xff>). However, it
-also means that we already have different behavior between ACPI and DT
-boot on arm64, which makes it ambiguous what the behavior should be if
-_DSM indicates that the configuration should not be preserved. IOW,
-'reconfigure everything' currently means different things between DT
-and ACPI boot.
+a) why this patch seems to have never made it into the mainline kernel:
+http://lists.openfabrics.org/pipermail/general/2008-October/055006.html
+We probably had it added to both OFED and the supported distros at
+the time (RHEL, Fedora, SLES, all in versions I don't remember any
+more)
 
-Thoughts?
+b) How this relates to the PCIe relaxed ordering flag on DMA transfers.
+It's possible that the hardware later learned to correctly set the
+flag on the actual transfer to have the same effect, or it's possible
+that we had to add the dma_alloc_attr() interface specifically because
+the hardware could not do this for some but not other transfers.
 
--- 
-Ard.
+      Arnd
