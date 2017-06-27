@@ -1,109 +1,87 @@
-Return-Path: <SRS0=Qz6u=5M=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=Qz6u=5M=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v3 3/3] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Wed, 7 Jun 2017 17:16:08 +0800
-Message-ID: <1496826968-10152-4-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
-References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44768 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753543AbdF0U7z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 16:59:55 -0400
+Date: Tue, 27 Jun 2017 15:59:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Peter Anvin <hpa@zytor.com>, Borislav Petkov <bp@alien8.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Stephane Eranian <eranian@google.com>,
+        Andi Kleen <ak@linux.intel.com>, linux-pci@vger.kernel.org
+Subject: Re: [patch 2/7] x86/pci: Abort if legacy init fails
+Message-ID: <20170627205952.GC764@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170316215002.726697858@linutronix.de>
+ <20170316215057.047576516@linutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170316215057.047576516@linutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+[+cc linux-pci]
 
-cxgb4 Ethernet driver now queries Root Complex Port to determine if it can
-send TLPs to it with the Relaxed Ordering Attribute set.
+s|x86/pci: |x86/PCI: | for these three, to follow previous convention.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 +++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
- 3 files changed, 21 insertions(+), 2 deletions(-)
+On Thu, Mar 16, 2017 at 10:50:04PM +0100, Thomas Gleixner wrote:
+> If the legacy pci init fails, then there are no pci config space accesors
+> available, but the code continues and tries to scan the busses, which fails
+> due to the lack of config space accessors.
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index e88c180..478f25a 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -521,6 +521,7 @@ enum {                                 /* adapter flags */
- 	USING_SOFT_PARAMS  = (1 << 6),
- 	MASTER_PF          = (1 << 7),
- 	FW_OFLD_CONN       = (1 << 9),
-+	ROOT_NO_RELAXED_ORDERING = (1 << 10),
- };
- 
- enum {
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 38a5c67..fbfe341 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -4628,6 +4628,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- #ifdef CONFIG_PCI_IOV
- 	u32 v, port_vec;
- #endif
-+	struct pci_dev *root;
- 
- 	printk_once(KERN_INFO "%s - version %s\n", DRV_DESC, DRV_VERSION);
- 
-@@ -4726,6 +4727,22 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
- 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
- 
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * So we check our Root Complex to see if it's flaged with advice
-+	 * against using Relaxed Ordering.
-+	 */
-+	root = pci_find_pcie_root_port(adapter->pdev);
-+	if (pcie_get_relaxed_ordering(root))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	spin_lock_init(&adapter->stats_lock);
- 	spin_lock_init(&adapter->tid_release_lock);
- 	spin_lock_init(&adapter->win0_lock);
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-index f05f0d4..ac229a3 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
-@@ -2571,6 +2571,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 	struct fw_iq_cmd c;
- 	struct sge *s = &adap->sge;
- 	struct port_info *pi = netdev_priv(dev);
-+	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/* Size needs to be multiple of 16, including status entry. */
- 	iq->size = roundup(iq->size, 16);
-@@ -2624,8 +2625,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
- 
- 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
- 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
--					     FW_IQ_CMD_FL0FETCHRO_F |
--					     FW_IQ_CMD_FL0DATARO_F |
-+					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 					     FW_IQ_CMD_FL0PADEN_F);
- 		if (cong >= 0)
- 			c.iqns_to_fl0congen |=
--- 
-1.9.0
+s/pci/PCI/ above.
+
+> Return right away, if the last init fallback fails.
+> 
+> Switch the few printks to pr_info while at it.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> ---
+>  arch/x86/pci/legacy.c |   18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
+> 
+> --- a/arch/x86/pci/legacy.c
+> +++ b/arch/x86/pci/legacy.c
+> @@ -24,12 +24,10 @@ static void pcibios_fixup_peer_bridges(v
+>  
+>  int __init pci_legacy_init(void)
+>  {
+> -	if (!raw_pci_ops) {
+> -		printk("PCI: System does not support PCI\n");
+> -		return 0;
+> -	}
+> +	if (!raw_pci_ops)
+> +		return 1;
+>  
+> -	printk("PCI: Probing PCI hardware\n");
+> +	pr_info("PCI: Probing PCI hardware\n");
+>  	pcibios_scan_root(0);
+>  	return 0;
+>  }
+> @@ -46,7 +44,7 @@ void pcibios_scan_specific_bus(int busn)
+>  		if (!raw_pci_read(0, busn, devfn, PCI_VENDOR_ID, 2, &l) &&
+>  		    l != 0x0000 && l != 0xffff) {
+>  			DBG("Found device at %02x:%02x [%04x]\n", busn, devfn, l);
+> -			printk(KERN_INFO "PCI: Discovered peer bus %02x\n", busn);
+> +			pr_info("PCI: Discovered peer bus %02x\n", busn);
+>  			pcibios_scan_root(busn);
+>  			return;
+>  		}
+> @@ -60,8 +58,12 @@ static int __init pci_subsys_init(void)
+>  	 * The init function returns an non zero value when
+>  	 * pci_legacy_init should be invoked.
+>  	 */
+> -	if (x86_init.pci.init())
+> -		pci_legacy_init();
+> +	if (x86_init.pci.init()) {
+> +		if (pci_legacy_init()) {
+> +			pr_info("PCI: System does not support PCI\n");
+> +			return -ENODEV;
+> +		}
+> +	}
+>  
+>  	pcibios_fixup_peer_bridges();
+>  	x86_init.pci.init_irq();
+> 
+> 
