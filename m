@@ -1,298 +1,244 @@
-Return-Path: <SRS0=nDxn=5Z=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=nDxn=5Z=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: [PATCH v9 3/3] PCI: Add tango MSI controller support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: linux-pci <linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, LKML <linux-kernel@vger.kernel.org>,
-	Mason <slash.tmp@free.fr>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
-Message-ID: <d7e7aa08-c827-da31-01ea-6f852d76c751@sigmadesigns.com>
-Date: Tue, 20 Jun 2017 10:18:27 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 27 Jun 2017 18:37:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Palmer Dabbelt <palmer@dabbelt.com>
+Subject: Re: [PATCH] pci:  Add and use PCI_GENERIC_SETUP Kconfig entry
+Message-ID: <20170627233740.GN17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170623214538.25967-1-palmer@dabbelt.com>
 MIME-Version: 1.0
-In-Reply-To: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170623214538.25967-1-palmer@dabbelt.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-mips@linux-mips.org, dalias@libc.org, linux-sh@vger.kernel.org,
+ catalin.marinas@arm.com, will.deacon@arm.com, sparclinux@vger.kernel.org,
+ gxt@mprc.pku.edu.cn, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ ysato@users.sourceforge.jp, linux@armlinux.org.uk, hch@infradead.org,
+ geert@linux-m68k.org, linux-pci@vger.kernel.org, mattst88@gmail.com,
+ linux-snps-arc@lists.infradead.org, cmetcalf@mellanox.com,
+ linux-m68k@lists.linux-m68k.org, ink@jurassic.park.msu.ru,
+ viro@zeniv.linux.org.uk, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org, rth@twiddle.net, vgupta@synopsys.com,
+ linux-kernel@vger.kernel.org, ralf@linux-mips.org, linux-alpha@vger.kernel.org,
+ akpm@linux-foundation.org, davem@davemloft.net
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MSI controller in Tango supports 256 message-signaled interrupts,
-and a single doorbell address.
+[+cc Lorenzo]
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
- drivers/pci/host/pcie-tango.c | 226 ++++++++++++++++++++++++++++++++++++++=
-++++
- 1 file changed, 226 insertions(+)
+Hi Palmer,
 
-diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-index 67aaadcc1c5e..5c47a4cc03e3 100644
---- a/drivers/pci/host/pcie-tango.c
-+++ b/drivers/pci/host/pcie-tango.c
-@@ -1,16 +1,229 @@
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/pci-ecam.h>
- #include <linux/delay.h>
-+#include <linux/msi.h>
- #include <linux/of.h>
-=20
- #define MSI_MAX 256
-=20
- #define SMP8759_MUX=09=090x48
- #define SMP8759_TEST_OUT=090x74
-+#define SMP8759_STATUS=09=090x80
-+#define SMP8759_ENABLE=09=090xa0
-+#define SMP8759_DOORBELL=090xa002e07c
-=20
- struct tango_pcie {
-+=09DECLARE_BITMAP(used_msi, MSI_MAX);
-+=09spinlock_t used_msi_lock;
- =09void __iomem *mux;
-+=09void __iomem *msi_status;
-+=09void __iomem *msi_enable;
-+=09phys_addr_t msi_doorbell;
-+=09struct irq_domain *irq_dom;
-+=09struct irq_domain *msi_dom;
-+=09int irq;
- };
-=20
-+/*** MSI CONTROLLER SUPPORT ***/
-+
-+static void tango_msi_isr(struct irq_desc *desc)
-+{
-+=09struct irq_chip *chip =3D irq_desc_get_chip(desc);
-+=09struct tango_pcie *pcie =3D irq_desc_get_handler_data(desc);
-+=09unsigned long status, base, virq, idx, pos =3D 0;
-+
-+=09chained_irq_enter(chip, desc);
-+=09spin_lock(&pcie->used_msi_lock);
-+
-+=09while ((pos =3D find_next_bit(pcie->used_msi, MSI_MAX, pos)) < MSI_MAX)=
- {
-+=09=09base =3D round_down(pos, 32);
-+=09=09status =3D readl_relaxed(pcie->msi_status + base / 8);
-+=09=09for_each_set_bit(idx, &status, 32) {
-+=09=09=09virq =3D irq_find_mapping(pcie->irq_dom, base + idx);
-+=09=09=09generic_handle_irq(virq);
-+=09=09}
-+=09=09pos =3D base + 32;
-+=09}
-+
-+=09spin_unlock(&pcie->used_msi_lock);
-+=09chained_irq_exit(chip, desc);
-+}
-+
-+static void tango_ack(struct irq_data *d)
-+{
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+=09u32 offset =3D (d->hwirq / 32) * 4;
-+=09u32 bit =3D BIT(d->hwirq % 32);
-+
-+=09writel_relaxed(bit, pcie->msi_status + offset);
-+}
-+
-+static void update_msi_enable(struct irq_data *d, bool unmask)
-+{
-+=09unsigned long flags;
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+=09u32 offset =3D (d->hwirq / 32) * 4;
-+=09u32 bit =3D BIT(d->hwirq % 32);
-+=09u32 val;
-+
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+=09val =3D readl_relaxed(pcie->msi_enable + offset);
-+=09val =3D unmask ? val | bit : val & ~bit;
-+=09writel_relaxed(val, pcie->msi_enable + offset);
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+}
-+
-+static void tango_mask(struct irq_data *d)
-+{
-+=09update_msi_enable(d, false);
-+}
-+
-+static void tango_unmask(struct irq_data *d)
-+{
-+=09update_msi_enable(d, true);
-+}
-+
-+static int tango_set_affinity(struct irq_data *d,
-+=09=09const struct cpumask *mask, bool force)
-+{
-+=09return -EINVAL;
-+}
-+
-+static void tango_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
-+{
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+=09msg->address_lo =3D lower_32_bits(pcie->msi_doorbell);
-+=09msg->address_hi =3D upper_32_bits(pcie->msi_doorbell);
-+=09msg->data =3D d->hwirq;
-+}
-+
-+static struct irq_chip tango_chip =3D {
-+=09.irq_ack=09=09=3D tango_ack,
-+=09.irq_mask=09=09=3D tango_mask,
-+=09.irq_unmask=09=09=3D tango_unmask,
-+=09.irq_set_affinity=09=3D tango_set_affinity,
-+=09.irq_compose_msi_msg=09=3D tango_compose_msi_msg,
-+};
-+
-+static void msi_ack(struct irq_data *d)
-+{
-+=09irq_chip_ack_parent(d);
-+}
-+
-+static void msi_mask(struct irq_data *d)
-+{
-+=09pci_msi_mask_irq(d);
-+=09irq_chip_mask_parent(d);
-+}
-+
-+static void msi_unmask(struct irq_data *d)
-+{
-+=09pci_msi_unmask_irq(d);
-+=09irq_chip_unmask_parent(d);
-+}
-+
-+static struct irq_chip msi_chip =3D {
-+=09.name =3D "MSI",
-+=09.irq_ack =3D msi_ack,
-+=09.irq_mask =3D msi_mask,
-+=09.irq_unmask =3D msi_unmask,
-+};
-+
-+static struct msi_domain_info msi_dom_info =3D {
-+=09.flags=09=3D MSI_FLAG_PCI_MSIX
-+=09=09| MSI_FLAG_USE_DEF_DOM_OPS
-+=09=09| MSI_FLAG_USE_DEF_CHIP_OPS,
-+=09.chip=09=3D &msi_chip,
-+};
-+
-+static int tango_irq_domain_alloc(struct irq_domain *dom,
-+=09=09unsigned int virq, unsigned int nr_irqs, void *args)
-+{
-+=09int pos;
-+=09unsigned long flags;
-+=09struct tango_pcie *pcie =3D dom->host_data;
-+
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+=09pos =3D find_first_zero_bit(pcie->used_msi, MSI_MAX);
-+=09if (pos >=3D MSI_MAX) {
-+=09=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+=09=09return -ENOSPC;
-+=09}
-+=09__set_bit(pos, pcie->used_msi);
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+=09irq_domain_set_info(dom, virq, pos, &tango_chip,
-+=09=09=09pcie, handle_edge_irq, NULL, NULL);
-+
-+=09return 0;
-+}
-+
-+static void tango_irq_domain_free(struct irq_domain *dom,
-+=09=09unsigned int virq, unsigned int nr_irqs)
-+{
-+=09unsigned long flags;
-+=09struct irq_data *d =3D irq_domain_get_irq_data(dom, virq);
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+=09__clear_bit(d->hwirq, pcie->used_msi);
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+}
-+
-+static const struct irq_domain_ops irq_dom_ops =3D {
-+=09.alloc=09=3D tango_irq_domain_alloc,
-+=09.free=09=3D tango_irq_domain_free,
-+};
-+
-+static int tango_msi_remove(struct platform_device *pdev)
-+{
-+=09struct tango_pcie *pcie =3D platform_get_drvdata(pdev);
-+
-+=09irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-+=09irq_domain_remove(pcie->msi_dom);
-+=09irq_domain_remove(pcie->irq_dom);
-+
-+=09return 0;
-+}
-+
-+static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie=
- *pcie)
-+{
-+=09int i, virq;
-+=09struct irq_domain *msi_dom, *irq_dom;
-+=09struct fwnode_handle *fwnode =3D of_node_to_fwnode(pdev->dev.of_node);
-+
-+=09spin_lock_init(&pcie->used_msi_lock);
-+=09for (i =3D 0; i < MSI_MAX / 32; ++i)
-+=09=09writel_relaxed(0, pcie->msi_enable + i * 4);
-+
-+=09virq =3D platform_get_irq(pdev, 1);
-+=09if (virq <=3D 0) {
-+=09=09pr_err("Failed to map IRQ\n");
-+=09=09return -ENXIO;
-+=09}
-+
-+=09irq_dom =3D irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pci=
-e);
-+=09if (!irq_dom) {
-+=09=09pr_err("Failed to create IRQ domain\n");
-+=09=09return -ENOMEM;
-+=09}
-+
-+=09msi_dom =3D pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
-+=09if (!msi_dom) {
-+=09=09pr_err("Failed to create MSI domain\n");
-+=09=09irq_domain_remove(irq_dom);
-+=09=09return -ENOMEM;
-+=09}
-+
-+=09pcie->irq_dom =3D irq_dom;
-+=09pcie->msi_dom =3D msi_dom;
-+=09pcie->irq =3D virq;
-+
-+=09irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
-+
-+=09return 0;
-+}
-+
- /*** HOST BRIDGE SUPPORT ***/
-=20
- static int smp8759_config_read(struct pci_bus *bus,
-@@ -88,6 +301,9 @@ static int tango_check_pcie_link(void __iomem *test_out)
- static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
- {
- =09pcie->mux=09=09=3D base + SMP8759_MUX;
-+=09pcie->msi_status=09=3D base + SMP8759_STATUS;
-+=09pcie->msi_enable=09=3D base + SMP8759_ENABLE;
-+=09pcie->msi_doorbell=09=3D SMP8759_DOORBELL;
-=20
- =09return tango_check_pcie_link(base + SMP8759_TEST_OUT);
- }
-@@ -121,11 +337,21 @@ static int tango_pcie_probe(struct platform_device *p=
-dev)
- =09if (ret)
- =09=09return ret;
-=20
-+=09ret =3D tango_msi_probe(pdev, pcie);
-+=09if (ret)
-+=09=09return ret;
-+
- =09return pci_host_common_probe(pdev, &smp8759_ecam_ops);
- }
-=20
-+static int tango_pcie_remove(struct platform_device *pdev)
-+{
-+=09return tango_msi_remove(pdev);
-+}
-+
- static struct platform_driver tango_pcie_driver =3D {
- =09.probe=09=3D tango_pcie_probe,
-+=09.remove=09=3D tango_pcie_remove,
- =09.driver=09=3D {
- =09=09.name =3D KBUILD_MODNAME,
- =09=09.of_match_table =3D tango_pcie_ids,
---=20
-2.11.0
+On Fri, Jun 23, 2017 at 02:45:38PM -0700, Palmer Dabbelt wrote:
+> We wanted to add RISC-V to the list of architectures that used the
+> generic PCI setup-irq.o inside the Makefile and it was suggested that
+> instead we define a Kconfig entry and use that.
+> 
+> I've done very minimal testing on this: I just checked to see that
+> an aarch64 defconfig still build setup-irq.o with the patch applied.
+> The intention is that this patch doesn't change the behavior of any
+> build.
+> 
+> Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
+
+Lorenzo Pieralisi's "ARM/ARM64: remove pci_fixup_irqs() usage" series
+overlaps with this quite a bit, and includes this patch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/enumeration&id=5b64036feff4
+
+which makes it so we build setup-irq.o on *all* arches.  Can you check
+out the pci/enumeration branch and see whether it accomplishes what
+you need?
+
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/enumeration
+
+> ---
+>  arch/alpha/Kconfig     |  1 +
+>  arch/arc/Kconfig       |  1 +
+>  arch/arm/Kconfig       |  1 +
+>  arch/arm64/Kconfig     |  1 +
+>  arch/m68k/Kconfig      |  1 +
+>  arch/mips/Kconfig      |  1 +
+>  arch/sh/Kconfig        |  1 +
+>  arch/sparc/Kconfig     |  1 +
+>  arch/tile/Kconfig      |  1 +
+>  arch/unicore32/Kconfig |  1 +
+>  drivers/pci/Kconfig    |  3 +++
+>  drivers/pci/Makefile   | 11 +----------
+>  12 files changed, 14 insertions(+), 10 deletions(-)
+> 
+> diff --git a/arch/alpha/Kconfig b/arch/alpha/Kconfig
+> index 0e49d39ea74a..30f4e711f681 100644
+> --- a/arch/alpha/Kconfig
+> +++ b/arch/alpha/Kconfig
+> @@ -26,6 +26,7 @@ config ALPHA
+>  	select ODD_RT_SIGACTION
+>  	select OLD_SIGSUSPEND
+>  	select CPU_NO_EFFICIENT_FFS if !ALPHA_EV67
+> +	select PCI_GENERIC_SETUP
+>  	help
+>  	  The Alpha is a 64-bit general-purpose processor designed and
+>  	  marketed by the Digital Equipment Corporation of blessed memory,
+> diff --git a/arch/arc/Kconfig b/arch/arc/Kconfig
+> index a5459698f0ee..dd1f64858118 100644
+> --- a/arch/arc/Kconfig
+> +++ b/arch/arc/Kconfig
+> @@ -44,6 +44,7 @@ config ARC
+>  	select HAVE_GENERIC_DMA_COHERENT
+>  	select HAVE_KERNEL_GZIP
+>  	select HAVE_KERNEL_LZMA
+> +	select PCI_GENERIC_SETUP
+>  
+>  config MIGHT_HAVE_PCI
+>  	bool
+> diff --git a/arch/arm/Kconfig b/arch/arm/Kconfig
+> index 4c1a35f15838..86872246951c 100644
+> --- a/arch/arm/Kconfig
+> +++ b/arch/arm/Kconfig
+> @@ -96,6 +96,7 @@ config ARM
+>  	select PERF_USE_VMALLOC
+>  	select RTC_LIB
+>  	select SYS_SUPPORTS_APM_EMULATION
+> +	select PCI_GENERIC_SETUP
+>  	# Above selects are sorted alphabetically; please add new ones
+>  	# according to that.  Thanks.
+>  	help
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index b2024db225a9..6c684d8c8816 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -115,6 +115,7 @@ config ARM64
+>  	select SPARSE_IRQ
+>  	select SYSCTL_EXCEPTION_TRACE
+>  	select THREAD_INFO_IN_TASK
+> +	select PCI_GENERIC_SETUP
+>  	help
+>  	  ARM 64-bit (AArch64) Linux support.
+>  
+> diff --git a/arch/m68k/Kconfig b/arch/m68k/Kconfig
+> index d140206d5d29..c16214344f1c 100644
+> --- a/arch/m68k/Kconfig
+> +++ b/arch/m68k/Kconfig
+> @@ -22,6 +22,7 @@ config M68K
+>  	select MODULES_USE_ELF_RELA
+>  	select OLD_SIGSUSPEND3
+>  	select OLD_SIGACTION
+> +	select PCI_GENERIC_SETUP
+>  
+>  config RWSEM_GENERIC_SPINLOCK
+>  	bool
+> diff --git a/arch/mips/Kconfig b/arch/mips/Kconfig
+> index 2828ecde133d..474a7c710686 100644
+> --- a/arch/mips/Kconfig
+> +++ b/arch/mips/Kconfig
+> @@ -70,6 +70,7 @@ config MIPS
+>  	select HAVE_EXIT_THREAD
+>  	select HAVE_REGS_AND_STACK_ACCESS_API
+>  	select HAVE_COPY_THREAD_TLS
+> +	select PCI_GENERIC_SETUP
+>  
+>  menu "Machine selection"
+>  
+> diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+> index ee086958b2b2..90a98ac526fb 100644
+> --- a/arch/sh/Kconfig
+> +++ b/arch/sh/Kconfig
+> @@ -48,6 +48,7 @@ config SUPERH
+>  	select HAVE_ARCH_AUDITSYSCALL
+>  	select HAVE_FUTEX_CMPXCHG if FUTEX
+>  	select HAVE_NMI
+> +	select PCI_GENERIC_SETUP
+>  	help
+>  	  The SuperH is a RISC processor targeted for use in embedded systems
+>  	  and consumer electronics; it was also used in the Sega Dreamcast
+> diff --git a/arch/sparc/Kconfig b/arch/sparc/Kconfig
+> index 5639c9fe5b55..24cea64104bd 100644
+> --- a/arch/sparc/Kconfig
+> +++ b/arch/sparc/Kconfig
+> @@ -424,6 +424,7 @@ config SPARC_LEON
+>  	depends on SPARC32
+>  	select USB_EHCI_BIG_ENDIAN_MMIO
+>  	select USB_EHCI_BIG_ENDIAN_DESC
+> +	select PCI_GENERIC_SETUP
+>  	---help---
+>  	  If you say Y here if you are running on a SPARC-LEON processor.
+>  	  The LEON processor is a synthesizable VHDL model of the
+> diff --git a/arch/tile/Kconfig b/arch/tile/Kconfig
+> index 4583c0320059..6679af85a882 100644
+> --- a/arch/tile/Kconfig
+> +++ b/arch/tile/Kconfig
+> @@ -33,6 +33,7 @@ config TILE
+>  	select USER_STACKTRACE_SUPPORT
+>  	select USE_PMC if PERF_EVENTS
+>  	select VIRT_TO_BUS
+> +	select PCI_GENERIC_SETUP
+>  
+>  config MMU
+>  	def_bool y
+> diff --git a/arch/unicore32/Kconfig b/arch/unicore32/Kconfig
+> index 0769066929c6..162a7d3def0c 100644
+> --- a/arch/unicore32/Kconfig
+> +++ b/arch/unicore32/Kconfig
+> @@ -18,6 +18,7 @@ config UNICORE32
+>  	select ARCH_WANT_FRAME_POINTERS
+>  	select GENERIC_IOMAP
+>  	select MODULES_USE_ELF_REL
+> +	select PCI_GENERIC_SETUP
+>  	help
+>  	  UniCore-32 is 32-bit Instruction Set Architecture,
+>  	  including a series of low-power-consumption RISC chip
+> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+> index e0cacb7b8563..658c9f95ab3f 100644
+> --- a/drivers/pci/Kconfig
+> +++ b/drivers/pci/Kconfig
+> @@ -131,6 +131,9 @@ config PCI_HYPERV
+>            The PCI device frontend driver allows the kernel to import arbitrary
+>            PCI devices from a PCI backend to support PCI driver domains.
+>  
+> +config PCI_GENERIC_SETUP
+> +	def_bool n
+> +
+>  source "drivers/pci/hotplug/Kconfig"
+>  source "drivers/pci/dwc/Kconfig"
+>  source "drivers/pci/host/Kconfig"
+> diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+> index 462c1f5f5546..26f4710c88ec 100644
+> --- a/drivers/pci/Makefile
+> +++ b/drivers/pci/Makefile
+> @@ -31,16 +31,7 @@ obj-$(CONFIG_PCI_IOV) += iov.o
+>  #
+>  # Some architectures use the generic PCI setup functions
+>  #
+> -obj-$(CONFIG_ALPHA) += setup-irq.o
+> -obj-$(CONFIG_ARC) += setup-irq.o
+> -obj-$(CONFIG_ARM) += setup-irq.o
+> -obj-$(CONFIG_ARM64) += setup-irq.o
+> -obj-$(CONFIG_UNICORE32) += setup-irq.o
+> -obj-$(CONFIG_SUPERH) += setup-irq.o
+> -obj-$(CONFIG_MIPS) += setup-irq.o
+> -obj-$(CONFIG_TILE) += setup-irq.o
+> -obj-$(CONFIG_SPARC_LEON) += setup-irq.o
+> -obj-$(CONFIG_M68K) += setup-irq.o
+> +obj-$(CONFIG_PCI_GENERIC_SETUP) += setup-irq.o
+>  
+>  #
+>  # ACPI Related PCI FW Functions
+> -- 
+> 2.13.0
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
