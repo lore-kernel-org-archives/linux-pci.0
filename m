@@ -1,113 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 2/7] dt-bindings: PCI: Describe ATS property for root
- complex nodes
-To: Rob Herring <robh@kernel.org>
-References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
- <20170524180143.19855-3-jean-philippe.brucker@arm.com>
- <20170531172320.3u6bdctv44aqighy@rob-hp-laptop>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <cd63a2dc-8259-482d-19e9-9db60be866f7@arm.com>
-Date: Thu, 1 Jun 2017 13:28:01 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52630 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752792AbdF0XVA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 19:21:00 -0400
+Date: Tue, 27 Jun 2017 18:20:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mediatek: change to use the new host bridge
+ interface
+Message-ID: <20170627232057.GK17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+ <1498555451-55073-2-git-send-email-ryder.lee@mediatek.com>
+ <20170627223039.GE17844@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170531172320.3u6bdctv44aqighy@rob-hp-laptop>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- linux-pci@vger.kernel.org, joro@8bytes.org, thunder.leizhen@huawei.com,
- rjw@rjwysocki.net, will.deacon@arm.com, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, bhelgaas@google.com,
- tn@semihalf.com, sunil.kovvuri@gmail.com, robin.murphy@arm.com,
- linux-arm-kernel@lists.infradead.org, lenb@kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170627223039.GE17844@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/17 18:23, Rob Herring wrote:
-> On Wed, May 24, 2017 at 07:01:38PM +0100, Jean-Philippe Brucker wrote:
->> Address Translation Service (ATS) is an extension to PCIe allowing
->> endpoints to manage their own IOTLB, called Address Translation Cache
->> (ATC). Instead of having every memory transaction processed by the IOMMU,
->> the endpoint can first send an Address Translation Requests for an IOVA,
->> obtain the corresponding Physical Address from the IOMMU and store it in
->> its ATC. Subsequent transactions to this memory region can be performed on
->> the PA, in which case they are marked 'translated' and (partially) bypass
->> the IOMMU.
->>
->> Since the extension uses fields that were previously reserved in the
->> PCIe Translation Layer Packet, it seems ill-advised to enabled it on a
->> system that doesn't fully support ATS.
->>
->> To "old" root complexes that simply ignored the new AT field, an Address
->> Translation Request will look exactly like a Memory Read Request, so the
->> root bridge will forward a memory read to the IOMMU instead of a
->> translation request. If the access succeeds, the RC will send a Read
->> Completion, which looks like a Translation Completion, back to the
->> endpoint. As a result the endpoint might end up storing the content of
->> memory instead of a physical address in its ATC. In reality, it's more
->> likely that the size fields will be invalid and either end will detect the
->> error, but in any case, it is undesirable.
->>
->> Add a way for firmware to tell the OS that ATS is supported by the PCI
->> root complex.
+On Tue, Jun 27, 2017 at 05:30:40PM -0500, Bjorn Helgaas wrote:
+> On Tue, Jun 27, 2017 at 05:24:11PM +0800, Ryder Lee wrote:
+> > With the introduction of pci_scan_root_bus_bridge() there is no need to
+> > export pci_register_host_bridge() to other kernel subsystems other than the
+> > PCI compilation unit that needs it.
+> > 
+> > Make pci_register_host_bridge() static to its compilation unit and convert
+> > the existing drivers usage over to pci_scan_root_bus_bridge().
+> > 
+> > Also, when probing the PCI host controller driver, if an error occurs, the probe
+> > function code does not free memory allocated for the struct pci_host_bridge
+> > resulting in memory leakage.
+> > 
+> > This patch fixes them by using the methods that introduces by Lorenzo.
+> > 
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 > 
-> Can't firmware have already enabled ATS? Often for things like this, not 
-> present means "use firmware setting".
-
-I don't think it's up to firmware to enable ATS in endpoints, because it
-depends on IOMMU properties (e.g. configured page size). It must also be
-enabled after the PASID capability, which the OS may or may not want to
-enable.
-
-While endpoints have ATS capability and config register, there is no
-architected mechanism in root complexes as far as I know. So firmware may
-have a mechanism outside the OS scope to toggle ATS in the root complex.
-If there is a bug and firmware cannot enable ATS, then the OS must be made
-aware of it, so that it doesn't enable ATS in endpoints, or else we might
-end up with silent memory corruption as described above. (Lack of ATS may
-slow the system down but shouldn't be fatal.)
-
-If the SMMU supports ATS, then the root complex attached to it will most
-likely supports ATS. The switch in this patch simply allows firmware to
-confirm that.
-
->> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
->> ---
->>  Documentation/devicetree/bindings/pci/pci-iommu.txt | 8 ++++++++
->>  1 file changed, 8 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/pci-iommu.txt b/Documentation/devicetree/bindings/pci/pci-iommu.txt
->> index 0def586fdcdf..f21a68ec471a 100644
->> --- a/Documentation/devicetree/bindings/pci/pci-iommu.txt
->> +++ b/Documentation/devicetree/bindings/pci/pci-iommu.txt
->> @@ -44,6 +44,14 @@ Optional properties
->>  - iommu-map-mask: A mask to be applied to each Requester ID prior to being
->>    mapped to an IOMMU specifier per the iommu-map property.
->>  
->> +- ats-supported: if present, the root complex supports the Address
->> +  Translation Service (ATS). It is able to interpret the AT field in PCIe
->> +  Transaction Layer Packets, and forward Translation Completions or
->> +  Invalidation Requests to endpoints.
+> I rebased my pci/host-mediatek branch on top of pci/enumeration (which
+> contains the series from Lorenzo), and folded this into the initial
+> MediaTek driver commit.
 > 
-> Why can't this be based on the compatible strings?
+> This branch:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-mediatek&id=b6ca15d18881b784dc9efc5d81989be26ecd9fc8
+> 
+> should have all the MediaTek bits I know about.  Can you double-check
+> it, please?
 
-Host controllers like the generic ECAM one should be able to advertise
-ATS, if for instance the virtual IOMMU in Qemu offers a channel for ATS
-invalidation. In that case we would have pci-host-{e,}cam-generic{-ats,}
-compatible strings and double the number of compatible strings each time
-we add a similar capability.
-
-Thanks,
-Jean
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sorry, that's wrong; I see your controller powerup stuff in patchwork, and
+that's *not* included yet.
