@@ -1,214 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Palmer Dabbelt <palmer@dabbelt.com>
-To: linux-pci@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-To: bhelgaas@google.com
-To: hch@infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-snps-arc@lists.infradead.org
-Cc: linux-cris-kernel@axis.com
-Cc: linux-ia64@vger.kernel.org
-Cc: linux-s390@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Cc: sparclinux@vger.kernel.org
-Cc: Palmer Dabbelt <palmer@dabbelt.com>
-Subject: [PATCH 1/3] pci: Add a generic, weakly-linked pcibios_fixup_bus
-Date: Fri, 23 Jun 2017 18:50:42 -0700
-Message-Id: <20170624015044.16746-2-palmer@dabbelt.com>
-In-Reply-To: <20170624015044.16746-1-palmer@dabbelt.com>
-References: <20170624015044.16746-1-palmer@dabbelt.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:43932 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753653AbdF0Vjs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jun 2017 17:39:48 -0400
+Message-ID: <5952D144.8060609@oracle.com>
+Date: Tue, 27 Jun 2017 17:42:28 -0400
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
+MIME-Version: 1.0
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH v4] PCI: Workaround wrong flags completions for IDT switch
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Multiple architectures define this as an empty function, and I'm adding
-another one as part of the RISC-V port.  This adds a __weak version of
-pci_fixup_bios and deletes the now obselete ones in a handful of ports.
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 
-The only functional change should be that microblaze used to export
-pcibios_fixup_bus.  None of the other architectures export this, so I
-just dropped it.
+The IDT switch incorrectly flags an ACS source violation on a read config
+request to an end point device on the completion (IDT 89H32H8G3-YC,
+errata #36) even though the PCI Express spec states that completions are
+never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
 
-Signed-off-by: Palmer Dabbelt <palmer@dabbelt.com>
----
- arch/arc/kernel/pcibios.c             |  4 ----
- arch/arm64/kernel/pci.c               |  8 --------
- arch/cris/arch-v32/drivers/pci/bios.c |  4 ----
- arch/microblaze/pci/pci-common.c      |  6 ------
- arch/s390/pci/pci.c                   |  4 ----
- arch/sh/drivers/pci/pci.c             |  8 --------
- arch/sparc/kernel/pci.c               |  4 ----
- arch/tile/kernel/pci.c                |  8 --------
- arch/tile/kernel/pci_gx.c             |  5 -----
- drivers/pci/probe.c                   | 10 ++++++++++
- 10 files changed, 10 insertions(+), 51 deletions(-)
+The suggested workaround by IDT is to issue a configuration write to the
+downstream device before issuing the first config read. This allows the
+downstream device to capture its bus number, thus avoiding the ACS
+violation on the completion.
 
-diff --git a/arch/arc/kernel/pcibios.c b/arch/arc/kernel/pcibios.c
-index 72e1d73d0bd6..1c8df8fd5fed 100644
---- a/arch/arc/kernel/pcibios.c
-+++ b/arch/arc/kernel/pcibios.c
-@@ -16,7 +16,3 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- {
- 	return res->start;
- }
--
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--}
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index c7e3e6387a49..4c7f451aca05 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -23,14 +23,6 @@
- #include <linux/slab.h>
- 
- /*
-- * Called after each bus is probed, but before its children are examined
-- */
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--	/* nothing to do, expected to be removed in the future */
--}
--
--/*
-  * We don't have to worry about legacy ISA devices, so nothing to do here
-  */
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index 394c2a73d5e2..5cc622c0225e 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -2,10 +2,6 @@
- #include <linux/kernel.h>
- #include <hwregs/intr_vect.h>
- 
--void pcibios_fixup_bus(struct pci_bus *b)
--{
--}
--
- void pcibios_set_master(struct pci_dev *dev)
- {
- 	u8 lat;
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 404fb38d06b7..940f266e5d5c 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -810,12 +810,6 @@ void pcibios_setup_bus_devices(struct pci_bus *bus)
- 	}
- }
- 
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--	/* nothing to do */
--}
--EXPORT_SYMBOL(pcibios_fixup_bus);
--
- /*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 8051df109db3..98a54dd63483 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -234,10 +234,6 @@ static int zpci_cfg_store(struct zpci_dev *zdev, int offset, u32 val, u8 len)
- 	return rc;
- }
- 
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--}
--
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				       resource_size_t size,
- 				       resource_size_t align)
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index c99ee286b69f..749642e1272e 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -155,14 +155,6 @@ static int __init pcibios_init(void)
- subsys_initcall(pcibios_init);
- 
- /*
-- *  Called after each bus is probed, but before its children
-- *  are examined.
-- */
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--}
--
--/*
-  * We need to avoid collisions with `mirrored' VGA ports
-  * and other strange ISA hardware, so we always want the
-  * addresses to be allocated in the 0x000-0x0ff region
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 7eceaa10836f..78d3dc25e126 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -690,10 +690,6 @@ struct pci_bus *pci_scan_one_pbm(struct pci_pbm_info *pbm,
- 	return bus;
- }
- 
--void pcibios_fixup_bus(struct pci_bus *pbus)
--{
--}
--
- resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 				resource_size_t size, resource_size_t align)
- {
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index bc6656b5708b..3113d4d5c329 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -369,14 +369,6 @@ int __init pcibios_init(void)
- }
- subsys_initcall(pcibios_init);
- 
--/*
-- * No bus fixups needed.
-- */
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--	/* Nothing needs to be done. */
--}
--
- void pcibios_set_master(struct pci_dev *dev)
- {
- 	/* No special bus mastering setup handling. */
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index b554a68eea1b..b89172b592cc 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -1038,11 +1038,6 @@ int __init pcibios_init(void)
- }
- subsys_initcall(pcibios_init);
- 
--/* No bus fixups needed. */
--void pcibios_fixup_bus(struct pci_bus *bus)
--{
--}
--
- /* Process any "pci=" kernel boot arguments. */
- char *__init pcibios_setup(char *str)
- {
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 19c8950c6c38..1ff44dde7164 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2227,6 +2227,16 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
- }
- EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
- 
-+/*
-+ * Called after each bus is probed, but before its children are examined.  This
-+ * is marked as __weak because multiple architectures define it
+The patch does the following -
+
+1. Disable ACS source violation if enabled
+2. Wait for config space access to become available by reading vendor id
+3. Do a config write to the end point (errata workaround)
+4. Enable ACS source validation (if it was enabled to begin with)
+
+-v2: move workaround to pci_bus_read_dev_vendor_id() from 
+pci_bus_check_dev()
+      and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
+-v3: add bus->self check for root bus and virtual bus for sriov vfs.
+-v4: only do workaround for IDT switches
+
+Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+--
+
+  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
+  drivers/pci/pci.h   |  1 +
+  drivers/pci/probe.c | 38 ++++++++++++++++++++++++++++++++++++--
+  3 files changed, 70 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 563901c..a7a2e2b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2835,6 +2835,39 @@ static bool pci_acs_flags_enabled(struct pci_dev 
+*pdev, u16 acs_flags)
+  }
+
+  /**
++ *  pci_std_enable_acs_sv - enable/disable ACS source validation if 
+supported by the switch
++ *  @dev - pcie switch/RP
++ *  @enable - enable (1) or disable (0) source validation
++ *
++ *  Returns : < 0 on failure
++ *           previous acs_sv state
 + */
-+__attribute__ ((weak))
-+void pcibios_fixup_bus(struct pci_bus *bus)
++int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable)
 +{
-+       /* nothing to do, expected to be removed in the future */
++	int pos;
++	u16 cap;
++	u16 ctrl;
++	int retval;
++
++	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
++	if (!pos)
++		return -ENODEV;
++
++	pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
++	pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
++
++	retval = !!(ctrl & cap & PCI_ACS_SV);
++	if (enable)
++		ctrl |= (cap & PCI_ACS_SV);
++	else
++		ctrl &= ~(cap & PCI_ACS_SV);
++
++	pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
++
++	return retval;
 +}
 +
- unsigned int pci_scan_child_bus(struct pci_bus *bus)
- {
- 	unsigned int devfn, pass, max = bus->busn_res.start;
--- 
-2.13.0
++/**
+   * pci_acs_enabled - test ACS against required flags for a given device
+   * @pdev: device to test
+   * @acs_flags: required PCI ACS flags
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f8113e5..3960c2a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -343,6 +343,7 @@ static inline resource_size_t 
+pci_resource_alignment(struct pci_dev *dev,
+  }
+
+  void pci_enable_acs(struct pci_dev *dev);
++int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable);
+
+  #ifdef CONFIG_PCIE_PTM
+  void pci_ptm_init(struct pci_dev *dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950..c154a90 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1763,8 +1763,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+  }
+  EXPORT_SYMBOL(pci_alloc_dev);
+
+-bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+-				int crs_timeout)
++static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn,
++					 u32 *l, int crs_timeout)
+  {
+  	int delay = 1;
+
+@@ -1801,6 +1801,40 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus 
+*bus, int devfn, u32 *l,
+
+  	return true;
+  }
++
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++				int crs_timeout)
++{
++	int found;
++	int enable = -1;
++	int idt_workaround = (bus->self && (bus->self->vendor == 
+PCI_VENDOR_ID_IDT));
++	/*
++	 * Some IDT switches flag an ACS violation for config reads
++	 * even though the PCI spec allows for it (PCIe 3.1, 6.1.12.1)
++	 * It flags it because the bus number is not properly set in the
++	 * completion. The workaround is to do a dummy write to properly
++	 * latch number once the device is ready for config operations
++	 */
++
++	if (idt_workaround)
++		enable = pci_std_enable_acs_sv(bus->self, false);
++
++	found = __pci_bus_read_dev_vendor_id(bus, devfn, l, crs_timeout);
++
++	/*
++	 * The fact that we can read the vendor id indicates that the device
++	 * is ready for config operations. Do the write as part of the errata
++	 * workaround.
++	 */
++	if (idt_workaround) {
++		if (found)
++			pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID, 0);
++		if (enable > 0)
++			pci_std_enable_acs_sv(bus->self, enable);
++	}
++
++	return found;
++}
+  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
