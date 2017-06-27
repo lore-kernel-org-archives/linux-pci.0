@@ -1,89 +1,74 @@
-Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v6 3/3] PCI: Add tango MSI controller support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
- <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
- <82d6bf37-96b9-cd9d-134b-f01638fa2b1b@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <d39b5b3a-48be-7aaa-b7dd-28d4ae1d2083@arm.com>
-Date: Tue, 13 Jun 2017 15:22:39 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54276 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753975AbdF0Xna (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 19:43:30 -0400
+Date: Tue, 27 Jun 2017 18:43:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 0/5] PM: Unify the handling of device wakeup settings
+Message-ID: <20170627234326.GO17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <12296383.UdE5HVtyng@aspire.rjw.lan>
+ <2524735.NRzn8A9HAf@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <82d6bf37-96b9-cd9d-134b-f01638fa2b1b@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2524735.NRzn8A9HAf@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/06/17 15:01, Marc Gonzalez wrote:
-> The MSI controller in Tango supports 256 message-signaled interrupts,
-> and a single doorbell address.
+Hi Rafael,
+
+On Sat, Jun 24, 2017 at 01:50:55AM +0200, Rafael J. Wysocki wrote:
+> On Monday, June 19, 2017 11:31:58 PM Rafael J. Wysocki wrote:
+> > Hi All,
+> > 
+> > The handling of device wakeup settings, especially in the ACPI core and the PCI
+> > bus type, depends on whether it is about system wakeup from sleep states or
+> > remote wakeup in the working state (runtime).  However, that distinction is
+> > mostly based on the ACPI concept of "wakeup" and "runtime" GPEs, which is
+> > somewhat artificial, because the underlying hardware mechanism is basically
+> > the same in both cases.
+> > 
+> > Moreover, suspend-to-idle is now supported as a sleep state and wakeup from it
+> > is based on exactly the same hardware capabilities as the working-state
+> > (runtime) remote wakeup.
+> > 
+> > The following patch series removes that distinction and unifies the handling of
+> > device wakeup settings between system sleep and runtime.  It also fixes one
+> > issue related to wakeup signaling through PCI bridges.
+> > 
+> > [1/6]: Get rid of the "runtime wakeup" concept from the ACPI core.
+> > [2/6]: Unify device wakeup settings code paths in the ACPI core.
+> > [3-4/6]: Unify device wakeup settings code paths in the PCI bus type code.
+> > [5/6]: Fix wakeup-related issue with bridges in the PCI bus type code.
+> > [6/6]: Get rid of the "runtime wakeup" concept from the driver core.
+> > 
+> > The series is based on current linux-next and will be made available for
+> > testing in the linux-pm.git tree in a couple of days.
 > 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> ---
-> Changes from v5 to v6
-> o Rename 'used' bitmap to 'used_msi'
-> o Rename 'lock' spinlock to 'used_msi_lock'
-> o Take lock in interrupt handler
-> o Remove irq_dom in error path
-> ---
->  drivers/pci/host/pcie-tango.c | 225 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 225 insertions(+)
+> Here's a v2 with tentatively added Reviewed-by tags from Mika.
 > 
-> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-> index 67aaadcc1c5e..b06446b23bc8 100644
-> --- a/drivers/pci/host/pcie-tango.c
-> +++ b/drivers/pci/host/pcie-tango.c
-> @@ -1,16 +1,228 @@
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/irqdomain.h>
->  #include <linux/pci-ecam.h>
->  #include <linux/delay.h>
-> +#include <linux/msi.h>
->  #include <linux/of.h>
->  
->  #define MSI_MAX 256
->  
->  #define SMP8759_MUX		0x48
->  #define SMP8759_TEST_OUT	0x74
-> +#define SMP8759_STATUS		0x80
-> +#define SMP8759_ENABLE		0xa0
-> +#define SMP8759_DOORBELL	0xa002e07c
->  
->  struct tango_pcie {
-> +	DECLARE_BITMAP(used_msi, MSI_MAX);
-> +	spinlock_t used_msi_lock;
->  	void __iomem *mux;
-> +	void __iomem *msi_status;
-> +	void __iomem *msi_enable;
-> +	phys_addr_t msi_doorbell;
-> +	struct irq_domain *irq_dom;
-> +	struct irq_domain *msi_dom;
-> +	int irq;
->  };
->  
-> +/*** MSI CONTROLLER SUPPORT ***/
-> +
-> +static void tango_msi_isr(struct irq_desc *desc)
-> +{
-> +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
-> +	unsigned long flags, status, base, virq, idx, pos = 0;
-> +
-> +	chained_irq_enter(chip, desc);
-> +	spin_lock_irqsave(&pcie->used_msi_lock, flags);
+> I've dropped patch [5/6] from the previous iteration as it didn't really belong
+> here and the issue it attempted to fix is rather theoretical.  I'm going to
+> take a different approach there.
+> 
+> Apart from this, the function previously called acpi_pm_device_wakeup() has
+> a different name now: acpi_pm_set_device_wakeup(), to possibly avoid
+> confusion about its purpose.
+> 
+> Also the changelog of patch [3/5] has been modified slightly.
 
-You're already in interrupt context, so there is no need to disable
-interrupts any further. spin_lock() should do the trick
+This series does touch drivers/pci, but is mostly ACPI.  Do you want
+to take it via your tree?  I have a couple PM changes in my tree, but
+I don't see anything that should conflict with this series.
 
-Thanks,
+For the PCI parts:
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
