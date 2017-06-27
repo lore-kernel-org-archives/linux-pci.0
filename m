@@ -1,63 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:2072 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752373AbdFQT7N (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jun 2017 15:59:13 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v5 4/4] PCI: xilinx: Allow build on MIPS platforms
-Date: Sat, 17 Jun 2017 12:57:41 -0700
-Message-ID: <20170617195741.12757-5-paul.burton@imgtec.com>
-In-Reply-To: <20170617195741.12757-1-paul.burton@imgtec.com>
-References: <20170617195741.12757-1-paul.burton@imgtec.com>
+Received: from mail.kernel.org ([198.145.29.99]:50094 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751900AbdF0WhH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 18:37:07 -0400
+Date: Tue, 27 Jun 2017 17:37:04 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] ARM/PCI: iop13xx: address uninitialized variable
+ warning
+Message-ID: <20170627223704.GF17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170621215323.3921382-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170621215323.3921382-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow the xilinx-pcie driver to be built on MIPS platforms which make
-use of generic PCI drivers rather than legacy MIPS-specific interfaces.
-This is used on the MIPS Boston development board.
+On Wed, Jun 21, 2017 at 11:52:59PM +0200, Arnd Bergmann wrote:
+> The last rework returned a variable that the compiler cannot prove
+> to be initialized:
+> 
+> arch/arm/mach-iop13xx/pci.c: In function 'iop13xx_scan_bus':
+> arch/arm/mach-iop13xx/pci.c:509:17: error: 'ret' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> In the switch statement that sets the return value, this adds
+> a default returning an error.
+> 
+> Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
+Folded into Lorenzo's series on pci/enumeration, thanks!
 
----
-
-Changes in v5: None
-
-Changes in v4:
-- Depend on PCI_DRIVERS_GENERIC, which the driver won't work on MIPS without.
-
-Changes in v3:
-- Split out from Boston patchset.
-
-Changes in v2: None
-
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 7f47cd5e10a5..22d4405914ec 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -71,7 +71,7 @@ config PCI_HOST_GENERIC
- 
- config PCIE_XILINX
- 	bool "Xilinx AXI PCIe host bridge support"
--	depends on ARCH_ZYNQ || MICROBLAZE
-+	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC)
- 	help
- 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
- 	  Host Bridge driver.
--- 
-2.13.1
+> ---
+>  arch/arm/mach-iop13xx/pci.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
+> index b97879bfb81a..3c51a9bb9b49 100644
+> --- a/arch/arm/mach-iop13xx/pci.c
+> +++ b/arch/arm/mach-iop13xx/pci.c
+> @@ -553,6 +553,8 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
+>  		if (!ret)
+>  			pci_bus_atue = bridge->bus;
+>  		break;
+> +	default:
+> +		ret = -EINVAL;
+>  	}
+>  
+>  	return ret;
+> -- 
+> 2.9.0
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
