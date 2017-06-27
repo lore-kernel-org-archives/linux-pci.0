@@ -1,240 +1,147 @@
-Return-Path: <SRS0=wzvk=5T=gmail.com=alexdeucher@kernel.org>
-Return-Path: <SRS0=wzvk=5T=gmail.com=alexdeucher@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1496998787-6371-7-git-send-email-deathsimple@vodafone.de>
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de> <1496998787-6371-7-git-send-email-deathsimple@vodafone.de>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Wed, 14 Jun 2017 15:27:46 -0400
-Message-ID: <CADnq5_NBK-3QNs9gOXrtzyKGHnN7Y1wFQxv9tHkT5Xtv=YGidA@mail.gmail.com>
-Subject: Re: [PATCH v5 6/6] drm/amdgpu: resize VRAM BAR for CPU access v3
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, amd-gfx list <amd-gfx@lists.freedesktop.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:50373 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751453AbdF0AeC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 20:34:02 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5] PCI: use IDA to manage domain number if not getting it from DT
+Date: Tue, 27 Jun 2017 08:31:13 +0800
+Message-Id: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 9, 2017 at 4:59 AM, Christian K=C3=B6nig <deathsimple@vodafone.=
-de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Try to resize BAR0 to let CPU access all of VRAM.
->
-> v2: rebased, style cleanups, disable mem decode before resize,
->     handle gmc_v9 as well, round size up to power of two.
-> v3: handle gmc_v6 as well, release and reassign all BARs in the driver.
->
-> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
-> ---
->  drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 40 ++++++++++++++++++++++++=
-++++++
->  drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c      |  8 +++---
->  drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++---
->  drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++---
->  drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 +++++---
->  6 files changed, 62 insertions(+), 13 deletions(-)
->
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/am=
-dgpu/amdgpu.h
-> index c6a2ca4..87655e2 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> @@ -1943,6 +1943,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_devi=
-ce *adev, struct ttm_tt *ttm,
->                                  struct ttm_mem_reg *mem);
->  void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *=
-mc, u64 base);
->  void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *m=
-c);
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->  void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 siz=
-e);
->  int amdgpu_ttm_init(struct amdgpu_device *adev);
->  void amdgpu_ttm_fini(struct amdgpu_device *adev);
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
-/amd/amdgpu/amdgpu_device.c
-> index 99290af..f74b79f 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> @@ -709,6 +709,46 @@ void amdgpu_gtt_location(struct amdgpu_device *adev,=
- struct amdgpu_mc *mc)
->                         mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
->  }
->
-> +/**
-> + * amdgpu_resize_bar0 - try to resize BAR0
-> + *
-> + * @adev: amdgpu_device pointer
-> + *
-> + * Try to resize BAR0 to make all VRAM CPU accessible.
-> + */
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
+If not getting domain number from DT, the domain number will
+keep increasing once doing unbind/bind RC drivers. This could
+introduce pointless tree view of lspci as shows below:
 
+-+-[0001:00]---00.0-[01]----00.0
+  \-[0000:00]-
 
-Please rename this function to amdgpu_device_resize_fb_bar().
-"amdgpu_device" for naming consistency in this file and "fb_bar" in
-case the framebuffer bar changes from bar0 to something else in the
-future.
+The more test we do, the lengthier it would be. The more serious
+issue is that if attaching two hierarchies for two different domains
+belonging to two root bridges, so when doing unbind/bind test for one
+of them and keep the other, then the domain number would finally
+overflow and make the two hierarchies of devices share the some domain
+number but actually they shouldn't. So it looks like we need to invent
+a new indexing ID mechanism to manage domain number. This patch
+introduces idr to achieve our purpose.
 
-Alex
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-> +{
-> +       u64 space_needed =3D roundup_pow_of_two(adev->mc.real_vram_size);
-> +       u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) - 1;
-> +       u16 cmd;
-> +       int r;
-> +
-> +       /* Disable memory decoding while we change the BAR addresses and =
-size */
-> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
-> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
-> +                             cmd & ~PCI_COMMAND_MEMORY);
-> +
-> +       /* Free the VRAM and doorbell BAR, we most likely need to move bo=
-th. */
-> +       amdgpu_doorbell_fini(adev);
-> +       pci_release_resource(adev->pdev, 0);
-> +       if (adev->asic_type >=3D CHIP_BONAIRE)
-> +               pci_release_resource(adev->pdev, 2);
-> +
-> +       r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
-> +       if (r =3D=3D -ENOSPC)
-> +               DRM_INFO("Not enough PCI address space for a large BAR.")=
-;
-> +       else if (r && r !=3D -ENOTSUPP)
-> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
-> +
-> +       pci_assign_unassigned_bus_resources(adev->pdev->bus);
-> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
-> +
-> +       /* When the doorbell BAR isn't available we have no chance of
-> +        * using the device.
-> +        */
-> +       BUG_ON(amdgpu_doorbell_init(adev));
-> +}
-> +
->  /*
->   * GPU helpers function.
->   */
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c b/drivers/gpu/drm/amd/=
-amdgpu/gmc_v6_0.c
-> index a33ba60..af3c3c6 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v6_0.c
-> @@ -334,12 +334,14 @@ static int gmc_v6_0_mc_init(struct amdgpu_device *a=
-dev)
->                 break;
->         }
->         adev->mc.vram_width =3D numchan * chansize;
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
-24ULL;
->         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
-1024ULL;
-> +
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         adev->mc.visible_vram_size =3D adev->mc.aper_size;
->
->         /* unless the user had overridden it, set the gart
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/=
-amdgpu/gmc_v7_0.c
-> index 1326c1f..1d9f7a2 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *a=
-dev)
->                 }
->                 adev->mc.vram_width =3D numchan * chansize;
->         }
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
-24ULL;
->         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
-1024ULL;
->
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
-> +
->  #ifdef CONFIG_X86_64
->         if (adev->flags & AMD_IS_APU) {
->                 adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)) <=
-< 22;
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/=
-amdgpu/gmc_v8_0.c
-> index 42e5b55..858153d 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *a=
-dev)
->                 }
->                 adev->mc.vram_width =3D numchan * chansize;
->         }
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
-24ULL;
->         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
-1024ULL;
->
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
-> +
->  #ifdef CONFIG_X86_64
->         if (adev->flags & AMD_IS_APU) {
->                 adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)) <=
-< 22;
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c b/drivers/gpu/drm/amd/=
-amdgpu/gmc_v9_0.c
-> index 68172aa..f2e311d 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
-> @@ -480,17 +480,19 @@ static int gmc_v9_0_mc_init(struct amdgpu_device *a=
-dev)
->         }
->         adev->mc.vram_width =3D numchan * chansize;
->
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D
->                 ((adev->flags & AMD_IS_APU) ? nbio_v7_0_get_memsize(adev)=
- :
->                  nbio_v6_1_get_memsize(adev)) * 1024ULL * 1024ULL;
->         adev->mc.real_vram_size =3D adev->mc.mc_vram_size;
-> -       adev->mc.visible_vram_size =3D adev->mc.aper_size;
-> +
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->
->         /* In case the PCI BAR is larger than the actual amount of vram *=
-/
-> +       adev->mc.visible_vram_size =3D adev->mc.aper_size;
->         if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
->                 adev->mc.visible_vram_size =3D adev->mc.real_vram_size;
->
-> --
-> 2.7.4
->
-> _______________________________________________
-> amd-gfx mailing list
-> amd-gfx@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/amd-gfx
+---
+
+Changes in v5:
+- fix Bjorn's comments for v3 as actually I didn't address his comments
+  for v3 when posted my v4.
+  v3: https://patchwork.kernel.org/patch/9742003/
+  For ACPI case, we never use DT or IDA to get domain numbers and
+  acpi_pci_bus_find_domain_nr would return the proper value we need
+  whether _SEG exist or not. For DT or IDA, we hope bridges use one of
+  them consistently, and this is actually what the pre-existing code
+  did. So I remove ida_domain now since it complicated the logic of the
+  code and we could just make use_dt_domains global instead to slightly
+  achieve our purpose.
+
+Changes in v4:
+- make domain_nr depends on CONFIG_PCI_DOMAINS instead of
+CONFIG_PCI_DOMAINS_GENERIC.
+
+Changes in v3:
+- make ida_domain a system-wide property and check it in the code to
+combine with use_dt_domains. Also update the comment there.
+
+Changes in v2:
+- add a remove wrapper
+- rename use_dt_domains to ida_domain and set this bit
+in pci_get_new_domain_nr and test it in the remove wrapper.
+
+ drivers/pci/pci.c    | 13 ++++++++++---
+ drivers/pci/remove.c |  2 ++
+ include/linux/pci.h  |  7 +++++--
+ 3 files changed, 17 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b58a6b3..9953eaf 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -11,6 +11,7 @@
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/dmi.h>
++#include <linux/idr.h>
+ #include <linux/init.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+@@ -5305,17 +5306,23 @@ static void pci_no_domains(void)
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+-static atomic_t __domain_nr = ATOMIC_INIT(-1);
++static DEFINE_IDA(__domain_nr);
+ 
+ int pci_get_new_domain_nr(void)
+ {
+-	return atomic_inc_return(&__domain_nr);
++	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
++}
++
++static int use_dt_domains = -1;
++void pci_put_domain_nr(struct pci_bus *bus)
++{
++	if (acpi_disabled && use_dt_domains != 1)
++		ida_simple_remove(&__domain_nr, bus->domain_nr);
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static int of_pci_bus_find_domain_nr(struct device *parent)
+ {
+-	static int use_dt_domains = -1;
+ 	int domain = -1;
+ 
+ 	if (parent)
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 73a03d3..01dd1b4 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
+ 	list_for_each_entry_safe(child, tmp,
+ 				 &bus->devices, bus_list)
+ 		pci_remove_bus_device(child);
++
++	pci_put_domain_nr(bus);
+ 	pci_remove_bus(bus);
+ 	host_bridge->bus = NULL;
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 18cc70a..d6be9596 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -523,7 +523,7 @@ struct pci_bus {
+ 	unsigned char	primary;	/* number of primary bridge */
+ 	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+ 	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+-#ifdef CONFIG_PCI_DOMAINS_GENERIC
++#ifdef CONFIG_PCI_DOMAINS
+ 	int		domain_nr;
+ #endif
+ 
+@@ -1466,11 +1466,14 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+ int pci_get_new_domain_nr(void);
++void pci_put_domain_nr(struct pci_bus *bus);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
++static inline int pci_get_new_domain_nr(void)
++{ return -ENOSYS; }
++static inline void pci_put_domain_nr(struct pci_bus *bus) { }
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
+ /*
+-- 
+1.9.1
