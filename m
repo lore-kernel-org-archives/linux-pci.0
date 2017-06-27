@@ -1,177 +1,218 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v2 1/5] ACPI / PM: Drop run_wake from struct acpi_device_wakeup_flags
-Date: Sat, 24 Jun 2017 01:53:14 +0200
-Message-ID: <2229106.sCO2LvC1ax@aspire.rjw.lan>
-In-Reply-To: <2524735.NRzn8A9HAf@aspire.rjw.lan>
-References: <12296383.UdE5HVtyng@aspire.rjw.lan> <2524735.NRzn8A9HAf@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49432 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752792AbdF0WUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 18:20:25 -0400
+Date: Tue, 27 Jun 2017 17:20:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        linux-pci@vger.kernel.org,
+        Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH] drivers: pci: host: ftpci100: Remove pre-scan bus
+ dependency
+Message-ID: <20170627222022.GC17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170621162651.25315-1-linus.walleij@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170621162651.25315-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Wed, Jun 21, 2017 at 06:26:51PM +0200, Linus Walleij wrote:
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Remove leftover pci_bus dependencies from the probe path.
+> 
+> We were digging around in config space before the bus was
+> up so we need to use a few raw accessors and avoid storing
+> things in the bus structure until the host is initialized.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Tested-by: Linus Walleij <linus.walleij@linaro.org>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 
-The run_wake flag in struct acpi_device_wakeup_flags stores the
-information on whether or not the device can generate wakeup
-signals at run time, but in ACPI that really is equivalent to
-being able to generate wakeup signals at all.
+Thanks for helping untangle all this, Linus.
 
-In fact, run_wake will always be set after successful executeion of
-acpi_setup_gpe_for_wake(), but if that fails, the device will not be
-able to use a wakeup GPE at all, so it won't be able to wake up the
-systems from sleep states too.  Hence, run_wake actually means that
-the device is capable of triggering wakeup and so it is equivalent
-to the valid flag.
+I split this into two parts:
 
-For this reason, drop run_wake from struct acpi_device_wakeup_flags
-and make sure that the valid flag is only set if
-acpi_setup_gpe_for_wake() has been successful.
+  1) the faraday_raw_pci_read_config() stuff, which I folded into the
+  "PCI: faraday: Convert IRQ masking to raw PCI config accessors"
+  patch from Lorenzo's series.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
+  2) the bus max/cur clock speed setting, which I folded into the
+  "PCI: faraday: Add clock handling" patch that you posted earlier.
 
--> v2: No changes.
+I rebased pci/host-faraday on top of pci/enumeration, so I *think*
+pci/host-faraday should have everything I know about for the FTPCI100.
+Can you double-check it?
 
----
- drivers/acpi/pci_root.c |    2 +-
- drivers/acpi/proc.c     |    4 ++--
- drivers/acpi/scan.c     |   23 ++++++++---------------
- drivers/pci/pci-acpi.c  |    3 +--
- include/acpi/acpi_bus.h |    1 -
- 5 files changed, 12 insertions(+), 21 deletions(-)
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-faraday&id=2e7062416fdff640c5f2ee488690fc5af4b927ff
 
-Index: linux-pm/drivers/acpi/scan.c
-===================================================================
---- linux-pm.orig/drivers/acpi/scan.c
-+++ linux-pm/drivers/acpi/scan.c
-@@ -835,7 +835,7 @@ static int acpi_bus_extract_wakeup_devic
- 	return err;
- }
- 
--static void acpi_wakeup_gpe_init(struct acpi_device *device)
-+static bool acpi_wakeup_gpe_init(struct acpi_device *device)
- {
- 	static const struct acpi_device_id button_device_ids[] = {
- 		{"PNP0C0C", 0},
-@@ -845,13 +845,11 @@ static void acpi_wakeup_gpe_init(struct
- 	};
- 	struct acpi_device_wakeup *wakeup = &device->wakeup;
- 	acpi_status status;
--	acpi_event_status event_status;
- 
- 	wakeup->flags.notifier_present = 0;
- 
- 	/* Power button, Lid switch always enable wakeup */
- 	if (!acpi_match_device_ids(device, button_device_ids)) {
--		wakeup->flags.run_wake = 1;
- 		if (!acpi_match_device_ids(device, &button_device_ids[1])) {
- 			/* Do not use Lid/sleep button for S5 wakeup */
- 			if (wakeup->sleep_state == ACPI_STATE_S5)
-@@ -859,17 +857,12 @@ static void acpi_wakeup_gpe_init(struct
- 		}
- 		acpi_mark_gpe_for_wake(wakeup->gpe_device, wakeup->gpe_number);
- 		device_set_wakeup_capable(&device->dev, true);
--		return;
-+		return true;
- 	}
- 
--	acpi_setup_gpe_for_wake(device->handle, wakeup->gpe_device,
--				wakeup->gpe_number);
--	status = acpi_get_gpe_status(wakeup->gpe_device, wakeup->gpe_number,
--				     &event_status);
--	if (ACPI_FAILURE(status))
--		return;
--
--	wakeup->flags.run_wake = !!(event_status & ACPI_EVENT_FLAG_HAS_HANDLER);
-+	status = acpi_setup_gpe_for_wake(device->handle, wakeup->gpe_device,
-+					 wakeup->gpe_number);
-+	return ACPI_SUCCESS(status);
- }
- 
- static void acpi_bus_get_wakeup_device_flags(struct acpi_device *device)
-@@ -887,10 +880,10 @@ static void acpi_bus_get_wakeup_device_f
- 		return;
- 	}
- 
--	device->wakeup.flags.valid = 1;
-+	device->wakeup.flags.valid = acpi_wakeup_gpe_init(device);
- 	device->wakeup.prepare_count = 0;
--	acpi_wakeup_gpe_init(device);
--	/* Call _PSW/_DSW object to disable its ability to wake the sleeping
-+	/*
-+	 * Call _PSW/_DSW object to disable its ability to wake the sleeping
- 	 * system for the ACPI device with the _PRW object.
- 	 * The _PSW object is depreciated in ACPI 3.0 and is replaced by _DSW.
- 	 * So it is necessary to call _DSW object first. Only when it is not
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -314,7 +314,6 @@ struct acpi_device_perf {
- /* Wakeup Management */
- struct acpi_device_wakeup_flags {
- 	u8 valid:1;		/* Can successfully enable wakeup? */
--	u8 run_wake:1;		/* Run-Wake GPE devices */
- 	u8 notifier_present:1;  /* Wake-up notify handler has been installed */
- 	u8 enabled:1;		/* Enabled for wakeup */
- };
-Index: linux-pm/drivers/acpi/pci_root.c
-===================================================================
---- linux-pm.orig/drivers/acpi/pci_root.c
-+++ linux-pm/drivers/acpi/pci_root.c
-@@ -608,7 +608,7 @@ static int acpi_pci_root_add(struct acpi
- 		pcie_no_aspm();
- 
- 	pci_acpi_add_bus_pm_notifier(device);
--	if (device->wakeup.flags.run_wake)
-+	if (device->wakeup.flags.valid)
- 		device_set_run_wake(root->bus->bridge, true);
- 
- 	if (hotadd) {
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -777,9 +777,8 @@ static void pci_acpi_setup(struct device
- 		return;
- 
- 	device_set_wakeup_capable(dev, true);
-+	device_set_run_wake(dev, true);
- 	acpi_pci_sleep_wake(pci_dev, false);
--	if (adev->wakeup.flags.run_wake)
--		device_set_run_wake(dev, true);
- }
- 
- static void pci_acpi_cleanup(struct device *dev)
-Index: linux-pm/drivers/acpi/proc.c
-===================================================================
---- linux-pm.orig/drivers/acpi/proc.c
-+++ linux-pm/drivers/acpi/proc.c
-@@ -42,7 +42,7 @@ acpi_system_wakeup_device_seq_show(struc
- 
- 		if (!dev->physical_node_count) {
- 			seq_printf(seq, "%c%-8s\n",
--				dev->wakeup.flags.run_wake ? '*' : ' ',
-+				dev->wakeup.flags.valid ? '*' : ' ',
- 				device_may_wakeup(&dev->dev) ?
- 					"enabled" : "disabled");
- 		} else {
-@@ -58,7 +58,7 @@ acpi_system_wakeup_device_seq_show(struc
- 					seq_printf(seq, "\t\t");
- 
- 				seq_printf(seq, "%c%-8s  %s:%s\n",
--					dev->wakeup.flags.run_wake ? '*' : ' ',
-+					dev->wakeup.flags.valid ? '*' : ' ',
- 					(device_may_wakeup(&dev->dev) ||
- 					device_may_wakeup(ldev)) ?
- 					"enabled" : "disabled",
+I'm still hoping to get this all in v4.13.
 
+> ---
+> This patch on top of Lorenzo's patch series make everything
+> work fine for me.
+> ---
+>  drivers/pci/host/pci-ftpci100.c | 53 +++++++++++++++++++++++++----------------
+>  1 file changed, 32 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+> index db31ab21884e..5162dffc102b 100644
+> --- a/drivers/pci/host/pci-ftpci100.c
+> +++ b/drivers/pci/host/pci-ftpci100.c
+> @@ -183,12 +183,11 @@ static int faraday_res_to_memcfg(resource_size_t mem_base,
+>  	return 0;
+>  }
+>  
+> -static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
+> -				   int config, int size, u32 *value)
+> +static int faraday_raw_pci_read_config(struct faraday_pci *p, int bus_number,
+> +				       unsigned int fn, int config, int size,
+> +				       u32 *value)
+>  {
+> -	struct faraday_pci *p = bus->sysdata;
+> -
+> -	writel(PCI_CONF_BUS(bus->number) |
+> +	writel(PCI_CONF_BUS(bus_number) |
+>  			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
+>  			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
+>  			PCI_CONF_WHERE(config) |
+> @@ -202,11 +201,19 @@ static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
+>  	else if (size == 2)
+>  		*value = (*value >> (8 * (config & 3))) & 0xFFFF;
+>  
+> +	return PCIBIOS_SUCCESSFUL;
+> +}
+> +
+> +static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
+> +				   int config, int size, u32 *value)
+> +{
+> +	struct faraday_pci *p = bus->sysdata;
+> +
+>  	dev_dbg(&bus->dev,
+>  		"[read]  slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
+>  		PCI_SLOT(fn), PCI_FUNC(fn), config, size, *value);
+>  
+> -	return PCIBIOS_SUCCESSFUL;
+> +	return faraday_raw_pci_read_config(p, bus->number, fn, config, size, value);
+>  }
+>  
+>  static int faraday_raw_pci_write_config(struct faraday_pci *p, int bus_number,
+> @@ -262,10 +269,10 @@ static void faraday_pci_ack_irq(struct irq_data *d)
+>  	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
+>  	unsigned int reg;
+>  
+> -	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
+> +	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+>  	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
+>  	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTSTS_SHIFT);
+> -	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
+> +	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, reg);
+>  }
+>  
+>  static void faraday_pci_mask_irq(struct irq_data *d)
+> @@ -273,10 +280,10 @@ static void faraday_pci_mask_irq(struct irq_data *d)
+>  	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
+>  	unsigned int reg;
+>  
+> -	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
+> +	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+>  	reg &= ~((0xF << PCI_CTRL2_INTSTS_SHIFT)
+>  		 | BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT));
+> -	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
+> +	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, reg);
+>  }
+>  
+>  static void faraday_pci_unmask_irq(struct irq_data *d)
+> @@ -284,10 +291,10 @@ static void faraday_pci_unmask_irq(struct irq_data *d)
+>  	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
+>  	unsigned int reg;
+>  
+> -	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
+> +	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+>  	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
+>  	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT);
+> -	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
+> +	faraday_raw_pci_write_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, reg);
+>  }
+>  
+>  static void faraday_pci_irq_handler(struct irq_desc *desc)
+> @@ -296,7 +303,7 @@ static void faraday_pci_irq_handler(struct irq_desc *desc)
+>  	struct irq_chip *irqchip = irq_desc_get_chip(desc);
+>  	unsigned int irq_stat, reg, i;
+>  
+> -	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
+> +	faraday_raw_pci_read_config(p, 0, 0, FARADAY_PCI_CTRL2, 4, &reg);
+>  	irq_stat = reg >> PCI_CTRL2_INTSTS_SHIFT;
+>  
+>  	chained_irq_enter(irqchip, desc);
+> @@ -417,8 +424,8 @@ static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
+>  		dev_info(dev, "DMA MEM%d BASE: 0x%016llx -> 0x%016llx config %08x\n",
+>  			 i + 1, range.pci_addr, end, val);
+>  		if (i <= 2) {
+> -			faraday_pci_write_config(p->bus, 0, confreg[i],
+> -						 4, val);
+> +			faraday_raw_pci_write_config(p, 0, 0, confreg[i],
+> +						     4, val);
+>  		} else {
+>  			dev_err(dev, "ignore extraneous dma-range %d\n", i);
+>  			break;
+> @@ -443,6 +450,8 @@ static int faraday_pci_probe(struct platform_device *pdev)
+>  	struct resource *io;
+>  	struct pci_host_bridge *host;
+>  	struct clk *clk;
+> +	unsigned char max_bus_speed = PCI_SPEED_33MHz;
+> +	unsigned char cur_bus_speed = PCI_SPEED_33MHz;
+>  	int ret;
+>  	u32 val;
+>  	LIST_HEAD(res);
+> @@ -546,27 +555,27 @@ static int faraday_pci_probe(struct platform_device *pdev)
+>  		unsigned long rate;
+>  		u32 val;
+>  
+> -		faraday_pci_read_config(p->bus, 0,
+> -					FARADAY_PCI_STATUS_CMD, 4, &val);
+> +		faraday_raw_pci_read_config(p, 0, 0,
+> +					    FARADAY_PCI_STATUS_CMD, 4, &val);
+>  		rate = clk_get_rate(p->bus_clk);
+>  
+>  		if ((rate == 33000000) && (val & PCI_STATUS_66MHZ_CAPABLE)) {
+>  			dev_info(dev, "33MHz bus is 66MHz capable\n");
+> -			p->bus->max_bus_speed = PCI_SPEED_66MHz;
+> +			max_bus_speed = PCI_SPEED_66MHz;
+>  			ret = clk_set_rate(p->bus_clk, 66000000);
+>  			if (ret)
+>  				dev_err(dev, "failed to set bus clock\n");
+>  		} else {
+>  			dev_info(dev, "33MHz only bus\n");
+> -			p->bus->max_bus_speed = PCI_SPEED_33MHz;
+> +			max_bus_speed = PCI_SPEED_33MHz;
+>  		}
+>  
+>  		/* Bumping the clock may fail so read back the rate */
+>  		rate = clk_get_rate(p->bus_clk);
+>  		if (rate == 33000000)
+> -			p->bus->cur_bus_speed = PCI_SPEED_33MHz;
+> +			cur_bus_speed = PCI_SPEED_33MHz;
+>  		if (rate == 66000000)
+> -			p->bus->cur_bus_speed = PCI_SPEED_66MHz;
+> +			cur_bus_speed = PCI_SPEED_66MHz;
+>  	}
+>  
+>  	ret = faraday_pci_parse_map_dma_ranges(p, dev->of_node);
+> @@ -580,6 +589,8 @@ static int faraday_pci_probe(struct platform_device *pdev)
+>  		return ret;
+>  	}
+>  	p->bus = host->bus;
+> +	p->bus->max_bus_speed = max_bus_speed;
+> +	p->bus->cur_bus_speed = cur_bus_speed;
+>  
+>  	pci_bus_assign_resources(p->bus);
+>  	pci_bus_add_devices(p->bus);
+> -- 
+> 2.9.4
+> 
