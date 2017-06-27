@@ -1,142 +1,118 @@
-Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=S67v=5S=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH v6 3/3] PCI: Add tango MSI controller support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
- <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
- <82d6bf37-96b9-cd9d-134b-f01638fa2b1b@sigmadesigns.com>
- <d39b5b3a-48be-7aaa-b7dd-28d4ae1d2083@arm.com>
- <49b4138d-0030-1e8c-6a14-0e9151b63d24@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <1588fa00-92c6-046d-ccfc-9a2deae61486@arm.com>
-Date: Tue, 13 Jun 2017 17:53:49 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 27 Jun 2017 14:58:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: next-20170621 build: 1 failures 7 warnings (next-20170621)
+Message-ID: <20170627195815.GA17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <E1dNcMp-0005RN-1w@optimist>
+ <20170621100440.vcaxagg4yjca2cv4@sirena.org.uk>
+ <1498209196.26313.71.camel@mtkswgap22>
+ <20170623094356.GA5337@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <49b4138d-0030-1e8c-6a14-0e9151b63d24@sigmadesigns.com>
-Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <20170623094356.GA5337@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, Ryder Lee <ryder.lee@mediatek.com>,
+ "kernel-build-reports@lists.linaro.org"
+ <kernel-build-reports@lists.linaro.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Mark Brown <broonie@kernel.org>,
+ "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linaro-kernel@lists.linaro.org" <linaro-kernel@lists.linaro.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/06/17 15:47, Marc Gonzalez wrote:
-> On 13/06/2017 16:22, Marc Zyngier wrote:
->> On 13/06/17 15:01, Marc Gonzalez wrote:
->>> The MSI controller in Tango supports 256 message-signaled interrupts,
->>> and a single doorbell address.
->>>
->>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
->>> ---
->>> Changes from v5 to v6
->>> o Rename 'used' bitmap to 'used_msi'
->>> o Rename 'lock' spinlock to 'used_msi_lock'
->>> o Take lock in interrupt handler
->>> o Remove irq_dom in error path
->>> ---
->>>  drivers/pci/host/pcie-tango.c | 225 ++++++++++++++++++++++++++++++++++++++++++
->>>  1 file changed, 225 insertions(+)
->>>
->>> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
->>> index 67aaadcc1c5e..b06446b23bc8 100644
->>> --- a/drivers/pci/host/pcie-tango.c
->>> +++ b/drivers/pci/host/pcie-tango.c
->>> @@ -1,16 +1,228 @@
->>> +#include <linux/irqchip/chained_irq.h>
->>> +#include <linux/irqdomain.h>
->>>  #include <linux/pci-ecam.h>
->>>  #include <linux/delay.h>
->>> +#include <linux/msi.h>
->>>  #include <linux/of.h>
->>>  
->>>  #define MSI_MAX 256
->>>  
->>>  #define SMP8759_MUX		0x48
->>>  #define SMP8759_TEST_OUT	0x74
->>> +#define SMP8759_STATUS		0x80
->>> +#define SMP8759_ENABLE		0xa0
->>> +#define SMP8759_DOORBELL	0xa002e07c
->>>  
->>>  struct tango_pcie {
->>> +	DECLARE_BITMAP(used_msi, MSI_MAX);
->>> +	spinlock_t used_msi_lock;
->>>  	void __iomem *mux;
->>> +	void __iomem *msi_status;
->>> +	void __iomem *msi_enable;
->>> +	phys_addr_t msi_doorbell;
->>> +	struct irq_domain *irq_dom;
->>> +	struct irq_domain *msi_dom;
->>> +	int irq;
->>>  };
->>>  
->>> +/*** MSI CONTROLLER SUPPORT ***/
->>> +
->>> +static void tango_msi_isr(struct irq_desc *desc)
->>> +{
->>> +	struct irq_chip *chip = irq_desc_get_chip(desc);
->>> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
->>> +	unsigned long flags, status, base, virq, idx, pos = 0;
->>> +
->>> +	chained_irq_enter(chip, desc);
->>> +	spin_lock_irqsave(&pcie->used_msi_lock, flags);
->>
->> You're already in interrupt context, so there is no need to disable
->> interrupts any further. spin_lock() should do the trick
+On Fri, Jun 23, 2017 at 10:43:56AM +0100, Lorenzo Pieralisi wrote:
+> On Fri, Jun 23, 2017 at 05:13:16PM +0800, Ryder Lee wrote:
+> > Sorry for late reply, 
+> > 
+> > +Lorenzo
+> > 
+> > On Wed, 2017-06-21 at 18:04 +0800, Mark Brown wrote:
+> > > On Wed, Jun 21, 2017 at 10:56:07AM +0100, Build bot for Mark Brown wrote:
+> > > 
+> > > Today's -next fails to build an arm allmodconfig due to:
+> > > 
+> > > > 	arm-allmodconfig
+> > > > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
+> > > 
+> > > caused by eaf3023b0498a (PCI: mediatek: Add MediaTek PCIe host
+> > > controller support).
+> > 
+> > 
+> > Hi Lorenzo,
+> > 
+> > I picked up your changes and had some modifications like what you did
+> > for other platforms:
+> > 
+> > 9f8e3a5 PCI: Add devm_pci_alloc_host_bridge() interface 
+> > 35a1a84 PCI: Add pci_free_host_bridge() interface
+> > e33aafd PCI: Initialize bridge release function at bridge allocation
+> > 
+> > ...and it looks Okay.
+> > 
+> > I have also noticed that you continue sending patches for other
+> > platforms but I have not yet had a look in detail. I'm quite busy these
+> > days and don't have time to dig it, hence it is becoming a little
+> > unmanageable for me.
 > 
-> Thanks for the hint.
+> If it is unmanageable you don't add yourself as a maintainer of that
+> PCI host bridge driver, you know, we are all busy.
 > 
-> I am confused, because Documentation/locking/spinlocks.txt states:
+> Your driver in the PCI tree as it stands contains already two bugs:
 > 
->> If you have a case where you have to protect a data structure across
->> several CPU's and you want to use spinlocks you can potentially use
->> cheaper versions of the spinlocks. IFF you know that the spinlocks are
->> never used in interrupt handlers, you can use the non-irq versions:
->>
->> 	spin_lock(&lock);
->> 	...
->> 	spin_unlock(&lock);
->>
->> (and the equivalent read-write versions too, of course). The spinlock will
->> guarantee the same kind of exclusive access, and it will be much faster.
->> This is useful if you know that the data in question is only ever
->> manipulated from a "process context", ie no interrupts involved.
->>
->> The reasons you mustn't use these versions if you have interrupts that
->> play with the spinlock is that you can get deadlocks:
->>
->> 	spin_lock(&lock);
->> 	...
->> 		<- interrupt comes in:
->> 			spin_lock(&lock);
->>
->> where an interrupt tries to lock an already locked variable. This is ok if
->> the other interrupt happens on another CPU, but it is _not_ ok if the
->> interrupt happens on the same CPU that already holds the lock, because the
->> lock will obviously never be released (because the interrupt is waiting
->> for the lock, and the lock-holder is interrupted by the interrupt and will
->> not continue until the interrupt has been processed).
->>
->> (This is also the reason why the irq-versions of the spinlocks only need
->> to disable the _local_ interrupts - it's ok to use spinlocks in interrupts
->> on other CPU's, because an interrupt on another CPU doesn't interrupt the
->> CPU that holds the lock, so the lock-holder can continue and eventually
->> releases the lock).
+> 1) It leaks memory on the probe failure path
+> 2) pci_fixup_irqs() is broken on configurations with multiple host
+>    bridges
 > 
-> Isn't this saying that it is not safe to call spin_lock() from
-> the interrupt handler? (Sorry if I misunderstood.)
+> And we keep copy'n'pasting that code.
+> 
+> > Did you have a chance to send the same patches for MediaTek?  I
+> > appreciate that and I can help to test it on our platforms.
+> 
+> No, how could I have sent them ? It is not upstream and it is a separate
+> branch in the PCI tree. As I mentioned in another thread it is probably
+> best to drop my pci_fixup_irqs() removal patches since it is impossible
+> to work on them without a stable branch to apply them against, in the
+> interim we keep adding PCI host bridges that use the wrong interfaces by
+> copy'n'pasting code that I have been trying to remove.
+> 
+> I think the best solution is to repost my series when v4.13-rc1 appears
+> and ask all new crop of host bridge drivers to rebase against it.
+> 
+> I won't be able to follow mailing lists till end of next week, which
+> is bad timing.
+> 
+> Bjorn, is the plan above ok ? Please let me know how you want to
+> proceed.
 
-It is saying exactly the opposite.
+Sorry, I was on vacation myself most of last week, and you're
+unavailable most of this week, but I'd still like to try to get this
+into v4.13.
 
-If you take a spinlock and can be interrupted by an interrupt that takes
-the same spinlock, then you must use the irq-safe version *outside of
-the interrupt handler*. That's because Linux interrupts are not
-preemptible (well, in general -- it is different with RT, but let's not
-get there). If you're guaranteed that no interrupt handler will take
-this spinlock, then you don't have to use the irq-safe version.
+We may not get every host tested, but I'm not sure that will happen
+even if we wait for the next cycle.  If we trip over something it will
+likely be something small or for a relatively rare platform, so we can
+fix it up after the fact.
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+I haven't looked at everything yet, but my plan is to try to
+incorporate the fixes people have posted and keep pushing forward.  If
+that turns out not to work, I'll drop the pci_fixup_irqs() series, but
+I'll at least give it a try.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
