@@ -1,257 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35506 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:49832 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751628AbdFNSyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 14 Jun 2017 14:54:36 -0400
-Date: Wed, 14 Jun 2017 13:54:33 -0500
+        id S1752826AbdF0Wan (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 18:30:43 -0400
+Date: Tue, 27 Jun 2017 17:30:40 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, linux-kernel@vger.kernel.org,
-        amd-gfx@lists.freedesktop.org
-Subject: Re: [PATCH v5 3/6] PCI: add functionality for resizing resources v6
-Message-ID: <20170614185433.GD20778@bhelgaas-glaptop.roam.corp.google.com>
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
- <1496998787-6371-4-git-send-email-deathsimple@vodafone.de>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: mediatek: change to use the new host bridge
+ interface
+Message-ID: <20170627223039.GE17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+ <1498555451-55073-2-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1496998787-6371-4-git-send-email-deathsimple@vodafone.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1498555451-55073-2-git-send-email-ryder.lee@mediatek.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 09, 2017 at 10:59:44AM +0200, Christian König wrote:
-> From: Christian König <christian.koenig@amd.com>
+On Tue, Jun 27, 2017 at 05:24:11PM +0800, Ryder Lee wrote:
+> With the introduction of pci_scan_root_bus_bridge() there is no need to
+> export pci_register_host_bridge() to other kernel subsystems other than the
+> PCI compilation unit that needs it.
 > 
-> This allows device drivers to request resizing their BARs.
+> Make pci_register_host_bridge() static to its compilation unit and convert
+> the existing drivers usage over to pci_scan_root_bus_bridge().
 > 
-> The function only tries to reprogram the windows of the bridge directly above
-> the requesting device and only the BAR of the same type (usually mem, 64bit,
-> prefetchable). This is done to make sure not to disturb other drivers by
-> changing the BARs of their devices.
+> Also, when probing the PCI host controller driver, if an error occurs, the probe
+> function code does not free memory allocated for the struct pci_host_bridge
+> resulting in memory leakage.
 > 
-> If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
-> returned to the calling device driver.
+> This patch fixes them by using the methods that introduces by Lorenzo.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 
-Can you include an outline of how drivers should use
-pci_resize_resource() here, including disabling decoding, releasing
-resource(s), resizing, re-enabling decoding, re-reading
-pdev->resource[]?
+I rebased my pci/host-mediatek branch on top of pci/enumeration (which
+contains the series from Lorenzo), and folded this into the initial
+MediaTek driver commit.
 
-> v2: rebase on changes in rbar support
-> v3: style cleanups, fail if memory decoding is enabled or resources
->     still allocated, resize all unused bridge BARs,
->     drop calling pci_reenable_device
-> v4: print resources before releasing them, style cleanups,
->     use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
-> v5: use next pointer to simplify loop
-> v6: move reassigning resources on error to driver side
-> 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
+This branch:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-mediatek&id=b6ca15d18881b784dc9efc5d81989be26ecd9fc8
+
+should have all the MediaTek bits I know about.  Can you double-check
+it, please?
+
+If all goes well, I'll incorporate this into -next tomorrow.
+
 > ---
->  drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/setup-res.c | 58 +++++++++++++++++++++++++++++
->  include/linux/pci.h     |  3 ++
->  3 files changed, 159 insertions(+)
+>  drivers/pci/host/pcie-mediatek.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index 451a9c0..2ea872d 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1908,6 +1908,104 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->  }
->  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> index 3baafa8..514ef34 100644
+> --- a/drivers/pci/host/pcie-mediatek.c
+> +++ b/drivers/pci/host/pcie-mediatek.c
+> @@ -482,12 +482,10 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
+>  	host->dev.parent = pcie->dev;
+>  	host->ops = &mtk_pcie_ops;
 >  
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
-> +{
-> +	struct pci_dev_resource *dev_res;
-> +	struct pci_dev *next;
-> +	LIST_HEAD(saved);
-> +	LIST_HEAD(added);
-> +	LIST_HEAD(failed);
-> +	unsigned int i;
-> +	int ret;
-> +
-> +	/* Walk to the root hub, releasing bridge BARs when possible */
-> +	next = bridge;
-> +	do {
-> +		bridge = next;
-> +		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
-> +		     i++) {
-> +			struct resource *res = &bridge->resource[i];
-> +
-> +			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
-> +				continue;
-> +
-> +			/* Ignore BARs which are still in use */
-> +			if (res->child)
-> +				continue;
-> +
-> +			ret = add_to_list(&saved, bridge, res, 0, 0);
-> +			if (ret)
-> +				goto cleanup;
-> +
-> +			dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
-> +				 i, res);
-> +
-> +			if (res->parent)
-> +				release_resource(res);
-> +			res->start = 0;
-> +			res->end = 0;
-> +			break;
-> +		}
-> +		if (i == PCI_BRIDGE_RESOURCE_END)
-> +			break;
-> +
-> +		next = bridge->bus ? bridge->bus->self : NULL;
-> +	} while (next);
-> +
-> +	if (list_empty(&saved))
-> +		return -ENOENT;
-> +
-> +	__pci_bus_size_bridges(bridge->subordinate, &added);
-> +	__pci_bridge_assign_resources(bridge, &added, &failed);
-> +	BUG_ON(!list_empty(&added));
-> +
-> +	if (!list_empty(&failed)) {
-> +		ret = -ENOSPC;
-> +		goto cleanup;
-> +	}
-> +
-> +	list_for_each_entry(dev_res, &saved, list) {
-> +		/* Skip the bridge we just assigned resources for. */
-> +		if (bridge == dev_res->dev)
-> +			continue;
-> +
-> +		bridge = dev_res->dev;
-> +		pci_setup_bridge(bridge->subordinate);
-> +	}
-> +
-> +	free_list(&saved);
-> +	return 0;
-> +
-> +cleanup:
-> +	/* restore size and flags */
-> +	list_for_each_entry(dev_res, &failed, list) {
-> +		struct resource *res = dev_res->res;
-> +
-> +		res->start = dev_res->start;
-> +		res->end = dev_res->end;
-> +		res->flags = dev_res->flags;
-> +	}
-> +	free_list(&failed);
-> +
-> +	/* Revert to the old configuration */
-> +	list_for_each_entry(dev_res, &saved, list) {
-> +		struct resource *res = dev_res->res;
-> +
-> +		bridge = dev_res->dev;
-> +		i = res - bridge->resource;
-> +
-> +		res->start = dev_res->start;
-> +		res->end = dev_res->end;
-> +		res->flags = dev_res->flags;
-> +
-> +		pci_claim_resource(bridge, i);
-> +		pci_setup_bridge(bridge->subordinate);
-> +	}
-> +	free_list(&saved);
-> +
-> +	return ret;
-> +}
-> +
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  {
->  	struct pci_dev *dev;
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 4bc589e..077c515 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -383,6 +383,64 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
->  	return 0;
->  }
+> -	err = pci_register_host_bridge(host);
+> +	err = pci_scan_root_bus_bridge(host);
+>  	if (err < 0)
+>  		return err;
 >  
-> +void pci_release_resource(struct pci_dev *dev, int resno)
-> +{
-> +	struct resource *res = dev->resource + resno;
-> +
-> +	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
-> +	release_resource(res);
-> +	res->end = resource_size(res) - 1;
-> +	res->start = 0;
-> +	res->flags |= IORESOURCE_UNSET;
-> +}
-> +EXPORT_SYMBOL(pci_release_resource);
-> +
-> +int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-> +{
-> +	struct resource *res = dev->resource + resno;
-> +	int old, ret;
-> +	u32 sizes;
-> +	u16 cmd;
-> +
-> +	/* Make sure the resource isn't assigned before resizing it. */
-> +	if (!(res->flags & IORESOURCE_UNSET))
-> +		return -EBUSY;
-> +
-> +	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> +	if (cmd & PCI_COMMAND_MEMORY)
-> +		return -EBUSY;
-> +
-> +	sizes = pci_rbar_get_possible_sizes(dev, resno);
-> +	if (!sizes)
-> +		return -ENOTSUPP;
-> +
-> +	if (!(sizes & BIT(size)))
-> +		return -EINVAL;
-> +
-> +	old = pci_rbar_get_current_size(dev, resno);
-> +	if (old < 0)
-> +		return old;
-> +
-> +	ret = pci_rbar_set_size(dev, resno, size);
-> +	if (ret)
-> +		return ret;
-> +
-> +	res->end = res->start + pci_rbar_size_to_bytes(size) - 1;
-> +
-> +	/* Check if the new config works by trying to assign everything. */
-> +	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
-> +	if (ret)
-> +		goto error_resize;
-> +
-> +	return 0;
-> +
-> +error_resize:
-> +	pci_rbar_set_size(dev, resno, old);
-> +	res->end = res->start + pci_rbar_size_to_bytes(old) - 1;
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(pci_resize_resource);
-> +
->  int pci_enable_resources(struct pci_dev *dev, int mask)
->  {
->  	u16 cmd, old_cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index eb3da1a..2d631ad 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1068,6 +1068,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
->  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
-> +void pci_release_resource(struct pci_dev *dev, int resno);
-> +int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
->  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
->  void pci_ignore_hotplug(struct pci_dev *dev);
-> @@ -1148,6 +1150,7 @@ void pci_assign_unassigned_resources(void);
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
->  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
->  void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+> -	pci_scan_child_bus(host->bus);
+> -
+>  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+>  	pci_bus_size_bridges(host->bus);
+>  	pci_bus_assign_resources(host->bus);
+> @@ -506,7 +504,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+>  	struct pci_host_bridge *host;
+>  	int err;
+>  
+> -	host = pci_alloc_host_bridge(sizeof(*pcie));
+> +	host = devm_pci_alloc_host_bridge(&pdev->dev, sizeof(*pcie));
+>  	if (!host)
+>  		return -ENOMEM;
+>  
 > -- 
-> 2.7.4
+> 1.9.1
 > 
