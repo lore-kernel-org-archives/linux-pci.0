@@ -1,50 +1,33 @@
-Return-Path: <SRS0=Owqj=5S=linux.intel.com=alan@kernel.org>
-Return-Path: <SRS0=Owqj=5S=linux.intel.com=alan@kernel.org>
-Message-ID: <1497354494.5693.1.camel@linux.intel.com>
-Subject: Re: [Merge tag 'pci-v4.12-changes' of git] 857f864014: BUG: unable
- to handle kernel NULL pointer dereference at 00000000000000a8
-From: Alan Cox <alan@linux.intel.com>
-To: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: kernel test robot <fengguang.wu@intel.com>, Linus Torvalds
- <torvalds@linux-foundation.org>, LKP <lkp@01.org>,
- linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- wfg@linux.intel.com, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arnd
- Bergmann <arnd@arndb.de>, Linus Walleij <linus.walleij@linaro.org>, David
- Airlie <airlied@linux.ie>,  David Herrmann <dh.herrmann@gmail.com>, Daniel
- Vetter <daniel.vetter@ffwll.ch>
-Date: Tue, 13 Jun 2017 12:48:14 +0100
-In-Reply-To: <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
-References: <5933fe2d.V33ODGPU9noDVuyF%fengguang.wu@intel.com>
-	 <20170606175552.GA12672@bhelgaas-glaptop.roam.corp.google.com>
-	 <fe0543c1-cba6-02bb-36eb-395910bd5012@deltatee.com>
-	 <20170612200852.GA28578@bhelgaas-glaptop.roam.corp.google.com>
-	 <61e11e67-6c1b-ef1e-5fb8-a7c9efb17666@deltatee.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <sfr@canb.auug.org.au>
+Date: Wed, 28 Jun 2017 08:10:26 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Bjorn Helgaas <bjorn.helgaas@gmail.com>
+Cc: bjorn@helgaas.com, Ryder Lee <ryder.lee@mediatek.com>, Andrew Morton
+ <akpm@linux-foundation.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH] critical patch to fix pci-tree build bot failure
+Message-ID: <20170628081026.5a211391@canb.auug.org.au>
+In-Reply-To: <CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
+References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+	<CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2017-06-12 at 17:34 -0600, Logan Gunthorpe wrote:
-> Hey,
-> 
-> Ok, I dug into this bug and I know what's going on. Unfortunately,
-> it's
-> a mess of a couple issues and I don't know what correct the
-> solution(s)
-> is(are).
-> 
-> 1) The test we are looking at is overrunning the dynamic char dev
-> major
-> numbers by a lot. On a successful run, it gets down to 216 where the
-> limit is 234. Thus, there are 18 too many major numbers assigned and
-> the
-> fact that this test used to work is really just luck. (I've cc'd
-> developers from 49db08c3 for this issue.)
-> 
+Hi Bjorn,
 
-If you dump the list of majors and drivers do they all look valid or is
-there any corruption or repetition that looks odd (wondering if we've
-got too many devices or a leak) ?
+On Tue, 27 Jun 2017 08:20:44 -0500 Bjorn Helgaas <bjorn.helgaas@gmail.com> wrote:
+>
+> On Tue, Jun 27, 2017 at 4:24 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> > Hi Stephen and Andrew,
+> >
+> > Could you help to apply this patch? Seems Bjorn didn't response it these days.  
+> 
+> I'm not dead, but I was on vacation most of last week.  I'll resolve this today.
 
-Alan
+Should I just add this patch to linux-next today (if you don't get
+around to it in the next hour or so)?
+
+-- 
+Cheers,
+Stephen Rothwell
