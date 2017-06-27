@@ -1,74 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0113.outbound.protection.outlook.com ([104.47.40.113]:7344
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751333AbdF2X5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 29 Jun 2017 19:57:15 -0400
-From: Stephen Hemminger <sthemmin@microsoft.com>
-To: Jork Loeser <Jork.Loeser@microsoft.com>,
-        "stephen@networkplumber.org" <stephen@networkplumber.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
-Subject: RE: [PATCH] hv: fix msi affinity when device requests all possible
- CPU's
-Date: Thu, 29 Jun 2017 23:57:12 +0000
-Message-ID: <MWHPR21MB0703BA4E9B4F990C09323BFDCCD20@MWHPR21MB0703.namprd21.prod.outlook.com>
-References: <20170628232204.15227-1-sthemmin@microsoft.com>
- <DM5PR21MB0476CFFA739B74FBB3B6F42DA0D20@DM5PR21MB0476.namprd21.prod.outlook.com>
- <MWHPR21MB0639EC5C9B141D0591D1D957F1D20@MWHPR21MB0639.namprd21.prod.outlook.com>
-In-Reply-To: <MWHPR21MB0639EC5C9B141D0591D1D957F1D20@MWHPR21MB0639.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 27 Jun 2017 18:11:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 2/4] ARM/PCI: mv78xx0: pass pci_ops correctly again
+Message-ID: <20170627231143.GI17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170621215323.3921382-1-arnd@arndb.de>
+ <20170621215323.3921382-2-arnd@arndb.de>
+ <20170622093855.GA23310@red-moon>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170622093855.GA23310@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Patch still needed for 4.12
+On Thu, Jun 22, 2017 at 10:38:55AM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Jun 21, 2017 at 11:53:00PM +0200, Arnd Bergmann wrote:
+> > We used to pass the operations when calling pci_scan_root_bus, but
+> > that argument was removed:
+> > 
+> > arch/arm/mach-mv78xx0/pcie.c:175:23: error: 'pcie_ops' defined but not used [-Werror=unused-variable]
+> > 
+> > Setting it in pci_hw should address this.
+> 
+> No unfortunately it does not. The way I structured the code the
+> bridge set-up is carried out in the struct hw_pci.scan() callback and
+> for mv78xx0 it was not done properly.
+> 
+> As said in the other thread we need a pci_fixup_irqs() removal v3 to
+> address these issues, given that on some host bridges v2 it is still
+> untested.
+> 
+> Lorenzo
+> 
+> > Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> > ---
+> >  arch/arm/mach-mv78xx0/pcie.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
+> > index 2b406e909a43..cb7f95c9d8eb 100644
+> > --- a/arch/arm/mach-mv78xx0/pcie.c
+> > +++ b/arch/arm/mach-mv78xx0/pcie.c
+> > @@ -214,6 +214,7 @@ static int __init mv78xx0_pcie_map_irq(const struct pci_dev *dev, u8 slot,
+> >  }
+> >  
+> >  static struct hw_pci mv78xx0_pci __initdata = {
+> > +	.ops		= &pcie_ops,
+> >  	.nr_controllers	= 8,
+> >  	.preinit	= mv78xx0_pcie_preinit,
+> >  	.setup		= mv78xx0_pcie_setup,
 
------Original Message-----
-From: Jork Loeser=20
-Sent: Thursday, June 29, 2017 3:08 PM
-To: stephen@networkplumber.org; KY Srinivasan <kys@microsoft.com>; bhelgaas=
-@google.com
-Cc: linux-pci@vger.kernel.org; devel@linuxdriverproject.org; Stephen Hemmin=
-ger <sthemmin@microsoft.com>
-Subject: RE: [PATCH] hv: fix msi affinity when device requests all possible=
- CPU's
+I provisionally made the following change for mv78xx0, based on similar
+hunks for dove, iop13xx, and orion5x.
 
-> -----Original Message-----
-> From: Stephen Hemminger [mailto:stephen@networkplumber.org]
-> Sent: Wednesday, June 28, 2017 4:22 PM
-> To: KY Srinivasan <kys@microsoft.com>; bhelgaas@google.com
-> Cc: linux-pci@vger.kernel.org; devel@linuxdriverproject.org; Stephen
-> Hemminger <sthemmin@microsoft.com>
-> Subject: [PATCH] hv: fix msi affinity when device requests all possible C=
-PU's
->=20
-> When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV, the dr=
-iver
-> requests affinity with all possible CPU's (0-239) even those CPU's are no=
-t online
-> (and will never be). Because of this the device is unable to correctly ge=
-t MSI
-> interrupt's setup.
->=20
-> This was caused by the change in 4.12 that converted this affinity into a=
-ll
-> possible CPU's (0-31) but then host reports an error since this is larger=
- than the
-> number of online cpu's.
->=20
-> Previously, this worked (up to 4.12-rc1) because only online cpu's would =
-be put
-> in mask passed to the host.
->=20
-> This patch applies only to 4.12.
-> The driver in linux-next needs a a different fix because of the changes t=
-o PCI
-> host protocol version.
+This is on my pci/enumeration branch:
 
-The vPCI patch in linux-next has the issue fixed already.
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/enumeration&id=31ddd0eab68e19cf3dfc14321c99ff0b95cda4ad
 
-Regards,
-Jork
+Please take a look and see if it makes sense.
+
+
+diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
+index 2b406e909a43..f793ebbd7539 100644
+--- a/arch/arm/mach-mv78xx0/pcie.c
++++ b/arch/arm/mach-mv78xx0/pcie.c
+@@ -201,6 +201,7 @@ static int __init mv78xx0_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
+ 		return -EINVAL;
+ 	}
+ 
++	bridge->ops = &pcie_ops;
+ 	return pci_scan_root_bus_bridge(bridge);
+ }
+ 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
