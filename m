@@ -1,42 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:35903 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751485AbdFZMwB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 08:52:01 -0400
-Message-ID: <1498481507.6075.10.camel@mtkswgap22>
-Subject: Re: next-20170626 build: 1 failures 1 warnings (next-20170626)
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Mark Brown <broonie@kernel.org>
-CC: <lorenzo.pieralisi@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-        <kernel-build-reports@lists.linaro.org>,
-        <linaro-kernel@lists.linaro.org>, <linux-next@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-pci@vger.kernel.org>
-Date: Mon, 26 Jun 2017 20:51:47 +0800
-In-Reply-To: <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
-References: <E1dPPgG-0002pe-3A@optimist>
-         <20170626115653.e4xs4lk4paibuphx@sirena.org.uk>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail.kernel.org ([198.145.29.99]:44500 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752914AbdF0UzY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 27 Jun 2017 16:55:24 -0400
+Date: Tue, 27 Jun 2017 15:55:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andi Kleen <ak@linux.intel.com>,
+        LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+        Peter Anvin <hpa@zytor.com>, Borislav Petkov <bp@alien8.de>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Stephane Eranian <eranian@google.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [patch 0/7] x86/pci: Switch to lockless ECAM configuration mode
+Message-ID: <20170627205521.GA764@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170316215002.726697858@linutronix.de>
+ <20170613002536.GA21242@tassilo.jf.intel.com>
+ <alpine.DEB.2.20.1706220026450.2152@nanos>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1706220026450.2152@nanos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2017-06-26 at 12:56 +0100, Mark Brown wrote:
-> On Mon, Jun 26, 2017 at 09:47:36AM +0100, Build bot for Mark Brown wrote:
+[+cc linux-pci]
+
+On Thu, Jun 22, 2017 at 12:28:09AM +0200, Thomas Gleixner wrote:
+> Andi,
 > 
-> This build failure is still present in -next:
+> On Mon, 12 Jun 2017, Andi Kleen wrote:
+> > On Thu, Mar 16, 2017 at 10:50:02PM +0100, Thomas Gleixner wrote:
+> > > Andi reported that the Intel Uncore performance monitoring suffers from the
+> > > global pci_lock which protects the generic PCI config space accessors.
+> > > 
+> > > This lock can be removed on X86 because all architecture specific config
+> > > space accessors are either serialized by a seperate lock or can be
+> > > converted to have their own locking. The mmconfig based access (ECAM) does
+> > > not require serialization at the config read/write level because the access
+> > > is a simple byte/word/dword read from or write to the memory mapped
+> > > configuration space. In that case the lock does not provide any more
+> > > protection than the hardware provides already.
+> > > 
+> > > The series converts the CE4100 PCI low level accessors to use the x86
+> > > specific pci_config_lock and implements the switch over to lockless ECAM
+> > > configureation space accesors when the system is capable.
+> > 
+> > What's the status of this patch series? The lock contention
+> > problem is still there.
 > 
-> > 	arm-allmodconfig
-> > ../drivers/pci/host/pcie-mediatek.c:485:8: error: implicit declaration of function 'pci_register_host_bridge' [-Werror=implicit-function-declaration]
+> Just rechecked. It still applies and boots (patch 6/7) dropped.
 > 
-> and we're at -rc7 now.
+> If Bjorn has no objections I can route it through tip tomorrow.
 
-Hi Mark,
- 
-This is due to we are in different branch but merge together...
+Sorry for the delay.  I use patchwork as my to-do list, and it only
+looks at linux-pci.  This series wasn't posted there, so I didn't see
+it until now.
 
-Anyway, I could send a critical patch, but I need Bjorn help to apply to
--next. Seems he didn't response these days.
+I have a couple trivial comments but I think it looks great overall.
+Here's my ack if you want to apply it via tip:
 
-Not sure how could I send it?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Ryder.
+Bjorn
