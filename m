@@ -1,199 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0083.outbound.protection.outlook.com ([104.47.42.83]:19376
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751492AbdFGDuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 6 Jun 2017 23:50:13 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Bjorn Helgaas' <helgaas@kernel.org>,
-        =?iso-8859-1?Q?Christian_K=F6nig?= <deathsimple@vodafone.de>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "platform-driver-x86@vger.kernel.org"
-        <platform-driver-x86@vger.kernel.org>,
-        David Airlie <airlied@linux.ie>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-Subject: RE: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access v2
-Date: Wed, 7 Jun 2017 03:50:10 +0000
-Message-ID: <BN6PR12MB1652BE84A75FA06D302A541AF7C80@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
- <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
- <20170601201430.GC12257@bhelgaas-glaptop.roam.corp.google.com>
- <72e061a5-9684-06e2-3021-80de8ca97bd7@vodafone.de>
- <20170602202631.GA1452@bhelgaas-glaptop.roam.corp.google.com>
- <779a883a-265a-ae04-b0cd-8cb3599f0dc0@vodafone.de>
- <20170606231019.GC12672@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170606231019.GC12672@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Received: from eddie.linux-mips.org ([148.251.95.138]:39556 "EHLO
+        cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752460AbdF0KS4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 27 Jun 2017 06:18:56 -0400
+Received: from localhost.localdomain ([127.0.0.1]:60170 "EHLO linux-mips.org"
+        rhost-flags-OK-OK-OK-FAIL) by eddie.linux-mips.org with ESMTP
+        id S23993976AbdF0KSylUZxt (ORCPT <rfc822;linux-pci@vger.kernel.org>
+        + 5 others); Tue, 27 Jun 2017 12:18:54 +0200
+Date: Tue, 27 Jun 2017 12:18:48 +0200
+From: Ralf Baechle <ralf@linux-mips.org>
+To: Palmer Dabbelt <palmer@dabbelt.com>
+Cc: rth@twiddle.net, ink@jurassic.park.msu.ru, mattst88@gmail.com,
+        vgupta@synopsys.com, linux@armlinux.org.uk,
+        catalin.marinas@arm.com, will.deacon@arm.com, geert@linux-m68k.org,
+        ysato@users.sourceforge.jp, dalias@libc.org, davem@davemloft.net,
+        cmetcalf@mellanox.com, gxt@mprc.pku.edu.cn, bhelgaas@google.com,
+        viro@zeniv.linux.org.uk, james.hogan@imgtec.com,
+        linux-alpha@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-snps-arc@lists.infradead.org, linux-m68k@vger.kernel.org,
+        linux-mips@linux-mips.org, linux-sh@vger.kernel.org,
+        sparclinux@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] pci:  Add and use PCI_GENERIC_SETUP Kconfig entry
+Message-ID: <20170627101640.GA19700@linux-mips.org>
+References: <CAMuHMdXSrfbSX2de2q35Hj6vQwi+sr23M1LEg82JL+FyLq4OJw@mail.gmail.com>
+ <20170626202756.22220-1-palmer@dabbelt.com>
+ <20170626202756.22220-2-palmer@dabbelt.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170626202756.22220-2-palmer@dabbelt.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, June 06, 2017 7:10 PM
-> To: Christian K=F6nig
-> Cc: linux-pci@vger.kernel.org; platform-driver-x86@vger.kernel.org;
-> Deucher, Alexander; David Airlie; amd-gfx@lists.freedesktop.org; dri-
-> devel@lists.freedesktop.org
-> Subject: Re: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access
-> v2
->=20
-> On Tue, Jun 06, 2017 at 01:51:11PM +0200, Christian K=F6nig wrote:
-> > Am 02.06.2017 um 22:26 schrieb Bjorn Helgaas:
-> > >On Fri, Jun 02, 2017 at 11:32:21AM +0200, Christian K=F6nig wrote:
-> > >>Hi Bjorn,
-> > >>
-> > >>sorry for not responding earlier and thanks for picking this thread
-> > >>up again.
-> > >>
-> > >>Am 01.06.2017 um 22:14 schrieb Bjorn Helgaas:
-> > >>>[+cc ADMGPU, DRM folks]
-> > >>>
-> > >>>On Tue, May 09, 2017 at 06:49:07PM +0200, Christian K=F6nig wrote:
-> > >>>>[SNIP]
-> > >>>>+/**
-> > >>>>+ * amdgpu_resize_bar0 - try to resize BAR0
-> > >>>>+ *
-> > >>>>+ * @adev: amdgpu_device pointer
-> > >>>>+ *
-> > >>>>+ * Try to resize BAR0 to make all VRAM CPU accessible.
-> > >>>>+ */
-> > >>>>+void amdgpu_resize_bar0(struct amdgpu_device *adev)
-> > >>>>+{
-> > >>>>+	u64 space_needed =3D roundup_pow_of_two(adev-
-> >mc.real_vram_size);
-> > >>>>+	u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) -
-> 1;
-> > >>>>+	u16 cmd;
-> > >>>>+	int r;
-> > >>>>+
-> > >>>>+	/* Free the doorbell mapping, it most likely needs to move as
-> well */
-> > >>>>+	amdgpu_doorbell_fini(adev);
-> > >>>>+	pci_release_resource(adev->pdev, 2);
-> > >>>>+
-> > >>>>+	/* Disable memory decoding while we change the BAR
-> addresses and size */
-> > >>>>+	pci_read_config_word(adev->pdev, PCI_COMMAND,
-> &cmd);
-> > >>>>+	pci_write_config_word(adev->pdev, PCI_COMMAND,
-> > >>>>+			      cmd & ~PCI_COMMAND_MEMORY);
-> > >>>>+
-> > >>>>+	r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
-> > >>>>+	if (r =3D=3D -ENOSPC)
-> > >>>>+		DRM_INFO("Not enough PCI address space for a
-> large BAR.");
-> > >>>>+	else if (r && r !=3D -ENOTSUPP)
-> > >>>>+		DRM_ERROR("Problem resizing BAR0 (%d).", r);
-> > >>>>+
-> > >>>>+	pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
-> > >>>>+
-> > >>>>+	/* When the doorbell BAR isn't available we have no chance
-> of
-> > >>>>+	 * using the device.
-> > >>>>+	 */
-> > >>>>+	BUG_ON(amdgpu_doorbell_init(adev));
->=20
-> > >>> From the PCI core perspective, it would be much cleaner to do the B=
-AR
-> > >>>resize before the driver calls pci_enable_device().  If that could b=
-e
-> > >>>done, there would be no need for this sort of shutdown/reinit stuff
-> > >>>and we wouldn't have to worry about issues like these.  The amdgpu
-> > >>>init path is pretty complicated, so I don't know whether this is
-> > >>>possible.
-> > >>I completely agree on this and it is actually the approach I tried fi=
-rst.
-> > >>
-> > >>There are just two problems with this approach:
-> > >>1. When the amdgpu driver is loaded there can already be the VGA
-> > >>console, Vesa or EFI driver active for the device and displaying the
-> > >>splash screen.
-> > >>
-> > >>When we resize and most likely relocate the BAR while those drivers
-> > >>are active it will certainly cause problems.
-> > >>
-> > >>What amdgpu does before trying to resize the BAR is kicking out
-> > >>other driver and making sure it has exclusive access to the
-> > >>hardware.
-> > >I don't understand the problem here yet.  If you need to enable the
-> > >device, then disable it, resize, and re-enable it, that's fine.
-> >
-> > The issue is we never enable the device ourself in amdgpu, except
-> > for some rare cases during resume.
-> >
-> > In most of the cases we have to handle this is the primary display
-> > device which is enabled by either the BIOS, VGA console, VesaFB or
-> > EFIFB. Amdgpu just kicks out whatever driver was responsible for the
-> > device previously and takes over.
-> >
-> > I could of course do the disable/resize/reenable dance, but I would
-> > rather want to avoid that.
-> >
-> > The hardware is most likely already displaying a boot splash and we
-> > want to transit to the desktop without any flickering (at least
-> > that's the long term goal). Completely disabling the device to do
-> > this doesn't sounds like a good idea if we want that.
-> >
-> > >The important thing I'm looking for is that the resize happens before
-> > >a pci_enable_device(), because pci_enable_device() is the sync point
-> > >where the PCI core enables resources and makes them available to the
-> > >driver.  Drivers know that they can't look at the resources before
-> > >that point.  There's a little bit of text about this in [1].
-> >
-> > Yeah, I understand that. But wouldn't it be sufficient to just
-> > disable memory decoding during the resize?
-> >
-> > I can easily guarantee that the CPU isn't accessing the BAR during
-> > the time (we need to do this for changing the memory clocks as
-> > well), but I have a bad gut feeling completely turning of the device
-> > while we are still displaying stuff.
->=20
-> pci_disable_device() doesn't turn off the device; it only disables bus
-> mastering (and some of the arch-specific pcibios_disable_device()
-> implementations do a little more).  But it's certainly the wrong
-> direction -- it disables DMA, which has nothing to do with the BAR
-> decoding we're interested in.
->=20
-> What if the driver did something like this:
->=20
->   pci_disable_decoding(dev, IORESOURCE_MEM);
->   pci_release_resource(dev, 2);
->   pci_resize_bar(dev, bar, size);
->   pci_assign_resources(dev);
->   pci_enable_decoding(dev, IORESOURCE_MEM);
->=20
-> That would require adding pci_enable/disable_decoding() to the driver
-> API, along with the requirement that the driver discard and remap
-> some resources after pci_enable_decoding().  I think
-> pci_enable_decoding() would look much like the existing
-> pci_enable_resources() except taking a resource type instead of a
-> bitmask.
->=20
-> I would *prefer* if we released and reassigned all resources, because
-> then the core has complete flexibility to move things around, and it's
-> easy to document that pci_assign_resources() means you have to
-> reread/remap everything.
->=20
-> If the driver only releases specified BARs, the pci_assign_resources()
-> interface becomes "you need to reread/remap the BAR you resized, plus
-> any other BARs you released".  It's a little more complicated to
-> describe and more dependent on previous driver actions.
->=20
-> But releasing only the specified BAR will make your life easier and
-> help with the fact that multiple drivers might be using the same BAR
-> (I have to raise my eyebrows at that), so I think I'm OK with it.  And
+On Mon, Jun 26, 2017 at 01:27:56PM -0700, Palmer Dabbelt wrote:
 
-It's pretty standard on SoCs.  The kernel has the mfd infrastructure to sup=
-port it.
+Acked-by: Ralf Baechle <ralf@linux-mips.org>
 
-Alex
+Thanks,
 
-> it would also side-step the "can't restore previous state" problem.
->=20
-> It's an "interesting" asymmetry that pci_enable_device() turns on BAR
-> decoding but doesn't touch bus mastering, while pci_disable_device()
-> turns off bus mastering but doesn't touch BAR decoding.
->=20
-> Bjorn
+  Ralf
