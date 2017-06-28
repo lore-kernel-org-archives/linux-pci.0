@@ -1,72 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:35812 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1751977AbdFLOSx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 12 Jun 2017 10:18:53 -0400
-Date: Mon, 12 Jun 2017 10:18:52 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-cc: gregkh@linuxfoundation.org, USB list <linux-usb@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
-In-Reply-To: <CAAd53p6S9NPBD=qGP419mhBgSgn-s1dc=adued8Y+Y0=GDsHKg@mail.gmail.com>
-Message-ID: <Pine.LNX.4.44L0.1706121010010.2092-100000@iolanthe.rowland.org>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:36333 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751545AbdF1XWO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jun 2017 19:22:14 -0400
+Received: by mail-pg0-f49.google.com with SMTP id u62so38662693pgb.3
+        for <linux-pci@vger.kernel.org>; Wed, 28 Jun 2017 16:22:13 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, devel@linuxdriverproject.org,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: [PATCH] hv: fix msi affinity when device requests all possible CPU's
+Date: Wed, 28 Jun 2017 16:22:04 -0700
+Message-Id: <20170628232204.15227-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Let's get some help from people who understand PCI well.
+When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV,
+the driver requests affinity with all possible CPU's (0-239) even
+those CPU's are not online (and will never be). Because of this the device
+is unable to correctly get MSI interrupt's setup.
 
-Here's the general problem: Kai-Heng has a PCI-based USB host 
-controller that advertises wakeup capability from D3, but it doesn't 
-assert PME# from D3 when it should.  For "lspci -vv" output, see
+This was caused by the change in 4.12 that converted this affinity
+into all possible CPU's (0-31) but then host reports
+an error since this is larger than the number of online cpu's.
 
-	http://marc.info/?l=linux-usb&m=149570231732519&w=2
+Previously, this worked (up to 4.12-rc1) because only online cpu's
+would be put in mask passed to the host.
 
-On Mon, 12 Jun 2017, Kai-Heng Feng wrote:
+This patch applies only to 4.12.
+The driver in linux-next needs a a different fix because of the changes
+to PCI host protocol version.
 
-> On Mon, Jun 12, 2017 at 3:04 PM, Kai-Heng Feng
-> <kai.heng.feng@canonical.com> wrote:
-> > On Fri, Jun 9, 2017 at 10:43 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> >> On Fri, 9 Jun 2017, Kai-Heng Feng wrote:
-> >>
-> >> Is this really the right solution?  Maybe it would be better to allow
-> >> the controller to go into D3 provided no wakeup signal is needed.  You
-> >> could do:
-> >>
-> >>                 device_set_wakeup_capable(&pdev->dev, 0);
-> >
-> > This doesn't work.
-> > After applying this function, still nothing happens when devices get plugged in.
-> > IIUC this function disable the wakeup function, but what I want to do
-> > here is to have PME signal works even when runtime PM is enabled.
+Fixes: 433fcf6b7b31 ("PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >= 32 CPUs")
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This may indicate a bug in either the PCI or USB stacks (or both!).  If 
-a driver requires wakeup capability from runtime suspend but the device 
-does not provide it, the PCI core should not allow the device to go 
-into runtime suspend.  Or is that the driver's responsibility?
-
-> > I also saw some legacy PCI PM stuff, so I also tried:
-> > device_set_wakeup_capable(&pdev->dev, 1);
-> > ...doesn't work either.
-> >
-> >>
-> >> Another alternative is to put the controller into D2 instead of D3, but
-> >> (1) I don't know how to do that, and (2) we don't know if wakeup
-> >> signalling works any better in D2 than it does in D3.
-> >
-> > I'll try if D2 works.
-> 
-> Put the device into D2 instead of D3 can make the wakeup signaling
-> work, i.e. USB devices can be correctly detected after plugged into
-> EHCI port.
-> 
-> Do you think this alternative an acceptable workaround?
-
-Yes, it is.  The difficulty is that I don't know how to tell the PCI 
-core that the device should go in D2 during runtime suspend instead of 
-D3.  Some sort of quirk may be needed -- perhaps Bjorn can help.
-
-Alan Stern
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 84936383e269..3cadfcca3ae9 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -900,10 +900,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 	 * processors because Hyper-V only supports 64 in a guest.
+ 	 */
+ 	affinity = irq_data_get_affinity_mask(data);
++	cpumask_and(affinity, affinity, cpu_online_mask);
++
+ 	if (cpumask_weight(affinity) >= 32) {
+ 		int_pkt->int_desc.cpu_mask = CPU_AFFINITY_ALL;
+ 	} else {
+-		for_each_cpu_and(cpu, affinity, cpu_online_mask) {
++		for_each_cpu(cpu, affinity) {
+ 			int_pkt->int_desc.cpu_mask |=
+ 				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
+ 		}
+-- 
+2.11.0
