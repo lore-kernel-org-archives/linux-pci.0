@@ -1,67 +1,57 @@
-Return-Path: <SRS0=I39A=5Y=rowland.harvard.edu=stern+5952b05e@kernel.org>
-Return-Path: <SRS0=I39A=5Y=rowland.harvard.edu=stern+5952b05e@kernel.org>
-Date: Mon, 19 Jun 2017 14:32:57 -0400 (EDT)
-From: Alan Stern <stern@rowland.harvard.edu>
+Return-Path: <SRS0=ylFh=6B=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=ylFh=6B=linutronix.de=tglx@kernel.org>
+Date: Wed, 28 Jun 2017 22:31:20 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Kai-Heng Feng <kai.heng.feng@canonical.com>,
-    Bjorn Helgaas <bhelgaas@google.com>,  <gregkh@linuxfoundation.org>,
-    USB list <linux-usb@vger.kernel.org>,  <linux-pci@vger.kernel.org>,
-    LKML <linux-kernel@vger.kernel.org>,
-    "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-     <linux-pm@vger.kernel.org>
-Subject: Re: [PATCH] usb: host: ehci: workaround PME bug on AMD EHCI controller
-In-Reply-To: <20170619174533.GA20550@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org>
+cc: LKML <linux-kernel@vger.kernel.org>, x86@kernel.org,
+    Peter Anvin <hpa@zytor.com>, Borislav Petkov <bp@alien8.de>,
+    Peter Zijlstra <peterz@infradead.org>,
+    Stephane Eranian <eranian@google.com>, Andi Kleen <ak@linux.intel.com>,
+    linux-pci@vger.kernel.org
+Subject: Re: [patch 4/7] PCI: Provide Kconfig option for lockless config
+ space accessors
+In-Reply-To: <20170627211152.GE764@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1706282220400.1890@nanos>
+References: <20170316215002.726697858@linutronix.de> <20170316215057.205961140@linutronix.de> <20170627211152.GE764@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 19 Jun 2017, Bjorn Helgaas wrote:
-
-> > > Have you tested it with system suspend?  That is, if you suspend the
-> > > whole computer, does plugging or unplugging a USB device cause the
-> > > system to wake up?
-> > 
-> > No, the system will not wake up when plugging or unplugging.
-> > Tried several times, nether runtime PM enabled nor runtime PM disabled
-> > will wake up the system under S3, when (un)plugging USB devices.
+On Tue, 27 Jun 2017, Bjorn Helgaas wrote:
+> On Thu, Mar 16, 2017 at 10:50:06PM +0100, Thomas Gleixner wrote:
+> > Provide a kernel config option which can be selected by an architecture
+> > when the low level PCI configuration space accessors in the architecture
+> > use their own serialization or can operate completely lockless.
 > 
-> Alan, I don't know what this test means for the patch
-> (http://marc.info/?l=linux-pci&m=149760607914628&w=2).
+> The arch/x86/pci/common.c comment:
 > 
-> pci_target_state() is documented as "return the deepest state from
-> which the device can generate wake events."  For this device, I guess
-> that means D2, and the patch should accomplish that.
+>   /*
+>    * This interrupt-safe spinlock protects all accesses to PCI
+>    * configuration space.
+>    */
+>   DEFINE_RAW_SPINLOCK(pci_config_lock);
 > 
-> I don't know what's supposed to happen to this device when the system
-> is in S3.  I assume that if the system is in S3, most devices are in
-> D3.  If this device is in D3, we won't get PMEs, which I guess is what
-> Kai-Heng is seeing.  Is that the desired behavior?  Or do we want the
-> PMEs enough that we should leave the device in D2 (if that's even
-> possible)?
+> is no longer quite correct.
 
-It's possible that the test was invalid.  Kai-Heng did not say whether
-/sys/.../power/wakeup was set to "enabled" for both the EHCI controller
-and the USB root hub beneath it, before the test was started.  If
-either of them was set to "disabled" then we would not expect a plug or
-unplug event to wake up the system.
+Yes. I updated it to:
 
-In any case, the controller should be set to the lowest power setting 
-that is consistent with the desired wakeup behavior.  If wakeup is set 
-to "enabled" then the state should be D2 -- if possible.  That's the 
-theory, anyway.  If the system supports putting devices only into D3 
-during S3 sleep then there's no choice, but if we do have a choice then 
-we should take it.
+ * This interrupt-safe spinlock protects all accesses to PCI configuration
+ * space, except for the mmconfig (ECAM) based operations.
 
-BTW, I just noticed that pci_target_state() uses device_may_wakeup() to
-get the desired wakeup behavior.  That is correct for system sleep, but
-it is wrong for runtime PM.  For runtime PM, wakeup should be enabled
-whenever the hardware allows it, so the test should be
-device_can_wakeup().
+> I think the raw_pci_read() and raw_pci_write() implementations are
+> such that we use the old locked accessors for the first 256 bytes,
+> even when ECAM is available.  Not necessarily a problem, just an
+> observation.
 
-This means that pci_target_state() should behave differently depending
-on whether it is called from pci_prepare_to_sleep() or from
-pci_finish_runtime_suspend().  Probably nobody noticed this before 
-because it usually doesn't make any difference.
+No, we actually don't after the next patch, which replaces the
+pci_root_ops.read/write function pointers with the lockless ECAM accessors
+after the end of the initialization, if none of the special quirks replaced
+raw_pci_ext_ops and mmconfig/ECAM is available.
 
-Alan Stern
+> I guess the uncore PMU registers are in the extended config space.
+
+Yes.
+
+Thanks,
+
+	tglx
