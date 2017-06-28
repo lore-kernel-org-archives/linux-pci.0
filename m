@@ -1,40 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:47309 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751620AbdFOJZJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 15 Jun 2017 05:25:09 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>, linuxppc-dev@lists.ozlabs.org
-Cc: kvm@vger.kernel.org, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Yongji Xie <elohimes@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        David Gibson <david@gibson.dropbear.id.au>
-Subject: Re: [PATCH kernel 2/3] pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-In-Reply-To: <20170615054845.8428-3-aik@ozlabs.ru>
-References: <20170615054845.8428-1-aik@ozlabs.ru> <20170615054845.8428-3-aik@ozlabs.ru>
-Date: Thu, 15 Jun 2017 19:25:06 +1000
-Message-ID: <877f0dppql.fsf@concordia.ellerman.id.au>
+Return-Path: <sfr@canb.auug.org.au>
+Date: Thu, 29 Jun 2017 07:55:37 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, bjorn@helgaas.com, Ryder Lee
+ <ryder.lee@mediatek.com>, Andrew Morton <akpm@linux-foundation.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH] critical patch to fix pci-tree build bot failure
+Message-ID: <20170629075537.0aec88ee@canb.auug.org.au>
+In-Reply-To: <20170628204316.GU17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+	<CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
+	<20170628081026.5a211391@canb.auug.org.au>
+	<20170628204316.GU17844@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Alexey Kardashevskiy <aik@ozlabs.ru> writes:
+Hi Bjorn,
 
-> From: Yongji Xie <elohimes@gmail.com>
+On Wed, 28 Jun 2017 15:43:17 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote:
 >
-> Any IODA host bridge have the capability of IRQ remapping.
-> So we set PCI_BUS_FLAGS_MSI_REMAP when this kind of host birdge
-> is detected.
+> On Wed, Jun 28, 2017 at 08:10:26AM +1000, Stephen Rothwell wrote:
+> > Hi Bjorn,
+> > 
+> > On Tue, 27 Jun 2017 08:20:44 -0500 Bjorn Helgaas <bjorn.helgaas@gmail.com> wrote:  
+> > >
+> > > On Tue, Jun 27, 2017 at 4:24 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:  
+> > > > Hi Stephen and Andrew,
+> > > >
+> > > > Could you help to apply this patch? Seems Bjorn didn't response it these days.    
+> > > 
+> > > I'm not dead, but I was on vacation most of last week.  I'll resolve this today.  
+> > 
+> > Should I just add this patch to linux-next today (if you don't get
+> > around to it in the next hour or so)?  
+> 
+> Just FYI, this should be fixed in my -next branch now, so you shouldn't
+> need to add the patch yourself, Stephen.
 
-Where's the code that actually enforces this property?
+Excellent, thanks.
 
-It would be good to have a comment in pnv_pci_ioda_root_bridge_prepare()
-(probably), pointing to that code, so that we can remember the
-relationship between the two.
-
-cheers
+-- 
+Cheers,
+Stephen Rothwell
