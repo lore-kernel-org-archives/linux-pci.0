@@ -1,81 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:35221 "EHLO
-        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751814AbdFAKWA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 06:22:00 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: shawn.lin@rock-chips.com, wenrui.li@rock-chips.com, heiko@sntech.de
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: rockchip: Handle return value of clk_prepare_enable
-Date: Thu,  1 Jun 2017 15:51:45 +0530
-Message-Id: <4ebfc69644f9d6e9e5ff0cfc82e9efa5c476be0e.1496312348.git.arvind.yadav.cs@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <helgaas@kernel.org>
+Date: Wed, 28 Jun 2017 15:43:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Bjorn Helgaas <bjorn.helgaas@gmail.com>, bjorn@helgaas.com,
+	Ryder Lee <ryder.lee@mediatek.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH] critical patch to fix pci-tree build bot failure
+Message-ID: <20170628204316.GU17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <1498555451-55073-1-git-send-email-ryder.lee@mediatek.com>
+ <CABhMZUW0q3iAwsf6_ykEM1wTnEv1O9gMP3YUvXzr+HDwJq=VXA@mail.gmail.com>
+ <20170628081026.5a211391@canb.auug.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170628081026.5a211391@canb.auug.org.au>
 List-ID: <linux-pci.vger.kernel.org>
 
-clk_prepare_enable() can fail here and we must check its return value.
+On Wed, Jun 28, 2017 at 08:10:26AM +1000, Stephen Rothwell wrote:
+> Hi Bjorn,
+> 
+> On Tue, 27 Jun 2017 08:20:44 -0500 Bjorn Helgaas <bjorn.helgaas@gmail.com> wrote:
+> >
+> > On Tue, Jun 27, 2017 at 4:24 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> > > Hi Stephen and Andrew,
+> > >
+> > > Could you help to apply this patch? Seems Bjorn didn't response it these days.  
+> > 
+> > I'm not dead, but I was on vacation most of last week.  I'll resolve this today.
+> 
+> Should I just add this patch to linux-next today (if you don't get
+> around to it in the next hour or so)?
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/pci/host/pcie-rockchip.c | 34 ++++++++++++++++++++++++++++------
- 1 file changed, 28 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 0e020b6..0a248cd 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1259,24 +1259,46 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
- 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
- 	int err;
- 
--	clk_prepare_enable(rockchip->clk_pcie_pm);
--	clk_prepare_enable(rockchip->hclk_pcie);
--	clk_prepare_enable(rockchip->aclk_perf_pcie);
--	clk_prepare_enable(rockchip->aclk_pcie);
-+	err = clk_prepare_enable(rockchip->clk_pcie_pm);
-+	if (err)
-+		goto err_pcie_pm;
-+
-+	err = clk_prepare_enable(rockchip->hclk_pcie);
-+	if (err)
-+		goto err_hclk_pcie;
-+
-+	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
-+	if (err)
-+		goto err_aclk_perf_pcie;
-+
-+	err = clk_prepare_enable(rockchip->aclk_pcie);
-+	if (err)
-+		goto err_aclk_pcie;
- 
- 	err = rockchip_pcie_init_port(rockchip);
- 	if (err)
--		return err;
-+		goto err_pcie_resume;
- 
- 	err = rockchip_cfg_atu(rockchip);
- 	if (err)
--		return err;
-+		goto err_pcie_resume;
- 
- 	/* Need this to enter L1 again */
- 	rockchip_pcie_update_txcredit_mui(rockchip);
- 	rockchip_pcie_enable_interrupts(rockchip);
- 
- 	return 0;
-+
-+err_pcie_resume:
-+	clk_disable_unprepare(rockchip->aclk_pcie);
-+err_aclk_pcie:
-+	clk_disable_unprepare(rockchip->aclk_perf_pcie);
-+err_aclk_perf_pcie:
-+	clk_disable_unprepare(rockchip->hclk_pcie);
-+err_hclk_pcie:
-+	clk_disable_unprepare(rockchip->clk_pcie_pm);
-+err_pcie_pm:
-+	return err;
- }
- 
- static int rockchip_pcie_probe(struct platform_device *pdev)
--- 
-1.9.1
+Just FYI, this should be fixed in my -next branch now, so you shouldn't
+need to add the patch yourself, Stephen.
