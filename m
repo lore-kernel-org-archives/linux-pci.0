@@ -1,102 +1,43 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 14 Jun 2017 13:10:04 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 28 Jun 2017 07:32:12 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux USB <linux-usb@vger.kernel.org>,
-        Mathias Nyman <mathias.nyman@linux.intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mario Limonciello <mario_limonciello@dell.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Hans De Goede <hdegoede@redhat.com>,
-        Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 6/8] PCI / PM: Restore PME Enable if skipping wakeup
- setup
-Message-ID: <20170614181004.GB20778@bhelgaas-glaptop.roam.corp.google.com>
-References: <8918199.uo13RZ8hZk@aspire.rjw.lan>
- <1615075.mBkoKApGGc@aspire.rjw.lan>
- <1667474.rysFhR2k32@aspire.rjw.lan>
+To: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: Build failure in -next due to 'PCI: versatile: Convert PCI scan
+ API to pci_scan_root_bus_bridge()'
+Message-ID: <20170628123212.GP17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <113c3ec2-152d-de17-e05e-ade4fe76b7d8@roeck-us.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1667474.rysFhR2k32@aspire.rjw.lan>
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <113c3ec2-152d-de17-e05e-ade4fe76b7d8@roeck-us.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 12, 2017 at 10:53:36PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The wakeup_prepared PCI device flag is used for preventing subsequent
-> changes of PCI device wakeup settings in the same way (e.g. enabling
-> device wakeup twice in a row).
-> 
-> However, in some cases PME Enable may be updated by things like PCI
-> configuration space restoration in the meantime and it may need to be
-> set again even though the rest of the settings need not change, so
-> modify __pci_enable_wake() to do that when it is about to return
-> early.
-> 
-> Also, it is reasonable to expect that __pci_enable_wake() will always
-> clear PME Status when invoked to disable device wakeup, so make it do
-> so even if it is going to return early then.
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+On Tue, Jun 27, 2017 at 07:30:38PM -0700, Guenter Roeck wrote:
+> drivers/pci/host/pci-versatile.c: In function 'versatile_pci_probe':
+> drivers/pci/host/pci-versatile.c:131:38: error: 'dev' undeclared
+>   bridge = devm_pci_alloc_host_bridge(dev, 0);
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+We fixed this yesterday, but I haven't put it into -next yet (I wanted
+the autobuilder to have a crack at it first):
 
-> ---
->  drivers/pci/pci.c |   26 ++++++++++++++++++++++++--
->  1 file changed, 24 insertions(+), 2 deletions(-)
-> 
-> Index: linux-pm/drivers/pci/pci.c
-> ===================================================================
-> --- linux-pm.orig/drivers/pci/pci.c
-> +++ linux-pm/drivers/pci/pci.c
-> @@ -1805,6 +1805,23 @@ static void __pci_pme_active(struct pci_
->  	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
->  }
->  
-> +static void pci_pme_restore(struct pci_dev *dev)
-> +{
-> +	u16 pmcsr;
-> +
-> +	if (!dev->pme_support)
-> +		return;
-> +
-> +	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
-> +	if (dev->wakeup_prepared) {
-> +		pmcsr |= PCI_PM_CTRL_PME_ENABLE;
-> +	} else {
-> +		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
-> +		pmcsr |= PCI_PM_CTRL_PME_STATUS;
-> +	}
-> +	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
-> +}
-> +
->  /**
->   * pci_pme_active - enable or disable PCI device's PME# function
->   * @dev: PCI device to handle.
-> @@ -1899,9 +1916,14 @@ int __pci_enable_wake(struct pci_dev *de
->  	if (enable && !runtime && !device_may_wakeup(&dev->dev))
->  		return -EINVAL;
->  
-> -	/* Don't do the same thing twice in a row for one device. */
-> -	if (!!enable == !!dev->wakeup_prepared)
-> +	/*
-> +	 * Don't do the same thing twice in a row for one device, but restore
-> +	 * PME Enable in case it has been updated by config space restoration.
-> +	 */
-> +	if (!!enable == !!dev->wakeup_prepared) {
-> +		pci_pme_restore(dev);
->  		return 0;
-> +	}
->  
->  	/*
->  	 * According to "PCI System Architecture" 4th ed. by Tom Shanley & Don
-> 
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-versatile&id=7a530532567f059f87671cae798c5cd9f32865ed
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
