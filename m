@@ -1,82 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33482 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754730AbdFNIZi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 14 Jun 2017 04:25:38 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 83so80789187pfr.0
-        for <linux-pci@vger.kernel.org>; Wed, 14 Jun 2017 01:25:37 -0700 (PDT)
-From: Guodong Xu <guodong.xu@linaro.org>
-To: robh+dt@kernel.org, mark.rutland@arm.com, xuwei5@hisilicon.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        wangkefeng.wang@huawei.com, xuejiancheng@hisilicon.com,
-        peter.griffin@linaro.org, puck.chen@hisilicon.com,
-        lee.jones@linaro.org, ulf.hansson@linaro.org, bhelgaas@google.com,
-        arnd@arndb.de
-Cc: zhangfei.gao@linaro.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Guodong Xu <guodong.xu@linaro.org>
-Subject: [PATCH v3 16/21] arm64: dts: hisi: add kirin pcie node
-Date: Wed, 14 Jun 2017 16:23:33 +0800
-Message-Id: <20170614082338.15673-17-guodong.xu@linaro.org>
-In-Reply-To: <20170614082338.15673-1-guodong.xu@linaro.org>
-References: <20170614082338.15673-1-guodong.xu@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 28 Jun 2017 14:53:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Subject: Re: [PATCH v5 1/2] PCI: mediatek: Add Mediatek PCIe host controller
+ support
+Message-ID: <20170628195325.GR17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
+ <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
+MIME-Version: 1.0
+In-Reply-To: <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Xiaowei Song <songxiaowei@hisilicon.com>
+On Sun, May 21, 2017 at 11:42:24AM +0800, Ryder Lee wrote:
+> Add support for the Mediatek PCIe Gen2 controller which can
+> be found on MT7623 series SoCs.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  drivers/pci/host/Kconfig         |  11 +
+>  drivers/pci/host/Makefile        |   1 +
+>  drivers/pci/host/pcie-mediatek.c | 553 +++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 565 insertions(+)
+>  create mode 100644 drivers/pci/host/pcie-mediatek.c
+>...
 
-Add PCIe node for hi3660, and add binding documentation.
+> +static int mtk_pcie_register_host(struct pci_host_bridge *host)
+> +{
+> +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
+> +	struct pci_bus *child;
+> +	int err;
+> +
+> +	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
----
- arch/arm64/boot/dts/hisilicon/hi3660.dtsi | 32 +++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+Do you really need the PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS
+flags?  I'd like to get rid of them because we should automatically
+assign resources if the firmware hasn't done it.
 
-diff --git a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-index 4101bf5..bdfdf27 100644
---- a/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-+++ b/arch/arm64/boot/dts/hisilicon/hi3660.dtsi
-@@ -817,5 +817,37 @@
- 			cs-gpios = <&gpio18 5 0>;
- 			status = "disabled";
- 		};
-+
-+		pcie@f4000000 {
-+			compatible = "hisilicon,kirin960-pcie";
-+			reg = <0x0 0xf4000000 0x0 0x1000>,
-+			      <0x0 0xff3fe000 0x0 0x1000>,
-+			      <0x0 0xf3f20000 0x0 0x40000>,
-+			      <0x0 0xf5000000 0x0 0x2000>;
-+			reg-names = "dbi", "apb", "phy", "config";
-+			bus-range = <0x0  0x1>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			device_type = "pci";
-+			ranges = <0x02000000 0x0 0x00000000 0x0
-+				  0xf6000000 0x0 0x2000000>;
-+			num-lanes = <1>;
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0xf800 0 0 7>;
-+			interrupt-map = <0x0 0 0 1 &gic 0 0 0 282 4>,
-+					<0x0 0 0 2 &gic 0 0 0  283 4>,
-+					<0x0 0 0 3 &gic 0 0 0  284 4>,
-+					<0x0 0 0 4 &gic 0 0 0  285 4>;
-+			clocks = <&crg_ctrl HI3660_PCIEPHY_REF>,
-+				 <&crg_ctrl HI3660_CLK_GATE_PCIEAUX>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_PHY>,
-+				 <&crg_ctrl HI3660_PCLK_GATE_PCIE_SYS>,
-+				 <&crg_ctrl HI3660_ACLK_GATE_PCIE>;
-+			clock-names = "pcie_phy_ref", "pcie_aux",
-+				      "pcie_apb_phy", "pcie_apb_sys",
-+				      "pcie_aclk";
-+			reset-gpios = <&gpio11 1 0 >;
-+			status = "ok";
-+		};
- 	};
- };
--- 
-2.10.2
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
