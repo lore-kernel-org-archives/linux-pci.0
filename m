@@ -1,88 +1,154 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f179.google.com ([209.85.216.179]:34541 "EHLO
-        mail-qt0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751018AbdFTIgz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 04:36:55 -0400
-Received: by mail-qt0-f179.google.com with SMTP id v20so12285685qtg.1
-        for <linux-pci@vger.kernel.org>; Tue, 20 Jun 2017 01:36:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5947CAD8.4040607@hisilicon.com>
-References: <20170614082338.15673-1-guodong.xu@linaro.org> <20170614082338.15673-20-guodong.xu@linaro.org>
- <CAPDyKFpvJu8_TETWr0Vy4ubDC7NYvi7TxmSLYZyw33qHFsoNaQ@mail.gmail.com> <5947CAD8.4040607@hisilicon.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 20 Jun 2017 10:36:53 +0200
-Message-ID: <CAPDyKFo=hqp=j=nWpO8uf_0pGTSKjN0T-ZKqD8cuKp1C3Q2_hA@mail.gmail.com>
-Subject: Re: [PATCH v3 19/21] dt-bindings: mmc: dw_mmc-k3: add document of
- hi3660 mmc
-To: Wei Xu <xuwei5@hisilicon.com>
-Cc: Guodong Xu <guodong.xu@linaro.org>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>, wangkefeng.wang@huawei.com,
-        xuejiancheng@hisilicon.com,
-        Peter Griffin <peter.griffin@linaro.org>,
-        puck.chen@hisilicon.com, Lee Jones <lee.jones@linaro.org>,
+Received: from ale.deltatee.com ([207.54.116.67]:49035 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751798AbdF2D1H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:07 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        zhangfei <zhangfei.gao@linaro.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Li Wei <liwei213@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:36 -0600
+Message-Id: <20170629032648.3073-5-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 04/16] switchtec: add link event notifier callback
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Wei,
+In order for the switchtec NTB code to handle link change events we
+create a notifier callback in the switchtec code which gets called
+whenever an appropriate event interrupt occurs.
 
-On 19 June 2017 at 15:00, Wei Xu <xuwei5@hisilicon.com> wrote:
-> Hi Ulf,
->
-> On 2017/6/19 13:43, Ulf Hansson wrote:
->> On 14 June 2017 at 10:23, Guodong Xu <guodong.xu@linaro.org> wrote:
->>> Add bindings for hi3660 mmc support
->>>
->>> Signed-off-by: Li Wei <liwei213@huawei.com>
->>> Signed-off-by: Guodong Xu <guodong.xu@linaro.org>
->>> ---
->>>  Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt | 1 +
->>>  1 file changed, 1 insertion(+)
->>>
->>> diff --git a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>> index df37058..8af1afc 100644
->>> --- a/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>> +++ b/Documentation/devicetree/bindings/mmc/k3-dw-mshc.txt
->>> @@ -12,6 +12,7 @@ extensions to the Synopsys Designware Mobile Storage Host Controller.
->>>  Required Properties:
->>>
->>>  * compatible: should be one of the following.
->>> +  - "hisilicon,hi3660-dw-mshc": for controllers with hi3660 specific extensions.
->>>    - "hisilicon,hi4511-dw-mshc": for controllers with hi4511 specific extensions.
->>>    - "hisilicon,hi6220-dw-mshc": for controllers with hi6220 specific extensions.
->>>
->>> --
->>> 2.10.2
->>>
->>
->> Thanks, applied for next!
->
-> Thanks!
-> Last week I had applied the v4 patch set[1]
-> and this patch is included.
-> But it should be fine for the upper gatekeeper to merge
-> since these 2 patch are same.
+In order to preserve userspace's ability to follow these events,
+we compare the event count with a stored copy from last time we
+checked.
 
-No, that's not how git works.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/pci/switch/switchtec.c | 51 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/switchtec.h      |  4 ++++
+ 2 files changed, 55 insertions(+)
 
-If the patch has the same hash, that would be fine, but that isn't the
-case here as we have two different hashes for the same change.
-
-To deal with this, I have just dropped the change from my tree and
-leave it to you to carry the patch. Feel free to add my ack for it.
-
-Kind regards
-Uffe
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index fc139ee3fa73..8fb01d7a793c 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -969,6 +969,49 @@ static const struct file_operations switchtec_fops = {
+ 	.compat_ioctl = switchtec_dev_ioctl,
+ };
+ 
++static void link_event_work(struct work_struct *work)
++{
++	struct switchtec_dev *stdev;
++
++	stdev = container_of(work, struct switchtec_dev, link_event_work);
++
++	if (stdev->link_notifier)
++		stdev->link_notifier(stdev);
++}
++
++static void check_link_state_events(struct switchtec_dev *stdev)
++{
++	int idx;
++	u32 reg;
++	int count;
++	int occurred = 0;
++
++	for (idx = 0; idx < stdev->pff_csr_count; idx++) {
++		reg = ioread32(&stdev->mmio_pff_csr[idx].link_state_hdr);
++		dev_dbg(&stdev->dev, "link_state: %d->%08x\n", idx, reg);
++		count = (reg >> 5) & 0xFF;
++
++		if (count != stdev->link_event_count[idx]) {
++			occurred = 1;
++			stdev->link_event_count[idx] = count;
++		}
++	}
++
++	if (occurred)
++		schedule_work(&stdev->link_event_work);
++}
++
++static void enable_link_state_events(struct switchtec_dev *stdev)
++{
++	int idx;
++
++	for (idx = 0; idx < stdev->pff_csr_count; idx++) {
++		iowrite32(SWITCHTEC_EVENT_CLEAR |
++			  SWITCHTEC_EVENT_EN_IRQ,
++			  &stdev->mmio_pff_csr[idx].link_state_hdr);
++	}
++}
++
+ static void stdev_release(struct device *dev)
+ {
+ 	struct switchtec_dev *stdev = to_stdev(dev);
+@@ -1021,6 +1064,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+ 	stdev->mrpc_busy = 0;
+ 	INIT_WORK(&stdev->mrpc_work, mrpc_event_work);
+ 	INIT_DELAYED_WORK(&stdev->mrpc_timeout, mrpc_timeout_work);
++	INIT_WORK(&stdev->link_event_work, link_event_work);
+ 	init_waitqueue_head(&stdev->event_wq);
+ 	atomic_set(&stdev->event_cnt, 0);
+ 
+@@ -1064,6 +1108,9 @@ static int mask_event(struct switchtec_dev *stdev, int eid, int idx)
+ 	if (!(hdr & SWITCHTEC_EVENT_OCCURRED && hdr & SWITCHTEC_EVENT_EN_IRQ))
+ 		return 0;
+ 
++	if (eid == SWITCHTEC_IOCTL_EVENT_LINK_STATE)
++		return 0;
++
+ 	dev_dbg(&stdev->dev, "%s: %d %d %x\n", __func__, eid, idx, hdr);
+ 	hdr &= ~(SWITCHTEC_EVENT_EN_IRQ | SWITCHTEC_EVENT_OCCURRED);
+ 	iowrite32(hdr, hdr_reg);
+@@ -1083,6 +1130,7 @@ static int mask_all_events(struct switchtec_dev *stdev, int eid)
+ 		for (idx = 0; idx < stdev->pff_csr_count; idx++) {
+ 			if (!stdev->pff_local[idx])
+ 				continue;
++
+ 			count += mask_event(stdev, eid, idx);
+ 		}
+ 	} else {
+@@ -1107,6 +1155,8 @@ static irqreturn_t switchtec_event_isr(int irq, void *dev)
+ 		iowrite32(reg, &stdev->mmio_part_cfg->mrpc_comp_hdr);
+ 	}
+ 
++	check_link_state_events(stdev);
++
+ 	for (eid = 0; eid < SWITCHTEC_IOCTL_MAX_EVENTS; eid++)
+ 		event_count += mask_all_events(stdev, eid);
+ 
+@@ -1233,6 +1283,7 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 	iowrite32(SWITCHTEC_EVENT_CLEAR |
+ 		  SWITCHTEC_EVENT_EN_IRQ,
+ 		  &stdev->mmio_part_cfg->mrpc_comp_hdr);
++	enable_link_state_events(stdev);
+ 
+ 	rc = cdev_device_add(&stdev->cdev, &stdev->dev);
+ 	if (rc)
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index a75f3d7e6876..6a056ffbc439 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -344,6 +344,10 @@ struct switchtec_dev {
+ 
+ 	wait_queue_head_t event_wq;
+ 	atomic_t event_cnt;
++
++	struct work_struct link_event_work;
++	void (*link_notifier)(struct switchtec_dev *stdev);
++	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
+ };
+ 
+ static inline struct switchtec_dev *to_stdev(struct device *dev)
+-- 
+2.11.0
