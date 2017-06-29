@@ -1,96 +1,48 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
- <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v3 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Wed, 7 Jun 2017 17:16:05 +0800
-Message-ID: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:51843 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752506AbdF2TAT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jun 2017 15:00:19 -0400
+To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20170629032648.3073-1-logang@deltatee.com>
+ <20170629032648.3073-7-logang@deltatee.com>
+ <000301d2f103$3310ca60$99325f20$@dell.com>
+Cc: 'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        'Serge Semin' <fancer.lancer@gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <079047c1-6612-2814-e147-844fabd56b75@deltatee.com>
+Date: Thu, 29 Jun 2017 13:00:06 -0600
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <000301d2f103$3310ca60$99325f20$@dell.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 06/16] ntb: add check and comment for link up to mw_count
+ and mw_get_align
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
+On 6/29/2017 12:11 PM, Allen Hubbe wrote:
+> Nak.  This breaks a work around for stability issues on some hardware.  I am ok with changing the comment to say, this is only supported when called after link up.  I would still like to allow these to be called at any time.  Specific hardware drivers like Switchtec may return an error.  Upstream drivers, of course, should call these after link up: patch 5/16 part of this set looks good.
 
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
+If absolutely necessary I can leave this out. But in terms of interface 
+design it's _so_ much better to have it in. This change would bring the 
+score from a 3 to a 5 on Rusty Russel's Hard to Misuse ranking[1]. To 
+quote Rusty:
 
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
+"3. Read the documentation and you'll get it right.
+People only read instructions after they've already tied themselves into 
+a knot. Then they skim them for keywords and don't read your warnings. I 
+don't give an example of this; if this is the best an interface can get 
+do, it's in trouble."
 
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
+Can someone not just fix the out-of-tree code? And since when is 
+out-of-tree code reasonable justification for what's done in upstream?
 
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.  
+Logan
 
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-Casey Leedom (2):
-  PCI: Add new PCIe Fabric End Node flag,
-    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (1):
-  PCI: Enable PCIe Relaxed Ordering if supported
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
- drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
- drivers/pci/pci.c                               | 29 +++++++++++++++++
- drivers/pci/probe.c                             | 43 +++++++++++++++++++++++++
- drivers/pci/quirks.c                            | 38 ++++++++++++++++++++++
- include/linux/pci.h                             |  4 +++
- 7 files changed, 135 insertions(+), 2 deletions(-)
-
--- 
-1.9.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+[1]http://ozlabs.org/~rusty/index.cgi/tech/2008-03-30.html
