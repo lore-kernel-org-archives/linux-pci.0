@@ -1,51 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:36225 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751552AbdF2BZk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 28 Jun 2017 21:25:40 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 3/3] PCI: rockchip: use local variable dev consistently
-Date: Thu, 29 Jun 2017 09:22:49 +0800
-Message-Id: <1498699369-65515-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1498699288-63944-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1498699288-63944-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from ale.deltatee.com ([207.54.116.67]:52113 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751532AbdF2URR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jun 2017 16:17:17 -0400
+To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20170629032648.3073-1-logang@deltatee.com>
+ <20170629032648.3073-7-logang@deltatee.com>
+ <000301d2f103$3310ca60$99325f20$@dell.com>
+ <079047c1-6612-2814-e147-844fabd56b75@deltatee.com>
+ <000401d2f114$3499f2b0$9dcdd810$@dell.com>
+Cc: 'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        'Serge Semin' <fancer.lancer@gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <63c4b0fa-2f03-6313-2d60-c6dab53bc3a5@deltatee.com>
+Date: Thu, 29 Jun 2017 14:17:02 -0600
+MIME-Version: 1.0
+In-Reply-To: <000401d2f114$3499f2b0$9dcdd810$@dell.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 06/16] ntb: add check and comment for link up to mw_count
+ and mw_get_align
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We have "struct device *dev" in rockchip_pcie_probe but
-still fetch it from pdev and rockchip->dev somewhere.
-This patch tries to improve and no functional change intended.
+On 6/29/2017 2:13 PM, Allen Hubbe wrote:
+> Unfortunately, it is to work around hardware errata.  That is not so trivial to fix.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Can you describe more what the work around is doing? Can you share the 
+code? It seems odd that a workaround is based on the alignment 
+restrictions of the mws.
 
- drivers/pci/host/pcie-rockchip.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index c545213..eb0a170 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1482,15 +1482,14 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		goto err_free_res;
- 
--	rockchip->msg_region = devm_ioremap(rockchip->dev,
--					    rockchip->msg_bus_addr, SZ_1M);
-+	rockchip->msg_region = devm_ioremap(dev, rockchip->msg_bus_addr, SZ_1M);
- 	if (!rockchip->msg_region) {
- 		err = -ENOMEM;
- 		goto err_free_res;
- 	}
- 
- 	list_splice_init(&res, &bridge->windows);
--	bridge->dev.parent = &pdev->dev;
-+	bridge->dev.parent = dev;
- 	bridge->sysdata = rockchip;
- 	bridge->busnr = 0;
- 	bridge->ops = &rockchip_pcie_ops;
--- 
-1.9.1
+Logan
