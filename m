@@ -1,41 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:7895 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753783AbdFSJ7g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 05:59:36 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <guodong.xu@linaro.org>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>
-CC: <songxiaowei@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 3/3] ARM4: defconfig: Enable  Kirin PCIe
-Date: Mon, 19 Jun 2017 17:59:20 +0800
-Message-ID: <20170619095920.40920-4-songxiaowei@hisilicon.com>
-In-Reply-To: <20170619095920.40920-1-songxiaowei@hisilicon.com>
-References: <20170619095920.40920-1-songxiaowei@hisilicon.com>
+Received: from mail-co1nam03on0121.outbound.protection.outlook.com ([104.47.40.121]:26544
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752454AbdF2WII (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jun 2017 18:08:08 -0400
+From: Jork Loeser <Jork.Loeser@microsoft.com>
+To: "stephen@networkplumber.org" <stephen@networkplumber.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "Stephen Hemminger" <sthemmin@microsoft.com>
+Subject: RE: [PATCH] hv: fix msi affinity when device requests all possible
+ CPU's
+Date: Thu, 29 Jun 2017 22:08:00 +0000
+Message-ID: <MWHPR21MB0639EC5C9B141D0591D1D957F1D20@MWHPR21MB0639.namprd21.prod.outlook.com>
+References: <20170628232204.15227-1-sthemmin@microsoft.com>
+ <DM5PR21MB0476CFFA739B74FBB3B6F42DA0D20@DM5PR21MB0476.namprd21.prod.outlook.com>
+In-Reply-To: <DM5PR21MB0476CFFA739B74FBB3B6F42DA0D20@DM5PR21MB0476.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+> -----Original Message-----
+> From: Stephen Hemminger [mailto:stephen@networkplumber.org]
+> Sent: Wednesday, June 28, 2017 4:22 PM
+> To: KY Srinivasan <kys@microsoft.com>; bhelgaas@google.com
+> Cc: linux-pci@vger.kernel.org; devel@linuxdriverproject.org; Stephen
+> Hemminger <sthemmin@microsoft.com>
+> Subject: [PATCH] hv: fix msi affinity when device requests all possible C=
+PU's
+>=20
+> When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV, the dr=
+iver
+> requests affinity with all possible CPU's (0-239) even those CPU's are no=
+t online
+> (and will never be). Because of this the device is unable to correctly ge=
+t MSI
+> interrupt's setup.
+>=20
+> This was caused by the change in 4.12 that converted this affinity into a=
+ll
+> possible CPU's (0-31) but then host reports an error since this is larger=
+ than the
+> number of online cpu's.
+>=20
+> Previously, this worked (up to 4.12-rc1) because only online cpu's would =
+be put
+> in mask passed to the host.
+>=20
+> This patch applies only to 4.12.
+> The driver in linux-next needs a a different fix because of the changes t=
+o PCI
+> host protocol version.
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 7c48028ec64a..d56d8f1062ab 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
- CONFIG_PCI_LAYERSCAPE=y
- CONFIG_PCI_HISI=y
- CONFIG_PCIE_QCOM=y
-+CONFIG_PCIE_KIRIN=y
- CONFIG_PCIE_ARMADA_8K=y
- CONFIG_ARM64_VA_BITS_48=y
- CONFIG_SCHED_MC=y
--- 
-2.11.GIT
+The vPCI patch in linux-next has the issue fixed already.
+
+Regards,
+Jork
