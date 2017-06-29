@@ -1,113 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:58117 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751015AbdFTPvn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 20 Jun 2017 11:51:43 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <5949445C.3010706@ti.com>
-Date: Tue, 20 Jun 2017 11:50:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:45 -0600
+Message-Id: <20170629032648.3073-14-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 13/16] switchtec_ntb: implement doorbell registers
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/19/2017 12:31 PM, Joao Pinto wrote:
-> 
-> Hi Murali,
-> 
-> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->> Joao,
->>
->> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>> This patch series adds the new interrupt api to pcie-designware
->>> make it possible to use features like MSIX.
->>>
->>> The work consisted of adapting the pcie-designware-host and each SoC
->>> specific driver.
->>>
->>> The patch set was made against the Bjorn' next branch.
->>>
->>> Joao Pinto (9):
->>>   pci: adding new irq api to pci-designware
->>>   pci: exynos SoC driver adapted to new irq API
->>>   pci: imx6 SoC driver adapted to new irq API
->>>   pci: artpec6 SoC driver adapted to new irq API
->>>   pci: generic PCIe DW driver adapted to new irq API
->>>   pci: qcom SoC driver adapted to new irq API
->>>   pci: keystone SoC driver adapted to new irq API
->>>   pci: removing old irq api from pcie-designware
->>>   pci: remove limitation of the number of the available IRQs
->>>
->>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>
->>
->> I gave this a try today and it failed. Logs at
->> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>
->> The first part of the log is with your patch series.
->> The second part is before applying the patch. You will see
->> that there is qc timeout log that shows the issue
->>
->> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>
->> Is there any DT change I need to make for this? I didn't have a
->> chance to review your patch w.r.t Keystone. But I see you have change
->> the MSI IRq handling.
->>
-> 
-> There is no need to change your DT. I think I will need to debug this issue
-> further. Could you please advice a board containing this SoC?
-> 
-I think I may be able to work with you on this. Keystone has different 
-register set for MSI IRQ. It is in application space. Also there are
-8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
-please review the original code vs the changed one w.r.t to this. I haven't
-had a chance to review the code as I am in the middle of a release.
-But will be able to spend some time after two weeks. Meanwhile please
-spend some time reviewing the code and exchange email to identify
-the issue. I can add specific debug prints for you as well and provide
-you the log for analysis.
+Pretty straightforward implementation of doorbell registers.
+The shift and mask were setup in an earlier patch and this just hooks
+up the approprirate portion of the idb register as the local doorbells
+and the opposite portion of odb as the peer doorbells. The db mask is
+protected by a spinlock to avoid concurrent read-modify-write accesses.
 
-Let me know.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 89 +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 85 insertions(+), 4 deletions(-)
 
-Murali
-> Thanks.
-> 
-> 
-> 
-> 
-
-
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 8ef84d45bda6..980acf2e5b42 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -100,6 +100,9 @@ struct switchtec_ntb {
+ 	int db_shift;
+ 	int db_peer_shift;
+ 
++	/* synchronize rmw access of db_mask and hw reg */
++	spinlock_t db_mask_lock;
++
+ 	int nr_direct_mw;
+ 	int nr_lut_mw;
+ 	int direct_mw_to_bar[MAX_DIRECT_MW];
+@@ -336,41 +339,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+ 
+ static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	return 1;
+ }
+ 
+ static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_vector < 0 || db_vector > 1)
++		return 0;
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
+ {
+-	return 0;
++	u64 ret;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
++
++	return ret & sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++	{
++		sndev->db_mask |= db_bits << sndev->db_shift;
++		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	}
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++	{
++		sndev->db_mask &= ~(db_bits << sndev->db_shift);
++		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	}
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
++	return 0;
++}
++
++static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
++}
++
++static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
++				      phys_addr_t *db_addr,
++				      resource_size_t *db_size)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
++		(unsigned long)sndev->stdev->mmio;
++
++	offset += sndev->db_shift / 8;
++
++	if (db_addr)
++		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
++	if (db_size)
++		*db_size = sizeof(u32);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_peer_shift,
++		  &sndev->mmio_self_dbmsg->odb);
++
+ 	return 0;
+ }
+ 
+@@ -411,6 +488,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.db_clear		= switchtec_ntb_db_clear,
+ 	.db_set_mask		= switchtec_ntb_db_set_mask,
+ 	.db_clear_mask		= switchtec_ntb_db_clear_mask,
++	.db_read_mask		= switchtec_ntb_db_read_mask,
++	.peer_db_addr		= switchtec_ntb_peer_db_addr,
+ 	.peer_db_set		= switchtec_ntb_peer_db_set,
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+@@ -663,6 +742,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
+ 
+ 	dev_dbg(&sndev->stdev->dev, "doorbell\n");
+ 
++	ntb_db_event(&sndev->ntb, 0);
++
+ 	return IRQ_HANDLED;
+ }
+ 
 -- 
-Murali Karicheri
-Linux Kernel, Keystone
+2.11.0
