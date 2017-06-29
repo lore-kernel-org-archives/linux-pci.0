@@ -1,91 +1,268 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:52946 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750883AbdFSQcF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 12:32:05 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Murali Karicheri <m-karicheri2@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
-Date: Mon, 19 Jun 2017 17:31:57 +0100
-MIME-Version: 1.0
-In-Reply-To: <593F0533.4010106@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Received: from ale.deltatee.com ([207.54.116.67]:48929 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751701AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:04 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:43 -0600
+Message-Id: <20170629032648.3073-12-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 11/16] switchtec_ntb: add skeleton ntb driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+This patch simply adds a skeleton NTB driver which will be filled
+out in subsequent patches.
 
-Hi Murali,
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 148 +++++++++++++++++++++++++++++++++++-
+ include/linux/ntb.h                 |   3 +
+ 2 files changed, 150 insertions(+), 1 deletion(-)
 
-Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
-> Joao,
-> 
-> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->> This patch series adds the new interrupt api to pcie-designware
->> make it possible to use features like MSIX.
->>
->> The work consisted of adapting the pcie-designware-host and each SoC
->> specific driver.
->>
->> The patch set was made against the Bjorn' next branch.
->>
->> Joao Pinto (9):
->>   pci: adding new irq api to pci-designware
->>   pci: exynos SoC driver adapted to new irq API
->>   pci: imx6 SoC driver adapted to new irq API
->>   pci: artpec6 SoC driver adapted to new irq API
->>   pci: generic PCIe DW driver adapted to new irq API
->>   pci: qcom SoC driver adapted to new irq API
->>   pci: keystone SoC driver adapted to new irq API
->>   pci: removing old irq api from pcie-designware
->>   pci: remove limitation of the number of the available IRQs
->>
->>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>  11 files changed, 255 insertions(+), 359 deletions(-)
->>
-> 
-> I gave this a try today and it failed. Logs at
-> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
-> 
-> The first part of the log is with your patch series.
-> The second part is before applying the patch. You will see
-> that there is qc timeout log that shows the issue
-> 
-> [   12.791852] ata2.00: qc timeout (cmd 0xec)
-> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
-> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> [   23.511852] ata2.00: qc timeout (cmd 0xec)
-> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-> 
-> Is there any DT change I need to make for this? I didn't have a
-> chance to review your patch w.r.t Keystone. But I see you have change
-> the MSI IRq handling.
-> 
-
-There is no need to change your DT. I think I will need to debug this issue
-further. Could you please advice a board containing this SoC?
-
-Thanks.
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 4f48b34ce0b5..0587b2380bcc 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -18,6 +18,7 @@
+ #include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/interrupt.h>
++#include <linux/ntb.h>
+ 
+ MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
+ MODULE_VERSION("0.1");
+@@ -73,6 +74,7 @@ struct shared_mw {
+ #define LUT_SIZE SZ_64K
+ 
+ struct switchtec_ntb {
++	struct ntb_dev ntb;
+ 	struct switchtec_dev *stdev;
+ 
+ 	int self_partition;
+@@ -159,10 +161,148 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
+ 	return -EIO;
+ }
+ 
++static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
++{
++	return 0;
++}
++
++static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
++				      int widx, resource_size_t *addr_align,
++				      resource_size_t *size_align,
++				      resource_size_t *size_max)
++{
++	return 0;
++}
++
++static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
++				      dma_addr_t addr, resource_size_t size)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
++					  phys_addr_t *base,
++					  resource_size_t *size)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
++				    enum ntb_speed *speed,
++				    enum ntb_width *width)
++{
++	return 0;
++}
++
++static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
++				     enum ntb_speed max_speed,
++				     enum ntb_width max_width)
++{
++	return 0;
++}
++
++static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
++{
++	return 0;
++}
++
++static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
++					 int sidx, u32 val)
++{
++	return 0;
++}
++
++static const struct ntb_dev_ops switchtec_ntb_ops = {
++	.mw_count		= switchtec_ntb_mw_count,
++	.mw_get_align		= switchtec_ntb_mw_get_align,
++	.mw_set_trans		= switchtec_ntb_mw_set_trans,
++	.peer_mw_count		= switchtec_ntb_peer_mw_count,
++	.peer_mw_get_addr	= switchtec_ntb_peer_mw_get_addr,
++	.link_is_up		= switchtec_ntb_link_is_up,
++	.link_enable		= switchtec_ntb_link_enable,
++	.link_disable		= switchtec_ntb_link_disable,
++	.db_valid_mask		= switchtec_ntb_db_valid_mask,
++	.db_vector_count	= switchtec_ntb_db_vector_count,
++	.db_vector_mask		= switchtec_ntb_db_vector_mask,
++	.db_read		= switchtec_ntb_db_read,
++	.db_clear		= switchtec_ntb_db_clear,
++	.db_set_mask		= switchtec_ntb_db_set_mask,
++	.db_clear_mask		= switchtec_ntb_db_clear_mask,
++	.peer_db_set		= switchtec_ntb_peer_db_set,
++	.spad_count		= switchtec_ntb_spad_count,
++	.spad_read		= switchtec_ntb_spad_read,
++	.spad_write		= switchtec_ntb_spad_write,
++	.peer_spad_write	= switchtec_ntb_peer_spad_write,
++};
++
+ static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+ {
+ 	u64 part_map;
+ 
++	sndev->ntb.pdev = sndev->stdev->pdev;
++	sndev->ntb.topo = NTB_TOPO_SWITCH;
++	sndev->ntb.ops = &switchtec_ntb_ops;
++
+ 	sndev->self_partition = sndev->stdev->partition;
+ 
+ 	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
+@@ -495,7 +635,6 @@ static int switchtec_ntb_add(struct device *dev,
+ 		return -ENOMEM;
+ 
+ 	sndev->stdev = stdev;
+-
+ 	switchtec_ntb_init_sndev(sndev);
+ 	switchtec_ntb_init_mw(sndev);
+ 	switchtec_ntb_init_db(sndev);
+@@ -515,11 +654,17 @@ static int switchtec_ntb_add(struct device *dev,
+ 
+ 	switchtec_ntb_init_mw(sndev);
+ 
++	rc = ntb_register_device(&sndev->ntb);
++	if (rc)
++		goto deinit_and_exit;
++
+ 	stdev->sndev = sndev;
+ 	dev_info(dev, "NTB device registered");
+ 
+ 	return 0;
+ 
++deinit_and_exit:
++	switchtec_ntb_deinit_db_msg_irq(sndev);
+ deinit_shared_and_exit:
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ free_and_exit:
+@@ -538,6 +683,7 @@ void switchtec_ntb_remove(struct device *dev,
+ 		return;
+ 
+ 	stdev->sndev = NULL;
++	ntb_unregister_device(&sndev->ntb);
+ 	switchtec_ntb_deinit_db_msg_irq(sndev);
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ 	kfree(sndev);
+diff --git a/include/linux/ntb.h b/include/linux/ntb.h
+index de4f800c82b6..bf3dd2d2a821 100644
+--- a/include/linux/ntb.h
++++ b/include/linux/ntb.h
+@@ -70,6 +70,7 @@ struct pci_dev;
+  * @NTB_TOPO_SEC:	On secondary side of remote ntb.
+  * @NTB_TOPO_B2B_USD:	On primary side of local ntb upstream of remote ntb.
+  * @NTB_TOPO_B2B_DSD:	On primary side of local ntb downstream of remote ntb.
++ * @NTB_TOPO_SWITCH:	Connected via a switch which supports ntb.
+  */
+ enum ntb_topo {
+ 	NTB_TOPO_NONE = -1,
+@@ -77,6 +78,7 @@ enum ntb_topo {
+ 	NTB_TOPO_SEC,
+ 	NTB_TOPO_B2B_USD,
+ 	NTB_TOPO_B2B_DSD,
++	NTB_TOPO_SWITCH,
+ };
+ 
+ static inline int ntb_topo_is_b2b(enum ntb_topo topo)
+@@ -97,6 +99,7 @@ static inline char *ntb_topo_string(enum ntb_topo topo)
+ 	case NTB_TOPO_SEC:	return "NTB_TOPO_SEC";
+ 	case NTB_TOPO_B2B_USD:	return "NTB_TOPO_B2B_USD";
+ 	case NTB_TOPO_B2B_DSD:	return "NTB_TOPO_B2B_DSD";
++	case NTB_TOPO_SWITCH:	return "NTB_TOPO_SWITCH";
+ 	}
+ 	return "NTB_TOPO_INVALID";
+ }
+-- 
+2.11.0
