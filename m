@@ -1,171 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:36557 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751170AbdFASLd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 1 Jun 2017 14:11:33 -0400
-Received: by mail-qt0-f182.google.com with SMTP id f55so42691836qta.3
-        for <linux-pci@vger.kernel.org>; Thu, 01 Jun 2017 11:11:32 -0700 (PDT)
-Subject: Re: [PATCH 2/2] PCI: iproc: add device shutdown for PCI RC
-To: Oza Pawandeep <oza.oza@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-References: <1496294871-5836-1-git-send-email-oza.oza@broadcom.com>
- <1496294871-5836-3-git-send-email-oza.oza@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <397e2b1a-c62f-2df2-5eca-8e240ac65df5@broadcom.com>
-Date: Thu, 1 Jun 2017 11:11:24 -0700
+Return-Path: <SRS0=MIKm=6C=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=MIKm=6C=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <43e01fca-a746-90d2-fdfa-c63f1d56ef5f@huawei.com>
+Date: Thu, 29 Jun 2017 13:47:23 +0800
 MIME-Version: 1.0
-In-Reply-To: <1496294871-5836-3-git-send-email-oza.oza@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Oza,
+ping
 
-On 5/31/17 10:27 PM, Oza Pawandeep wrote:
-> PERST# must be asserted around ~500ms before
-> the reboot is applied.
+On 2017/6/22 20:15, Ding Tianhong wrote:
+> Some devices have problems with Transaction Layer Packets with the Relaxed
+> Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+> PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+> devices with Relaxed Ordering issues, and a use of this new flag by the
+> cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+> Ports.
 > 
-> During soft reset (e.g., "reboot" from Linux) on some iProc based SoCs
-> LCPLL clock and PERST both goes off simultaneously.
-> This will cause certain Endpoints Intel NVMe not get detected, upon
-> next boot sequence.
+> It's been years since I've submitted kernel.org patches, I appolgise for the
+> almost certain submission errors.
 > 
-> This happens because; Endpoint is expecting the clock for some amount of
-> time after PERST is asserted, which is not happening in our case
-> (Compare to Intel X86 boards, will have clocks running).
-> this cause NVMe to behave in undefined way.
+> v2: Alexander point out that the v1 was only a part of the whole solution,
+>     some platform which has some issues could use the new flag to indicate
+>     that it is not safe to enable relaxed ordering attribute, then we need
+>     to clear the relaxed ordering enable bits in the PCI configuration when
+>     initializing the device. So add a new second patch to modify the PCI
+>     initialization code to clear the relaxed ordering enable bit in the
+>     event that the root complex doesn't want relaxed ordering enabled.
 > 
-> Essentially clock will remain alive for 500ms with PERST# = 0
-> before reboot.
+>     The third patch was base on the v1's second patch and only be changed
+>     to query the relaxed ordering enable bit in the PCI configuration space
+>     to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
+>     set.
 > 
-> This patch adds platform shutdown where it should be
-> called in device_shutdown while reboot command is issued.
+>     This version didn't plan to drop the defines for Intel Drivers to use the
+>     new checking way to enable relaxed ordering because it is not the hardest
+>     part of the moment, we could fix it in next patchset when this patches
+>     reach the goal.  
 > 
-> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-> followed by RC shutdown is called, which issues safe PERST
-> assertion.
+> v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
+>     If a PCIe device didn't enable the relaxed ordering attribute default,
+>     we should not do anything in the PCIe configuration, otherwise we
+>     should check if any of the devices above us do not support relaxed
+>     ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+>     the result if we get a return that indicate that the relaxed ordering
+>     is not supported we should update our device to disable relaxed ordering
+>     in configuration space. If the device above us doesn't exist or isn't
+>     the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+>     because we are probably running in a guest.
 > 
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
+>     according John's suggestion, and modify the description, use the true/false
+>     as the return value.
 > 
-> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-> index 90d2bdd..9512960 100644
-> --- a/drivers/pci/host/pcie-iproc-platform.c
-> +++ b/drivers/pci/host/pcie-iproc-platform.c
-> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->  	return iproc_pcie_remove(pcie);
->  }
+>     We shouldn't enable relaxed ordering attribute by the setting in the root
+>     complex configuration space for PCIe device, so fix it for cxgb4.
+> 
+>     Fix some format issues.
+> 
+> v5: Removed the unnecessary code for some function which only return the bool
+>     value, and add the check for VF device.
+> 
+>     Make this patch set base on 4.12-rc5.
+> 
+> v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
 >  
-> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-> +{
-> +	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-> +
-> +	iproc_pcie_shutdown(pcie);
-> +}
-> +
->  static struct platform_driver iproc_pcie_pltfm_driver = {
->  	.driver = {
->  		.name = "iproc-pcie",
-> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->  	},
->  	.probe = iproc_pcie_pltfm_probe,
->  	.remove = iproc_pcie_pltfm_remove,
-> +	.shutdown = iproc_pcie_pltfm_shutdown,
->  };
->  module_platform_driver(iproc_pcie_pltfm_driver);
->  
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index 05a3647..e9afc63 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -608,31 +608,38 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
->  	.write = iproc_pcie_config_write32,
->  };
->  
-> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
-> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
->  {
->  	u32 val;
->  
->  	/*
-> -	 * PAXC and the internal emulated endpoint device downstream should not
-> -	 * be reset.  If firmware has been loaded on the endpoint device at an
-> -	 * earlier boot stage, reset here causes issues.
-> +	 * The internal emulated endpoints (such as PAXC) device downstream
-> +	 * should not be reset. If firmware has been loaded on the endpoint
-> +	 * device at an earlier boot stage, reset here causes issues.
->  	 */
->  	if (pcie->ep_is_internal)
->  		return;
->  
-> -	/*
-> -	 * Select perst_b signal as reset source. Put the device into reset,
-> -	 * and then bring it out of reset
-> -	 */
-> -	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> -	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-> -		~RC_PCIE_RST_OUTPUT;
-> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> -	udelay(250);
-> -
-> -	val |= RC_PCIE_RST_OUTPUT;
-> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> -	msleep(100);
-> +	if (assert) {
-> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> +		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-> +			~RC_PCIE_RST_OUTPUT;
-> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> +		udelay(250);
-> +	} else {
-> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> +		val |= RC_PCIE_RST_OUTPUT;
-> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> +		msleep(100);
-> +	}
-> +}
-> +
-> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-> +{
-> +	iproc_pcie_perst_ctrl(pcie, true);
-> +	msleep(500);
-> +
-> +	return 0;
->  }
-
-Please export the symbol here to fix the build issue detected by kbuild
-test when the iProc PCIe platform driver is compiled as a kernel module.
-
->  
->  static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
-> @@ -1310,7 +1317,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->  		goto err_exit_phy;
->  	}
->  
-> -	iproc_pcie_reset(pcie);
-> +	iproc_pcie_perst_ctrl(pcie, true);
-> +	iproc_pcie_perst_ctrl(pcie, false);
->  
->  	if (pcie->need_ob_cfg) {
->  		ret = iproc_pcie_map_ranges(pcie, res);
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index 0bbe2ea..a6b55ce 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -110,6 +110,7 @@ struct iproc_pcie {
->  
->  int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
->  int iproc_pcie_remove(struct iproc_pcie *pcie);
-> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
->  
->  #ifdef CONFIG_PCIE_IPROC_MSI
->  int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+> Casey Leedom (2):
+>   PCI: Add new PCIe Fabric End Node flag,
+>     PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+>   net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+> 
+> Ding Tianhong (1):
+>   PCI: Enable PCIe Relaxed Ordering if supported
+> 
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
+>  drivers/pci/pci.c                               | 32 +++++++++++++++++++
+>  drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
+>  drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
+>  include/linux/pci.h                             |  4 +++
+>  7 files changed, 136 insertions(+), 2 deletions(-)
 > 
