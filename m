@@ -1,129 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:7896 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752280AbdFSJ7f (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 05:59:35 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <guodong.xu@linaro.org>, <bhelgaas@google.com>,
-        <robh+dt@kernel.org>
-CC: <songxiaowei@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 0/3] add PCIe driver for Kirin PCIe
-Date: Mon, 19 Jun 2017 17:59:17 +0800
-Message-ID: <20170619095920.40920-1-songxiaowei@hisilicon.com>
+Received: from mail-co1nam03on0113.outbound.protection.outlook.com ([104.47.40.113]:7344
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751333AbdF2X5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jun 2017 19:57:15 -0400
+From: Stephen Hemminger <sthemmin@microsoft.com>
+To: Jork Loeser <Jork.Loeser@microsoft.com>,
+        "stephen@networkplumber.org" <stephen@networkplumber.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>
+Subject: RE: [PATCH] hv: fix msi affinity when device requests all possible
+ CPU's
+Date: Thu, 29 Jun 2017 23:57:12 +0000
+Message-ID: <MWHPR21MB0703BA4E9B4F990C09323BFDCCD20@MWHPR21MB0703.namprd21.prod.outlook.com>
+References: <20170628232204.15227-1-sthemmin@microsoft.com>
+ <DM5PR21MB0476CFFA739B74FBB3B6F42DA0D20@DM5PR21MB0476.namprd21.prod.outlook.com>
+ <MWHPR21MB0639EC5C9B141D0591D1D957F1D20@MWHPR21MB0639.namprd21.prod.outlook.com>
+In-Reply-To: <MWHPR21MB0639EC5C9B141D0591D1D957F1D20@MWHPR21MB0639.namprd21.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Before Version Patches
-======================
-patch v9
-http://www.spinics.net/lists/linux-pci/msg61821.html
-patch V8
-http://www.spinics.net/lists/linux-pci/msg61715.html
-patch V7
-https://www.spinics.net/lists/linux-pci/msg61664.html
-patch V6
-https://www.spinics.net/lists/linux-pci/msg61610.html
+Patch still needed for 4.12
 
-patch V4
-https://www.spinics.net/lists/linux-pci/msg61406.html
+-----Original Message-----
+From: Jork Loeser=20
+Sent: Thursday, June 29, 2017 3:08 PM
+To: stephen@networkplumber.org; KY Srinivasan <kys@microsoft.com>; bhelgaas=
+@google.com
+Cc: linux-pci@vger.kernel.org; devel@linuxdriverproject.org; Stephen Hemmin=
+ger <sthemmin@microsoft.com>
+Subject: RE: [PATCH] hv: fix msi affinity when device requests all possible=
+ CPU's
 
-patch V3
-https://www.spinics.net/lists/linux-pci/msg61399.html
+> -----Original Message-----
+> From: Stephen Hemminger [mailto:stephen@networkplumber.org]
+> Sent: Wednesday, June 28, 2017 4:22 PM
+> To: KY Srinivasan <kys@microsoft.com>; bhelgaas@google.com
+> Cc: linux-pci@vger.kernel.org; devel@linuxdriverproject.org; Stephen
+> Hemminger <sthemmin@microsoft.com>
+> Subject: [PATCH] hv: fix msi affinity when device requests all possible C=
+PU's
+>=20
+> When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV, the dr=
+iver
+> requests affinity with all possible CPU's (0-239) even those CPU's are no=
+t online
+> (and will never be). Because of this the device is unable to correctly ge=
+t MSI
+> interrupt's setup.
+>=20
+> This was caused by the change in 4.12 that converted this affinity into a=
+ll
+> possible CPU's (0-31) but then host reports an error since this is larger=
+ than the
+> number of online cpu's.
+>=20
+> Previously, this worked (up to 4.12-rc1) because only online cpu's would =
+be put
+> in mask passed to the host.
+>=20
+> This patch applies only to 4.12.
+> The driver in linux-next needs a a different fix because of the changes t=
+o PCI
+> host protocol version.
 
-Changes between V8 and V7
-========================
-1. Fix the indent issues according to the review comments from Bjorn:
-   (1) The value of reg is right-aligned in both dtsi file and Documentation file.
-   (2) Re-indent the space of macro defination pointed out by Bjorn.
-   (3) Adjust the space in 'struct kirin_pcie' defination.
-   (4) Use dev replace of pdev->dev in function  kirin_pcie_get_clk and kirin_pcie_get_resource.
-   (5) Aligned params with '(' in function kirin_apb_ctrl_writel and several others.
-2. Fix the issues that compitable value in Documentation was different with .dtsi file.
-3. For dependance during compiling, the dtsi patch is deleted, and it was merged in patch[1].
-4. The indent style issues will be pull with MSI-patch in the next weeks;
+The vPCI patch in linux-next has the issue fixed already.
 
-patch[1]: https://www.spinics.net/lists/arm-kernel/msg588944.html
-
-=========================
-Changes between V8 and V7
-=========================
-1. Fix the indent issues in Documentation, dtsi file and macro defination.
-2. Replace pdev->dev with dev in kirin_pcie_get_resource and 
-   kirin_pcie_get_clk functions.
-3. Put variables "pci" and "kirin_pcie" to be initialized at first
-   in kirin_pcie_wr_own_config, kirin_pcie_read_dbi and other functions.
-4. Add space before blankets in "Low power mode(L1 ".
-5. Short the Makefile sentence to lower than 80 characters
-   and delete reduntant words.
-6. Use word 'located' instead of the wrong one 'lacated'.
-7. Fix the problem of return value type.
-
-Changes between V8 and V7
-=========================
-1. Replace 'reset-gpios' of 'reset-gpio' in Documentation.
-
-Changes between V7 and V6
-=========================
-1. add enumeration log Based on Hikey960 Board with these patches.
-2. fix issues as fellows:
-   (1) delete reduntant blankets in macro defination,
-   (2) add blank line in  kirin_pcie_clk_ctrl function.
-   (3) Fix compitable property in DT with the SoC name,
-       for example "hisilicon,kirin960-pcie".
-
-Changes between V6 and V4
-=========================
-1. seperate Document from .dtsi patch.
-2. fix issues according to review comments
-   from Bjorn Helgaas and Rob Herring: annotation stype, DT node,
-   patch post method and so on.
-
-Enumeration log
-===============
-These test logs come from patches running on Hikey960 Board
-(1) Connect with Atheros Communications WIFI
-	OF: PCI: host bridge /soc/kirin_pcie_rc@f4000000 ranges:
-	OF: PCI:   MEM 0xf6000000..0xf7ffffff -> 0x00000000
-	kirin-pcie f4000000.kirin_pcie_rc: PCI host bridge to bus 0000:00
-	pci_bus 0000:00: root bus resource [bus 00-01]
-	pci_bus 0000:00: root bus resource [mem 0xf6000000-0xf7ffffff] (bus address [0x00000000-0x01ffffff])
-	pci 0000:00:00.0: [19e5:3660] type 01 class 0x060400
-	pci 0000:00:00.0: reg 0x10: [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: supports D1 D2
-	pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-	pci 0000:01:00.0: [168c:002a] type 00 class 0x028000
-	pci 0000:01:00.0: reg 0x10: [mem 0xf6000000-0xf600ffff 64bit]
-	pci 0000:01:00.0: supports D1
-	pci 0000:01:00.0: PME# supported from D0 D1 D3hot
-	pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
-	pci 0000:00:00.0: BAR 0: assigned [mem 0xf6000000-0xf6ffffff]
-	pci 0000:00:00.0: BAR 14: assigned [mem 0xf7000000-0xf70fffff]
-	pci 0000:01:00.0: BAR 0: assigned [mem 0xf7000000-0xf700ffff 64bit]
-	pci 0000:00:00.0: PCI bridge to [bus 01]
-	pci 0000:00:00.0:   bridge window [mem 0xf7000000-0xf70fffff]
-	pcieport 0000:00:00.0: Signaling PME with IRQ 276
-	pcieport 0000:00:00.0: AER enabled with IRQ 276	
-
-
-*** BLURB HERE ***
-
-Xiaowei Song (4):
-  PCI: hisi: Add DT binding for PCIe of Kirin SoC series
-  PCI: dwc: kirin: add PCIe Driver for HiSilicon Kirin SoC
-  ARM4: defconfig: Enable  Kirin PCIe
-
- .../devicetree/bindings/pci/kirin-pcie.txt         |  55 +++
- arch/arm64/configs/defconfig                       |   1 +
- drivers/pci/dwc/Kconfig                            |  10 +
- drivers/pci/dwc/Makefile                           |   1 +
- drivers/pci/dwc/pcie-kirin.c                       | 517 +++++++++++++++++++++
- 6 files changed, 617 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/kirin-pcie.txt
- create mode 100644 drivers/pci/dwc/pcie-kirin.c
-
--- 
-2.11.GIT
+Regards,
+Jork
