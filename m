@@ -1,83 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:36974 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751622AbdFRAdV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 17 Jun 2017 20:33:21 -0400
-Date: Sun, 18 Jun 2017 08:33:15 +0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>
-Subject: Re: [RFC PATCH 06/13] switchtec_ntb: initialize hardware for memory
- windows
-Message-ID: <20170618003315.GA5326@kroah.com>
-References: <20170615203729.9009-1-logang@deltatee.com>
- <20170615203729.9009-7-logang@deltatee.com>
- <20170617051658.GG6040@kroah.com>
- <5294be8f-5547-0cd8-2e1d-a9bbfe06dc6f@deltatee.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Allen Hubbe" <Allen.Hubbe@dell.com>
+To: "'Logan Gunthorpe'" <logang@deltatee.com>,
+        <linux-ntb@googlegroups.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Cc: "'Jon Mason'" <jdmason@kudzu.us>,
+        "'Dave Jiang'" <dave.jiang@intel.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
+        "'Kurt Schwemmer'" <kurt.schwemmer@microsemi.com>,
+        "'Stephen Bates'" <sbates@raithlin.com>,
+        "'Serge Semin'" <fancer.lancer@gmail.com>
+References: <20170629032648.3073-1-logang@deltatee.com> <20170629032648.3073-6-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-6-logang@deltatee.com>
+Subject: RE: [PATCH 05/16] ntb: ensure ntb_mw_get_align is only called when the link is up
+Date: Thu, 29 Jun 2017 14:11:47 -0400
+Message-ID: <000101d2f103$2c8d0140$85a703c0$@dell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5294be8f-5547-0cd8-2e1d-a9bbfe06dc6f@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+        charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jun 17, 2017 at 10:39:35AM -0600, Logan Gunthorpe wrote:
+From: Logan Gunthorpe
+> With switchtec hardware it's impossible to get the alignment parameters
+> for a peer's memory window until the peer's driver has configured it's
+> windows. Strictly speaking, the link doesn't have to be up for this,
+> but the link being up is the only way the client can tell that
+> the otherside has been configured.
 > 
+> This patch converts ntb_transport and ntb_perf to use this function after
+> the link goes up. This simplifies these clients slightly because they
+> no longer have to store the alignment parameters. It also tweaks
+> ntb_tool so that peer_mw_trans will print zero if it is run before
+> the link goes up.
 > 
-> On 16/06/17 11:16 PM, Greg Kroah-Hartman wrote:
-> >> +#ifndef ioread64
-> >> +#ifdef readq
-> >> +#define ioread64 readq
-> >> +#else
-> >> +#define ioread64 _ioread64
-> >> +static inline u64 _ioread64(void __iomem *mmio)
-> >> +{
-> >> +	u64 low, high;
-> >> +
-> >> +	low = ioread32(mmio);
-> >> +	high = ioread32(mmio + sizeof(u32));
-> >> +	return low | (high << 32);
-> >> +}
-> >> +#endif
-> >> +#endif
-> > 
-> > Really?  Don't we have ioread64 in generic code for all arches?  If not,
-> > that should be fixed, don't hide this in a random driver please.  Or
-> > just restrict your driver to only building on those arches that does
-> > provide this api.
-> 
-> Yes, I know these are _very_ ugly. Unfortunately, the other ntb drivers
-> each have the exact same thing. ioread64 is not provided universally at
-> this time and I did spend a bit of time digging and things are a bit
-> messy so I wasn't at all sure of the correct solution.
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 
-That implies that this needs to be fixed, no driver should ever have to
-define this themselves.  The fact that they all do it at the same time
-is a huge hint that it's wrong.
+Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
 
-> For starters, ioread64 is only defined on 64 bit machines. They are
-> surrounded by ifdef CONFIG_64BIT and it's not clear to me if the above
-> wrapper (around two ioread32s) would be acceptable universally.
+> ---
+>  drivers/ntb/ntb_transport.c | 20 ++++++++++----------
+>  drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
+>  drivers/ntb/test/ntb_tool.c |  6 +++---
+>  3 files changed, 22 insertions(+), 22 deletions(-)
 > 
-> Second, the x86_64 version doesn't even compile. This is because the
-> arch doesn't provide any ioread64 implementation anywhere and the macro
-> in io.h isn't used because CONFIG_GENERIC_IOMAP is defined.
+> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+> index b29558ddfe95..7ed745aaa213 100644
+> --- a/drivers/ntb/ntb_transport.c
+> +++ b/drivers/ntb/ntb_transport.c
+> @@ -191,8 +191,6 @@ struct ntb_transport_qp {
+>  struct ntb_transport_mw {
+>  	phys_addr_t phys_addr;
+>  	resource_size_t phys_size;
+> -	resource_size_t xlat_align;
+> -	resource_size_t xlat_align_size;
+>  	void __iomem *vbase;
+>  	size_t xlat_size;
+>  	size_t buff_size;
+> @@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+>  	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
+>  	struct pci_dev *pdev = nt->ndev->pdev;
+>  	size_t xlat_size, buff_size;
+> +	resource_size_t xlat_align;
+> +	resource_size_t xlat_align_size;
+>  	int rc;
 > 
-> The only arch where I _think_ ioread64 would work is powerpc or any that
-> define CONFIG_64BIT and not CONFIG_GENERIC_IOMAP.
+>  	if (!size)
+>  		return -EINVAL;
 > 
-> If you have any guidance on this I'd be happy to try and make a patch or
-> two for it.
-
-I suggest coming up with something simple like what you have here,
-adding it to the arch-generic code and posting it to the linux-arch
-mailing list and seeing if anyone screams :)
-
-thanks,
-
-greg k-h
+> -	xlat_size = round_up(size, mw->xlat_align_size);
+> -	buff_size = round_up(size, mw->xlat_align);
+> +	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
+> +			      &xlat_align_size, NULL);
+> +	if (rc)
+> +		return rc;
+> +
+> +	xlat_size = round_up(size, xlat_align_size);
+> +	buff_size = round_up(size, xlat_align);
+> 
+>  	/* No need to re-setup */
+>  	if (mw->xlat_size == xlat_size)
+> @@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+>  	 * is a requirement of the hardware. It is recommended to setup CMA
+>  	 * for BAR sizes equal or greater than 4MB.
+>  	 */
+> -	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
+> +	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
+>  		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
+>  			&mw->dma_addr);
+>  		ntb_free_mw(nt, num_mw);
+> @@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+>  	for (i = 0; i < mw_count; i++) {
+>  		mw = &nt->mw_vec[i];
+> 
+> -		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
+> -				      &mw->xlat_align_size, NULL);
+> -		if (rc)
+> -			goto err1;
+> -
+>  		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
+>  					  &mw->phys_size);
+>  		if (rc)
+> diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
+> index 759f772fa00c..427112cf101a 100644
+> --- a/drivers/ntb/test/ntb_perf.c
+> +++ b/drivers/ntb/test/ntb_perf.c
+> @@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
+>  struct perf_mw {
+>  	phys_addr_t	phys_addr;
+>  	resource_size_t	phys_size;
+> -	resource_size_t	xlat_align;
+> -	resource_size_t	xlat_align_size;
+>  	void __iomem	*vbase;
+>  	size_t		xlat_size;
+>  	size_t		buf_size;
+> @@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
+>  {
+>  	struct perf_mw *mw = &perf->mw;
+>  	size_t xlat_size, buf_size;
+> +	resource_size_t	xlat_align;
+> +	resource_size_t	xlat_align_size;
+>  	int rc;
+> 
+>  	if (!size)
+>  		return -EINVAL;
+> 
+> -	xlat_size = round_up(size, mw->xlat_align_size);
+> -	buf_size = round_up(size, mw->xlat_align);
+> +	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
+> +			      &xlat_align_size, NULL);
+> +	if (rc)
+> +		return rc;
+> +
+> +	xlat_size = round_up(size, xlat_align_size);
+> +	buf_size = round_up(size, xlat_align);
+> 
+>  	if (mw->xlat_size == xlat_size)
+>  		return 0;
+> @@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
+> 
+>  	mw = &perf->mw;
+> 
+> -	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
+> -			      &mw->xlat_align_size, NULL);
+> -	if (rc)
+> -		return rc;
+> -
+>  	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
+>  	if (rc)
+>  		return rc;
+> diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
+> index a69815c45ce6..91526a986caa 100644
+> --- a/drivers/ntb/test/ntb_tool.c
+> +++ b/drivers/ntb/test/ntb_tool.c
+> @@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
+> 
+>  	phys_addr_t base;
+>  	resource_size_t mw_size;
+> -	resource_size_t align_addr;
+> -	resource_size_t align_size;
+> -	resource_size_t max_size;
+> +	resource_size_t align_addr = 0;
+> +	resource_size_t align_size = 0;
+> +	resource_size_t max_size = 0;
+> 
+>  	buf_size = min_t(size_t, size, 512);
+> 
+> --
+> 2.11.0
