@@ -1,91 +1,74 @@
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-Subject: Re: [PATCH v6 5/5] drm/amdgpu: resize VRAM BAR for CPU access v2
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
- Alex Deucher <alexander.deucher@amd.com>, David Airlie <airlied@linux.ie>,
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
- <1494348547-1465-6-git-send-email-deathsimple@vodafone.de>
- <20170601201430.GC12257@bhelgaas-glaptop.roam.corp.google.com>
- <72e061a5-9684-06e2-3021-80de8ca97bd7@vodafone.de>
- <20170602202631.GA1452@bhelgaas-glaptop.roam.corp.google.com>
- <779a883a-265a-ae04-b0cd-8cb3599f0dc0@vodafone.de>
- <20170606231019.GC12672@bhelgaas-glaptop.roam.corp.google.com>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <55fb9500-5062-78ea-93c3-0f3e850dd31f@vodafone.de>
-Date: Fri, 9 Jun 2017 10:59:38 +0200
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: "Rafael J. Wysocki" <rafael@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+References: <20170530132408.GA2556@red-moon>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40A7B677@FRAEML521-MBX.china.huawei.com>
+ <20170606085553.GA20085@red-moon> <20170612155700.GA31930@red-moon>
+ <20170613084831.GP3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+ <20170616083313.GY3187@lahna.fi.intel.com>
+ <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+CC: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+From: John Garry <john.garry@huawei.com>
+Message-ID: <808a7db0-7844-b263-0216-1fe943ac819a@huawei.com>
+Date: Thu, 29 Jun 2017 17:16:15 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170606231019.GC12672@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 07.06.2017 um 01:10 schrieb Bjorn Helgaas:
-> [SNIP]
-> What if the driver did something like this:
+On 16/06/2017 12:24, Rafael J. Wysocki wrote:
+>>>> >> >
+>>>> >> > It causes acpi_default_enumeration() to be called but it should be fine
+>>>> >> > as we are dealing with platform device anyway.
+>>> >>
+>>> >> I do not quite understand how declaring such MFD cell above would make sure
+>>> >> that the LPC probe is called before the IPMI device is enumerated...
+>> >
+>> > In fact it may be that it is not sufficient in this case because the
+>> > ACPI core might enumerate child devices before the LPC driver even gets
+>> > a chance to probe so you would need to add also scan handler to the
+>> > child devices and mark them already enumerated or something like that.
+> Or extend the special I2C/SPI handling to them.
 >
->    pci_disable_decoding(dev, IORESOURCE_MEM);
->    pci_release_resource(dev, 2);
->    pci_resize_bar(dev, bar, size);
->    pci_assign_resources(dev);
->    pci_enable_decoding(dev, IORESOURCE_MEM);
->
-> That would require adding pci_enable/disable_decoding() to the driver
-> API, along with the requirement that the driver discard and remap
-> some resources after pci_enable_decoding().  I think
-> pci_enable_decoding() would look much like the existing
-> pci_enable_resources() except taking a resource type instead of a
-> bitmask.
 
-This is pretty close to what we already do. I'm going to send out an 
-updated version of the patch in a minute.
+For this, is it possible to just configure the ACPI table so we spoof 
+that the LPC slave (IPI0001), is an i2c/spi slave? Could we just add a 
+resource of type ACPI_RESOURCE_TYPE_SERIAL_BUS, and common serial bus 
+type i2c/spi to solve this?
 
-One difference that I still have in this patch is
-> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
-> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
-> +                             cmd & ~PCI_COMMAND_MEMORY);
-in the driver instead of "pci_disable_decoding(dev, IORESOURCE_MEM);"
+This resource would/should need to be ignored for other purposes.
 
-I thought that introducing a new interface for this two lines would be 
-overkill, but if you find it cleaner to add the new interface I can 
-change that.
+John
 
-> I would *prefer* if we released and reassigned all resources, because
-> then the core has complete flexibility to move things around, and it's
-> easy to document that pci_assign_resources() means you have to
-> reread/remap everything.
-I've tried this and it doesn't work at all, surprisingly the I/O ports 
-turned out to be not the first problem I've ran into.
+> Thanks,
+> Rafael
 
-Releasing all resources means that we also try to release the 
-0xa000-0xbffff (VGA) and 0xc0000-0xdffff (VBIOS) ranges.
 
-They can be reassigned, but somehow that seems to cause problems later on.
-
-> If the driver only releases specified BARs, the pci_assign_resources()
-> interface becomes "you need to reread/remap the BAR you resized, plus
-> any other BARs you released".  It's a little more complicated to
-> describe and more dependent on previous driver actions.
-How about the driver releases all resources it wants to move, including 
-the resized and reallocates them after the resize is done?
-
->
-> But releasing only the specified BAR will make your life easier and
-> help with the fact that multiple drivers might be using the same BAR
-> (I have to raise my eyebrows at that), so I think I'm OK with it.  And
-> it would also side-step the "can't restore previous state" problem.
-I agree that it is a bit more documentation work to describe how the 
-interface works, but it is clearly less problematic during runtime.
-
-Please take a look at the new version of the patches and let me know 
-what you think.
-
-Regards,
-Christian.
-
->
-> It's an "interesting" asymmetry that pci_enable_device() turns on BAR
-> decoding but doesn't touch bus mastering, while pci_disable_device()
-> turns off bus mastering but doesn't touch BAR decoding.
->
-> Bjorn
