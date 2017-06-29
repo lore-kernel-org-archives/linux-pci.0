@@ -1,79 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        David Gibson <david@gibson.dropbear.id.au>
-Subject: [PATCH kernel 0/3] vfio-pci: Add support for mmapping MSI-X table
-Date: Thu, 15 Jun 2017 15:06:39 +1000
-Message-Id: <20170615050642.8197-1-aik@ozlabs.ru>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=xPYE=6C=mediatek.com=ryder.lee@kernel.org>
+Return-Path: <SRS0=xPYE=6C=mediatek.com=ryder.lee@kernel.org>
+Message-ID: <1498701623.32475.9.camel@mtkswgap22>
+Subject: Re: [PATCH v5 1/2] PCI: mediatek: Add Mediatek PCIe host controller
+ support
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, <devicetree@vger.kernel.org>, Red Hung
+	<red.hung@mediatek.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
+	<linux-arm-kernel@lists.infradead.org>
+Date: Thu, 29 Jun 2017 10:00:23 +0800
+In-Reply-To: <20170628195325.GR17844@bhelgaas-glaptop.roam.corp.google.com>
+References: <1495338145-9384-1-git-send-email-ryder.lee@mediatek.com>
+	 <1495338145-9384-2-git-send-email-ryder.lee@mediatek.com>
+	 <20170628195325.GR17844@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Here is a patchset which Yongji was working on before
-leaving IBM LTC. Since we still want to have this functionality
-in the kernel (DPDK is the first user), here is a rebase
-on the current upstream.
+On Wed, 2017-06-28 at 14:53 -0500, Bjorn Helgaas wrote:
+> On Sun, May 21, 2017 at 11:42:24AM +0800, Ryder Lee wrote:
+> > Add support for the Mediatek PCIe Gen2 controller which can
+> > be found on MT7623 series SoCs.
+> > 
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  drivers/pci/host/Kconfig         |  11 +
+> >  drivers/pci/host/Makefile        |   1 +
+> >  drivers/pci/host/pcie-mediatek.c | 553 +++++++++++++++++++++++++++++++++++++++
+> >  3 files changed, 565 insertions(+)
+> >  create mode 100644 drivers/pci/host/pcie-mediatek.c
+> >...
+> 
+> > +static int mtk_pcie_register_host(struct pci_host_bridge *host)
+> > +{
+> > +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
+> > +	struct pci_bus *child;
+> > +	int err;
+> > +
+> > +	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
+> 
+> Do you really need the PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS
+> flags?  I'd like to get rid of them because we should automatically
+> assign resources if the firmware hasn't done it.
+> 
+> Bjorn
 
+You're right! These flags are not needed and should be removed.
+Thanks for catching that.
 
-Current vfio-pci implementation disallows to mmap the page
-containing MSI-X table in case that users can write directly
-to MSI-X table and generate an incorrect MSIs.
-
-However, this will cause some performance issue when there
-are some critical device registers in the same page as the
-MSI-X table. We have to handle the mmio access to these
-registers in QEMU emulation rather than in guest.
-
-To solve this issue, this series allows to expose MSI-X table
-to userspace when hardware enables the capability of interrupt
-remapping which can ensure that a given PCI device can only
-shoot the MSIs assigned for it. And we introduce a new bus_flags
-PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
-for different archs.
-
-The patch 3 are based on the proposed patchset[1].
-
-Changelog
-v3:
-- rebased on the current upstream
-
-v2:
-- Make the commit log more clear
-- Replace pci_bus_check_msi_remapping() with pci_bus_msi_isolated()
-  so that we could clearly know what the function does
-- Set PCI_BUS_FLAGS_MSI_REMAP in pci_create_root_bus() instead
-  of iommu_bus_notifier()
-- Reserve VFIO_REGION_INFO_FLAG_CAPS when we allow to mmap MSI-X
-  table so that we can know whether we allow to mmap MSI-X table
-  in QEMU
-
-[1] https://www.mail-archive.com/linux-kernel%40vger.kernel.org/msg1138820.html
-
-
-This is based on sha1
-63f700aab4c1 Linus Torvalds "Merge tag 'xtensa-20170612' of git://github.com/jcmvbkbc/linux-xtensa".
-
-Please comment. Thanks.
-
-
-
-Yongji Xie (3):
-  PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-  pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
-  vfio-pci: Allow to expose MSI-X table to userspace if interrupt
-    remapping is enabled
-
- include/linux/pci.h                       |  1 +
- arch/powerpc/platforms/powernv/pci-ioda.c |  8 ++++++++
- drivers/vfio/pci/vfio_pci.c               | 18 +++++++++++++++---
- drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
- 4 files changed, 26 insertions(+), 4 deletions(-)
-
--- 
-2.11.0
+Ryder
