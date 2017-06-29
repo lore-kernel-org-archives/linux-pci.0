@@ -1,307 +1,250 @@
-Return-Path: <SRS0=TnGP=5S=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=TnGP=5S=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: [PATCH v6 3/3] PCI: Add tango MSI controller support
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Liviu Dudau
-	<liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>, linux-pci
-	<linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, LKML <linux-kernel@vger.kernel.org>,
-	Mason <slash.tmp@free.fr>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <e868f9b8-39e3-4501-a8c6-64bd28a4be8b@sigmadesigns.com>
- <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <82d6bf37-96b9-cd9d-134b-f01638fa2b1b@sigmadesigns.com>
-Date: Tue, 13 Jun 2017 16:01:14 +0200
-MIME-Version: 1.0
-In-Reply-To: <9975fa6c-f426-519b-6b3e-a2d102d36fd5@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:48921 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751607AbdF2D1B (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:01 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:42 -0600
+Message-Id: <20170629032648.3073-11-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 10/16] switchtec_ntb: initialize hardware for doorbells and messages
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MSI controller in Tango supports 256 message-signaled interrupts,
-and a single doorbell address.
+This patch sets up some hardware registers and creates interrupt service
+routines for the doorbells and messages.
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
-Changes from v5 to v6
-o Rename 'used' bitmap to 'used_msi'
-o Rename 'lock' spinlock to 'used_msi_lock'
-o Take lock in interrupt handler
-o Remove irq_dom in error path
----
- drivers/pci/host/pcie-tango.c | 225 ++++++++++++++++++++++++++++++++++++++=
-++++
- 1 file changed, 225 insertions(+)
+There are 64 doorbells in the switch that are shared between all
+partitions. The upper 4 doorbells are also shared with the messages
+and are there for not used. Thus, this code provides 28 doorbells
+for each partition.
 
-diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-index 67aaadcc1c5e..b06446b23bc8 100644
---- a/drivers/pci/host/pcie-tango.c
-+++ b/drivers/pci/host/pcie-tango.c
-@@ -1,16 +1,228 @@
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/pci-ecam.h>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 144 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 144 insertions(+)
+
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index ff03424153d9..4f48b34ce0b5 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -17,6 +17,7 @@
+ #include <linux/module.h>
  #include <linux/delay.h>
-+#include <linux/msi.h>
- #include <linux/of.h>
-=20
- #define MSI_MAX 256
-=20
- #define SMP8759_MUX=09=090x48
- #define SMP8759_TEST_OUT=090x74
-+#define SMP8759_STATUS=09=090x80
-+#define SMP8759_ENABLE=09=090xa0
-+#define SMP8759_DOORBELL=090xa002e07c
-=20
- struct tango_pcie {
-+=09DECLARE_BITMAP(used_msi, MSI_MAX);
-+=09spinlock_t used_msi_lock;
- =09void __iomem *mux;
-+=09void __iomem *msi_status;
-+=09void __iomem *msi_enable;
-+=09phys_addr_t msi_doorbell;
-+=09struct irq_domain *irq_dom;
-+=09struct irq_domain *msi_dom;
-+=09int irq;
- };
-=20
-+/*** MSI CONTROLLER SUPPORT ***/
+ #include <linux/kthread.h>
++#include <linux/interrupt.h>
+ 
+ MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
+ MODULE_VERSION("0.1");
+@@ -77,6 +78,9 @@ struct switchtec_ntb {
+ 	int self_partition;
+ 	int peer_partition;
+ 
++	int doorbell_irq;
++	int message_irq;
 +
-+static void tango_msi_isr(struct irq_desc *desc)
-+{
-+=09struct irq_chip *chip =3D irq_desc_get_chip(desc);
-+=09struct tango_pcie *pcie =3D irq_desc_get_handler_data(desc);
-+=09unsigned long flags, status, base, virq, idx, pos =3D 0;
+ 	struct ntb_info_regs __iomem *mmio_ntb;
+ 	struct ntb_ctrl_regs __iomem *mmio_ctrl;
+ 	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
+@@ -88,6 +92,11 @@ struct switchtec_ntb {
+ 	struct shared_mw __iomem *peer_shared;
+ 	dma_addr_t self_shared_dma;
+ 
++	u64 db_mask;
++	u64 db_valid_mask;
++	int db_shift;
++	int db_peer_shift;
 +
-+=09chained_irq_enter(chip, desc);
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+
-+=09while ((pos =3D find_next_bit(pcie->used_msi, MSI_MAX, pos)) < MSI_MAX)=
- {
-+=09=09base =3D round_down(pos, 32);
-+=09=09status =3D readl_relaxed(pcie->msi_status + base / 8);
-+=09=09for_each_set_bit(idx, &status, 32) {
-+=09=09=09virq =3D irq_find_mapping(pcie->irq_dom, base + idx);
-+=09=09=09generic_handle_irq(virq);
-+=09=09}
-+=09=09pos =3D base + 32;
-+=09}
-+
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+=09chained_irq_exit(chip, desc);
-+}
-+
-+static void tango_ack(struct irq_data *d)
-+{
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+=09u32 offset =3D (d->hwirq / 32) * 4;
-+=09u32 bit =3D BIT(d->hwirq % 32);
-+
-+=09writel_relaxed(bit, pcie->msi_status + offset);
-+}
-+
-+static void update_msi_enable(struct irq_data *d, bool unmask)
-+{
-+=09unsigned long flags;
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+=09u32 offset =3D (d->hwirq / 32) * 4;
-+=09u32 bit =3D BIT(d->hwirq % 32);
-+=09u32 val;
-+
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+=09val =3D readl_relaxed(pcie->msi_enable + offset);
-+=09val =3D unmask ? val | bit : val & ~bit;
-+=09writel_relaxed(val, pcie->msi_enable + offset);
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+}
-+
-+static void tango_mask(struct irq_data *d)
-+{
-+=09update_msi_enable(d, false);
-+}
-+
-+static void tango_unmask(struct irq_data *d)
-+{
-+=09update_msi_enable(d, true);
-+}
-+
-+static int tango_set_affinity(struct irq_data *d,
-+=09=09const struct cpumask *mask, bool force)
-+{
-+=09return -EINVAL;
-+}
-+
-+static void tango_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
-+{
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+=09msg->address_lo =3D lower_32_bits(pcie->msi_doorbell);
-+=09msg->address_hi =3D upper_32_bits(pcie->msi_doorbell);
-+=09msg->data =3D d->hwirq;
-+}
-+
-+static struct irq_chip tango_chip =3D {
-+=09.irq_ack=09=09=3D tango_ack,
-+=09.irq_mask=09=09=3D tango_mask,
-+=09.irq_unmask=09=09=3D tango_unmask,
-+=09.irq_set_affinity=09=3D tango_set_affinity,
-+=09.irq_compose_msi_msg=09=3D tango_compose_msi_msg,
-+};
-+
-+static void msi_ack(struct irq_data *d)
-+{
-+=09irq_chip_ack_parent(d);
-+}
-+
-+static void msi_mask(struct irq_data *d)
-+{
-+=09pci_msi_mask_irq(d);
-+=09irq_chip_mask_parent(d);
-+}
-+
-+static void msi_unmask(struct irq_data *d)
-+{
-+=09pci_msi_unmask_irq(d);
-+=09irq_chip_unmask_parent(d);
-+}
-+
-+static struct irq_chip msi_chip =3D {
-+=09.name =3D "MSI",
-+=09.irq_ack =3D msi_ack,
-+=09.irq_mask =3D msi_mask,
-+=09.irq_unmask =3D msi_unmask,
-+};
-+
-+static struct msi_domain_info msi_dom_info =3D {
-+=09.flags=09=3D MSI_FLAG_PCI_MSIX
-+=09=09| MSI_FLAG_USE_DEF_DOM_OPS
-+=09=09| MSI_FLAG_USE_DEF_CHIP_OPS,
-+=09.chip=09=3D &msi_chip,
-+};
-+
-+static int tango_irq_domain_alloc(struct irq_domain *dom,
-+=09=09unsigned int virq, unsigned int nr_irqs, void *args)
-+{
-+=09unsigned long flags;
-+=09int pos, err =3D -ENOSPC;
-+=09struct tango_pcie *pcie =3D dom->host_data;
-+
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+=09pos =3D find_first_zero_bit(pcie->used_msi, MSI_MAX);
-+=09if (pos < MSI_MAX) {
-+=09=09err =3D 0;
-+=09=09__set_bit(pos, pcie->used_msi);
-+=09=09irq_domain_set_info(dom, virq, pos,
-+=09=09=09=09&tango_chip, pcie, handle_edge_irq, NULL, NULL);
-+=09}
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+
-+=09return err;
-+}
-+
-+static void tango_irq_domain_free(struct irq_domain *dom,
-+=09=09unsigned int virq, unsigned int nr_irqs)
-+{
-+=09unsigned long flags;
-+=09struct irq_data *d =3D irq_domain_get_irq_data(dom, virq);
-+=09struct tango_pcie *pcie =3D d->chip_data;
-+
-+=09spin_lock_irqsave(&pcie->used_msi_lock, flags);
-+=09__clear_bit(d->hwirq, pcie->used_msi);
-+=09spin_unlock_irqrestore(&pcie->used_msi_lock, flags);
-+}
-+
-+static const struct irq_domain_ops irq_dom_ops =3D {
-+=09.alloc=09=3D tango_irq_domain_alloc,
-+=09.free=09=3D tango_irq_domain_free,
-+};
-+
-+static int tango_msi_remove(struct platform_device *pdev)
-+{
-+=09struct tango_pcie *pcie =3D platform_get_drvdata(pdev);
-+
-+=09irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-+=09irq_domain_remove(pcie->msi_dom);
-+=09irq_domain_remove(pcie->irq_dom);
-+
-+=09return 0;
-+}
-+
-+static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie=
- *pcie)
-+{
-+=09int i, virq;
-+=09struct irq_domain *msi_dom, *irq_dom;
-+=09struct fwnode_handle *fwnode =3D of_node_to_fwnode(pdev->dev.of_node);
-+
-+=09spin_lock_init(&pcie->used_msi_lock);
-+=09for (i =3D 0; i < MSI_MAX / 32; ++i)
-+=09=09writel_relaxed(0, pcie->msi_enable + i * 4);
-+
-+=09virq =3D platform_get_irq(pdev, 1);
-+=09if (virq <=3D 0) {
-+=09=09pr_err("Failed to map IRQ\n");
-+=09=09return -ENXIO;
-+=09}
-+
-+=09irq_dom =3D irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pci=
-e);
-+=09if (!irq_dom) {
-+=09=09pr_err("Failed to create IRQ domain\n");
-+=09=09return -ENOMEM;
-+=09}
-+
-+=09msi_dom =3D pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
-+=09if (!msi_dom) {
-+=09=09pr_err("Failed to create MSI domain\n");
-+=09=09irq_domain_remove(irq_dom);
-+=09=09return -ENOMEM;
-+=09}
-+
-+=09pcie->irq_dom =3D irq_dom;
-+=09pcie->msi_dom =3D msi_dom;
-+=09pcie->irq =3D virq;
-+
-+=09irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
-+
-+=09return 0;
-+}
-+
- /*** HOST BRIDGE SUPPORT ***/
-=20
- static int smp8759_config_read(struct pci_bus *bus,
-@@ -88,6 +300,9 @@ static int tango_check_pcie_link(void __iomem *test_out)
- static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
- {
- =09pcie->mux=09=09=3D base + SMP8759_MUX;
-+=09pcie->msi_status=09=3D base + SMP8759_STATUS;
-+=09pcie->msi_enable=09=3D base + SMP8759_ENABLE;
-+=09pcie->msi_doorbell=09=3D SMP8759_DOORBELL;
-=20
- =09return tango_check_pcie_link(base + SMP8759_TEST_OUT);
+ 	int nr_direct_mw;
+ 	int nr_lut_mw;
+ 	int direct_mw_to_bar[MAX_DIRECT_MW];
+@@ -196,6 +205,49 @@ static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
+ 		sndev->nr_direct_mw, cnt - sndev->nr_direct_mw);
  }
-@@ -121,11 +336,21 @@ static int tango_pcie_probe(struct platform_device *p=
-dev)
- =09if (ret)
- =09=09return ret;
-=20
-+=09ret =3D tango_msi_probe(pdev, pcie);
-+=09if (ret)
-+=09=09return ret;
-+
- =09return pci_host_common_probe(pdev, &smp8759_ecam_ops);
- }
-=20
-+static int tango_pcie_remove(struct platform_device *pdev)
+ 
++/*
++ * There are 64 doorbells in the switch hardware but this is
++ * shared among all partitions. So we must split them in half
++ * (32 for each partition). However, the message interrupts are
++ * also shared with the top 4 doorbells so we just limit this to
++ * 28 doorbells per partition
++ */
++static void switchtec_ntb_init_db(struct switchtec_ntb *sndev)
 +{
-+=09return tango_msi_remove(pdev);
++	sndev->db_valid_mask = 0x0FFFFFFF;
++
++	if (sndev->self_partition < sndev->peer_partition) {
++		sndev->db_shift = 0;
++		sndev->db_peer_shift = 32;
++	} else {
++		sndev->db_shift = 32;
++		sndev->db_peer_shift = 0;
++	}
++
++	sndev->db_mask = 0x0FFFFFFFFFFFFFFFULL;
++	iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	iowrite64(sndev->db_valid_mask << sndev->db_peer_shift,
++		  &sndev->mmio_self_dbmsg->odb_mask);
 +}
 +
- static struct platform_driver tango_pcie_driver =3D {
- =09.probe=09=3D tango_pcie_probe,
-+=09.remove=09=3D tango_pcie_remove,
- =09.driver=09=3D {
- =09=09.name =3D KBUILD_MODNAME,
- =09=09.of_match_table =3D tango_pcie_ids,
---=20
++static void switchtec_ntb_init_msgs(struct switchtec_ntb *sndev)
++{
++	int i;
++	u32 msg_map = 0;
++
++	for (i = 0; i < ARRAY_SIZE(sndev->mmio_self_dbmsg->imsg); i++) {
++		int m = i | sndev->peer_partition << 2;
++
++		msg_map |= m << i * 8;
++	}
++
++	iowrite32(msg_map, &sndev->mmio_self_dbmsg->msg_map);
++
++	for (i = 0; i < ARRAY_SIZE(sndev->mmio_self_dbmsg->imsg); i++)
++		iowrite64(NTB_DBMSG_IMSG_STATUS | NTB_DBMSG_IMSG_MASK,
++			  &sndev->mmio_self_dbmsg->imsg[i]);
++}
++
+ static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
+ {
+ 	int rc = 0;
+@@ -342,6 +394,87 @@ static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
+ 				  sndev->self_shared_dma);
+ }
+ 
++static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
++{
++	struct switchtec_ntb *sndev = dev;
++
++	dev_dbg(&sndev->stdev->dev, "doorbell\n");
++
++	return IRQ_HANDLED;
++}
++
++static irqreturn_t switchtec_ntb_message_isr(int irq, void *dev)
++{
++	int i;
++	struct switchtec_ntb *sndev = dev;
++
++	for (i = 0; i < ARRAY_SIZE(sndev->mmio_self_dbmsg->imsg); i++) {
++		u64 msg = ioread64(&sndev->mmio_self_dbmsg->imsg[i]);
++
++		if (msg & NTB_DBMSG_IMSG_STATUS) {
++			dev_dbg(&sndev->stdev->dev, "message: %d %08x\n", i,
++				(u32)msg);
++			iowrite8(1, &sndev->mmio_self_dbmsg->imsg[i].status);
++		}
++	}
++
++	return IRQ_HANDLED;
++}
++
++static int switchtec_ntb_init_db_msg_irq(struct switchtec_ntb *sndev)
++{
++	int i;
++	int rc;
++	int doorbell_irq = 0;
++	int message_irq = 0;
++	int event_irq;
++	int idb_vecs = sizeof(sndev->mmio_self_dbmsg->idb_vec_map);
++
++	event_irq = ioread32(&sndev->stdev->mmio_part_cfg->vep_vector_number);
++
++	while (doorbell_irq == event_irq)
++		doorbell_irq++;
++	while (message_irq == doorbell_irq ||
++	       message_irq == event_irq)
++		message_irq++;
++
++	dev_dbg(&sndev->stdev->dev, "irqs - event: %d, db: %d, msgs: %d",
++		event_irq, doorbell_irq, message_irq);
++
++	for (i = 0; i < idb_vecs - 4; i++)
++		iowrite8(doorbell_irq,
++			 &sndev->mmio_self_dbmsg->idb_vec_map[i]);
++
++	for (; i < idb_vecs; i++)
++		iowrite8(message_irq,
++			 &sndev->mmio_self_dbmsg->idb_vec_map[i]);
++
++	sndev->doorbell_irq = pci_irq_vector(sndev->stdev->pdev, doorbell_irq);
++	sndev->message_irq = pci_irq_vector(sndev->stdev->pdev, message_irq);
++
++	rc = request_irq(sndev->doorbell_irq,
++			 switchtec_ntb_doorbell_isr, 0,
++			 "switchtec_ntb_doorbell", sndev);
++	if (rc)
++		return rc;
++
++	rc = request_irq(sndev->message_irq,
++			 switchtec_ntb_message_isr, 0,
++			 "switchtec_ntb_message", sndev);
++	if (rc) {
++		free_irq(sndev->doorbell_irq, sndev);
++		return rc;
++	}
++
++	return 0;
++}
++
++static void switchtec_ntb_deinit_db_msg_irq(struct switchtec_ntb *sndev)
++{
++	free_irq(sndev->doorbell_irq, sndev);
++	free_irq(sndev->message_irq, sndev);
++}
++
+ static int switchtec_ntb_add(struct device *dev,
+ 			     struct class_interface *class_intf)
+ {
+@@ -365,6 +498,8 @@ static int switchtec_ntb_add(struct device *dev,
+ 
+ 	switchtec_ntb_init_sndev(sndev);
+ 	switchtec_ntb_init_mw(sndev);
++	switchtec_ntb_init_db(sndev);
++	switchtec_ntb_init_msgs(sndev);
+ 
+ 	rc = switchtec_ntb_init_req_id_table(sndev);
+ 	if (rc)
+@@ -374,11 +509,19 @@ static int switchtec_ntb_add(struct device *dev,
+ 	if (rc)
+ 		goto free_and_exit;
+ 
++	rc = switchtec_ntb_init_db_msg_irq(sndev);
++	if (rc)
++		goto deinit_shared_and_exit;
++
++	switchtec_ntb_init_mw(sndev);
++
+ 	stdev->sndev = sndev;
+ 	dev_info(dev, "NTB device registered");
+ 
+ 	return 0;
+ 
++deinit_shared_and_exit:
++	switchtec_ntb_deinit_shared_mw(sndev);
+ free_and_exit:
+ 	kfree(sndev);
+ 	dev_err(dev, "failed to register ntb device: %d", rc);
+@@ -395,6 +538,7 @@ void switchtec_ntb_remove(struct device *dev,
+ 		return;
+ 
+ 	stdev->sndev = NULL;
++	switchtec_ntb_deinit_db_msg_irq(sndev);
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ 	kfree(sndev);
+ 	dev_info(dev, "ntb device unregistered");
+-- 
 2.11.0
