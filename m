@@ -1,104 +1,208 @@
-Return-Path: <SRS0=Qz6u=5M=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=Qz6u=5M=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v3 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Date: Wed, 7 Jun 2017 17:16:06 +0800
-Message-ID: <1496826968-10152-2-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
-References: <1496826968-10152-1-git-send-email-dingtianhong@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:48928 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751699AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:04 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:40 -0600
+Message-Id: <20170629032648.3073-9-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 08/16] switchtec_ntb: introduce initial ntb driver
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+Seeing the switchtec NTB hardware shares the same endpoint as the
+management endpoint we utilize the class_interface api to register
+an NTB driver for every switchtec device in the system that has the
+NTB class code.
 
-The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
-Ordering Attribute should not be used on Transaction Layer Packets destined
-for the PCIe End Node so flagged.  Initially flagged this way are Intel
-E5-26xx Root Complex Ports which suffer from a Flow Control Credit
-Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
-don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
-
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |  2 ++
- 2 files changed, 40 insertions(+)
+ MAINTAINERS                         |  1 +
+ drivers/ntb/hw/Kconfig              |  1 +
+ drivers/ntb/hw/Makefile             |  1 +
+ drivers/ntb/hw/mscc/Kconfig         |  9 +++++
+ drivers/ntb/hw/mscc/Makefile        |  1 +
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 81 +++++++++++++++++++++++++++++++++++++
+ include/linux/switchtec.h           |  4 ++
+ 7 files changed, 98 insertions(+)
+ create mode 100644 drivers/ntb/hw/mscc/Kconfig
+ create mode 100644 drivers/ntb/hw/mscc/Makefile
+ create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 085fb78..58bdd23 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3999,6 +3999,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
- 			      quirk_tw686x_class);
+diff --git a/MAINTAINERS b/MAINTAINERS
+index de6924290f73..e03464a50bed 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9848,6 +9848,7 @@ F:	Documentation/ABI/testing/sysfs-class-switchtec
+ F:	drivers/pci/switch/switchtec*
+ F:	include/uapi/linux/switchtec_ioctl.h
+ F:	include/linux/switchtec.h
++F:	drivers/ntb/hw/mscc/
  
- /*
-+ * Some devices have problems with Transaction Layer Packets with the Relaxed
-+ * Ordering Attribute set.  Such devices should mark themselves and other
-+ * Device Drivers should check before sending TLPs with RO set.
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+diff --git a/drivers/ntb/hw/Kconfig b/drivers/ntb/hw/Kconfig
+index a89243c9fdd3..e51b581fd102 100644
+--- a/drivers/ntb/hw/Kconfig
++++ b/drivers/ntb/hw/Kconfig
+@@ -1,3 +1,4 @@
+ source "drivers/ntb/hw/amd/Kconfig"
+ source "drivers/ntb/hw/idt/Kconfig"
+ source "drivers/ntb/hw/intel/Kconfig"
++source "drivers/ntb/hw/mscc/Kconfig"
+diff --git a/drivers/ntb/hw/Makefile b/drivers/ntb/hw/Makefile
+index 87332c3905f0..923c442db750 100644
+--- a/drivers/ntb/hw/Makefile
++++ b/drivers/ntb/hw/Makefile
+@@ -1,3 +1,4 @@
+ obj-$(CONFIG_NTB_AMD)	+= amd/
+ obj-$(CONFIG_NTB_IDT)	+= idt/
+ obj-$(CONFIG_NTB_INTEL)	+= intel/
++obj-$(CONFIG_NTB_SWITCHTEC) += mscc/
+diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
+new file mode 100644
+index 000000000000..013ed6716438
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/Kconfig
+@@ -0,0 +1,9 @@
++config NTB_SWITCHTEC
++	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
++	select PCI_SW_SWITCHTEC
++	help
++	 Enables NTB support for Switchtec PCI switches. This also
++	 selects the Switchtec management driver as they share the same
++	 hardware interface.
++
++	 If unsure, say N.
+diff --git a/drivers/ntb/hw/mscc/Makefile b/drivers/ntb/hw/mscc/Makefile
+new file mode 100644
+index 000000000000..21907b364e19
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_NTB_SWITCHTEC) += switchtec_ntb.o
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+new file mode 100644
+index 000000000000..253efba72275
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -0,0 +1,81 @@
++/*
++ * Microsemi Switchtec(tm) PCIe Management Driver
++ * Copyright (c) 2017, Microsemi Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
 + */
-+static void quirk_relaxedordering_disable(struct pci_dev *dev)
++
++#include <linux/switchtec.h>
++#include <linux/module.h>
++
++MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
++MODULE_VERSION("0.1");
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Microsemi Corporation");
++
++struct switchtec_ntb {
++	struct switchtec_dev *stdev;
++};
++
++static int switchtec_ntb_add(struct device *dev,
++			     struct class_interface *class_intf)
 +{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
++	struct switchtec_dev *stdev = to_stdev(dev);
++	struct switchtec_ntb *sndev;
++
++	stdev->sndev = NULL;
++
++	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
++		return -ENODEV;
++
++	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
++	if (!sndev)
++		return -ENOMEM;
++
++	sndev->stdev = stdev;
++
++	stdev->sndev = sndev;
++	dev_info(dev, "NTB device registered");
++
++	return 0;
 +}
 +
-+/*
-+ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
-+ * cause performance problems with Upstream Transaction Layer Packets with
-+ * Relaxed Ordering set.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
++void switchtec_ntb_remove(struct device *dev,
++			  struct class_interface *class_intf)
++{
++	struct switchtec_dev *stdev = to_stdev(dev);
++	struct switchtec_ntb *sndev = stdev->sndev;
 +
-+/*
-+ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
-+ * where Upstream Transaction Layer Packets with the Relaxed Ordering
-+ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
-+ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
-+ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
-+ * November 10, 2010).  As a result, on this platform we can't use Relaxed
-+ * Ordering for Upstream TLPs.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
++	if (!sndev)
++		return;
 +
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b..e1e8428 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -183,6 +183,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
- 	/* Do not use FLR even if device advertises PCI_AF_CAP */
- 	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 10),
-+	/* Don't use Relaxed Ordering for TLPs directed at this device */
-+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 11),
++	stdev->sndev = NULL;
++	kfree(sndev);
++	dev_info(dev, "ntb device unregistered");
++}
++
++static struct class_interface switchtec_interface  = {
++	.add_dev = switchtec_ntb_add,
++	.remove_dev = switchtec_ntb_remove,
++};
++
++static int __init switchtec_ntb_init(void)
++{
++	switchtec_interface.class = switchtec_class;
++	return class_interface_register(&switchtec_interface);
++}
++module_init(switchtec_ntb_init);
++
++static void __exit switchtec_ntb_exit(void)
++{
++	class_interface_unregister(&switchtec_interface);
++}
++module_exit(switchtec_ntb_exit);
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 6a056ffbc439..c2920112deae 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -311,6 +311,8 @@ struct pff_csr_regs {
+ 	u32 reserved4[174];
+ } __packed;
+ 
++struct switchtec_ntb;
++
+ struct switchtec_dev {
+ 	struct pci_dev *pdev;
+ 	struct device dev;
+@@ -348,6 +350,8 @@ struct switchtec_dev {
+ 	struct work_struct link_event_work;
+ 	void (*link_notifier)(struct switchtec_dev *stdev);
+ 	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
++
++	struct switchtec_ntb *sndev;
  };
  
- enum pci_irq_reroute_variant {
+ static inline struct switchtec_dev *to_stdev(struct device *dev)
 -- 
-1.9.0
+2.11.0
