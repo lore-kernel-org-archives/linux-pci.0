@@ -1,138 +1,123 @@
-Return-Path: <SRS0=PqzH=5S=ginzinger.com=Stefan.Schoefegger@kernel.org>
-Return-Path: <SRS0=PqzH=5S=ginzinger.com=Stefan.Schoefegger@kernel.org>
-From: =?iso-8859-1?Q?Sch=F6fegger_Stefan?= <Stefan.Schoefegger@ginzinger.com>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, open list
-	<linux-kernel@vger.kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>,
-	Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	"moderated list:PCI DRIVER FOR IMX6" <linux-arm-kernel@lists.infradead.org>,
-	Lucas Stach <l.stach@pengutronix.de>
-Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
-Date: Tue, 13 Jun 2017 05:55:09 +0000
-Message-ID: <1782110.RW4F1b4ZIY@en-pc05>
-References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
- <AM5PR0402MB285053130F4B1FCBF67C31998CC20@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-In-Reply-To: <AM5PR0402MB285053130F4B1FCBF67C31998CC20@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51264 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751532AbdF2UGu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jun 2017 16:06:50 -0400
+Date: Thu, 29 Jun 2017 14:06:48 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yongji Xie <elohimes@gmail.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Paul Mackerras <paulus@samba.org>,
+        David Gibson <david@gibson.dropbear.id.au>
+Subject: Re: [PATCH kernel 0/3 REPOST] vfio-pci: Add support for mmapping
+ MSI-X table
+Message-ID: <20170629140648.160adabf@w520.home>
+In-Reply-To: <49060a05-bbdb-8a38-909a-f9615693501e@ozlabs.ru>
+References: <20170615054845.8428-1-aik@ozlabs.ru>
+        <20170622151118.0006c3d3@w520.home>
+        <82b2e63c-0a39-303c-f255-b857764fc412@ozlabs.ru>
+        <20170623091723.1f122800@w520.home>
+        <49060a05-bbdb-8a38-909a-f9615693501e@ozlabs.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, June 13, 2017 2:00:16 AM CEST Richard Zhu wrote:
-> > -----Original Message-----
-> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > Sent: Tuesday, June 13, 2017 7:49 AM
-> > To: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-> > Cc: linux-pci@vger.kernel.org; Richard Zhu <hongxing.zhu@nxp.com>; Arnd
-> > Bergmann <arnd@arndb.de>; open list <linux-kernel@vger.kernel.org>;
-> > Kishon Vijay Abraham I <kishon@ti.com>; Jingoo Han
-> > <jingoohan1@gmail.com>; Bjorn Helgaas <bhelgaas@google.com>;
-> > moderated list:PCI DRIVER FOR IMX6 <linux-arm-kernel@lists.infradead.or=
-g>;
-> > Lucas Stach <l.stach@pengutronix.de>
-> > Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
-> >=20
-> > On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
-> > > Link speed must not be limited to gen1 during link test for complianc=
-e
-> > > tests
-> > >=20
-> > > Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-> > > ---
-> > >=20
-> > > Changes since v1:
-> > >  - pci-imx6.c moved to dwc directory
-> > > =20
-> > >  drivers/pci/dwc/Kconfig    | 10 ++++++++++
-> > >  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
-> > >  2 files changed, 22 insertions(+), 9 deletions(-)
-> > >=20
-> > > diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig index
-> > > b7e15526d676..b6e9ced5a45d 100644
-> > > --- a/drivers/pci/dwc/Kconfig
-> > > +++ b/drivers/pci/dwc/Kconfig
-> > > @@ -77,6 +77,16 @@ config PCI_IMX6
-> > >=20
-> > >  	select PCIEPORTBUS
-> > >  	select PCIE_DW_HOST
-> > >=20
-> > > +config PCI_IMX6_COMPLIANCE_TEST
-> > > +	bool "Enable pcie compliance tests on imx6"
-> > > +	depends on PCI_IMX6
-> > > +	default n
-> > > +	help
-> > > +	  Enables support for pcie compliance test on FSL iMX SoCs.
-> > > +	  The link speed wouldn't be limited to gen1 when enabled.
-> > > +	  Enable only during compliance tests, otherwise
-> > > +	  link detection will fail on some peripherals.
-> >=20
-> > I'm puzzled about why we would want to merge this patch.  It looks like
-> > we're trying to game the system to make the device pass compliance test=
-ing
-> > when it isn't really compliant.  Is this config option useful to users,=
- or
-> > is it only useful during internal development of iMX SoCs?
->=20
-> [Zhu hongxing] Agree with Bjorn. These modifications shouldn't be merged.
-> They are used for the boards used to pass the PCIe RC certification, when
-> one Standalone external OSC is used as PCIe reference clock source in the
-> boards design.
-Yes, passing gen2 compliance test is only possible with external clk. But t=
-his=20
-is a errata of imx6 pci phy of PCIe clk jitter. Why should we not be able t=
-o=20
-do gen2 tests? I think it is useful to do other gen2 tests (signal integrit=
-y)=20
-during board design.
-> > >  config PCIE_SPEAR13XX
-> > > =20
-> > >  	bool "STMicroelectronics SPEAr PCIe controller"
-> > >  	depends on PCI
-> > >=20
-> > > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> > > index 19a289b8cc94..b0fbe52e25b0 100644
-> > > --- a/drivers/pci/dwc/pci-imx6.c
-> > > +++ b/drivers/pci/dwc/pci-imx6.c
-> > > @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct
-> >=20
-> > imx6_pcie *imx6_pcie)
-> >=20
-> > >  	u32 tmp;
-> > >  	int ret;
-> > >=20
-> > > -	/*
-> > > -	 * Force Gen1 operation when starting the link.  In case the link i=
-s
-> > > -	 * started in Gen2 mode, there is a possibility the devices on the
-> > > -	 * bus will not be detected at all.  This happens with PCIe switche=
-s.
-> > > -	 */
-> > > -	tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > > -	tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > > -	tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > > -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > > +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
-> > > +		/*
-> > > +		 * Force Gen1 operation when starting the link.  In case the
-> > > +		 * link is started in Gen2 mode, there is a possibility the
-> > > +		 * devices on the bus will not be detected at all.  This
-> > > +		 * happens with PCIe switches.
-> > > +		 */
-> > > +		tmp =3D dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> > > +		tmp &=3D ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> > > +		tmp |=3D PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> > > +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> > > +	}
-> > >=20
-> > >  	/* Start LTSSM. */
-> > >  	if (imx6_pcie->variant =3D=3D IMX7D)
-> > >=20
-> > > --
-> > > 2.11.0
-> > >=20
-> > >=20
-> > > _______________________________________________
-> > > linux-arm-kernel mailing list
-> > > linux-arm-kernel@lists.infradead.org
-> > > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On Wed, 28 Jun 2017 17:27:32 +1000
+Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+
+> On 24/06/17 01:17, Alex Williamson wrote:
+> > On Fri, 23 Jun 2017 15:06:37 +1000
+> > Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+> >   
+> >> On 23/06/17 07:11, Alex Williamson wrote:  
+> >>> On Thu, 15 Jun 2017 15:48:42 +1000
+> >>> Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+> >>>     
+> >>>> Here is a patchset which Yongji was working on before
+> >>>> leaving IBM LTC. Since we still want to have this functionality
+> >>>> in the kernel (DPDK is the first user), here is a rebase
+> >>>> on the current upstream.
+> >>>>
+> >>>>
+> >>>> Current vfio-pci implementation disallows to mmap the page
+> >>>> containing MSI-X table in case that users can write directly
+> >>>> to MSI-X table and generate an incorrect MSIs.
+> >>>>
+> >>>> However, this will cause some performance issue when there
+> >>>> are some critical device registers in the same page as the
+> >>>> MSI-X table. We have to handle the mmio access to these
+> >>>> registers in QEMU emulation rather than in guest.
+> >>>>
+> >>>> To solve this issue, this series allows to expose MSI-X table
+> >>>> to userspace when hardware enables the capability of interrupt
+> >>>> remapping which can ensure that a given PCI device can only
+> >>>> shoot the MSIs assigned for it. And we introduce a new bus_flags
+> >>>> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+> >>>> for different archs.
+> >>>>
+> >>>> The patch 3 are based on the proposed patchset[1].
+> >>>>
+> >>>> Changelog
+> >>>> v3:
+> >>>> - rebased on the current upstream    
+> >>>
+> >>> There's something not forthcoming here, the last version I see from
+> >>> Yongji is this one:
+> >>>
+> >>> https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017245.html
+> >>>
+> >>> Which was a 6-patch series where patches 2-4 tried to apply
+> >>> PCI_BUS_FLAGS_MSI_REMAP for cases that supported other platforms.  That
+> >>> doesn't exist here, so it's not simply a rebase.  Patch 1/ seems to
+> >>> equate this new flag to the IOMMU capability IOMMU_CAP_INTR_REMAP, but
+> >>> nothing is done here to match them together.  That patch also mentions
+> >>> the work Eric has done for similar features on ARM, but again those
+> >>> patches are dropped.  It seems like an incomplete feature now.  Thanks,    
+> >>
+> >>
+> >> Thanks! I suspected this is not the latest but could not find anything
+> >> better than we use internally for tests, and I could not reach Yongji for
+> >> comments whether this was the latest update.
+> >>
+> >> As I am reading the patches, I notice that the "msi remap" term is used all
+> >> over the place. While this remapping capability may be the case for x86/arm
+> >> (and therefore the IOMMU_CAP_INTR_REMAP flag makes sense), powernv does not
+> >> do remapping but provides hardware isolation. When we are allowing MSIX BAR
+> >> mapping to the userspace - the isolation is what we really care about. Will
+> >> it make sense to rename PCI_BUS_FLAGS_MSI_REMAP to
+> >> PCI_BUS_FLAGS_MSI_ISOLATED ?  
+> > 
+> > I don't have a strong opinion either way, so long as it's fully
+> > described what the flag indicates.
+> >   
+> >> Another thing - the patchset enables PCI_BUS_FLAGS_MSI_REMAP when IOMMU
+> >> just advertises IOMMU_CAP_INTR_REMAP, not necessarily uses it, should the
+> >> patchset actually look at something like irq_remapping_enabled in
+> >> drivers/iommu/amd_iommu.c instead?  
+> > 
+> > Interrupt remapping being enabled is implicit in IOMMU_CAP_INTR_REMAP,
+> > neither intel or amd iommu export the capability unless enabled.
+> > Nobody cares if it's supported but not enabled.  Thanks,  
+> 
+> 
+> As I am reading the current drivers/vfio/vfio_iommu_type1.c, it feels like
+> MSIX BAR mappings can always be allowed for the type1 IOMMU as
+> vfio_iommu_type1_attach_group() performs this check:
+> 
+> msi_remap = resv_msi ? irq_domain_check_msi_remap() :
+>     iommu_capable(bus, IOMMU_CAP_INTR_REMAP);
+> 
+> and simply does not proceed if MSI remap is not supported. Is that correct
+> or I miss something here? Thanks.
+
+The MSI code in type1 has absolutely nothing to do with BAR mappings.
+That's looking at how MSI is handled by the IOMMU, whether it needs a
+reserved mapping area and whether MSI writes have source ID
+validation.  Thanks,
+
+Alex
