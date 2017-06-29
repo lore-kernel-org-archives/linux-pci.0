@@ -1,115 +1,167 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 12 Jun 2017 18:49:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-Subject: Re: [PATCH v2 1/1] PCI: imx6: Add pcie compliance test option
-Message-ID: <20170612234924.GE4379@bhelgaas-glaptop.roam.corp.google.com>
-References: <1472121518-9340-1-git-send-email-stefan.schoefegger@ginzinger.com>
- <1496835374-13053-1-git-send-email-stefan.schoefegger@ginzinger.com>
-MIME-Version: 1.0
-In-Reply-To: <1496835374-13053-1-git-send-email-stefan.schoefegger@ginzinger.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, Arnd Bergmann <arnd@arndb.de>,
- Jingoo Han <jingoohan1@gmail.com>, open list <linux-kernel@vger.kernel.org>,
- Kishon Vijay Abraham I <kishon@ti.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- "moderated list:PCI DRIVER FOR IMX6" <linux-arm-kernel@lists.infradead.org>,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:48924 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751715AbdF2D1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:04 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:37 -0600
+Message-Id: <20170629032648.3073-6-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 05/16] ntb: ensure ntb_mw_get_align is only called when the link is up
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 07, 2017 at 01:36:11PM +0200, Stefan Schoefegger wrote:
-> Link speed must not be limited to gen1 during link test for compliance
-> tests
-> 
-> Signed-off-by: Stefan Schoefegger <stefan.schoefegger@ginzinger.com>
-> ---
-> 
-> Changes since v1:
->  - pci-imx6.c moved to dwc directory
-> 
->  drivers/pci/dwc/Kconfig    | 10 ++++++++++
->  drivers/pci/dwc/pci-imx6.c | 21 ++++++++++++---------
->  2 files changed, 22 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index b7e15526d676..b6e9ced5a45d 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -77,6 +77,16 @@ config PCI_IMX6
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
->  
-> +config PCI_IMX6_COMPLIANCE_TEST
-> +	bool "Enable pcie compliance tests on imx6"
-> +	depends on PCI_IMX6
-> +	default n
-> +	help
-> +	  Enables support for pcie compliance test on FSL iMX SoCs.
-> +	  The link speed wouldn't be limited to gen1 when enabled.
-> +	  Enable only during compliance tests, otherwise
-> +	  link detection will fail on some peripherals.
+With switchtec hardware it's impossible to get the alignment parameters
+for a peer's memory window until the peer's driver has configured it's
+windows. Strictly speaking, the link doesn't have to be up for this,
+but the link being up is the only way the client can tell that
+the otherside has been configured.
 
-I'm puzzled about why we would want to merge this patch.  It looks
-like we're trying to game the system to make the device pass
-compliance testing when it isn't really compliant.  Is this config
-option useful to users, or is it only useful during internal
-development of iMX SoCs?
+This patch converts ntb_transport and ntb_perf to use this function after
+the link goes up. This simplifies these clients slightly because they
+no longer have to store the alignment parameters. It also tweaks
+ntb_tool so that peer_mw_trans will print zero if it is run before
+the link goes up.
 
->  config PCIE_SPEAR13XX
->  	bool "STMicroelectronics SPEAr PCIe controller"
->  	depends on PCI
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> index 19a289b8cc94..b0fbe52e25b0 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -533,15 +533,18 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
->  	u32 tmp;
->  	int ret;
->  
-> -	/*
-> -	 * Force Gen1 operation when starting the link.  In case the link is
-> -	 * started in Gen2 mode, there is a possibility the devices on the
-> -	 * bus will not be detected at all.  This happens with PCIe switches.
-> -	 */
-> -	tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> -	tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> -	tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> -	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> +	if (!IS_ENABLED(CONFIG_PCI_IMX6_COMPLIANCE_TEST)) {
-> +		/*
-> +		 * Force Gen1 operation when starting the link.  In case the
-> +		 * link is started in Gen2 mode, there is a possibility the
-> +		 * devices on the bus will not be detected at all.  This
-> +		 * happens with PCIe switches.
-> +		 */
-> +		tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCR);
-> +		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
-> +		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1;
-> +		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
-> +	}
->  
->  	/* Start LTSSM. */
->  	if (imx6_pcie->variant == IMX7D)
-> -- 
-> 2.11.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/ntb/ntb_transport.c | 20 ++++++++++----------
+ drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
+ drivers/ntb/test/ntb_tool.c |  6 +++---
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index b29558ddfe95..7ed745aaa213 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -191,8 +191,6 @@ struct ntb_transport_qp {
+ struct ntb_transport_mw {
+ 	phys_addr_t phys_addr;
+ 	resource_size_t phys_size;
+-	resource_size_t xlat_align;
+-	resource_size_t xlat_align_size;
+ 	void __iomem *vbase;
+ 	size_t xlat_size;
+ 	size_t buff_size;
+@@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
+ 	struct pci_dev *pdev = nt->ndev->pdev;
+ 	size_t xlat_size, buff_size;
++	resource_size_t xlat_align;
++	resource_size_t xlat_align_size;
+ 	int rc;
+ 
+ 	if (!size)
+ 		return -EINVAL;
+ 
+-	xlat_size = round_up(size, mw->xlat_align_size);
+-	buff_size = round_up(size, mw->xlat_align);
++	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
++			      &xlat_align_size, NULL);
++	if (rc)
++		return rc;
++
++	xlat_size = round_up(size, xlat_align_size);
++	buff_size = round_up(size, xlat_align);
+ 
+ 	/* No need to re-setup */
+ 	if (mw->xlat_size == xlat_size)
+@@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	 * is a requirement of the hardware. It is recommended to setup CMA
+ 	 * for BAR sizes equal or greater than 4MB.
+ 	 */
+-	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
++	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
+ 		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
+ 			&mw->dma_addr);
+ 		ntb_free_mw(nt, num_mw);
+@@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	for (i = 0; i < mw_count; i++) {
+ 		mw = &nt->mw_vec[i];
+ 
+-		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
+-				      &mw->xlat_align_size, NULL);
+-		if (rc)
+-			goto err1;
+-
+ 		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
+ 					  &mw->phys_size);
+ 		if (rc)
+diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
+index 759f772fa00c..427112cf101a 100644
+--- a/drivers/ntb/test/ntb_perf.c
++++ b/drivers/ntb/test/ntb_perf.c
+@@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
+ struct perf_mw {
+ 	phys_addr_t	phys_addr;
+ 	resource_size_t	phys_size;
+-	resource_size_t	xlat_align;
+-	resource_size_t	xlat_align_size;
+ 	void __iomem	*vbase;
+ 	size_t		xlat_size;
+ 	size_t		buf_size;
+@@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
+ {
+ 	struct perf_mw *mw = &perf->mw;
+ 	size_t xlat_size, buf_size;
++	resource_size_t	xlat_align;
++	resource_size_t	xlat_align_size;
+ 	int rc;
+ 
+ 	if (!size)
+ 		return -EINVAL;
+ 
+-	xlat_size = round_up(size, mw->xlat_align_size);
+-	buf_size = round_up(size, mw->xlat_align);
++	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
++			      &xlat_align_size, NULL);
++	if (rc)
++		return rc;
++
++	xlat_size = round_up(size, xlat_align_size);
++	buf_size = round_up(size, xlat_align);
+ 
+ 	if (mw->xlat_size == xlat_size)
+ 		return 0;
+@@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
+ 
+ 	mw = &perf->mw;
+ 
+-	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
+-			      &mw->xlat_align_size, NULL);
+-	if (rc)
+-		return rc;
+-
+ 	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
+ 	if (rc)
+ 		return rc;
+diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
+index a69815c45ce6..91526a986caa 100644
+--- a/drivers/ntb/test/ntb_tool.c
++++ b/drivers/ntb/test/ntb_tool.c
+@@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
+ 
+ 	phys_addr_t base;
+ 	resource_size_t mw_size;
+-	resource_size_t align_addr;
+-	resource_size_t align_size;
+-	resource_size_t max_size;
++	resource_size_t align_addr = 0;
++	resource_size_t align_size = 0;
++	resource_size_t max_size = 0;
+ 
+ 	buf_size = min_t(size_t, size, 512);
+ 
+-- 
+2.11.0
