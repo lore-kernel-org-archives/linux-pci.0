@@ -1,169 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0044.outbound.protection.outlook.com ([104.47.34.44]:15164
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750960AbdFTCfs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 19 Jun 2017 22:35:48 -0400
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Ley Foon Tan <ley.foon.tan@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC: Paul Burton <paul.burton@imgtec.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        "Ley Foon Tan" <lftan@altera.com>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: RE: [PATCH v5 1/4] PCI: xilinx: Create legacy IRQ domain with size 5
-Date: Tue, 20 Jun 2017 02:30:39 +0000
-Message-ID: <8520D5D51A55D047800579B09414719826474650@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <20170617195741.12757-1-paul.burton@imgtec.com>
-         <20170617195741.12757-2-paul.burton@imgtec.com>
-         <20170619234708.GG554@bhelgaas-glaptop.roam.corp.google.com>
-         <1497919094.42572.3.camel@intel.com>
-         <20170620014903.GI554@bhelgaas-glaptop.roam.corp.google.com>
- <1497923734.42572.8.camel@intel.com>
-In-Reply-To: <1497923734.42572.8.camel@intel.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from esa2.dell-outbound.iphmx.com ([68.232.149.220]:7010 "EHLO
+        esa2.dell-outbound.iphmx.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753211AbdF2UOA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 29 Jun 2017 16:14:00 -0400
+From: "Allen Hubbe" <Allen.Hubbe@dell.com>
+To: "'Logan Gunthorpe'" <logang@deltatee.com>,
+        <linux-ntb@googlegroups.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Cc: "'Jon Mason'" <jdmason@kudzu.us>,
+        "'Dave Jiang'" <dave.jiang@intel.com>,
+        "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'Greg Kroah-Hartman'" <gregkh@linuxfoundation.org>,
+        "'Kurt Schwemmer'" <kurt.schwemmer@microsemi.com>,
+        "'Stephen Bates'" <sbates@raithlin.com>,
+        "'Serge Semin'" <fancer.lancer@gmail.com>
+References: <20170629032648.3073-1-logang@deltatee.com> <20170629032648.3073-7-logang@deltatee.com> <000301d2f103$3310ca60$99325f20$@dell.com> <079047c1-6612-2814-e147-844fabd56b75@deltatee.com>
+In-Reply-To: <079047c1-6612-2814-e147-844fabd56b75@deltatee.com>
+Subject: RE: [PATCH 06/16] ntb: add check and comment for link up to mw_count and mw_get_align
+Date: Thu, 29 Jun 2017 16:13:40 -0400
+Message-ID: <000401d2f114$3499f2b0$9dcdd810$@dell.com>
 MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBTdWJqZWN0OiBSZTogW1BBVENIIHY1IDEvNF0gUENJOiB4aWxpbng6IENyZWF0ZSBsZWdhY3kg
-SVJRIGRvbWFpbiB3aXRoIHNpemUgNQ0KPiANCj4gT24gTW9uLCAyMDE3LTA2LTE5IGF0IDIwOjQ5
-IC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+IFsrY2MgTWFyY10NCj4gPg0KPiA+IE9u
-IFR1ZSwgSnVuIDIwLCAyMDE3IGF0IDA4OjM4OjE0QU0gKzA4MDAsIExleSBGb29uIFRhbiB3cm90
-ZToNCj4gPiA+DQo+ID4gPiBPbiBNb24sIDIwMTctMDYtMTkgYXQgMTg6NDcgLTA1MDAsIEJqb3Ju
-IEhlbGdhYXMgd3JvdGU6DQo+ID4gPiA+DQo+ID4gPiA+IFsrY2MgVGhvbWFzLCBMZXkgRm9vbl0N
-Cj4gPiA+ID4NCj4gPiA+ID4gT24gU2F0LCBKdW4gMTcsIDIwMTcgYXQgMTI6NTc6MzhQTSAtMDcw
-MCwgUGF1bCBCdXJ0b24gd3JvdGU6DQo+ID4gPiA+ID4NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IFRo
-ZSBkcml2ZXIgZXhwZWN0cyB0byB1c2UgaGFyZHdhcmUgSVJRIG51bWJlcnMgMSB0aHJvdWdoIDQg
-Zm9yDQo+ID4gPiA+ID4gSU5UWCBpbnRlcnJ1cHRzLCBidXQgb25seSBjcmVhdGVzIGFuIElSUSBk
-b21haW4gb2Ygc2l6ZSA0IChpZS4NCj4gPiA+ID4gPiBJUlEgbnVtYmVycyAwIHRocm91Z2ggMyku
-IFRoaXMgcmVzdWx0cyBpbiBhIHdhcm5pbmcgZnJvbQ0KPiA+ID4gPiA+IGlycV9kb21haW5fYXNz
-b2NpYXRlIHdoZW4gaXQgaXMgY2FsbGVkIHdpdGggaHdpcnE9NDoNCj4gPiA+ID4gPg0KPiA+ID4g
-PiA+IMKgwqDCoMKgwqBXQVJOSU5HOiBDUFU6IDAgUElEOiAxIGF0IGtlcm5lbC9pcnEvaXJxZG9t
-YWluLmM6MzY1DQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgaXJxX2RvbWFpbl9hc3NvY2lh
-dGUrMHgxNzAvMHgyMjANCj4gPiA+ID4gPiDCoMKgwqDCoMKgZXJyb3I6IGh3aXJxIDB4NCBpcyB0
-b28gbGFyZ2UgZm9yIGR1bW15DQo+ID4gPiA+ID4gwqDCoMKgwqDCoE1vZHVsZXMgbGlua2VkIGlu
-Og0KPiA+ID4gPiA+IMKgwqDCoMKgwqBDUFU6IDAgUElEOiAxIENvbW06IHN3YXBwZXIvMCBUYWlu
-dGVkOiBHwqDCoMKgwqDCoMKgwqDCoFcNCj4gPiA+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqA0LjEy
-LjAtcmM1LTAwMTI2LWcxOWUxYjNhMTBhYWQtZGlydHkgIzQyNw0KPiA+ID4gPiA+IMKgwqDCoMKg
-wqBTdGFjayA6IDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDAwMDAwMDAwNCAwMDAwMDAwMDAwMDAw
-MDA2DQo+ID4gPiA+ID4gZmZmZmZmZmY4MDkyYzc4YQ0KPiA+ID4gPiA+IMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgMDAwMDAwMDAwMDAwMDA2MSBmZmZmZmZmZjgwMThiZjYwIDAwMDAwMDAwMDAw
-MDAwMDANCj4gPiA+ID4gPiAwMDAwMDAwMDAwMDAwMDAwDQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqBmZmZmZmZmZjgwODhjMjg3IGZmZmZmZmZmODA4MTFkMTggYTgwMDAwMDBm
-ZmM2MDAwMA0KPiA+ID4gPiA+IGZmZmZmZmZmODA5MjY2NzgNCj4gPiA+ID4gPiDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoDAwMDAwMDAwMDAwMDAwMDEgMDAwMDAwMDAwMDAwMDAwMCBmZmZmZmZm
-ZjgwODg3ODgwDQo+ID4gPiA+ID4gZmZmZmZmZmY4MDk2MDAwMA0KPiA+ID4gPiA+IMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgZmZmZmZmZmY4MDkyMDAwMCBmZmZmZmZmZjgwMWU2NzQ0IGZmZmZm
-ZmZmODA4ODc4ODANCj4gPiA+ID4gPiBhODAwMDAwMGZmYzRmOGY4DQo+ID4gPiA+ID4gwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqAwMDAwMDAwMDAwMDAwODljIGZmZmZmZmZmODAxOGQyNjAgMDAw
-MDAwMDAwMDAxMDAwMA0KPiA+ID4gPiA+IGZmZmZmZmZmODA4MTFkMTgNCj4gPiA+ID4gPiDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDAwMDAwMDAwMSAw
-MDAwMDAwMDAwMDAwMDAwDQo+ID4gPiA+ID4gMDAwMDAwMDAwMDAwMDAwMA0KPiA+ID4gPiA+IMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgMDAwMDAwMDAwMDAwMDAwMCBhODAwMDAwMGZmYzRmODQw
-IDAwMDAwMDAwMDAwMDAwMDANCj4gPiA+ID4gPiBmZmZmZmZmZjgwNDJjZjM0DQo+ID4gPiA+ID4g
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAwMDAwMDAwMDAwMDAwMDAwIDAwMDAwMDAwMDAwMDAw
-MDAgMDAwMDAwMDAwMDAwMDAwMA0KPiA+ID4gPiA+IDAwMDAwMDAwMDAwNDBjMDANCj4gPiA+ID4g
-PiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoDAwMDAwMDAwMDAwMDAwMDAgZmZmZmZmZmY4MDEw
-ZDFjOCAwMDAwMDAwMDAwMDAwMDAwDQo+ID4gPiA+ID4gZmZmZmZmZmY4MDQyY2YzNA0KPiA+ID4g
-PiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLi4uDQo+ID4gPiA+ID4gwqDCoMKgwqDCoENh
-bGwgVHJhY2U6DQo+ID4gPiA+ID4gwqDCoMKgwqDCoFs8ZmZmZmZmZmY4MDEwZDFjOD5dIHNob3df
-c3RhY2srMHg4MC8weGEwDQo+ID4gPiA+ID4gwqDCoMKgwqDCoFs8ZmZmZmZmZmY4MDQyY2YzND5d
-IGR1bXBfc3RhY2srMHhkNC8weDExMA0KPiA+ID4gPiA+IMKgwqDCoMKgwqBbPGZmZmZmZmZmODAx
-M2VhOTg+XSBfX3dhcm4rMHhmMC8weDEwOA0KPiA+ID4gPiA+IMKgwqDCoMKgwqBbPGZmZmZmZmZm
-ODAxM2ViMTQ+XSB3YXJuX3Nsb3dwYXRoX2ZtdCsweDNjLzB4NDgNCj4gPiA+ID4gPiDCoMKgwqDC
-oMKgWzxmZmZmZmZmZjgwMTk2NTI4Pl0gaXJxX2RvbWFpbl9hc3NvY2lhdGUrMHgxNzAvMHgyMjAN
-Cj4gPiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZmZjgwMTk2YmYwPl0gaXJxX2NyZWF0ZV9tYXBw
-aW5nKzB4ODgvMHgxMTgNCj4gPiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZmZjgwMTk3NmE4Pl0g
-aXJxX2NyZWF0ZV9md3NwZWNfbWFwcGluZysweGI4LzB4MzIwDQo+ID4gPiA+ID4gwqDCoMKgwqDC
-oFs8ZmZmZmZmZmY4MDE5Nzk3MD5dIGlycV9jcmVhdGVfb2ZfbWFwcGluZysweDYwLzB4NzANCj4g
-PiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZmZjgwNWQxMzE4Pl0gb2ZfaXJxX3BhcnNlX2FuZF9t
-YXBfcGNpKzB4MjAvMHgzOA0KPiA+ID4gPiA+IMKgwqDCoMKgwqBbPGZmZmZmZmZmODA0OWMyMTA+
-XSBwY2lfZml4dXBfaXJxcysweDYwLzB4ZTANCj4gPiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZm
-ZjgwNDljZDY0Pl0geGlsaW54X3BjaWVfcHJvYmUrMHgyOGMvMHg0NzgNCj4gPiA+ID4gPiDCoMKg
-wqDCoMKgWzxmZmZmZmZmZjgwNGU4Y2E4Pl0gcGxhdGZvcm1fZHJ2X3Byb2JlKzB4NTAvMHhkMA0K
-PiA+ID4gPiA+IMKgwqDCoMKgwqBbPGZmZmZmZmZmODA0ZTczYTQ+XSBkcml2ZXJfcHJvYmVfZGV2
-aWNlKzB4MmM0LzB4M2EwDQo+ID4gPiA+ID4gwqDCoMKgwqDCoFs8ZmZmZmZmZmY4MDRlNzU0ND5d
-IF9fZHJpdmVyX2F0dGFjaCsweGM0LzB4ZDANCj4gPiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZm
-ZjgwNGU1MjU0Pl0gYnVzX2Zvcl9lYWNoX2RldisweDY0LzB4YTgNCj4gPiA+ID4gPiDCoMKgwqDC
-oMKgWzxmZmZmZmZmZjgwNGU1ZTQwPl0gYnVzX2FkZF9kcml2ZXIrMHgxZjAvMHgyNjgNCj4gPiA+
-ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZmZjgwNGU4MDAwPl0gZHJpdmVyX3JlZ2lzdGVyKzB4Njgv
-MHgxMTgNCj4gPiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZmZjgwMTAwMWE0Pl0gZG9fb25lX2lu
-aXRjYWxsKzB4NGMvMHgxNzgNCj4gPiA+ID4gPiDCoMKgwqDCoMKgWzxmZmZmZmZmZjgwOGQzY2E4
-Pl0ga2VybmVsX2luaXRfZnJlZWFibGUrMHgyMDQvMHgyYjANCj4gPiA+ID4gPiDCoMKgwqDCoMKg
-WzxmZmZmZmZmZjgwNzMwYjY4Pl0ga2VybmVsX2luaXQrMHgxMC8weGY4DQo+ID4gPiA+ID4gwqDC
-oMKgwqDCoFs8ZmZmZmZmZmY4MDEwNjIxOD5dIHJldF9mcm9tX2tlcm5lbF90aHJlYWQrMHgxNC8w
-eDFjDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBUaGlzIHBhdGNoIGF2b2lkcyB0aGF0IHdhcm5pbmcg
-YnkgY3JlYXRpbmcgdGhlIGxlZ2FjeSBJUlEgZG9tYWluDQo+ID4gPiA+ID4gd2l0aCBzaXplIDUg
-cmF0aGVyIHRoYW4gNCwgYWxsb3dpbmcgaXQgdG8gY292ZXIgdGhlIGh3aXJxPTQvSU5URA0KPiA+
-ID4gPiA+IGNhc2UuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBQYXVsIEJ1
-cnRvbiA8cGF1bC5idXJ0b25AaW1ndGVjLmNvbT4NCj4gPiA+ID4gPiBDYzogQmhhcmF0IEt1bWFy
-IEdvZ2FkYSA8YmhhcmF0a3VAeGlsaW54LmNvbT4NCj4gPiA+ID4gPiBDYzogQmpvcm4gSGVsZ2Fh
-cyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4NCj4gPiA+ID4gPiBDYzogTWljaGFsIFNpbWVrIDxtaWNo
-YWwuc2ltZWtAeGlsaW54LmNvbT4NCj4gPiA+ID4gPiBDYzogUmF2aWtpcmFuIEd1bW1hbHVyaSA8
-cmd1bW1hbEB4aWxpbnguY29tPg0KPiA+ID4gPiA+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwu
-b3JnDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiAtLS0NCj4gPiA+ID4gPg0KPiA+ID4gPiA+IENoYW5n
-ZXMgaW4gdjU6DQo+ID4gPiA+ID4gLSBOZXcgcGF0Y2g7IHJlcGxhY2luZyAiUENJOiB4aWxpbng6
-IEZpeCBJTlRYIGlycSBkaXNwYXRjaCIuDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBDaGFuZ2VzIGlu
-IHY0OiBOb25lDQo+ID4gPiA+ID4gQ2hhbmdlcyBpbiB2MzogTm9uZQ0KPiA+ID4gPiA+IENoYW5n
-ZXMgaW4gdjI6IE5vbmUNCj4gPiA+ID4gPg0KPiA+ID4gPiA+IMKgZHJpdmVycy9wY2kvaG9zdC9w
-Y2llLXhpbGlueC5jIHwgMiArLQ0KPiA+ID4gPiA+IMKgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0
-aW9uKCspLCAxIGRlbGV0aW9uKC0pDQo+ID4gPiA+ID4NCj4gPiA+ID4gPiBkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9wY2kvaG9zdC9wY2llLXhpbGlueC5jDQo+ID4gPiA+ID4gYi9kcml2ZXJzL3BjaS9o
-b3N0L3BjaWUteGlsaW54LmMgaW5kZXgNCj4gPiA+ID4gPiAyZmUyZGY1MWY5ZjguLjk0YzcxZmI5
-MTY0OCAxMDA2NDQNCj4gPiA+ID4gPiAtLS0gYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUteGlsaW54
-LmMNCj4gPiA+ID4gPiArKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUteGlsaW54LmMNCj4gPiA+
-ID4gPiBAQCAtNTI0LDcgKzUyNCw3IEBAIHN0YXRpYyBpbnQNCj4gPiA+ID4gPiB4aWxpbnhfcGNp
-ZV9pbml0X2lycV9kb21haW4oc3RydWN0DQo+ID4gPiA+ID4geGlsaW54X3BjaWVfcG9ydCAqcG9y
-dCkNCj4gPiA+ID4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIC1FTk9ERVY7
-DQo+ID4gPiA+ID4gwqDCoMKgwqDCoMKgfQ0KPiA+ID4gPiA+DQo+ID4gPiA+ID4gLcKgwqDCoMKg
-wqBwb3J0LT5sZWdfZG9tYWluID0gaXJxX2RvbWFpbl9hZGRfbGluZWFyKHBjaWVfaW50Y19ub2Rl
-LA0KPiA+ID4gPiA+IDQsDQo+ID4gPiA+ID4gK8KgwqDCoMKgwqBwb3J0LT5sZWdfZG9tYWluID0g
-aXJxX2RvbWFpbl9hZGRfbGluZWFyKHBjaWVfaW50Y19ub2RlLA0KPiA+ID4gPiA+IDEgKw0KPiA+
-ID4gPiA+IDQsDQo+ID4gPiA+IEkgZG9uJ3QgdW5kZXJzdGFuZCB0aGlzLsKgwqBTZXZlcmFsIGRy
-aXZlcnMgY2FsbA0KPiA+ID4gPiBpcnFfZG9tYWluX2FkZF9saW5lYXIoKSB3aXRoDQo+ID4gPiA+
-IGEgc2l6ZSBvZiA0Og0KPiA+ID4gPg0KPiA+ID4gPiDCoCBkcmE3eHhfcGNpZV9pbml0X2lycV9k
-b21haW4NCj4gPiA+ID4gwqAga3NfZHdfcGNpZV9ob3N0X2luaXQNCj4gPiA+ID4gwqAgYWR2a19w
-Y2llX2luaXRfaXJxX2RvbWFpbg0KPiA+ID4gPiDCoCBmYXJhZGF5X3BjaV9zZXR1cF9jYXNjYWRl
-ZF9pcnENCj4gPiA+ID4gwqAgcm9ja2NoaXBfcGNpZV9pbml0X2lycV9kb21haW4NCj4gPiA+ID4g
-wqAgbndsX3BjaWVfaW5pdF9pcnFfZG9tYWluDQo+ID4gPiA+DQo+ID4gPiA+IE9ubHkgb25lIG90
-aGVyIGluIGRyaXZlcnMvcGNpIHVzZXMgYSBzaXplIG9mIDU6DQo+ID4gPiA+DQo+ID4gPiA+IMKg
-IGFsdGVyYV9wY2llX2luaXRfaXJxX2RvbWFpbg0KPiA+ID4gPg0KPiA+ID4gPiBXaHkgY2FuJ3Qg
-d2UgdXNlIGEgc2l6ZSBvZiA0IGZvciBhbGwgb2YgdGhlbT/CoMKgV2Ugb25seSBoYXZlIElOVEEt
-DQo+ID4gPiA+IElOVEQuwqDCoEFyZSBhbHRlcmEgYW5kIHhpbGlueCBtaXNzaW5nIHNvbWV0aGlu
-ZyB0byBhcHBseSBhbiBvZmZzZXQNCj4gPiA+ID4gZnJvbSB0aGUNCj4gPiA+ID4gMC0zDQo+ID4g
-PiA+IHNwYWNlDQo+ID4gPiA+IHRvIHRoZSAxLTQgc3BhY2U/DQo+ID4gPiBXZSBoYXZlIHRoZSBz
-YW1lIGRpc2N1c3Npb24gYmVmb3JlIGluIDIwMTY6wqBodHRwczovL2xrbWwub3JnL2xrbWwvMg0K
-PiA+ID4gMDE2Lw0KPiA+ID4gOC8zMC8xOTgNCj4gPiBUaGFua3MgZm9yIGRpZ2dpbmcgdGhhdCBv
-dXQuwqDCoEkga25ldyB3ZSdkIGRpc2N1c3NlZCB0aGlzIGJlZm9yZSwgYnV0IEkNCj4gPiBjb3Vs
-ZG4ndCBmaW5kIGl0IGluIHRoZSBhcmNoaXZlcy7CoMKgSSBkb24ndCB0aGluayBhbnlib2R5IHdh
-cyByZWFsbHkNCj4gPiBzYXRpc2ZpZWQgd2l0aCB0aGUgb3V0Y29tZSwgYnV0IHdlIGFjY2VwdGVk
-IGl0IHRvIG1ha2UgZm9yd2FyZA0KPiA+IHByb2dyZXNzLg0KPiA+DQo+ID4gPg0KPiA+ID4gVGhp
-cyBpcyBiZWNhdXNlIGxlZ2FjeSBpbnRlcnJ1cHQgaXMgc3RhcnQgd2l0aCBpbmRleCAxIGluc3Rl
-YWQgb2YgMC4NCj4gPiBJJ20gbm90IGJ1eWluZyB0aGlzLsKgwqBZb3VyIGFyZ3VtZW50IHdhcyB0
-aGF0ICJ0aGUgaHdpcnEgZm9yIGxlZ2FjeQ0KPiA+IGludGVycnVwdHMgd2lsbCBzdGFydCBhdCAw
-eDEgdG8gMHg0IChJTlRBIHRvIElOVEQpIGFuZCB0aGVzZSB2YWx1ZXMNCj4gPiBhcmUgYXMgcGVy
-IFBDSWUgc3BlY2lmaWNhdGlvbiBmb3IgbGVnYWN5IGludGVycnVwdHMuwqDCoFNvIHRoZXNlIGNh
-bm5vdA0KPiA+IGJlIG51bWJlcmVkIGZyb20gMC4iDQo+ID4NCj4gPiBCdXQgYWxsIHRoZSBvdGhl
-ciBkcml2ZXJzIEkgbWVudGlvbmVkIGdldCBhbG9uZyB3aXRoIHRoZSAwLTMgcmFuZ2UNCj4gPiBz
-b21laG93LsKgwqBJZiB0aGVyZSdzIHNvbWV0aGluZyBkaWZmZXJlbnQgYWJvdXQgYWx0ZXJhIGFu
-ZCB4aWxpbnggdGhhdA0KPiA+IG1lYW5zIHRoZXkgY2FuJ3QgdXNlIHRoZSBzYW1lIHNvbHV0aW9u
-IHRoZSBvdGhlcnMgZG8sIEknZCBsaWtlIHRvIGtub3cNCj4gPiB3aGF0IGl0IGlzLg0KPiBJJ20g
-bm90IHN1cmUgdGhvc2UgZHJpdmVycyB3aXRoIGluZGV4IDAtMyByYW5nZSB0ZXN0ZWQgd2l0aCA0
-IGxlZ2FjeSBpbnRlcnJ1cHRzIG9yDQo+IG5vdC4gSXQgd2lsbCBub3QgaGFzIGVycm9yIHVudGls
-IHNvbWVvbmUgcmVxdWVzdGluZyA0IGxlZ2FjeSBpbnRlcnJ1cHRzLiBXZSBzZWUNCj4gdGhpcyBl
-cnJvciB3aGVuIHdlIGVuYWJsaW5nIG11bHRpLWZ1bmN0aW9uIGVuZHBvaW50ICg0IGZ1bmN0aW9u
-cykuIEkgYmVsaWV2ZSB0aGlzDQo+IGlzIG5vdCBhbHRlcmEgb3IgeGlsaW54IHNwZWNpZmljLg0K
-DQpIaSBCam9ybiwNCg0KWWVzIGFzIG1lbnRpb25lZCBieSBMZXkgRm9vbiBpdCdzIG5vdCBYaWxp
-bnggb3IgQWx0ZXJhIHNwZWNpZmljLCBhbmQgdGhlIGlzc3VlIHNob3dzIA0KdXAgb25seSwgd2hl
-biB3ZSBoYXZlIG11bHRpZnVuY3Rpb24gZGV2aWNlIHdpdGggNCBmdW5jdGlvbnMuIA0KQXMgSSBh
-bHJlYWR5IG1lbnRpb25lZCBpbiB0aGUgYWJvdmUgcG9pbnRlZCBkaXNjdXNzaW9uLCB0aGUgaXNz
-dWUgaXMgc3Vic3lzdGVtIA0KY3JlYXRlcyAgaHdpcnEgYmFzZWQgb24gUENJX0lOVEVSUlVQVF9Q
-SU4gd2hpY2ggc3RhcnRzIGZyb20gMHgxLCBidXQgaW4gDQpJUlEgZG9tYWlucyBod2lycSBzdGFy
-dCBmcm9tIDAsIGR1ZSB0byB0aGlzIGRpZmZlcmVuY2UsIGlzc3VlIGFyaXNlcyANCndoZW4gd2Ug
-dXNlIG11bHRpZnVuY3Rpb24gZGV2aWNlLg0KDQpCaGFyYXQNCg==
+From: Logan Gunthorpe
+> On 6/29/2017 12:11 PM, Allen Hubbe wrote:
+> > Nak.  This breaks a work around for stability issues on some =
+hardware.  I am ok with changing the
+> comment to say, this is only supported when called after link up.  I =
+would still like to allow these
+> to be called at any time.  Specific hardware drivers like Switchtec =
+may return an error.  Upstream
+> drivers, of course, should call these after link up: patch 5/16 part =
+of this set looks good.
+>=20
+> If absolutely necessary I can leave this out. But in terms of =
+interface
+> design it's _so_ much better to have it in. This change would bring =
+the
+> score from a 3 to a 5 on Rusty Russel's Hard to Misuse ranking[1]. To
+> quote Rusty:
+>=20
+> "3. Read the documentation and you'll get it right.
+> People only read instructions after they've already tied themselves =
+into
+> a knot. Then they skim them for keywords and don't read your warnings. =
+I
+> don't give an example of this; if this is the best an interface can =
+get
+> do, it's in trouble."
+>=20
+> Can someone not just fix the out-of-tree code? And since when is
+> out-of-tree code reasonable justification for what's done in upstream?
+
+Unfortunately, it is to work around hardware errata.  That is not so =
+trivial to fix.
+
+The workaround in software is also not acceptable upstream, for doing =
+things like writing directly to the peer's interrupt controller =
+registers, bypassing the ntb doorbells.
+
+>=20
+> Logan
+>=20
+> [1]http://ozlabs.org/~rusty/index.cgi/tech/2008-03-30.html
