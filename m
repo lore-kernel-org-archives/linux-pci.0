@@ -1,71 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:61567 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754001AbdFSKAO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 19 Jun 2017 06:00:14 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH 3/3] PCI: mediatek: make some properties optioanl
-Date: Mon, 19 Jun 2017 18:00:00 +0800
-Message-ID: <1497866400-41844-4-git-send-email-ryder.lee@mediatek.com>
-In-Reply-To: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
-References: <1497866400-41844-1-git-send-email-ryder.lee@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from ale.deltatee.com ([207.54.116.67]:49002 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751782AbdF2D1F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:05 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:34 -0600
+Message-Id: <20170629032648.3073-3-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 02/16] switchtec: export class symbol for use in upper layer driver
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some properties for PCIe controller are optional and therefore change
-to use *optional* function.
+We export the class pointer symbol and add an extern define in the
+switchtec header file.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+ drivers/pci/switch/switchtec.c | 4 +++-
+ include/linux/switchtec.h      | 2 ++
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index d256263..91a6328 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -306,18 +306,15 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
- 	}
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index a27b2bacad5a..fc139ee3fa73 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -33,9 +33,11 @@ module_param(max_devices, int, 0644);
+ MODULE_PARM_DESC(max_devices, "max number of switchtec device instances");
  
- 	snprintf(name, sizeof(name), "pcie-rst%d", index);
--	port->reset = devm_reset_control_get(dev, name);
--	if (IS_ERR(port->reset)) {
--		dev_err(dev, "failed to get port%d reset\n", index);
-+	port->reset = devm_reset_control_get_optional(dev, name);
-+	if (PTR_ERR(port->reset) == -EPROBE_DEFER)
- 		return PTR_ERR(port->reset);
--	}
+ static dev_t switchtec_devt;
+-static struct class *switchtec_class;
+ static DEFINE_IDA(switchtec_minor_ida);
  
-+	/* some platforms may use default PHY setting */
- 	snprintf(name, sizeof(name), "pcie-phy%d", index);
--	port->phy = devm_phy_get(dev, name);
--	if (IS_ERR(port->phy)) {
--		dev_err(dev, "failed to get port%d phy\n", index);
-+	port->phy = devm_phy_optional_get(dev, name);
-+	if (IS_ERR(port->phy))
- 		return PTR_ERR(port->phy);
--	}
- 
- 	port->index = index;
- 	port->pcie = pcie;
-@@ -345,8 +342,10 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- 
- 	pcie->free_ck = devm_clk_get(dev, "free_ck");
- 	if (IS_ERR(pcie->free_ck)) {
--		dev_err(dev, "failed to get free_ck\n");
--		return PTR_ERR(pcie->free_ck);
-+		if (PTR_ERR(pcie->free_ck) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
++struct class *switchtec_class;
++EXPORT_SYMBOL_GPL(switchtec_class);
 +
-+		pcie->free_ck = NULL;
- 	}
+ enum mrpc_state {
+ 	MRPC_IDLE = 0,
+ 	MRPC_QUEUED,
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 508cda78a430..24e598ebbcf7 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -267,4 +267,6 @@ static inline struct switchtec_dev *to_stdev(struct device *dev)
+ 	return container_of(dev, struct switchtec_dev, dev);
+ }
  
- 	if (dev->pm_domain) {
++extern struct class *switchtec_class;
++
+ #endif
 -- 
-1.9.1
+2.11.0
