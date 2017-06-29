@@ -1,41 +1,56 @@
-Return-Path: <SRS0=KlWK=5X=gmail.com=robherring2@kernel.org>
-Return-Path: <SRS0=KlWK=5X=gmail.com=robherring2@kernel.org>
-Date: Sun, 18 Jun 2017 09:05:01 -0500
-From: Rob Herring <robh@kernel.org>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	David Laight <david.laight@aculab.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	DT <devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v6 1/3] PCI: Add DT binding for tango PCIe controller
-Message-ID: <20170618140501.mu3zrr5dw4fstshd@rob-hp-laptop>
-References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com>
- <69f3ffe7-3c39-fa94-71f8-91744a869cc9@sigmadesigns.com>
- <20170607212907.2wr3hqbokjb74kj3@rob-hp-laptop>
- <3790db8d-6a4c-5c74-9ca2-431715a712a7@sigmadesigns.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:51742 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752454AbdF2Sdd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 29 Jun 2017 14:33:33 -0400
+To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20170629032648.3073-1-logang@deltatee.com>
+ <20170629032648.3073-15-logang@deltatee.com>
+ <000001d2f103$291602f0$7b4208d0$@dell.com>
+Cc: 'Jon Mason' <jdmason@kudzu.us>,
+        'Dave Jiang' <dave.jiang@intel.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
+        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
+        'Stephen Bates' <sbates@raithlin.com>,
+        'Serge Semin' <fancer.lancer@gmail.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bc717da6-0bac-b198-3047-293165e65925@deltatee.com>
+Date: Thu, 29 Jun 2017 12:33:21 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3790db8d-6a4c-5c74-9ca2-431715a712a7@sigmadesigns.com>
+In-Reply-To: <000001d2f103$291602f0$7b4208d0$@dell.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH 14/16] switchtec_ntb: implement scratchpad registers
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 13, 2017 at 03:51:32PM +0200, Marc Gonzalez wrote:
-> Binding for the Sigma Designs SMP8759 SoC.
-> 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> ---
-> Changes from v5 to v6
-> o Delete links to elinux.org
-> o Use explicit hex numbers instead of symbolic constants for sizes (in the example)
-> o Add bus-range to "Required properties"
-> ---
->  .../devicetree/bindings/pci/tango-pcie.txt         | 29 ++++++++++++++++++++++
->  1 file changed, 29 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
+On 6/29/2017 12:11 PM, Allen Hubbe wrote:
+> This could get in the way of letting the driver support more than two ports later on.  Is there already a plan to change this to support more than two ports?
 
-Acked-by: Rob Herring <robh@kernel.org>
+Well, as I mentioned this patchset is only to support 2 ports. Future 
+work will expand this and remove the restriction. The core concept of 
+the emulated spads doesn't get in the way but will need some further 
+consideration.
+
+But multi-port support will need a lot more work in the ntb clients 
+anyway. There's no sense having support in my driver until I can 
+actually test things. And I'll probably be fine doing some of the client 
+work once we get there.
+
+> This is also not the only hardware to lack scratchpads, but does have memory windows.  Wouldn't it be better for a software substitute like this to be done in a way that it is not tied to a specific hardware driver?
+
+Yeah, we discussed this previously. Some of this is kind of hardware 
+dependent though. In this case we are using a small fixed size LUT 
+window. If the other hardware doesn't have similar support, using up one 
+of the BAR memory windows (which are a very limited resource) for this 
+might not make sense.
+
+The switchtec driver also uses this special memory window to negotiate 
+link status.
+
+Anyway, I'm happy to collaborate to making what common parts we can 
+possible with the IDT driver but Serge seemed against the whole concept 
+of emulation.
+
+Logan
