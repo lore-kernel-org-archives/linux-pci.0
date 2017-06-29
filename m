@@ -1,70 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:56488 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:48909 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751544AbdF1UaY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 28 Jun 2017 16:30:24 -0400
-Date: Wed, 28 Jun 2017 15:30:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: John Mazzie <john_mazzie@dell.com>, linux-pci@vger.kernel.org,
+        id S1751618AbdF2D1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 28 Jun 2017 23:27:02 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Enable ECRC only if device supports it
-Message-ID: <20170628203011.GT17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170620190207.9292.39574.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170620190207.9292.39574.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Wed, 28 Jun 2017 21:26:46 -0600
+Message-Id: <20170629032648.3073-15-logang@deltatee.com>
+In-Reply-To: <20170629032648.3073-1-logang@deltatee.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+Subject: [PATCH 14/16] switchtec_ntb: implement scratchpad registers
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 20, 2017 at 02:02:07PM -0500, Bjorn Helgaas wrote:
-> John reported that an Intel QuickAssist crypto accelerator didn't work in a
-> Dell PowerEdge R730.  The problem seems to be that we enabled ECRC when the
-> device doesn't support it:
-> 
->   85:00.0 Co-processor [0b40]: Intel Corporation DH895XCC Series QAT [8086:0435]
->     Capabilities: [100 v1] Advanced Error Reporting
->       AERCap: First Error Pointer: 00, GenCap- CGenEn+ ChkCap- ChkEn+
-> 
-> 1302fcf0d03e ("PCI: Configure *all* devices, not just hot-added ones")
-> exposed the problem because it applies settings from the _HPX method to all
-> devices, not just hot-added ones.  The R730 supplies an _HPX method that
-> allows the kernel to enable ECRC.
-> 
-> Only enable ECRC if the device advertises support for it.
-> 
-> Link: https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1571798
-> Fixes: 1302fcf0d03e ("PCI: Configure *all* devices, not just hot-added ones")
-> Reported-by: John Mazzie <john_mazzie@dell.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Seeing there is no dedicated hardware for this, we simply add
+these as entries in the shared memory window. Thus, we could support
+any number of them but 128 seems like enough, for now.
 
-Applied to pci/enumeration for v4.13.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 2 deletions(-)
 
-I haven't seen any testing reports for this, so if anybody can test
-and make sure that ECRC is enabled when you expect it to be enabled
-and disabled when you don't, that would be great.  This only affects
-the _HPX path, and most machines don't supply _HPX, so you probably
-have to have a machine with decent hotplug PCI support this patch to
-make any difference at all.
-
-> ---
->  drivers/pci/probe.c |    5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 31001017b3c4..c31310db0404 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1730,6 +1730,11 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  	/* Initialize Advanced Error Capabilities and Control Register */
->  	pci_read_config_dword(dev, pos + PCI_ERR_CAP, &reg32);
->  	reg32 = (reg32 & hpp->adv_err_cap_and) | hpp->adv_err_cap_or;
-> +	/* Don't enable ECRC generation or checking if unsupported */
-> +	if (!(reg32 & PCI_ERR_CAP_ECRC_GENC))
-> +		reg32 &= ~PCI_ERR_CAP_ECRC_GENE;
-> +	if (!(reg32 & PCI_ERR_CAP_ECRC_CHKC))
-> +		reg32 &= ~PCI_ERR_CAP_ECRC_CHKE;
->  	pci_write_config_dword(dev, pos + PCI_ERR_CAP, reg32);
->  
->  	/*
-> 
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 980acf2e5b42..a42e80742b52 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -69,6 +69,7 @@ struct shared_mw {
+ 	u16 nr_direct_mw;
+ 	u16 nr_lut_mw;
+ 	u64 mw_sizes[MAX_MWS];
++	u32 spad[128];
+ };
+ 
+ #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
+@@ -453,22 +454,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ 
+ static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return ARRAY_SIZE(sndev->self_shared->spad);
+ }
+ 
+ static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return 0;
++
++	if (!sndev->self_shared)
++		return 0;
++
++	return sndev->self_shared->spad[idx];
+ }
+ 
+ static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->self_shared)
++		return -EIO;
++
++	sndev->self_shared->spad[idx] = val;
++
+ 	return 0;
+ }
+ 
++static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
++					int sidx)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return 0;
++
++	if (!sndev->peer_shared)
++		return 0;
++
++	return ioread32(&sndev->peer_shared->spad[sidx]);
++}
++
+ static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
+ 					 int sidx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->peer_shared)
++		return -EIO;
++
++	iowrite32(val, &sndev->peer_shared->spad[sidx]);
++
++	return 0;
++}
++
++static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
++					int sidx, phys_addr_t *spad_addr)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
++		(unsigned long)sndev->stdev->mmio;
++
++	if (spad_addr)
++		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
++
+ 	return 0;
+ }
+ 
+@@ -494,7 +563,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+ 	.spad_write		= switchtec_ntb_spad_write,
++	.peer_spad_read		= switchtec_ntb_peer_spad_read,
+ 	.peer_spad_write	= switchtec_ntb_peer_spad_write,
++	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
+ };
+ 
+ static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+-- 
+2.11.0
