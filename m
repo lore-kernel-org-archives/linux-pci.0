@@ -1,71 +1,147 @@
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=QzeJ=5O=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: [PATCH v5 5/6] drm/amdgpu: move hw generation check into amdgpu_doorbell_init
-Date: Fri,  9 Jun 2017 10:59:46 +0200
-Message-Id: <1496998787-6371-6-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
-References: <1496998787-6371-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <SRS0=lbmX=6D=intel.com=yu.c.chen@kernel.org>
+Return-Path: <SRS0=lbmX=6D=intel.com=yu.c.chen@kernel.org>
+Date: Fri, 30 Jun 2017 11:06:46 +0800
+From: Chen Yu <yu.c.chen@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH][RFC v3] PCI: Workaround to enable poweroff on Mac Pro 11
+Message-ID: <20170630030646.GA27468@yu-desktop-1.sh.intel.com>
+References: <1471595425-1752-1-git-send-email-yu.c.chen@intel.com>
+ <20170629191926.GV17844@bhelgaas-glaptop.roam.corp.google.com>
+ <20170630023931.GW17844@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170630023931.GW17844@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+Hi Bjorn,
+On Thu, Jun 29, 2017 at 09:39:31PM -0500, Bjorn Helgaas wrote:
+> On Thu, Jun 29, 2017 at 02:19:26PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Aug 19, 2016 at 04:30:25PM +0800, Chen Yu wrote:
+> > > People reported that they can not do a poweroff nor a
+> > > suspend to ram on their Mac Pro 11. After some investigations
+> > > it was found that, once the PCI bridge 0000:00:1c.0 reassigns its
+> > > mm windows to ([mem 0x7fa00000-0x7fbfffff] and
+> > > [mem 0x7fc00000-0x7fdfffff 64bit pref]), the region of ACPI
+> > > io resource 0x1804 becomes unaccessible immediately, where the
+> > > ACPI Sleep register is located, as a result neither poweroff(S5)
+> > > nor suspend to ram(S3) works.
+> > > 
+> > > As suggested by Bjorn, further testing shows that, there is an
+> > > unreported device may be (using) conflict with above aperture,
+> > > which brings unpredictable result such as the failure of accessing
+> > > the io port, which blocks the poweroff(S5). Besides if we reassign
+> > > the memory aperture to the other place, the poweroff works again.
+> > > 
+> > > As we do not find any resource declared in _CRS which contain above
+> > > memory aperture, and Mac OS does not use this pci bridge neither, we
+> > > choose a simple workaround to clear the hotplug flag(suggested by
+> > > Yinghai Lu), thus do not allocate any resource for this pci bridge,
+> > > and thereby no conflict anymore.
+> > > 
+> > > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Rafael J. Wysocki <rafael@kernel.org>
+> > > Cc: Lukas Wunner <lukas@wunner.de>
+> > > Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+> > > ---
+> > >  drivers/pci/quirks.c | 20 ++++++++++++++++++++
+> > >  1 file changed, 20 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > > index 37ff015..04bbdba 100644
+> > > --- a/drivers/pci/quirks.c
+> > > +++ b/drivers/pci/quirks.c
+> > > @@ -2776,6 +2776,26 @@ static void quirk_hotplug_bridge(struct pci_dev *dev)
+> > >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_HINT, 0x0020, quirk_hotplug_bridge);
+> > >  
+> > >  /*
+> > > + * Apple: Avoid programming the memory/io aperture of 00:1c.0
+> > > + *
+> > > + * BIOS does not declare any resource for 00:1c.0, but with
+> > > + * hotplug flag set, thus the OS allocates:
+> > > + * [mem 0x7fa00000 - 0x7fbfffff]
+> > > + * [mem 0x7fc00000-0x7fdfffff 64bit pref]
+> > > + * which is conflict with an unreported device, which
+> > > + * causes unpredictable result such as accessing io port.
+> > > + * So clear the hotplug flag to work around it.
+> > > + */
+> > > +static void quirk_apple_mbp_poweroff(struct pci_dev *dev)
+> > > +{
+> > > +	if (dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") ||
+> > > +	    dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5"))
+> > > +		dev->is_hotplug_bridge = 0;
+> > > +}
+> > > +
+> > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+> > > +
+> > > +/*
+> > >   * This is a quirk for the Ricoh MMC controller found as a part of
+> > 
+> > I give up.  We're not making any progress on this.  I propose the
+> > following patch for v4.13.  This is slightly modified to:
+> > 
+> >   - move to arch/x86/pci/fixups.c, since I think this is specific to
+> >     x86
+> > 
+> >   - only clear dev->is_hotplug_bridge for the 00:1c.0 bridge, since
+> >     these systems contain other bridges where I think we *do* want to
+> >     support hotplug, e.g., the Thunderbolt bridge at 09:00.0 (from
+> >     https://bugzilla.kernel.org/attachment.cgi?id=210611)
+> > 
+> >   - log a note in dmesg about what we're doing
+> > 
+> > commit f7bf6baa11b84534d0b7f5ceee06e3349948c853
+> > Author: Chen Yu <yu.c.chen@intel.com>
+> > Date:   Fri Aug 19 16:30:25 2016 +0800
+> > 
+> >     PCI: Work around poweroff & suspend-to-RAM issue on Macbook Pro 11
+> >     
+> >     Neither soft poweroff (transition to ACPI power state S5) nor
+> >     suspend-to-RAM (transition to state S3) works on the Macbook Pro 11,4 and
+> >     11,5.
+> >     
+> >     The problem is related to assigning the [mem 0x7fa00000-0x7fbfffff] space
+> >     to the 00:1c.0 Root Port.  This port isn't connected to anything, but it
+> >     advertises hotplug support in its PCIe Capability.  Initially it has no
+> >     windows assigned, and if Linux leaves it that way, poweroff and
+> >     suspend-to-RAM work fine.
+> >     
+> >     Since the port supports hotplug, Linux assigns windows for future hot-added
+> >     devices.  We currently assign [mem 0x7fa00000-0x7fbfffff] for the memory
+> >     window, and poweroff and suspend-to-RAM don't work after this assignment.
+> >     
+> >     Linux does a soft poweroff (transition to S5) by writing to PM1_CNT at
+> >     [io 0x1804].  The theory about why this doesn't work is:
+> >     
+> >       - The write to PM1_CNT causes an SMI.
+> >       - The BIOS SMI handler depends on something in [mem 0x7fa00000-0x7fbfffff].
+> >       - When Linux assigns [mem 0x7fa00000-0x7fbfffff] to the 00:1c.0 Port, it
+> >         covers up whatever the SMI handler uses, so the SMI handler no longer
+> >         works correctly.
+> >     
+> >     Mark the 00:1c.0 bridge as not supporting hotplug, so we don't assign the
+> >     [mem 0x7fa00000-0x7fbfffff] space to it.
+> >     
+> >     Note that we don't know what the real conflict is, so other use of this
+> >     memory range by another device may cause similar problems.
+> >     
+> >     Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
+> >     Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+> >     [bhelgaas: limit to device 00:1c.0, add printk, changelog, comment]
+> >     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >     Cc: Rafael J. Wysocki <rafael@kernel.org>
+> >     Cc: Lukas Wunner <lukas@wunner.de>
+> > 
+> 
+> This patch stinks, sorry.  I'll try again tomorrow.  The problem is
+> the address space, not the device, so we should be able to do better
+> than this.
+It is a quite old bug and thanks for taking care of this :-). Do you mean
+reserve the [mem 0x7fa00000-0x7fbfffff] thus no one could allocate this region?
 
-This way we can savely call it on SI as well.
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index a7d6804..99290af 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -419,6 +419,15 @@ void amdgpu_pci_config_reset(struct amdgpu_device *adev)
-  */
- static int amdgpu_doorbell_init(struct amdgpu_device *adev)
- {
-+	/* No doorbell on SI hardware generation */
-+	if (adev->asic_type < CHIP_BONAIRE) {
-+		adev->doorbell.base = 0;
-+		adev->doorbell.size = 0;
-+		adev->doorbell.num_doorbells = 0;
-+		adev->doorbell.ptr = NULL;
-+		return 0;
-+	}
-+
- 	/* doorbell bar mapping */
- 	adev->doorbell.base = pci_resource_start(adev->pdev, 2);
- 	adev->doorbell.size = pci_resource_len(adev->pdev, 2);
-@@ -2136,9 +2145,8 @@ int amdgpu_device_init(struct amdgpu_device *adev,
- 	DRM_INFO("register mmio base: 0x%08X\n", (uint32_t)adev->rmmio_base);
- 	DRM_INFO("register mmio size: %u\n", (unsigned)adev->rmmio_size);
- 
--	if (adev->asic_type >= CHIP_BONAIRE)
--		/* doorbell bar mapping */
--		amdgpu_doorbell_init(adev);
-+	/* doorbell bar mapping */
-+	amdgpu_doorbell_init(adev);
- 
- 	/* io port mapping */
- 	for (i = 0; i < DEVICE_COUNT_RESOURCE; i++) {
-@@ -2335,8 +2343,7 @@ void amdgpu_device_fini(struct amdgpu_device *adev)
- 	adev->rio_mem = NULL;
- 	iounmap(adev->rmmio);
- 	adev->rmmio = NULL;
--	if (adev->asic_type >= CHIP_BONAIRE)
--		amdgpu_doorbell_fini(adev);
-+	amdgpu_doorbell_fini(adev);
- 	amdgpu_debugfs_regs_cleanup(adev);
- }
- 
--- 
-2.7.4
+thanks,
+Yu
