@@ -1,95 +1,45 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 27 Jun 2017 18:11:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH 2/4] ARM/PCI: mv78xx0: pass pci_ops correctly again
-Message-ID: <20170627231143.GI17844@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170621215323.3921382-1-arnd@arndb.de>
- <20170621215323.3921382-2-arnd@arndb.de>
- <20170622093855.GA23310@red-moon>
-MIME-Version: 1.0
-In-Reply-To: <20170622093855.GA23310@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>,
- Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.139]:34794 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752074AbdF3KJF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 30 Jun 2017 06:09:05 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-pci@vger.kernel.org, mj@ucw.cz
+Cc: rajatja@google.com, briannorris@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: [PCIUTILS PATCH v2] lspci: Fix wrong read size for RootSta
+Date: Fri, 30 Jun 2017 18:09:00 +0800
+Message-Id: <1498817340-24918-1-git-send-email-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 22, 2017 at 10:38:55AM +0100, Lorenzo Pieralisi wrote:
-> On Wed, Jun 21, 2017 at 11:53:00PM +0200, Arnd Bergmann wrote:
-> > We used to pass the operations when calling pci_scan_root_bus, but
-> > that argument was removed:
-> > 
-> > arch/arm/mach-mv78xx0/pcie.c:175:23: error: 'pcie_ops' defined but not used [-Werror=unused-variable]
-> > 
-> > Setting it in pci_hw should address this.
-> 
-> No unfortunately it does not. The way I structured the code the
-> bridge set-up is carried out in the struct hw_pci.scan() callback and
-> for mv78xx0 it was not done properly.
-> 
-> As said in the other thread we need a pci_fixup_irqs() removal v3 to
-> address these issues, given that on some host bridges v2 it is still
-> untested.
-> 
-> Lorenzo
-> 
-> > Fixes: ace27646da8e ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> > ---
-> >  arch/arm/mach-mv78xx0/pcie.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> > 
-> > diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
-> > index 2b406e909a43..cb7f95c9d8eb 100644
-> > --- a/arch/arm/mach-mv78xx0/pcie.c
-> > +++ b/arch/arm/mach-mv78xx0/pcie.c
-> > @@ -214,6 +214,7 @@ static int __init mv78xx0_pcie_map_irq(const struct pci_dev *dev, u8 slot,
-> >  }
-> >  
-> >  static struct hw_pci mv78xx0_pci __initdata = {
-> > +	.ops		= &pcie_ops,
-> >  	.nr_controllers	= 8,
-> >  	.preinit	= mv78xx0_pcie_preinit,
-> >  	.setup		= mv78xx0_pcie_setup,
+We are reading wrong size(word) for this cap, since:
 
-I provisionally made the following change for mv78xx0, based on similar
-hunks for dove, iop13xx, and orion5x.
+RootSta has:
+PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
+PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
 
-This is on my pci/enumeration branch:
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/enumeration&id=31ddd0eab68e19cf3dfc14321c99ff0b95cda4ad
+Changes in v2:
+Sorry, DevCtl2/LnkCtl2 are correct, remove wrong modifies for them...
 
-Please take a look and see if it makes sense.
+ ls-caps.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
-index 2b406e909a43..f793ebbd7539 100644
---- a/arch/arm/mach-mv78xx0/pcie.c
-+++ b/arch/arm/mach-mv78xx0/pcie.c
-@@ -201,6 +201,7 @@ static int __init mv78xx0_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
- 		return -EINVAL;
- 	}
+diff --git a/ls-caps.c b/ls-caps.c
+index 0ca46fb..d4aebc8 100644
+--- a/ls-caps.c
++++ b/ls-caps.c
+@@ -879,7 +879,7 @@ static void cap_express_root(struct device *d, int where)
+   printf("\t\tRootCap: CRSVisible%c\n",
+ 	FLAG(w, PCI_EXP_RTCAP_CRSVIS));
  
-+	bridge->ops = &pcie_ops;
- 	return pci_scan_root_bus_bridge(bridge);
- }
- 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-  w = get_conf_word(d, where + PCI_EXP_RTSTA);
++  w = get_conf_long(d, where + PCI_EXP_RTSTA);
+   printf("\t\tRootSta: PME ReqID %04x, PMEStatus%c PMEPending%c\n",
+ 	w & PCI_EXP_RTSTA_PME_REQID,
+ 	FLAG(w, PCI_EXP_RTSTA_PME_STATUS),
+-- 
+2.1.4
