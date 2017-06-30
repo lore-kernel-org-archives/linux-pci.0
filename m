@@ -1,133 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50018 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751781AbdFHONA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 8 Jun 2017 10:13:00 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Simon Horman <horms@verge.net.au>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 30 Jun 2017 12:05:15 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: John Garry <john.garry@huawei.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>,
         Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Matthew Minter <matt@masarand.com>,
-        Linus Walleij <linus.walleij@linaro.org>
-Subject: [RFT PATCH v2 06/42] PCI: Add devm_pci_alloc_host_bridge() interface
-Date: Thu,  8 Jun 2017 15:13:06 +0100
-Message-Id: <20170608141342.2018-7-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "brian.starkey@arm.com" <brian.starkey@arm.com>,
+        "olof@lixom.net" <olof@lixom.net>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+Message-ID: <20170630090515.GU629@lahna.fi.intel.com>
+References: <20170612155700.GA31930@red-moon>
+ <20170613084831.GP3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+ <20170616083313.GY3187@lahna.fi.intel.com>
+ <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+ <808a7db0-7844-b263-0216-1fe943ac819a@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <808a7db0-7844-b263-0216-1fe943ac819a@huawei.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-struct pci_host_bridge can be allocated by PCI host bridge drivers
-which usually allocate and map memory through devm managed interfaces.
+On Thu, Jun 29, 2017 at 05:16:15PM +0100, John Garry wrote:
+> On 16/06/2017 12:24, Rafael J. Wysocki wrote:
+> > > > > >> >
+> > > > > >> > It causes acpi_default_enumeration() to be called but it should be fine
+> > > > > >> > as we are dealing with platform device anyway.
+> > > > >>
+> > > > >> I do not quite understand how declaring such MFD cell above would make sure
+> > > > >> that the LPC probe is called before the IPMI device is enumerated...
+> > > >
+> > > > In fact it may be that it is not sufficient in this case because the
+> > > > ACPI core might enumerate child devices before the LPC driver even gets
+> > > > a chance to probe so you would need to add also scan handler to the
+> > > > child devices and mark them already enumerated or something like that.
+> > Or extend the special I2C/SPI handling to them.
+> > 
+> 
+> For this, is it possible to just configure the ACPI table so we spoof that
+> the LPC slave (IPI0001), is an i2c/spi slave? Could we just add a resource
+> of type ACPI_RESOURCE_TYPE_SERIAL_BUS, and common serial bus type i2c/spi to
+> solve this?
 
-Add a devm version for the pci_alloc_host_bridge() interface to
-simplify PCI host controller drivers porting and simplify the
-drivers failures paths.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- Documentation/driver-model/devres.txt |  1 +
- drivers/pci/probe.c                   | 24 ++++++++++++++++++++++--
- include/linux/pci.h                   |  2 ++
- 3 files changed, 25 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-index e72587f..ffbc891 100644
---- a/Documentation/driver-model/devres.txt
-+++ b/Documentation/driver-model/devres.txt
-@@ -342,6 +342,7 @@ PER-CPU MEM
-   devm_free_percpu()
- 
- PCI
-+  devm_pci_alloc_host_bridge()  : managed PCI host bridge allocation
-   devm_pci_remap_cfgspace()	: ioremap PCI configuration space
-   devm_pci_remap_cfg_resource()	: ioremap PCI configuration space resource
-   pcim_enable_device()		: after success, all PCI ops become managed
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index cbf0d0c..e3f6965 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -510,14 +510,18 @@ static struct pci_bus *pci_alloc_bus(struct pci_bus *parent)
- 	return b;
- }
- 
--static void pci_release_host_bridge_dev(struct device *dev)
-+static void devm_pci_release_host_bridge_dev(struct device *dev)
- {
- 	struct pci_host_bridge *bridge = to_pci_host_bridge(dev);
- 
- 	if (bridge->release_fn)
- 		bridge->release_fn(bridge);
-+}
- 
--	pci_free_host_bridge(bridge);
-+static void pci_release_host_bridge_dev(struct device *dev)
-+{
-+	devm_pci_release_host_bridge_dev(dev);
-+	pci_free_host_bridge(to_pci_host_bridge(dev));
- }
- 
- struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
-@@ -535,6 +539,22 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
- }
- EXPORT_SYMBOL(pci_alloc_host_bridge);
- 
-+struct pci_host_bridge *devm_pci_alloc_host_bridge(struct device *dev,
-+						   size_t priv)
-+{
-+	struct pci_host_bridge *bridge;
-+
-+	bridge = devm_kzalloc(dev, sizeof(*bridge) + priv, GFP_KERNEL);
-+	if (!bridge)
-+		return NULL;
-+
-+	INIT_LIST_HEAD(&bridge->windows);
-+	bridge->dev.release = devm_pci_release_host_bridge_dev;
-+
-+	return bridge;
-+}
-+EXPORT_SYMBOL(devm_pci_alloc_host_bridge);
-+
- void pci_free_host_bridge(struct pci_host_bridge *bridge)
- {
- 	pci_free_resource_list(&bridge->windows);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5720635..b21308e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -463,6 +463,8 @@ static inline struct pci_host_bridge *pci_host_bridge_from_priv(void *priv)
- }
- 
- struct pci_host_bridge *pci_alloc_host_bridge(size_t priv);
-+struct pci_host_bridge *devm_pci_alloc_host_bridge(struct device *dev,
-+						   size_t priv);
- void pci_free_host_bridge(struct pci_host_bridge *bridge);
- int pci_register_host_bridge(struct pci_host_bridge *bridge);
- struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
--- 
-2.10.0
+But is the device connected to a I2C or SPI bus? If not, then it does
+not make much sense to declare it as I2C or SPI slave. Instead it should
+be platform device which is the type we use when there is no explicit
+bus specified in ACPI.
