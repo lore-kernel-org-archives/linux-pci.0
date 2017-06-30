@@ -1,66 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34478 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751403AbdFZU2F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 26 Jun 2017 16:28:05 -0400
-Received: by mail-pg0-f66.google.com with SMTP id j186so1506591pge.1
-        for <linux-pci@vger.kernel.org>; Mon, 26 Jun 2017 13:28:04 -0700 (PDT)
-From: Palmer Dabbelt <palmer@dabbelt.com>
-To: rth@twiddle.net
-To: ink@jurassic.park.msu.ru
-To: mattst88@gmail.com
-To: vgupta@synopsys.com
-To: linux@armlinux.org.uk
-To: catalin.marinas@arm.com
-To: will.deacon@arm.com
-To: geert@linux-m68k.org
-To: ralf@linux-mips.org
-To: ysato@users.sourceforge.jp
-To: dalias@libc.org
-To: davem@davemloft.net
-To: cmetcalf@mellanox.com
-To: gxt@mprc.pku.edu.cn
-To: bhelgaas@google.com
-To: viro@zeniv.linux.org.uk
-To: james.hogan@imgtec.com
-To: linux-alpha@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-To: linux-snps-arc@lists.infradead.org
-To: linux-m68k@lists.linux-m68k.org
-To: linux-mips@linux-mips.org
-To: linux-sh@vger.kernel.org
-To: sparclinux@vger.kernel.org
-To: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Add and use PCI_GENERIC_SETUP Kconfig entry
-Date: Mon, 26 Jun 2017 13:27:55 -0700
-Message-Id: <20170626202756.22220-1-palmer@dabbelt.com>
-In-Reply-To: <CAMuHMdXSrfbSX2de2q35Hj6vQwi+sr23M1LEg82JL+FyLq4OJw@mail.gmail.com>
-References: <CAMuHMdXSrfbSX2de2q35Hj6vQwi+sr23M1LEg82JL+FyLq4OJw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=EfYg=6D=linux.intel.com=mika.westerberg@kernel.org>
+Return-Path: <SRS0=EfYg=6D=linux.intel.com=mika.westerberg@kernel.org>
+Date: Fri, 30 Jun 2017 11:44:57 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+	Alan Stern <stern@rowland.harvard.edu>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, gregkh@linuxfoundation.org,
+	USB list <linux-usb@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	linux-pm@vger.kernel.org
+Subject: Re: [PATCH v2] PCI / PM: Avoid using device_may_wakeup() for runtime
+ PM
+Message-ID: <20170630084457.GS629@lahna.fi.intel.com>
+References: <Pine.LNX.4.44L0.1706191415180.1715-100000@iolanthe.rowland.org>
+ <2883450.A8OIi7Gmb8@aspire.rjw.lan>
+ <2677722.OnHOCzR3UZ@aspire.rjw.lan>
+ <2254362.EY9ByagAJb@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2254362.EY9ByagAJb@aspire.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
->On Mon, Jun 26, 2017 at 7:39 AM, kbuild test robot <lkp@intel.com> wrote:
->> [auto build test WARNING on linus/master]
->> [also build test WARNING on v4.12-rc6]
->> [cannot apply to next-20170623]
->> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->>
->> url:    https://github.com/0day-ci/linux/commits/Palmer-Dabbelt/pci-Add-and-use-PCI_GENERIC_SETUP-Kconfig-entry/20170626-043558
->> config: m68k-allnoconfig (attached as .config)
->> compiler: m68k-linux-gcc (GCC) 4.9.0
->> reproduce:
->>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->>         chmod +x ~/bin/make.cross
->>         # save the attached .config to linux build tree
->>         make.cross ARCH=m68k
->>
->> All warnings (new ones prefixed by >>):
->>
->> warning: (M68K) selects PCI_GENERIC_SETUP which has unmet direct dependencies (MMU)
->
->I can't seem to find this dependency of PCI_GENERIC_SETUP on MMU?
+On Fri, Jun 30, 2017 at 12:37:00AM +0200, Rafael J. Wysocki wrote:
+> On Friday, June 23, 2017 02:58:11 PM Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > pci_target_state() calls device_may_wakeup() which checks whether
+> > or not the device may wake up the system from sleep states, but
+> > pci_target_state() is used for runtime PM too.
+> > 
+> > Since runtime PM is expected to always enable remote wakeup if
+> > possible, modify pci_target_state() to take additional argument
+> > indicating whether or not it should look for a state from which
+> > the device can signal wakeup and pass either the return value
+> > of device_can_wakeup(), or "false" (if the device itself is not
+> > wakeup-capable) to it from the code related to runtime PM.
+> > 
+> > While at it, fix the comment in pci_dev_run_wake() which is not
+> > about sleep states.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> > 
+> > -> v2:
+> > 
+> > Passing "true" as the second argument to pci_target_state() for runtime PM
+> > might trigger suboptimal state choices to be made, so pass the return value
+> > of device_can_wakeup() to it instead and pass "false" to it in pci_dev_run_wake(),
+> > because that assumes device_can_wakeup() to return "false" already.
+> 
+> This was sent a week ago without any response so far.
+> 
+> Any concerns?
 
-It looks like M68K only includes the PCI Kconfig entry when MMU is enabled.  I
-moved the select around a bit and it builds the config that was failing for me.
+No concerns from me.
 
-The updated patch is threaded.
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
