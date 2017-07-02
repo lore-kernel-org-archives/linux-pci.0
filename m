@@ -1,64 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:41532 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbdGSH17 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:27:59 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH v4 5/7] arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339
-Date: Wed, 19 Jul 2017 15:27:36 +0800
-Message-Id: <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:53810 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751889AbdGBViW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 2 Jul 2017 17:38:22 -0400
+Date: Sun, 2 Jul 2017 16:38:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: kys@microsoft.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+        devel@linuxdriverproject.org,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: Re: [PATCH] hv: fix msi affinity when device requests all possible
+ CPU's
+Message-ID: <20170702213819.GF18324@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170628232204.15227-1-sthemmin@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170628232204.15227-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Convert all RK3399 platforms to use per-lane PHY model in
-order to save more power by idling the unused lane(s).
+On Wed, Jun 28, 2017 at 04:22:04PM -0700, Stephen Hemminger wrote:
+> When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV,
+> the driver requests affinity with all possible CPU's (0-239) even
+> those CPU's are not online (and will never be). Because of this the device
+> is unable to correctly get MSI interrupt's setup.
+> 
+> This was caused by the change in 4.12 that converted this affinity
+> into all possible CPU's (0-31) but then host reports
+> an error since this is larger than the number of online cpu's.
+> 
+> Previously, this worked (up to 4.12-rc1) because only online cpu's
+> would be put in mask passed to the host.
+> 
+> This patch applies only to 4.12.
+> The driver in linux-next needs a a different fix because of the changes
+> to PCI host protocol version.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+If Linus decides to postpone v4.12 a week, I can ask him to pull this.  But
+I suspect he will release v4.12 today.  In that case, I don't know what to
+do with this other than maybe send it to Greg for a -stable release.
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- arch/arm64/boot/dts/rockchip/rk3399.dtsi | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399.dtsi b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
-index 69c56f7..5b78ce1 100644
---- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
-+++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
-@@ -238,8 +238,10 @@
- 		linux,pci-domain = <0>;
- 		max-link-speed = <1>;
- 		msi-map = <0x0 &its 0x0 0x1000>;
--		phys = <&pcie_phy>;
--		phy-names = "pcie-phy";
-+		phys = <&pcie_phy 0>, <&pcie_phy 1>,
-+		       <&pcie_phy 2>, <&pcie_phy 3>;
-+		phy-names = "pcie-phy-0", "pcie-phy-1",
-+			    "pcie-phy-2", "pcie-phy-3";
- 		ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x1e00000
- 			  0x81000000 0x0 0xfbe00000 0x0 0xfbe00000 0x0 0x100000>;
- 		resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
-@@ -1295,7 +1297,7 @@
- 			compatible = "rockchip,rk3399-pcie-phy";
- 			clocks = <&cru SCLK_PCIEPHY_REF>;
- 			clock-names = "refclk";
--			#phy-cells = <0>;
-+			#phy-cells = <1>;
- 			resets = <&cru SRST_PCIEPHY>;
- 			reset-names = "phy";
- 			status = "disabled";
--- 
-1.9.1
+> Fixes: 433fcf6b7b31 ("PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >= 32 CPUs")
+> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 84936383e269..3cadfcca3ae9 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -900,10 +900,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  	 * processors because Hyper-V only supports 64 in a guest.
+>  	 */
+>  	affinity = irq_data_get_affinity_mask(data);
+> +	cpumask_and(affinity, affinity, cpu_online_mask);
+> +
+>  	if (cpumask_weight(affinity) >= 32) {
+>  		int_pkt->int_desc.cpu_mask = CPU_AFFINITY_ALL;
+>  	} else {
+> -		for_each_cpu_and(cpu, affinity, cpu_online_mask) {
+> +		for_each_cpu(cpu, affinity) {
+>  			int_pkt->int_desc.cpu_mask |=
+>  				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
+>  		}
+> -- 
+> 2.11.0
+> 
