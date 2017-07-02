@@ -1,108 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57230 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753447AbdGCNU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Jul 2017 09:20:56 -0400
-Date: Mon, 3 Jul 2017 08:20:53 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sun, 2 Jul 2017 16:19:50 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        stable@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH] PCI: rockchip: fix wrong access of root port register
-Message-ID: <20170703132053.GE13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499073662-241267-1-git-send-email-shawn.lin@rock-chips.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for
+ bios32 host controllers
+Message-ID: <20170702211950.GD18324@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
+ <20170701140629.GC8977@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499073662-241267-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170701140629.GC8977@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Linus Walleij <linus.walleij@linaro.org>, Jason Cooper <jason@lakedaemon.net>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, bhelgaas@google.com,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 03, 2017 at 05:21:02PM +0800, Shawn Lin wrote:
-> Rockchip's RC has two banks of register for root port,
-> one is strictly compatible to the PCIe spec(normal bank), but
-> the other one could be used to change the RO bit of root port
-> register(privileged bank).
+On Sat, Jul 01, 2017 at 03:06:30PM +0100, Lorenzo Pieralisi wrote:
+> Hi Bjorn,
 > 
-> When probing the RC driver, we was using the privileged bank to
-> do some basic setup work as some RO bits of the root port register
-> is hw-inited to wrong value. But we didn't change to use the normal
-> bank when finishing to probe the driver. This could lead to a serious
-> problem when the PME code try to clear the PME status by writing
-> PCI_EXP_RTSTA_PME to the register of PCI_EXP_RTSTA. Per the PCIe 3.0
-> spec, section 7.8.14, PME status bit is RW1C. So the PME code is doing
-> the right thing to clear the PME status but we find the RC doesn't
-> clear it but actually setting it to one. So finally the system trap in
-> pcie_pme_work_fn as PCI_EXP_RTSTA_PME is true now forever. And this
-> issue could be reproduced by booting kernel with pci=nomsi.
+> On Thu, Jun 08, 2017 at 03:13:29PM +0100, Lorenzo Pieralisi wrote:
+> > Legacy PCI host controllers (ie host controllers that set-up the PCI bus
+> > through the ARM pci_common_init() API) are currently relying on
+> > pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
+> > in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
+> > given system some of which may well be enabled by the time
+> > pci_fixup_irqs() is called (ie a system with multiple host controllers).
+> > With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
+> > possible to assign IRQs for all devices originating from a PCI host
+> > bridge at probe time; this is implemented through pci_assign_irq() that
+> > relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
+> > given device.
+> > 
+> > The benefits this brings are twofold:
+> > 
+> > - the IRQ for a device is assigned once at probe time
+> > - the IRQ assignment works also for hotplugged devices
+> > 
+> > Remove pci_fixup_irqs() call from bios32 code and rely on
+> > pci_assign_irq() to carry out the IRQ mapping at device probe
+> > time.
+> > 
+> > The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
+> > set-up in the struct pci_host_bridge created in the bios32
+> > pcibios_init_hw() function and mach-* code paths (for PCI mach
+> > implementations that require a specific struct hw_pci.(*scan) function
+> > callback).
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Jason Cooper <jason@lakedaemon.net>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Russell King <linux@armlinux.org.uk>
+> > Cc: Andrew Lunn <andrew@lunn.ch>
+> > ---
+> >  arch/arm/kernel/bios32.c    |  4 ++--
+> >  arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
+> >  arch/arm/mach-iop13xx/pci.c |  2 ++
+> >  arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
+> >  4 files changed, 29 insertions(+), 23 deletions(-)
 > 
-> To fix it, we should change to use the normal bank of root port register
-> for PCI core to visit root port.
+> As I mentioned to you, this patch is incomplete and needs an upgrade
+> (ie I misread how Orion and the gazillions board file that go with
+> it to map irqs - apologies but it is very hard to untangle).
 > 
-> Fixes: e77f847d ("PCI: rockchip: Add Rockchip PCIe controller support")
-> Cc: stable@vger.kernel.org
-> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Cc: Brian Norris <briannorris@chromium.org>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> I am inlining below an incremental patch to be folded in commit:
+> 
+> feaec00e757a ("ARM/PCI: Remove pci_fixup_irqs() call for bios32 host
+> controllers")
+> 
+> in your pci/irq-fixups branch, or if you prefer I can send you the
+> resulting squashed-in patch to replace this one, as you prefer.
 
-Applied to pci/host-rockchip for v4.13, thanks!
+Thanks, I folded this into pci/irq-fixups.  The resulting patch is
+merely this:
 
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 13 +++++++++----
->  1 file changed, 9 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index eb070ab..5acf869 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -139,6 +139,7 @@
->  		 PCIE_CORE_INT_CT | PCIE_CORE_INT_UTC | \
->  		 PCIE_CORE_INT_MMVC)
->  
-> +#define PCIE_RC_CONFIG_NORMAL_BASE	0x800000
->  #define PCIE_RC_CONFIG_BASE		0xa00000
->  #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
->  #define   PCIE_RC_CONFIG_SCC_SHIFT		16
-> @@ -301,7 +302,9 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
->  static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
->  				     int where, int size, u32 *val)
->  {
-> -	void __iomem *addr = rockchip->apb_base + PCIE_RC_CONFIG_BASE + where;
-> +	void __iomem *addr;
-> +
-> +	addr = rockchip->apb_base + PCIE_RC_CONFIG_NORMAL_BASE + where;
->  
->  	if (!IS_ALIGNED((uintptr_t)addr, size)) {
->  		*val = 0;
-> @@ -325,11 +328,13 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
->  				     int where, int size, u32 val)
->  {
->  	u32 mask, tmp, offset;
-> +	void __iomem *addr;
->  
->  	offset = where & ~0x3;
-> +	addr = rockchip->apb_base + PCIE_RC_CONFIG_NORMAL_BASE + offset;
->  
->  	if (size == 4) {
-> -		writel(val, rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset);
-> +		writel(val, addr);
->  		return PCIBIOS_SUCCESSFUL;
->  	}
->  
-> @@ -340,9 +345,9 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
->  	 * corrupt RW1C bits in adjacent registers.  But the hardware
->  	 * doesn't support smaller writes.
->  	 */
-> -	tmp = readl(rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset) & mask;
-> +	tmp = readl(addr) & mask;
->  	tmp |= val << ((where & 0x3) * 8);
-> -	writel(tmp, rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset);
-> +	writel(tmp, addr);
->  
->  	return PCIBIOS_SUCCESSFUL;
->  }
-> -- 
-> 1.9.1
-> 
-> 
+commit 16508469c0f3198a63923aaec08efa1c63f5fbcc
+Author: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date:   Wed Jun 28 15:14:04 2017 -0500
+
+    ARM/PCI: Remove pci_fixup_irqs() call for bios32 host controllers
+    
+    Legacy PCI host controllers (ie host controllers that set-up the PCI bus
+    through the ARM pci_common_init() API) are currently relying on
+    pci_fixup_irqs() to assign legacy PCI irqs to devices.  This is not ideal
+    in that pci_fixup_irqs() assigns IRQs for all PCI devices present in a given
+    system some of which may well be enabled by the time pci_fixup_irqs() is
+    called (ie a system with multiple host controllers).  With the introduction
+    of struct pci_host_bridge.(*map_irq) pointer it is possible to assign IRQs
+    for all devices originating from a PCI host bridge at probe time; this is
+    implemented through pci_assign_irq() that relies on the struct
+    pci_host_bridge.map_irq pointer to map IRQ for a given device.
+    
+    The benefits this brings are twofold:
+    
+      - the IRQ for a device is assigned once at probe time
+      - the IRQ assignment works also for hotplugged devices
+    
+    Remove pci_fixup_irqs() call from bios32 code and rely on pci_assign_irq()
+    to carry out the IRQ mapping at device probe time.
+    
+    The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are set-up
+    in the struct pci_host_bridge created in the bios32 pcibios_init_hw()
+    function and mach-* code paths (for PCI mach implementations that require a
+    specific struct hw_pci.(*scan) function callback).
+    
+    Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+    [bhelgaas: folded in fixes from Lorenzo:
+    http://lkml.kernel.org/r/20170701140629.GC8977@red-moon]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Cc: Jason Cooper <jason@lakedaemon.net>
+    Cc: Russell King <linux@armlinux.org.uk>
+    Cc: Andrew Lunn <andrew@lunn.ch>
+
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 4c7621ac389c..56dc1a3a33b4 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -484,6 +484,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+ 				break;
+ 			}
+ 
++			bridge->map_irq = pcibios_map_irq;
++			bridge->swizzle_irq = pcibios_swizzle;
++
+ 			if (hw->scan)
+ 				ret = hw->scan(nr, bridge);
+ 			else {
+@@ -530,8 +533,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+ 	if (hw->postinit)
+ 		hw->postinit();
+ 
+-	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+-
+ 	list_for_each_entry(sys, &head, node) {
+ 		struct pci_bus *bus = sys->bus;
+ 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
