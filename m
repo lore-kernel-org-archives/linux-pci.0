@@ -1,201 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:55713 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753096AbdGSJ4o (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:56:44 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 2/7] PCI: rockchip: introduce per-lanes PHYs support
-Date: Wed, 19 Jul 2017 17:55:13 +0800
-Message-Id: <1500458118-139042-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=2bA7=6G=sigmadesigns.com=marc_gonzalez@kernel.org>
+Return-Path: <SRS0=2bA7=6G=sigmadesigns.com=marc_gonzalez@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, LKML <linux-kernel@vger.kernel.org>,
+	Mason <slash.tmp@free.fr>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>, Ard Biesheuvel
+	<ard.biesheuvel@linaro.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <16622817-8ccd-107b-be08-676b576f6e8a@sigmadesigns.com>
+Date: Mon, 3 Jul 2017 16:34:29 +0200
+MIME-Version: 1.0
+In-Reply-To: <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-We distinguish the legacy PHY with the newer per-lane
-PHYs by adding legacy_phy flag. Note that the legacy phy
-is still the first option to be searched in order not to
-break the backward compatibility of DTB.
+Bjorn Helgaas wrote:
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+> Marc Gonzalez wrote:
+>
+>> On 03/07/2017 01:18, Bjorn Helgaas wrote:
+>>
+>>> On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:
+>>>
+>>>> +static int tango_check_pcie_link(void __iomem *test_out)
+>>>
+>>> I think this is checking for link up.  Rename to tango_pcie_link_up()
+>>> to follow the convention of other drivers.  Take a struct tango_pcie *
+>>> instead of an address, if possible.
+>>
+>> Anything's possible. NB: if I pass the struct, then I have to store
+>> the address in the struct, which isn't the case now, since I never
+>> need the address later. If you don't mind adding an unnecessary
+>> field to the struct, I can do it. What do you say?
+>=20
+> The benefit of following the same formula as other drivers is pretty
+> large.  Most drivers save the equivalent of "base" in the struct.  If
+> you did that, you wouldn't need an extra pointer; you would just use
+> "base + SMP8759_MUX" in the config accessors and "base + SMP8759_TEST_OUT=
+"
+> in tango_pcie_link_up().
 
-Changes in v5: None
-Changes in v4:
-- move rockchip_pcie_get_phys to where it stands in
-  patch 1.
-- print PHY index in err output log
+The problem is that TEST_OUT is at 0x74 on SMP8759, but at 0x138
+on my other chip. In fact, all registers have been "reshuffled",
+and none have the same offsets on the two chips.
 
-Changes in v3:
-- kill rockchip_pcie_manipulate_phys and related stuff
-- use phys array
-- improve the commit msg
+My solution was to define specific registers in the struct.
 
-Changes in v2: None
+In my [RFC PATCH v0.2] posted March 23, I tried illustrating
+the issue:
 
- drivers/pci/host/pcie-rockchip.c | 77 +++++++++++++++++++++++++++++-----------
- 1 file changed, 57 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index c42feab..f510349 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -47,6 +47,7 @@
- #define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
- 
- #define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
-+#define MAX_LANE_NUM			4
- 
- #define PCIE_CLIENT_BASE		0x0
- #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
-@@ -210,7 +211,8 @@
- struct rockchip_pcie {
- 	void	__iomem *reg_base;		/* DT axi-base */
- 	void	__iomem *apb_base;		/* DT apb-base */
--	struct	phy *phy;
-+	bool    legacy_phy;
-+	struct  phy *phys[MAX_LANE_NUM];
- 	struct	reset_control *core_rst;
- 	struct	reset_control *mgmt_rst;
- 	struct	reset_control *mgmt_sticky_rst;
-@@ -514,7 +516,7 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
- static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
--	int err;
-+	int err, i;
- 	u32 status;
- 
- 	gpiod_set_value(rockchip->ep_gpio, 0);
-@@ -537,10 +539,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
- 
--	err = phy_init(rockchip->phy);
--	if (err < 0) {
--		dev_err(dev, "fail to init phy, err %d\n", err);
--		return err;
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		err = phy_init(rockchip->phys[i]);
-+		if (err) {
-+			dev_err(dev, "init phy%d err %d\n", i, err);
-+			return err;
-+		}
- 	}
- 
- 	err = reset_control_assert(rockchip->core_rst);
-@@ -602,10 +606,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			    PCIE_CLIENT_MODE_RC,
- 			    PCIE_CLIENT_CONFIG);
- 
--	err = phy_power_on(rockchip->phy);
--	if (err) {
--		dev_err(dev, "fail to power on phy, err %d\n", err);
--		return err;
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		err = phy_power_on(rockchip->phys[i]);
-+		if (err) {
-+			dev_err(dev, "power on phy%d err %d\n", i, err);
-+			return err;
-+		}
- 	}
- 
- 	/*
-@@ -856,12 +862,38 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
-+	struct phy *phy;
-+	char *name;
-+	u32 i;
++static const struct of_device_id tango_pcie_ids[] =3D {
++=09{ .compatible =3D "sigma,smp8759-pcie" },
++=09{ .compatible =3D "sigma,rev2-pcie" },
++=09{ /* sentinel */ },
++};
 +
-+	rockchip->phys[0] = devm_phy_get(dev, "pcie-phy");
-+	if (IS_ERR(rockchip->phys[0])) {
-+		if (PTR_ERR(rockchip->phys[0]) == -EPROBE_DEFER)
-+			return PTR_ERR(rockchip->phys[0]);
-+		dev_dbg(dev, "missing legacy phy, and search for per-lane PHY\n");
-+	} else {
-+		rockchip->legacy_phy = true;
-+		dev_warn(dev, "legacy phy model is deprecated!\n");
-+		return 0;
-+	}
++static void smp8759_init(struct tango_pcie *pcie, void __iomem *base)
++{
++=09pcie->mux=09=09=3D base + 0x48;
++=09pcie->msi_status=09=3D base + 0x80;
++=09pcie->msi_mask=09=09=3D base + 0xa0;
++=09pcie->msi_doorbell=09=3D 0xa0000000 + 0x2e07c;
++}
 +
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		name = kasprintf(GFP_KERNEL, "pcie-phy-%u", i);
-+		if (!name)
-+			return -ENOMEM;
++static void rev2_init(struct tango_pcie *pcie, void __iomem *base)
++{
++=09void __iomem *misc_irq=09=3D base + 0x40;
++=09void __iomem *doorbell=09=3D base + 0x8c;
 +
-+		phy = devm_of_phy_get(rockchip->dev,
-+				      rockchip->dev->of_node, name);
-+		kfree(name);
- 
--	rockchip->phy = devm_phy_get(dev, "pcie-phy");
--	if (IS_ERR(rockchip->phy)) {
--		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
--			dev_err(dev, "missing phy\n");
--		return PTR_ERR(rockchip->phy);
-+		if (IS_ERR(phy)) {
-+			if (PTR_ERR(phy) != -EPROBE_DEFER)
-+				dev_err(dev, "missing phy for lane %d: %ld\n",
-+					i, PTR_ERR(phy));
-+			return PTR_ERR(phy);
-+		}
++=09pcie->mux=09=09=3D base + 0x2c;
++=09pcie->msi_status=09=3D base + 0x4c;
++=09pcie->msi_mask=09=09=3D base + 0x6c;
++=09pcie->msi_doorbell=09=3D 0x80000000;
 +
-+		rockchip->phys[i] = phy;
- 	}
- 
- 	return 0;
-@@ -1283,7 +1315,7 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
- static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- {
- 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
--	int ret;
-+	int ret, i;
- 
- 	/* disable core and cli int since we don't need to ack PME_ACK */
- 	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
-@@ -1296,8 +1328,10 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- 		return ret;
- 	}
- 
--	phy_power_off(rockchip->phy);
--	phy_exit(rockchip->phy);
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		phy_power_off(rockchip->phys[i]);
-+		phy_exit(rockchip->phys[i]);
-+	}
- 
- 	clk_disable_unprepare(rockchip->clk_pcie_pm);
- 	clk_disable_unprepare(rockchip->hclk_pcie);
-@@ -1533,14 +1567,17 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
-+	int i;
- 
- 	pci_stop_root_bus(rockchip->root_bus);
- 	pci_remove_root_bus(rockchip->root_bus);
- 	pci_unmap_iospace(rockchip->io);
- 	irq_domain_remove(rockchip->irq_domain);
- 
--	phy_power_off(rockchip->phy);
--	phy_exit(rockchip->phy);
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		phy_power_off(rockchip->phys[i]);
-+		phy_exit(rockchip->phys[i]);
-+	}
- 
- 	clk_disable_unprepare(rockchip->clk_pcie_pm);
- 	clk_disable_unprepare(rockchip->hclk_pcie);
--- 
-1.9.1
++=09writel(lower_32_bits(pcie->msi_doorbell), doorbell + 0);
++=09writel(upper_32_bits(pcie->msi_doorbell), doorbell + 4);
++
++=09/* Enable legacy PCI interrupts */
++=09writel(BIT(15), misc_irq);
++=09writel(0xf << 4, misc_irq + 4);
++}
+
+
+Do you agree that the 'base + OFFSET' idiom does not work in
+this specific situation? Would you handle it differently?
+
+Regards.
