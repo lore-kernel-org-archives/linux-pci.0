@@ -1,92 +1,92 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:33616 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbdGSB3Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:24 -0400
-Received: by mail-pg0-f68.google.com with SMTP id z1so4870690pgs.0
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:24 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org
-Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
-        zourongrong@gmail.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, gabriele.paoloni@huawei.com,
-        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
-        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/4] powerpc: simplify and fix VGA default device behaviour
-Date: Wed, 19 Jul 2017 11:28:34 +1000
-Message-Id: <20170719012839.20124-2-dja@axtens.net>
-In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
-References: <20170719012839.20124-1-dja@axtens.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 3 Jul 2017 08:27:04 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Mason <slash.tmp@free.fr>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some powerpc devices provide a PCI display that isn't picked up by
-the VGA arbiter, presumably because it doesn't support the PCI
-legacy VGA ranges.
+[+cc Jingoo, Joao]
 
-Commit c2e1d84523ad ("powerpc: Set default VGA device") introduced
-an arch quirk to mark these devices as default to fix X autoconfig.
+On Mon, Jul 03, 2017 at 10:35:50AM +0100, Ard Biesheuvel wrote:
+> On 3 July 2017 at 00:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:
+> >> This driver is required to work around several hardware bugs
+> >> in the PCIe controller.
+> >>
+> >> NB: Revision 1 does not support legacy interrupts, or IO space.
+> >
+> > I had to apply these manually because of conflicts in Kconfig and
+> > Makefile.  What are these based on?  Easiest for me is if you base
+> > them on the current -rc1 tag.
+> >
+> >> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> >> ---
+> >>  drivers/pci/host/Kconfig      |   8 +++
+> >>  drivers/pci/host/Makefile     |   1 +
+> >>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++
+> >>  include/linux/pci_ids.h       |   2 +
+> >>  4 files changed, 175 insertions(+)
+> >>  create mode 100644 drivers/pci/host/pcie-tango.c
+> >>
+> [..]
+> >> +     /*
+> >> +      * QUIRK #2
+> >> +      * Unfortunately, config and mem spaces are muxed.
+> >> +      * Linux does not support such a setting, since drivers are free
+> >> +      * to access mem space directly, at any time.
+> >> +      * Therefore, we can only PRAY that config and mem space accesses
+> >> +      * NEVER occur concurrently.
+> >> +      */
+> >> +     writel_relaxed(1, pcie->mux);
+> >> +     ret = pci_generic_config_read(bus, devfn, where, size, val);
+> >> +     writel_relaxed(0, pcie->mux);
+> >
+> > I'm very hesitant about this.  When people stress this, we're going to
+> > get reports of data corruption.  Even with the disclaimer below, I
+> > don't feel good about this.  Adding the driver is an implicit claim
+> > that we support the device, but we know it can't be made reliable.
+> 
+> I noticed that the Synopsys driver suffers from a similar issue: in
+> dw_pcie_rd_other_conf(), it happily reprograms the outbound I/O window
+> to perform a config space access, and switches it back to I/O space
+> afterwards (unless it has more than 2 viewports, in which case it uses
+> dedicated windows for I/O space and config space)
 
-The commit message stated that the patch:
+That doesn't sound good.  Jingoo, Joao?  I remember some discussion
+about this, but not the details.
 
-    Ensures a default VGA is always set if a graphics adapter is present,
-    even if firmware did not initialize it. If more than one graphics
-    adapter is present, ensure the one initialized by firmware is set
-    as the default VGA device.
+I/O accesses use wrappers (inb(), etc), so there's at least the
+possibility of a mutex to serialize them with respect to config
+accesses.
 
-The patch used the following test to decide whether or not to mark
-a device as default:
+Bjorn
 
-  pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-  if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-          vga_set_default_device(pdev);
-
-This doesn't seem like it works quite as intended. Because of the
-logical OR, the default device will be set in 2 cases:
-
- 1) if there is no default device
-OR
- 2) if this device has normal memory/IO decoding turned on
-
-This will work as intended if there is only one device, but if
-there are multiple devices, we may override the device the VGA
-arbiter picked.
-
-Instead, set a device as default if there is no default device AND
-this device decodes.
-
-This will not change behaviour on single-headed systems.
-
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Daniel Axtens <dja@axtens.net>
-
----
-
-Tested in TCG (the card provided by qemu doesn't automatically
-register with vgaarb, so the relevant code path has been tested)
-but I would appreciate any tests on real hardware.
----
- arch/powerpc/kernel/pci-common.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 341a7469cab8..c95fdda3a2dc 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
- {
- 	u16 cmd;
- 
-+	if (vga_default_device())
-+		return;
-+
- 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
--	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-+	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
- 		vga_set_default_device(pdev);
- 
- }
--- 
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
