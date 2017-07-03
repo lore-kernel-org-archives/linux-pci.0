@@ -1,72 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f170.google.com ([209.85.128.170]:35663 "EHLO
-        mail-wr0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751388AbdGRRmm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 13:42:42 -0400
-Received: by mail-wr0-f170.google.com with SMTP id w4so38422282wrb.2
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 10:42:41 -0700 (PDT)
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 3 Jul 2017 08:05:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Ethan Zhao <ethan.kernel@gmail.com>, Chen Yu <yu.c.chen@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>, thejoe@gmail.com,
+        "Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH] PCI: Work around poweroff & suspend-to-RAM issue on
+ Macbook Pro 11
+Message-ID: <20170703130526.GC13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170702205948.GB18324@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703042621.GA22429@yu-desktop-1.sh.intel.com>
+ <CABawtvNd0MtxVnwedJc3nrMuAViAnRojezuRqJK+-QXaRfNOAA@mail.gmail.com>
+ <20170703091048.GA15823@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170717202324.105e993c@w520.home>
-References: <1500338752-30576-1-git-send-email-fkan@apm.com> <20170717202324.105e993c@w520.home>
-From: Feng Kan <fkan@apm.com>
-Date: Tue, 18 Jul 2017 10:42:40 -0700
-Message-ID: <CAL85gmAsjSiThTujA=tbhceOd71ee3AVmGDaFhc3FMFWDsQ4HA@mail.gmail.com>
-Subject: Re: [PATCH] pci: quirk: Apply APM ACS quirk to XGene devices
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        "Jonglih (Daniel) Yu" <jyu@apm.com>,
-        "jcm@redhat.com" <jcm@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170703091048.GA15823@wunner.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 17, 2017 at 7:23 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Mon, 17 Jul 2017 17:45:52 -0700
-> Feng Kan <fkan@apm.com> wrote:
->
->> The APM X-Gene PCIe root port does not support ACS at this point.
->> Since the root does not allow peer to peer transactions, mask out
->> ACS capability flag bits.
->>
->> Signed-off-by: Feng Kan <fkan@apm.com>
->> ---
->>  drivers/pci/quirks.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 085fb78..951064d 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -4368,6 +4368,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
->>       /* Cavium ThunderX */
->>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
->> +     /* APM XGene */
->> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_mf_endpoint_acs },
->>       { 0 }
->>  };
->
->
-> You're using the "mf_enpoint" quirk for something that is not an
-> endpoint and may or may not be multi-function.  Downstream ports have
-> different rules than multi-function endpoints and the quirk function is
-> commented to reflect why certain fields are relevant or not to
-> multi-function endpoints.  I don't think it's valid to use this quirk
-> for other device types, we'd only need to accidentally test the assumed
-> device type in that function to break you in the future.
-Would creating another function like what Cavium did be sufficient?
+On Mon, Jul 03, 2017 at 11:10:48AM +0200, Lukas Wunner wrote:
+> On Mon, Jul 03, 2017 at 02:33:39PM +0800, Ethan Zhao wrote:
+> > On Mon, Jul 3, 2017 at 12:26 PM, Chen Yu <yu.c.chen@intel.com> wrote:
+> > > On Sun, Jul 02, 2017 at 03:59:48PM -0500, Bjorn Helgaas wrote:
+> > >> --- a/arch/x86/pci/fixup.c
+> > >> +++ b/arch/x86/pci/fixup.c
+> [snip]
+> > >> +static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+> > >> +{
+> > >> +     struct device *dev = &pdev->dev;
+> > >> +     struct resource *res;
+> > >> +
+> > >> +     if ((!dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") &&
+> > >> +          !dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5")) ||
+> > >> +         pdev->bus->number != 0 || pdev->devfn != PCI_DEVFN(0x1c, 0))
+> > >> +             return;
+> > >> +
+> > > Not sure why we need to also the bus number of devfn, as there
+> > > is only one PCI bridge that would match 0x8c10? according to
+> > > https://bugzilla.kernel.org/attachment.cgi?id=210611
+> > > am I missing something?
+> > 
+> >  To make sure it runs only once only when 00:1c.0 is 0x8c10 ?
+> 
+> Each root port has a different PCI device ID and is only present once
+> on the affected machines, so I think Chen Yu is right.
+> 
+> Actually, since the quirk is now related to a memory region and no longer
+> to a specific PCI device, it need not be a PCI fixup.  It could go into
+> arch/x86/kernel/setup.c:trim_platform_memory_ranges() as a DMI quirk.
+> 
+> This would also allow declaration of the code as __init.
 
+That's a good idea, but I don't know what (if any) ordering issues
+we'd have with reserving this region vs. the host bridge windows.
 
-Additionally,
-> lack of peer to peer does not necessarily imply functionality like
-> Source Validation, without which a device can spoof the requester ID.
-> Thanks,
-I can remove the statement.
->
-> Alex
-Alex, the goal here is to enable virtualization to work correctly.
-Please let me know if the
-above is sufficient. Much thanks.
->
+If somebody wants to rework this and test it, I'd be glad to replace
+the current patch.  If you do, please collect the /proc/iomem contents
+to make sure they look reasonable.
+
+Bjorn
