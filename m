@@ -1,152 +1,169 @@
-Return-Path: <SRS0=OVob=6H=infradead.org=peterz@kernel.org>
-Return-Path: <SRS0=OVob=6H=infradead.org=peterz@kernel.org>
-Date: Tue, 4 Jul 2017 16:27:58 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Mason <slash.tmp@free.fr>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-Message-ID: <20170704142758.GB7287@worktop>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <e57debab-3457-1d9c-a72e-ecdf7d4f742e@sigmadesigns.com>
- <baf9866b-04ba-698c-3012-a957ec0123d1@sigmadesigns.com>
- <20170704070958.oolhapyx7uy2fly4@hirez.programming.kicks-ass.net>
- <c80ce48f-5a7d-48d2-fd60-0d87eb0fcc0a@free.fr>
+Return-Path: <SRS0=4j9z=6G=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=4j9z=6G=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 3 Jul 2017 11:26:19 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+	Andrew Lunn <andrew@lunn.ch>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Will Deacon <will.deacon@arm.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Simon Horman <horms@verge.net.au>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for
+ bios32 host controllers
+Message-ID: <20170703102619.GE19119@red-moon>
+References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
+ <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
+ <20170701140629.GC8977@red-moon>
+ <20170702211950.GD18324@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c80ce48f-5a7d-48d2-fd60-0d87eb0fcc0a@free.fr>
+In-Reply-To: <20170702211950.GD18324@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 04, 2017 at 03:08:43PM +0200, Mason wrote:
-> On 04/07/2017 09:09, Peter Zijlstra wrote:
-> 
-> > On Mon, Jul 03, 2017 at 05:30:28PM +0200, Marc Gonzalez wrote:
+On Sun, Jul 02, 2017 at 04:19:50PM -0500, Bjorn Helgaas wrote:
+> On Sat, Jul 01, 2017 at 03:06:30PM +0100, Lorenzo Pieralisi wrote:
+> > Hi Bjorn,
 > > 
-> >> And at the end of smp8759_config_read:
-> >>
-> >> 	printk("in_atomic_preempt_off = %d\n", in_atomic_preempt_off());
+> > On Thu, Jun 08, 2017 at 03:13:29PM +0100, Lorenzo Pieralisi wrote:
+> > > Legacy PCI host controllers (ie host controllers that set-up the PCI bus
+> > > through the ARM pci_common_init() API) are currently relying on
+> > > pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
+> > > in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
+> > > given system some of which may well be enabled by the time
+> > > pci_fixup_irqs() is called (ie a system with multiple host controllers).
+> > > With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
+> > > possible to assign IRQs for all devices originating from a PCI host
+> > > bridge at probe time; this is implemented through pci_assign_irq() that
+> > > relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
+> > > given device.
+> > > 
+> > > The benefits this brings are twofold:
+> > > 
+> > > - the IRQ for a device is assigned once at probe time
+> > > - the IRQ assignment works also for hotplugged devices
+> > > 
+> > > Remove pci_fixup_irqs() call from bios32 code and rely on
+> > > pci_assign_irq() to carry out the IRQ mapping at device probe
+> > > time.
+> > > 
+> > > The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
+> > > set-up in the struct pci_host_bridge created in the bios32
+> > > pcibios_init_hw() function and mach-* code paths (for PCI mach
+> > > implementations that require a specific struct hw_pci.(*scan) function
+> > > callback).
+> > > 
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Cc: Jason Cooper <jason@lakedaemon.net>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Russell King <linux@armlinux.org.uk>
+> > > Cc: Andrew Lunn <andrew@lunn.ch>
+> > > ---
+> > >  arch/arm/kernel/bios32.c    |  4 ++--
+> > >  arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
+> > >  arch/arm/mach-iop13xx/pci.c |  2 ++
+> > >  arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
+> > >  4 files changed, 29 insertions(+), 23 deletions(-)
 > > 
-> > That's confused...
-> 
-> That much is certain. I am indeed grasping at straws.
-> 
-> I grepped "scheduling while atomic", found __schedule_bug()
-> in kernel/sched/core.c and saw
-> 
-> 	if (IS_ENABLED(CONFIG_DEBUG_PREEMPT) && in_atomic_preempt_off()) {
-> 		pr_err("Preemption disabled at:");
-> 		print_ip_sym(preempt_disable_ip);
-> 		pr_cont("\n");
-> 	}
-> 
-> I thought printing the value of in_atomic_preempt_off()
-> in the callback would indicate whether preemption had
-> already been turned off at that point.
-
-in_atomic_preempt_off() is a 'weird' construct. It basically checks to
-see if preempt_count != 1. So calling it while holding a single preempt,
-will return false (like in your case).
-
-> It doesn't work like that?
-
-Not really, you want to just print preempt_count.
-
-> BTW, why didn't print_ip_sym(preempt_disable_ip); say
-> where preemption had been disabled?
-
-It does, but it might be non-obvious. We only store the first 0->!0
-transition IP in there.
-
-So if you have chains like:
-
-	preempt_disable();		// 0 -> 1
-	spin_lock();			// 1 -> 2
-	preempt_enable();		// 2 -> 1
-	preempt_disable();		// 1 -> 2
-	spin_unlock();			// 2 -> 1
-
-	mutex_lock();
-	  might_sleep();		*SPLAT* report the IP of 0 -> 1
-
-	preempt_enable():		// 1 -> 0
-
-
-That IP might not even be part of the current callchain.
-
-> >> [    1.026568] BUG: scheduling while atomic: swapper/0/1/0x00000002
-> >> [    1.032625] 5 locks held by swapper/0/1:
-> >> [    1.036575]  #0:  (&dev->mutex){......}, at: [<c038c684>] __driver_attach+0x50/0xd0
-> >> [    1.044319]  #1:  (&dev->mutex){......}, at: [<c038c694>] __driver_attach+0x60/0xd0
-> >> [    1.052050]  #2:  (pci_lock){+.+...}, at: [<c03309d8>] pci_bus_read_config_dword+0x44/0x94
+> > As I mentioned to you, this patch is incomplete and needs an upgrade
+> > (ie I misread how Orion and the gazillions board file that go with
+> > it to map irqs - apologies but it is very hard to untangle).
 > > 
-> > This is a raw_spinlock_t, that disables preemption
+> > I am inlining below an incremental patch to be folded in commit:
+> > 
+> > feaec00e757a ("ARM/PCI: Remove pci_fixup_irqs() call for bios32 host
+> > controllers")
+> > 
+> > in your pci/irq-fixups branch, or if you prefer I can send you the
+> > resulting squashed-in patch to replace this one, as you prefer.
 > 
-> drivers/pci/access.c
+> Thanks, I folded this into pci/irq-fixups.  The resulting patch is
+> merely this:
+
+Yes that's what I expected, we remove pci_fixup_irqs() and add the
+hooks into the host bridge structure that should cover all host
+bridges initialized via pci_common_init_dev().
+
+Thanks !
+Lorenzo
+
+> commit 16508469c0f3198a63923aaec08efa1c63f5fbcc
+> Author: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Date:   Wed Jun 28 15:14:04 2017 -0500
 > 
-> /*
->  * This interrupt-safe spinlock protects all accesses to PCI
->  * configuration space.
->  */
-> DEFINE_RAW_SPINLOCK(pci_lock);
+>     ARM/PCI: Remove pci_fixup_irqs() call for bios32 host controllers
+>     
+>     Legacy PCI host controllers (ie host controllers that set-up the PCI bus
+>     through the ARM pci_common_init() API) are currently relying on
+>     pci_fixup_irqs() to assign legacy PCI irqs to devices.  This is not ideal
+>     in that pci_fixup_irqs() assigns IRQs for all PCI devices present in a given
+>     system some of which may well be enabled by the time pci_fixup_irqs() is
+>     called (ie a system with multiple host controllers).  With the introduction
+>     of struct pci_host_bridge.(*map_irq) pointer it is possible to assign IRQs
+>     for all devices originating from a PCI host bridge at probe time; this is
+>     implemented through pci_assign_irq() that relies on the struct
+>     pci_host_bridge.map_irq pointer to map IRQ for a given device.
+>     
+>     The benefits this brings are twofold:
+>     
+>       - the IRQ for a device is assigned once at probe time
+>       - the IRQ assignment works also for hotplugged devices
+>     
+>     Remove pci_fixup_irqs() call from bios32 code and rely on pci_assign_irq()
+>     to carry out the IRQ mapping at device probe time.
+>     
+>     The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are set-up
+>     in the struct pci_host_bridge created in the bios32 pcibios_init_hw()
+>     function and mach-* code paths (for PCI mach implementations that require a
+>     specific struct hw_pci.(*scan) function callback).
+>     
+>     Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>     [bhelgaas: folded in fixes from Lorenzo:
+>     http://lkml.kernel.org/r/20170701140629.GC8977@red-moon]
+>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>     Cc: Jason Cooper <jason@lakedaemon.net>
+>     Cc: Russell King <linux@armlinux.org.uk>
+>     Cc: Andrew Lunn <andrew@lunn.ch>
 > 
-> 
-> 	raw_spin_lock_irqsave(&pci_lock, flags);
-> 	res = bus->ops->read(bus, devfn, pos, len, &data);
-> 
-> 
-> IIUC, it's not possible to call stop_machine() while holding
-> a raw spinlock?
-
-Correct. You cannot call blocking primitives while holding a spinlock.
-
-> What about regular spinlocks? IIUC, in RT,
-> regular spinlocks may sleep?
-
-Still not, your code should not depend on CONFIG_PREEMPT*.
-
-> I didn't find "preempt" or "schedul" in the spinlock doc.
-> https://www.kernel.org/doc/Documentation/locking/spinlocks.txt
-
-Correct... as per usual the documentation is somewhat terse.
-
-But once you think about it, its 'obvious' a spinlock needs to disable
-preemption. If you don't you get into heaps of trouble (one of the
-reasons userspace spinlocks are an absolute trainwreck).
-
-> > Using stop_machine() is per definition doing it wrong ;-)
-> 
-> Here's the high-level view. My HW is borked and muxes
-> config space and mem space. So I need a way to freeze
-> the entire system, make the config space access, and
-> then return the system to normal. (AFAICT, config space
-> accesses are rare, so if I kill performance for these
-> accesses, the system might remain usable.)
-> 
-> Is there a way to do this? Mark suggested stop_machine
-> but it seems using it in my situation is not quite
-> straight-forward.
-
-*groan*... so yeah, broken hardware demands crazy stuff... stop machine
-is tricky here because I'm not sure we can demand all PCI accessors to
-allow sleeping.
-
-And given that PCI lock is irqsave, we can't even assume IRQs are
-enabled.
-
-Does your platform have NMIs? If so, you can do yuck things like the
-kgdb sync. NMI IPI all other CPUs and have them spin-wait on your state.
-
-Then be careful not to deadlock when two CPUs do that concurrently.
+> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+> index 4c7621ac389c..56dc1a3a33b4 100644
+> --- a/arch/arm/kernel/bios32.c
+> +++ b/arch/arm/kernel/bios32.c
+> @@ -484,6 +484,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
+>  				break;
+>  			}
+>  
+> +			bridge->map_irq = pcibios_map_irq;
+> +			bridge->swizzle_irq = pcibios_swizzle;
+> +
+>  			if (hw->scan)
+>  				ret = hw->scan(nr, bridge);
+>  			else {
+> @@ -530,8 +533,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
+>  	if (hw->postinit)
+>  		hw->postinit();
+>  
+> -	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
+> -
+>  	list_for_each_entry(sys, &head, node) {
+>  		struct pci_bus *bus = sys->bus;
+>  
