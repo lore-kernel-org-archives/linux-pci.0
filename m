@@ -1,42 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:58236 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965813AbdGTWfX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jul 2017 18:35:23 -0400
-Date: Thu, 20 Jul 2017 18:41:27 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Scott Bauer <scott.bauer@intel.com>
-Cc: Jon Derrick <jonathan.derrick@intel.com>,
-        linux-pci@vger.kernel.org, david.fugate@intel.com,
-        bhelgaas@google.com
-Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
-Message-ID: <20170720224126.GF1202@localhost.localdomain>
-References: <20170720202858.1918-1-scott.bauer@intel.com>
- <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
- <20170720213420.lxllowcwnp24gmxf@sbauer-Z170X-UD5>
- <a8fa0b4a-a918-6c98-169c-2b9c35bd8cdb@intel.com>
- <20170720215654.nyfpvgzgny2bpqny@sbauer-Z170X-UD5>
+Return-Path: <SRS0=m95N=6G=linaro.org=guodong.xu@kernel.org>
+Return-Path: <SRS0=m95N=6G=linaro.org=guodong.xu@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170720215654.nyfpvgzgny2bpqny@sbauer-Z170X-UD5>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170703104727.GB1573@arm.com>
+References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
+ <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com> <20170703104727.GB1573@arm.com>
+From: Guodong Xu <guodong.xu@linaro.org>
+Date: Mon, 3 Jul 2017 21:04:56 +0800
+Message-ID: <CAFGCpxx+92PSs1VaryFOXau7CjBYEP4H6wT-o=bNMwkSznjQuw@mail.gmail.com>
+Subject: Re: [PATCH v11 0/3]add PCIe driver for Kirin PCIe
+To: "xuwei (O)" <xuwei5@hisilicon.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Xiaowei Song <songxiaowei@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+	Suzhuangluan <suzhuangluan@hisilicon.com>, linux-pci <linux-pci@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Catalin Marinas <catalin.marinas@arm.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 20, 2017 at 03:56:54PM -0600, Scott Bauer wrote:
-> On Tue, Jul 25, 2017 at 08:36:10PM -0600, Jon Derrick wrote:
-> > 
-> > I think we'll need to do more than free the irq handlers because if an
-> > interrupt occurs after that, I think it'll get kicked to handle_bad_irq.
-> > I think we just need to add pci_disable_device after save and
-> > pcim_enable_device after restore.
-> 
-> I orignally had this in the patch I was testing on SLES and took it out when
-> it seemingly didn't make a difference. I didnt test yanking a drive or anything
-> behind the domain while it was suspended, so I wouldn't have hit your scenario.
-> 
-> I'll add it back in. Also, I think I need to CC stable on this one too since
-> this is missing all the way since the original inception of this driver.
+Hi, Xu Wei
 
-I think your patch should be okay as-is. After freeing VMD's IRQs,
-the kernel will automatically clear the MSI-x control bit to disable it
-from firing.
+
+
+On Mon, Jul 3, 2017 at 6:47 PM, Will Deacon <will.deacon@arm.com> wrote:
+> On Sun, Jul 02, 2017 at 06:36:57PM -0500, Bjorn Helgaas wrote:
+>> [+cc Catalin, Will, linux-arm-kernel]
+>>
+>> Applied patches 2 & 3 to pci/host-kirin for v4.13.
+>>
+>> I would like a MAINTAINERS update, too.  If you send me that, I'll
+>> squash it into the driver patch.
+>>
+>> Catalin, Will, how do you want to handle the
+>> arch/arm64/configs/defconfig change (patch 3)?  It's currently on my
+>> branch, but I'm happy to drop it if another route is better.
+>
+> defconfig updates usually go through arm-soc, via the relevant platform
+> maintainer, so it would be best to follow that route here too otherwise
+> you'll probably see conflicts in -next.
+>
+
+Is it ok for you to pick up the arch/arm64/configs/defconfig change (patch 3)?
+
+-Guodong
+
+> Will
