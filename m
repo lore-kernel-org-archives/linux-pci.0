@@ -1,54 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60942 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750789AbdGaGee (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 02:34:34 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v6 1/7] dt-bindings: phy: qmp: Add output-clock-names
-Date: Mon, 31 Jul 2017 12:04:11 +0530
-Message-Id: <1501482857-14100-2-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
-References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=LhAB=6G=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=LhAB=6G=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Date: Mon, 3 Jul 2017 19:11:28 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170703181128.GD4902@n2100.armlinux.org.uk>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-The phy outputs a clock that will act as the parent for
-the phy's pipe clock. Add the name of this clock to the
-lane's DT node.
+On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
+> The problem is serializing vs. memory accesses, since they don't use
+> any wrappers.  However, they are ioremapped(), so it's at least
+> conceivable that another solution would be to use VM to trap those
+> accesses.  I'm not a VM person, so I don't know whether that's
+> feasible in Linux.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
- 1 file changed, 3 insertions(+)
+Bjorn,
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-index e11c563..5d7a51f 100644
---- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-@@ -60,6 +60,8 @@ Required properties for child node:
- 	   one for each entry in clock-names.
-  - clock-names: Must contain following for pcie and usb qmp phys:
- 		 "pipe<lane-number>" for pipe clock specific to each lane.
-+ - clock-output-names: Name of the phy clock that will be the parent for
-+		       the above pipe clock.
- 
-  - resets: a list of phandles and reset controller specifier pairs,
- 	   one for each entry in reset-names.
-@@ -96,6 +98,7 @@ Example:
- 
- 			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
- 			clock-names = "pipe0";
-+			clock-output-names = "pcie_0_pipe_clk_src";
- 			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
- 			reset-names = "lane0";
- 		};
+You're forgetting that MMIO (iow, memory returned by ioremap()) must
+be accessed through the appropriate accessors, and must not be
+directly dereferenced in C.  (We do have buggy drivers that do that
+but they are buggy, and in many cases are getting attention to fix
+that.)
+
+However, adding a spinlock into them is really not nice, because it
+adds extra overhead that's only necessary for rare cases like Sigma
+Designs - especially when you consider that these accessors are used
+for all MMIO accesses, not just PCI.  It would effectively mean that
+we end up serialising all MMIO accesses throughout the kernel when
+Sigma Designs SoCs are enabled, destroying some of the SMP benefit.
+
+I don't think we can sanely use the MMU to trap those accesses either,
+that would mean sending IPIs to tell other CPUs to do something, and
+waiting for them to respond - which can deadlock if we're already in
+an IRQ-protected region (iirc, config accesses are made with IRQs
+off.)
+
+I don't think there's an easy solution to this problem - and I'm not
+sure that stop_machine() can be made to work in this path (which
+needs a process context).  I have a suspicion that the Sigma Designs
+PCI implementation is just soo insane that it's never going to work
+reliably in a multi-SoC kernel without introducing severe performance
+issues for everyone else.
+
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
