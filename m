@@ -1,167 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36624 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752565AbdGYU6F (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 16:58:05 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:43 -0600
-Message-Id: <20170725205753.4735-7-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 06/16] ntb: ensure ntb_mw_get_align() is only called when the link is up
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+ <20170616083313.GY3187@lahna.fi.intel.com>
+ <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+ <20170616120048.GC629@lahna.fi.intel.com>
+ <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
+ <20170619100209.GC629@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 3 Jul 2017 23:22:45 +0300
+Message-ID: <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>, John Garry <john.garry@huawei.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "olof@lixom.net" <olof@lixom.net>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With Switchtec hardware it's impossible to get the alignment parameters
-for a peer's memory window until the peer's driver has configured it's
-windows. Strictly speaking, the link doesn't have to be up for this,
-but the link being up is the only way the client can tell that
-the otherside has been configured.
+On Mon, Jul 3, 2017 at 7:08 PM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
 
-This patch converts ntb_transport and ntb_perf to use this function after
-the link goes up. This simplifies these clients slightly because they
-no longer have to store the alignment parameters. It also tweaks
-ntb_tool so that peer_mw_trans will print zero if it is run before
-the link goes up.
+JFYI: Mika on vacation.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/ntb/ntb_transport.c | 20 ++++++++++----------
- drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
- drivers/ntb/test/ntb_tool.c |  6 +++---
- 3 files changed, 22 insertions(+), 22 deletions(-)
+> I had a look into the MFD framework. If my understanding is correct the mfd
+> framework create a platform device for each declared mfd_cell that is passed
+> to mfd_add_devices().
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index b29558ddfe95..7ed745aaa213 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -191,8 +191,6 @@ struct ntb_transport_qp {
- struct ntb_transport_mw {
- 	phys_addr_t phys_addr;
- 	resource_size_t phys_size;
--	resource_size_t xlat_align;
--	resource_size_t xlat_align_size;
- 	void __iomem *vbase;
- 	size_t xlat_size;
- 	size_t buff_size;
-@@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
- 	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
- 	struct pci_dev *pdev = nt->ndev->pdev;
- 	size_t xlat_size, buff_size;
-+	resource_size_t xlat_align;
-+	resource_size_t xlat_align_size;
- 	int rc;
- 
- 	if (!size)
- 		return -EINVAL;
- 
--	xlat_size = round_up(size, mw->xlat_align_size);
--	buff_size = round_up(size, mw->xlat_align);
-+	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
-+			      &xlat_align_size, NULL);
-+	if (rc)
-+		return rc;
-+
-+	xlat_size = round_up(size, xlat_align_size);
-+	buff_size = round_up(size, xlat_align);
- 
- 	/* No need to re-setup */
- 	if (mw->xlat_size == xlat_size)
-@@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
- 	 * is a requirement of the hardware. It is recommended to setup CMA
- 	 * for BAR sizes equal or greater than 4MB.
- 	 */
--	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
-+	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
- 		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
- 			&mw->dma_addr);
- 		ntb_free_mw(nt, num_mw);
-@@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 	for (i = 0; i < mw_count; i++) {
- 		mw = &nt->mw_vec[i];
- 
--		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
--				      &mw->xlat_align_size, NULL);
--		if (rc)
--			goto err1;
--
- 		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
- 					  &mw->phys_size);
- 		if (rc)
-diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
-index 759f772fa00c..427112cf101a 100644
---- a/drivers/ntb/test/ntb_perf.c
-+++ b/drivers/ntb/test/ntb_perf.c
-@@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
- struct perf_mw {
- 	phys_addr_t	phys_addr;
- 	resource_size_t	phys_size;
--	resource_size_t	xlat_align;
--	resource_size_t	xlat_align_size;
- 	void __iomem	*vbase;
- 	size_t		xlat_size;
- 	size_t		buf_size;
-@@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
- {
- 	struct perf_mw *mw = &perf->mw;
- 	size_t xlat_size, buf_size;
-+	resource_size_t	xlat_align;
-+	resource_size_t	xlat_align_size;
- 	int rc;
- 
- 	if (!size)
- 		return -EINVAL;
- 
--	xlat_size = round_up(size, mw->xlat_align_size);
--	buf_size = round_up(size, mw->xlat_align);
-+	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
-+			      &xlat_align_size, NULL);
-+	if (rc)
-+		return rc;
-+
-+	xlat_size = round_up(size, xlat_align_size);
-+	buf_size = round_up(size, xlat_align);
- 
- 	if (mw->xlat_size == xlat_size)
- 		return 0;
-@@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
- 
- 	mw = &perf->mw;
- 
--	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
--			      &mw->xlat_align_size, NULL);
--	if (rc)
--		return rc;
--
- 	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
- 	if (rc)
- 		return rc;
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-index a69815c45ce6..91526a986caa 100644
---- a/drivers/ntb/test/ntb_tool.c
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
- 
- 	phys_addr_t base;
- 	resource_size_t mw_size;
--	resource_size_t align_addr;
--	resource_size_t align_size;
--	resource_size_t max_size;
-+	resource_size_t align_addr = 0;
-+	resource_size_t align_size = 0;
-+	resource_size_t max_size = 0;
- 
- 	buf_size = min_t(size_t, size, 512);
- 
+Right.
+
+> However there is something that I do not quite understand:
+> from
+> http://elixir.free-electrons.com/linux/latest/source/drivers/mfd/mfd-core.c#L207
+> it seems that mfd_add_device() will create the platform device using the
+> resources that are statically declared in the respective mfd_cell.
+
+It's one possibility.
+
+> In my case I'd like to have a platform device using the resources that are
+> parsed from the ACPI table (i.e. as it is done now by
+> acpi_create_platform_device()).
+
+So far so good. Nothing prevents you to do that.
+
+> If my understanding is correct, if I declared an mfd_cell for my IPMI child
+> the mfd subsystem would create a platform device for such child and
+> therefore acpi_create_platform_device() would fail to create a new platform
+> device as adev->physical_node_count will be non zero.
+> However as things stand now mfd_cell devices can only use the resources
+> that are statically defined in the code (and therefore not the ones in the
+> ACPI nodes)...am I right?
+
+You may file resources first and then register MFD cells. See many
+existing examples in the kernel.
+
 -- 
-2.11.0
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
