@@ -1,77 +1,64 @@
-Return-Path: <SRS0=XC36=66=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=XC36=66=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Casey Leedom <leedom@chelsio.com>,
-        Alex Williamson
-	<alex.williamson@redhat.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
- <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
- <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
- <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
-CC: Sinan Kaya <okaya@codeaurora.org>,
-        "ashok.raj@intel.com"
-	<ashok.raj@intel.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        Michael Werner
-	<werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
-        "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-        "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-        "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>,
-        "amira@mellanox.com" <amira@mellanox.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "David.Laight@aculab.com" <David.Laight@aculab.com>,
-        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "davem@davemloft.net"
-	<davem@davemloft.net>,
-        "alexander.duyck@gmail.com"
-	<alexander.duyck@gmail.com>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
-Date: Thu, 27 Jul 2017 09:08:20 +0800
+Return-Path: <SRS0=zSJD=6G=h08.hostsharing.net=foo00@kernel.org>
+Return-Path: <SRS0=zSJD=6G=h08.hostsharing.net=foo00@kernel.org>
+Date: Mon, 3 Jul 2017 11:10:48 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Ethan Zhao <ethan.kernel@gmail.com>
+Cc: Chen Yu <yu.c.chen@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, thejoe@gmail.com,
+	"Rafael J. Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH] PCI: Work around poweroff & suspend-to-RAM issue on
+ Macbook Pro 11
+Message-ID: <20170703091048.GA15823@wunner.de>
+References: <20170702205948.GB18324@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703042621.GA22429@yu-desktop-1.sh.intel.com>
+ <CABawtvNd0MtxVnwedJc3nrMuAViAnRojezuRqJK+-QXaRfNOAA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABawtvNd0MtxVnwedJc3nrMuAViAnRojezuRqJK+-QXaRfNOAA@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2017/7/27 2:26, Casey Leedom wrote:
->   By the way Ding, two issues:
+On Mon, Jul 03, 2017 at 02:33:39PM +0800, Ethan Zhao wrote:
+> On Mon, Jul 3, 2017 at 12:26 PM, Chen Yu <yu.c.chen@intel.com> wrote:
+> > On Sun, Jul 02, 2017 at 03:59:48PM -0500, Bjorn Helgaas wrote:
+> >> --- a/arch/x86/pci/fixup.c
+> >> +++ b/arch/x86/pci/fixup.c
+[snip]
+> >> +static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+> >> +{
+> >> +     struct device *dev = &pdev->dev;
+> >> +     struct resource *res;
+> >> +
+> >> +     if ((!dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") &&
+> >> +          !dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5")) ||
+> >> +         pdev->bus->number != 0 || pdev->devfn != PCI_DEVFN(0x1c, 0))
+> >> +             return;
+> >> +
+> > Not sure why we need to also the bus number of devfn, as there
+> > is only one PCI bridge that would match 0x8c10? according to
+> > https://bugzilla.kernel.org/attachment.cgi?id=210611
+> > am I missing something?
 > 
->  1. Did we ever get any acknowledgement from either Intel or AMD
->     on this patch?  I know that we can't ensure that, but it sure would
->     be nice since the PCI Quirks that we're putting in affect their
->     products.
-> 
+>  To make sure it runs only once only when 00:1c.0 is 0x8c10 ?
 
-Still no Intel and AMD guys has ack this, this is what I am worried about, should I
-ping some man again ?
+Each root port has a different PCI device ID and is only present once
+on the affected machines, so I think Chen Yu is right.
 
-Thanks
-Ding
-> 
-> Casey
-> .
-> 
+Actually, since the quirk is now related to a memory region and no longer
+to a specific PCI device, it need not be a PCI fixup.  It could go into
+arch/x86/kernel/setup.c:trim_platform_memory_ranges() as a DMI quirk.
+
+This would also allow declaration of the code as __init.
+
+Thanks,
+
+Lukas
+
+> >> +     res = request_mem_region(0x7fa00000, 0x200000,
+> >> +                              "MacBook Pro poweroff workaround");
+> >> +     if (res)
+> >> +             dev_info(dev, "claimed %s %pR\n", res->name, res);
+> >> +     else
+> >> +             dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
+> >> +}
+> >> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
