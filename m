@@ -1,213 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:5974 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751638AbdG0C6z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jul 2017 22:58:55 -0400
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v2 1/5] PCI: mediatek: Add a structure to abstract the controller generations
-Date: Thu, 27 Jul 2017 10:58:35 +0800
-Message-ID: <948f9bd0881402d13e6913ad425e7dff50f3fcfc.1501122135.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1501122135.git.honghui.zhang@mediatek.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+Return-Path: <SRS0=2bA7=6G=sigmadesigns.com=marc_gonzalez@kernel.org>
+Return-Path: <SRS0=2bA7=6G=sigmadesigns.com=marc_gonzalez@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, LKML <linux-kernel@vger.kernel.org>,
+	Mason <slash.tmp@free.fr>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>, Ard Biesheuvel
+	<ard.biesheuvel@linaro.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+Date: Mon, 3 Jul 2017 11:54:20 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=WINDOWS-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+Hello Bjorn,
 
-Introduce a structure "mtk_pcie_soc" to abstract the differences between
-controller generations, and the .startup() hook is used to encapsulate
-some SoC-dependent related setting. In doing so, the common code which
-will be reused by future chips.
+On 03/07/2017 01:18, Bjorn Helgaas wrote:
 
-In addition, we change the approaches to waiting Gen2 training by using
-readl_poll_timeout() calls.
+> On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:
+>=20
+>> This driver is required to work around several hardware bugs
+>> in the PCIe controller.
+>
+> [ Snip style issues ]
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 81 +++++++++++++++++++++++-----------------
- 1 file changed, 47 insertions(+), 34 deletions(-)
+I wish you had pointed these out in your May 23 review, or in
+my March 29 version (or even just alluded to them). I would
+have fixed them in time for 2.13.
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 5a9d858..7f952a4 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -16,6 +16,7 @@
- 
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/iopoll.h>
- #include <linux/kernel.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -63,6 +64,18 @@
- #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
- #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
- 
-+struct mtk_pcie_port;
-+
-+/**
-+ * struct mtk_pcie_soc - differentiate between host generations
-+ * @ops: pointer to configuration access functions
-+ * @startup: pointer to controller setting functions
-+ */
-+struct mtk_pcie_soc {
-+	struct pci_ops *ops;
-+	int (*startup)(struct mtk_pcie_port *port);
-+};
-+
- /**
-  * struct mtk_pcie_port - PCIe port information
-  * @base: IO mapped register base
-@@ -96,6 +109,7 @@ struct mtk_pcie_port {
-  * @busn: bus range
-  * @offset: IO / Memory offset
-  * @ports: pointer to PCIe port information
-+ * @soc: pointer to SoC-dependent operations
-  */
- struct mtk_pcie {
- 	struct device *dev;
-@@ -111,13 +125,9 @@ struct mtk_pcie {
- 		resource_size_t io;
- 	} offset;
- 	struct list_head ports;
-+	const struct mtk_pcie_soc *soc;
- };
- 
--static inline bool mtk_pcie_link_up(struct mtk_pcie_port *port)
--{
--	return !!(readl(port->base + PCIE_LINK_STATUS) & PCIE_PORT_LINKUP);
--}
--
- static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -171,12 +181,30 @@ static struct pci_ops mtk_pcie_ops = {
- 	.write = pci_generic_config_write,
- };
- 
--static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
-+static int mtk_pcie_startup_ports(struct mtk_pcie_port *port)
- {
- 	struct mtk_pcie *pcie = port->pcie;
- 	u32 func = PCI_FUNC(port->index << 3);
- 	u32 slot = PCI_SLOT(port->index << 3);
- 	u32 val;
-+	int err;
-+
-+	/* assert port PERST_N */
-+	val = readl(pcie->base + PCIE_SYS_CFG);
-+	val |= PCIE_PORT_PERST(port->index);
-+	writel(val, pcie->base + PCIE_SYS_CFG);
-+
-+	/* de-assert port PERST_N */
-+	val = readl(pcie->base + PCIE_SYS_CFG);
-+	val &= ~PCIE_PORT_PERST(port->index);
-+	writel(val, pcie->base + PCIE_SYS_CFG);
-+
-+	/* 100ms timeout value should be enough for Gen1/2 training */
-+	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS, val,
-+				 !!(val & PCIE_PORT_LINKUP), 20,
-+				 100 * USEC_PER_MSEC);
-+	if (err)
-+		return -ETIMEDOUT;
- 
- 	/* enable interrupt */
- 	val = readl(pcie->base + PCIE_INT_ENABLE);
-@@ -209,30 +237,14 @@ static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
- 	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
- 	       pcie->base + PCIE_CFG_ADDR);
- 	writel(val, pcie->base + PCIE_CFG_DATA);
--}
- 
--static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
--{
--	struct mtk_pcie *pcie = port->pcie;
--	u32 val;
--
--	/* assert port PERST_N */
--	val = readl(pcie->base + PCIE_SYS_CFG);
--	val |= PCIE_PORT_PERST(port->index);
--	writel(val, pcie->base + PCIE_SYS_CFG);
--
--	/* de-assert port PERST_N */
--	val = readl(pcie->base + PCIE_SYS_CFG);
--	val &= ~PCIE_PORT_PERST(port->index);
--	writel(val, pcie->base + PCIE_SYS_CFG);
--
--	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
--	msleep(100);
-+	return 0;
- }
- 
- static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- {
--	struct device *dev = port->pcie->dev;
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct device *dev = pcie->dev;
- 	int err;
- 
- 	err = clk_prepare_enable(port->sys_ck);
-@@ -250,13 +262,8 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- 		goto err_phy_on;
- 	}
- 
--	mtk_pcie_assert_ports(port);
--
--	/* if link up, then setup root port configuration space */
--	if (mtk_pcie_link_up(port)) {
--		mtk_pcie_configure_rc(port);
-+	if (!pcie->soc->startup(port))
- 		return;
--	}
- 
- 	dev_info(dev, "Port%d link down\n", port->index);
- 
-@@ -480,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = pcie->dev;
--	host->ops = &mtk_pcie_ops;
-+	host->ops = pcie->soc->ops;
- 	host->map_irq = of_irq_parse_and_map_pci;
- 	host->swizzle_irq = pci_common_swizzle;
- 
-@@ -513,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(host);
- 
- 	pcie->dev = dev;
-+	pcie->soc = of_device_get_match_data(dev);
- 	platform_set_drvdata(pdev, pcie);
- 	INIT_LIST_HEAD(&pcie->ports);
- 
-@@ -537,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-+	.ops = &mtk_pcie_ops,
-+	.startup = mtk_pcie_startup_ports,
-+};
-+
- static const struct of_device_id mtk_pcie_ids[] = {
--	{ .compatible = "mediatek,mt7623-pcie"},
--	{ .compatible = "mediatek,mt2701-pcie"},
-+	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
-+	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
- 	{},
- };
- 
--- 
-2.6.4
+
+>> +=09/*
+>> +=09 * QUIRK #2
+>> +=09 * Unfortunately, config and mem spaces are muxed.
+>> +=09 * Linux does not support such a setting, since drivers are free
+>> +=09 * to access mem space directly, at any time.
+>> +=09 * Therefore, we can only PRAY that config and mem space accesses
+>> +=09 * NEVER occur concurrently.
+>> +=09 */
+>> +=09writel_relaxed(1, pcie->mux);
+>> +=09ret =3D pci_generic_config_read(bus, devfn, where, size, val);
+>> +=09writel_relaxed(0, pcie->mux);
+>=20
+> I'm very hesitant about this.  When people stress this, we're going to
+> get reports of data corruption.  Even with the disclaimer below, I
+> don't feel good about this.  Adding the driver is an implicit claim
+> that we support the device, but we know it can't be made reliable.
+
+I can't say I didn't see this coming (I had taken your long silence
+as a sign of your reluctance) but back in May, I thought you implied
+that a warning + tainting the kernel would be sufficient.
+
+Mark Rutland points out stop_machine. I will test this solution.
+Would you find that acceptable?
+
+
+> What is the benefit of adding this driver?  How many units are in the
+> field?  Are you hoping to have support in distros like RHEL?  Are
+> these running self-built kernels straight from kernel.org?  Is it
+> feasible for you to distribute this driver separately from the
+> upstream kernel?
+
+The benefit of upstreaming (for me) is making kernel maintainers
+aware that one is using specific internal APIs. Then one may be
+notified when these APIs are about to change.
+
+I'm told we have sold ~100k units. Though I don't know how many
+are in the field and using PCIe.
+
+There are no plans to use "full-blown" distros, we use embedded
+oriented distros, such as buildroot.
+
+Maintaining out-of-tree drivers is what we've been doing for
+~15 years, and there are many pain-points involved. Ask Greg
+what he thinks of OOT drivers.
+
+
+>> +static int tango_check_pcie_link(void __iomem *test_out)
+>=20
+> I think this is checking for link up.  Rename to tango_pcie_link_up()
+> to follow the convention of other drivers.  Take a struct tango_pcie *
+> instead of an address, if possible.
+
+Anything's possible. NB: if I pass the struct, then I have to store
+the address in the struct, which isn't the case now, since I never
+need the address later. If you don't mind adding an unnecessary
+field to the struct, I can do it. What do you say?
+
+
+>> +static struct platform_driver tango_pcie_driver =3D {
+>> +=09.probe=09=3D tango_pcie_probe,
+>> +=09.driver=09=3D {
+>> +=09=09.name =3D KBUILD_MODNAME,
+>> +=09=09.of_match_table =3D tango_pcie_ids,
+>=20
+> I think you need ".suppress_bind_attrs =3D true" here to prevent issues
+> when unbinding driver.  See
+> http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=
+=3Da5f40e8098fe
+
+Will do. In that case, I can drop tango_pcie_remove() right?
+
+Regards.
