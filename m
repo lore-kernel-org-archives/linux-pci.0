@@ -1,32 +1,108 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bes.se.axis.com ([195.60.68.10]:39493 "EHLO bes.se.axis.com"
+Received: from mail.kernel.org ([198.145.29.99]:57230 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753626AbdGNMHu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Jul 2017 08:07:50 -0400
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: Niklas Cassel <niklass@axis.com>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH 0/2] PCI: dwc: convert remaining dbi read/writes to dw_pcie_readX_dbi/dw_pcie_writeX_dbi
-Date: Fri, 14 Jul 2017 14:07:33 +0200
-Message-ID: <20170714120735.11993-1-niklas.cassel@axis.com>
+        id S1753447AbdGCNU4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Jul 2017 09:20:56 -0400
+Date: Mon, 3 Jul 2017 08:20:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        stable@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: Re: [PATCH] PCI: rockchip: fix wrong access of root port register
+Message-ID: <20170703132053.GE13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499073662-241267-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1499073662-241267-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since the introduction of the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros,
-most dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..) calls
-have been converted to dw_pcie_readX_dbi/dw_pcie_writeX_dbi calls.
-Convert the remaining calls.
+On Mon, Jul 03, 2017 at 05:21:02PM +0800, Shawn Lin wrote:
+> Rockchip's RC has two banks of register for root port,
+> one is strictly compatible to the PCIe spec(normal bank), but
+> the other one could be used to change the RO bit of root port
+> register(privileged bank).
+> 
+> When probing the RC driver, we was using the privileged bank to
+> do some basic setup work as some RO bits of the root port register
+> is hw-inited to wrong value. But we didn't change to use the normal
+> bank when finishing to probe the driver. This could lead to a serious
+> problem when the PME code try to clear the PME status by writing
+> PCI_EXP_RTSTA_PME to the register of PCI_EXP_RTSTA. Per the PCIe 3.0
+> spec, section 7.8.14, PME status bit is RW1C. So the PME code is doing
+> the right thing to clear the PME status but we find the RC doesn't
+> clear it but actually setting it to one. So finally the system trap in
+> pcie_pme_work_fn as PCI_EXP_RTSTA_PME is true now forever. And this
+> issue could be reproduced by booting kernel with pci=nomsi.
+> 
+> To fix it, we should change to use the normal bank of root port register
+> for PCI core to visit root port.
+> 
+> Fixes: e77f847d ("PCI: rockchip: Add Rockchip PCIe controller support")
+> Cc: stable@vger.kernel.org
+> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Cc: Brian Norris <briannorris@chromium.org>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Niklas Cassel (2):
-  PCI: dwc: dra7xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
-  PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi
-    macros
+Applied to pci/host-rockchip for v4.13, thanks!
 
- drivers/pci/dwc/pci-dra7xx.c     | 14 ++++++--------
- drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
- 2 files changed, 16 insertions(+), 20 deletions(-)
-
--- 
-2.11.0
+> ---
+> 
+>  drivers/pci/host/pcie-rockchip.c | 13 +++++++++----
+>  1 file changed, 9 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index eb070ab..5acf869 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -139,6 +139,7 @@
+>  		 PCIE_CORE_INT_CT | PCIE_CORE_INT_UTC | \
+>  		 PCIE_CORE_INT_MMVC)
+>  
+> +#define PCIE_RC_CONFIG_NORMAL_BASE	0x800000
+>  #define PCIE_RC_CONFIG_BASE		0xa00000
+>  #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
+>  #define   PCIE_RC_CONFIG_SCC_SHIFT		16
+> @@ -301,7 +302,9 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+>  static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
+>  				     int where, int size, u32 *val)
+>  {
+> -	void __iomem *addr = rockchip->apb_base + PCIE_RC_CONFIG_BASE + where;
+> +	void __iomem *addr;
+> +
+> +	addr = rockchip->apb_base + PCIE_RC_CONFIG_NORMAL_BASE + where;
+>  
+>  	if (!IS_ALIGNED((uintptr_t)addr, size)) {
+>  		*val = 0;
+> @@ -325,11 +328,13 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
+>  				     int where, int size, u32 val)
+>  {
+>  	u32 mask, tmp, offset;
+> +	void __iomem *addr;
+>  
+>  	offset = where & ~0x3;
+> +	addr = rockchip->apb_base + PCIE_RC_CONFIG_NORMAL_BASE + offset;
+>  
+>  	if (size == 4) {
+> -		writel(val, rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset);
+> +		writel(val, addr);
+>  		return PCIBIOS_SUCCESSFUL;
+>  	}
+>  
+> @@ -340,9 +345,9 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
+>  	 * corrupt RW1C bits in adjacent registers.  But the hardware
+>  	 * doesn't support smaller writes.
+>  	 */
+> -	tmp = readl(rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset) & mask;
+> +	tmp = readl(addr) & mask;
+>  	tmp |= val << ((where & 0x3) * 8);
+> -	writel(tmp, rockchip->apb_base + PCIE_RC_CONFIG_BASE + offset);
+> +	writel(tmp, addr);
+>  
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+> -- 
+> 1.9.1
+> 
+> 
