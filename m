@@ -1,104 +1,156 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48104 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751228AbdGSGuG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 02:50:06 -0400
-Date: Wed, 19 Jul 2017 12:19:50 +0530
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, smuthayy <smuthayy@codeaurora.org>
-Subject: Re: [PATCH 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe
- controller
-Message-ID: <20170719064943.GA29996@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
- <1500293043-1887-8-git-send-email-varada@codeaurora.org>
- <20170717220718.GZ20973@minitux>
- <20170718095814.GE32439@codeaurora.org>
- <20170718164438.GE20973@minitux>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>
+Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+ devices before scanning
+Date: Mon, 3 Jul 2017 16:08:02 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+ <20170616083313.GY3187@lahna.fi.intel.com>
+ <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+ <20170616120048.GC629@lahna.fi.intel.com>
+ <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
+ <20170619100209.GC629@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170718164438.GE20973@minitux>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "arnd@arndb.de" <arnd@arndb.de>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ John Garry <john.garry@huawei.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ "olof@lixom.net" <olof@lixom.net>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 18, 2017 at 09:44:38AM -0700, Bjorn Andersson wrote:
-> On Tue 18 Jul 02:58 PDT 2017, Varadarajan Narayanan wrote:
->
-> > On Mon, Jul 17, 2017 at 03:07:18PM -0700, Bjorn Andersson wrote:
-> > > On Mon 17 Jul 05:04 PDT 2017, Varadarajan Narayanan wrote:
-> [..]
+Hi Mika
+
+> -----Original Message-----
+> From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
+> owner@vger.kernel.org] On Behalf Of Gabriele Paoloni
+> Sent: 19 June 2017 11:05
+> To: Mika Westerberg
+> Cc: Rafael J. Wysocki; Lorenzo Pieralisi; Rafael J. Wysocki;
+> catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
+> kernel@lists.infradead.org; mark.rutland@arm.com;
+> brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
+> kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
+> pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
+> Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+> devices before scanning
+> 
+> Hi Mika
+> 
+> > -----Original Message-----
+> > From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
+> > Sent: 19 June 2017 11:02
+> > To: Gabriele Paoloni
+> > Cc: Rafael J. Wysocki; Lorenzo Pieralisi; Rafael J. Wysocki;
+> > catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> > frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-
+> arm-
+> > kernel@lists.infradead.org; mark.rutland@arm.com;
+> > brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org;
+> linux-
+> > kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
+> > pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
+> > Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
+> > devices before scanning
+> >
+> > On Mon, Jun 19, 2017 at 09:50:49AM +0000, Gabriele Paoloni wrote:
+> > > Many thanks for your response and your help here.
 > > >
-> > > Can you confirm that this is actually version 4 of this block? Or are we
-> > > just incrementing an arbitrary number here?
-> >
-> > This is not exactly the 4th version of the block. However, it is
-> > a different version than the ones that are already supported in
-> > this driver. Since the existing driver didn't exactly tie it with
-> > the block IP version, I too followed the same versioning
-> > convention.
-> >
->
-> Do you have a block IP version that you could base your numbering on, to
-> break the trend? (We should go back and fix up the others as well)
-
-Presently, the driver supports the ipq8064, apq8064, apq8084,
-msm8996, ipq4019 and ipq8074. The SoCs, qcom_pcie_ops version and
-the block IP versions are as follows.
-
-	ipq8064 - v0 - 2.1.0
-	apq8064 - v0 - 2.1.0
-	apq8084 - v1 - 1.0.0
-	msm8996 - v2 - 2.3.2
-	ipq4019 - v3 - 2.4.0
-	ipq8074 - v4 - 2.3.3
-
-I will rename the qcom_pcie_ops structure and related functions
-with the block IP version instead of vX numbering and post the
-patch.
-
-> [..]
-> > > > +static int qcom_pcie_enable_resources_v4(struct qcom_pcie *pcie)
-> > > > +{
-> > > > +	struct qcom_pcie_resources_v4 *res = &pcie->res.v4;
-> > > > +	struct dw_pcie *pci = pcie->pci;
-> > > > +	struct device *dev = pci->dev;
-> > > > +	int ret;
-> > > > +
-> > > > +	ret = clk_prepare_enable(res->sys_noc_clk);
-> > > > +	if (ret) {
-> > > > +		dev_err(dev, "cannot prepare/enable core clock\n");
-> > > > +		return ret;
-> > > > +	}
+> > > I guess that as conclusion with respect to the current v9 patchset
+> we
+> > can
+> > > disregard the idea of MFD and modify the current v9 so that it
+> > doesn't
+> > > touch directly ACPI resources.
+> > > Instead as I proposed before we can have the scan handler to
+> > enumerate
+> > > the children devices and translate its addresses filling dev-
+> > >resources[] and
+> > > at the same time we can modify acpi_default_enumeration to check
+> > > acpi_device_enumerated() before continuing with device
+> > enumeration...?
 > > >
-> > > Should these clocks really be handled explicitly in the driver? Are
-> > > these not the bus clocks, to be handled by "msm_bus"?
+> > > Do you think it as a viable solution?
 > >
-> > This not the bus clock. This clock is for the Bus Interface Unit
-> > between the PCIe module and the System NOC.
-> >
->
-> Right, that was the piece I meant. Sorry for not using the right
-> nomenclature.
->
-> So then it would be handled by the msm_bus in the downstream kernel?
->
->
-> Perhaps we can merge it like this and once we have the interconnect
-> framework setup we can make this the fallback method.
+> > No, I think MFD + scan handler inside the MFD driver is the way to
+> go.
+> > We don't want to trash ACPI core with stuff that does not belong
+> there
+> > IMHO.
+> 
+> Ok Many thanks I will investigate this direction
 
-Agree that this has to be handled by the interconnect framework.
-For now will rename this as "iface" similar to v0 and v1.
+I had a look into the MFD framework. If my understanding is correct the mfd
+framework create a platform device for each declared mfd_cell that is passed
+to mfd_add_devices().
+However there is something that I do not quite understand:
+from
+http://elixir.free-electrons.com/linux/latest/source/drivers/mfd/mfd-core.c#L207
+it seems that mfd_add_device() will create the platform device using the
+resources that are statically declared in the respective mfd_cell.
+
+In my case I'd like to have a platform device using the resources that are
+parsed from the ACPI table (i.e. as it is done now by 
+acpi_create_platform_device()).
+
+If my understanding is correct, if I declared an mfd_cell for my IPMI child
+the mfd subsystem would create a platform device for such child and
+therefore acpi_create_platform_device() would fail to create a new platform
+device as adev->physical_node_count will be non zero.
+However as things stand now mfd_cell devices can only use the resources
+that are statically defined in the code (and therefore not the ones in the
+ACPI nodes)...am I right?
 
 Thanks
-Varada
+Gab
 
-> Thanks,
-> Bjorn
+> 
+> >
+> > Also you don't need to modify acpi_default_enumeration() because you
+> > can
+> > mark your device enumerated in the MFD driver. So all the dirty
+> details
+> > will be in the MFD driver and not in ACPI core.
+> 
+> Ok got it :)
+> 
+> Cheers
+> Gab
 
---
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
