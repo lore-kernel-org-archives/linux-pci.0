@@ -1,202 +1,200 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:22934 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751873AbdGFUeP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jul 2017 16:34:15 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>, <bhelgaas@google.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
- <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
- <594955BC.3010703@ti.com> <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
- <a6380712-214b-990b-69e3-e3889835879b@arm.com> <595D5423.50908@ti.com>
- <5158c0cb-cc2a-0f1b-22f7-db84c9568e80@arm.com>
- <333ea05a-672d-c610-27c0-7c2ff5c5f050@synopsys.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <595E9EAD.1080209@ti.com>
-Date: Thu, 6 Jul 2017 16:33:49 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:36348 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752927AbdGCSRV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jul 2017 14:17:21 -0400
+Subject: Re: [PATCH v4] PCI: Workaround wrong flags completions for IDT switch
+To: Ethan Zhao <ethan.kernel@gmail.com>
+References: <5952D144.8060609@oracle.com>
+ <CABawtvOHnQ12WvSNDn2gZRLAqLjAXUGXc8PObtdU5uBS6rpe_Q@mail.gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Yinghai Lu <yinghai@kernel.org>
+From: james puthukattukaran <james.puthukattukaran@oracle.com>
+Message-ID: <fca21589-b01a-ea17-d03c-89eee75af744@oracle.com>
+Date: Mon, 3 Jul 2017 14:17:47 -0400
 MIME-Version: 1.0
-In-Reply-To: <333ea05a-672d-c610-27c0-7c2ff5c5f050@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <CABawtvOHnQ12WvSNDn2gZRLAqLjAXUGXc8PObtdU5uBS6rpe_Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/06/2017 05:05 AM, Joao Pinto wrote:
-> 
-> Hi to all,
-> 
-> Às 9:02 AM de 7/6/2017, Marc Zyngier escreveu:
->> On 05/07/17 22:03, Murali Karicheri wrote:
->>> On 07/05/2017 11:26 AM, Marc Zyngier wrote:
->>>> On 05/07/17 11:57, Joao Pinto wrote:
->>>>> Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
->>>>>> On 06/20/2017 12:28 PM, Joao Pinto wrote:
->>>>>>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
->>>>>>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
->>>>>>>>>
->>>>>>>>> Hi Murali,
->>>>>>>>>
->>>>>>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->>>>>>>>>> Joao,
->>>>>>>>>>
->>>>>>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>>>>>>>>>> This patch series adds the new interrupt api to pcie-designware
->>>>>>>>>>> make it possible to use features like MSIX.
->>>>>>>>>>>
->>>>>>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
->>>>>>>>>>> specific driver.
->>>>>>>>>>>
->>>>>>>>>>> The patch set was made against the Bjorn' next branch.
->>>>>>>>>>>
->>>>>>>>>>> Joao Pinto (9):
->>>>>>>>>>>   pci: adding new irq api to pci-designware
->>>>>>>>>>>   pci: exynos SoC driver adapted to new irq API
->>>>>>>>>>>   pci: imx6 SoC driver adapted to new irq API
->>>>>>>>>>>   pci: artpec6 SoC driver adapted to new irq API
->>>>>>>>>>>   pci: generic PCIe DW driver adapted to new irq API
->>>>>>>>>>>   pci: qcom SoC driver adapted to new irq API
->>>>>>>>>>>   pci: keystone SoC driver adapted to new irq API
->>>>>>>>>>>   pci: removing old irq api from pcie-designware
->>>>>>>>>>>   pci: remove limitation of the number of the available IRQs
->>>>>>>>>>>
->>>>>>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>>>>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>>>>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>>>>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>>>>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>>>>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>>>>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>>>>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>>>>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>>>>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>>>>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>>>>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>>>>>>>>>
->>>>>>>>>>
->>>>>>>>>> I gave this a try today and it failed. Logs at
->>>>>>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>>>>>>>>>
->>>>>>>>>> The first part of the log is with your patch series.
->>>>>>>>>> The second part is before applying the patch. You will see
->>>>>>>>>> that there is qc timeout log that shows the issue
->>>>>>>>>>
->>>>>>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->>>>>>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>>>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->>>>>>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->>>>>>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>>>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>>>>>>
->>>>>>>>>> Is there any DT change I need to make for this? I didn't have a
->>>>>>>>>> chance to review your patch w.r.t Keystone. But I see you have change
->>>>>>>>>> the MSI IRq handling.
->>>>>>>>>>
->>>>>>>>>
->>>>>>>>> There is no need to change your DT. I think I will need to debug this issue
->>>>>>>>> further. Could you please advice a board containing this SoC?
->>>>>>>>>
->>>>>>>> I think I may be able to work with you on this. Keystone has different 
->>>>>>>> register set for MSI IRQ. It is in application space. Also there are
->>>>>>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
->>>>>>>> please review the original code vs the changed one w.r.t to this. I haven't
->>>>>>>> had a chance to review the code as I am in the middle of a release.
->>>>>>>> But will be able to spend some time after two weeks. Meanwhile please
->>>>>>>> spend some time reviewing the code and exchange email to identify
->>>>>>>> the issue. I can add specific debug prints for you as well and provide
->>>>>>>> you the log for analysis.
->>>>>>>
->>>>>>> Ok, I agree! Thanks!
->>>>>>>
->>>>>>>>
->>>>>> Look at this logic in the patch where a potential issue exists for Keystone.
->>>>>>
->>>>>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
->>>>>> +{
->>>>>> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
->>>>>> +       struct pcie_port *pp = &pci->pp;
->>>>>> +       u64 msi_target;
->>>>>> +
->>>>>> +       if (pp->ops->get_msi_addr)
->>>>>> +               msi_target = pp->ops->get_msi_addr(pp);
->>>>>> +       else
->>>>>> +               msi_target = virt_to_phys((void *)pp->msi_data);
->>>>>> +
->>>>>> +       msg->address_lo = lower_32_bits(msi_target);
->>>>>> +       msg->address_hi = upper_32_bits(msi_target);
->>>>>> +
->>>>>> +       if (pp->ops->get_msi_data)
->>>>>> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
->>>>>> +       else
->>>>>> +               msg->data = data->hwirq;
->>>>>> +
->>>>>> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
->>>>>> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
->>>>>> +}
->>>>>>
->>>>>> Keystone has 8 hw irqs, 4 multiplexed over each since the register
->>>>>> set is different than other DWC cores. So will not work for Keystone,
->>>>>> right?
->>>>>
->>>>> Well, that can be challenging, since it is a very particular operation.
->>>>> Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
->>>>> overide this one if necessary. What do you think?
->>>>
->>>> At that rate, and given that keystone seems to override almost all
->>>> operations in this driver, wouldn't it make sense for this to be
->>>> implemented as a *separate* driver?
->>> Marc,
->>>
->>> What you mean by separate driver? Just the MSI handling part? 
->>
->> The MSI part indeed. Looking at this series, KS looks like a sore spot
->> on the face of rest of the MSI code, and it'd be better of opting out of
->> this MSI management code and provide its own.
->>
->> It seems to me that this would simplify the DW MSI code (no more
->> indirections all over the place), and make it obvious that KW MSIs are
->> managed in a very different way.
->>
->> Thoughts?
-> 
-> I agree with Mark. The core driver is full of callbacks for custom SoC
-> operations, and most of them are not massively used.
-> Keystone with no doubt has its own way of dealing with interrupts, so I fully
-> support the a keystone_msi driver to be created as altera does.
-> 
-> At this time my bandwidth is almost full, so I won't be able to do it. Muralli
-> what are your thoughts? Would you help on this task?
-I agree as well. If I recall, that was how the initial version of the driver
-looked like. But then based on review, it was changed to use core API and
-I had to add the callback functions into keystone dwc to handle msi. 
 
-Unfortunately I am running into the same situation as Joao and afraid I can
-get to this anytime soon. Is there a possibility of excluding Keystone from this
-patch set without breaking the driver? If so we need an interim solution to
-have keystone not affected by this change and I can add the new driver later
-when I get some bandwidth.
+Ethan -
 
-Murali
-
-> 
-> Thanks,
-> Joao
-> 
-> 
+On 7/2/2017 9:55 PM, Ethan Zhao wrote:
+> James,
+>
+> On Wed, Jun 28, 2017 at 5:42 AM, James Puthukattukaran
+> <james.puthukattukaran@oracle.com> wrote:
+>> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 >>
->> 	M.
+>> The IDT switch incorrectly flags an ACS source violation on a read config
+>> request to an end point device on the completion (IDT 89H32H8G3-YC,
+>> errata #36) even though the PCI Express spec states that completions are
+>> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
 >>
-> 
+>> The suggested workaround by IDT is to issue a configuration write to the
+>> downstream device before issuing the first config read. This allows the
+>> downstream device to capture its bus number, thus avoiding the ACS
+>> violation on the completion.
+>>
+>> The patch does the following -
+>>
+>> 1. Disable ACS source violation if enabled
+>> 2. Wait for config space access to become available by reading vendor id
+>> 3. Do a config write to the end point (errata workaround)
+>> 4. Enable ACS source validation (if it was enabled to begin with)
+>>
+>> -v2: move workaround to pci_bus_read_dev_vendor_id() from
+>> pci_bus_check_dev()
+>>       and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
+>> -v3: add bus->self check for root bus and virtual bus for sriov vfs.
+>> -v4: only do workaround for IDT switches
+>>
+>> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
+>> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>>
+>> --
+>>
+>>   drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
+>>   drivers/pci/pci.h   |  1 +
+>>   drivers/pci/probe.c | 38 ++++++++++++++++++++++++++++++++++++--
+>>   3 files changed, 70 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 563901c..a7a2e2b 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -2835,6 +2835,39 @@ static bool pci_acs_flags_enabled(struct pci_dev
+>> *pdev, u16 acs_flags)
+>>   }
+>>
+>>   /**
+>> + *  pci_std_enable_acs_sv - enable/disable ACS source validation if
+>> supported by the switch
+>> + *  @dev - pcie switch/RP
+>> + *  @enable - enable (1) or disable (0) source validation
+>> + *
+>> + *  Returns : < 0 on failure
+> You didn't define the meaning of 0 and >0, but you check it later against >0,
+> Then what does it mean 0 and >0 ?
+see below..
+>
+>> + *           previous acs_sv state
 
+It returns the previous acs_sv state (0 or 1).
+>> + */
+>> +int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable)
+>> +{
+>> +       int pos;
+>> +       u16 cap;
+>> +       u16 ctrl;
+>> +       int retval;
+>> +
+>> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
+>> +       if (!pos)
+>> +               return -ENODEV;
+>> +
+>> +       pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
+>> +       pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
+>> +
+>> +       retval = !!(ctrl & cap & PCI_ACS_SV);
+> If the device's ACS SV( ACS Source Validation) capability wasn't
+> implemented, the return value of this function will still tell us the
+> operation of enabling is successful ? though it might be rare case.
+If the ACS capability is implemented, then all bits are expected to have 
+meaning and are valid. If SV is not implemented by the switch, the 
+control bit for it should return zero (no source validation done). This 
+is the PCI specification.  The onus is on the switch designer to keep it so.
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+thanks,
+James
+
+>> +       if (enable)
+>> +               ctrl |= (cap & PCI_ACS_SV);
+>> +       else
+>> +               ctrl &= ~(cap & PCI_ACS_SV);
+>> +
+>> +       pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
+>> +
+>> +       return retval;
+>> +}
+>> +
+>> +/**
+>>    * pci_acs_enabled - test ACS against required flags for a given device
+>>    * @pdev: device to test
+>>    * @acs_flags: required PCI ACS flags
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index f8113e5..3960c2a 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -343,6 +343,7 @@ static inline resource_size_t
+>> pci_resource_alignment(struct pci_dev *dev,
+>>   }
+>>
+>>   void pci_enable_acs(struct pci_dev *dev);
+>> +int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable);
+>>
+>>   #ifdef CONFIG_PCIE_PTM
+>>   void pci_ptm_init(struct pci_dev *dev);
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index 19c8950..c154a90 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1763,8 +1763,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+>>   }
+>>   EXPORT_SYMBOL(pci_alloc_dev);
+>>
+>> -bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>> -                               int crs_timeout)
+>> +static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn,
+>> +                                        u32 *l, int crs_timeout)
+>>   {
+>>          int delay = 1;
+>>
+>> @@ -1801,6 +1801,40 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus,
+>> int devfn, u32 *l,
+>>
+>>          return true;
+>>   }
+>> +
+>> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+>> +                               int crs_timeout)
+>> +{
+>> +       int found;
+>> +       int enable = -1;
+>> +       int idt_workaround = (bus->self && (bus->self->vendor ==
+>> PCI_VENDOR_ID_IDT));
+>> +       /*
+>> +        * Some IDT switches flag an ACS violation for config reads
+>> +        * even though the PCI spec allows for it (PCIe 3.1, 6.1.12.1)
+>> +        * It flags it because the bus number is not properly set in the
+>> +        * completion. The workaround is to do a dummy write to properly
+>> +        * latch number once the device is ready for config operations
+>> +        */
+>> +
+>> +       if (idt_workaround)
+>> +               enable = pci_std_enable_acs_sv(bus->self, false);
+>> +
+>> +       found = __pci_bus_read_dev_vendor_id(bus, devfn, l, crs_timeout);
+>> +
+>> +       /*
+>> +        * The fact that we can read the vendor id indicates that the device
+>> +        * is ready for config operations. Do the write as part of the
+>> errata
+>> +        * workaround.
+>> +        */
+>> +       if (idt_workaround) {
+>> +               if (found)
+>> +                       pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID,
+>> 0);
+>> +               if (enable > 0)
+>> +                       pci_std_enable_acs_sv(bus->self, enable);
+>> +       }
+>> +
+>> +       return found;
+>> +}
+>>   EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
+>>
