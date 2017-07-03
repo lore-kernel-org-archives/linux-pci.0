@@ -1,58 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:51660 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753346AbdGNDst (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:48:49 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH 0/6] Reconstruct rockchip's PCIe and PCIe-PHY driver for per-lane PHY model
-Date: Fri, 14 Jul 2017 11:48:15 +0800
-Message-Id: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=wQcV=6G=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=wQcV=6G=linaro.org=ard.biesheuvel@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20170703181128.GD4902@n2100.armlinux.org.uk>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com> <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com> <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703181128.GD4902@n2100.armlinux.org.uk>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Mon, 3 Jul 2017 19:44:31 +0100
+Message-ID: <CAKv+Gu8bD5X1Fo7z6_E4G1F1O-3YdC1aMmRv1CN-dufG3WQ6Ug@mail.gmail.com>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
+	Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
+On 3 July 2017 at 19:11, Russell King - ARM Linux <linux@armlinux.org.uk> wrote:
+> On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
+>> The problem is serializing vs. memory accesses, since they don't use
+>> any wrappers.  However, they are ioremapped(), so it's at least
+>> conceivable that another solution would be to use VM to trap those
+>> accesses.  I'm not a VM person, so I don't know whether that's
+>> feasible in Linux.
+>
+> Bjorn,
+>
+> You're forgetting that MMIO (iow, memory returned by ioremap()) must
+> be accessed through the appropriate accessors, and must not be
+> directly dereferenced in C.  (We do have buggy drivers that do that
+> but they are buggy, and in many cases are getting attention to fix
+> that.)
+>
+> However, adding a spinlock into them is really not nice, because it
+> adds extra overhead that's only necessary for rare cases like Sigma
+> Designs - especially when you consider that these accessors are used
+> for all MMIO accesses, not just PCI.  It would effectively mean that
+> we end up serialising all MMIO accesses throughout the kernel when
+> Sigma Designs SoCs are enabled, destroying some of the SMP benefit.
+>
+> I don't think we can sanely use the MMU to trap those accesses either,
+> that would mean sending IPIs to tell other CPUs to do something, and
+> waiting for them to respond - which can deadlock if we're already in
+> an IRQ-protected region (iirc, config accesses are made with IRQs
+> off.)
+>
+> I don't think there's an easy solution to this problem - and I'm not
+> sure that stop_machine() can be made to work in this path (which
+> needs a process context).  I have a suspicion that the Sigma Designs
+> PCI implementation is just soo insane that it's never going to work
+> reliably in a multi-SoC kernel without introducing severe performance
+> issues for everyone else.
+>
 
-This patchset is trying to reconstruct PCIe and PCIe-PHY driver
-for rockchip platform in order to support per-lane PHY mode. And
-we could idle the inactive lane(s) finally.
-
-We deprecate the legacy PHY mode but the code could still support
-it in order not to break backware compatibility of DTB. And I organize
-the patches carefully so that we don't introduce git-bisect issue.
-
-Hi Brian & Jeffy,
-
-I tested it by backporting all things into my kernel 4.4 tree, and it
-works fine for both legacy PHY mode and per-lane PHY model. However I
-couldn't run 4.12 for my rk3399-evb now, so could you please help test
-it on your Chromebook devices which can run 4.12?
-
-Hi Rob,
-
-Does the changes for rockchip-pcie.txt in patch 6 look good to you
-from the perspective of DT?
-
-
-
-Shawn Lin (6):
-  PCI: rockchip: split out rockchip_pcie_get_phys
-  PCI: rockchip: introduce per-lanes PHYs support
-  phy: rockcip-pcie: reconstruct driver to support per-lane PHYs
-  PCI: rockchip: idle the inactive PHY(s)
-  arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339-evb
-  dt-bindings: PCI: rockchip: convert to use per-lane PHY model
-
- .../devicetree/bindings/pci/rockchip-pcie.txt      |  25 +++-
- arch/arm64/boot/dts/rockchip/rk3399-evb.dts        |   2 +
- drivers/pci/host/pcie-rockchip.c                   | 162 ++++++++++++++++++---
- drivers/phy/rockchip/phy-rockchip-pcie.c           | 116 +++++++++++++--
- 4 files changed, 269 insertions(+), 36 deletions(-)
-
--- 
-1.9.1
+I suppose we could perhaps use per-cpu spinlocks? That would put the
+complexity in the Sigma config space accessors, i.e., to take each
+lock before proceeding with reprogramming the outbound window, and
+other implementations wouldn't have to care. However, I do agree with
+Russell that having this complexity in the first place is hard to
+justify if the only implementation that requires it is a wacky design
+that needs lots of other quirks to operate somewhat sanely to begin
+with.
