@@ -1,38 +1,37 @@
-Return-Path: <SRS0=qvcf=6O=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=qvcf=6O=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V3 1/2] PCI: Add Extended Tags quirk for Broadcom HT2100
- Root Port
+Return-Path: <SRS0=8J87=6G=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=8J87=6G=arm.com=will.deacon@kernel.org>
+Date: Mon, 3 Jul 2017 11:47:27 +0100
+From: Will Deacon <will.deacon@arm.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-References: <1499786735-25782-1-git-send-email-okaya@codeaurora.org>
- <20170711195853.GA14614@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <ae4dca5b-30cf-3a14-1707-380a3660badf@codeaurora.org>
-Date: Tue, 11 Jul 2017 16:16:23 -0400
+Cc: Xiaowei Song <songxiaowei@hisilicon.com>, guodong.xu@linaro.org,
+	bhelgaas@google.com, robh+dt@kernel.org, suzhuangluan@hisilicon.com,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v11 0/3]add PCIe driver for Kirin PCIe
+Message-ID: <20170703104727.GB1573@arm.com>
+References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
+ <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170711195853.GA14614@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/11/2017 3:58 PM, Bjorn Helgaas wrote:
-> I'm trying to avoid pci_walk_bus() because it's such a minefield as
-> far as hot-added devices.  I don't think we can avoid one in the
-> quirk, to turn off extended tags for any devices we've already found,
-> but I think we *can* avoid adding more i
+On Sun, Jul 02, 2017 at 06:36:57PM -0500, Bjorn Helgaas wrote:
+> [+cc Catalin, Will, linux-arm-kernel]
+> 
+> Applied patches 2 & 3 to pci/host-kirin for v4.13.
+> 
+> I would like a MAINTAINERS update, too.  If you send me that, I'll
+> squash it into the driver patch.
+> 
+> Catalin, Will, how do you want to handle the
+> arch/arm64/configs/defconfig change (patch 3)?  It's currently on my
+> branch, but I'm happy to drop it if another route is better.
 
-Jike Song asked what if you attach a PCIe endpoint that has an extended
-tags quirk to think about the reverse direction. That's why, I was walking
-the entire bus. 
+defconfig updates usually go through arm-soc, via the relevant platform
+maintainer, so it would be best to follow that route here too otherwise
+you'll probably see conflicts in -next.
 
-We can maybe hold onto putting such a generic code until such a device
-with quirk actually shows up.
-
-I'll pull your suggestion into a patch, give it a try and then post the
-next version.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Will
