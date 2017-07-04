@@ -1,74 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jisheng Zhang'" <jszhang@marvell.com>, <Joao.Pinto@synopsys.com>,
- <bhelgaas@google.com>
-References: <20170718064821.3668-1-jszhang@marvell.com>
-In-Reply-To: <20170718064821.3668-1-jszhang@marvell.com>
-Subject: Re: [PATCH v2] PCI: dwc: designware: test PCIE_ATU_ENABLE bit to
- check enabled or not
-Date: Tue, 18 Jul 2017 23:25:24 -0400
-Message-ID: <000001d3003e$a9ad0fe0$fd072fa0$@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53852 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752244AbdGDQZk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Jul 2017 12:25:40 -0400
+Date: Tue, 4 Jul 2017 11:25:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: guodong.xu@linaro.org, bhelgaas@google.com,
+        suzhuangluan@hisilicon.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS:add maintainer for kirin pcie
+Message-ID: <20170704162538.GJ13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170704021516.96575-1-songxiaowei@hisilicon.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170704021516.96575-1-songxiaowei@hisilicon.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 18, 2017 2:48 AM, Jisheng Zhang wrote:
+On Tue, Jul 04, 2017 at 10:15:16AM +0800, Xiaowei Song wrote:
+> Kirin PCIe Driver does not have a maintainer at present,
 > 
-> The ATU CTRL2 register is 32 bit, besides the enable bit, other bits
-> may also be set. To check whether the ATU is enabled or not, we should
-> test the enable bit.
+> Add maintainers for kirin pcie driver and Doc, the two fellowing files.
+> Documentation/devicetree/bindings/pci/pcie-kirin.txt
+> drivers/pci/dwc/pcie-kirin.c
 > 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> Acked-by: Joao Pinto <jpinto@synopsys.com>
+> Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
+> Cc: Guodong Xu <guodong.xu@linaro.org>
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
+Applied to pci/host-kirin for v4.13, thanks!
 
 > ---
-> Since v1:
->  - Add Joao's Ack
->  - Fix typo in commit msg, thank Jingoo
+>  MAINTAINERS | 8 ++++++++
+>  1 file changed, 8 insertions(+)
 > 
->  drivers/pci/dwc/pcie-designware.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 5ee3125f8341..c64ff79587c8 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -9851,6 +9851,14 @@ S:	Maintained
+>  F:	Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+>  F:	drivers/pci/dwc/pcie-hisi.c
+>  
+> +PCIE DRIVER FOR Kirin
+> +M:	Xiaowei Song <songxiaowei@hisilicon.com>
+> +M:	Binghui Wang <wangbinghui@hisilicon.com>
+> +L:	linux-pci@vger.kernel.org
+> +S:	Maintained
+> +F:	Documentation/devicetree/bindings/pci/pcie-kirin.txt
+> +F:	drivers/pci/dwc/pcie-kirin.c
+> +
+>  PCIE DRIVER FOR ROCKCHIP
+>  M:	Shawn Lin <shawn.lin@rock-chips.com>
+>  M:	Wenrui Li <wenrui.li@rock-chips.com>
+> -- 
+> 2.11.GIT
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-
-> designware.c
-> index 0e03af279259..6bf0b409050a 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -177,7 +177,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
-> int index, int type,
->  	 */
->  	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++)
-> {
->  		val = dw_pcie_readl_dbi(pci, PCIE_ATU_CR2);
-> -		if (val == PCIE_ATU_ENABLE)
-> +		if (val & PCIE_ATU_ENABLE)
->  			return;
-> 
->  		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> --
-> 2.13.2
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
