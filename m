@@ -1,103 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout1.freenet.de ([195.4.92.91]:47812 "EHLO mout1.freenet.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751230AbdGPTmN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 16 Jul 2017 15:42:13 -0400
-Subject: Re: ryzen X370: iommu - unusable huge groups
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <95b7f350-76f7-daff-be4a-f3fc70589ba9@01019freenet.de>
- <20170716085334.7ae210d2@w520.home>
- <ecdf6b75-4966-fa3a-00de-99b1c9fe6caa@01019freenet.de>
- <20170716125630.7cfcec1c@w520.home>
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-Message-ID: <7b5757d3-d0dc-e70a-2c15-954d252a9834@01019freenet.de>
-Date: Sun, 16 Jul 2017 21:39:59 +0200
+Return-Path: <SRS0=PCTw=6H=marvell.com=jszhang@kernel.org>
+Return-Path: <SRS0=PCTw=6H=marvell.com=jszhang@kernel.org>
+Date: Tue, 4 Jul 2017 15:16:33 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>, Mason <slash.tmp@free.fr>,
+        "Marc
+ Zyngier" <marc.zyngier@arm.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+        Ard Biesheuvel
+	<ard.biesheuvel@linaro.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Jingoo
+ Han" <jingoohan1@gmail.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Linux ARM
+	<linux-arm-kernel@lists.infradead.org>,
+        Marc Gonzalez
+	<marc_gonzalez@sigmadesigns.com>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170704151633.0a7701b7@xhacker>
+In-Reply-To: <20170704145840.69e53f58@xhacker>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+	<b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+	<20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+	<CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
+	<20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
+	<20170704145840.69e53f58@xhacker>
 MIME-Version: 1.0
-In-Reply-To: <20170716125630.7cfcec1c@w520.home>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/16/2017 at 08:56 PM, Alex Williamson wrote:
+On Tue, 4 Jul 2017 14:58:40 +0800 Jisheng Zhang wrote:
 
-> On Sun, 16 Jul 2017 18:53:11 +0200
-> Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+> On Mon, 3 Jul 2017 08:27:04 -0500 wrote:
 > 
->> Hello Alex!
->>
->> Nice to hear you again :-)
->>
->>
->>
->> On 07/16/2017 at 04:53 PM Alex Williamson wrote:
->>> On Sun, 16 Jul 2017 07:44:01 +0200
->>> Andreas Hartmann <andihartmann@01019freenet.de> wrote:
->>>    
->>>> Hello!
->>>>
->>>> I've got a Asus X370-Pro motherboard with enabled iommu. Unfortunately,
->>>> the group 0 is mostly all of the system :-).
->>>>
->>>> [    2.602426] iommu: Adding device 0000:00:01.0 to group 0
->>>> [    2.602440] iommu: Adding device 0000:00:01.3 to group 0
->>>> [    2.603368] iommu: Adding device 0000:03:00.0 to group 0
->>>> [    2.603377] iommu: Adding device 0000:03:00.1 to group 0
->>>> [    2.603385] iommu: Adding device 0000:03:00.2 to group 0
->>>> [    2.603396] iommu: Adding device 0000:1d:00.0 to group 0
->>>> [    2.603406] iommu: Adding device 0000:1d:02.0 to group 0
->>>> [    2.603417] iommu: Adding device 0000:1d:03.0 to group 0
->>>> [    2.603428] iommu: Adding device 0000:1d:04.0 to group 0
->>>> [    2.603439] iommu: Adding device 0000:1d:06.0 to group 0
->>>> [    2.603450] iommu: Adding device 0000:1d:07.0 to group 0
->>>> [    2.603466] iommu: Adding device 0000:24:00.0 to group 0
->>>> [    2.603481] iommu: Adding device 0000:25:00.0 to group 0
->>>> [    2.603498] iommu: Adding device 0000:26:00.0 to group 0
->>>> [    2.603513] iommu: Adding device 0000:27:00.0 to group 0
->>>
->>>
->>> Update your motherboard BIOS, AMD AGESA 1.0.0.6 is supposed to
->>> enable ACS in the PCIe root ports.  Thanks,
->>
->> Group 0 is now group 10 - that's mostly all :-( - no significant change.
->> (Version 805 which should contain AGESA 1.0.0.6).
->>
->>
->> [    2.600097] iommu: Adding device 0000:03:00.0 to group 10
->> [    2.600117] iommu: Adding device 0000:03:00.1 to group 10
->> [    2.600136] iommu: Adding device 0000:03:00.2 to group 10
->> [    2.600148] iommu: Adding device 0000:1d:00.0 to group 10
->> [    2.600158] iommu: Adding device 0000:1d:02.0 to group 10
->> [    2.600169] iommu: Adding device 0000:1d:03.0 to group 10
->> [    2.600180] iommu: Adding device 0000:1d:04.0 to group 10
->> [    2.600190] iommu: Adding device 0000:1d:06.0 to group 10
->> [    2.600201] iommu: Adding device 0000:1d:07.0 to group 10
->> [    2.600216] iommu: Adding device 0000:24:00.0 to group 10
->> [    2.600233] iommu: Adding device 0000:25:00.0 to group 10
->> [    2.600249] iommu: Adding device 0000:26:00.0 to group 10
->> [    2.600266] iommu: Adding device 0000:27:00.0 to group 10
->>
->>
->> All devices that are used are in the same group again.
->>
->> Isn't it possible to allow them to put to VM anyway if there is no peer
->> to peer communication - same as it was possible with the previous
->> chipset (990xa)?
+> > [+cc Jingoo, Joao]
+> > 
+> > On Mon, Jul 03, 2017 at 10:35:50AM +0100, Ard Biesheuvel wrote:  
+> > > On 3 July 2017 at 00:18, Bjorn Helgaas <helgaas@kernel.org> wrote:    
+> > > > On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:    
+> > > >> This driver is required to work around several hardware bugs
+> > > >> in the PCIe controller.
+> > > >>
+> > > >> NB: Revision 1 does not support legacy interrupts, or IO space.    
+> > > >
+> > > > I had to apply these manually because of conflicts in Kconfig and
+> > > > Makefile.  What are these based on?  Easiest for me is if you base
+> > > > them on the current -rc1 tag.
+> > > >    
+> > > >> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> > > >> ---
+> > > >>  drivers/pci/host/Kconfig      |   8 +++
+> > > >>  drivers/pci/host/Makefile     |   1 +
+> > > >>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++
+> > > >>  include/linux/pci_ids.h       |   2 +
+> > > >>  4 files changed, 175 insertions(+)
+> > > >>  create mode 100644 drivers/pci/host/pcie-tango.c
+> > > >>    
+> > > [..]    
+> > > >> +     /*
+> > > >> +      * QUIRK #2
+> > > >> +      * Unfortunately, config and mem spaces are muxed.
+> > > >> +      * Linux does not support such a setting, since drivers are free
+> > > >> +      * to access mem space directly, at any time.
+> > > >> +      * Therefore, we can only PRAY that config and mem space accesses
+> > > >> +      * NEVER occur concurrently.
+> > > >> +      */
+> > > >> +     writel_relaxed(1, pcie->mux);
+> > > >> +     ret = pci_generic_config_read(bus, devfn, where, size, val);
+> > > >> +     writel_relaxed(0, pcie->mux);    
+> > > >
+> > > > I'm very hesitant about this.  When people stress this, we're going to
+> > > > get reports of data corruption.  Even with the disclaimer below, I
+> > > > don't feel good about this.  Adding the driver is an implicit claim
+> > > > that we support the device, but we know it can't be made reliable.    
+> > > 
+> > > I noticed that the Synopsys driver suffers from a similar issue: in
+> > > dw_pcie_rd_other_conf(), it happily reprograms the outbound I/O window
+> > > to perform a config space access, and switches it back to I/O space
+> > > afterwards (unless it has more than 2 viewports, in which case it uses
+> > > dedicated windows for I/O space and config space)    
+> > 
+> > That doesn't sound good.  Jingoo, Joao?  I remember some discussion
+> > about this, but not the details.
+> > 
+> > I/O accesses use wrappers (inb(), etc), so there's at least the
+> > possibility of a mutex to serialize them with respect to config
+> > accesses.
+> >   
 > 
-> Ah, I see you have a PCIe switch with downstream ports 1d.*.0 where
-> the downstream switch ports don't support ACS (not surprising for
-> something reporting ASMedia as a subsystem capability).  So ACS was
-> broken at multiple levels and now that it's exposed at the root port
-> it's still broken by the non-ACS switch.  The endpoints downstream of
-> the switch are not sufficiently isolated to separate between VMs,
-> sorry, the hardware isn't up to the task at hand.  Thanks,
+> IIRC, for 2 viewports, we don't need to worry about the config space
+> access, because config space access is serialized by pci_lock; We
+> do have race between config space and io space. But the accessing config
+> space and io space at the same time is rare. And the PCIe EPs which
+> has io space are rare too, supporting these EPs are not the potential
+> target of those platforms with 2 viewports.
+> 
 
-In other words, you're telling, that there can't be done anything to get 
-it working? Do you know any other board, which doesn't have this problem 
-and could work?
-
-Gigabyte? Asrock?
-
-
-Thanks,
-Andreas
+PS: I think most platforms choose 2 pcie designware viewports just because
+it's the default setting. And I have send a feature request to ASIC people
+to increase the viewports to 3 for future marvell berlin SoCs.
