@@ -1,89 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:60602 "EHLO
-        bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756873AbdGYBOx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 21:14:53 -0400
-Subject: Re: [PATCH] PCI: xilinx: Remove platform/architecture restrictions
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Michal Simek <michal.simek@xilinx.com>,
-        =?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
-        James Hogan <james.hogan@imgtec.com>
-References: <1500856777-23383-1-git-send-email-linux@roeck-us.net>
- <3882569.bb2rKKAOIY@np-p-burton>
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <5da467c2-7494-bbb5-1007-6990f04877be@roeck-us.net>
-Date: Mon, 24 Jul 2017 18:14:50 -0700
+Received: from aserp1040.oracle.com ([141.146.126.69]:49657 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752035AbdGDR73 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 13:59:29 -0400
+Date: Tue, 4 Jul 2017 19:59:16 +0200
+From: Wim ten Have <wim.ten.have@oracle.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Wim ten Have <wim.ten.have@oracle.com>
+Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
+ functional performance enhancements causing PCI Express crashes,
+Message-ID: <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
+In-Reply-To: <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
+References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
+        <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
+        <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <3882569.bb2rKKAOIY@np-p-burton>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/24/2017 03:49 AM, Paul Burton wrote:
-> Hi Guenter & all,
-> 
-> On Monday, 24 July 2017 01:39:37 BST Guenter Roeck wrote:
->> The MIPS Boston board configuration tries to enable CONFIG_PCIE_XILINX.
->> That doesn't work since PCIE_XILINX depends on ARCH_ZYNQ || MICROBLAZE.
->> Remove that restriction.
-> 
-> I'd prefer that this patch does not go in standalone. The intent for the MIPS
-> Boston board is that this driver is enabled for MIPS by this patch:
-> 
-> https://patchwork.kernel.org/patch/9794361/
-> 
-> But not until after earlier patches in that series fix issues with the driver:
-> 
-> https://patchwork.kernel.org/patch/9794355/
-> https://patchwork.kernel.org/patch/9794357/
-> https://patchwork.kernel.org/patch/9794359/
-> 
-> That has been held up by disagreement about whether the driver should be using
-> 0-3 or 1-4 for hardware IRQ numbers, sadly, despite the driver already being
-> in tree & clearly broken, and my series not changing which the driver uses...
-> 
-> In any case, I don't really mind if people would rather remove the
-> architecture restrictions than just add MIPS, but I'd prefer this doesn't go
-> in until the rest of my series since without at least patch 1 of my seres this
-> will lead to various WARN()s on Boston boards.
-> 
+On Tue, 4 Jul 2017 11:57:37 -0400
+Sinan Kaya <okaya@codeaurora.org> wrote:
 
-Not with qemu, at least not yet.
-
-from the exchange, it doesn't look like that is going to be resolved anytime
-soon.
-
-Ok, I'll hold back with adding mips/boston to my qemu tests. Too bad.
-Hope this is going to be resolved before qemu and/or platform support
-for boston falls apart.
-
-Makes me wonder - is there a way to add initrd support for the platform ?
-
-Guenter
-
-> Thanks,
->      Paul
+> Hi,
 > 
->>
->> Cc: Paul Burton <paul.burton@imgtec.com>
->> Cc: James Hogan <james.hogan@imgtec.com>
->> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
->> ---
->>   drivers/pci/host/Kconfig | 1 -
->>   1 file changed, 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
->> index 89d61c2cbfaa..ed905a5401c3 100644
->> --- a/drivers/pci/host/Kconfig
->> +++ b/drivers/pci/host/Kconfig
->> @@ -71,7 +71,6 @@ config PCI_HOST_GENERIC
->>
->>   config PCIE_XILINX
->>   	bool "Xilinx AXI PCIe host bridge support"
->> -	depends on ARCH_ZYNQ || MICROBLAZE
->>   	help
->>   	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
->>   	  Host Bridge driver.
+> On 7/4/2017 11:32 AM, Bjorn Helgaas wrote:
+> > [+cc linux-pci]
+> > 
+> > Thanks very much for the detailed problem report, Wim!  I'm taking the
+> > liberty to forward to the linux-pci list in case others trip over the
+> > same thing.
+> >   
 > 
+> So, the spec is lying :) and reality doesn't match theory.
+> 
+> "Per the ECN mentioned below, all PCIe Receivers are expected to support
+>  Extended Tags"
+> 
+> > The problem is not specific to this piece of h/w.  I did pin-point the
+> > issue to specific kernel code commit  
+> <snip>
+> 
+> > 60db3a4d8cc9073cf56264785197ba75ee1caca4
+> >   * <wtenhave@hagen:55> git bisect good
+> >     60db3a4d8cc9073cf56264785197ba75ee1caca4 is the first bad commit
+> >     commit 60db3a4d8cc9073cf56264785197ba75ee1caca4
+> >     Author: Sinan Kaya <okaya@codeaurora.org>
+> >     Date:   Fri Jan 20 09:16:51 2017 -0500
+> > 
+> >       PCI: Enable PCIe Extended Tags if supported
+> >   
+> <snip>
+> 
+> > 3. Boot and see it crash as soon it starts to operate on specific PCI
+> > Express Ethernet controller.
+> >   
+> 
+> I guess we have an endpoint/system with errata that needs to be blacklisted.
+> Can you please try another endpoint with the same system?
+> 
+> You have conflicting information above. I want to understand whether it
+> is the endpoint or the system that needs to be blacklisted.
+
+  Specific PCI Express ethernet are embedded on the systems mainboard.
+  There's only one PCI Express that requires a riser card.  It is empty.
+
+> Please also provide sudo lspci -vvv output from the system with the patch.
+> Sinan
+
+  Detail (lspci -vvv) is added to RedHat filed bugzilla entry; BugID 1467674
+  since the info is rather large.
+
+	https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+
+Enjoy,
+- Wim.
