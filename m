@@ -1,110 +1,152 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=OVob=6H=infradead.org=peterz@kernel.org>
+Return-Path: <SRS0=OVob=6H=infradead.org=peterz@kernel.org>
+Date: Tue, 4 Jul 2017 16:27:58 +0200
+From: Peter Zijlstra <peterz@infradead.org>
+To: Mason <slash.tmp@free.fr>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170704142758.GB7287@worktop>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <e57debab-3457-1d9c-a72e-ecdf7d4f742e@sigmadesigns.com>
+ <baf9866b-04ba-698c-3012-a957ec0123d1@sigmadesigns.com>
+ <20170704070958.oolhapyx7uy2fly4@hirez.programming.kicks-ass.net>
+ <c80ce48f-5a7d-48d2-fd60-0d87eb0fcc0a@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
- <20170613200339.GX3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
- <20170616083313.GY3187@lahna.fi.intel.com>
- <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
- <20170616120048.GC629@lahna.fi.intel.com>
- <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
- <20170619100209.GC629@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
- <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 4 Jul 2017 18:46:59 +0300
-Message-ID: <CAHp75VccwpesvDxMcxZ+349rhrAq8QxNoau9XmquMnv9DBLBfA@mail.gmail.com>
-Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "minyard@acm.org" <minyard@acm.org>, John Garry <john.garry@huawei.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "olof@lixom.net" <olof@lixom.net>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c80ce48f-5a7d-48d2-fd60-0d87eb0fcc0a@free.fr>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 4, 2017 at 6:14 PM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
+On Tue, Jul 04, 2017 at 03:08:43PM +0200, Mason wrote:
+> On 04/07/2017 09:09, Peter Zijlstra wrote:
+> 
+> > On Mon, Jul 03, 2017 at 05:30:28PM +0200, Marc Gonzalez wrote:
+> > 
+> >> And at the end of smp8759_config_read:
+> >>
+> >> 	printk("in_atomic_preempt_off = %d\n", in_atomic_preempt_off());
+> > 
+> > That's confused...
+> 
+> That much is certain. I am indeed grasping at straws.
+> 
+> I grepped "scheduling while atomic", found __schedule_bug()
+> in kernel/sched/core.c and saw
+> 
+> 	if (IS_ENABLED(CONFIG_DEBUG_PREEMPT) && in_atomic_preempt_off()) {
+> 		pr_err("Preemption disabled at:");
+> 		print_ip_sym(preempt_disable_ip);
+> 		pr_cont("\n");
+> 	}
+> 
+> I thought printing the value of in_atomic_preempt_off()
+> in the callback would indicate whether preemption had
+> already been turned off at that point.
 
->> > In my case I'd like to have a platform device using the resources
->> that are
->> > parsed from the ACPI table (i.e. as it is done now by
->> > acpi_create_platform_device()).
->>
->> So far so good. Nothing prevents you to do that.
->>
->> > If my understanding is correct, if I declared an mfd_cell for my IPMI
->> child
->> > the mfd subsystem would create a platform device for such child and
->> > therefore acpi_create_platform_device() would fail to create a new
->> platform
->> > device as adev->physical_node_count will be non zero.
->> > However as things stand now mfd_cell devices can only use the
->> resources
->> > that are statically defined in the code (and therefore not the ones
->> in the
->> > ACPI nodes)...am I right?
->>
->> You may file resources first and then register MFD cells. See many
->> existing examples in the kernel.
->
-> Well I had a look around the Kernel I have seen no mfd cells using
-> Resources that are not statically defined:
-> i.e. cell->resources in mfd_add_device() always points to statically
-> defined resource structures.
->
-> Usually for ACPI devices first you need to parse the ACPI resources
-> from the table calling acpi_dev_get_resources(), then you iterate
-> over the resource list and fill the resource array by calling
-> acpi_platform_fill_resurces() (as in acpi_create_platform_device())
->
-> With respect to my case are you suggesting dynamically allocate a
-> resource array and fill it using the same fashion as
-> acpi_create_platform_device(), then point cell->resources to such
-> array before calling mfd_add_device() ?
+in_atomic_preempt_off() is a 'weird' construct. It basically checks to
+see if preempt_count != 1. So calling it while holding a single preempt,
+will return false (like in your case).
 
-You may do it on stack. Define your cell statically (but not const)
-and apply resources just before mfd_add_devices() call.
-There are examples in the existing drivers. Intel LPC comes to my mind
-and perhaps PMC (Broxton), though latter has too much other stuff
-around.
+> It doesn't work like that?
 
--- 
-With Best Regards,
-Andy Shevchenko
+Not really, you want to just print preempt_count.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> BTW, why didn't print_ip_sym(preempt_disable_ip); say
+> where preemption had been disabled?
+
+It does, but it might be non-obvious. We only store the first 0->!0
+transition IP in there.
+
+So if you have chains like:
+
+	preempt_disable();		// 0 -> 1
+	spin_lock();			// 1 -> 2
+	preempt_enable();		// 2 -> 1
+	preempt_disable();		// 1 -> 2
+	spin_unlock();			// 2 -> 1
+
+	mutex_lock();
+	  might_sleep();		*SPLAT* report the IP of 0 -> 1
+
+	preempt_enable():		// 1 -> 0
+
+
+That IP might not even be part of the current callchain.
+
+> >> [    1.026568] BUG: scheduling while atomic: swapper/0/1/0x00000002
+> >> [    1.032625] 5 locks held by swapper/0/1:
+> >> [    1.036575]  #0:  (&dev->mutex){......}, at: [<c038c684>] __driver_attach+0x50/0xd0
+> >> [    1.044319]  #1:  (&dev->mutex){......}, at: [<c038c694>] __driver_attach+0x60/0xd0
+> >> [    1.052050]  #2:  (pci_lock){+.+...}, at: [<c03309d8>] pci_bus_read_config_dword+0x44/0x94
+> > 
+> > This is a raw_spinlock_t, that disables preemption
+> 
+> drivers/pci/access.c
+> 
+> /*
+>  * This interrupt-safe spinlock protects all accesses to PCI
+>  * configuration space.
+>  */
+> DEFINE_RAW_SPINLOCK(pci_lock);
+> 
+> 
+> 	raw_spin_lock_irqsave(&pci_lock, flags);
+> 	res = bus->ops->read(bus, devfn, pos, len, &data);
+> 
+> 
+> IIUC, it's not possible to call stop_machine() while holding
+> a raw spinlock?
+
+Correct. You cannot call blocking primitives while holding a spinlock.
+
+> What about regular spinlocks? IIUC, in RT,
+> regular spinlocks may sleep?
+
+Still not, your code should not depend on CONFIG_PREEMPT*.
+
+> I didn't find "preempt" or "schedul" in the spinlock doc.
+> https://www.kernel.org/doc/Documentation/locking/spinlocks.txt
+
+Correct... as per usual the documentation is somewhat terse.
+
+But once you think about it, its 'obvious' a spinlock needs to disable
+preemption. If you don't you get into heaps of trouble (one of the
+reasons userspace spinlocks are an absolute trainwreck).
+
+> > Using stop_machine() is per definition doing it wrong ;-)
+> 
+> Here's the high-level view. My HW is borked and muxes
+> config space and mem space. So I need a way to freeze
+> the entire system, make the config space access, and
+> then return the system to normal. (AFAICT, config space
+> accesses are rare, so if I kill performance for these
+> accesses, the system might remain usable.)
+> 
+> Is there a way to do this? Mark suggested stop_machine
+> but it seems using it in my situation is not quite
+> straight-forward.
+
+*groan*... so yeah, broken hardware demands crazy stuff... stop machine
+is tricky here because I'm not sure we can demand all PCI accessors to
+allow sleeping.
+
+And given that PCI lock is irqsave, we can't even assume IRQs are
+enabled.
+
+Does your platform have NMIs? If so, you can do yuck things like the
+kgdb sync. NMI IPI all other CPUs and have them spin-wait on your state.
+
+Then be careful not to deadlock when two CPUs do that concurrently.
