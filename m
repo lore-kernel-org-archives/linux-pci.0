@@ -1,47 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH] PCI: Do not enable extended tags on pre-dated (v1.x)
- systems
-To: Jike Song <albcamus@gmail.com>
-References: <1499260748-21860-1-git-send-email-okaya@codeaurora.org>
- <CANE52Ki_B0pitpyNMBjrtEJBX6Cspe8-m3hZuEFCWuBN2osh-g@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <c5e37c83-a43d-257a-fa2f-50fdab29ce7a@codeaurora.org>
-Date: Fri, 7 Jul 2017 09:31:09 -0400
+Return-Path: <SRS0=Fe65=6I=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=Fe65=6I=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+To: Russell King - ARM Linux <linux@armlinux.org.uk>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Mark Rutland <mark.rutland@arm.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ LKML <linux-kernel@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703181128.GD4902@n2100.armlinux.org.uk>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
+Date: Wed, 5 Jul 2017 01:59:55 +0200
 MIME-Version: 1.0
-In-Reply-To: <CANE52Ki_B0pitpyNMBjrtEJBX6Cspe8-m3hZuEFCWuBN2osh-g@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- wim.ten.have@oracle.com, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170703181128.GD4902@n2100.armlinux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/7/2017 1:04 AM, Jike Song wrote:
-> Maybe checking the version of this endpoint at first? Do you expect a
-> v1 endpoint
-> to be working under v2+ ports?
+On 03/07/2017 20:11, Russell King - ARM Linux wrote:
 
-I see your point. I guess we need to validate both incoming and outgoing.
-I was only checking incoming direction. 
+> I don't think there's an easy solution to this problem - and I'm not
+> sure that stop_machine() can be made to work in this path (which
+> needs a process context).  I have a suspicion that the Sigma Designs
+> PCI implementation is just soo insane that it's never going to work
+> reliably in a multi-SoC kernel without introducing severe performance
+> issues for everyone else.
 
-Let me look at this one more time.
+If I remember correctly, this is the second HW block from
+tango that has been deemed "too insane for Linux".
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+The first one was the DMA engine, which doesn't interrupt
+when a transfer is done, but when a new transfer may be
+programmed. (Though there is a simple work-around for
+this one, if we give up command pipelining.)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Do larger SoC vendors have HW devs working closely with
+Linux devs, to avoid these design bloopers?
+
+Regards.
