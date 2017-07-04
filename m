@@ -1,79 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49657 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752035AbdGDR73 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 13:59:29 -0400
-Date: Tue, 4 Jul 2017 19:59:16 +0200
-From: Wim ten Have <wim.ten.have@oracle.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Wim ten Have <wim.ten.have@oracle.com>
-Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
- functional performance enhancements causing PCI Express crashes,
-Message-ID: <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
-In-Reply-To: <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
-References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
-        <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
-        <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
+Return-Path: <SRS0=aQ1x=6H=linaro.org=guodong.xu@kernel.org>
+Return-Path: <SRS0=aQ1x=6H=linaro.org=guodong.xu@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <595A4768.20404@hisilicon.com>
+References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
+ <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703104727.GB1573@arm.com> <CAFGCpxx+92PSs1VaryFOXau7CjBYEP4H6wT-o=bNMwkSznjQuw@mail.gmail.com>
+ <595A4768.20404@hisilicon.com>
+From: Guodong Xu <guodong.xu@linaro.org>
+Date: Tue, 4 Jul 2017 10:03:08 +0800
+Message-ID: <CAFGCpxy-Rn4aeRs6GwGu7kaXvk5ftQxSpho8D2kQ4OG5MgCA8w@mail.gmail.com>
+Subject: Re: [PATCH v11 0/3]add PCIe driver for Kirin PCIe
+To: Wei Xu <xuwei5@hisilicon.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Xiaowei Song <songxiaowei@hisilicon.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+	Suzhuangluan <suzhuangluan@hisilicon.com>, linux-pci <linux-pci@vger.kernel.org>,
+	devicetree@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Catalin Marinas <catalin.marinas@arm.com>,
+	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Will Deacon <will.deacon@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Jul 2017 11:57:37 -0400
-Sinan Kaya <okaya@codeaurora.org> wrote:
+On Mon, Jul 3, 2017 at 9:32 PM, Wei Xu <xuwei5@hisilicon.com> wrote:
+> Hi Guodong,
+>
+> On 2017/7/3 14:04, Guodong Xu wrote:
+>> Hi, Xu Wei
+>>
+>>
+>>
+>> On Mon, Jul 3, 2017 at 6:47 PM, Will Deacon <will.deacon@arm.com> wrote:
+>>> On Sun, Jul 02, 2017 at 06:36:57PM -0500, Bjorn Helgaas wrote:
+>>>> [+cc Catalin, Will, linux-arm-kernel]
+>>>>
+>>>> Applied patches 2 & 3 to pci/host-kirin for v4.13.
+>>>>
+>>>> I would like a MAINTAINERS update, too.  If you send me that, I'll
+>>>> squash it into the driver patch.
+>>>>
+>>>> Catalin, Will, how do you want to handle the
+>>>> arch/arm64/configs/defconfig change (patch 3)?  It's currently on my
+>>>> branch, but I'm happy to drop it if another route is better.
+>>>
+>>> defconfig updates usually go through arm-soc, via the relevant platform
+>>> maintainer, so it would be best to follow that route here too otherwise
+>>> you'll probably see conflicts in -next.
+>>>
+>>
+>> Is it ok for you to pick up the arch/arm64/configs/defconfig change (patch 3)?
+>
+> Since it is already 4.12-rc7, I will pick up it and queue for the v4.14.
+> Are you fine about that?
+> Thanks!
 
-> Hi,
-> 
-> On 7/4/2017 11:32 AM, Bjorn Helgaas wrote:
-> > [+cc linux-pci]
-> > 
-> > Thanks very much for the detailed problem report, Wim!  I'm taking the
-> > liberty to forward to the linux-pci list in case others trip over the
-> > same thing.
-> >   
-> 
-> So, the spec is lying :) and reality doesn't match theory.
-> 
-> "Per the ECN mentioned below, all PCIe Receivers are expected to support
->  Extended Tags"
-> 
-> > The problem is not specific to this piece of h/w.  I did pin-point the
-> > issue to specific kernel code commit  
-> <snip>
-> 
-> > 60db3a4d8cc9073cf56264785197ba75ee1caca4
-> >   * <wtenhave@hagen:55> git bisect good
-> >     60db3a4d8cc9073cf56264785197ba75ee1caca4 is the first bad commit
-> >     commit 60db3a4d8cc9073cf56264785197ba75ee1caca4
-> >     Author: Sinan Kaya <okaya@codeaurora.org>
-> >     Date:   Fri Jan 20 09:16:51 2017 -0500
-> > 
-> >       PCI: Enable PCIe Extended Tags if supported
-> >   
-> <snip>
-> 
-> > 3. Boot and see it crash as soon it starts to operate on specific PCI
-> > Express Ethernet controller.
-> >   
-> 
-> I guess we have an endpoint/system with errata that needs to be blacklisted.
-> Can you please try another endpoint with the same system?
-> 
-> You have conflicting information above. I want to understand whether it
-> is the endpoint or the system that needs to be blacklisted.
+Sure.
 
-  Specific PCI Express ethernet are embedded on the systems mainboard.
-  There's only one PCI Express that requires a riser card.  It is empty.
-
-> Please also provide sudo lspci -vvv output from the system with the patch.
-> Sinan
-
-  Detail (lspci -vvv) is added to RedHat filed bugzilla entry; BugID 1467674
-  since the info is rather large.
-
-	https://bugzilla.redhat.com/show_bug.cgi?id=1467674
-
-Enjoy,
-- Wim.
+>
+> Best Regards,
+> Wei
+>
+>>
+>> -Guodong
+>>
+>>> Will
+>>
+>> .
+>>
+>
