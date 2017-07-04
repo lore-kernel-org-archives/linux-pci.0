@@ -1,12 +1,11 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>, Mika Westerberg
- <mika.westerberg@linux.intel.com>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
 Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
  devices before scanning
-Date: Mon, 3 Jul 2017 16:23:40 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B10632@FRAEML521-MBX.china.huawei.com>
+Date: Tue, 4 Jul 2017 16:22:11 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B16310@FRAEML521-MBX.china.huawei.com>
 References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
  <20170613151013.GT3187@lahna.fi.intel.com>
  <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
@@ -20,7 +19,10 @@ References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei
  <20170619100209.GC629@lahna.fi.intel.com>
  <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
  <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
+ <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
+ <CAHp75VccwpesvDxMcxZ+349rhrAq8QxNoau9XmquMnv9DBLBfA@mail.gmail.com>
+In-Reply-To: <CAHp75VccwpesvDxMcxZ+349rhrAq8QxNoau9XmquMnv9DBLBfA@mail.gmail.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -34,15 +36,15 @@ Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
  "Rafael J. Wysocki" <rafael@kernel.org>,
  "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
  "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- "lee.jones@linaro.org" <lee.jones@linaro.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
  "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
  "xuwei \(O\)" <xuwei5@hisilicon.com>,
  "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
  "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
  "minyard@acm.org" <minyard@acm.org>, John Garry <john.garry@huawei.com>,
  "robh+dt@kernel.org" <robh+dt@kernel.org>,
  "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
  "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
  "Rafael J. Wysocki" <rjw@rjwysocki.net>,
  "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
@@ -53,136 +55,30 @@ Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+CC Lee Jones
+Hi Andy
 
-> -----Original Message-----
-> From: Gabriele Paoloni
-> Sent: 03 July 2017 17:08
-> To: Gabriele Paoloni; Mika Westerberg
-> Cc: Rafael J. Wysocki; Lorenzo Pieralisi; Rafael J. Wysocki;
-> catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-arm-
-> kernel@lists.infradead.org; mark.rutland@arm.com;
-> brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org; linux-
-> kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
-> pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
-> Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
-> devices before scanning
-> 
-> Hi Mika
-> 
-> > -----Original Message-----
-> > From: linux-pci-owner@vger.kernel.org [mailto:linux-pci-
-> > owner@vger.kernel.org] On Behalf Of Gabriele Paoloni
-> > Sent: 19 June 2017 11:05
-> > To: Mika Westerberg
-> > Cc: Rafael J. Wysocki; Lorenzo Pieralisi; Rafael J. Wysocki;
-> > catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> > frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-
-> arm-
-> > kernel@lists.infradead.org; mark.rutland@arm.com;
-> > brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org;
-> linux-
-> > kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm; linux-
-> > pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
-> > Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
-> > devices before scanning
-> >
-> > Hi Mika
-> >
-> > > -----Original Message-----
-> > > From: Mika Westerberg [mailto:mika.westerberg@linux.intel.com]
-> > > Sent: 19 June 2017 11:02
-> > > To: Gabriele Paoloni
-> > > Cc: Rafael J. Wysocki; Lorenzo Pieralisi; Rafael J. Wysocki;
-> > > catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> > > frowand.list@gmail.com; bhelgaas@google.com; arnd@arndb.de; linux-
-> > arm-
-> > > kernel@lists.infradead.org; mark.rutland@arm.com;
-> > > brian.starkey@arm.com; olof@lixom.net; benh@kernel.crashing.org;
-> > linux-
-> > > kernel@vger.kernel.org; linux-acpi@vger.kernel.org; Linuxarm;
-> linux-
-> > > pci@vger.kernel.org; minyard@acm.org; John Garry; xuwei (O)
-> > > Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-
-> MMIO
-> > > devices before scanning
-> > >
-> > > On Mon, Jun 19, 2017 at 09:50:49AM +0000, Gabriele Paoloni wrote:
-> > > > Many thanks for your response and your help here.
-> > > >
-> > > > I guess that as conclusion with respect to the current v9
-> patchset
-> > we
-> > > can
-> > > > disregard the idea of MFD and modify the current v9 so that it
-> > > doesn't
-> > > > touch directly ACPI resources.
-> > > > Instead as I proposed before we can have the scan handler to
-> > > enumerate
-> > > > the children devices and translate its addresses filling dev-
-> > > >resources[] and
-> > > > at the same time we can modify acpi_default_enumeration to check
-> > > > acpi_device_enumerated() before continuing with device
-> > > enumeration...?
-> > > >
-> > > > Do you think it as a viable solution?
-> > >
-> > > No, I think MFD + scan handler inside the MFD driver is the way to
-> > go.
-> > > We don't want to trash ACPI core with stuff that does not belong
-> > there
-> > > IMHO.
-> >
-> > Ok Many thanks I will investigate this direction
-> 
-> I had a look into the MFD framework. If my understanding is correct the
-> mfd
-> framework create a platform device for each declared mfd_cell that is
-> passed
-> to mfd_add_devices().
-> However there is something that I do not quite understand:
-> from
-> http://elixir.free-electrons.com/linux/latest/source/drivers/mfd/mfd-
-> core.c#L207
-> it seems that mfd_add_device() will create the platform device using
-> the
-> resources that are statically declared in the respective mfd_cell.
-> 
-> In my case I'd like to have a platform device using the resources that
-> are
-> parsed from the ACPI table (i.e. as it is done now by
-> acpi_create_platform_device()).
-> 
-> If my understanding is correct, if I declared an mfd_cell for my IPMI
-> child
-> the mfd subsystem would create a platform device for such child and
-> therefore acpi_create_platform_device() would fail to create a new
-> platform
-> device as adev->physical_node_count will be non zero.
-> However as things stand now mfd_cell devices can only use the resources
-> that are statically defined in the code (and therefore not the ones in
-> the
-> ACPI nodes)...am I right?
-> 
-> Thanks
-> Gab
-> 
-> >
-> > >
-> > > Also you don't need to modify acpi_default_enumeration() because
-> you
-> > > can
-> > > mark your device enumerated in the MFD driver. So all the dirty
-> > details
-> > > will be in the MFD driver and not in ACPI core.
-> >
-> > Ok got it :)
-> >
-> > Cheers
-> > Gab
+[...]
 
+> 
+> You may do it on stack. Define your cell statically (but not const)
+> and apply resources just before mfd_add_devices() call.
 
+Ok thanks got it
+
+> There are examples in the existing drivers. Intel LPC comes to my mind
+> and perhaps PMC (Broxton), though latter has too much other stuff
+> around.
+
+Uh yes I see now in lpc_ich.c (base address is read from PCI config space
+and resources are set accordingly).
+
+Cheers
+Gab
+
+> 
+> --
+> With Best Regards,
+> Andy Shevchenko
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
