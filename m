@@ -1,66 +1,75 @@
-Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 4 Jul 2017 10:15:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170704151502.GH13824@bhelgaas-glaptop.roam.corp.google.com>
 References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
-Date: Wed, 5 Jul 2017 00:55:37 +0200
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703181128.GD4902@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170703181128.GD4902@n2100.armlinux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ LKML <linux-kernel@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/2017 22:24, Bjorn Helgaas wrote:
-
-> On Tue, Jun 20, 2017 at 10:12:57AM +0200, Marc Gonzalez wrote:
->
->> Marc Z pointed out that posting partial series is not ideal.
->> Collect last-minute fixups into a single patch series.
->>
->> - Bump series to v9 to avoid any ambiguity
->> - Add Rob's Ack on patch 1
->>
->> Marc Gonzalez (3):
->>   PCI: Add DT binding for tango PCIe controller
->>   PCI: Add tango PCIe host bridge support
->>   PCI: Add tango MSI controller support
->>
->>  .../devicetree/bindings/pci/tango-pcie.txt         |  29 ++
->>  drivers/pci/host/Kconfig                           |   8 +
->>  drivers/pci/host/Makefile                          |   1 +
->>  drivers/pci/host/pcie-tango.c                      | 390 +++++++++++++++++++++
->>  include/linux/pci_ids.h                            |   2 +
->>  5 files changed, 430 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
->>  create mode 100644 drivers/pci/host/pcie-tango.c
+On Mon, Jul 03, 2017 at 07:11:28PM +0100, Russell King - ARM Linux wrote:
+> On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
+> > The problem is serializing vs. memory accesses, since they don't use
+> > any wrappers.  However, they are ioremapped(), so it's at least
+> > conceivable that another solution would be to use VM to trap those
+> > accesses.  I'm not a VM person, so I don't know whether that's
+> > feasible in Linux.
 > 
-> I made the trivial changes I mentioned, added a dependency on
-> CONFIG_BROKEN (for the config/MMIO muxing issue), and put these on
-> pci/host-tango.  I can't build or test this, so I probably broke
-> something in the process.  I think the combination of the boot-time
-> warning, the taint, and CONFIG_BROKEN is a reasonable amount of
-> warning that a user should expect issues.
+> Bjorn,
 > 
-> Can you take a look and see if it works for you?
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-tango
+> You're forgetting that MMIO (iow, memory returned by ioremap()) must
+> be accessed through the appropriate accessors, and must not be
+> directly dereferenced in C.  (We do have buggy drivers that do that
+> but they are buggy, and in many cases are getting attention to fix
+> that.)
 
-Thanks. I'll take it for a spin ASAP.
+Oh, you're right, thank you!  I guess you're referring to readb()
+and friends.  I haven't found an actual prohibition on directly
+dereferencing addresses returned from ioremap(), but
+Documentation/driver-api/device-io.rst is clear that they're
+suitable for passing to readb(), etc.
 
-TAINT_CRAP... Smirk. I didn't see that one in the docs:
-https://www.kernel.org/doc/html/latest/admin-guide/tainted-kernels.html
+I recently told someone else my mistaken idea that ioremap() must
+return a valid virtual address.  I wish I remembered who it was, so I
+could correct that.  Documentation/DMA-API-HOWTO.txt also suggests
+that ioremap() returns a virtual address -- I think I wrote that, and
+maybe that virtual address reference should be tweaked a bit.
 
-Oh wait... TAINT_CRAP is "C" => a staging driver has been loaded
+Another wrinkle is that the pci_mmap_resource() interface is exposed
+via sysfs and allows direct userspace mmap of PCI MMIO resources.  In
+that case, there is no accessor available.  I wonder if we need some
+way to disable this mmap when readb() is non-trivial.
 
-The one issue I anticipate with "depends on BROKEN" is
-when I add support for revision 2, which isn't broken.
+Bjorn
 
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
