@@ -1,80 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:38733 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752680AbdGLTEj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jul 2017 15:04:39 -0400
-Received: by mail-it0-f44.google.com with SMTP id k192so21267724ith.1
-        for <linux-pci@vger.kernel.org>; Wed, 12 Jul 2017 12:04:39 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 4 Jul 2017 14:58:40 +0800
+From: Jisheng Zhang <jszhang@marvell.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170704145840.69e53f58@xhacker>
+In-Reply-To: <20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
+ <20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu_7TCjN=LPdsG+QBwYqRD7fMuOPeH2qBDL7gvsB6tP0wA@mail.gmail.com>
-References: <20170710155230.8622-1-marc.zyngier@arm.com> <CAKv+Gu_7TCjN=LPdsG+QBwYqRD7fMuOPeH2qBDL7gvsB6tP0wA@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 12 Jul 2017 20:04:38 +0100
-Message-ID: <CAKv+Gu8D-t9KqP8CWJpBBEvMLV1EJst=a_xmwPQSRO36677rsA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-usb <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Mason <slash.tmp@free.fr>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ LKML <linux-kernel@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>, Thomas
+ Gleixner <tglx@linutronix.de>, Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10 July 2017 at 18:21, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
-> On 10 July 2017 at 16:52, Marc Zyngier <marc.zyngier@arm.com> wrote:
->> Ard and myself have just spent quite some time lately trying to pin
->> down an issue in the DMA code which was taking the form of a PCIe USB3
->> controller issuing a DMA access at some bizarre address, and being
->> caught red-handed by the IOMMU.
->>
->> After much head scratching and most of a week-end spent on tracing the
->> damn thing, I'm now convinced that the DMA code is fine, the XHCI
->> driver is correct, but that the HW (a Renesas uPD720202 chip) is a
->> nasty piece of work.
->>
->> The issue is as follow:
->>
->> - EFI initializes the controller using physical addresses above the
->>   4GB limit (this is on an arm64 box where the memory starts at
->>   0x80_00000000...).
->>
->> - The kernel takes over, sends a XHCI reset to the controller, and
->>   because we have an IOMMU sitting between the controller and memory,
->>   provides *virtual* addresses. Trying to make things a bit faster for
->>   our controller, it issues IOVAs in the low 4GB range).
->>
->> - Low and behold, the controller is now issuing transactions with a
->>   0x80 prefix in front of our IOVA. Yes, the same prefix that was
->>   programmed during the EFI configuration. IOMMU fault, not happy.
->>
->> If the kernel is hacked to only generate IOVAs that are more than
->> 32bit wide, the HW behaves correctly. The only way I can explain this
->> behaviour is that the HW latches the top 32bit of the ERST (it is
->> always the ERST IOVA that appears in my traces) in some internal
->> register, and that the XHCI reset fails to clear it. Writing zero in
->> the top bits is not enough to clear it either.
->>
->
-> To clarify, this seems to be an issue in the internal DMA logic of the
-> controller. The ESRT base address register *is* cleared by the XHCI
-> reset, i.e., it reads back as all zeroes. However, any 32-bit value we
-> write there is extended with the high word written by the UEFI in the
-> actual DMA transactions that take place.
->
->> So far, the only solution we have for this lovely piece of kit is to
->> force a PCI reset at probe time, which puts it right. The patches are
->> pretty ugly, but that's the best I could come up with so far.
->>
->> Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
->> uPD720202 controllers.
->>
->> Marc Zyngier (2):
->>   PCI: Implement pci_reset_function_locked
->>   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
->>     controller
->>
+On Mon, 3 Jul 2017 08:27:04 -0500 wrote:
 
-Tested-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> [+cc Jingoo, Joao]
+> 
+> On Mon, Jul 03, 2017 at 10:35:50AM +0100, Ard Biesheuvel wrote:
+> > On 3 July 2017 at 00:18, Bjorn Helgaas <helgaas@kernel.org> wrote:  
+> > > On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:  
+> > >> This driver is required to work around several hardware bugs
+> > >> in the PCIe controller.
+> > >>
+> > >> NB: Revision 1 does not support legacy interrupts, or IO space.  
+> > >
+> > > I had to apply these manually because of conflicts in Kconfig and
+> > > Makefile.  What are these based on?  Easiest for me is if you base
+> > > them on the current -rc1 tag.
+> > >  
+> > >> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> > >> ---
+> > >>  drivers/pci/host/Kconfig      |   8 +++
+> > >>  drivers/pci/host/Makefile     |   1 +
+> > >>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++
+> > >>  include/linux/pci_ids.h       |   2 +
+> > >>  4 files changed, 175 insertions(+)
+> > >>  create mode 100644 drivers/pci/host/pcie-tango.c
+> > >>  
+> > [..]  
+> > >> +     /*
+> > >> +      * QUIRK #2
+> > >> +      * Unfortunately, config and mem spaces are muxed.
+> > >> +      * Linux does not support such a setting, since drivers are free
+> > >> +      * to access mem space directly, at any time.
+> > >> +      * Therefore, we can only PRAY that config and mem space accesses
+> > >> +      * NEVER occur concurrently.
+> > >> +      */
+> > >> +     writel_relaxed(1, pcie->mux);
+> > >> +     ret = pci_generic_config_read(bus, devfn, where, size, val);
+> > >> +     writel_relaxed(0, pcie->mux);  
+> > >
+> > > I'm very hesitant about this.  When people stress this, we're going to
+> > > get reports of data corruption.  Even with the disclaimer below, I
+> > > don't feel good about this.  Adding the driver is an implicit claim
+> > > that we support the device, but we know it can't be made reliable.  
+> > 
+> > I noticed that the Synopsys driver suffers from a similar issue: in
+> > dw_pcie_rd_other_conf(), it happily reprograms the outbound I/O window
+> > to perform a config space access, and switches it back to I/O space
+> > afterwards (unless it has more than 2 viewports, in which case it uses
+> > dedicated windows for I/O space and config space)  
+> 
+> That doesn't sound good.  Jingoo, Joao?  I remember some discussion
+> about this, but not the details.
+> 
+> I/O accesses use wrappers (inb(), etc), so there's at least the
+> possibility of a mutex to serialize them with respect to config
+> accesses.
+> 
+
+IIRC, for 2 viewports, we don't need to worry about the config space
+access, because config space access is serialized by pci_lock; We
+do have race between config space and io space. But the accessing config
+space and io space at the same time is rare. And the PCIe EPs which
+has io space are rare too, supporting these EPs are not the potential
+target of those platforms with 2 viewports.
+
+Thanks,
+Jisheng
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
