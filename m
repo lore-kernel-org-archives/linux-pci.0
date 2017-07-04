@@ -1,46 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:10160
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753177AbdGFGuG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Jul 2017 02:50:06 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCH 2/3] PCI: designware: enable write permission before updating class code
-Date: Thu, 6 Jul 2017 14:33:48 +0800
-Message-ID: <1499322829-23018-2-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
+Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ LKML <linux-kernel@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Mark Rutland <mark.rutland@arm.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <16622817-8ccd-107b-be08-676b576f6e8a@sigmadesigns.com>
+ <20170704155855.GI13824@bhelgaas-glaptop.roam.corp.google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <877fefdf-969d-bc46-3233-f988ccfe4c74@free.fr>
+Date: Wed, 5 Jul 2017 01:42:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170704155855.GI13824@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On 04/07/2017 17:58, Bjorn Helgaas wrote:
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> It's definitely a hassle to support chips with different register
+> layouts.  Your hardware guys are really making your life hard :)
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index d29c020..6e10cda 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -634,8 +634,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
-+	/* Enable write permission for the DBI read-only register */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	/* program correct class for RC */
- 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+	/* Better disable write permission right after the update */
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
--- 
-2.1.0.27.g96db324
+Now where did I put my foam bat...
+
+> If the chips are fundamentally different, i.e., if they *operate*
+> differently in addition to having a different register layout, you
+> could make two separate drivers.
+
+It's the exact same underlying IP. Revision 2 is only a
+bug fix rev. IIUC, some of the fixes lead to adding a
+register here, removing a register there... and I don't
+think the HW dev ever considered the pain of supporting
+both revs within a single driver.
+
+This dual support explains some of the peculiarities
+you noted in my submission.
+
+Regards.
