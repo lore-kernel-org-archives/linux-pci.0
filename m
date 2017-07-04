@@ -1,92 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 3 Jul 2017 08:27:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
 Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-Message-ID: <20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
+To: Peter Zijlstra <peterz@infradead.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ LKML <linux-kernel@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Mark Rutland <mark.rutland@arm.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Ingo Molnar <mingo@kernel.org>
 References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
  <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
  <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <e57debab-3457-1d9c-a72e-ecdf7d4f742e@sigmadesigns.com>
+ <baf9866b-04ba-698c-3012-a957ec0123d1@sigmadesigns.com>
+ <20170704070958.oolhapyx7uy2fly4@hirez.programming.kicks-ass.net>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <c80ce48f-5a7d-48d2-fd60-0d87eb0fcc0a@free.fr>
+Date: Tue, 4 Jul 2017 15:08:43 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Mason <slash.tmp@free.fr>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170704070958.oolhapyx7uy2fly4@hirez.programming.kicks-ass.net>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Jingoo, Joao]
+On 04/07/2017 09:09, Peter Zijlstra wrote:
 
-On Mon, Jul 03, 2017 at 10:35:50AM +0100, Ard Biesheuvel wrote:
-> On 3 July 2017 at 00:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:
-> >> This driver is required to work around several hardware bugs
-> >> in the PCIe controller.
-> >>
-> >> NB: Revision 1 does not support legacy interrupts, or IO space.
-> >
-> > I had to apply these manually because of conflicts in Kconfig and
-> > Makefile.  What are these based on?  Easiest for me is if you base
-> > them on the current -rc1 tag.
-> >
-> >> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> >> ---
-> >>  drivers/pci/host/Kconfig      |   8 +++
-> >>  drivers/pci/host/Makefile     |   1 +
-> >>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++
-> >>  include/linux/pci_ids.h       |   2 +
-> >>  4 files changed, 175 insertions(+)
-> >>  create mode 100644 drivers/pci/host/pcie-tango.c
-> >>
-> [..]
-> >> +     /*
-> >> +      * QUIRK #2
-> >> +      * Unfortunately, config and mem spaces are muxed.
-> >> +      * Linux does not support such a setting, since drivers are free
-> >> +      * to access mem space directly, at any time.
-> >> +      * Therefore, we can only PRAY that config and mem space accesses
-> >> +      * NEVER occur concurrently.
-> >> +      */
-> >> +     writel_relaxed(1, pcie->mux);
-> >> +     ret = pci_generic_config_read(bus, devfn, where, size, val);
-> >> +     writel_relaxed(0, pcie->mux);
-> >
-> > I'm very hesitant about this.  When people stress this, we're going to
-> > get reports of data corruption.  Even with the disclaimer below, I
-> > don't feel good about this.  Adding the driver is an implicit claim
-> > that we support the device, but we know it can't be made reliable.
+> On Mon, Jul 03, 2017 at 05:30:28PM +0200, Marc Gonzalez wrote:
 > 
-> I noticed that the Synopsys driver suffers from a similar issue: in
-> dw_pcie_rd_other_conf(), it happily reprograms the outbound I/O window
-> to perform a config space access, and switches it back to I/O space
-> afterwards (unless it has more than 2 viewports, in which case it uses
-> dedicated windows for I/O space and config space)
+>> And at the end of smp8759_config_read:
+>>
+>> 	printk("in_atomic_preempt_off = %d\n", in_atomic_preempt_off());
+> 
+> That's confused...
 
-That doesn't sound good.  Jingoo, Joao?  I remember some discussion
-about this, but not the details.
+That much is certain. I am indeed grasping at straws.
 
-I/O accesses use wrappers (inb(), etc), so there's at least the
-possibility of a mutex to serialize them with respect to config
-accesses.
+I grepped "scheduling while atomic", found __schedule_bug()
+in kernel/sched/core.c and saw
 
-Bjorn
+	if (IS_ENABLED(CONFIG_DEBUG_PREEMPT) && in_atomic_preempt_off()) {
+		pr_err("Preemption disabled at:");
+		print_ip_sym(preempt_disable_ip);
+		pr_cont("\n");
+	}
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I thought printing the value of in_atomic_preempt_off()
+in the callback would indicate whether preemption had
+already been turned off at that point.
+
+It doesn't work like that?
+
+BTW, why didn't print_ip_sym(preempt_disable_ip); say
+where preemption had been disabled?
+
+
+>> [    1.026568] BUG: scheduling while atomic: swapper/0/1/0x00000002
+>> [    1.032625] 5 locks held by swapper/0/1:
+>> [    1.036575]  #0:  (&dev->mutex){......}, at: [<c038c684>] __driver_attach+0x50/0xd0
+>> [    1.044319]  #1:  (&dev->mutex){......}, at: [<c038c694>] __driver_attach+0x60/0xd0
+>> [    1.052050]  #2:  (pci_lock){+.+...}, at: [<c03309d8>] pci_bus_read_config_dword+0x44/0x94
+> 
+> This is a raw_spinlock_t, that disables preemption
+
+drivers/pci/access.c
+
+/*
+ * This interrupt-safe spinlock protects all accesses to PCI
+ * configuration space.
+ */
+DEFINE_RAW_SPINLOCK(pci_lock);
+
+
+	raw_spin_lock_irqsave(&pci_lock, flags);
+	res = bus->ops->read(bus, devfn, pos, len, &data);
+
+
+IIUC, it's not possible to call stop_machine() while holding
+a raw spinlock? What about regular spinlocks? IIUC, in RT,
+regular spinlocks may sleep?
+
+I didn't find "preempt" or "schedul" in the spinlock doc.
+https://www.kernel.org/doc/Documentation/locking/spinlocks.txt
+
+
+> Using stop_machine() is per definition doing it wrong ;-)
+
+Here's the high-level view. My HW is borked and muxes
+config space and mem space. So I need a way to freeze
+the entire system, make the config space access, and
+then return the system to normal. (AFAICT, config space
+accesses are rare, so if I kill performance for these
+accesses, the system might remain usable.)
+
+Is there a way to do this? Mark suggested stop_machine
+but it seems using it in my situation is not quite
+straight-forward.
+
+Regards.
