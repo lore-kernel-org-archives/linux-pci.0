@@ -1,82 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7938 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964809AbdGTWQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jul 2017 18:16:03 -0400
-Date: Thu, 20 Jul 2017 16:15:54 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Roland Dreier <roland@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, Emil Tantilov <emil.s.tantilov@intel.com>
-Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
-Message-ID: <20170720161554.45ce1673@ul30vt.home>
-In-Reply-To: <20170720214101.7449-1-roland@kernel.org>
-References: <20170720214101.7449-1-roland@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 4 Jul 2017 15:24:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
+Message-ID: <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: DT <devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 20 Jul 2017 14:41:01 -0700
-Roland Dreier <roland@kernel.org> wrote:
-
-> From: Roland Dreier <roland@purestorage.com>
+On Tue, Jun 20, 2017 at 10:12:57AM +0200, Marc Gonzalez wrote:
+> Marc Z pointed out that posting partial series is not ideal.
+> Collect last-minute fixups into a single patch series.
 > 
-> Add one more variant of the 82599 plus the device IDs for X540 and X550
-> variants.  Intel has confirmed that none of these devices does peer-to-peer
-> between functions.  The X540 and X550 have added ACS capabilities in their
-> PCI config space, but the ACS control register is hard-wired to 0 for both
-> devices, so we still need the quirk for IOMMU grouping to allow assignment
-> of individual SR-IOV functions.
-
-Most of the ACS capabilities are worded as "Must be implemented by
-devices that implement ..."  Shouldn't a hard-wired ACS capability
-sufficiently describe that, or is there something wrong with how
-they're hard wired?  Thanks,
-
-Alex
-
+> - Bump series to v9 to avoid any ambiguity
+> - Add Rob's Ack on patch 1
 > 
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> ---
->  drivers/pci/quirks.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
+> Marc Gonzalez (3):
+>   PCI: Add DT binding for tango PCIe controller
+>   PCI: Add tango PCIe host bridge support
+>   PCI: Add tango MSI controller support
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6967c6b4cf6b..b939db671326 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4335,12 +4335,33 @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1528, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x154A, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1560, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1563, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AA, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AC, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AD, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AE, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15B0, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C2, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C3, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C4, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C6, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C7, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C8, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15CE, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15E4, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15E5, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15D1, pci_quirk_mf_endpoint_acs },
->  	/* 82580 */
->  	{ PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
+>  .../devicetree/bindings/pci/tango-pcie.txt         |  29 ++
+>  drivers/pci/host/Kconfig                           |   8 +
+>  drivers/pci/host/Makefile                          |   1 +
+>  drivers/pci/host/pcie-tango.c                      | 390 +++++++++++++++++++++
+>  include/linux/pci_ids.h                            |   2 +
+>  5 files changed, 430 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
+>  create mode 100644 drivers/pci/host/pcie-tango.c
+
+I made the trivial changes I mentioned, added a dependency on
+CONFIG_BROKEN (for the config/MMIO muxing issue), and put these on
+pci/host-tango.  I can't build or test this, so I probably broke
+something in the process.  I think the combination of the boot-time
+warning, the taint, and CONFIG_BROKEN is a reasonable amount of
+warning that a user should expect issues.
+
+Can you take a look and see if it works for you?
+
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-tango
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
