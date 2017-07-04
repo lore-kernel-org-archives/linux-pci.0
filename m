@@ -1,20 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Alex Williamson
- <alex.williamson@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
- HiSilicon bridge
-Date: Fri, 14 Jul 2017 12:26:05 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B399B4@FRAEML521-MBX.china.huawei.com>
-References: <20170712050811.3620-1-dja@axtens.net>
- <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
- <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
- <20170713151146.53e9644c@w520.home>
- <1499980882.2865.65.camel@kernel.crashing.org>
-In-Reply-To: <1499980882.2865.65.camel@kernel.crashing.org>
+Date: Tue, 4 Jul 2017 10:58:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170704155855.GI13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <16622817-8ccd-107b-be08-676b576f6e8a@sigmadesigns.com>
 MIME-Version: 1.0
+In-Reply-To: <16622817-8ccd-107b-be08-676b576f6e8a@sigmadesigns.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -22,71 +20,109 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: David Airlie <airlied@linux.ie>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>,
- "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Rongrong Zou <zourongrong@gmail.com>, Daniel Vetter <daniel.vetter@intel.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Daniel Axtens <dja@axtens.net>
-Content-Type: text/plain; charset="utf-8"
+Cc: Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ LKML <linux-kernel@vger.kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmVuLCBBbGV4DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmVu
-amFtaW4gSGVycmVuc2NobWlkdCBbbWFpbHRvOmJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZ10NCj4g
-U2VudDogMTMgSnVseSAyMDE3IDIyOjIxDQo+IFRvOiBBbGV4IFdpbGxpYW1zb247IEJqb3JuIEhl
-bGdhYXMNCj4gQ2M6IEdhYnJpZWxlIFBhb2xvbmk7IERhbmllbCBBeHRlbnM7IGxpbnV4LXBjaUB2
-Z2VyLmtlcm5lbC5vcmc7DQo+IExpdXhpbmxpYW5nIChNYXR0aGV3IExpdSk7IFJvbmdyb25nIFpv
-dTsgQ2F0YWxpbiBNYXJpbmFzOyBXaWxsIERlYWNvbjsNCj4gbGludXgtYXJtLWtlcm5lbEBsaXN0
-cy5pbmZyYWRlYWQub3JnOyBEYXZpZCBBaXJsaWU7IERhbmllbCBWZXR0ZXINCj4gU3ViamVjdDog
-UmU6IFtQQVRDSCB2NF0gUENJOiBTdXBwb3J0IGhpYm1jIFZHQSBjYXJkcyBiZWhpbmQgYQ0KPiBt
-aXNiZWhhdmluZyBIaVNpbGljb24gYnJpZGdlDQo+IA0KPiBPbiBUaHUsIDIwMTctMDctMTMgYXQg
-MTU6MTEgLTA2MDAsIEFsZXggV2lsbGlhbXNvbiB3cm90ZToNCj4gPiA+ID4gwqDCoMKgwqDCoCAq
-Lw0KPiA+ID4gPiAtwqDCoMKgaWYgKHZnYV9kZWZhdWx0ID09IE5VTEwgJiYNCj4gPiA+ID4gLcKg
-wqDCoMKgwqDCoCAoKHZnYWRldi0+b3ducyAmIFZHQV9SU1JDX0xFR0FDWV9NQVNLKSA9PQ0KPiBW
-R0FfUlNSQ19MRUdBQ1lfTUFTSykpIHsNCj4gPiA+ID4gK8KgwqDCoGlmICh2Z2FfZGVmYXVsdCA9
-PSBOVUxMKSB7DQo+ID4gPiA+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdmdhYXJiX2luZm8o
-JnBkZXYtPmRldiwgInNldHRpbmcgYXMgYm9vdCBWR0ENCj4gZGV2aWNlXG4iKTsNCj4gPiA+ID4g
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB2Z2Ffc2V0X2RlZmF1bHRfZGV2aWNlKHBkZXYpOw0K
-PiA+ID4gPiDCoMKgwqDCoMKgfQ0KPiA+DQo+ID4NCj4gPiAiTGVnYWN5IiBpcyB0aGUgYnJlYWRj
-cnVtYiB3ZSB1c2UgdG8gdHJ5IHRvIHBpY2sgdGhlIHNhbWUgZGV2aWNlIGZvcg0KPiA+IGRlZmF1
-bHQgVkdBIGFzIHRoZSBzeXN0ZW0gZmlybXdhcmUgdXNlZCBhcyB0aGUgYm9vdCBWR0EuwqAgVGhl
-cmUgY2FuDQo+IGJlDQo+ID4gbXVsdGlwbGUgVkdBIGRldmljZXMgaW4gdGhlIHN5c3RlbSwgdGhl
-IGNoYW5nZSBhYm92ZSB3b3VsZCBzaW1wbHkNCj4gbWFrZQ0KPiA+IHRoZSBmaXJzdCBkaXNjb3Zl
-cmVkIGRldmljZSBiZSB0aGUgZGVmYXVsdCBWR0EuwqAgVGhhdCB3b3VsZCBicmVhaw0KPiBtYW55
-LA0KPiA+IG1hbnkgc3lzdGVtcy7CoCBJZiBsZWdhY3kgVkdBIHJhbmdlcyBtZWFuIG5vdGhpbmcg
-b24gQVJNNjQsIHRoZW4NCj4gZm9sbG93DQo+ID4gdGhlIHBvd2VycGMgbGVhZCBhbmQgbWFrZSBh
-biBhcmNoIHF1aXJrIHRoYXQgc2ltcGx5IHNlbGVjdHMgdGhlIGZpcnN0DQo+ID4gZW5hYmxlZCBW
-R0EgZGV2aWNlIGFzIHRoZSBkZWZhdWx0LsKgIFZHQSByb3V0aW5nIGlzIHBhcnQgb2YgdGhlIFBD
-SQ0KPiBzcGVjDQo+ID4gdGhvdWdoLCBzbyB0aGUgZGVmYXVsdCBvZiBzZWxlY3RpbmcgdGhlIGRl
-dmljZSB3aXRoIHJvdXRpbmcgZW5hYmxlZA0KPiA+IG1ha2VzIHNlbnNlLsKgIFRoYW5rcywNCj4g
-DQo+ICJMZWdhY3kiIHRoZXJlIGlpcmMgYWxzbyBtZWFucyB0aGF0IGl0IGhhcyBkZWNvZGluZyBl
-bmFibGVkIGF0IGJvb3QuIElmDQo+IHlvdSBwaWNrIHRoZSBmaXJzdCBvbmUgeW91IG1heSBwaWNr
-IGEgZGV2aWNlIHRoYXQgZG9lc24ndCBhbmQgaGFzbid0DQo+IGJlZW4gaW5pdGlhbGl6ZWQgYnkg
-YW55IGRyaXZlciAoZ29vZCBvbGQgQklPUy1pbml0aWFsaXplZCB0ZXh0IG1vZGUpLg0KDQpSaWdo
-dCBzbyBlZmZlY3RpdmVseSBpZiB0aGVyZSBpcyBhIGxlZ2FjeSBkZXYgd2Ugc2hvdWxkIHBpY2sg
-dGhhdCB1cDsNCmhvd2V2ZXIgd2hhdCBhYm91dCB0aGUgZm9sbG93aW5nIGNvZGU6DQoNCmRpZmYg
-LS1naXQgYS9kcml2ZXJzL2dwdS92Z2EvdmdhYXJiLmMgYi9kcml2ZXJzL2dwdS92Z2EvdmdhYXJi
-LmMNCmluZGV4IDkyZjE0NTIuLmFiM2FkOWEgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL2dwdS92Z2Ev
-dmdhYXJiLmMNCisrKyBiL2RyaXZlcnMvZ3B1L3ZnYS92Z2FhcmIuYw0KQEAgLTE0MjQsNiArMTQy
-NCwxNCBAQCBzdGF0aWMgaW50IF9faW5pdCB2Z2FfYXJiX2RldmljZV9pbml0KHZvaWQpDQogDQog
-CWxpc3RfZm9yX2VhY2hfZW50cnkodmdhZGV2LCAmdmdhX2xpc3QsIGxpc3QpIHsNCiAJCXN0cnVj
-dCBkZXZpY2UgKmRldiA9ICZ2Z2FkZXYtPnBkZXYtPmRldjsNCisNCisJCS8qIGlmIG5vIGxlZ2Fj
-eSBkZXZpY2UgaGFzIGJlZW4gc2V0IGFzIGRlZmF1bHQgVkdBDQorCQkgKiBkZXZpY2UsIGp1c3Qg
-cGljayB1cCB0aGUgZmlyc3Qgb25lIGluIHRoZSBsaXN0ICovDQorCQlpZiAodmdhX2RlZmF1bHQg
-PT0gTlVMTCkgew0KKwkJCXZnYWFyYl9pbmZvKGRldiwgInNldHRpbmcgYXMgYm9vdCBWR0EgZGV2
-aWNlXG4iKTsNCisJCQl2Z2Ffc2V0X2RlZmF1bHRfZGV2aWNlKHZnYWRldi0+cGRldik7DQorCQl9
-DQorDQogI2lmIGRlZmluZWQoQ09ORklHX1g4NikgfHwgZGVmaW5lZChDT05GSUdfSUE2NCkNCiAJ
-CS8qDQogCQkgKiBPdmVycmlkZSB2Z2FfYXJiaXRlcl9hZGRfcGNpX2RldmljZSgpJ3MgSS9PIGJh
-c2VkIGRldGVjdGlvbiANCg0KQWJvdmUgYWZ0ZXIgd2UgaGF2ZSBmaWxsZWQgdGhlIGxpc3Qgb2Yg
-VkdBIGRldmljZXMgYnkgaXRlcmF0aW5nIG92ZXIgYWxsDQpQQ0kgZGV2aWNlcyB3ZSBjaGVjayBp
-ZiBubyBsZWdhY3kgb25lIGhhcyBiZWVuIHNldCBhcyBkZWZhdWx0IFZHQSBkZXZpY2UNCnlldDog
-dGhlcmVmb3JlIHdlIHNldCB0aGUgZmlyc3QgVkdBIGRldmljZSBpbiB0aGUgbGlzdCBhcyBkZWZh
-dWx0IG9uZS4uLg0KDQpEbyB5b3UgdGhpbmsgaXQgd291bGQgd29yaz8NCg0KVGhhbmtzDQpHYWIN
-Cg0KPiANCj4gQ2hlZXJzLA0KPiBCZW4uDQoNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFy
-bS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9t
-YWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Mon, Jul 03, 2017 at 04:34:29PM +0200, Marc Gonzalez wrote:
+> Bjorn Helgaas wrote:
+> 
+> > Marc Gonzalez wrote:
+> >
+> >> On 03/07/2017 01:18, Bjorn Helgaas wrote:
+> >>
+> >>> On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:
+> >>>
+> >>>> +static int tango_check_pcie_link(void __iomem *test_out)
+> >>>
+> >>> I think this is checking for link up.  Rename to tango_pcie_link_up()
+> >>> to follow the convention of other drivers.  Take a struct tango_pcie *
+> >>> instead of an address, if possible.
+> >>
+> >> Anything's possible. NB: if I pass the struct, then I have to store
+> >> the address in the struct, which isn't the case now, since I never
+> >> need the address later. If you don't mind adding an unnecessary
+> >> field to the struct, I can do it. What do you say?
+> > 
+> > The benefit of following the same formula as other drivers is pretty
+> > large.  Most drivers save the equivalent of "base" in the struct.  If
+> > you did that, you wouldn't need an extra pointer; you would just use
+> > "base + SMP8759_MUX" in the config accessors and "base + SMP8759_TEST_OUT"
+> > in tango_pcie_link_up().
+> 
+> The problem is that TEST_OUT is at 0x74 on SMP8759, but at 0x138
+> on my other chip. In fact, all registers have been "reshuffled",
+> and none have the same offsets on the two chips.
+> 
+> My solution was to define specific registers in the struct.
+> 
+> In my [RFC PATCH v0.2] posted March 23, I tried illustrating
+> the issue:
+> 
+> +static const struct of_device_id tango_pcie_ids[] = {
+> +	{ .compatible = "sigma,smp8759-pcie" },
+> +	{ .compatible = "sigma,rev2-pcie" },
+> +	{ /* sentinel */ },
+> +};
+> +
+> +static void smp8759_init(struct tango_pcie *pcie, void __iomem *base)
+> +{
+> +	pcie->mux		= base + 0x48;
+> +	pcie->msi_status	= base + 0x80;
+> +	pcie->msi_mask		= base + 0xa0;
+> +	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
+> +}
+> +
+> +static void rev2_init(struct tango_pcie *pcie, void __iomem *base)
+> +{
+> +	void __iomem *misc_irq	= base + 0x40;
+> +	void __iomem *doorbell	= base + 0x8c;
+> +
+> +	pcie->mux		= base + 0x2c;
+> +	pcie->msi_status	= base + 0x4c;
+> +	pcie->msi_mask		= base + 0x6c;
+> +	pcie->msi_doorbell	= 0x80000000;
+> +
+> +	writel(lower_32_bits(pcie->msi_doorbell), doorbell + 0);
+> +	writel(upper_32_bits(pcie->msi_doorbell), doorbell + 4);
+> +
+> +	/* Enable legacy PCI interrupts */
+> +	writel(BIT(15), misc_irq);
+> +	writel(0xf << 4, misc_irq + 4);
+> +}
+> 
+> 
+> Do you agree that the 'base + OFFSET' idiom does not work in
+> this specific situation? Would you handle it differently?
+
+It's definitely a hassle to support chips with different register
+layouts.  Your hardware guys are really making your life hard :)
+
+drivers/pci/host/pcie-iproc.c is one strategy.  It has
+iproc_pcie_reg_paxb[] and iproc_pcie_reg_paxb_v2[] with register
+offsets for different chip versions.
+
+It saves a table of register offsets per controller, which is similar
+to saving a set of pointers per controller.  Saving the pointers as
+you suggest above is marginally more storage but probably easier to
+read.
+
+If the chips are fundamentally different, i.e., if they *operate*
+differently in addition to having a different register layout, you
+could make two separate drivers.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
