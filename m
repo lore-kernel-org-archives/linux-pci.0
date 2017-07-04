@@ -1,87 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1500636977-11934-3-git-send-email-varada@codeaurora.org>
-References: <1500636977-11934-1-git-send-email-varada@codeaurora.org> <1500636977-11934-3-git-send-email-varada@codeaurora.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Date: Wed, 26 Jul 2017 20:33:46 +0530
-Message-ID: <CAFp+6iG+PL_dY7JiiSAuLaFBzaykqO9XCP9f_Y4Odqdh4sf9gw@mail.gmail.com>
-Subject: Re: [PATCH v4 2/7] dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-To: Varadarajan Narayanan <varada@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "robh+dt" <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, svarbanov@mm-sol.com,
-        kishon <kishon@ti.com>, Stephen Boyd <sboyd@codeaurora.org>,
-        fengguang.wu@intel.com, Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-pci@vger.kernel.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-msm <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
+ <20170613151013.GT3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
+ <20170613200339.GX3187@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
+ <20170616083313.GY3187@lahna.fi.intel.com>
+ <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
+ <20170616120048.GC629@lahna.fi.intel.com>
+ <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
+ <20170619100209.GC629@lahna.fi.intel.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
+ <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 4 Jul 2017 18:46:59 +0300
+Message-ID: <CAHp75VccwpesvDxMcxZ+349rhrAq8QxNoau9XmquMnv9DBLBfA@mail.gmail.com>
+Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
+ before scanning
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
+ "frowand.list@gmail.com" <frowand.list@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
+ "xuwei \(O\)" <xuwei5@hisilicon.com>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "minyard@acm.org" <minyard@acm.org>, John Garry <john.garry@huawei.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "olof@lixom.net" <olof@lixom.net>,
+ "brian.starkey@arm.com" <brian.starkey@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 21, 2017 at 5:06 PM, Varadarajan Narayanan
-<varada@codeaurora.org> wrote:
-> IPQ8074 uses QMP phy controller that provides support to PCIe and
-> USB. Adding dt binding information for the same.
->
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
->  Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 8 ++++++++
->  1 file changed, 8 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> index 5d7a51f..82fe0c4 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> @@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
->
->  Required properties:
->   - compatible: compatible list, contains:
-> +              "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
->                "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
->                "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
->
-> @@ -38,6 +39,8 @@ Required properties:
->                  "phy", "common", "cfg".
->                 For "qcom,msm8996-qmp-usb3-phy" must contain
->                  "phy", "common".
-> +               For "qcom,ipq8074-qmp-pcie-phy" must contain:
-> +                "phy", "phy_phy".
+On Tue, Jul 4, 2017 at 6:14 PM, Gabriele Paoloni
+<gabriele.paoloni@huawei.com> wrote:
 
-Actually the "common" reset for msm8996-qmp-usb3-phy is
-usb3phy_phy_reset in the datasheets, which functions in a
-similar fashion as this "phy_phy" reset. So may be we don't
-need another name?
-
-regards
-Vivek
-
+>> > In my case I'd like to have a platform device using the resources
+>> that are
+>> > parsed from the ACPI table (i.e. as it is done now by
+>> > acpi_create_platform_device()).
+>>
+>> So far so good. Nothing prevents you to do that.
+>>
+>> > If my understanding is correct, if I declared an mfd_cell for my IPMI
+>> child
+>> > the mfd subsystem would create a platform device for such child and
+>> > therefore acpi_create_platform_device() would fail to create a new
+>> platform
+>> > device as adev->physical_node_count will be non zero.
+>> > However as things stand now mfd_cell devices can only use the
+>> resources
+>> > that are statically defined in the code (and therefore not the ones
+>> in the
+>> > ACPI nodes)...am I right?
+>>
+>> You may file resources first and then register MFD cells. See many
+>> existing examples in the kernel.
 >
->   - vdda-phy-supply: Phandle to a regulator supply to PHY core block.
->   - vdda-pll-supply: Phandle to 1.8V regulator supply to PHY refclk pll block.
-> @@ -63,6 +66,11 @@ Required properties for child node:
->   - clock-output-names: Name of the phy clock that will be the parent for
->                        the above pipe clock.
+> Well I had a look around the Kernel I have seen no mfd cells using
+> Resources that are not statically defined:
+> i.e. cell->resources in mfd_add_device() always points to statically
+> defined resource structures.
 >
-> +       For "qcom,ipq8074-qmp-pcie-phy":
-> +               - "pcie20_phy0_pipe_clk"        Pipe Clock parent
-> +                       (or)
-> +                 "pcie20_phy1_pipe_clk"
-> +
->   - resets: a list of phandles and reset controller specifier pairs,
->            one for each entry in reset-names.
->   - reset-names: Must contain following for pcie qmp phys:
-> --
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> Usually for ACPI devices first you need to parse the ACPI resources
+> from the table calling acpi_dev_get_resources(), then you iterate
+> over the resource list and fill the resource array by calling
+> acpi_platform_fill_resurces() (as in acpi_create_platform_device())
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> With respect to my case are you suggesting dynamically allocate a
+> resource array and fill it using the same fashion as
+> acpi_create_platform_device(), then point cell->resources to such
+> array before calling mfd_add_device() ?
 
-
+You may do it on stack. Define your cell statically (but not const)
+and apply resources just before mfd_add_devices() call.
+There are examples in the existing drivers. Intel LPC comes to my mind
+and perhaps PMC (Broxton), though latter has too much other stuff
+around.
 
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
