@@ -1,226 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59722 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753502AbdGUViT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:38:19 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v2 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
-Date: Fri, 21 Jul 2017 23:30:24 +0200
-Message-ID: <4690779.IRjbMOd2yB@aspire.rjw.lan>
-In-Reply-To: <4853865.5aRGCM4CdQ@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <4853865.5aRGCM4CdQ@aspire.rjw.lan>
+Return-Path: <SRS0=lBym=6I=synopsys.com=Joao.Pinto@kernel.org>
+Return-Path: <SRS0=lBym=6I=synopsys.com=Joao.Pinto@kernel.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>, Jisheng Zhang
+	<jszhang@marvell.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+	Mason <slash.tmp@free.fr>, Marc Zyngier <marc.zyngier@arm.com>, linux-pci
+	<linux-pci@vger.kernel.org>, Thibaud Cornic
+	<thibaud_cornic@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>, Thomas Gleixner <tglx@linutronix.de>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>, Marc Gonzalez
+	<marc_gonzalez@sigmadesigns.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
+ <20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
+ <20170704145840.69e53f58@xhacker>
+ <CAKv+Gu9gi1W2Ex1hchMdob9PqkQ94uYspQW31W2+RG_sgsEV4Q@mail.gmail.com>
+ <20170704161913.4935b16a@xhacker>
+ <CAKv+Gu9ASLzBpJNN2eddw4K=g6+be8amH_7ZdZ0Qj+s_p+EuRw@mail.gmail.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <e758781e-65d0-d891-1c7b-a3f04fbe6c79@synopsys.com>
+Date: Wed, 5 Jul 2017 14:53:17 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKv+Gu9ASLzBpJNN2eddw4K=g6+be8amH_7ZdZ0Qj+s_p+EuRw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hi to all,
 
-The acpi_pci_propagate_wakeup() routine is there to handle cases in
-which PCI bridges (or PCIe ports) are expected to signal wakeup
-for devices below them, but currently it doesn't do that correctly.
+Às 10:38 AM de 7/4/2017, Ard Biesheuvel escreveu:
+> On 4 July 2017 at 09:19, Jisheng Zhang <jszhang@marvell.com> wrote:
+>> On Tue, 4 Jul 2017 09:02:06 +0100 Ard Biesheuvel wrote:
+>>
+>>> On 4 July 2017 at 07:58, Jisheng Zhang <jszhang@marvell.com> wrote:
+>>>> On Mon, 3 Jul 2017 08:27:04 -0500 wrote:
+>>>>
+>>>>> [+cc Jingoo, Joao]
+>>>>>
+>>>>> On Mon, Jul 03, 2017 at 10:35:50AM +0100, Ard Biesheuvel wrote:
+>>>>>> On 3 July 2017 at 00:18, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>>>>> On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:
+>>>>>>>> This driver is required to work around several hardware bugs
+>>>>>>>> in the PCIe controller.
+>>>>>>>>
+>>>>>>>> NB: Revision 1 does not support legacy interrupts, or IO space.
+>>>>>>>
+>>>>>>> I had to apply these manually because of conflicts in Kconfig and
+>>>>>>> Makefile.  What are these based on?  Easiest for me is if you base
+>>>>>>> them on the current -rc1 tag.
+>>>>>>>
+>>>>>>>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+>>>>>>>> ---
+>>>>>>>>  drivers/pci/host/Kconfig      |   8 +++
+>>>>>>>>  drivers/pci/host/Makefile     |   1 +
+>>>>>>>>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++
+>>>>>>>>  include/linux/pci_ids.h       |   2 +
+>>>>>>>>  4 files changed, 175 insertions(+)
+>>>>>>>>  create mode 100644 drivers/pci/host/pcie-tango.c
+>>>>>>>>
+>>>>>> [..]
+>>>>>>>> +     /*
+>>>>>>>> +      * QUIRK #2
+>>>>>>>> +      * Unfortunately, config and mem spaces are muxed.
+>>>>>>>> +      * Linux does not support such a setting, since drivers are free
+>>>>>>>> +      * to access mem space directly, at any time.
+>>>>>>>> +      * Therefore, we can only PRAY that config and mem space accesses
+>>>>>>>> +      * NEVER occur concurrently.
+>>>>>>>> +      */
+>>>>>>>> +     writel_relaxed(1, pcie->mux);
+>>>>>>>> +     ret = pci_generic_config_read(bus, devfn, where, size, val);
+>>>>>>>> +     writel_relaxed(0, pcie->mux);
+>>>>>>>
+>>>>>>> I'm very hesitant about this.  When people stress this, we're going to
+>>>>>>> get reports of data corruption.  Even with the disclaimer below, I
+>>>>>>> don't feel good about this.  Adding the driver is an implicit claim
+>>>>>>> that we support the device, but we know it can't be made reliable.
+>>>>>>
+>>>>>> I noticed that the Synopsys driver suffers from a similar issue: in
+>>>>>> dw_pcie_rd_other_conf(), it happily reprograms the outbound I/O window
+>>>>>> to perform a config space access, and switches it back to I/O space
+>>>>>> afterwards (unless it has more than 2 viewports, in which case it uses
+>>>>>> dedicated windows for I/O space and config space)
+>>>>>
+>>>>> That doesn't sound good.  Jingoo, Joao?  I remember some discussion
+>>>>> about this, but not the details.
+>>>>>
+>>>>> I/O accesses use wrappers (inb(), etc), so there's at least the
+>>>>> possibility of a mutex to serialize them with respect to config
+>>>>> accesses.
+>>>>>
+>>>>
+>>>> IIRC, for 2 viewports, we don't need to worry about the config space
+>>>> access, because config space access is serialized by pci_lock; We
+>>>> do have race between config space and io space. But the accessing config
+>>>> space and io space at the same time is rare.
+>>>
+>>> Being 'rare' is not sufficient, unfortunately. In the current
+>>> situation, I/O space accesses may occur when the outbound window is
+>>> directed to the config space of a potentially completely unrelated
+>>> device. This is bad.
+>>
+>> Yep, I agree with you.
+>>
+>>>
+>>>> And the PCIe EPs which
+>>>> has io space are rare too, supporting these EPs are not the potential
+>>>> target of those platforms with 2 viewports.
+>>>>
+>>>
+>>> I am not sure EP mode is relevant here. What I do know is that boards
+>>
+>> I mean those PCIe EP cards which have IO space, but that doesn't matter.
+>>
+> 
+> Ah, ok. But if such EP cards are so rare, why expose I/O space at all
+> if we cannot do it safely?
+> 
+>>> like the Marvell 8040 based MacchiatoBin uses this IP in RC mode, and
+>>> exposes config, MMIO and IO space windows using only 2 viewports. Note
+>>> that this is essentially a bug in the DT description, given that its
+>>> version of the IP supports 8 viewports. But the driver needs to be
+>>> fixed as well.
+>>
+>> To fix for 2 viewports situation, we need to serialize access of the io
+>> and config space. In internal repo, we can achieve it by modifying the
+>> io access helper functions such as inl/outl, but this won't be accepted
+>> by the mainline IMHO. Except fixing the HW, any elegant solution?
+>>
+>> Suggestions are appreciated.
+>>
+> 
+> I think the safe and upstreamable approach is to disable the I/O
+> window completely if num-viewports <= 2.
+> 
 
-The problem is that acpi_pci_propagate_wakeup() uses
-acpi_pm_set_device_wakeup() for bridges and if that routine is
-called for multiple times to disable wakeup for the same device,
-it will disable it on the first invocation and the next calls
-will have no effect (it works analogously when called to enable
-wakeup, but that is not a problem).
+I think that the critical case is when we are using a single ATU region, and
+that has to managed by software. The hardware is not capable of managing racing
+conditions, like programming the ATU while still transfering data, so problems
+can ocurre for sure. In this case we should be able to add to the driver a
+simple lock to signal that the ATU is being used. If the ATU was being used we
+could make a spinlock for example. Would this acceptable in your opinion? The
+problem is when we are transfering data. Are we able to know that data is being
+processed?
 
-Now, say acpi_pci_propagate_wakeup() has been called for two
-different devices under the same bridge and it has called
-acpi_pm_set_device_wakeup() for that bridge each time.  The
-bridge is now enabled to generate wakeup signals.  Next,
-suppose that one of the devices below it resumes and
-acpi_pci_propagate_wakeup() is called to disable wakeup for that
-device.  It will then call acpi_pm_set_device_wakeup() for the bridge
-and that will effectively disable remote wakeup for all devices under
-it even though some of them may still be suspended and remote wakeup
-may be expected to work for them.
+When using a single region, when we access the config mem, we have to stop all
+data transfers, reprogram the ATU to handle the config access, do the config
+read/write, put the region "back" and restart the data transfer.
 
-To address this (arguably theoretical) issue, allow
-wakeup.enable_count under struct acpi_device to grow beyond 1 in
-certain situations.  In particular, allow that to happen in
-acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
-for PCI bridges, so that wakeup is actually disabled for the
-bridge when all devices under it resume and not when just one
-of them does that.
+When using 2 or more regions, we can separate the scopes and the data transfers
+does not need to be stopped. The race problem is harder to ocurre.
 
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
-
--> v2: Rearrange checks in acpi_device_wakeup_enable() to reduce indentation
-          level and possibly save some unnecessary checks for max_count == 1.
-
----
- drivers/acpi/device_pm.c |   46 +++++++++++++++++++++++++++++-----------------
- drivers/pci/pci-acpi.c   |    4 ++--
- include/acpi/acpi_bus.h  |   14 ++++++++++++--
- 3 files changed, 43 insertions(+), 21 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -682,19 +682,8 @@ static void acpi_pm_notify_work_func(str
- 
- static DEFINE_MUTEX(acpi_wakeup_lock);
- 
--/**
-- * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-- * @adev: ACPI device to enable wakeup functionality for.
-- * @target_state: State the system is transitioning into.
-- *
-- * Enable the GPE associated with @adev so that it can generate wakeup signals
-- * for the device in response to external (remote) events and enable wakeup
-- * power for it.
-- *
-- * Callers must ensure that @adev is a valid ACPI device node before executing
-- * this function.
-- */
--static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
-+static int __acpi_device_wakeup_enable(struct acpi_device *adev,
-+				       u32 target_state, int max_count)
- {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
- 	acpi_status status;
-@@ -702,9 +691,12 @@ static int acpi_device_wakeup_enable(str
- 
- 	mutex_lock(&acpi_wakeup_lock);
- 
--	if (wakeup->enable_count > 0)
-+	if (wakeup->enable_count >= max_count)
- 		goto out;
- 
-+	if (wakeup->enable_count > 0)
-+		goto inc;
-+
- 	error = acpi_enable_wakeup_device_power(adev, target_state);
- 	if (error)
- 		goto out;
-@@ -716,6 +708,7 @@ static int acpi_device_wakeup_enable(str
- 		goto out;
- 	}
- 
-+inc:
- 	wakeup->enable_count++;
- 
- out:
-@@ -724,6 +717,23 @@ out:
- }
- 
- /**
-+ * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-+ * @adev: ACPI device to enable wakeup functionality for.
-+ * @target_state: State the system is transitioning into.
-+ *
-+ * Enable the GPE associated with @adev so that it can generate wakeup signals
-+ * for the device in response to external (remote) events and enable wakeup
-+ * power for it.
-+ *
-+ * Callers must ensure that @adev is a valid ACPI device node before executing
-+ * this function.
-+ */
-+static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
-+{
-+	return __acpi_device_wakeup_enable(adev, target_state, 1);
-+}
-+
-+/**
-  * acpi_device_wakeup_disable - Disable wakeup functionality for device.
-  * @adev: ACPI device to disable wakeup functionality for.
-  *
-@@ -754,8 +764,9 @@ out:
-  * acpi_pm_set_device_wakeup - Enable/disable remote wakeup for given device.
-  * @dev: Device to enable/disable to generate wakeup events.
-  * @enable: Whether to enable or disable the wakeup functionality.
-+ * @max_count: Maximum value of the enable reference counter.
-  */
--int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
- {
- 	struct acpi_device *adev;
- 	int error;
-@@ -775,13 +786,14 @@ int acpi_pm_set_device_wakeup(struct dev
- 		return 0;
- 	}
- 
--	error = acpi_device_wakeup_enable(adev, acpi_target_system_state());
-+	error = __acpi_device_wakeup_enable(adev, acpi_target_system_state(),
-+					    max_count);
- 	if (!error)
- 		dev_dbg(dev, "Wakeup enabled by ACPI\n");
- 
- 	return error;
- }
--EXPORT_SYMBOL(acpi_pm_set_device_wakeup);
-+EXPORT_SYMBOL(__acpi_pm_set_device_wakeup);
- 
- /**
-  * acpi_dev_pm_low_power - Put ACPI device into a low-power state.
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -605,7 +605,7 @@ acpi_status acpi_add_pm_notifier(struct
- acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
- bool acpi_pm_device_can_wakeup(struct device *dev);
- int acpi_pm_device_sleep_state(struct device *, int *, int);
--int acpi_pm_set_device_wakeup(struct device *dev, bool enable);
-+int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count);
- #else
- static inline void acpi_pm_wakeup_event(struct device *dev)
- {
-@@ -632,12 +632,22 @@ static inline int acpi_pm_device_sleep_s
- 	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3_COLD) ?
- 		m : ACPI_STATE_D0;
- }
--static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+static inline int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
- {
- 	return -ENODEV;
- }
- #endif
- 
-+static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+{
-+	return __acpi_pm_set_device_wakeup(dev, enable, 1);
-+}
-+
-+static inline int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
-+{
-+	return __acpi_pm_set_device_wakeup(dev, enable, INT_MAX);
-+}
-+
- #ifdef CONFIG_ACPI_SLEEP
- u32 acpi_target_system_state(void);
- #else
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -573,7 +573,7 @@ static int acpi_pci_propagate_wakeup(str
- {
- 	while (bus->parent) {
- 		if (acpi_pm_device_can_wakeup(&bus->self->dev))
--			return acpi_pm_set_device_wakeup(&bus->self->dev, enable);
-+			return acpi_pm_set_bridge_wakeup(&bus->self->dev, enable);
- 
- 		bus = bus->parent;
- 	}
-@@ -581,7 +581,7 @@ static int acpi_pci_propagate_wakeup(str
- 	/* We have reached the root bus. */
- 	if (bus->bridge) {
- 		if (acpi_pm_device_can_wakeup(bus->bridge))
--			return acpi_pm_set_device_wakeup(bus->bridge, enable);
-+			return acpi_pm_set_bridge_wakeup(bus->bridge, enable);
- 	}
- 	return 0;
- }
+Thanks,
+Joao
