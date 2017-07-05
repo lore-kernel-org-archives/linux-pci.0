@@ -1,53 +1,160 @@
-Return-Path: <SRS0=5Tji=6O=suse.de=jroedel@kernel.org>
-Return-Path: <SRS0=5Tji=6O=suse.de=jroedel@kernel.org>
-Date: Tue, 11 Jul 2017 13:49:48 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
-	Alexander Deucher <Alexander.Deucher@amd.com>,
-	Samuel Sieb <samuel@sieb.net>,
-	David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Message-ID: <20170711114948.GA6244@suse.de>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <20170615140421.GB25710@suse.de>
- <20170615191545.GB12735@bhelgaas-glaptop.roam.corp.google.com>
- <20170616162923.GE25710@suse.de>
- <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:47267 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751696AbdGEK5z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 06:57:55 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <marc.zyngier@arm.com>
+CC: <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+ <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
+ <594955BC.3010703@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
+Date: Wed, 5 Jul 2017 11:57:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <594955BC.3010703@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Mon, Jul 10, 2017 at 11:53:58AM -0500, Bjorn Helgaas wrote:
-> I'm still confused.  Per Samuel
-> (6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net):
+Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
+> On 06/20/2017 12:28 PM, Joao Pinto wrote:
+>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
+>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
+>>>>
+>>>> Hi Murali,
+>>>>
+>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+>>>>> Joao,
+>>>>>
+>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>>>>>> This patch series adds the new interrupt api to pcie-designware
+>>>>>> make it possible to use features like MSIX.
+>>>>>>
+>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
+>>>>>> specific driver.
+>>>>>>
+>>>>>> The patch set was made against the Bjorn' next branch.
+>>>>>>
+>>>>>> Joao Pinto (9):
+>>>>>>   pci: adding new irq api to pci-designware
+>>>>>>   pci: exynos SoC driver adapted to new irq API
+>>>>>>   pci: imx6 SoC driver adapted to new irq API
+>>>>>>   pci: artpec6 SoC driver adapted to new irq API
+>>>>>>   pci: generic PCIe DW driver adapted to new irq API
+>>>>>>   pci: qcom SoC driver adapted to new irq API
+>>>>>>   pci: keystone SoC driver adapted to new irq API
+>>>>>>   pci: removing old irq api from pcie-designware
+>>>>>>   pci: remove limitation of the number of the available IRQs
+>>>>>>
+>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>>>>>
+>>>>>
+>>>>> I gave this a try today and it failed. Logs at
+>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+>>>>>
+>>>>> The first part of the log is with your patch series.
+>>>>> The second part is before applying the patch. You will see
+>>>>> that there is qc timeout log that shows the issue
+>>>>>
+>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>
+>>>>> Is there any DT change I need to make for this? I didn't have a
+>>>>> chance to review your patch w.r.t Keystone. But I see you have change
+>>>>> the MSI IRq handling.
+>>>>>
+>>>>
+>>>> There is no need to change your DT. I think I will need to debug this issue
+>>>> further. Could you please advice a board containing this SoC?
+>>>>
+>>> I think I may be able to work with you on this. Keystone has different 
+>>> register set for MSI IRQ. It is in application space. Also there are
+>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
+>>> please review the original code vs the changed one w.r.t to this. I haven't
+>>> had a chance to review the code as I am in the middle of a release.
+>>> But will be able to spend some time after two weeks. Meanwhile please
+>>> spend some time reviewing the code and exchange email to identify
+>>> the issue. I can add specific debug prints for you as well and provide
+>>> you the log for analysis.
+>>
+>> Ok, I agree! Thanks!
+>>
+>>>
+> Look at this logic in the patch where a potential issue exists for Keystone.
 > 
-> Samuel> The other patch seems to fix this issue without disabling ATS.
-> Samuel> Isn't that better?
+> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+> +       struct pcie_port *pp = &pci->pp;
+> +       u64 msi_target;
+> +
+> +       if (pp->ops->get_msi_addr)
+> +               msi_target = pp->ops->get_msi_addr(pp);
+> +       else
+> +               msi_target = virt_to_phys((void *)pp->msi_data);
+> +
+> +       msg->address_lo = lower_32_bits(msi_target);
+> +       msg->address_hi = upper_32_bits(msi_target);
+> +
+> +       if (pp->ops->get_msi_data)
+> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+> +       else
+> +               msg->data = data->hwirq;
+> +
+> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
+> +}
 > 
-> and Alex
-> (BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd12.prod.outlook.com):
+> Keystone has 8 hw irqs, 4 multiplexed over each since the register
+> set is different than other DWC cores. So will not work for Keystone,
+> right?
+
+Well, that can be challenging, since it is a very particular operation.
+Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
+overide this one if necessary. What do you think?
+
+Thanks.
+
 > 
-> Alex> I talked to our validation team and ATS was validated on Stoney,
-> Alex> so this patch is just working around something else.  The other
-> Alex> patch fixes it and is a valid optimization ...
+> Murali
 > 
-> I'm confused about what this "other patch" is and whether we want that
-> one, this one, or both.
-
-The other patches floating around lowered the ATS flush-rate from the
-AMD IOMMU driver, which makes the issue disappear as well. But the issue
-only disappeared, it is not solved and could probably still be
-reproduced with a GPU usage pattern that increases the ATS flush-rate.
-
-So blacklisting the device for ATS is still the safest thing we could do
-here.
-
-
-Regards,
-
-	Joerg
+>>> Let me know.
+>>>
+>>> Murali
+>>>> Thanks.
+>>>>
+>>>>
+>>>>
+>>>>
+>>>
+>>>
+>>
+> 
+> 
