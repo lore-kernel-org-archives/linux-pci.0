@@ -1,102 +1,239 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:36751 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753241AbdGNDxK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:53:10 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH 4/6] PCI: rockchip: idle the inactive PHY(s)
-Date: Fri, 14 Jul 2017 11:52:44 +0800
-Message-Id: <1500004366-241633-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
- <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=oqJc=6I=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=oqJc=6I=linaro.org=ard.biesheuvel@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
+References: <741766e5-cff2-db5f-d40b-6866e08fd966@sigmadesigns.com> <1802aae0-f97b-c437-c00e-5fa7c867286d@sigmadesigns.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 5 Jul 2017 10:36:24 +0100
+Message-ID: <CAKv+Gu_VBrbra0GZ9gziVh+pcjO34f28t5WHoBTrfYCNAKfnAg@mail.gmail.com>
+Subject: Re: [PATCH v5 2/3] PCI: Add tango PCIe host bridge support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Mason <slash.tmp@free.fr>, Marc Zyngier <marc.zyngier@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, Liviu Dudau <liviu.dudau@arm.com>,
+	LKML <linux-kernel@vger.kernel.org>, David Laight <david.laight@aculab.com>,
+	Thomas Gleixner <tglx@linutronix.de>, Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+	Robin Murphy <robin.murphy@arm.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Check the status of all lanes and idle the inactive one(s).
+On 31 May 2017 at 13:33, Marc Gonzalez <marc_gonzalez@sigmadesigns.com> wrote:
+> This driver is required to work around several hardware bugs
+> in the PCIe controller.
+>
+> NB: Revision 1 does not support legacy interrupts, or IO space.
+>
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> ---
+>  drivers/pci/host/Kconfig      |   8 +++
+>  drivers/pci/host/Makefile     |   1 +
+>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/pci_ids.h       |   2 +
+>  4 files changed, 175 insertions(+)
+>
+[...]
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+> new file mode 100644
+> index 000000000000..67aaadcc1c5e
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-tango.c
+> @@ -0,0 +1,164 @@
+> +#include <linux/pci-ecam.h>
+> +#include <linux/delay.h>
+> +#include <linux/of.h>
+> +
+> +#define MSI_MAX 256
+> +
+> +#define SMP8759_MUX            0x48
+> +#define SMP8759_TEST_OUT       0x74
+> +
+> +struct tango_pcie {
+> +       void __iomem *mux;
+> +};
+> +
+> +/*** HOST BRIDGE SUPPORT ***/
+> +
+> +static int smp8759_config_read(struct pci_bus *bus,
+> +               unsigned int devfn, int where, int size, u32 *val)
+> +{
+> +       int ret;
+> +       struct pci_config_window *cfg = bus->sysdata;
+> +       struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
+> +
+> +       /*
+> +        * QUIRK #1
+> +        * Reads in configuration space outside devfn 0 return garbage.
+> +        */
+> +       if (devfn != 0)
+> +               return PCIBIOS_FUNC_NOT_SUPPORTED;
+> +
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Does this mean multi-function devices are not supported? E.g., on my
+system I have
 
- drivers/pci/host/pcie-rockchip.c | 31 ++++++++++++++++++++++++++++++-
- 1 file changed, 30 insertions(+), 1 deletion(-)
+-[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD] Device 1a00
+           +-02.0  Advanced Micro Devices, Inc. [AMD] Device 1a01
+           +-02.1-[01]----00.0  Renesas Technology Corp. uPD720201 USB 3.0
+           \-02.2-[02]--+-00.0  NVIDIA Corporation GT218 [GeForce 210]
+                        \-00.1  NVIDIA Corporation HD Audio Controller
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index a3dc7bd..d678a93 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -15,6 +15,7 @@
-  * (at your option) any later version.
-  */
- 
-+#include <linux/bitrev.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
-@@ -112,6 +113,9 @@
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
- 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
-+#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
-+#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
-+#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -311,6 +315,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 	return 1;
- }
- 
-+static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
-+{
-+	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-+	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
-+
-+	/* The link may be using a reverse-indexed mapping. */
-+	if (val & PCIE_CORE_LANE_MAP_REVERSE)
-+		map = bitrev8(map) >> 4;
-+
-+	return map;
-+}
-+
- static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 *val)
- {
-@@ -618,7 +634,8 @@ static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
- static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
--	int err;
-+	int err, i;
-+	u8 lane_map;
- 	u32 status;
- 
- 	gpiod_set_value(rockchip->ep_gpio, 0);
-@@ -791,6 +808,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
-+	if (!rockchip->legacy_phy) {
-+		/*  power off unused lane(s) */
-+		lane_map = rockchip_pcie_lane_map(rockchip);
-+		for (i = 0; i < MAX_LANE_NUM; i++) {
-+			if (lane_map & BIT(i))
-+				continue;
-+
-+			dev_err(dev, "idling lane %d\n", i);
-+			phy_power_off(rockchip->phys[i]);
-+		}
-+	}
-+
- 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
- 			    PCIE_CORE_CONFIG_VENDOR);
- 	rockchip_pcie_write(rockchip,
--- 
-1.9.1
+where the HDMI audio is on devfn 00.1 on bus 2
+
+
+> +       /*
+> +        * QUIRK #2
+> +        * Unfortunately, config and mem spaces are muxed.
+> +        * Linux does not support such a setting, since drivers are free
+> +        * to access mem space directly, at any time.
+> +        * Therefore, we can only PRAY that config and mem space accesses
+> +        * NEVER occur concurrently.
+> +        */
+> +       writel_relaxed(1, pcie->mux);
+> +       ret = pci_generic_config_read(bus, devfn, where, size, val);
+> +       writel_relaxed(0, pcie->mux);
+> +
+> +       return ret;
+> +}
+> +
+> +static int smp8759_config_write(struct pci_bus *bus,
+> +               unsigned int devfn, int where, int size, u32 val)
+> +{
+> +       int ret;
+> +       struct pci_config_window *cfg = bus->sysdata;
+> +       struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
+> +
+> +       writel_relaxed(1, pcie->mux);
+> +       ret = pci_generic_config_write(bus, devfn, where, size, val);
+> +       writel_relaxed(0, pcie->mux);
+> +
+> +       return ret;
+> +}
+> +
+> +static struct pci_ecam_ops smp8759_ecam_ops = {
+> +       .bus_shift      = 20,
+> +       .pci_ops        = {
+> +               .map_bus        = pci_ecam_map_bus,
+> +               .read           = smp8759_config_read,
+> +               .write          = smp8759_config_write,
+> +       }
+> +};
+> +
+> +static const struct of_device_id tango_pcie_ids[] = {
+> +       { .compatible = "sigma,smp8759-pcie" },
+> +       { /* sentinel */ },
+> +};
+> +
+> +static int tango_check_pcie_link(void __iomem *test_out)
+> +{
+> +       int i;
+> +
+> +       writel_relaxed(16, test_out);
+> +       for (i = 0; i < 10; ++i) {
+> +               u32 ltssm_state = readl_relaxed(test_out) >> 8;
+> +               if ((ltssm_state & 0x1f) == 0xf) /* L0 */
+> +                       return 0;
+> +               usleep_range(3000, 4000);
+> +       }
+> +
+> +       return -ENODEV;
+> +}
+> +
+> +static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
+> +{
+> +       pcie->mux               = base + SMP8759_MUX;
+> +
+> +       return tango_check_pcie_link(base + SMP8759_TEST_OUT);
+> +}
+> +
+> +static int tango_pcie_probe(struct platform_device *pdev)
+> +{
+> +       int ret = -EINVAL;
+> +       void __iomem *base;
+> +       struct resource *res;
+> +       struct tango_pcie *pcie;
+> +       struct device *dev = &pdev->dev;
+> +
+> +       pr_err("MAJOR ISSUE: PCIe config and mem spaces are muxed\n");
+> +       pr_err("Tainting kernel... Use driver at your own risk\n");
+> +       add_taint(TAINT_FIRMWARE_WORKAROUND, LOCKDEP_STILL_OK);
+> +
+> +       pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
+> +       if (!pcie)
+> +               return -ENOMEM;
+> +
+> +       platform_set_drvdata(pdev, pcie);
+> +
+> +       res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+> +       base = devm_ioremap_resource(&pdev->dev, res);
+> +       if (IS_ERR(base))
+> +               return PTR_ERR(base);
+> +
+> +       if (of_device_is_compatible(dev->of_node, "sigma,smp8759-pcie"))
+> +               ret = smp8759_init(pcie, base);
+> +
+> +       if (ret)
+> +               return ret;
+> +
+> +       return pci_host_common_probe(pdev, &smp8759_ecam_ops);
+> +}
+> +
+> +static struct platform_driver tango_pcie_driver = {
+> +       .probe  = tango_pcie_probe,
+> +       .driver = {
+> +               .name = KBUILD_MODNAME,
+> +               .of_match_table = tango_pcie_ids,
+> +       },
+> +};
+> +
+> +builtin_platform_driver(tango_pcie_driver);
+> +
+> +/*
+> + * QUIRK #3
+> + * The root complex advertizes the wrong device class.
+> + * Header Type 1 is for PCI-to-PCI bridges.
+> + */
+> +static void tango_fixup_class(struct pci_dev *dev)
+> +{
+> +       dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x24, tango_fixup_class);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x28, tango_fixup_class);
+> +
+> +/*
+> + * QUIRK #4
+> + * The root complex exposes a "fake" BAR, which is used to filter
+> + * bus-to-system accesses. Only accesses within the range defined
+> + * by this BAR are forwarded to the host, others are ignored.
+> + *
+> + * By default, the DMA framework expects an identity mapping,
+> + * and DRAM0 is mapped at 0x80000000.
+> + */
+> +static void tango_fixup_bar(struct pci_dev *dev)
+> +{
+> +       dev->non_compliant_bars = true;
+> +       pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000000);
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x24, tango_fixup_bar);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x28, tango_fixup_bar);
+> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+> index f020ab4079d3..b577dbe46f8f 100644
+> --- a/include/linux/pci_ids.h
+> +++ b/include/linux/pci_ids.h
+> @@ -1369,6 +1369,8 @@
+>  #define PCI_DEVICE_ID_TTI_HPT374       0x0008
+>  #define PCI_DEVICE_ID_TTI_HPT372N      0x0009  /* apparently a 372N variant? */
+>
+> +#define PCI_VENDOR_ID_SIGMA            0x1105
+> +
+>  #define PCI_VENDOR_ID_VIA              0x1106
+>  #define PCI_DEVICE_ID_VIA_8763_0       0x0198
+>  #define PCI_DEVICE_ID_VIA_8380_0       0x0204
+> --
+> 2.11.0
+>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
