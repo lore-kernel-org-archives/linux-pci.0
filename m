@@ -1,89 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42542 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754312AbdGJVHj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 17:07:39 -0400
-Date: Mon, 10 Jul 2017 16:07:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: pci-keystone-dw: remove some unused variables
-Message-ID: <20170710210735.GD5610@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499331404-122436-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:34726 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752317AbdGEDJX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:09:23 -0400
+Received: by mail-wr0-f182.google.com with SMTP id 77so256153270wrb.1
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:09:22 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v4 0/2] PCI: iproc: SOC specific fixes
+Date: Wed,  5 Jul 2017 08:38:57 +0530
+Message-Id: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499331404-122436-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 06, 2017 at 04:56:44PM +0800, Shawn Lin wrote:
-> We got the following warning:
-> 
-> drivers/pci/dwc/pci-keystone-dw.c: In function
-> 'ks_dw_pcie_msi_irq_mask':
-> 
-> drivers/pci/dwc/pci-keystone-dw.c:171:24: warning: variable 'ks_pcie'
-> set but not used [-Wunused-but-set-variable]
-> 
-> drivers/pci/dwc/pci-keystone-dw.c: In function
->   'ks_dw_pcie_msi_irq_unmask':
-> 
-> drivers/pci/dwc/pci-keystone-dw.c:194:24: warning: variable 'ks_pcie'
->   set but not used [-Wunused-but-set-variable
-> 
-> By looing into the code, ks_pcie and pci variables are never used.
-> Remove them to silent the compile warning.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+PCI: iproc: Retry request when CRS returned from EP
+Above patch adds support for CRS in PCI RC driver, otherwise if not
+handled at lower level, the user space PMD (poll mode drivers) can
+timeout.
 
-Applied to pci/host-keystone for v4.14, thanks!
+PCI: iproc: add device shutdown for PCI RC
+This fixes the issue where certian PCI endpoints are not getting
+detected on Stingray SOC after reboot.
 
-> ---
-> 
->  drivers/pci/dwc/pci-keystone-dw.c | 8 --------
->  1 file changed, 8 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-> index 8bc626e..df60f487 100644
-> --- a/drivers/pci/dwc/pci-keystone-dw.c
-> +++ b/drivers/pci/dwc/pci-keystone-dw.c
-> @@ -168,16 +168,12 @@ void ks_dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
->  
->  static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
->  {
-> -	struct keystone_pcie *ks_pcie;
->  	struct msi_desc *msi;
->  	struct pcie_port *pp;
-> -	struct dw_pcie *pci;
->  	u32 offset;
->  
->  	msi = irq_data_get_msi_desc(d);
->  	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
-> -	pci = to_dw_pcie_from_pp(pp);
-> -	ks_pcie = to_keystone_pcie(pci);
->  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
->  
->  	/* Mask the end point if PVM implemented */
-> @@ -191,16 +187,12 @@ static void ks_dw_pcie_msi_irq_mask(struct irq_data *d)
->  
->  static void ks_dw_pcie_msi_irq_unmask(struct irq_data *d)
->  {
-> -	struct keystone_pcie *ks_pcie;
->  	struct msi_desc *msi;
->  	struct pcie_port *pp;
-> -	struct dw_pcie *pci;
->  	u32 offset;
->  
->  	msi = irq_data_get_msi_desc(d);
->  	pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
-> -	pci = to_dw_pcie_from_pp(pp);
-> -	ks_pcie = to_keystone_pcie(pci);
->  	offset = d->irq - irq_linear_revmap(pp->irq_domain, 0);
->  
->  	/* Mask the end point if PVM implemented */
-> -- 
-> 1.9.1
-> 
-> 
+
+Changes Since v4:
+Bjorn's comments addressed.
+
+Changes Since v3:
+[re-send]
+
+Changes Since v2:
+Fix compilation errors for pcie-iproc-platform.ko which was caught by
+kbuild.
+
+Oza Pawandeep (2):
+  PCI: iproc: Retry request when CRS returned from EP
+  PCI: iproc: add device shutdown for PCI RC
+
+ drivers/pci/host/pcie-iproc-platform.c |   8 ++
+ drivers/pci/host/pcie-iproc.c          | 134 ++++++++++++++++++++++++++++-----
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 124 insertions(+), 19 deletions(-)
+
+-- 
+1.9.1
