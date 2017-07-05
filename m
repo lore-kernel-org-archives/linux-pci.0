@@ -1,141 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:34485 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750893AbdGYGJs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2017 02:09:48 -0400
-Received: by mail-io0-f195.google.com with SMTP id m88so3912467iod.1
-        for <linux-pci@vger.kernel.org>; Mon, 24 Jul 2017 23:09:48 -0700 (PDT)
-Subject: Re: [PATCH kernel v4 4/6] iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu
- driver initialization
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        David Gibson <david@gibson.dropbear.id.au>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Yongji Xie <elohimes@gmail.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-        Jike Song <jike.song@intel.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-References: <20170630052436.15212-1-aik@ozlabs.ru>
- <20170630052436.15212-5-aik@ozlabs.ru>
- <CAErSpo4pAZfDx5p_S9Z8jR_ctH=ZrkgG6aNaNmPaN2H77dgEgQ@mail.gmail.com>
- <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
-Message-ID: <5d35506e-4c37-7922-c398-d62955ddb1e2@ozlabs.ru>
-Date: Tue, 25 Jul 2017 16:09:39 +1000
+Received: from mail.kernel.org ([198.145.29.99]:47516 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751692AbdGETrA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 5 Jul 2017 15:47:00 -0400
+Date: Wed, 5 Jul 2017 14:46:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH 15/16] switchtec_ntb: add memory window support
+Message-ID: <20170705194642.GC25063@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170629032648.3073-1-logang@deltatee.com>
+ <20170629032648.3073-16-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
-Content-Type: text/plain; charset=koi8-r
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170629032648.3073-16-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/07/17 20:02, Alexey Kardashevskiy wrote:
-> On 11/07/17 05:23, Bjorn Helgaas wrote:
->> [+cc Joerg, iommu]
->>
->> On Fri, Jun 30, 2017 at 12:24 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
->>> From: Yongji Xie <elohimes@gmail.com>
->>>
->>> Some iommu drivers would be initialized after PCI device
->>> enumeration. So PCI_BUS_FLAGS_MSI_REMAP would not be set
->>> when probing PCI devices although IOMMU enables capability
->>> of IRQ remapping. This patch tests this capability and
->>> set the flag when iommu driver is initialized.
->>>
->>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->>> ---
->>>  drivers/iommu/iommu.c | 8 ++++++++
->>>  drivers/pci/probe.c   | 1 +
->>>  2 files changed, 9 insertions(+)
->>>
->>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
->>> index cf7ca7e70777..0b5881ddca09 100644
->>> --- a/drivers/iommu/iommu.c
->>> +++ b/drivers/iommu/iommu.c
->>> @@ -1063,6 +1063,14 @@ static int add_iommu_group(struct device *dev, void *data)
->>>         const struct iommu_ops *ops = cb->ops;
->>>         int ret;
->>>
->>> +       /*
->>> +        * Set PCI_BUS_FLAGS_MSI_REMAP for all PCI buses when IOMMU
->>> +        * have capability of IRQ remapping.
->>> +        */
->>> +       if (dev_is_pci(dev) && ops->capable &&
->>> +                       ops->capable(IOMMU_CAP_INTR_REMAP))
->>> +               to_pci_dev(dev)->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
->>
->> This isn't my area, but this addition is really ugly.  It doesn't look
->> anything like the rest of the code in add_iommu_group(), so it just
->> feels like a wart.
+On Wed, Jun 28, 2017 at 09:26:47PM -0600, Logan Gunthorpe wrote:
+> The switchtec hardware has two types of memory windows: LUTs and Direct.
+> The first area in each BAR is for LUT windows and the remaining area is
+> for the direct region. The total number of LUT entries is set by a
+> configuration setting in hardware and they all must be the same
+> size. (This is fixed by switchtec_ntb to be 64K.)
 > 
-> 
-> It does look like a wart, however it did not cause immediate rejection
-> after first couple of revisions of this before I took it over...
-> 
-> So. Here is the problem - deliver an MSIX isolation flag from IOMMU to
-> VFIO-PCI driver. The options are:
-> 
-> 1. PCI_BUS_FLAGS_MSI_REMAP on a PCI bus - MSIX isolation is not really a
-> PCI bus property and it is "like a wart".
-> 
-> 2. Introduce "flags" in iommu_group and define IOMMU_GROUP_MSIX_ISOLATED
-> and set it when an IOMMU group is created; VFIO-PCI has ways to get to the
-> group and read the flag.
-> 
-> 3. Create IOMMU_DOMAIN_UNMANAGED IOMMU domains for PPC64/powernv IOMMU
-> groups and only define capable() hook to report IOMMU_CAP_INTR_REMAP;
-> others already use these IOMMU domains. VFIO-PCI's mmap() hook could then
-> check the capability via iommu_capable(bus). The problems is as Robin said:
-> "iommu_capable() is a fundamentally broken and unworkable interface
-> anyway"; however it is still not clear to me why it is unworkable in this
-> particular case of isolation checking.
-> 
-> I am missing knowledge about ARM, is there a good overview of these MSIX
-> domains vs. IOMMU on ARM (as MSIX remapping seems not to be an IOMMU property)?
-> 
-> 
-> Which one to pick? Thanks.
+> switchtec_ntb enables the LUTs only for the first bar and enables the
 
+s/bar/BAR/
 
+> highest power of two possible. Seeing the LUTs are at the beginning of
+> the BAR, the direct memory window's alignment is affected. Therefore,
+> the maximum direct memory window size can not be greater than the number
+> of LUTs times 64K. The direct window in other bars will not have this
 
-Anyone, please?
+s/bars/BARs/
 
+> restriction as the LUTs will not be enabled there. LUTs will only be
+> exposed through the NTB api if the use_lut_mw parameter is set.
 
+s/api/API/
 
+> Seeing the switchtec hardware, by default, configures BARs to be 4G a
+> module parameter is given to limit the size of the advertised memory
+> windows. Higher layers tend to allocate the maximum BAR size and this
+> has a tendancy of failing when they try to allocate 4GB of continuous
+> memory.
+
+s/tendancy/tendency/
+
+s/of failing/to fail/
+
+s/continuous/contiguous/
+
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> ---
+>  drivers/ntb/hw/mscc/switchtec_ntb.c | 205 +++++++++++++++++++++++++++++++++++-
+>  1 file changed, 202 insertions(+), 3 deletions(-)
 > 
-> 
-> 
->>
->>>         if (!ops->add_device)
->>>                 return 0;
->>>
->>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>> index f2393b7d7ebf..14aac9df3d17 100644
->>> --- a/drivers/pci/probe.c
->>> +++ b/drivers/pci/probe.c
->>> @@ -17,6 +17,7 @@
->>>  #include <linux/acpi.h>
->>>  #include <linux/irqdomain.h>
->>>  #include <linux/pm_runtime.h>
->>> +#include <linux/iommu.h>
->>
->> This obviously belongs in another patch, as the compile error showed.
->>
->>>  #include "pci.h"
->>>
->>>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
->>> --
->>> 2.11.0
->>>
-> 
-> 
+> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> index a42e80742b52..5f9118940a24 100644
+> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
+> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> @@ -25,6 +25,11 @@ MODULE_VERSION("0.1");
+>  MODULE_LICENSE("GPL");
+>  MODULE_AUTHOR("Microsemi Corporation");
+>  
+> +static ulong max_mw_size = SZ_2M;
+> +module_param(max_mw_size, ulong, 0644);
+> +MODULE_PARM_DESC(max_mw_size,
+> +	"Limit the size of the memory windows reported to the upper layer");
 
+Maybe the description should be "Max window size reported ..."?
 
--- 
-Alexey
+"Limit the size ..." sounds like it could be a boolean.
