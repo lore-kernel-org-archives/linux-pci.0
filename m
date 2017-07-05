@@ -1,85 +1,39 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 0/4] Allow non-legacy cards to be vgaarb default
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Daniel Axtens <dja@axtens.net>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Hans de Goede <hdegoede@redhat.com>
-References: <20170719012839.20124-1-dja@axtens.net>
- <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
- <87pocusm2x.fsf@linkitivity.dja.id.au>
- <CAKv+Gu-O7cyJSgDrqSNi6F_n9eBnFEgz==aqowMqhy+81YK=CQ@mail.gmail.com>
- <87r2x6vj7t.fsf@linkitivity.dja.id.au>
- <a61222c6-e548-1e3b-f6f7-63952b90ac13@redhat.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B76A1A@FRAEML521-MBX.china.huawei.com>
-From: Laszlo Ersek <lersek@redhat.com>
-Message-ID: <c2d6889e-c8fd-012d-a24b-a72c26850fde@redhat.com>
-Date: Wed, 26 Jul 2017 12:45:53 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:51078 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752675AbdGEMhG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 08:37:06 -0400
+Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
+ functional performance enhancements causing PCI Express crashes,
+To: Wim ten Have <wim.ten.have@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
+ <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
+ <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
+ <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
+ <97b8c58e-7384-0519-5ccb-837fa5054d84@codeaurora.org>
+ <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
+ <20170705131312.6073b8aa.wim.ten.have@oracle.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c350ebc3-51cf-d2d7-e40c-740360f1dc4d@codeaurora.org>
+Date: Wed, 5 Jul 2017 08:37:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B76A1A@FRAEML521-MBX.china.huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>, David Airlie <airlied@linux.ie>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Zou Rongrong <zourongrong@gmail.com>,
- "daniel.vetter@intel.com" <daniel.vetter@intel.com>,
- linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170705131312.6073b8aa.wim.ten.have@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMDcvMjUvMTcgMTc6NTYsIEdhYnJpZWxlIFBhb2xvbmkgd3JvdGU6Cj4gSGkgTGFzemxvCj4g
-Cj4gWy4uLl0KPiAKPj4KPj4gSGF2aW5nIHByYWN0aWNhbGx5IHplcm8gYmFja2dyb3VuZCBpbiBn
-ZnggZGV2ZWxvcG1lbnQgKGVpdGhlciBrZXJuZWwgb3IKPj4gWG9yZyksIEkgdGhpbmsgdGhlIHBy
-b2JsZW0gaXMgdGhhdCB2Z2FfZGVmYXVsdF9kZXZpY2UoKSAvCj4+IHZnYV9zZXRfZGVmYXVsdF9k
-ZXZpY2UoKSwgd2hpY2ggLS0gYXBwYXJlbnRseSAtLSAiYm9vdF92Z2EiIGlzIGJhc2VkCj4+IHVw
-b24sIGNvbWUgZnJvbSAiZHJpdmVycy9ncHUvdmdhL3ZnYWFyYi5jIi4gTmFtZWx5LCB0aGUgY29u
-Y2VwdCBvZgo+PiAicHJpbWFyeSAvIGJvb3QgZGlzcGxheSBkZXZpY2UiIGlzIHRpZWQgdG8gdGhl
-IFZHQSBhcmJpdGVyLCBwbHVzIG9ubHkgYQo+PiBQQ0kgZGV2aWNlIGNhbiBjdXJyZW50bHkgYmUg
-bWFya2VkIGFzIHByaW1hcnkvYm9vdCBkaXNwbGF5IGRldmljZS4KPj4KPj4gQ2FuIHRoZXNlIGNv
-bmNlcHRzIGJlIHNwbGl0IGZyb20gZWFjaCBvdGhlcj8gKEkgY2FuIGZ1bGx5IGltYWdpbmUgdGhh
-dAo+PiB0aGlzIHdvdWxkIHJlc3VsdCBpbiBhIHVzZXJzcGFjZSB2aXNpYmxlIGludGVyZmFjZSBj
-aGFuZ2UgKG9yCj4+IGFkZGl0aW9uKSwKPj4gc28gdGhhdCBlLmcuICIvc3lzL2RldmljZXMvKiov
-Ym9vdF9ncHUiIHdvdWxkIGhhdmUgdG8gYmUgY29uc3VsdGVkIGJ5Cj4+IGRpc3BsYXkgc2VydmVy
-cy4pCj4+Cj4+IChTb3JyeSBpZiBJJ20gdG90YWxseSB3cm9uZy4pCj4+Cj4+IC4uLiBIbSwgcmVh
-ZGluZyB0aGUgdGhyZWFkIHN0YXJ0ZXIgYXQKPj4gPGh0dHBzOi8vd3d3Lm1haWwtYXJjaGl2ZS5j
-b20vbGludXhwcGMtCj4+IGRldkBsaXN0cy5vemxhYnMub3JnL21zZzEyMDg1MS5odG1sPiwKPj4g
-YW5kIHRoZSByZWZlcmVuY2VzIHdpdGhpbi4uLiBJdCBsb29rcyBsaWtlIHRoaXMgd29yayBpcyBt
-b3RpdmF0ZWQgYnkKPj4gaGFyZHdhcmUgdGhhdCBpcyBzdXBwb3NlZCB0byBiZSBQQ0ksIGJ1dCBh
-Y3R1YWxseSBicmVha3MgdGhlIHNwZWNzLiBJcwo+PiB0aGF0IGNvcnJlY3Q/IElmIHNvLCB0aGVu
-IEkgZG9uJ3QgdGhpbmsgSSBjYW4gc3VnZ2VzdCBhbnl0aGluZyB1c2VmdWwuCj4gCj4gTXkgdW5k
-ZXJzdGFuZGluZyBpcyB0aGF0IHRoZSBjdXJyZW50IFBDSWUgSFcgaXMgc3BlY3MgY29tcGxpYW50
-IGJ1dCB0aGUKPiB2Z2FhcmIsIGluIG9yZGVyIHRvIG1ha2UgYSBWR0EgZGV2aWNlIHRoZSBkZWZh
-dWx0IG9uZSwgcmVxdWlyZXMgYWxsIHRoZQo+IGJyaWRnZXMgb24gdG9wIG9mIHN1Y2ggZGV2aWNl
-IHRvIGhhdmUgdGhlICJWR0EgRW5hYmxlIiBiaXQgc2V0IChvcHRpb25hbAo+IGJpdCBpbiB0aGUg
-UENJIEV4cHJlc3PihKIgdG8gUENJL1BDSS1YIEJyaWRnZSBTcGVjKS4gSS5lLiBhbGwgdGhlIGJy
-aWRnZXMKPiBvbiB0b3AgaGF2ZSB0byBzdXBwb3J0IGxlZ2FjeSBWR0EgZGV2aWNlczsgYW5kIHRo
-aXMgaXMgbm90IG1hbmRhdG9yeQo+IGZyb20gdGhlIHNwZWNzLi4ucmlnaHQ/CgpTb3VuZHMgdmVy
-eSBwbGF1c2libGUgdG8gbWUuIEFuZCwgSSBndWVzcyBpZiB0aGUgImJvb3QgR1BVIiBjb25jZXB0
-IHdlcmUKc3BsaXQgZnJvbSB0aGUgVkdBIGFyYml0ZXIsIHRoZW4gdGhlIFZHQSBhcmJpdGVyJ3Mg
-YWJvdmUgcmVxdWlyZW1lbnQKKGEpIHdvdWxkIG5vdCBoYXZlIHRvIGJlIGRpc3R1cmJlZCwgYW5k
-CihiKSB3b3VsZCBubyBsb25nZXIgaW50ZXJmZXJlIHdpdGggdGhlIGtpbmQgb2YgaGFyZHdhcmUg
-dGhhdCdzIGJlaW5nCiAgICBkaXNjdXNzZWQuCgpUaGFua3MKTGFzemxvCgo+IEJUVyBteSBWR0Eg
-ZXhwZXJpZW5jZSBpcyBsaW1pdGVkIHRvby4uLnRoaXMgaXMganVzdCBteSB1bmRlcnN0YW5kaW5n
-Li4uCj4gCj4gR2FiCj4gCj4+IFNwZWNzIGV4aXN0IHNvIHRoYXQgaGFyZHdhcmUgdmVuZG9ycyBh
-bmQgc29mdHdhcmUgYXV0aG9ycyBmb2xsb3cgdGhlbS4KPj4gSWYgaGFyZHdhcmUgZG9lcyBub3Qg
-Y29uZm9ybSwgdGhlbiBzb2Z0d2FyZSBzaG91bGQgZWl0aGVyIHJlZnVzZSB0bwo+PiB3b3JrCj4+
-IHdpdGggaXQsIG9yIGhhbmRsZSBpdCB3aXRoIHF1aXJrcywgb24gYSBjYXNlLWJ5LWNhc2UgYmFz
-aXMuIEkgZ3Vlc3MKPj4gdGhpcwo+PiBtZWFucyB0aGF0IEkgZG9uJ3QgYWdyZWUgd2l0aCB0aGUK
-Pj4KPj4gICBicm9hZFtdIHN1Z2dlc3RbaW9uXSB0aGF0IGEgbW9yZSBnZW5lcmljIHNvbHV0aW9u
-IHdvdWxkIGJlIGJldHRlcgo+Pgo+PiB3aGljaCBzZWVtcyB0byBkaXNxdWFsaWZ5IG1lIGZyb20g
-dGhlIGRpc2N1c3Npb24sIGFzIGl0IG11c3QgaGF2ZSBiZWVuCj4+IHN1Z2dlc3RlZCBieSBwZW9w
-bGUgd2l0aCBpbmNvbXBhcmFibHkgbW9yZSBleHBlcmllbmNlIHRoYW4gd2hhdCBJIGhhdmUKPj4g
-OikKPj4KPj4gVGhhbmtzCj4+IExhc3psbwoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFy
-bS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9t
-YWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On 7/5/2017 7:13 AM, Wim ten Have wrote:
+>  From an 'rpmbuild -ba kernel.spec' nicely proceeded and generated all
+>   package.  They all installed and the system boots and works like a charm!
+
+Thanks for testing. I'll re-post the same patch with better commit text
+and fixes tag so that Bjorn can review it.
+
+Can I have a tested-by?
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
