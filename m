@@ -1,64 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40894 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753864AbdGJQTi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jul 2017 12:19:38 -0400
-Subject: Re: DMA_ATTR_WEAK_ORDERING defintion, was Re: [PATCH] nvme: set
- DMA_ATTR_WEAK_ORDERING attribute on dma buffers
-To: Christoph Hellwig <hch@lst.de>
-References: <1497645290-31041-1-git-send-email-alan.adamson@oracle.com>
- <20170617115703.GA13002@lst.de>
- <6a32f30b-433a-9857-164f-1717405a6082@oracle.com>
- <20170624073539.GE14580@lst.de>
- <f485b21a-0cf7-d2f0-c957-03d234447561@oracle.com>
- <20170705190714.GA7107@lst.de>
-Cc: Alan Adamson <alan.adamson@oracle.com>, keith.busch@intel.com,
-        axboe@fb.com, linux-nvme@lists.infradead.org, sagi@grimberg.me,
-        linux-pci@vger.kernel.org, Mark Nelson <markn@au1.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        iommu@lists.linux-foundation.org
-From: chris hyser <chris.hyser@oracle.com>
-Message-ID: <261c7733-71a0-c283-90dd-3e03f1fa08ff@oracle.com>
-Date: Mon, 10 Jul 2017 12:17:07 -0400
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:35712 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752368AbdGEDJt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:09:49 -0400
+Received: by mail-wm0-f44.google.com with SMTP id w126so209290508wme.0
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:09:38 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v4 1/2] PCI: iproc: Retry request when CRS returned from EP
+Date: Wed,  5 Jul 2017 08:38:58 +0530
+Message-Id: <1499224139-10746-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
+References: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20170705190714.GA7107@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/5/2017 3:07 PM, Christoph Hellwig wrote:
-> On Tue, Jun 27, 2017 at 04:46:31PM -0400, chris hyser wrote:
->> I put this in for SPARC. In our case the host bridge/RC itself follows very
->> strict ordering unless the relaxed order bit is set in the TLP. This works
->> great for devices that actually allow the driver to enable it. We however
->> also have to support an infiniband card that does not support enabling this
->> in the HW and thus in the TLP but is actually fine with relaxed order for
->> the data buffers (ie the streaming I/O vs the coherent control buffers). In
->> fact w/o relaxed order the performance is absolutely atrocious ... w/
->> exceeds x86. This flag enables the driver to signal to us when we map the
->> buffer in the IOMMU to enable the relaxed order attribute for our HW.
->
-> We'll really need to start writing down our semantics.  As I said
+For Configuration Requests only, following reset it is possible for a
+device to terminate the request but indicate that it is temporarily unable
+to process the Request, but will be able to process the Request in the
+future – in this case, the Configuration Request Retry Status 100 (CRS)
+Completion Status is used.
 
-Fair enough. This will get documented.
+As per PCI spec, CRS Software Visibility only affects config read of the
+Vendor ID, for config write or any other config read the Root must
+automatically re-issue configuration request again as a new request.
+Iproc based PCIe RC (hw) does not retry request on its own.
 
-> given how our streaming dma mappings (dma_map_single/page/sg) are
-> defined I can't think of any way how relaxed vs strict ordering would
-> matter for them, so just enabling it by default seems like the right
-> thing in this case, instead of having to patch every PCIe driver people
+As a result of the fact, PCIe RC driver (sw) should take care of CRS.
+This patch fixes the problem, and attempts to read config space again in
+case of PCIe code forwarding the CRS back to CPU.
+It implements iproc_pcie_config_read which gets called for Stingray,
+Otherwise it falls back to PCI generic APIs.
 
-People get real squeamish about just turning on relaxed order for driver/devices we actually know something about and 
-test let alone everything. I do agree with your interpretation of the streaming DMA semantics. That does not mean every 
-driver writer did or does. :-)
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 
-> might ever use on sparc to work around your bridge.
-
-To be clear, this isn't really a host bridge issue. Technically no driver that runs on SPARC needs this enabled -- even 
-performance critical ... if they do the HW correctly. Again, we have a necessary performance critical device which does 
-not correctly signal its okayness with relaxed order for non-control DMA. This feature of the host bridge is to enable a 
-workaround for just these cases (deemed needed by past history). Said differently, lots of devices are made for the 
-commodity market where shortcuts like this apparently do not affect performance but are critical to performance on large 
-systems.
-
--chrish
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 0f39bd2..b0abcd7 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -68,6 +68,9 @@
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
++#define CFG_RETRY_STATUS             0xffff0001
++#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
++
+ /* derive the enum index of the outbound/inbound mapping registers */
+ #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+ 
+@@ -448,6 +451,55 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+ 	}
+ }
+ 
++static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++{
++	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
++	unsigned int ret;
++
++	/*
++	 * As per PCI spec, CRS Software Visibility only
++	 * affects config read of the Vendor ID.
++	 * For config write or any other config read the Root must
++	 * automatically re-issue configuration request again as a
++	 * new request. Iproc based PCIe RC (hw) does not retry
++	 * request on its own, so handle it here.
++	 */
++	do {
++		ret = readl(cfg_data_p);
++		if (ret == CFG_RETRY_STATUS)
++			udelay(1);
++		else
++			return PCIBIOS_SUCCESSFUL;
++	} while (timeout--);
++
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
++					       unsigned int busno,
++					       unsigned int slot,
++					       unsigned int fn,
++					       int where)
++{
++	u16 offset;
++	u32 val;
++
++	/* EP device access */
++	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
++		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
++		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
++		(where & CFG_ADDR_REG_NUM_MASK) |
++		(1 & CFG_ADDR_CFG_TYPE_MASK);
++
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++
++	return (pcie->base + offset);
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -499,13 +551,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	unsigned int slot = PCI_SLOT(devfn);
++	unsigned int fn = PCI_FUNC(devfn);
++	unsigned int busno = bus->number;
++	void __iomem *cfg_data_p;
++	int ret;
++
++	/* root complex access. */
++	if (busno == 0)
++		return pci_generic_config_read32(bus, devfn, where, size, val);
++
++	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
++
++	if (!cfg_data_p)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	ret = iproc_pcie_cfg_retry(cfg_data_p);
++	if (ret)
++		return ret;
++
++	*val = readl(cfg_data_p);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+ 	int ret;
++	struct iproc_pcie *pcie = iproc_data(bus);
+ 
+ 	iproc_pcie_apb_err_disable(bus, true);
+-	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	if (pcie->type == IPROC_PCIE_PAXB_V2)
++		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
++	else
++		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	iproc_pcie_apb_err_disable(bus, false);
+ 
+ 	return ret;
+-- 
+1.9.1
