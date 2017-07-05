@@ -1,55 +1,187 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:50637 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753251AbdGXIfS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 04:35:18 -0400
-Message-ID: <1500885314.2391.52.camel@pengutronix.de>
-Subject: Re: [PATCH 054/102] PCI: rockchip: explicitly request exclusive
- reset control
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org
-Date: Mon, 24 Jul 2017 10:35:14 +0200
-In-Reply-To: <f4a8b573-7a5f-ff8a-65c3-f6b907e6a10a@rock-chips.com>
-References: <20170719152646.25903-1-p.zabel@pengutronix.de>
-         <20170719152646.25903-55-p.zabel@pengutronix.de>
-         <f4a8b573-7a5f-ff8a-65c3-f6b907e6a10a@rock-chips.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:36081 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752454AbdGEDvy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:51:54 -0400
+Received: by mail-pg0-f51.google.com with SMTP id u62so117540064pgb.3
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:51:49 -0700 (PDT)
+Subject: Re: [PATCH v4 2/2] PCI: iproc: add device shutdown for PCI RC
+To: Oza Pawandeep <oza.oza@broadcom.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+References: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
+ <1499224139-10746-3-git-send-email-oza.oza@broadcom.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <2b7393f8-14fb-d05e-0d65-09cb9cd352b2@broadcom.com>
+Date: Tue, 4 Jul 2017 20:51:42 -0700
+MIME-Version: 1.0
+In-Reply-To: <1499224139-10746-3-git-send-email-oza.oza@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
+Hi Oza,
 
-On Sat, 2017-07-22 at 21:12 +0800, Shawn Lin wrote:
-> Hi Philipp,
-> 
-> On 2017/7/19 23:25, Philipp Zabel wrote:
-> > Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
-> > reset lines") started to transition the reset control request API calls
-> > to explicitly state whether the driver needs exclusive or shared reset
-> > control behavior. Convert all drivers requesting exclusive resets to the
-> > explicit API call so the temporary transition helpers can be removed.
-> >
-> > No functional changes.
-> >
-> > Cc: Shawn Lin <shawn.lin@rock-chips.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Heiko Stuebner <heiko@sntech.de>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: linux-rockchip@lists.infradead.org
-> > Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
-> > ---
-> >  drivers/pci/host/pcie-rockchip.c | 15 ++++++++-------
-> 
-> As mentioned in the thread of conversion for phy-rockchip-pcie,
-> I would prefer add your patches after the reconstruction work got
-> merged.
+It looks like you missed my comments during the internal review. See my 
+comments inline below.
 
-Feel free to add them when and where it is most convenient for you.
-Please let me know if you want me to rebase them somewhere.
 
-regards
-Philipp
+On 7/4/2017 8:08 PM, Oza Pawandeep wrote:
+> PERST must be asserted around ~500ms before the reboot is applied.
+>
+> During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
+> LCPLL clock and PERST both goes off simultaneously.
+> This will cause certain Endpoints Intel NVMe not get detected, upon
+> next boot sequence.
+>
+> This is specifically happening with Intel P3700 400GB series.
+> Endpoint is expecting the clock for some amount of time after PERST is
+> asserted, which is not happening in Stingray (iproc based SOC).
+> This causes NVMe to behave in undefined way.
+>
+> On the contrary Intel x86 boards, will have ref clock running, so we
+> do not see this behavior there.
+>
+> Besides, PCI spec does not stipulate about such timings.
+> In-fact it does not tell us, whether PCIe device should consider
+> refclk to be available or not to be.
+>
+> It is completely up to vendor to design their EP the way they want
+> with respect to ref clock availability.
+>
+> 500ms is just based on the observation and taken as safe margin.
+> This patch adds platform shutdown where it should be
+> called in device_shutdown while reboot command is issued.
+> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+> followed by RC shutdown, which issues safe PERST assertion.
+>
+> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>
+> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+> index 90d2bdd..9512960 100644
+> --- a/drivers/pci/host/pcie-iproc-platform.c
+> +++ b/drivers/pci/host/pcie-iproc-platform.c
+> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>   	return iproc_pcie_remove(pcie);
+>   }
+>   
+> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+> +{
+> +	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+> +
+> +	iproc_pcie_shutdown(pcie);
+> +}
+> +
+>   static struct platform_driver iproc_pcie_pltfm_driver = {
+>   	.driver = {
+>   		.name = "iproc-pcie",
+> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+>   	},
+>   	.probe = iproc_pcie_pltfm_probe,
+>   	.remove = iproc_pcie_pltfm_remove,
+> +	.shutdown = iproc_pcie_pltfm_shutdown,
+>   };
+>   module_platform_driver(iproc_pcie_pltfm_driver);
+>   
+> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> index b0abcd7..d1bcdc9 100644
+> --- a/drivers/pci/host/pcie-iproc.c
+> +++ b/drivers/pci/host/pcie-iproc.c
+> @@ -616,32 +616,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+>   	.write = iproc_pcie_config_write32,
+>   };
+>   
+> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
+> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+>   {
+>   	u32 val;
+>   
+>   	/*
+> -	 * PAXC and the internal emulated endpoint device downstream should not
+> -	 * be reset.  If firmware has been loaded on the endpoint device at an
+> -	 * earlier boot stage, reset here causes issues.
+> +	 * The internal emulated endpoints (such as PAXC) device downstream
+> +	 * should not be reset. If firmware has been loaded on the endpoint
+> +	 * device at an earlier boot stage, reset here causes issues.
+>   	 */
+
+Why is the above comment modified? Is it even related to this patch that
+implements the shutdown routine for PAXB? In addition, the original
+comment is more correct. The new comment by stating the "internal
+emulated endpoints (such as PAXC)" is wrong. PAXC is not an endpoint.
+PAXC is the root complex interface. The endpoint is Nitro.
+
+Thanks,
+
+Ray
+>   	if (pcie->ep_is_internal)
+>   		return;
+>   
+> -	/*
+> -	 * Select perst_b signal as reset source. Put the device into reset,
+> -	 * and then bring it out of reset
+> -	 */
+> -	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> -	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> -		~RC_PCIE_RST_OUTPUT;
+> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> -	udelay(250);
+> -
+> -	val |= RC_PCIE_RST_OUTPUT;
+> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> -	msleep(100);
+> +	if (assert) {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> +		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+> +			~RC_PCIE_RST_OUTPUT;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> +		udelay(250);
+> +	} else {
+> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+> +		val |= RC_PCIE_RST_OUTPUT;
+> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+> +		msleep(100);
+> +	}
+> +}
+> +
+> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
+> +{
+> +	iproc_pcie_perst_ctrl(pcie, true);
+> +	msleep(500);
+> +
+> +	return 0;
+>   }
+> +EXPORT_SYMBOL(iproc_pcie_shutdown);
+>   
+>   static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+>   {
+> @@ -1318,7 +1326,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+>   		goto err_exit_phy;
+>   	}
+>   
+> -	iproc_pcie_reset(pcie);
+> +	iproc_pcie_perst_ctrl(pcie, true);
+> +	iproc_pcie_perst_ctrl(pcie, false);
+>   
+>   	if (pcie->need_ob_cfg) {
+>   		ret = iproc_pcie_map_ranges(pcie, res);
+> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+> index 0bbe2ea..a6b55ce 100644
+> --- a/drivers/pci/host/pcie-iproc.h
+> +++ b/drivers/pci/host/pcie-iproc.h
+> @@ -110,6 +110,7 @@ struct iproc_pcie {
+>   
+>   int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+>   int iproc_pcie_remove(struct iproc_pcie *pcie);
+> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+>   
+>   #ifdef CONFIG_PCIE_IPROC_MSI
+>   int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
