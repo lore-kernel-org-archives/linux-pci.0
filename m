@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 1 Jul 2017 15:06:30 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com
-Subject: Re: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for
- bios32 host controllers
-Message-ID: <20170701140629.GC8977@red-moon>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
- <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
+Date: Wed, 5 Jul 2017 13:03:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
+Message-ID: <20170705180359.GL13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
+ <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
+In-Reply-To: <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,226 +17,88 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Jason Cooper <jason@lakedaemon.net>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Mingkai Hu <mingkai.hu@freescale.com>,
- linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Cc: DT <devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Thu, Jun 08, 2017 at 03:13:29PM +0100, Lorenzo Pieralisi wrote:
-> Legacy PCI host controllers (ie host controllers that set-up the PCI bus
-> through the ARM pci_common_init() API) are currently relying on
-> pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
-> in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
-> given system some of which may well be enabled by the time
-> pci_fixup_irqs() is called (ie a system with multiple host controllers).
-> With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
-> possible to assign IRQs for all devices originating from a PCI host
-> bridge at probe time; this is implemented through pci_assign_irq() that
-> relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
-> given device.
+On Wed, Jul 05, 2017 at 12:55:37AM +0200, Mason wrote:
+> On 04/07/2017 22:24, Bjorn Helgaas wrote:
 > 
-> The benefits this brings are twofold:
+> > On Tue, Jun 20, 2017 at 10:12:57AM +0200, Marc Gonzalez wrote:
+> >
+> >> Marc Z pointed out that posting partial series is not ideal.
+> >> Collect last-minute fixups into a single patch series.
+> >>
+> >> - Bump series to v9 to avoid any ambiguity
+> >> - Add Rob's Ack on patch 1
+> >>
+> >> Marc Gonzalez (3):
+> >>   PCI: Add DT binding for tango PCIe controller
+> >>   PCI: Add tango PCIe host bridge support
+> >>   PCI: Add tango MSI controller support
+> >>
+> >>  .../devicetree/bindings/pci/tango-pcie.txt         |  29 ++
+> >>  drivers/pci/host/Kconfig                           |   8 +
+> >>  drivers/pci/host/Makefile                          |   1 +
+> >>  drivers/pci/host/pcie-tango.c                      | 390 +++++++++++++++++++++
+> >>  include/linux/pci_ids.h                            |   2 +
+> >>  5 files changed, 430 insertions(+)
+> >>  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
+> >>  create mode 100644 drivers/pci/host/pcie-tango.c
+> > 
+> > I made the trivial changes I mentioned, added a dependency on
+> > CONFIG_BROKEN (for the config/MMIO muxing issue), and put these on
+> > pci/host-tango.  I can't build or test this, so I probably broke
+> > something in the process.  I think the combination of the boot-time
+> > warning, the taint, and CONFIG_BROKEN is a reasonable amount of
+> > warning that a user should expect issues.
+> > 
+> > Can you take a look and see if it works for you?
+> > 
+> > https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-tango
 > 
-> - the IRQ for a device is assigned once at probe time
-> - the IRQ assignment works also for hotplugged devices
+> Thanks. I'll take it for a spin ASAP.
 > 
-> Remove pci_fixup_irqs() call from bios32 code and rely on
-> pci_assign_irq() to carry out the IRQ mapping at device probe
-> time.
+> TAINT_CRAP... Smirk. I didn't see that one in the docs:
+> https://www.kernel.org/doc/html/latest/admin-guide/tainted-kernels.html
 > 
-> The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
-> set-up in the struct pci_host_bridge created in the bios32
-> pcibios_init_hw() function and mach-* code paths (for PCI mach
-> implementations that require a specific struct hw_pci.(*scan) function
-> callback).
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Russell King <linux@armlinux.org.uk>
-> Cc: Andrew Lunn <andrew@lunn.ch>
-> ---
->  arch/arm/kernel/bios32.c    |  4 ++--
->  arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
->  arch/arm/mach-iop13xx/pci.c |  2 ++
->  arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
->  4 files changed, 29 insertions(+), 23 deletions(-)
+> Oh wait... TAINT_CRAP is "C" => a staging driver has been loaded
 
-As I mentioned to you, this patch is incomplete and needs an upgrade
-(ie I misread how Orion and the gazillions board file that go with
-it to map irqs - apologies but it is very hard to untangle).
+I wish it had a less pejorative, more descriptive name.  But it seems like
+the closest to this situation.
 
-I am inlining below an incremental patch to be folded in commit:
+> The one issue I anticipate with "depends on BROKEN" is
+> when I add support for revision 2, which isn't broken.
 
-feaec00e757a ("ARM/PCI: Remove pci_fixup_irqs() call for bios32 host
-controllers")
+How about this:
 
-in your pci/irq-fixups branch, or if you prefer I can send you the
-resulting squashed-in patch to replace this one, as you prefer.
+  - Rename PCIE_TANGO to PCIE_TANGO_REV1
+  - PCIE_TANGO_REV1 depends on BROKEN
+  - Add rev2 support later, enabled by PCIE_TANGO
+  - PCIE_TANGO_REV1 depends on PCIE_TANGO && BROKEN
 
-I understand timing is tight I am doing all I can to fix this series
-up and make 4.13.
+I updated pci/host-tango along these lines (without rev2 support,
+obviously).
 
-Please let me know how I can help, thank you !
-Lorenzo
+I forgot to ask for a MAINTAINERS update.  Can you send that, too,
+please?
 
--- >8 --
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index da201a2..56dc1a3 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -484,6 +484,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				break;
- 			}
- 
-+			bridge->map_irq = pcibios_map_irq;
-+			bridge->swizzle_irq = pcibios_swizzle;
-+
- 			if (hw->scan)
- 				ret = hw->scan(nr, bridge);
- 			else {
-@@ -494,8 +497,6 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				bridge->busnr = sys->busnr;
- 				bridge->ops = hw->ops;
- 				bridge->msi = hw->msi_ctrl;
--				bridge->map_irq = pcibios_map_irq;
--				bridge->swizzle_irq = pcibios_swizzle;
- 				bridge->align_resource =
- 						hw->align_resource;
- 
-diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
-index 8d54a67..dfb62f3 100644
---- a/arch/arm/mach-dove/pcie.c
-+++ b/arch/arm/mach-dove/pcie.c
-@@ -152,14 +152,6 @@ static void rc_pci_fixup(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL, PCI_ANY_ID, rc_pci_fixup);
- 
--static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	struct pci_sys_data *sys = dev->sysdata;
--	struct pcie_port *pp = sys->private_data;
--
--	return pp->index ? IRQ_DOVE_PCIE1 : IRQ_DOVE_PCIE0;
--}
--
- static int __init
- dove_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
- {
-@@ -175,12 +167,18 @@ dove_pcie_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	bridge->sysdata = sys;
- 	bridge->busnr = sys->busnr;
- 	bridge->ops = &pcie_ops;
--	bridge->map_irq = dove_pcie_map_irq;
--	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	return pci_scan_root_bus_bridge(bridge);
- }
- 
-+static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	struct pci_sys_data *sys = dev->sysdata;
-+	struct pcie_port *pp = sys->private_data;
-+
-+	return pp->index ? IRQ_DOVE_PCIE1 : IRQ_DOVE_PCIE0;
-+}
-+
- static struct hw_pci dove_pci __initdata = {
- 	.nr_controllers	= 2,
- 	.setup		= dove_pcie_setup,
-diff --git a/arch/arm/mach-iop13xx/pci.c b/arch/arm/mach-iop13xx/pci.c
-index 3c51a9b..070d92a 100644
---- a/arch/arm/mach-iop13xx/pci.c
-+++ b/arch/arm/mach-iop13xx/pci.c
-@@ -532,7 +532,6 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	bridge->dev.parent = NULL;
- 	bridge->sysdata = sys;
- 	bridge->busnr = sys->busnr;
--	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	switch (which_atu) {
- 	case IOP13XX_INIT_ATU_ATUX:
-@@ -548,7 +547,6 @@ int iop13xx_scan_bus(int nr, struct pci_host_bridge *bridge)
- 		break;
- 	case IOP13XX_INIT_ATU_ATUE:
- 		bridge->ops = &iop13xx_atue_ops;
--		bridge->map_irq = iop13xx_pcie_map_irq;
- 		ret = pci_scan_root_bus_bridge(bridge);
- 		if (!ret)
- 			pci_bus_atue = bridge->bus;
-diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
-index 0f1c343..76951bf 100644
---- a/arch/arm/mach-orion5x/pci.c
-+++ b/arch/arm/mach-orion5x/pci.c
-@@ -555,19 +555,6 @@ int __init orion5x_pci_sys_setup(int nr, struct pci_sys_data *sys)
- 	return 0;
- }
- 
--int __init orion5x_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--{
--	int bus = dev->bus->number;
--
--	/*
--	 * PCIe endpoint?
--	 */
--	if (orion5x_pci_disabled || bus < orion5x_pci_local_bus_nr())
--		return IRQ_ORION5X_PCIE0_INT;
--
--	return -1;
--}
--
- int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
- {
- 	struct pci_sys_data *sys = pci_host_bridge_priv(bridge);
-@@ -576,8 +563,6 @@ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	bridge->dev.parent = NULL;
- 	bridge->sysdata = sys;
- 	bridge->busnr = sys->busnr;
--	bridge->map_irq = orion5x_pci_map_irq;
--	bridge->swizzle_irq = pci_common_swizzle;
- 
- 	if (nr == 0) {
- 		bridge->ops = &pcie_ops;
-@@ -592,3 +577,16 @@ int __init orion5x_pci_sys_scan_bus(int nr, struct pci_host_bridge *bridge)
- 	BUG();
- 	return -ENODEV;
- }
-+
-+int __init orion5x_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-+{
-+	int bus = dev->bus->number;
-+
-+	/*
-+	 * PCIe endpoint?
-+	 */
-+	if (orion5x_pci_disabled || bus < orion5x_pci_local_bus_nr())
-+		return IRQ_ORION5X_PCIE0_INT;
-+
-+	return -1;
-+}
--- 
-2.10.0
+Which reminds me -- are these two addreses
 
+  Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+  Mason <slash.tmp@free.fr>
+
+different names for the same person?  Conversations are easier for me
+if I can keep who's who straight :)
+
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
