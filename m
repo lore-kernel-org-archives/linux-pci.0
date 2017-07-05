@@ -1,47 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:42341 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750980AbdGYMpc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 08:45:32 -0400
-Date: Tue, 25 Jul 2017 15:45:27 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/3] ACPI / PM: Split acpi_device_wakeup()
-Message-ID: <20170725124527.GR2369@lahna.fi.intel.com>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan>
- <3408475.MC8krXn0zk@aspire.rjw.lan>
+Return-Path: <SRS0=SVn8=6I=ucw.cz=mj+f-050717+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=SVn8=6I=ucw.cz=mj+f-050717+helgaas=kernel.org@kernel.org>
+Date: Wed, 5 Jul 2017 15:19:12 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, linux-pci@vger.kernel.org,
+	rajatja@google.com, briannorris@chromium.org
+Subject: Re: [PCIUTILS PATCH v2] lspci: Fix wrong read size for RootSta
+Message-ID: <mj+md-20170705.131850.63428.nikam@ucw.cz>
+References: <1498817340-24918-1-git-send-email-jeffy.chen@rock-chips.com>
+ <20170701132640.GA18324@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3408475.MC8krXn0zk@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170701132640.GA18324@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 21, 2017 at 02:40:49PM +0200, Rafael J. Wysocki wrote:
-> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> To prepare for a subsequent change and make the code somewhat easier
-> to follow, do the following in the ACPI device wakeup handling code:
-> 
->  * Replace wakeup.flags.enabled under struct acpi_device with
->    wakeup.enable_count as that will be necessary going forward.
-> 
->    For now, wakeup.enable_count is not allowed to grow beyond 1,
->    so the current behavior is retained.
-> 
->  * Split acpi_device_wakeup() into acpi_device_wakeup_enable()
->    and acpi_device_wakeup_disable() and modify the callers of
->    it accordingly.
-> 
->  * Introduce a new acpi_wakeup_lock mutex to protect the wakeup
->    enabling/disabling code from races in case it is executed
->    more than once in parallel for the same device (which may
->    happen for bridges theoretically).
-> 
-> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Hello!
 
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > We are reading wrong size(word) for this cap, since:
+> > 
+> > RootSta has:
+> > PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
+> > PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
+> > 
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> 
+> Looks good to me.  Root Status is indeed a 32-bit register, per
+> PCIe r3.1, sec 7.8.14.
+> 
+> Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Thanks, applied.
+
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Even nostalgia isn't what it used to be.
