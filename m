@@ -1,62 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36780 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751392AbdGRSIO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jul 2017 14:08:14 -0400
-To: Allen Hubbe <Allen.Hubbe@dell.com>, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20170718160409.6493-1-logang@deltatee.com>
- <000301d2ffee$6c2db5c0$44892140$@dell.com>
-Cc: 'Jon Mason' <jdmason@kudzu.us>,
-        'Dave Jiang' <dave.jiang@intel.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>,
-        'Kurt Schwemmer' <kurt.schwemmer@microsemi.com>,
-        'Stephen Bates' <sbates@raithlin.com>,
-        'Serge Semin' <fancer.lancer@gmail.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <8ba7a175-91c2-4a95-153c-0a7b668b7fbc@deltatee.com>
-Date: Tue, 18 Jul 2017 12:08:06 -0600
+Received: from jabberwock.ucw.cz ([46.255.230.98]:37258 "EHLO
+        jabberwock.ucw.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750837AbdGENia (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 09:38:30 -0400
+Received: from albireo.burrow.ucw.cz (albireo.ucw.cz [91.219.245.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client CN "albireo.ucw.cz", Issuer "ucw.cz" (verified OK))
+        by jabberwock.ucw.cz (Postfix) with ESMTPS id 031251C0186
+        for <linux-pci@vger.kernel.org>; Wed,  5 Jul 2017 15:30:27 +0200 (CEST)
+Date: Wed, 5 Jul 2017 15:30:26 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Linux-PCI Mailing List <linux-pci@vger.kernel.org>
+Subject: Released pciutils-3.5.5
+Message-ID: <mj+md-20170705.132916.7135.albireo@ucw.cz>
 MIME-Version: 1.0
-In-Reply-To: <000301d2ffee$6c2db5c0$44892140$@dell.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v2 00/16] Switchtec NTB Support
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello, world!\n
+
+The pciutils-3.5.5 have been released. Thanks to Bjorn Helgaas for most
+of the patches.
+
+Thus quoth the ChangeLog:
+
+| 2017-07-05  Martin Mares <mj@ucw.cz>
+| 
+| 	* Released as 3.5.5.
+| 
+| 	* Better decoding of AER capability.
+| 
+| 	* "Slot Implemented" flag is decoded for PCI/PCI-X to PCIe bridges.
+| 
+| 	* Minor fixes of decoding other capabilities.
+| 
+| 	* As usually, updated pci.ids to the current snapshot of the database.
 
 
-On 18/07/17 11:51 AM, Allen Hubbe wrote:
-> Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
-
-Thanks.
-
-> Should the order of 6 and 7 be swapped?
-
-Hmm, yes. I'll make the change for a v3 after more feedback comes.
-
-> 6 - I think just the comment is best.  Rather than prohibit the use of functionality for hardware that does support the calls, in my opinion it should be left to specific hardware drivers to return an error.
-
-As stated, I disagree. You can't allow clients to misuse the API when
-testing with drivers that don't care. Otherwise, I'd have to manually
-police the mailing-list for changes that would break when used with the
-switchtec code. Better to make this automatic.
-
-> 14 - I would prefer that a non-hardware-supported implementation of spads via a memory window should be common code, not reinvented in each specific hardware driver that lacks hardware spads.  You pointed out that the spads implemented here use the shared_mw construct, which is specific to this driver.  I am concerned that spads in the shared_mw (really anything in shared_mw, including this driver's indication of the peer link state) limits the applicability of this driver to just configurations of two ntb ports.  You stated this limitation upfront.
-
-I think it should wait until other drivers actually do something similar
-to common up the code. It's impossible to know exactly how it should be
-made common until we know what other drivers actually need. When that
-does happen I'm happy to work with anyone who wants to make it common.
-
-The code, as is, is limited to two hosts largely because I have no way
-to test multi-host setups (as no clients are ready for it) and
-multi-host is also not a priority for us at the moment. The shared_mw
-concept on its own will _not_ limit the number of hosts. The switchtec
-hardware has special fixed size LUT memory windows (the number of these
-is configurable but should have easily enough to provide one window per
-port as the default is 32 and the maximum is 128). I'm not sure if other
-devices provide similar functionality but it's fairly necessary for
-emulating spads and link status with memory windows.
-
-Logan
+				Have a nice fortnight
+-- 
+Martin `MJ' Mares                          <mj@ucw.cz>   http://mj.ucw.cz/
+Faculty of Math and Physics, Charles University, Prague, Czech Rep., Earth
+Q: How many alchemists does it take to change a light bulb?  A: Into what?
