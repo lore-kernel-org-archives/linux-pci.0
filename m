@@ -1,65 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:49352 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751336AbdGRIAG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 04:00:06 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH v3 7/7] dt-bindings: phy: convert to use per-lane Rockchip PCIe PHY
-Date: Tue, 18 Jul 2017 15:59:22 +0800
-Message-Id: <1500364762-98146-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500364762-98146-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
- <1500364762-98146-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=lPwk=6I=hisilicon.com=songxiaowei@kernel.org>
+Return-Path: <SRS0=lPwk=6I=hisilicon.com=songxiaowei@kernel.org>
+From: songxiaowei <songxiaowei@hisilicon.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
+        "bhelgaas@google.com"
+	<bhelgaas@google.com>,
+        Suzhuangluan <suzhuangluan@hisilicon.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] MAINTAINERS:add maintainer for kirin pcie
+Date: Wed, 5 Jul 2017 01:00:57 +0000
+Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54118F33F@DGGEMA505-MBS.china.huawei.com>
+References: <20170704021516.96575-1-songxiaowei@hisilicon.com>
+ <20170704162538.GJ13824@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170704162538.GJ13824@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch deprecate the legacy PCIe PHY and encourage user
-to use per-lane PHY mode by setting #phy-cells to 1.
-
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Acked-by: Rob Herring <robh@kernel.org>
----
-
-Changes in v3:
-- rename the commit tile
-
-Changes in v2: None
-
- Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-index 0f6222a..b496042 100644
---- a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-@@ -3,7 +3,6 @@ Rockchip PCIE PHY
- 
- Required properties:
-  - compatible: rockchip,rk3399-pcie-phy
-- - #phy-cells: must be 0
-  - clocks: Must contain an entry in clock-names.
- 	See ../clocks/clock-bindings.txt for details.
-  - clock-names: Must be "refclk"
-@@ -11,6 +10,12 @@ Required properties:
- 	See ../reset/reset.txt for details.
-  - reset-names: Must be "phy"
- 
-+Required properties for legacy PHY mode (deprecated):
-+ - #phy-cells: must be 0
-+
-+Required properties for per-lane PHY mode (preferred):
-+ - #phy-cells: must be 1
-+
- Example:
- 
- grf: syscon@ff770000 {
--- 
-1.9.1
+VGhhbmsgeW91IHNvIG11Y2ghDQoNCi0tLS0t08q8/tStvP4tLS0tLQ0Kt6K8/sjLOiBCam9ybiBI
+ZWxnYWFzIFttYWlsdG86aGVsZ2Fhc0BrZXJuZWwub3JnXSANCreiy83KsbzkOiAyMDE3xOo31MI1
+yNUgMDoyNg0KytW8/sjLOiBzb25neGlhb3dlaQ0Ks63LzTogZ3VvZG9uZy54dUBsaW5hcm8ub3Jn
+OyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBTdXpodWFuZ2x1YW47IGxpbnV4LXBjaUB2Z2VyLmtlcm5l
+bC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJu
+ZWwub3JnDQrW98ziOiBSZTogW1BBVENIXSBNQUlOVEFJTkVSUzphZGQgbWFpbnRhaW5lciBmb3Ig
+a2lyaW4gcGNpZQ0KDQpPbiBUdWUsIEp1bCAwNCwgMjAxNyBhdCAxMDoxNToxNkFNICswODAwLCBY
+aWFvd2VpIFNvbmcgd3JvdGU6DQo+IEtpcmluIFBDSWUgRHJpdmVyIGRvZXMgbm90IGhhdmUgYSBt
+YWludGFpbmVyIGF0IHByZXNlbnQsDQo+IA0KPiBBZGQgbWFpbnRhaW5lcnMgZm9yIGtpcmluIHBj
+aWUgZHJpdmVyIGFuZCBEb2MsIHRoZSB0d28gZmVsbG93aW5nIGZpbGVzLg0KPiBEb2N1bWVudGF0
+aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaWUta2lyaW4udHh0DQo+IGRyaXZlcnMvcGNp
+L2R3Yy9wY2llLWtpcmluLmMNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFhpYW93ZWkgU29uZyA8c29u
+Z3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4gQ2M6IEd1b2RvbmcgWHUgPGd1b2RvbmcueHVAbGlu
+YXJvLm9yZz4NCg0KQXBwbGllZCB0byBwY2kvaG9zdC1raXJpbiBmb3IgdjQuMTMsIHRoYW5rcyEN
+Cg0KPiAtLS0NCj4gIE1BSU5UQUlORVJTIHwgOCArKysrKysrKw0KPiAgMSBmaWxlIGNoYW5nZWQs
+IDggaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL01BSU5UQUlORVJTIGIvTUFJTlRB
+SU5FUlMgaW5kZXggDQo+IDVlZTMxMjVmODM0MS4uYzY0ZmY3OTU4N2M4IDEwMDY0NA0KPiAtLS0g
+YS9NQUlOVEFJTkVSUw0KPiArKysgYi9NQUlOVEFJTkVSUw0KPiBAQCAtOTg1MSw2ICs5ODUxLDE0
+IEBAIFM6CU1haW50YWluZWQNCj4gIEY6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5n
+cy9wY2kvaGlzaWxpY29uLXBjaWUudHh0DQo+ICBGOglkcml2ZXJzL3BjaS9kd2MvcGNpZS1oaXNp
+LmMNCj4gIA0KPiArUENJRSBEUklWRVIgRk9SIEtpcmluDQo+ICtNOglYaWFvd2VpIFNvbmcgPHNv
+bmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+DQo+ICtNOglCaW5naHVpIFdhbmcgPHdhbmdiaW5naHVp
+QGhpc2lsaWNvbi5jb20+DQo+ICtMOglsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+ICtTOglN
+YWludGFpbmVkDQo+ICtGOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3Bj
+aWUta2lyaW4udHh0DQo+ICtGOglkcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jDQo+ICsNCj4g
+IFBDSUUgRFJJVkVSIEZPUiBST0NLQ0hJUA0KPiAgTToJU2hhd24gTGluIDxzaGF3bi5saW5Acm9j
+ay1jaGlwcy5jb20+DQo+ICBNOglXZW5ydWkgTGkgPHdlbnJ1aS5saUByb2NrLWNoaXBzLmNvbT4N
+Cj4gLS0NCj4gMi4xMS5HSVQNCj4gDQo=
