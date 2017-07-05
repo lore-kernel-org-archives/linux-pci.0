@@ -1,308 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36127 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751503AbdGRQE1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jul 2017 12:04:27 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:08 -0600
-Message-Id: <20170718160409.6493-16-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 15/16] switchtec_ntb: add memory window support
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=XnOz=6I=sirena.org.uk=broonie@kernel.org>
+Return-Path: <SRS0=XnOz=6I=sirena.org.uk=broonie@kernel.org>
+Date: Wed, 5 Jul 2017 13:33:04 +0100
+From: Mark Brown <broonie@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>
+Message-ID: <20170705123304.extc5iswhwjepwyp@sirena.org.uk>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703181128.GD4902@n2100.armlinux.org.uk>
+ <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="fkjptutfsxnlabm5"
+In-Reply-To: <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
 List-ID: <linux-pci.vger.kernel.org>
 
-The Switchtec hardware has two types of memory windows: LUTs and Direct.
-The first area in each BAR is for LUT windows and the remaining area is
-for the direct region. The total number of LUT entries is set by a
-configuration setting in hardware and they all must be the same
-size. (This is fixed by switchtec_ntb to be 64K.)
 
-switchtec_ntb enables the LUTs only for the first BAR and enables the
-highest power of two possible. Seeing the LUTs are at the beginning of
-the BAR, the direct memory window's alignment is affected. Therefore,
-the maximum direct memory window size can not be greater than the number
-of LUTs times 64K. The direct window in other BARs will not have this
-restriction as the LUTs will not be enabled there. LUTs will only be
-exposed through the NTB API if the use_lut_mw parameter is set.
+--fkjptutfsxnlabm5
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Seeing the Switchtec hardware, by default, configures BARs to be 4G a
-module parameter is given to limit the size of the advertised memory
-windows. Higher layers tend to allocate the maximum BAR size and this
-has a tendency to fail when they try to allocate 4GB of contiguous
-memory.
+On Wed, Jul 05, 2017 at 01:59:55AM +0200, Mason wrote:
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 213 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 210 insertions(+), 3 deletions(-)
+> Do larger SoC vendors have HW devs working closely with
+> Linux devs, to avoid these design bloopers?
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 14f8ff654b57..471424ec0b6c 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -25,6 +25,11 @@ MODULE_VERSION("0.1");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Microsemi Corporation");
- 
-+static ulong max_mw_size = SZ_2M;
-+module_param(max_mw_size, ulong, 0644);
-+MODULE_PARM_DESC(max_mw_size,
-+	"Max memory window size reported to the upper layer");
-+
- static bool use_lut_mws;
- module_param(use_lut_mws, bool, 0644);
- MODULE_PARM_DESC(use_lut_mws,
-@@ -190,7 +195,27 @@ static int switchtec_ntb_send_msg(struct switchtec_ntb *sndev, int idx,
- 
- static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	int nr_direct_mw = sndev->peer_nr_direct_mw;
-+	int nr_lut_mw = sndev->peer_nr_lut_mw - 1;
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	if (!use_lut_mws)
-+		nr_lut_mw = 0;
-+
-+	return nr_direct_mw + nr_lut_mw;
-+}
-+
-+static int lut_index(struct switchtec_ntb *sndev, int mw_idx)
-+{
-+	return mw_idx - sndev->nr_direct_mw + 1;
-+}
-+
-+static int peer_lut_index(struct switchtec_ntb *sndev, int mw_idx)
-+{
-+	return mw_idx - sndev->peer_nr_direct_mw + 1;
- }
- 
- static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
-@@ -198,17 +223,192 @@ static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
- 				      resource_size_t *size_align,
- 				      resource_size_t *size_max)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	int lut;
-+	resource_size_t size;
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	lut = widx >= sndev->peer_nr_direct_mw;
-+	size = ioread64(&sndev->peer_shared->mw_sizes[widx]);
-+
-+	if (size == 0)
-+		return -EINVAL;
-+
-+	if (addr_align)
-+		*addr_align = lut ? size : SZ_4K;
-+
-+	if (size_align)
-+		*size_align = lut ? size : SZ_4K;
-+
-+	if (size_max)
-+		*size_max = size;
-+
- 	return 0;
- }
- 
-+static void switchtec_ntb_mw_clr_direct(struct switchtec_ntb *sndev, int idx)
-+{
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+	int bar = sndev->peer_direct_mw_to_bar[idx];
-+	u32 ctl_val;
-+
-+	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
-+	ctl_val &= ~NTB_CTRL_BAR_DIR_WIN_EN;
-+	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
-+	iowrite32(0, &ctl->bar_entry[bar].win_size);
-+	iowrite64(sndev->self_partition, &ctl->bar_entry[bar].xlate_addr);
-+}
-+
-+static void switchtec_ntb_mw_clr_lut(struct switchtec_ntb *sndev, int idx)
-+{
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+
-+	iowrite64(0, &ctl->lut_entry[peer_lut_index(sndev, idx)]);
-+}
-+
-+static void switchtec_ntb_mw_set_direct(struct switchtec_ntb *sndev, int idx,
-+					dma_addr_t addr, resource_size_t size)
-+{
-+	int xlate_pos = ilog2(size);
-+	int bar = sndev->peer_direct_mw_to_bar[idx];
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+	u32 ctl_val;
-+
-+	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
-+	ctl_val |= NTB_CTRL_BAR_DIR_WIN_EN;
-+
-+	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
-+	iowrite32(xlate_pos | size, &ctl->bar_entry[bar].win_size);
-+	iowrite64(sndev->self_partition | addr,
-+		  &ctl->bar_entry[bar].xlate_addr);
-+}
-+
-+static void switchtec_ntb_mw_set_lut(struct switchtec_ntb *sndev, int idx,
-+				     dma_addr_t addr, resource_size_t size)
-+{
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+
-+	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) | addr),
-+		  &ctl->lut_entry[peer_lut_index(sndev, idx)]);
-+}
-+
- static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
- 				      dma_addr_t addr, resource_size_t size)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+	int xlate_pos = ilog2(size);
-+	int nr_direct_mw = sndev->peer_nr_direct_mw;
-+	int rc;
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	dev_dbg(&sndev->stdev->dev, "MW %d: part %d addr %pad size %pap",
-+		widx, pidx, &addr, &size);
-+
-+	if (widx >= switchtec_ntb_mw_count(ntb, pidx))
-+		return -EINVAL;
-+
-+	if (xlate_pos < 12)
-+		return -EINVAL;
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		return rc;
-+
-+	if (addr == 0 || size == 0) {
-+		if (widx < nr_direct_mw)
-+			switchtec_ntb_mw_clr_direct(sndev, widx);
-+		else
-+			switchtec_ntb_mw_clr_lut(sndev, widx);
-+	} else {
-+		if (widx < nr_direct_mw)
-+			switchtec_ntb_mw_set_direct(sndev, widx, addr, size);
-+		else
-+			switchtec_ntb_mw_set_lut(sndev, widx, addr, size);
-+	}
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+
-+	if (rc == -EIO) {
-+		dev_err(&sndev->stdev->dev,
-+			"Hardware reported an error configuring mw %d: %08x",
-+			widx, ioread32(&ctl->bar_error));
-+
-+		if (widx < nr_direct_mw)
-+			switchtec_ntb_mw_clr_direct(sndev, widx);
-+		else
-+			switchtec_ntb_mw_clr_lut(sndev, widx);
-+
-+		switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
-+				      NTB_CTRL_PART_STATUS_NORMAL);
-+	}
-+
-+	return rc;
- }
- 
- static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return sndev->nr_direct_mw + (use_lut_mws ? sndev->nr_lut_mw - 1 : 0);
-+}
-+
-+static int switchtec_ntb_direct_get_addr(struct switchtec_ntb *sndev,
-+					 int idx, phys_addr_t *base,
-+					 resource_size_t *size)
-+{
-+	int bar = sndev->direct_mw_to_bar[idx];
-+	size_t offset = 0;
-+
-+	if (bar < 0)
-+		return -EINVAL;
-+
-+	if (idx == 0) {
-+		/*
-+		 * This is the direct BAR shared with the LUTs
-+		 * which means the actual window will be offset
-+		 * by the size of all the LUT entries.
-+		 */
-+
-+		offset = LUT_SIZE * sndev->nr_lut_mw;
-+	}
-+
-+	if (base)
-+		*base = pci_resource_start(sndev->ntb.pdev, bar) + offset;
-+
-+	if (size) {
-+		*size = pci_resource_len(sndev->ntb.pdev, bar) - offset;
-+		if (offset && *size > offset)
-+			*size = offset;
-+
-+		if (*size > max_mw_size)
-+			*size = max_mw_size;
-+	}
-+
-+	return 0;
-+}
-+
-+static int switchtec_ntb_lut_get_addr(struct switchtec_ntb *sndev,
-+				      int idx, phys_addr_t *base,
-+				      resource_size_t *size)
-+{
-+	int bar = sndev->direct_mw_to_bar[0];
-+	int offset;
-+
-+	offset = LUT_SIZE * lut_index(sndev, idx);
-+
-+	if (base)
-+		*base = pci_resource_start(sndev->ntb.pdev, bar) + offset;
-+
-+	if (size)
-+		*size = LUT_SIZE;
-+
- 	return 0;
- }
- 
-@@ -216,7 +416,14 @@ static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
- 					  phys_addr_t *base,
- 					  resource_size_t *size)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (idx < sndev->nr_direct_mw)
-+		return switchtec_ntb_direct_get_addr(sndev, idx, base, size);
-+	else if (idx < switchtec_ntb_peer_mw_count(ntb))
-+		return switchtec_ntb_lut_get_addr(sndev, idx, base, size);
-+	else
-+		return -EINVAL;
- }
- 
- static void switchtec_ntb_part_link_speed(struct switchtec_ntb *sndev,
--- 
-2.11.0
+Yes, or just internal software teams in general - hardware designs tend
+to be a lot more usable if there's good dialogue with users about what's
+useful and what isn't.  It's going to happen at some point anyway when
+people can't get the chip working well.
+
+--fkjptutfsxnlabm5
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAllc3H8ACgkQJNaLcl1U
+h9BSogf8CecwiRAi+trNsmUK16kSJeNzOtmSxMAOgn7foREKBLBqlxu/k6ZcBOTh
+axM1t1OdWTydkFfV+g0+qFX62Plbi2hrNRT7/F45WTtOaevKj4qmds7ca/A7a8Ej
+jAOeL7QveC/bY0JPZ79+MK+tf/8GsGpcJGavypTJ84/c5qcwlBICV8GuP3Cn1oWy
+scTTakHr874H1/j0tiDrz2IBtO2rI7LxAOaOJnfxUMjvBh5SpKUND9WKfr4Px9bI
+1fHezYoNml2FWX89H1ImoLFV5U6mmsrJ7u57G4AO407YDm0sin6jxlRKaHG8/D7u
+zU6DMZsIwouthZ+ECXW1hAaG+CREDQ==
+=vJlJ
+-----END PGP SIGNATURE-----
+
+--fkjptutfsxnlabm5--
