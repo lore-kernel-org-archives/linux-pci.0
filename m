@@ -1,242 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:05 -0600
-Message-Id: <20170718160409.6493-13-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 12/16] switchtec_ntb: add link management
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:33142 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752469AbdGEDJe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:09:34 -0400
+Received: by mail-wr0-f182.google.com with SMTP id r103so256298811wrb.0
+        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:09:34 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v4 2/2] PCI: iproc: add device shutdown for PCI RC
+Date: Wed,  5 Jul 2017 08:38:59 +0530
+Message-Id: <1499224139-10746-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
+References: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-switchtec_ntb checks for a link by looking at the shared memory
-window. If the magic number is correct and the otherside indicates
-their link is enabled then we take the link to be up.
+PERST must be asserted around ~500ms before the reboot is applied.
 
-Whenever we change our local link status we send a msg to the
-otherside to check whether it's up and change their status.
+During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
+LCPLL clock and PERST both goes off simultaneously.
+This will cause certain Endpoints Intel NVMe not get detected, upon
+next boot sequence.
 
-The current status is maintained in a flag so ntb_is_link_up
-can return quickly.
+This is specifically happening with Intel P3700 400GB series.
+Endpoint is expecting the clock for some amount of time after PERST is
+asserted, which is not happening in Stingray (iproc based SOC).
+This causes NVMe to behave in undefined way.
 
-We utilize Switchtec's link status notifier to also check link changes
-when the switch notices a port changes state.
+On the contrary Intel x86 boards, will have ref clock running, so we
+do not see this behavior there.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 130 +++++++++++++++++++++++++++++++++++-
- 1 file changed, 129 insertions(+), 1 deletion(-)
+Besides, PCI spec does not stipulate about such timings.
+In-fact it does not tell us, whether PCIe device should consider
+refclk to be available or not to be.
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 20f2fdda4644..dba14188ba95 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -64,6 +64,7 @@ static inline void _iowrite64(u64 val, void __iomem *mmio)
+It is completely up to vendor to design their EP the way they want
+with respect to ref clock availability.
+
+500ms is just based on the observation and taken as safe margin.
+This patch adds platform shutdown where it should be
+called in device_shutdown while reboot command is issued.
+So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+followed by RC shutdown, which issues safe PERST assertion.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 90d2bdd..9512960 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	return iproc_pcie_remove(pcie);
+ }
  
- struct shared_mw {
- 	u32 magic;
-+	u32 link_sta;
- 	u32 partition_id;
- 	u64 mw_sizes[MAX_MWS];
++static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
++{
++	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
++
++	iproc_pcie_shutdown(pcie);
++}
++
+ static struct platform_driver iproc_pcie_pltfm_driver = {
+ 	.driver = {
+ 		.name = "iproc-pcie",
+@@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	},
+ 	.probe = iproc_pcie_pltfm_probe,
+ 	.remove = iproc_pcie_pltfm_remove,
++	.shutdown = iproc_pcie_pltfm_shutdown,
  };
-@@ -104,8 +105,17 @@ struct switchtec_ntb {
- 	int peer_nr_direct_mw;
- 	int peer_nr_lut_mw;
- 	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
-+
-+	bool link_is_up;
-+	enum ntb_speed link_speed;
-+	enum ntb_width link_width;
+ module_platform_driver(iproc_pcie_pltfm_driver);
+ 
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index b0abcd7..d1bcdc9 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -616,32 +616,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+ 	.write = iproc_pcie_config_write32,
  };
  
-+static struct switchtec_ntb *ntb_sndev(struct ntb_dev *ntb)
-+{
-+	return container_of(ntb, struct switchtec_ntb, ntb);
-+}
-+
- static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 				 struct ntb_ctrl_regs __iomem *ctl,
- 				 u32 op, int wait_status)
-@@ -163,6 +173,17 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 	return -EIO;
- }
- 
-+static int switchtec_ntb_send_msg(struct switchtec_ntb *sndev, int idx,
-+				  u32 val)
-+{
-+	if (idx < 0 || idx >= ARRAY_SIZE(sndev->mmio_self_dbmsg->omsg))
-+		return -EINVAL;
-+
-+	iowrite32(val, &sndev->mmio_self_dbmsg->omsg[idx].msg);
-+
-+	return 0;
-+}
-+
- static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
+-static void iproc_pcie_reset(struct iproc_pcie *pcie)
++static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
  {
- 	return 0;
-@@ -194,22 +215,124 @@ static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
- 	return 0;
- }
+ 	u32 val;
  
-+static void switchtec_ntb_part_link_speed(struct switchtec_ntb *sndev,
-+					  int partition,
-+					  enum ntb_speed *speed,
-+					  enum ntb_width *width)
-+{
-+	struct switchtec_dev *stdev = sndev->stdev;
-+
-+	u32 pff = ioread32(&stdev->mmio_part_cfg[partition].vep_pff_inst_id);
-+	u32 linksta = ioread32(&stdev->mmio_pff_csr[pff].pci_cap_region[13]);
-+
-+	if (speed)
-+		*speed = (linksta >> 16) & 0xF;
-+
-+	if (width)
-+		*width = (linksta >> 20) & 0x3F;
-+}
-+
-+static void switchtec_ntb_set_link_speed(struct switchtec_ntb *sndev)
-+{
-+	enum ntb_speed self_speed, peer_speed;
-+	enum ntb_width self_width, peer_width;
-+
-+	if (!sndev->link_is_up) {
-+		sndev->link_speed = NTB_SPEED_NONE;
-+		sndev->link_width = NTB_WIDTH_NONE;
-+		return;
-+	}
-+
-+	switchtec_ntb_part_link_speed(sndev, sndev->self_partition,
-+				      &self_speed, &self_width);
-+	switchtec_ntb_part_link_speed(sndev, sndev->peer_partition,
-+				      &peer_speed, &peer_width);
-+
-+	sndev->link_speed = min(self_speed, peer_speed);
-+	sndev->link_width = min(self_width, peer_width);
-+}
-+
-+enum {
-+	LINK_MESSAGE = 0,
-+	MSG_LINK_UP = 1,
-+	MSG_LINK_DOWN = 2,
-+	MSG_CHECK_LINK = 3,
-+};
-+
-+static void switchtec_ntb_check_link(struct switchtec_ntb *sndev)
-+{
-+	int link_sta;
-+	int old = sndev->link_is_up;
-+
-+	link_sta = sndev->self_shared->link_sta;
-+	if (link_sta) {
-+		u64 peer = ioread64(&sndev->peer_shared->magic);
-+
-+		if ((peer & 0xFFFFFFFF) == SWITCHTEC_NTB_MAGIC)
-+			link_sta = peer >> 32;
-+		else
-+			link_sta = 0;
-+	}
-+
-+	sndev->link_is_up = link_sta;
-+	switchtec_ntb_set_link_speed(sndev);
-+
-+	if (link_sta != old) {
-+		switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_CHECK_LINK);
-+		ntb_link_event(&sndev->ntb);
-+		dev_info(&sndev->stdev->dev, "ntb link %s",
-+			 link_sta ? "up" : "down");
-+	}
-+}
-+
-+static void switchtec_ntb_link_notification(struct switchtec_dev *stdev)
-+{
-+	struct switchtec_ntb *sndev = stdev->sndev;
-+
-+	switchtec_ntb_check_link(sndev);
-+}
-+
- static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
- 				    enum ntb_speed *speed,
- 				    enum ntb_width *width)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (speed)
-+		*speed = sndev->link_speed;
-+	if (width)
-+		*width = sndev->link_width;
-+
-+	return sndev->link_is_up;
- }
- 
- static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
- 				     enum ntb_speed max_speed,
- 				     enum ntb_width max_width)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	dev_dbg(&sndev->stdev->dev, "enabling link");
-+
-+	sndev->self_shared->link_sta = 1;
-+	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
-+
-+	switchtec_ntb_check_link(sndev);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	dev_dbg(&sndev->stdev->dev, "disabling link");
-+
-+	sndev->self_shared->link_sta = 0;
-+	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
-+
-+	switchtec_ntb_check_link(sndev);
-+
- 	return 0;
- }
- 
-@@ -572,6 +695,9 @@ static irqreturn_t switchtec_ntb_message_isr(int irq, void *dev)
- 			dev_dbg(&sndev->stdev->dev, "message: %d %08x\n", i,
- 				(u32)msg);
- 			iowrite8(1, &sndev->mmio_self_dbmsg->imsg[i].status);
-+
-+			if (i == LINK_MESSAGE)
-+				switchtec_ntb_check_link(sndev);
- 		}
- 	}
- 
-@@ -676,6 +802,7 @@ static int switchtec_ntb_add(struct device *dev,
- 		goto deinit_and_exit;
- 
- 	stdev->sndev = sndev;
-+	stdev->link_notifier = switchtec_ntb_link_notification;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
-@@ -699,6 +826,7 @@ void switchtec_ntb_remove(struct device *dev,
- 	if (!sndev)
+ 	/*
+-	 * PAXC and the internal emulated endpoint device downstream should not
+-	 * be reset.  If firmware has been loaded on the endpoint device at an
+-	 * earlier boot stage, reset here causes issues.
++	 * The internal emulated endpoints (such as PAXC) device downstream
++	 * should not be reset. If firmware has been loaded on the endpoint
++	 * device at an earlier boot stage, reset here causes issues.
+ 	 */
+ 	if (pcie->ep_is_internal)
  		return;
  
-+	stdev->link_notifier = NULL;
- 	stdev->sndev = NULL;
- 	ntb_unregister_device(&sndev->ntb);
- 	switchtec_ntb_deinit_db_msg_irq(sndev);
+-	/*
+-	 * Select perst_b signal as reset source. Put the device into reset,
+-	 * and then bring it out of reset
+-	 */
+-	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+-	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+-		~RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	udelay(250);
+-
+-	val |= RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	msleep(100);
++	if (assert) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
++			~RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(250);
++	} else {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val |= RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		msleep(100);
++	}
++}
++
++int iproc_pcie_shutdown(struct iproc_pcie *pcie)
++{
++	iproc_pcie_perst_ctrl(pcie, true);
++	msleep(500);
++
++	return 0;
+ }
++EXPORT_SYMBOL(iproc_pcie_shutdown);
+ 
+ static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
+ {
+@@ -1318,7 +1326,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
+-	iproc_pcie_reset(pcie);
++	iproc_pcie_perst_ctrl(pcie, true);
++	iproc_pcie_perst_ctrl(pcie, false);
+ 
+ 	if (pcie->need_ob_cfg) {
+ 		ret = iproc_pcie_map_ranges(pcie, res);
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 0bbe2ea..a6b55ce 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -110,6 +110,7 @@ struct iproc_pcie {
+ 
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+ int iproc_pcie_remove(struct iproc_pcie *pcie);
++int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+ 
+ #ifdef CONFIG_PCIE_IPROC_MSI
+ int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
 -- 
-2.11.0
+1.9.1
