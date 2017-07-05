@@ -1,98 +1,162 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Daniel Axtens <dja@axtens.net>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
- <linuxppc-dev@lists.ozlabs.org>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH v2 0/4] Allow non-legacy cards to be vgaarb default
-Date: Wed, 19 Jul 2017 08:19:54 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B57B8A@FRAEML521-MBX.china.huawei.com>
-References: <20170719021516.24718-1-dja@axtens.net>
-In-Reply-To: <20170719021516.24718-1-dja@axtens.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:30166 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751964AbdGEVEA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 17:04:00 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+ <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
+ <594955BC.3010703@ti.com> <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
+ <a6380712-214b-990b-69e3-e3889835879b@arm.com>
+CC: <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Message-ID: <595D5423.50908@ti.com>
+Date: Wed, 5 Jul 2017 17:03:31 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "airlied@linux.ie" <airlied@linux.ie>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>, "Liuxinliang
- \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
- "zourongrong@gmail.com" <zourongrong@gmail.com>,
- "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "daniel.vetter@intel.com" <daniel.vetter@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <a6380712-214b-990b-69e3-e3889835879b@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Daniel many thanks for your patch
-
-> -----Original Message-----
-> From: Daniel Axtens [mailto:dja@axtens.net]
-> Sent: 19 July 2017 03:15
-> To: linux-pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
-> arm-kernel@lists.infradead.org
-> Cc: benh@kernel.crashing.org; Liuxinliang (Matthew Liu);
-> zourongrong@gmail.com; catalin.marinas@arm.com; will.deacon@arm.com;
-> Gabriele Paoloni; bhelgaas@google.com; airlied@linux.ie;
-> daniel.vetter@intel.com; alex.williamson@redhat.com; Daniel Axtens
-> Subject: [PATCH v2 0/4] Allow non-legacy cards to be vgaarb default
+On 07/05/2017 11:26 AM, Marc Zyngier wrote:
+> On 05/07/17 11:57, Joao Pinto wrote:
+>> Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
+>>> On 06/20/2017 12:28 PM, Joao Pinto wrote:
+>>>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
+>>>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
+>>>>>>
+>>>>>> Hi Murali,
+>>>>>>
+>>>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+>>>>>>> Joao,
+>>>>>>>
+>>>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>>>>>>>> This patch series adds the new interrupt api to pcie-designware
+>>>>>>>> make it possible to use features like MSIX.
+>>>>>>>>
+>>>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
+>>>>>>>> specific driver.
+>>>>>>>>
+>>>>>>>> The patch set was made against the Bjorn' next branch.
+>>>>>>>>
+>>>>>>>> Joao Pinto (9):
+>>>>>>>>   pci: adding new irq api to pci-designware
+>>>>>>>>   pci: exynos SoC driver adapted to new irq API
+>>>>>>>>   pci: imx6 SoC driver adapted to new irq API
+>>>>>>>>   pci: artpec6 SoC driver adapted to new irq API
+>>>>>>>>   pci: generic PCIe DW driver adapted to new irq API
+>>>>>>>>   pci: qcom SoC driver adapted to new irq API
+>>>>>>>>   pci: keystone SoC driver adapted to new irq API
+>>>>>>>>   pci: removing old irq api from pcie-designware
+>>>>>>>>   pci: remove limitation of the number of the available IRQs
+>>>>>>>>
+>>>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>>>>>>>
+>>>>>>>
+>>>>>>> I gave this a try today and it failed. Logs at
+>>>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+>>>>>>>
+>>>>>>> The first part of the log is with your patch series.
+>>>>>>> The second part is before applying the patch. You will see
+>>>>>>> that there is qc timeout log that shows the issue
+>>>>>>>
+>>>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+>>>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+>>>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+>>>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>>>
+>>>>>>> Is there any DT change I need to make for this? I didn't have a
+>>>>>>> chance to review your patch w.r.t Keystone. But I see you have change
+>>>>>>> the MSI IRq handling.
+>>>>>>>
+>>>>>>
+>>>>>> There is no need to change your DT. I think I will need to debug this issue
+>>>>>> further. Could you please advice a board containing this SoC?
+>>>>>>
+>>>>> I think I may be able to work with you on this. Keystone has different 
+>>>>> register set for MSI IRQ. It is in application space. Also there are
+>>>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
+>>>>> please review the original code vs the changed one w.r.t to this. I haven't
+>>>>> had a chance to review the code as I am in the middle of a release.
+>>>>> But will be able to spend some time after two weeks. Meanwhile please
+>>>>> spend some time reviewing the code and exchange email to identify
+>>>>> the issue. I can add specific debug prints for you as well and provide
+>>>>> you the log for analysis.
+>>>>
+>>>> Ok, I agree! Thanks!
+>>>>
+>>>>>
+>>> Look at this logic in the patch where a potential issue exists for Keystone.
+>>>
+>>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>>> +{
+>>> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>>> +       struct pcie_port *pp = &pci->pp;
+>>> +       u64 msi_target;
+>>> +
+>>> +       if (pp->ops->get_msi_addr)
+>>> +               msi_target = pp->ops->get_msi_addr(pp);
+>>> +       else
+>>> +               msi_target = virt_to_phys((void *)pp->msi_data);
+>>> +
+>>> +       msg->address_lo = lower_32_bits(msi_target);
+>>> +       msg->address_hi = upper_32_bits(msi_target);
+>>> +
+>>> +       if (pp->ops->get_msi_data)
+>>> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+>>> +       else
+>>> +               msg->data = data->hwirq;
+>>> +
+>>> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+>>> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
+>>> +}
+>>>
+>>> Keystone has 8 hw irqs, 4 multiplexed over each since the register
+>>> set is different than other DWC cores. So will not work for Keystone,
+>>> right?
+>>
+>> Well, that can be challenging, since it is a very particular operation.
+>> Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
+>> overide this one if necessary. What do you think?
 > 
-> [v2, in which I send the right patches. My apologies to you all.]
+> At that rate, and given that keystone seems to override almost all
+> operations in this driver, wouldn't it make sense for this to be
+> implemented as a *separate* driver?
+Marc,
+
+What you mean by separate driver? Just the MSI handling part? 
+
+Murali
 > 
-> Hi all,
+> Thanks,
 > 
-> Previously I posted a patch that provided a quirk for a hibmc card
-> behind a particular Huawei bridge that allowed it to be marked as the
-> default device in the VGA arbiter.[0] This lead to some discussion.[1]
-> It was broadly suggested that a more generic solution would be better,
-> something in the style of powerpc's fixup_vga() quirk.
+> 	M.
 > 
-> Here is my suggested solution:
-> 
->  - Create a Kconfig option ARCH_WANT_VGA_ARB_FALLBACK and
 
-In my opinion we could avoid depending on a Kernel config options.
-I.e. we can have generic code that, after all PCI devs are enumerated:
-1) check if we have a default vga device
-2) if not check each registered PCI device and make default device the first
-   one that is a VGA device, capable to respond to IO and MEM requests
-   and that has a driver bound to it 
 
-> 
->  - if an arch selects that option, install PCI_FIXUP_CLASS_ENABLE
->    hook. This hook fires when a card is enabled, which will require
->    that a driver has been bound.
-> 
->  - if there is no default device when the hook fires, and the device
->    can control memory and I/O, mark it as default.
-
-I am worried that the patchset you proposed has a race condition with the
-VGA arbiter. In fact you see:
-subsys_initcall(vga_arb_device_init) is not guaranteed to be called before
-subsys_initcall(acpi_init)
-
-acpi_init->acpi_scan_init->acpi_pci_root_init() at this stage the PCI enumeration
-is done and as soon as a device is added the Kernel will look for a driver
-to bind to it and therefore you quirk could be called before the VGA arbiter...
-Do you agree?
-
-What about modifying vgaarb.c to add a late_initcall() checking what I suggested
-above?
-
-Thanks
-Gab
-
-[...]
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Murali Karicheri
+Linux Kernel, Keystone
