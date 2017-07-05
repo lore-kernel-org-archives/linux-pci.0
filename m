@@ -1,88 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:36364 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751760AbdGUPpF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 11:45:05 -0400
+Return-Path: <SRS0=czt+=6I=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=czt+=6I=linuxfoundation.org=gregkh@kernel.org>
+Date: Wed, 5 Jul 2017 07:21:48 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Mason <slash.tmp@free.fr>
+Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Marc Zyngier <marc.zyngier@arm.com>,
+	linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+Message-ID: <20170705052148.GA6213@kroah.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
+ <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
+ <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
+ <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+ <20170703181128.GD4902@n2100.armlinux.org.uk>
+ <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <4853865.5aRGCM4CdQ@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <4853865.5aRGCM4CdQ@aspire.rjw.lan>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Fri, 21 Jul 2017 18:45:03 +0300
-Message-ID: <CAHp75VeQpmf5z1p9an2bvJDkAGeOxFyXz+VWk7OibNt+-9VMDw@mail.gmail.com>
-Subject: Re: [PATCH 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 21, 2017 at 3:42 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+On Wed, Jul 05, 2017 at 01:59:55AM +0200, Mason wrote:
+> Do larger SoC vendors have HW devs working closely with
+> Linux devs, to avoid these design bloopers?
 
-> The acpi_pci_propagate_wakeup() routine is there to handle cases in
-> which PCI bridges (or PCIe ports) are expected to signal wakeup
-> for devices below them, but currently it doesn't do that correctly.
->
-> The problem is that acpi_pci_propagate_wakeup() uses
-> acpi_pm_set_device_wakeup() for bridges and if that routine is
-> called for multiple times to disable wakeup for the same device,
-> it will disable it on the first invocation and the next calls
-> will have no effect (it works analogously when called to enable
-> wakeup, but that is not a problem).
->
-> Now, say acpi_pci_propagate_wakeup() has been called for two
-> different devices under the same bridge and it has called
-> acpi_pm_set_device_wakeup() for that bridge each time.  The
-> bridge is now enabled to generate wakeup signals.  Next,
-> suppose that one of the devices below it resumes and
-> acpi_pci_propagate_wakeup() is called to disable wakeup for that
-> device.  It will then call acpi_pm_set_device_wakeup() for the bridge
-> and that will effectively disable remote wakeup for all devices under
-> it even though some of them may still be suspended and remote wakeup
-> may be expected to work for them.
->
-> To address this (arguably theoretical) issue, allow
-> wakeup.enable_count under struct acpi_device to grow beyond 1 in
-> certain situations.  In particular, allow that to happen in
-> acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
-> for PCI bridges, so that wakeup is actually disabled for the
-> bridge when all devices under it resume and not when just one
-> of them does that.
+Yes they generally do, as they have learned from their prior mistakes :)
 
-> -       if (wakeup->enable_count > 0)
-> -               goto out;
-> +       if (wakeup->enable_count > 0) {
-> +               if (wakeup->enable_count < max_count)
-> +                       goto inc;
-> +               else
-> +                       goto out;
-> +       }
+good luck!
 
-Wouldn't be simpler
-
-    if (wakeup->enable_count >= max_count)
-      goto out;
-
-    if (wakeup->enable_count > 0)
-      goto inc;
-
-If max_count can be <= 0,
-
-    if (max_count > 0 && wakeup->enable_count >= max_count)
-      goto out;
-
-
-> +inc:
->         wakeup->enable_count++;
->
->  out:
-
-
-
--- 
-With Best Regards,
-Andy Shevchenko
+greg k-h
