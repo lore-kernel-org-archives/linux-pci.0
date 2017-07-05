@@ -1,173 +1,115 @@
-Return-Path: <SRS0=Kl3l=67=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=Kl3l=67=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Casey Leedom <leedom@chelsio.com>,
-        Alexander Duyck
-	<alexander.duyck@gmail.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
- <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
- <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
- <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com>
- <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
- <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
- <MWHPR12MB16007782C422082A92F4765DC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <2feff1a5-25b7-eb6c-7628-7c2257c56e95@huawei.com>
- <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
-CC: Netdev <netdev@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "David.Laight@aculab.com"
-	<David.Laight@aculab.com>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "Alex Williamson" <alex.williamson@redhat.com>,
-        "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>,
-        "Suravee.Suthikulpanit@amd.com"
-	<Suravee.Suthikulpanit@amd.com>,
-        "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "robin.murphy@arm.com"
-	<robin.murphy@arm.com>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        Ganesh GR <ganeshgr@chelsio.com>,
-        "asit.k.mallick@intel.com"
-	<asit.k.mallick@intel.com>,
-        "jeffrey.t.kirsher@intel.com"
-	<jeffrey.t.kirsher@intel.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        Michael Werner
-	<werner@chelsio.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>,
-        "amira@mellanox.com"
-	<amira@mellanox.com>,
-        "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <52e7c477-2f26-16d2-79f7-5f6baba60685@huawei.com>
-Date: Fri, 28 Jul 2017 10:48:59 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:34303 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751779AbdGEHmS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 03:42:18 -0400
+Received: by mail-oi0-f43.google.com with SMTP id l130so119731098oib.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Jul 2017 00:42:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
+In-Reply-To: <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
+References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
+ <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
+ <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org> <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
+ <97b8c58e-7384-0519-5ccb-837fa5054d84@codeaurora.org> <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
+From: Ethan Zhao <ethan.kernel@gmail.com>
+Date: Wed, 5 Jul 2017 15:42:16 +0800
+Message-ID: <CABawtvOOWV1aKk=1LBk+S0UfG02UTNMvtdJM58HQYW4JXFAyrQ@mail.gmail.com>
+Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
+ functional performance enhancements causing PCI Express crashes,
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Wim ten Have <wim.ten.have@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Sinan=EF=BC=8C
+
+    About the patch attached, why clear the word of
+PCI_EXP_DEVCTL_EXT_TAG ?  does the device will be set by default after
+POST it is not supported ?
+
+   dev_info(&dev->dev, "clearing extended tags capability\n");
+
++ pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
++   PCI_EXP_DEVCTL_EXT_TAG);
 
 
-On 2017/7/28 1:44, Casey Leedom wrote:
-> | From: Ding Tianhong <dingtianhong@huawei.com>
-> | Sent: Wednesday, July 26, 2017 6:01 PM
-> |
-> | On 2017/7/27 3:05, Casey Leedom wrote:
-> | >
-> | > Ding, send me a note if you'd like me to work that [cxgb4vf patch] up
-> | > for you.
-> |
-> | Ok, you could send the change log and I could put it in the v8 version
-> | together, will you base on the patch 3/3 or build a independence patch?
-> 
-> Which ever you'd prefer.  It would basically mirror the same exact code that
-> you've got for cxgb4.  I.e. testing the setting of the VF's PCIe Capability
-> Device Control[Relaxed Ordering Enable], setting a new flag in
-> adpater->flags, testing that flag in cxgb4vf/sge.c:t4vf_sge_alloc_rxq().
-> But since the VF's PF will already have disabled the PF's Relaxed Ordering
-> Enable, the VF will also have it's Relaxed Ordering Enable disabled and any
-> effort by the internal chip to send TLPs with the Relaxed Ordering Attribute
-> will be gated by the PCIe logic.  So it's not critical that this be in the
-> first patch.  Your call.  Let me know if you'd like me to send that to you.
-> 
+Thanks,
+Ethan
 
-Good， please Send it to me, I will put it together and send the v8 this week,
-I think Bjorn will be back next week .:)
-
-> 
-> | From: Ding Tianhong <dingtianhong@huawei.com>
-> | Sent: Wednesday, July 26, 2017 6:08 PM
-> |
-> | On 2017/7/27 2:26, Casey Leedom wrote:
-> | >
-> | >  1. Did we ever get any acknowledgement from either Intel or AMD
-> | >     on this patch?  I know that we can't ensure that, but it sure would
-> | >     be nice since the PCI Quirks that we're putting in affect their
-> | >     products.
-> |
-> | Still no Intel and AMD guys has ack this, this is what I am worried about,
-> | should I ping some man again ?
-> 
-> By amusing coincidence, Patrik Cramer (now Cc'ed) from Intel sent me a note
-> yesterday with a link to the official Intel performance tuning documentation
-> which covers this issue:
-> 
-> https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-architectures-optimization-manual.pdf
-> 
-> In section 3.9.1 we have:
-> 
->     3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
->           and Toward MMIO Regions (P2P)
-> 
->     In order to maximize performance for PCIe devices in the processors
->     listed in Table 3-6 below, the soft- ware should determine whether the
->     accesses are toward coherent memory (system memory) or toward MMIO
->     regions (P2P access to other devices). If the access is toward MMIO
->     region, then software can command HW to set the RO bit in the TLP
->     header, as this would allow hardware to achieve maximum throughput for
->     these types of accesses. For accesses toward coherent memory, software
->     can command HW to clear the RO bit in the TLP header (no RO), as this
->     would allow hardware to achieve maximum throughput for these types of
->     accesses.
-> 
->     Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
->                PCIe Performance
-> 
->     Processor                            CPU RP Device IDs
-> 
->     Intel Xeon processors based on       6F01H-6F0EH
->     Broadwell microarchitecture
-> 
->     Intel Xeon processors based on       2F01H-2F0EH
->     Haswell microarchitecture
-> 
-> Unfortunately that's a pretty thin section.  But it does expand the set of
-> Intel Root Complexes for which our Linux PCI Quirk will need to cover.  So
-> you should add those to the next (and hopefully final) spin of your patch.
-> And, it also verifies the need to handle the use of Relaxed Ordering more
-> subtlely than simply turning it off since the NVMe peer-to-peer example I
-> keep bringing up would fall into the "need to use Relaxed Ordering" case ...
-> 
-> It would have been nice to know why this is happening and if any future
-> processor would fix this.  After all, Relaxed Ordering, is just supposed to
-> be a hint.  At worst, a receiving device could just ignore the attribute
-> entirely.  Obviously someone made an effort to implement it but ... it
-> didn't go the way they wanted.
-> 
-> And, it also would have been nice to know if there was any hidden register
-> in these Intel Root Complexes which can completely turn off the effort to
-> pay attention to the Relaxed Ordering Attribute.  We've spend an enormous
-> amount of effort on this issue here on the Linux PCI email list struggling
-> mightily to come up with a way to determine when it's
-> safe/recommended/not-recommended/unsafe to use Relaxed Ordering when
-> directing TLPs towards the Root Complex.  And some architectures require RO
-> for decent performance so we can't just "turn it off" unilatterally.
-> 
-
-I am glad to hear that more person were focus on this problem, It would be great
-if they could enter our discussion and give us more suggestion. :)
-
-Thanks
-Ding
-
-> Casey
-> 
-> .
-> 
+On Wed, Jul 5, 2017 at 9:00 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 7/4/2017 6:25 PM, Sinan Kaya wrote:
+>> On 7/4/2017 1:59 PM, Wim ten Have wrote:
+>>> On Tue, 4 Jul 2017 11:57:37 -0400
+>>> Sinan Kaya <okaya@codeaurora.org> wrote:
+>>>
+>>>> Hi,
+>>>>
+>>>> On 7/4/2017 11:32 AM, Bjorn Helgaas wrote:
+>>>>> [+cc linux-pci]
+>>>>>
+>>>>> Thanks very much for the detailed problem report, Wim!  I'm taking th=
+e
+>>>>> liberty to forward to the linux-pci list in case others trip over the
+>>>>> same thing.
+>>>>>
+>>>>
+>>>> So, the spec is lying :) and reality doesn't match theory.
+>>
+>> The PCI Express bridge you have is a Broadcom HT 2100 bridge which seems=
+ to support
+>> PCI-Express V1.0 and 1.0a compliant only.
+>>
+>> http://www.hard-net.de/info_wissen/chipsatz/broadcom/HT-2100.pdf
+>>
+>> I can also see this in your lspci output.
+>>
+>> 00:08.0 PCI bridge: Broadcom HT2100 PCI-Express Bridge (rev a2) (prog-if=
+ 00 [Normal decode])
+>>       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr=
+- Stepping- SERR+ FastB2B- DisINTx+
+>>       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <=
+TAbort- <MAbort- >SERR- <PERR- INTx-
+>>       Latency: 0, Cache Line Size: 64 bytes
+>>       Interrupt: pin A routed to IRQ 19
+>>       NUMA node: 0
+>>       Bus: primary=3D00, secondary=3D01, subordinate=3D01, sec-latency=
+=3D0
+>>       I/O behind bridge: 0000f000-00000fff [empty]
+>>       Memory behind bridge: efe00000-efefffff [size=3D1M]
+>>       Prefetchable memory behind bridge: 00000000fff00000-00000000000fff=
+ff [empty]
+>>       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <=
+TAbort- <MAbort+ <SERR- <PERR-
+>>       BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
+>>               PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+>>       Capabilities: [a0] HyperTransport: MSI Mapping Enable+ Fixed-
+>>               Mapping Address Base: 00000000fee00000
+>>       Capabilities: [b0] Express (v1) Root Port (Slot-), MSI 00
+>>
+>> I'll post a patch to apply extended tags to systems with PCI express v2 =
+and higher
+>> bridges only.
+>>
+>
+> Please give this patch a try. I can make the patch pretty and re-post if =
+it works for you.
+>
+> You should be seeing messages like this during boot.
+>
+> [    3.949621] pci 0003:01:00.0: clearing extended tags capability
+> [    3.959540] pci 0003:01:00.1: clearing extended tags capability
+> [    3.969454] pci 0003:01:00.2: clearing extended tags capability
+> [    3.979373] pci 0003:01:00.3: clearing extended tags capability
+> [    3.989290] pci 0003:01:00.4: clearing extended tags capability
+>
+>
+>
+> --
+> Sinan Kaya
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Techno=
+logies, Inc.
+> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux=
+ Foundation Collaborative Project.
