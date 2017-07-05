@@ -1,40 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:59698 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751967AbdGSMF4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 08:05:56 -0400
-From: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
-To: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: <bhelgaas@google.com>, <gwshan@linux.vnet.ibm.com>,
-        Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
-Subject: [PATCH] pci: add missing __iomem cast
-Date: Wed, 19 Jul 2017 13:05:35 +0100
-Message-ID: <20170719120535.26350-1-palminha@synopsys.com>
+Received: from aserp1050.oracle.com ([141.146.126.70]:23380 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750893AbdGENlV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 09:41:21 -0400
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v65D0FBf010258
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-pci@vger.kernel.org>; Wed, 5 Jul 2017 13:00:15 GMT
+Date: Wed, 5 Jul 2017 15:00:06 +0200
+From: Wim ten Have <wim.ten.have@oracle.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Wim ten Have <wim.ten.have@oracle.com>
+Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
+ functional performance enhancements causing PCI Express crashes,
+Message-ID: <20170705150006.7f6a3c44.wim.ten.have@oracle.com>
+In-Reply-To: <c350ebc3-51cf-d2d7-e40c-740360f1dc4d@codeaurora.org>
+References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
+        <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
+        <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
+        <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
+        <97b8c58e-7384-0519-5ccb-837fa5054d84@codeaurora.org>
+        <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
+        <20170705131312.6073b8aa.wim.ten.have@oracle.com>
+        <c350ebc3-51cf-d2d7-e40c-740360f1dc4d@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add missing __iomem annotation to fix sparse warning:
-- incorrect type in return expression (different address spaces)
+On Wed, 5 Jul 2017 08:37:03 -0400
+Sinan Kaya <okaya@codeaurora.org> wrote:
 
-Signed-off-by: Carlos Palminha <palminha@synopsys.com>
----
- drivers/pci/rom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On 7/5/2017 7:13 AM, Wim ten Have wrote:
+> >  From an 'rpmbuild -ba kernel.spec' nicely proceeded and generated all
+> >   package.  They all installed and the system boots and works like a charm!  
+> 
+> Thanks for testing. I'll re-post the same patch with better commit text
+> and fixes tag so that Bjorn can review it.
+> 
+> Can I have a tested-by?
 
-diff --git a/drivers/pci/rom.c b/drivers/pci/rom.c
-index b6edb187d160..fa92d8fe6778 100644
---- a/drivers/pci/rom.c
-+++ b/drivers/pci/rom.c
-@@ -193,7 +193,7 @@ void __iomem *pci_platform_rom(struct pci_dev *pdev, size_t *size)
- {
- 	if (pdev->rom && pdev->romlen) {
- 		*size = pdev->romlen;
--		return phys_to_virt((phys_addr_t)pdev->rom);
-+		return (void __iomem *)phys_to_virt((phys_addr_t)pdev->rom);
- 	}
+  Sure.
 
- 	return NULL;
---
-2.11.0
+  tested-by: Wim ten Have <wim.ten.have@oracle.com>
+
+- Wim.
