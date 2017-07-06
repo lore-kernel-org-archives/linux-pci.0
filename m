@@ -1,63 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40830 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754029AbdGJO5y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 10:57:54 -0400
-Date: Mon, 10 Jul 2017 09:57:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Jason Cooper <jason@lakedaemon.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH 1/2] ARM/PCI: bios32: Fix pcibios_init_resource() error
- return path
-Message-ID: <20170710145751.GB20365@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170710123409.9043-1-lorenzo.pieralisi@arm.com>
+Received: from mail-by2nam03on0080.outbound.protection.outlook.com ([104.47.42.80]:34336
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753168AbdGFGuF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Jul 2017 02:50:05 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 1/3] PCI: designware: add accessors for write permission of DBI read-only registers
+Date: Thu, 6 Jul 2017 14:33:47 +0800
+Message-ID: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170710123409.9043-1-lorenzo.pieralisi@arm.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 01:34:08PM +0100, Lorenzo Pieralisi wrote:
-> Since commit 97ad2bdcbe85 ("ARM/PCI: Convert PCI scan API to
-> pci_scan_root_bus_bridge()") struct pci_sys_data is allocated through
-> pci_alloc_host_bridge() which implies that, if pcibios_init_resource()
-> fails, the pci_sys_data should be freed along with struct pci_host_bridge
-> members through pci_free_host_bridge() instead of a simple kfree.
-> 
-> Fix commit 97ad2bdcbe85 ("ARM/PCI: Convert PCI scan API to
-> pci_scan_root_bus_bridge()") by updating pcibios_init_resource()
-> error path.
-> 
-> Fixes: 97ad2bdcbe85 ("ARM/PCI: Convert PCI scan API to pci_scan_root_bus_bridge()")
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Russell King <linux@armlinux.org.uk>
-> Cc: Andrew Lunn <andrew@lunn.ch>
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Applied to for-linus for v4.13, thanks!
+The read-only DBI registers can be written over the DBI when set
+the "Write to RO Registers Using DBI" (DBI_RO_WR_EN) field of the
+MISC_CONTROL_1_OFF register.
 
-> ---
->  arch/arm/kernel/bios32.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 56dc1a3..c1809fb 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -480,7 +480,7 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  
->  			ret = pcibios_init_resource(nr, sys, hw->io_optional);
->  			if (ret)  {
-> -				kfree(sys);
-> +				pci_free_host_bridge(bridge);
->  				break;
->  			}
->  
-> -- 
-> 2.10.0
-> 
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+ drivers/pci/dwc/pcie-designware.h | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index b4d2a89..bbdf35b 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -76,6 +76,9 @@
+ #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+ #define PCIE_ATU_UPPER_TARGET		0x91C
+ 
++#define PCIE_MISC_CONTROL_1_OFF		0x8BC
++#define PCIE_DBI_RO_WR_EN		(0x1 << 0)
++
+ /*
+  * iATU Unroll-specific register definitions
+  * From 4.80 core version the address translation will be made by unroll
+@@ -279,6 +282,28 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
+ 	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
+ }
+ 
++static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
++{
++	u32 reg;
++	u32 val;
++
++	reg = PCIE_MISC_CONTROL_1_OFF;
++	val = dw_pcie_readl_dbi(pci, reg);
++	val |= PCIE_DBI_RO_WR_EN;
++	dw_pcie_writel_dbi(pci, reg, val);
++}
++
++static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
++{
++	u32 reg;
++	u32 val;
++
++	reg = PCIE_MISC_CONTROL_1_OFF;
++	val = dw_pcie_readl_dbi(pci, reg);
++	val &= ~PCIE_DBI_RO_WR_EN;
++	dw_pcie_writel_dbi(pci, reg, val);
++}
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+-- 
+2.1.0.27.g96db324
