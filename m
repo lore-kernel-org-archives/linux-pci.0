@@ -1,11 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v2 0/4] Allow non-legacy cards to be vgaarb default
-Date: Wed, 19 Jul 2017 12:15:12 +1000
-Message-Id: <20170719021516.24718-1-dja@axtens.net>
+Date: Thu, 6 Jul 2017 12:17:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ding Tianhong <dingtianhong@huawei.com>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Message-ID: <20170706171729.GP13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+ <43e01fca-a746-90d2-fdfa-c63f1d56ef5f@huawei.com>
+ <065edbdb-3a7f-2608-3cc0-3876f55d414b@huawei.com>
+MIME-Version: 1.0
+In-Reply-To: <065edbdb-3a7f-2608-3cc0-3876f55d414b@huawei.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -13,86 +17,38 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: gabriele.paoloni@huawei.com, airlied@linux.ie, benh@kernel.crashing.org,
- will.deacon@arm.com, z.liuxinliang@hisilicon.com, bhelgaas@google.com,
- alex.williamson@redhat.com, catalin.marinas@arm.com, zourongrong@gmail.com,
- daniel.vetter@intel.com, Daniel Axtens <dja@axtens.net>
-MIME-Version: 1.0
+Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, alexander.duyck@gmail.com,
+ ashok.raj@intel.com, jeffrey.t.kirsher@intel.com, linux-pci@vger.kernel.org,
+ ganeshgr@chelsio.com, Bob.Shaw@amd.com, leedom@chelsio.com,
+ patrick.j.cramer@intel.com, werner@chelsio.com,
+ linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
+ Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, davem@davemloft.net,
+ l.stach@pengutronix.de
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[v2, in which I send the right patches. My apologies to you all.]
+On Thu, Jul 06, 2017 at 08:58:51PM +0800, Ding Tianhong wrote:
+> Hi Bjorn:
+> 
+> Could you please give some feedback about this patchset, it looks like no more comments for more than a week,
+> thanks. :)
 
-Hi all,
+I was on vacation when you posted it, but don't worry, it's still in
+the queue:
 
-Previously I posted a patch that provided a quirk for a hibmc card
-behind a particular Huawei bridge that allowed it to be marked as the
-default device in the VGA arbiter.[0] This lead to some discussion.[1]
-It was broadly suggested that a more generic solution would be better,
-something in the style of powerpc's fixup_vga() quirk.
+  https://patchwork.ozlabs.org/project/linux-pci/list
 
-Here is my suggested solution:
+v4.12 was just released, so it's obviously too late for that.  The
+v4.13 merge window is open, so it's too late for v4.13 as well (we
+need stuff in -next before the merge window).
 
- - Create a Kconfig option ARCH_WANT_VGA_ARB_FALLBACK
- 
- - if an arch selects that option, install PCI_FIXUP_CLASS_ENABLE
-   hook. This hook fires when a card is enabled, which will require
-   that a driver has been bound.
+There's still plenty of time to work on this for v4.14.
 
- - if there is no default device when the hook fires, and the device
-   can control memory and I/O, mark it as default.
-
-The patches are as follows:
-
- (1) powerpc: simplify and fix VGA default device behaviour
-
-     This cleans up some quirks in the powerpc implementation of the
-     vga_fixup. It should make the behaviour match the original
-     intention.
-
- (2) vgaarb: allow non-legacy cards to be marked as default
-
-     Add the Kconfig option, and create the fixup in vgaarb.c gated
-     behind the option. Nothing happens at this stage because no arch
-     has selected the option yet.
-
- (3) powerpc: replace vga_fixup() with generic code
-
-     Select the option on powerpc and remove the old code. The only
-     change is that it moves from being a final fixup to an enable
-     fixup.
- 
- (4) arm64: allow non-legacy VGA devices to be default
-
-     Select the option on arm64. This solves my problem with the D05,
-     but may cause other cards to be marked as default on other
-     boards. This shouldn't cause any real issues but is worth being
-     aware of.
-
-Regards,
-Daniel
-
-[0]: https://patchwork.ozlabs.org/patch/787003/
-[1]: https://www.spinics.net/lists/arm-kernel/msg593656.html
-
-Daniel Axtens (4):
-  powerpc: simplify and fix VGA default device behaviour
-  vgaarb: allow non-legacy cards to be marked as default
-  powerpc: replace vga_fixup() with generic code
-  arm64: allow non-legacy VGA devices to be default
-
- arch/arm64/Kconfig               |  1 +
- arch/powerpc/Kconfig             |  1 +
- arch/powerpc/kernel/pci-common.c | 12 ------------
- drivers/gpu/vga/Kconfig          |  7 +++++++
- drivers/gpu/vga/vgaarb.c         | 21 +++++++++++++++++++++
- 5 files changed, 30 insertions(+), 12 deletions(-)
-
--- 
-2.11.0
-
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
