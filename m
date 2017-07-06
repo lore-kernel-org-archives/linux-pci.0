@@ -1,80 +1,183 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
- "'Bjorn Andersson'" <bjorn.andersson@linaro.org>
-References: <20170716063947.3272-1-bjorn.andersson@linaro.org>
- <73b9c442-38f6-cc5b-c6e0-4ce7187dc0a8@synopsys.com>
-In-Reply-To: <73b9c442-38f6-cc5b-c6e0-4ce7187dc0a8@synopsys.com>
-Subject: Re: [PATCH 1/3] PCI: dwc: Handle host_init failures
-Date: Mon, 17 Jul 2017 15:28:13 -0400
-Message-ID: <000a01d2ff32$d5d59e00$8180da00$@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:41695 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750778AbdGFJGD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jul 2017 05:06:03 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>
+CC: <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
+        <linux-pci@vger.kernel.org>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+ <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
+ <594955BC.3010703@ti.com> <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
+ <a6380712-214b-990b-69e3-e3889835879b@arm.com> <595D5423.50908@ti.com>
+ <5158c0cb-cc2a-0f1b-22f7-db84c9568e80@arm.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <333ea05a-672d-c610-27c0-7c2ff5c5f050@synopsys.com>
+Date: Thu, 6 Jul 2017 10:05:54 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "'open list:PCI DRIVER FOR TI DRA7XX'" <linux-pci@vger.kernel.org>,
- 'Binghui Wang' <wangbinghui@hisilicon.com>,
- "'open list:PCIE DRIVER FOR AXIS ARTPEC'" <linux-arm-kernel@axis.com>,
- 'Jesper Nilsson' <jesper.nilsson@axis.com>,
- "'moderated list:PCI DRIVER FOR SAMSUNG EXYNOS'"
- <linux-samsung-soc@vger.kernel.org>,
- 'Pratyush Anand' <pratyush.anand@gmail.com>,
- 'Krzysztof Kozlowski' <krzk@kernel.org>,
- 'Kishon Vijay Abraham I' <kishon@ti.com>, 'Kukjin Kim' <kgene@kernel.org>,
- 'Xiaowei Song' <songxiaowei@hisilicon.com>,
- 'Richard Zhu' <hongxing.zhu@nxp.com>,
- "'open list:PCIE DRIVER FOR QUALCOMM MSM'" <linux-arm-msm@vger.kernel.org>,
- 'Niklas Cassel' <niklas.cassel@axis.com>,
- 'Murali Karicheri' <m-karicheri2@ti.com>,
- 'Bjorn Helgaas' <bhelgaas@google.com>, 'Mingkai Hu' <mingkai.hu@freescale.com>,
- "'open list:PCI DRIVER FOR TI DRA7XX'" <linux-omap@vger.kernel.org>,
- "'moderated list:PCI DRIVER FOR SAMSUNG EXYNOS'"
- <linux-arm-kernel@lists.infradead.org>,
- 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
- "'open list:PCI DRIVER FOR FREESCALE LAYERSCAPE'"
- <linuxppc-dev@lists.ozlabs.org>, 'open list' <linux-kernel@vger.kernel.org>,
- 'Stanimir Varbanov' <svarbanov@mm-sol.com>,
- 'Minghuan Lian' <minghuan.Lian@freescale.com>,
- 'Roy Zang' <tie-fei.zang@freescale.com>,
- 'Lucas Stach' <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <5158c0cb-cc2a-0f1b-22f7-db84c9568e80@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gTW9uZGF5LCBKdWx5IDE3LCAyMDE3IDc6MTggQU0sIEpvYW8gUGludG8gd3JvdGU6Cj4gCj4g
-SGkgQmpvcm4gQW5kZXJzc29uLAo+IAo+IMOAcyA3OjM5IEFNIGRlIDcvMTYvMjAxNywgQmpvcm4g
-QW5kZXJzc29uIGVzY3JldmV1Ogo+ID4gSW4gc2V2ZXJhbCBkd2MgYmFzZWQgZHJpdmVycyBob3N0
-X2luaXQgY2FuIGZhaWwsIHNvIG1ha2Ugc3VyZSB0bwo+ID4gcHJvcGFnYXRlIGFuZCBoYW5kbGUg
-dGhpcyB0byBhdm9pZCBjb250aW51aW5nIG9wZXJhdGlvbiBvZiBhIGRyaXZlciBvcgo+ID4gaGFy
-ZHdhcmUgaW4gYW4gaW52YWxpZCBzdGF0ZS4KPiA+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBCam9ybiBB
-bmRlcnNzb24gPGJqb3JuLmFuZGVyc3NvbkBsaW5hcm8ub3JnPgo+ID4gLS0tCj4gPiAgZHJpdmVy
-cy9wY2kvZHdjL3BjaS1kcmE3eHguYyAgICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9w
-Y2kvZHdjL3BjaS1leHlub3MuYyAgICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9wY2kv
-ZHdjL3BjaS1pbXg2LmMgICAgICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9wY2kvZHdj
-L3BjaS1rZXlzdG9uZS5jICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9wY2kvZHdjL3Bj
-aS1sYXllcnNjYXBlLmMgICAgICAgfCAxNCArKysrKysrKysrLS0tLQo+ID4gIGRyaXZlcnMvcGNp
-L2R3Yy9wY2llLWFybWFkYThrLmMgICAgICAgIHwgIDQgKysrLQo+ID4gIGRyaXZlcnMvcGNpL2R3
-Yy9wY2llLWFydHBlYzYuYyAgICAgICAgIHwgIDQgKysrLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
-Y2llLWRlc2lnbndhcmUtaG9zdC5jIHwgIDcgKysrKystLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
-Y2llLWRlc2lnbndhcmUtcGxhdC5jIHwgIDQgKysrLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ll
-LWRlc2lnbndhcmUuaCAgICAgIHwgIDIgKy0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJp
-bi5jICAgICAgICAgICB8ICA0ICsrKy0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpZS1xY29tLmMg
-ICAgICAgICAgICB8ICA2ICsrKystLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLXNwZWFyMTN4
-eC5jICAgICAgIHwgIDQgKysrLQo+ID4gIDEzIGZpbGVzIGNoYW5nZWQsIDQ3IGluc2VydGlvbnMo
-KyksIDE4IGRlbGV0aW9ucygtKQo+ID4KClsuLi4uLl0KCj4gCj4gQSBzdGVwIGluIHRoZSByaWdo
-dCBkaXJlY3Rpb24gOikuIEluIHRoZSBmdXR1cmUgd2Ugc2hvdWxkIGFkZCBob3N0IGluaXQKPiB2
-YWxpZGF0aW9uIGluIHRoZSBzcGVjaWZpYyBTb0MgZHJpdmVycywgbGlrZSBMYXllcnNjYXBlIGFu
-ZCBRY29tIGhhdmUsIHRvCj4gYXNzdXJlCj4gdGhhdCBhbnkgcHJvYmxlbSBpcyB0cmVhdGVkIHBy
-b3Blcmx5IGluIHRoZSBjb3JlIGRyaXZlci4KCkkgYWdyZWUgd2l0aCB5b3VyIG9waW5pb24uCgo+
-IAo+IEFja2VkLWJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMuY29tPgoKQWNrZWQtYnk6
-IEppbmdvbyBIYW4gPGppbmdvb2hhbjFAZ21haWwuY29tPgoKQmVzdCByZWdhcmRzLApKaW5nb28g
-SGFuCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGlu
-dXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
-YWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgt
-YXJtLWtlcm5lbAo=
+
+Hi to all,
+
+Às 9:02 AM de 7/6/2017, Marc Zyngier escreveu:
+> On 05/07/17 22:03, Murali Karicheri wrote:
+>> On 07/05/2017 11:26 AM, Marc Zyngier wrote:
+>>> On 05/07/17 11:57, Joao Pinto wrote:
+>>>> Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
+>>>>> On 06/20/2017 12:28 PM, Joao Pinto wrote:
+>>>>>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
+>>>>>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
+>>>>>>>>
+>>>>>>>> Hi Murali,
+>>>>>>>>
+>>>>>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+>>>>>>>>> Joao,
+>>>>>>>>>
+>>>>>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>>>>>>>>>> This patch series adds the new interrupt api to pcie-designware
+>>>>>>>>>> make it possible to use features like MSIX.
+>>>>>>>>>>
+>>>>>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
+>>>>>>>>>> specific driver.
+>>>>>>>>>>
+>>>>>>>>>> The patch set was made against the Bjorn' next branch.
+>>>>>>>>>>
+>>>>>>>>>> Joao Pinto (9):
+>>>>>>>>>>   pci: adding new irq api to pci-designware
+>>>>>>>>>>   pci: exynos SoC driver adapted to new irq API
+>>>>>>>>>>   pci: imx6 SoC driver adapted to new irq API
+>>>>>>>>>>   pci: artpec6 SoC driver adapted to new irq API
+>>>>>>>>>>   pci: generic PCIe DW driver adapted to new irq API
+>>>>>>>>>>   pci: qcom SoC driver adapted to new irq API
+>>>>>>>>>>   pci: keystone SoC driver adapted to new irq API
+>>>>>>>>>>   pci: removing old irq api from pcie-designware
+>>>>>>>>>>   pci: remove limitation of the number of the available IRQs
+>>>>>>>>>>
+>>>>>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>>>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>>>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>>>>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>>>>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>>>>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>>>>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>>>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>>>>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>>>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>>>>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>>>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>>>>>>>>>
+>>>>>>>>>
+>>>>>>>>> I gave this a try today and it failed. Logs at
+>>>>>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+>>>>>>>>>
+>>>>>>>>> The first part of the log is with your patch series.
+>>>>>>>>> The second part is before applying the patch. You will see
+>>>>>>>>> that there is qc timeout log that shows the issue
+>>>>>>>>>
+>>>>>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+>>>>>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+>>>>>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+>>>>>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>>>>>
+>>>>>>>>> Is there any DT change I need to make for this? I didn't have a
+>>>>>>>>> chance to review your patch w.r.t Keystone. But I see you have change
+>>>>>>>>> the MSI IRq handling.
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>> There is no need to change your DT. I think I will need to debug this issue
+>>>>>>>> further. Could you please advice a board containing this SoC?
+>>>>>>>>
+>>>>>>> I think I may be able to work with you on this. Keystone has different 
+>>>>>>> register set for MSI IRQ. It is in application space. Also there are
+>>>>>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
+>>>>>>> please review the original code vs the changed one w.r.t to this. I haven't
+>>>>>>> had a chance to review the code as I am in the middle of a release.
+>>>>>>> But will be able to spend some time after two weeks. Meanwhile please
+>>>>>>> spend some time reviewing the code and exchange email to identify
+>>>>>>> the issue. I can add specific debug prints for you as well and provide
+>>>>>>> you the log for analysis.
+>>>>>>
+>>>>>> Ok, I agree! Thanks!
+>>>>>>
+>>>>>>>
+>>>>> Look at this logic in the patch where a potential issue exists for Keystone.
+>>>>>
+>>>>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>>>>> +{
+>>>>> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>>>>> +       struct pcie_port *pp = &pci->pp;
+>>>>> +       u64 msi_target;
+>>>>> +
+>>>>> +       if (pp->ops->get_msi_addr)
+>>>>> +               msi_target = pp->ops->get_msi_addr(pp);
+>>>>> +       else
+>>>>> +               msi_target = virt_to_phys((void *)pp->msi_data);
+>>>>> +
+>>>>> +       msg->address_lo = lower_32_bits(msi_target);
+>>>>> +       msg->address_hi = upper_32_bits(msi_target);
+>>>>> +
+>>>>> +       if (pp->ops->get_msi_data)
+>>>>> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+>>>>> +       else
+>>>>> +               msg->data = data->hwirq;
+>>>>> +
+>>>>> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+>>>>> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
+>>>>> +}
+>>>>>
+>>>>> Keystone has 8 hw irqs, 4 multiplexed over each since the register
+>>>>> set is different than other DWC cores. So will not work for Keystone,
+>>>>> right?
+>>>>
+>>>> Well, that can be challenging, since it is a very particular operation.
+>>>> Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
+>>>> overide this one if necessary. What do you think?
+>>>
+>>> At that rate, and given that keystone seems to override almost all
+>>> operations in this driver, wouldn't it make sense for this to be
+>>> implemented as a *separate* driver?
+>> Marc,
+>>
+>> What you mean by separate driver? Just the MSI handling part? 
+> 
+> The MSI part indeed. Looking at this series, KS looks like a sore spot
+> on the face of rest of the MSI code, and it'd be better of opting out of
+> this MSI management code and provide its own.
+> 
+> It seems to me that this would simplify the DW MSI code (no more
+> indirections all over the place), and make it obvious that KW MSIs are
+> managed in a very different way.
+> 
+> Thoughts?
+
+I agree with Mark. The core driver is full of callbacks for custom SoC
+operations, and most of them are not massively used.
+Keystone with no doubt has its own way of dealing with interrupts, so I fully
+support the a keystone_msi driver to be created as altera does.
+
+At this time my bandwidth is almost full, so I won't be able to do it. Muralli
+what are your thoughts? Would you help on this task?
+
+Thanks,
+Joao
+
+
+> 
+> 	M.
+> 
