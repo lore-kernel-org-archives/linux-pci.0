@@ -1,110 +1,219 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:9765 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751339AbdGMOWK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 10:22:10 -0400
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>,
-        <robin.murphy@arm.com>, <davem@davemloft.net>,
-        <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v7 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Date: Thu, 13 Jul 2017 22:21:30 +0800
-Message-ID: <1499955692-26556-2-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 6 Jul 2017 14:46:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
+Message-ID: <20170706194628.GQ13824@bhelgaas-glaptop.roam.corp.google.com>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
+ <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
+ <20170705180359.GL13824@bhelgaas-glaptop.roam.corp.google.com>
+ <5a1207cb-31fd-6b85-86af-8c37bd57ad4f@free.fr>
+ <20170705213419.GD25063@bhelgaas-glaptop.roam.corp.google.com>
+ <8dcab663-245b-880a-be3a-2965fd12d663@free.fr>
+ <20170706033946.GO13824@bhelgaas-glaptop.roam.corp.google.com>
+ <d04e1632-17b8-85f9-31c4-b789d55cc853@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <d04e1632-17b8-85f9-31c4-b789d55cc853@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: DT <devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+On Thu, Jul 06, 2017 at 02:26:44PM +0200, Mason wrote:
+> On 06/07/2017 05:39, Bjorn Helgaas wrote:
+> 
+> > On Wed, Jul 05, 2017 at 11:59:33PM +0200, Mason wrote:
+> >
+> >> There were a few nits I wanted to address:
+> >>
+> >> - Since we added suppress_bind_attrs = true, probe()
+> >> can only be called at init, so I wanted to mark __init
+> >> all the probe functions, to save space.
+> >>
+> >> - I left the definition of MSI_MAX in the wrong patch
 
-The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
-Ordering Attribute should not be used on Transaction Layer Packets destined
-for the PCIe End Node so flagged.  Initially flagged this way are Intel
-E5-26xx Root Complex Ports which suffer from a Flow Control Credit
-Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
-don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
+I moved this.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |  2 ++
- 2 files changed, 40 insertions(+)
+> >> - You put a pointer to the pdev in the struct tango_pcie.
+> >> I think this is redundant, since the pdev already has a
+> >> pointer to the struct, as drvdata.
+> >> So I wanted to change tango_msi_probe() to take a pdev
+> >> as argument (to make it more like an actual probe function)
+> >> and derive pcie from pdev, instead of the other way around.
+> > 
+> > I don't think tango_msi_probe() is really a "probe" function.  It's
+> > all part of the tango driver, and it's not claiming a separate piece
+> > of hardware.
+> 
+> I agree that tango_msi_probe() is not a probe function;
+> it is merely a piece of the actual probe function (static
+> with single call site). I split the probe function in two,
+> because it seemed to make sense at the time.
+> 
+> Perhaps it's better to inline tango_msi_probe? That would
+> avoid the issues of that function's name and parameters.
+> 
+> If you think it's better to keep the two pieces separate,
+> I can rename the MSI part to tango_msi_init() or some such.
+> But I'd like to avoid adding unnecessary fields to the struct.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b..1e1cdbe 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4016,6 +4016,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
- 			      quirk_tw686x_class);
- 
- /*
-+ * Some devices have problems with Transaction Layer Packets with the Relaxed
-+ * Ordering Attribute set.  Such devices should mark themselves and other
-+ * Device Drivers should check before sending TLPs with RO set.
-+ */
-+static void quirk_relaxedordering_disable(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
-+}
-+
-+/*
-+ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
-+ * cause performance problems with Upstream Transaction Layer Packets with
-+ * Relaxed Ordering set.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-+ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
-+ * where Upstream Transaction Layer Packets with the Relaxed Ordering
-+ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
-+ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
-+ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
-+ * November 10, 2010).  As a result, on this platform we can't use Relaxed
-+ * Ordering for Upstream TLPs.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4869e66..412ec1c 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -188,6 +188,8 @@ enum pci_dev_flags {
- 	 * the direct_complete optimization.
- 	 */
- 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-+	/* Don't use Relaxed Ordering for TLPs directed at this device */
-+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
- };
- 
- enum pci_irq_reroute_variant {
--- 
-1.8.3.1
+I think it's better to follow the structure of existing drivers unless
+your hardware dictates a different model.  Same with adding fields to
+the struct.  If you have a better way of doing it that works for all
+the drivers, great -- but please change all the drivers to do it that
+way.  If it's a matter of saving one pointer per system, by making the
+code look different than other drivers, that's not so great.
+
+> >  So I would keep the name and structure similar to these:
+> > 
+> >   advk_pcie_init_msi_irq_domain()
+> >   nwl_pcie_init_msi_irq_domain()
+> > 
+> > BTW, those functions use irq_domain_add_linear(), while you are one of
+> > the very few callers of irq_domain_create_linear().  Why the difference?
+> > If your code does basically the same thing, it's very helpful to me if
+> > it *looks* basically the same.
+> 
+> It was a suggestion from Marc Z on 2017-03-23.
+> 
+> <QUOTE>
+> + irq_dom = irq_domain_add_linear(NULL, MSI_COUNT, &msi_domain_ops, pcie);
+> 
+> Use irq_domain_create_linear, pass the same fwnode.
+> </QUOTE>
+> 
+> It seems odd to pass NULL as the first argument.
+> (As I had first done, when copying the Altera driver.)
+
+I'm a little queasy about the MSI stuff.  It doesn't feel very settled
+yet, and I don't want to keep tweaking it at this stage.
+
+How about we merge the base patch for v4.13 and deal with MSIs for
+v4.14?  I need confirmation that the base patch works ASAP.  Or if
+it's not really useful by itself, we can defer it all until v4.14.
+
+For v4.14, I'd really like to see some unification of naming and
+structure across the drivers in how they handle IRQ domains, and
+then have tango follow whatever pattern that ends up being.
+
+Right now we don't have much consistency in the names of legacy and
+MSI IRQ domains, what device_node they're associated with, how we
+handle the 0-3 vs 1-4 legacy numbering, pci_msi_create_irq_domain()
+usage, etc.  Some of this may be dictated by different hardware
+requirements, but I doubt all of it is.
+
+Bjorn
+
+
+P.S. Notes about current IRQ domain usage below, just for reference
+about where I'm seeing inconsistencies.
+
+    advk_pcie_probe			# "marvell,armada-3700-pcie"
+      advk_pcie_init_irq_domain
+        pcie_intc_node =  of_get_next_child(node, NULL)
+        irq_domain_add_linear(pcie_intc_node, ...)
+      advk_pcie_init_msi_irq_domain
+        pcie->msi_inner_domain = irq_domain_add_linear(NULL, ...)
+        pcie->msi_domain = pci_msi_create_irq_domain(...)
+
+    altera_pcie_probe			# "altr,pcie-root-port-1.0"
+      altera_pcie_init_irq_domain
+        pcie->irq_domain = irq_domain_add_linear(node, ...)
+    altera_msi_probe			# "altr,msi-1.0"
+      altera_allocate_domains
+        msi->inner_domain = irq_domain_add_linear(NULL, ...)
+        msi->msi_domain = pci_msi_create_irq_domain(fwnode, ...)
+
+    iproc_pcie_pltfm_probe		# "brcm,iproc-pcie", etc
+      iproc_pcie_setup
+        iproc_pcie_msi_enable
+          iproc_msi_init
+            iproc_msi_alloc_domains
+              msi->inner_domain = irq_domain_add_linear(NULL, ...)
+              msi->msi_domain = pci_msi_create_irq_domain(...)
+
+    rcar_pcie_probe			# "renesas,pcie-r8a7779", etc
+      rcar_pcie_enable_msi
+        msi->domain = irq_domain_add_linear(dev->of_node, ...)
+
+    rockchip_pcie_probe			# "rockchip,rk3399-pcie"
+      rockchip_pcie_init_irq_domain
+        intc = of_get_next_child(dev->of_node, NULL)
+        rockchip->irq_domain = irq_domain_add_linear(intc, ...)
+  
+    xilinx_pcie_probe			# "xlnx,axi-pcie-host-1.00.a"
+      xilinx_pcie_init_irq_domain
+        pcie_intc_node = of_get_next_child(node, NULL)
+        port->leg_domain = irq_domain_add_linear(pcie_intc_node, ...)
+        port->msi_domain = irq_domain_add_linear(node, ...)
+
+    nwl_pcie_probe			# "xlnx,nwl-pcie-2.11"
+      nwl_pcie_init_irq_domain
+        legacy_intc_node = of_get_next_child(node, NULL)
+        pcie->legacy_irq_domain = irq_domain_add_linear(legacy_intc_node, ...)
+        nwl_pcie_init_msi_irq_domain
+          msi->dev_domain = irq_domain_add_linear(NULL, ...)
+          msi->msi_domain = pci_msi_create_irq_domain(fwnode, ...)
+
+    faraday_pci_probe			# "faraday,ftpci100", etc
+      faraday_pci_setup_cascaded_irq
+        intc = of_get_next_child(p->dev->of_node, NULL)
+        p->irqdomain = irq_domain_add_linear(intc, ...)
+
+    hv_pci_probe
+      hv_pcie_init_irq_domain
+        hbus->irq_domain = pci_msi_create_irq_domain(...)
+
+    tegra_pcie_probe			# "nvidia,tegra210-pcie", etc
+      tegra_pcie_enable_msi
+        msi->domain = irq_domain_add_linear(dev->of_node, ...)
+
+    xgene_pcie_probe_bridge		# "apm,xgene-pcie"
+    xgene_msi_probe			# "apm,xgene1-msi"
+      xgene_allocate_domains
+        msi->inner_domain = irq_domain_add_linear(NULL, ...)
+        msi->msi_domain = pci_msi_create_irq_domain(...)
+
+    vmd_probe				# [8086:201d]
+      vmd_enable_domain
+        vmd->irq_domain = pci_msi_create_irq_domain(NULL, ...)
+
+    dra7xx_pcie_probe			# "ti,dra7-pcie", etc
+      dra7xx_add_pcie_port
+        dra7xx_pcie_init_irq_domain
+          pcie_intc_node =  of_get_next_child(node, NULL)
+          dra7xx->irq_domain = irq_domain_add_linear(pcie_intc_node, ...)
+
+    dw_pcie_host_init
+      pp->ops->msi_host_init
+        ks_dw_pcie_msi_host_init	# .msi_host_init
+          pp->irq_domain = irq_domain_add_linear(ks_pcie->msi_intc_np, ...)
+
+    ks_pcie_probe			# "ti,keystone-pcie"
+      ks_add_pcie_port
+        ks_dw_pcie_host_init
+          ks_pcie->legacy_irq_domain = irq_domain_add_linear(ks_pcie->legacy_intc_np, ...)
+
+    *_add_pcie_port
+      dw_pcie_host_init
+        pp->irq_domain = irq_domain_add_linear(dev->of_node, ...) # generic
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
