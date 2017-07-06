@@ -1,140 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36048 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751412AbdGRQEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jul 2017 12:04:24 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:03:56 -0600
-Message-Id: <20170718160409.6493-4-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 03/16] switchtec: add NTB hardware register definitions
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=9N9N=6J=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=9N9N=6J=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
+To: Mason <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>
+References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+ <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
+ <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
+ <20170705180359.GL13824@bhelgaas-glaptop.roam.corp.google.com>
+ <5a1207cb-31fd-6b85-86af-8c37bd57ad4f@free.fr>
+ <20170705213419.GD25063@bhelgaas-glaptop.roam.corp.google.com>
+ <8dcab663-245b-880a-be3a-2965fd12d663@free.fr>
+ <20170706033946.GO13824@bhelgaas-glaptop.roam.corp.google.com>
+ <d04e1632-17b8-85f9-31c4-b789d55cc853@free.fr>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Thomas Gleixner <tglx@linutronix.de>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <37d9f990-c037-5ccd-c162-786ca2bd07b5@arm.com>
+Date: Thu, 6 Jul 2017 13:40:37 +0100
+MIME-Version: 1.0
+In-Reply-To: <d04e1632-17b8-85f9-31c4-b789d55cc853@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two additional regions: ctrl and dbmsg. The first is
-for generic NTB control and memory windows. The second is for doorbells
-and message registers. This patch also adds a number of related
-constants for using these registers.
+On 06/07/17 13:26, Mason wrote:
+> On 06/07/2017 05:39, Bjorn Helgaas wrote:
+> 
+>> On Wed, Jul 05, 2017 at 11:59:33PM +0200, Mason wrote:
+>>
+>>> There were a few nits I wanted to address:
+>>>
+>>> - Since we added suppress_bind_attrs = true, probe()
+>>> can only be called at init, so I wanted to mark __init
+>>> all the probe functions, to save space.
+>>>
+>>> - I left the definition of MSI_MAX in the wrong patch
+>>>
+>>> - You put a pointer to the pdev in the struct tango_pcie.
+>>> I think this is redundant, since the pdev already has a
+>>> pointer to the struct, as drvdata.
+>>> So I wanted to change tango_msi_probe() to take a pdev
+>>> as argument (to make it more like an actual probe function)
+>>> and derive pcie from pdev, instead of the other way around.
+>>
+>> I don't think tango_msi_probe() is really a "probe" function.  It's
+>> all part of the tango driver, and it's not claiming a separate piece
+>> of hardware.
+> 
+> I agree that tango_msi_probe() is not a probe function;
+> it is merely a piece of the actual probe function (static
+> with single call site). I split the probe function in two,
+> because it seemed to make sense at the time.
+> 
+> Perhaps it's better to inline tango_msi_probe? That would
+> avoid the issues of that function's name and parameters.
+> 
+> If you think it's better to keep the two pieces separate,
+> I can rename the MSI part to tango_msi_init() or some such.
+> But I'd like to avoid adding unnecessary fields to the struct.
+> 
+>>  So I would keep the name and structure similar to these:
+>>
+>>   advk_pcie_init_msi_irq_domain()
+>>   nwl_pcie_init_msi_irq_domain()
+>>
+>> BTW, those functions use irq_domain_add_linear(), while you are one of
+>> the very few callers of irq_domain_create_linear().  Why the difference?
+>> If your code does basically the same thing, it's very helpful to me if
+>> it *looks* basically the same.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- include/linux/switchtec.h | 84 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
+irq_domain_add_linear() can only take an of_node as the identifier for
+the domain, while the _create_ variants use a fwnode. Given that an
+of+node is also a fwnode, the former is now deprecated in favour of the
+latter.
 
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 18e388101855..9c2be7631257 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -156,6 +156,12 @@ struct flash_info_regs {
- 	struct partition_info vendor[8];
- };
- 
-+enum {
-+	SWITCHTEC_NTB_REG_INFO_OFFSET   = 0x0000,
-+	SWITCHTEC_NTB_REG_CTRL_OFFSET   = 0x4000,
-+	SWITCHTEC_NTB_REG_DBMSG_OFFSET  = 0x64000,
-+};
-+
- struct ntb_info_regs {
- 	u8  partition_count;
- 	u8  partition_id;
-@@ -191,6 +197,84 @@ struct part_cfg_regs {
- } __packed;
- 
- enum {
-+	NTB_CTRL_PART_OP_LOCK = 0x1,
-+	NTB_CTRL_PART_OP_CFG = 0x2,
-+	NTB_CTRL_PART_OP_RESET = 0x3,
-+
-+	NTB_CTRL_PART_STATUS_NORMAL = 0x1,
-+	NTB_CTRL_PART_STATUS_LOCKED = 0x2,
-+	NTB_CTRL_PART_STATUS_LOCKING = 0x3,
-+	NTB_CTRL_PART_STATUS_CONFIGURING = 0x4,
-+	NTB_CTRL_PART_STATUS_RESETTING = 0x5,
-+
-+	NTB_CTRL_BAR_VALID = 1 << 0,
-+	NTB_CTRL_BAR_DIR_WIN_EN = 1 << 4,
-+	NTB_CTRL_BAR_LUT_WIN_EN = 1 << 5,
-+
-+	NTB_CTRL_REQ_ID_EN = 1 << 0,
-+
-+	NTB_CTRL_LUT_EN = 1 << 0,
-+
-+	NTB_PART_CTRL_ID_PROT_DIS = 1 << 0,
-+};
-+
-+struct ntb_ctrl_regs {
-+	u32 partition_status;
-+	u32 partition_op;
-+	u32 partition_ctrl;
-+	u32 bar_setup;
-+	u32 bar_error;
-+	u16 lut_table_entries;
-+	u16 lut_table_offset;
-+	u32 lut_error;
-+	u16 req_id_table_size;
-+	u16 req_id_table_offset;
-+	u32 req_id_error;
-+	u32 reserved1[7];
-+	struct {
-+		u32 ctl;
-+		u32 win_size;
-+		u64 xlate_addr;
-+	} bar_entry[6];
-+	u32 reserved2[216];
-+	u32 req_id_table[256];
-+	u32 reserved3[512];
-+	u64 lut_entry[512];
-+} __packed;
-+
-+#define NTB_DBMSG_IMSG_STATUS BIT_ULL(32)
-+#define NTB_DBMSG_IMSG_MASK   BIT_ULL(40)
-+
-+struct ntb_dbmsg_regs {
-+	u32 reserved1[1024];
-+	u64 odb;
-+	u64 odb_mask;
-+	u64 idb;
-+	u64 idb_mask;
-+	u8  idb_vec_map[64];
-+	u32 msg_map;
-+	u32 reserved2;
-+	struct {
-+		u32 msg;
-+		u32 status;
-+	} omsg[4];
-+
-+	struct {
-+		u32 msg;
-+		u8  status;
-+		u8  mask;
-+		u8  src;
-+		u8  reserved;
-+	} imsg[4];
-+
-+	u8 reserved3[3928];
-+	u8 msix_table[1024];
-+	u8 reserved4[3072];
-+	u8 pba[24];
-+	u8 reserved5[4072];
-+} __packed;
-+
-+enum {
- 	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
- 	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
- 	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
+> 
+> It was a suggestion from Marc Z on 2017-03-23.
+> 
+> <QUOTE>
+> + irq_dom = irq_domain_add_linear(NULL, MSI_COUNT, &msi_domain_ops, pcie);
+> 
+> Use irq_domain_create_linear, pass the same fwnode.
+> </QUOTE>
+> 
+> It seems odd to pass NULL as the first argument.
+> (As I had first done, when copying the Altera driver.)
+
+Indeed, as it creates a "default" domain, which is almost always wrong.
+
+Thanks,
+
+	M.
 -- 
-2.11.0
+Jazz is not dead. It just smells funny...
