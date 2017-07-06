@@ -1,58 +1,169 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 28 Jul 2017 16:12:33 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Borislav Petkov <bp@alien8.de>
-Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
- counters
-Message-ID: <20170728231233.GA29240@kroah.com>
-References: <20170726155548.GF28875@nazgul.tnic>
- <20170726161949.GB15426@kroah.com>
- <20170726163049.GG28875@nazgul.tnic>
- <20170726173353.GB21705@kroah.com>
- <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
- <20170726200802.GA17722@kroah.com>
- <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
- <20170727051157.GA4525@nazgul.tnic> <20170727090856.GB15784@hc>
- <20170727131515.GC28548@nazgul.tnic>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f176.google.com ([209.85.128.176]:35171 "EHLO
+        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752493AbdGFDJ7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 23:09:59 -0400
+Received: by mail-wr0-f176.google.com with SMTP id k67so9588218wrc.2
+        for <linux-pci@vger.kernel.org>; Wed, 05 Jul 2017 20:09:58 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v5 1/2] PCI: iproc: Retry request when CRS returned from EP
+Date: Thu,  6 Jul 2017 08:39:41 +0530
+Message-Id: <1499310582-21193-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
+References: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20170727131515.GC28548@nazgul.tnic>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jan Glauber <jan.glauber@caviumnetworks.com>,
- David Daney <ddaney.cavm@gmail.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 27, 2017 at 03:15:15PM +0200, Borislav Petkov wrote:
-> On Thu, Jul 27, 2017 at 11:08:56AM +0200, Jan Glauber wrote:
-> > OK. As fixing the firmware will take quite some time I'll go for the memory
-> > controller driver that starts EDAC / PMU depending on their CONFIG_.
-> > 
-> > What would be the proper location for the multiplexer?
-> > drivers/soc/cavium or drivers/misc?
-> 
-> Uff, no idea. Greg? You're the special drivers guy. :-)
+For Configuration Requests only, following reset it is possible for a
+device to terminate the request but indicate that it is temporarily unable
+to process the Request, but will be able to process the Request in the
+future – in this case, the Configuration Request Retry Status 100 (CRS)
+Completion Status is used.
 
-Start out in misc/ and let's see the code to determine if it should be
-moved elsewhere.
+As per PCI spec, CRS Software Visibility only affects config read of the
+Vendor ID, for config write or any other config read the Root must
+automatically re-issue configuration request again as a new request.
+Iproc based PCIe RC (hw) does not retry request on its own.
 
-thanks,
+As a result of the fact, PCIe RC driver (sw) should take care of CRS.
+This patch fixes the problem, and attempts to read config space again in
+case of PCIe code forwarding the CRS back to CPU.
+It implements iproc_pcie_config_read which gets called for Stingray,
+Otherwise it falls back to PCI generic APIs.
 
-greg k-h
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 0f39bd2..b0abcd7 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -68,6 +68,9 @@
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
++#define CFG_RETRY_STATUS             0xffff0001
++#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
++
+ /* derive the enum index of the outbound/inbound mapping registers */
+ #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+ 
+@@ -448,6 +451,55 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+ 	}
+ }
+ 
++static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++{
++	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
++	unsigned int ret;
++
++	/*
++	 * As per PCI spec, CRS Software Visibility only
++	 * affects config read of the Vendor ID.
++	 * For config write or any other config read the Root must
++	 * automatically re-issue configuration request again as a
++	 * new request. Iproc based PCIe RC (hw) does not retry
++	 * request on its own, so handle it here.
++	 */
++	do {
++		ret = readl(cfg_data_p);
++		if (ret == CFG_RETRY_STATUS)
++			udelay(1);
++		else
++			return PCIBIOS_SUCCESSFUL;
++	} while (timeout--);
++
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
++					       unsigned int busno,
++					       unsigned int slot,
++					       unsigned int fn,
++					       int where)
++{
++	u16 offset;
++	u32 val;
++
++	/* EP device access */
++	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
++		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
++		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
++		(where & CFG_ADDR_REG_NUM_MASK) |
++		(1 & CFG_ADDR_CFG_TYPE_MASK);
++
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++
++	return (pcie->base + offset);
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -499,13 +551,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	unsigned int slot = PCI_SLOT(devfn);
++	unsigned int fn = PCI_FUNC(devfn);
++	unsigned int busno = bus->number;
++	void __iomem *cfg_data_p;
++	int ret;
++
++	/* root complex access. */
++	if (busno == 0)
++		return pci_generic_config_read32(bus, devfn, where, size, val);
++
++	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
++
++	if (!cfg_data_p)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	ret = iproc_pcie_cfg_retry(cfg_data_p);
++	if (ret)
++		return ret;
++
++	*val = readl(cfg_data_p);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+ 	int ret;
++	struct iproc_pcie *pcie = iproc_data(bus);
+ 
+ 	iproc_pcie_apb_err_disable(bus, true);
+-	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	if (pcie->type == IPROC_PCIE_PAXB_V2)
++		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
++	else
++		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	iproc_pcie_apb_err_disable(bus, false);
+ 
+ 	return ret;
+-- 
+1.9.1
