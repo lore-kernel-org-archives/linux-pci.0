@@ -1,107 +1,166 @@
-Return-Path: <SRS0=Tt3F=6J=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=Tt3F=6J=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <helgaas@kernel.org>,
-        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <43e01fca-a746-90d2-fdfa-c63f1d56ef5f@huawei.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <065edbdb-3a7f-2608-3cc0-3876f55d414b@huawei.com>
-Date: Thu, 6 Jul 2017 20:58:51 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0043.outbound.protection.outlook.com ([104.47.34.43]:16780
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753128AbdGFGuU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Jul 2017 02:50:20 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+        Minghuan Lian <Minghuan.Lian@nxp.com>
+Subject: [PATCH 3/3] PCI: layerscape: refactor the host_init function
+Date: Thu, 6 Jul 2017 14:33:49 +0800
+Message-ID: <1499322829-23018-3-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <43e01fca-a746-90d2-fdfa-c63f1d56ef5f@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn:
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Could you please give some feedback about this patchset, it looks like no more comments for more than a week,
-thanks. :)
+Main changes:
+- Make the ls1021a's host_init reuse layerscape platform's common
+  host_init function.
+- Will not use the outbound windows configured by bootloader, but
+  introduce DWC common setup function dw_pcie_setup_rc and disable
+  the bootloader configured outbound windows. And remove the duplicate
+  class field fix code.
 
-Ding
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+---
+ drivers/pci/dwc/pci-layerscape.c | 85 ++++++++++++++++++++++------------------
+ 1 file changed, 46 insertions(+), 39 deletions(-)
 
-On 2017/6/29 13:47, Ding Tianhong wrote:
-> ping
-> 
-> On 2017/6/22 20:15, Ding Tianhong wrote:
->> Some devices have problems with Transaction Layer Packets with the Relaxed
->> Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
->> PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
->> devices with Relaxed Ordering issues, and a use of this new flag by the
->> cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
->> Ports.
->>
->> It's been years since I've submitted kernel.org patches, I appolgise for the
->> almost certain submission errors.
->>
->> v2: Alexander point out that the v1 was only a part of the whole solution,
->>     some platform which has some issues could use the new flag to indicate
->>     that it is not safe to enable relaxed ordering attribute, then we need
->>     to clear the relaxed ordering enable bits in the PCI configuration when
->>     initializing the device. So add a new second patch to modify the PCI
->>     initialization code to clear the relaxed ordering enable bit in the
->>     event that the root complex doesn't want relaxed ordering enabled.
->>
->>     The third patch was base on the v1's second patch and only be changed
->>     to query the relaxed ordering enable bit in the PCI configuration space
->>     to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
->>     set.
->>
->>     This version didn't plan to drop the defines for Intel Drivers to use the
->>     new checking way to enable relaxed ordering because it is not the hardest
->>     part of the moment, we could fix it in next patchset when this patches
->>     reach the goal.  
->>
->> v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
->>     If a PCIe device didn't enable the relaxed ordering attribute default,
->>     we should not do anything in the PCIe configuration, otherwise we
->>     should check if any of the devices above us do not support relaxed
->>     ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
->>     the result if we get a return that indicate that the relaxed ordering
->>     is not supported we should update our device to disable relaxed ordering
->>     in configuration space. If the device above us doesn't exist or isn't
->>     the PCIe device, we shouldn't do anything and skip updating relaxed ordering
->>     because we are probably running in a guest.
->>
->> v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
->>     according John's suggestion, and modify the description, use the true/false
->>     as the return value.
->>
->>     We shouldn't enable relaxed ordering attribute by the setting in the root
->>     complex configuration space for PCIe device, so fix it for cxgb4.
->>
->>     Fix some format issues.
->>
->> v5: Removed the unnecessary code for some function which only return the bool
->>     value, and add the check for VF device.
->>
->>     Make this patch set base on 4.12-rc5.
->>
->> v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
->>  
->> Casey Leedom (2):
->>   PCI: Add new PCIe Fabric End Node flag,
->>     PCI_DEV_FLAGS_NO_RELAXED_ORDERING
->>   net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
->>
->> Ding Tianhong (1):
->>   PCI: Enable PCIe Relaxed Ordering if supported
->>
->>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
->>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 17 ++++++++++
->>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +--
->>  drivers/pci/pci.c                               | 32 +++++++++++++++++++
->>  drivers/pci/probe.c                             | 41 +++++++++++++++++++++++++
->>  drivers/pci/quirks.c                            | 38 +++++++++++++++++++++++
->>  include/linux/pci.h                             |  4 +++
->>  7 files changed, 136 insertions(+), 2 deletions(-)
->>
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index fd86128..9bed3cd 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -33,7 +33,8 @@
+ 
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+-#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
++
++#define PCIE_IATU_NUM		6
+ 
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+@@ -69,15 +70,9 @@ static void ls_pcie_clear_multifunction(struct ls_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+ 
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	iowrite8(PCI_HEADER_TYPE_BRIDGE, pci->dbi_base + PCI_HEADER_TYPE);
+-}
+-
+-/* Fix class value */
+-static void ls_pcie_fix_class(struct ls_pcie *pcie)
+-{
+-	struct dw_pcie *pci = pcie->pci;
+-
+-	iowrite16(PCI_CLASS_BRIDGE_PCI, pci->dbi_base + PCI_CLASS_DEVICE);
++	dw_pcie_dbi_ro_wr_dis(pci);
+ }
+ 
+ /* Drop MSG TLP except for Vendor MSG */
+@@ -91,6 +86,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+ 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+ }
+ 
++static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
++{
++	int i;
++
++	for (i = 0; i < PCIE_IATU_NUM; i++)
++		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++}
++
+ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	u32 state;
+@@ -108,33 +111,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ 	return 1;
+ }
+ 
+-static void ls1021_pcie_host_init(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct ls_pcie *pcie = to_ls_pcie(pci);
+-	struct device *dev = pci->dev;
+-	u32 index[2];
+-
+-	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
+-						     "fsl,pcie-scfg");
+-	if (IS_ERR(pcie->scfg)) {
+-		dev_err(dev, "No syscfg phandle specified\n");
+-		pcie->scfg = NULL;
+-		return;
+-	}
+-
+-	if (of_property_read_u32_array(dev->of_node,
+-				       "fsl,pcie-scfg", index, 2)) {
+-		pcie->scfg = NULL;
+-		return;
+-	}
+-	pcie->index = index[1];
+-
+-	dw_pcie_setup_rc(pp);
+-
+-	ls_pcie_drop_msg_tlp(pcie);
+-}
+-
+ static int ls_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+@@ -155,11 +131,42 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
+-	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+-	ls_pcie_fix_class(pcie);
++	/*
++	 * Disable the outbound windows configured by bootloader to avoid
++	 * one transaction hitting multiple outbound windows and the function
++	 * dw_pcie_setup_rc will re-configure the outbound windows.
++	 */
++	ls_pcie_disable_outbound_atus(pcie);
++
+ 	ls_pcie_clear_multifunction(pcie);
+ 	ls_pcie_drop_msg_tlp(pcie);
+-	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++
++	dw_pcie_setup_rc(pp);
++}
++
++static void ls1021_pcie_host_init(struct pcie_port *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct ls_pcie *pcie = to_ls_pcie(pci);
++	struct device *dev = pci->dev;
++	u32 index[2];
++
++	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
++						     "fsl,pcie-scfg");
++	if (IS_ERR(pcie->scfg)) {
++		dev_err(dev, "No syscfg phandle specified\n");
++		pcie->scfg = NULL;
++		return;
++	}
++
++	if (of_property_read_u32_array(dev->of_node,
++				       "fsl,pcie-scfg", index, 2)) {
++		pcie->scfg = NULL;
++		return;
++	}
++	pcie->index = index[1];
++
++	ls_pcie_host_init(pp);
+ }
+ 
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+-- 
+2.1.0.27.g96db324
