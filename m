@@ -1,109 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0047.outbound.protection.outlook.com ([104.47.2.47]:53393
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0087.outbound.protection.outlook.com ([104.47.36.87]:10160
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751351AbdGRDBB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Jul 2017 23:01:01 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Jingoo Han <jingoohan1@gmail.com>,
-        'Joao Pinto' <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-Subject: RE: [PATCH 1/3] PCI: designware: add accessors for write permission
- of DBI read-only registers
-Date: Tue, 18 Jul 2017 03:00:59 +0000
-Message-ID: <AM5PR0402MB2771C36475339618766F736584A10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+        id S1753177AbdGFGuG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Jul 2017 02:50:06 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCH 2/3] PCI: designware: enable write permission before updating class code
+Date: Thu, 6 Jul 2017 14:33:48 +0800
+Message-ID: <1499322829-23018-2-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
 References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
- <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
- <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com>
- <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
- <000d01d2ff34$ab71cd30$02556790$@gmail.com>
-In-Reply-To: <000d01d2ff34$ab71cd30$02556790$@gmail.com>
-Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSmluZ29vIEhhbiwNCg0KVGhhbmtzIGZvciB5b3VyIGNvbW1lbnRzIQ0KDQo+IC0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEppbmdvbyBIYW4gW21haWx0bzpqaW5nb29oYW4x
-QGdtYWlsLmNvbV0NCj4gU2VudDogMjAxN+W5tDfmnIgxOOaXpSAzOjQxDQo+IFRvOiBaLnEuIEhv
-dSA8emhpcWlhbmcuaG91QG54cC5jb20+OyAnSm9hbyBQaW50bycNCj4gPEpvYW8uUGludG9Ac3lu
-b3BzeXMuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhlbGdhYXNAZ29vZ2xl
-LmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvM10gUENJOiBkZXNpZ253YXJlOiBhZGQgYWNj
-ZXNzb3JzIGZvciB3cml0ZSBwZXJtaXNzaW9uDQo+IG9mIERCSSByZWFkLW9ubHkgcmVnaXN0ZXJz
-DQo+IA0KPiBPbiBUdWVzZGF5LCBKdWx5IDExLCAyMDE3IDEyOjExIEFNLCBaLnEuIEhvdSB3cm90
-ZToNCj4gPg0KPiA+IEhpIEJqb3JuLA0KPiA+DQo+ID4gRHVlIHRvIGFsbCBGcmVlc2NhbGUgTGF5
-ZXJzY3BlIFBDSWUgY29udHJvbGxlcnMgaGF2ZSB0byBmaXggdGhlIENsYXNzDQo+ID4gY29kZSwg
-YW5kIHRoaXMgZml4dXAgZXhpc3RlZCBpbiBib3RoIExheWVyc2NhcGUgcGNpZSBkcml2ZXIgYW5k
-IERXQw0KPiA+IGNvbW1vbiBjb2RlLCBzbyBJIHdhbnQgdG8gcmV1c2UgdGhlIGZpeHVwIGluIERX
-QyBjb21tb24gY29kZS4NCj4gPiBDYW4geW91IGdpdmUgbWUgYW55IHN1Z2dlc3Rpb24/DQo+IA0K
-PiBQbGVhc2UgZG9uJ3QgYWRkIHlvdXIgY29tbWVudCBvbiB0b3Agb2YgdGhlIGVtYWlsLg0KDQpP
-aywgZ290IGl0Lg0KDQo+IA0KPiANCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
-LS0NCj4gPiA+IEZyb206IEpvYW8gUGludG8gW21haWx0bzpKb2FvLlBpbnRvQHN5bm9wc3lzLmNv
-bV0NCj4gPiA+IFNlbnQ6IDIwMTflubQ35pyIN+aXpSAxNjo1Mw0KPiA+ID4gVG86IFoucS4gSG91
-IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT47IEpvYW8gUGludG8NCj4gPiA+IDxKb2FvLlBpbnRvQHN5
-bm9wc3lzLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPiBiaGVsZ2Fhc0Bn
-b29nbGUuY29tDQo+ID4gPiBDYzogamluZ29vaGFuMUBnbWFpbC5jb20NCj4gPiA+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0ggMS8zXSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nlc3NvcnMgZm9yIHdyaXRl
-DQo+ID4gcGVybWlzc2lvbg0KPiA+ID4gb2YgREJJIHJlYWQtb25seSByZWdpc3RlcnMNCj4gPiA+
-DQo+ID4gPg0KPiA+ID4gSGkgWmhpcWlhbmcsDQo+ID4gPg0KPiA+ID4gw4BzIDQ6NDggQU0gZGUg
-Ny83LzIwMTcsIFoucS4gSG91IGVzY3JldmV1Og0KPiA+ID4gPiBIaSBKb2FvLA0KPiA+ID4gPg0K
-PiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBUaGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMh
-DQo+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KPiA+ID4gPg0KPiA+ID4gPj4gRnJvbTogSm9hbyBQaW50byBbbWFpbHRvOkpvYW8u
-UGludG9Ac3lub3BzeXMuY29tXQ0KPiA+ID4gPg0KPiA+ID4gPj4gU2VudDogMjAxN+W5tDfmnIg2
-5pelIDE3OjQ0DQo+ID4gPiA+DQo+ID4gPiA+PiBUbzogWi5xLiBIb3UgPHpoaXFpYW5nLmhvdUBu
-eHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+ID4NCj4gPiA+ID4+IEpv
-YW8uUGludG9Ac3lub3BzeXMuY29tDQo+ID4gPiA+DQo+ID4gPiA+PiBDYzogYmhlbGdhYXNAZ29v
-Z2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb20NCj4gPiA+ID4NCj4gPiA+ID4+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0ggMS8zXSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nlc3NvcnMgZm9yIHdyaXRl
-DQo+ID4gPiA+PiBwZXJtaXNzaW9uDQo+ID4gPiA+DQo+ID4gPiA+PiBvZiBEQkkgcmVhZC1vbmx5
-IHJlZ2lzdGVycw0KPiA+ID4gPg0KPiA+ID4gPj4NCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4gPiA+
-DQo+ID4gPiA+PiBIaSBaaGlxaWFuZywNCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4gPiA+DQo+ID4g
-PiA+PiDDgHMgNzozMyBBTSBkZSA3LzYvMjAxNywgWmhpcWlhbmcgSG91IGVzY3JldmV1Og0KPiA+
-ID4gPg0KPiA+ID4gPj4+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+
-DQo+ID4gPiA+DQo+ID4gPiA+Pj4NCj4gPiA+ID4NCj4gPiA+ID4+PiBUaGUgcmVhZC1vbmx5IERC
-SSByZWdpc3RlcnMgY2FuIGJlIHdyaXR0ZW4gb3ZlciB0aGUgREJJIHdoZW4gc2V0DQo+ID4gPiA+
-Pj4gdGhlDQo+ID4gPiA+DQo+ID4gPiA+Pj4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBE
-QkkiIChEQklfUk9fV1JfRU4pIGZpZWxkIG9mIHRoZQ0KPiA+ID4gPg0KPiA+ID4gPj4+IE1JU0Nf
-Q09OVFJPTF8xX09GRiByZWdpc3Rlci4NCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4gPiA+DQo+ID4g
-PiA+PiBJIHdvdWxkIHN1Z2dlc3QgeW91IHRvIGFkZCBhIGNvdmVyLWxldHRlciBuZXh0IHRpbWUg
-dG8gZXhwbGFpbg0KPiA+ID4gPj4gdGhlIGdsb2JhbA0KPiA+ID4gPg0KPiA+ID4gPj4gcGljdHVy
-ZSBvZiB0aGUgcGF0Y2gtc2V0Lg0KPiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBU
-aGFua3MsIEkgd2lsbC4NCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4g
-PiA+DQo+ID4gPiA+PiBJIHVuZGVyc3RhbmQgeW91ciBuZWVkIGZvciB0aGlzIHBhdGNoLCBidXQg
-SSBkb24ndCBhZ3JlZSBvbiB0aGUNCj4gPiBhcHByb2FjaC4NCj4gPiA+ID4NCj4gPiA+ID4NCj4g
-PiA+ID4NCj4gPiA+ID4gSW4gdGhlIERXQyBjb21tb24gY29kZSwgdGhlcmUgaXMgYSBmdW5jdGlv
-biB3cml0ZSBhIERCSSByZWFkLW9ubHkNCj4gPiByZWdpc3Rlcg0KPiA+ID4gJ0RldmljZSBjbGFz
-cyBjb2RlJywgYW5kIHRoZSBmaXJzdCAyIHBhdGNoZXMgaXMgdG8gZml4IGl0Lg0KPiA+ID4gPg0K
-PiA+ID4gPiBUaGUgM3JkIHBhdGNoIGlzIHRvIHJlZmFjdG9yIHRoZSBMYXllcnNjYXBlIFBDSWUg
-ZHJpdmVyJ3MNCj4gPiA+ID4gaG9zdF9pbml0DQo+ID4gZnVuY3Rpb24NCj4gPiA+IGFuZCByZXVz
-ZSB0aGUgbmV3IGFkZGVkIGFjY2Vzc29ycy4NCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4NCj4g
-PiA+ID4+IFNvbWV0aW1lcyB0aGUgcGVvcGxlIGluIGNoYXJnZSBvZiB0aGUgaGFyZHdhcmUgZGVz
-aWduIC8NCj4gPiA+ID4+IGNvbmZpZ3VyYXRpb24sIGZvcmdldA0KPiA+ID4gPg0KPiA+ID4gPj4g
-dG8gc3BlY2lmeSB0aGUgZGV2aWNlIGNsYXNzIGFuZCB0aGF0IGNhbiBiZSBwcm9ibGVtYXRpYyBm
-b3Igc29tZQ0KPiA+ID4gPj4gZHJpdmVycywgYW5kDQo+ID4gPiA+DQo+ID4gPiA+PiBzbyB0aGUg
-dHlwaWNhbCB3b3JrYXJvdW5kIGlzIHRvIHNldCBpdCBpbiB0aGUgZHJpdmVyIHVzaW5nIGENCj4g
-PiA+ID4+IHF1aXJrDQo+ID4gZm9yIGV4YW1wbGUuDQo+ID4gPiA+DQo+ID4gPiA+Pg0KPiA+ID4g
-Pg0KPiA+ID4gPj4gWW91IGNhbiBzZWUgc29tZSBleGFtcGxlcyBoZXJlOg0KPiA+ID4gPg0KPiA+
-ID4gPj4gaHR0cHM6Ly91cmxkZWZlbnNlLnByb29mcG9pbnQuY29tL3YyL3VybD91PWh0dHBzLTNB
-X19naXQua2VybmVsLm8NCj4gPiA+ID4+IHJnX3ANCj4gPiA+ID4+IHViX3NjbV9saW51eF9rZXJu
-ZWxfZ2l0X3RvcnZhbGRzX2xpbnV4LmdpdF90cmVlX2RyaXZlcnNfJmQ9RHdJR2FRDQo+ID4gPiA+
-PiAmYz1EDQo+ID4gPiA+Pg0KPiA+ID4NCj4gUEw2X1hfNkprWEZ4N0FYV3FCMHRnJnI9czJmTzBo
-aWkwT0dOT3Y5cVF5X0hSWHkteEFKVUQxTk5vRWNjM2lvDQo+ID4gPiBfa3gwJm0NCj4gPiA+ID4+
-DQo+ID4gPg0KPiA9MERyQkN2T2NfSjdMYU1YQmVpMXFDWHh4ZmJMeFdhVkVyS1o2UmttNmJVYyZz
-PXNPRW1FeFFGcXJDRW1wQQ0KPiA+ID4geDlMalNlSw0KPiA+ID4gPj4gUnZrVzFELVc4MmNrWDVX
-R0NnRld3JmU9DQo+ID4gPiA+DQo+ID4gPiA+PiBwY2kvcXVpcmtzLmMNCj4gPiA+ID4NCj4gPiA+
-ID4NCj4gPiA+ID4NCj4gPiA+ID4gSSBkb24ndCBrbm93IHRoZSBQQ0kgcXVpcmtzLCBkbyB5b3Ug
-bWVhbiByZW1vdmUgdGhlIHBjaSBEZXZpY2UNCj4gPiA+ID4gQ2xhc3MNCj4gPiBmaXgNCj4gPiA+
-IGNvZGUgZnJvbSB0aGUgRFdDIGNvbW1vbiBjb2RlIGFuZCBhZGQgaXQgdG8gcXVpcmtzPw0KPiA+
-ID4gPg0KPiA+ID4NCj4gPiA+IEluIG15IG9waW5pb24gYWRkaW5nIGZpeGVzIHRvIGEgY29tbW9u
-IGNvZGUgaXMgbm90IGEgZ29vZCBhcHByb2FjaC4NCj4gPiA+IEkNCj4gPiB3b3VsZA0KPiA+ID4g
-c3VnZ2VzdCB0aGUgZml4IHRvIGdvIGludG8gdGhlIHF1aXJrcyBmaWxlLg0KPiANCj4gWW91ciBh
-bnN3ZXIgc2hvdWxkIGJlIGFkZGVkIHRvIGhlcmUuDQo+IFRoZW4sIGl0IHdpbGwgaGVscCBvdGhl
-ciBwZW9wbGUgZm9sbG93IHRoaXMgZW1haWwgdGhyZWFkLg0KPiANCg0KWWVzLCBhbmQgZG8geW91
-IGtub3cgd2h5IHdyaXRlIHRvIHRoZSBEQkkgcmVhZC1vbmx5IHJlZ2lzdGVyKGNsYXNzIGNvZGUp
-IHdpdGhvdXQgZW5hYmxlIHRoZSB3cml0ZSBwZXJtaXNzaW9uIG9mIERCSSByZWFkLW9ubHkgcmVn
-aXN0ZXJzPw0KQ2FuIHlvdSBnaXZlIHNvbWUgc3VnZ2VzdGlvbnM/DQoNClRoYW5rcywNClpoaXFp
-YW5nDQo=
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index d29c020..6e10cda 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -634,8 +634,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
++	/* Enable write permission for the DBI read-only register */
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	/* program correct class for RC */
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++	/* Better disable write permission right after the update */
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+-- 
+2.1.0.27.g96db324
