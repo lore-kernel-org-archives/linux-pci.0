@@ -1,118 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36882 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932083AbdGXSsz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Jul 2017 14:48:55 -0400
-Date: Mon, 24 Jul 2017 12:48:54 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Feng Kan <fkan@apm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH V2] pci: quirk: Apply APM ACS quirk to XGene devices
-Message-ID: <20170724124854.71aa1e59@w520.home>
-In-Reply-To: <CAL85gmDZtLPqc3bmGA0s00Jb=180FfN4vvibdROyrJ05JYjcOg@mail.gmail.com>
-References: <1500511611-2019-1-git-send-email-fkan@apm.com>
-        <20170720162255.36e015f1@ul30vt.home>
-        <CAL85gmBB=U_4jkChKwfZGPQR0zeoZ4=hg7e6HMnu-DS0u1-Wsg@mail.gmail.com>
-        <20170723200636.3fa7f351@w520.home>
-        <CAL85gmDZtLPqc3bmGA0s00Jb=180FfN4vvibdROyrJ05JYjcOg@mail.gmail.com>
+Received: from bastet.se.axis.com ([195.60.68.11]:35393 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751853AbdGFOWZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Jul 2017 10:22:25 -0400
+Subject: Re: [PATCH v2 9/9] pci: remove limitation of the number of the
+ available IRQs
+To: Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
+        <marc.zyngier@arm.com>
+CC: <m-karicheri2@ti.com>, <thomas.petazzoni@free-electrons.com>,
+        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
+        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
+        <l.stach@pengutronix.de>, <jespern@axis.com>,
+        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <3839dbf866a10034298b758f63fe019873b829bc.1496677911.git.jpinto@synopsys.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <255c8d6f-603f-645f-c467-694352bd2dcf@axis.com>
+Date: Thu, 6 Jul 2017 16:22:18 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <3839dbf866a10034298b758f63fe019873b829bc.1496677911.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 24 Jul 2017 10:33:25 -0700
-Feng Kan <fkan@apm.com> wrote:
+On 06/05/2017 06:19 PM, Joao Pinto wrote:
+> The Synopsys PCIe Controller supports up to 256 IRQs distributed
+> by 8 controller registers.
+> 
+> Having this in mind, the number of the maximum number of
+> IRQs was changed to 256 and now the number of controllers is
+> calculated based on the number of vectors used by the specific
+> SoC driver.
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+> ---
+> Change v1->v2:
+> - New patch
+> 
+>  drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
+>  drivers/pci/dwc/pcie-designware.h      | 10 +++-------
+>  2 files changed, 11 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 6c771cc..31c7ccd 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -73,11 +73,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
+>  /* MSI int handler */
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  {
+> -	u32 val;
+>  	int i, pos, irq;
+> +	u32 val, num_ctrls;
+>  	irqreturn_t ret = IRQ_NONE;
+>  
+> -	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+> +	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+> +
+> +	for (i = 0; i < num_ctrls; i++) {
+>  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+>  				    &val);
 
-> On Sun, Jul 23, 2017 at 7:06 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Fri, 21 Jul 2017 13:20:18 -0700
-> > Feng Kan <fkan@apm.com> wrote:
-> >  
-> >> On Thu, Jul 20, 2017 at 3:22 PM, Alex Williamson
-> >> <alex.williamson@redhat.com> wrote:  
-> >> > On Wed, 19 Jul 2017 17:46:51 -0700
-> >> > Feng Kan <fkan@apm.com> wrote:
-> >> >  
-> >> >> The APM X-Gene PCIe root port does not support ACS at this point.
-> >> >> However, the hw provides isolation and source validation through
-> >> >> the SMMU. Turn on ACS but disable all the peer to peer features.
-> >> >>
-> >> >> Signed-off-by: Feng Kan <fkan@apm.com>
-> >> >> ---
-> >> >>  drivers/pci/quirks.c | 15 +++++++++++++++
-> >> >>  1 file changed, 15 insertions(+)
-> >> >>
-> >> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >> >> index 085fb78..0f8f1cd 100644
-> >> >> --- a/drivers/pci/quirks.c
-> >> >> +++ b/drivers/pci/quirks.c
-> >> >> @@ -4120,6 +4120,19 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> >> >>       return acs_flags ? 0 : 1;
-> >> >>  }
-> >> >>
-> >> >> +static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
-> >> >> +{
-> >> >> +     /*
-> >> >> +      * XGene root matching this quirk do not allow peer-to-peer
-> >> >> +      * transactions with others, allowing masking out these bits as if they
-> >> >> +      * were unimplemented in the ACS capability.
-> >> >> +      */
-> >> >> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> >> >> +                    PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> >> >> +
-> >> >> +     return acs_flags ? 0 : 1;
-> >> >> +}
-> >> >> +
-> >> >>  /*
-> >> >>   * Many Intel PCH root ports do provide ACS-like features to disable peer
-> >> >>   * transactions and validate bus numbers in requests, but do not provide an
-> >> >> @@ -4368,6 +4381,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
-> >> >>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-> >> >>       /* Cavium ThunderX */
-> >> >>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
-> >> >> +     /* APM XGene */
-> >> >> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
-> >> >>       { 0 }
-> >> >>  };
-> >> >>  
-> >> >
-> >> > Sorry, I'm not yet convinced there's an equivalent of SV, if a device
-> >> > spoofs a different bdf and it reaches the smmu, what prevents that from
-> >> > simply referencing the context for that alternate bdf?  
-> >> Perhaps I am not understanding the question correctly. The bdf forms a
-> >> stream id which is used to provide an context. Since there is no actual
-> >> context created by an alternate bdf, the transaction would be rejected
-> >> by the SMMU.  
-> >
-> > Unless that context does exist.  Take for example a basic topology:
-> >
-> > -[0000:00]-+-00.0
-> >            +-01.0-[01]----00.0
-> >            +-02.0-[02]----00.0
-> >
-> > Assume 00:01.0 and 00:02.0 are root ports and 01:00.0 and 02:00.0 are
-> > their respective downstream endpoint.  A single iommu would typically
-> > handle both of these endpoints using the requester ID, aka stream ID, to
-> > reference the appropriate context.  Source validation at the root port
-> > makes sure that any forwarded transaction has a requester ID that falls
-> > between the secondary and subordinate bus number range of the root
-> > port.  For instance, if device 01:00.0 was able to generate a
-> > transaction with a requester ID of 02:00.0, source validation at the
-> > root port would generate an ACS violation.  If the root port does not
-> > support source validation, the transaction might successfully reference
-> > the iommu context for the other endpoint.  Therefore I don't understand
-> > what property of the SMMU is able to prevent this spoofing technique if
-> > the root port provides no protection on its own.  Thanks,  
-> Yes, you are right. I left out some details to our implementation. Our
-> implementation
-> of the stream ID is not just the BDF. The stream ID also contains a
-> port ID at the
-> upper bits to indicate the difference between the PCIe ports. The scenario you
-> explained up above should not happen.
+Hello Joao
 
-Ok, great.  Can we update the comment in the patch to address that SV
-is implicit in the generation of a port specific stream ID since it
-cannot be hand-waved away as part of p2p?  Thanks,
 
-Alex
+Nice to see that we now have support for all 8 controllers,
+good job!
+
+Older versions of the DesignWare IP only had support for a
+combined msi irq (msi_ctrl_int), but since recent versions
+of the IP also supports a dedicated irq line per controller
+(msi_ctrl_int_vec[7:0]), do you	think that it makes sense
+to take this into consideration for this patchset?
+
+By doing so, dw_handle_msi_irq would not have to iterate
+over all 8 controllers, as the irq itself would tell us
+what controller to read the status from (to finally see
+which irq(s) that actually triggered).
+
+
+Regards,
+Niklas
