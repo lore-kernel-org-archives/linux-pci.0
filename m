@@ -1,37 +1,164 @@
-Return-Path: <SRS0=8J87=6G=arm.com=will.deacon@kernel.org>
-Return-Path: <SRS0=8J87=6G=arm.com=will.deacon@kernel.org>
-Date: Mon, 3 Jul 2017 11:47:27 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Xiaowei Song <songxiaowei@hisilicon.com>, guodong.xu@linaro.org,
-	bhelgaas@google.com, robh+dt@kernel.org, suzhuangluan@hisilicon.com,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v11 0/3]add PCIe driver for Kirin PCIe
-Message-ID: <20170703104727.GB1573@arm.com>
-References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
- <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34678 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751086AbdGFICY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Jul 2017 04:02:24 -0400
+Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
+To: Murali Karicheri <m-karicheri2@ti.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, bhelgaas@google.com
+References: <cover.1496677911.git.jpinto@synopsys.com>
+ <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
+ <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
+ <594955BC.3010703@ti.com> <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
+ <a6380712-214b-990b-69e3-e3889835879b@arm.com> <595D5423.50908@ti.com>
+Cc: thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5158c0cb-cc2a-0f1b-22f7-db84c9568e80@arm.com>
+Date: Thu, 6 Jul 2017 09:02:19 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <595D5423.50908@ti.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 02, 2017 at 06:36:57PM -0500, Bjorn Helgaas wrote:
-> [+cc Catalin, Will, linux-arm-kernel]
+On 05/07/17 22:03, Murali Karicheri wrote:
+> On 07/05/2017 11:26 AM, Marc Zyngier wrote:
+>> On 05/07/17 11:57, Joao Pinto wrote:
+>>> Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
+>>>> On 06/20/2017 12:28 PM, Joao Pinto wrote:
+>>>>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
+>>>>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
+>>>>>>>
+>>>>>>> Hi Murali,
+>>>>>>>
+>>>>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
+>>>>>>>> Joao,
+>>>>>>>>
+>>>>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
+>>>>>>>>> This patch series adds the new interrupt api to pcie-designware
+>>>>>>>>> make it possible to use features like MSIX.
+>>>>>>>>>
+>>>>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
+>>>>>>>>> specific driver.
+>>>>>>>>>
+>>>>>>>>> The patch set was made against the Bjorn' next branch.
+>>>>>>>>>
+>>>>>>>>> Joao Pinto (9):
+>>>>>>>>>   pci: adding new irq api to pci-designware
+>>>>>>>>>   pci: exynos SoC driver adapted to new irq API
+>>>>>>>>>   pci: imx6 SoC driver adapted to new irq API
+>>>>>>>>>   pci: artpec6 SoC driver adapted to new irq API
+>>>>>>>>>   pci: generic PCIe DW driver adapted to new irq API
+>>>>>>>>>   pci: qcom SoC driver adapted to new irq API
+>>>>>>>>>   pci: keystone SoC driver adapted to new irq API
+>>>>>>>>>   pci: removing old irq api from pcie-designware
+>>>>>>>>>   pci: remove limitation of the number of the available IRQs
+>>>>>>>>>
+>>>>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
+>>>>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
+>>>>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
+>>>>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
+>>>>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
+>>>>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
+>>>>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
+>>>>>>>>>
+>>>>>>>>
+>>>>>>>> I gave this a try today and it failed. Logs at
+>>>>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
+>>>>>>>>
+>>>>>>>> The first part of the log is with your patch series.
+>>>>>>>> The second part is before applying the patch. You will see
+>>>>>>>> that there is qc timeout log that shows the issue
+>>>>>>>>
+>>>>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
+>>>>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
+>>>>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
+>>>>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+>>>>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+>>>>>>>>
+>>>>>>>> Is there any DT change I need to make for this? I didn't have a
+>>>>>>>> chance to review your patch w.r.t Keystone. But I see you have change
+>>>>>>>> the MSI IRq handling.
+>>>>>>>>
+>>>>>>>
+>>>>>>> There is no need to change your DT. I think I will need to debug this issue
+>>>>>>> further. Could you please advice a board containing this SoC?
+>>>>>>>
+>>>>>> I think I may be able to work with you on this. Keystone has different 
+>>>>>> register set for MSI IRQ. It is in application space. Also there are
+>>>>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
+>>>>>> please review the original code vs the changed one w.r.t to this. I haven't
+>>>>>> had a chance to review the code as I am in the middle of a release.
+>>>>>> But will be able to spend some time after two weeks. Meanwhile please
+>>>>>> spend some time reviewing the code and exchange email to identify
+>>>>>> the issue. I can add specific debug prints for you as well and provide
+>>>>>> you the log for analysis.
+>>>>>
+>>>>> Ok, I agree! Thanks!
+>>>>>
+>>>>>>
+>>>> Look at this logic in the patch where a potential issue exists for Keystone.
+>>>>
+>>>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>>>> +{
+>>>> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+>>>> +       struct pcie_port *pp = &pci->pp;
+>>>> +       u64 msi_target;
+>>>> +
+>>>> +       if (pp->ops->get_msi_addr)
+>>>> +               msi_target = pp->ops->get_msi_addr(pp);
+>>>> +       else
+>>>> +               msi_target = virt_to_phys((void *)pp->msi_data);
+>>>> +
+>>>> +       msg->address_lo = lower_32_bits(msi_target);
+>>>> +       msg->address_hi = upper_32_bits(msi_target);
+>>>> +
+>>>> +       if (pp->ops->get_msi_data)
+>>>> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
+>>>> +       else
+>>>> +               msg->data = data->hwirq;
+>>>> +
+>>>> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
+>>>> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
+>>>> +}
+>>>>
+>>>> Keystone has 8 hw irqs, 4 multiplexed over each since the register
+>>>> set is different than other DWC cores. So will not work for Keystone,
+>>>> right?
+>>>
+>>> Well, that can be challenging, since it is a very particular operation.
+>>> Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
+>>> overide this one if necessary. What do you think?
+>>
+>> At that rate, and given that keystone seems to override almost all
+>> operations in this driver, wouldn't it make sense for this to be
+>> implemented as a *separate* driver?
+> Marc,
 > 
-> Applied patches 2 & 3 to pci/host-kirin for v4.13.
-> 
-> I would like a MAINTAINERS update, too.  If you send me that, I'll
-> squash it into the driver patch.
-> 
-> Catalin, Will, how do you want to handle the
-> arch/arm64/configs/defconfig change (patch 3)?  It's currently on my
-> branch, but I'm happy to drop it if another route is better.
+> What you mean by separate driver? Just the MSI handling part? 
 
-defconfig updates usually go through arm-soc, via the relevant platform
-maintainer, so it would be best to follow that route here too otherwise
-you'll probably see conflicts in -next.
+The MSI part indeed. Looking at this series, KS looks like a sore spot
+on the face of rest of the MSI code, and it'd be better of opting out of
+this MSI management code and provide its own.
 
-Will
+It seems to me that this would simplify the DW MSI code (no more
+indirections all over the place), and make it obvious that KW MSIs are
+managed in a very different way.
+
+Thoughts?
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
