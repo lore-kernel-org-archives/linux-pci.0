@@ -1,47 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:51362 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753059AbdGNDxf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:53:35 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH 5/6] arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339-evb
-Date: Fri, 14 Jul 2017 11:52:45 +0800
-Message-Id: <1500004366-241633-4-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
- <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: Do not enable extended tags on pre-dated (v1.x)
+ systems
+To: Jike Song <albcamus@gmail.com>
+References: <1499260748-21860-1-git-send-email-okaya@codeaurora.org>
+ <CANE52Ki_B0pitpyNMBjrtEJBX6Cspe8-m3hZuEFCWuBN2osh-g@mail.gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c5e37c83-a43d-257a-fa2f-50fdab29ce7a@codeaurora.org>
+Date: Fri, 7 Jul 2017 09:31:09 -0400
+MIME-Version: 1.0
+In-Reply-To: <CANE52Ki_B0pitpyNMBjrtEJBX6Cspe8-m3hZuEFCWuBN2osh-g@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ wim.ten.have@oracle.com, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DON'T MERGE currently as it's just for test and we could
-introduce it for rk3399.dtsi when the PHY & PCIe drivers
-finally got merged.
+On 7/7/2017 1:04 AM, Jike Song wrote:
+> Maybe checking the version of this endpoint at first? Do you expect a
+> v1 endpoint
+> to be working under v2+ ports?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+I see your point. I guess we need to validate both incoming and outgoing.
+I was only checking incoming direction. 
 
- arch/arm64/boot/dts/rockchip/rk3399-evb.dts | 2 ++
- 1 file changed, 2 insertions(+)
+Let me look at this one more time.
 
-diff --git a/arch/arm64/boot/dts/rockchip/rk3399-evb.dts b/arch/arm64/boot/dts/rockchip/rk3399-evb.dts
-index 42033bc..6398ca6 100644
---- a/arch/arm64/boot/dts/rockchip/rk3399-evb.dts
-+++ b/arch/arm64/boot/dts/rockchip/rk3399-evb.dts
-@@ -198,6 +198,8 @@
- &pcie0 {
- 	ep-gpios = <&gpio3 RK_PB5 GPIO_ACTIVE_HIGH>;
- 	num-lanes = <4>;
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pcie_clkreqn>;
- 	status = "disabled";
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
