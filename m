@@ -1,206 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45274 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750867AbdGZPbn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jul 2017 11:31:43 -0400
-Subject: Re: [PATCH v4 4/7] phy: qcom-qmp: Add support for IPQ8074
-To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
-        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-References: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
- <1500636977-11934-5-git-send-email-varada@codeaurora.org>
-Cc: smuthayy <smuthayy@codeaurora.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Message-ID: <785581e8-84c9-9f7d-d545-46e567efc5c9@codeaurora.org>
-Date: Wed, 26 Jul 2017 21:01:36 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
+ systems
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com
+References: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
+ <f95ae702-1b7b-b2d4-72bd-0518badfefbc@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <a257422d-206c-a5a9-f964-a1f476ca5850@codeaurora.org>
+Date: Fri, 7 Jul 2017 11:22:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <1500636977-11934-5-git-send-email-varada@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <f95ae702-1b7b-b2d4-72bd-0518badfefbc@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 7/7/2017 11:07 AM, Sinan Kaya wrote:
+> On 7/7/2017 10:53 AM, Sinan Kaya wrote:
+>> +	ret = pcie_capability_read_word(dev, PCI_EXP_FLAGS, &flags);
+>> +	if (ret || ((flags & PCI_EXP_FLAGS_VERS) < 2))
+>> +		return 0;
+>>  
+> 
+> Never mind, there is a problem here. I shouldn't have added it here.
+> I'll remove these and post again.
+> 
 
+I guess I'll wait until Bjorn gets a chance to review it. There is a decision
+that needs to be made here. 
 
-On 07/21/2017 05:06 PM, Varadarajan Narayanan wrote:
-> Add definitions required to enable QMP phy support for IPQ8074.
->
-> Signed-off-by: smuthayy <smuthayy@codeaurora.org>
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
->   drivers/phy/qualcomm/phy-qcom-qmp.c | 124 ++++++++++++++++++++++++++++++++++++
->   1 file changed, 124 insertions(+)
->
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-> index b046866..ec277fd 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-> @@ -59,6 +59,7 @@
->   #define QSERDES_COM_PLL_RCTRL_MODE1			0x088
->   #define QSERDES_COM_PLL_CCTRL_MODE0			0x090
->   #define QSERDES_COM_PLL_CCTRL_MODE1			0x094
-> +#define QSERDES_COM_BIAS_EN_CTRL_BY_PSM			0x0a8
->   #define QSERDES_COM_SYSCLK_EN_SEL			0x0ac
->   #define QSERDES_COM_RESETSM_CNTRL			0x0b4
->   #define QSERDES_COM_RESTRIM_CTRL			0x0bc
-> @@ -143,6 +144,11 @@
->   #define QPHY_LOCK_DETECT_CONFIG3			0x88
->   #define QPHY_PWRUP_RESET_DLY_TIME_AUXCLK		0xa0
->   #define QPHY_LP_WAKEUP_DLY_TIME_AUXCLK			0xa4
-> +#define QPHY_PLL_LOCK_CHK_DLY_TIME_AUXCLK_LSB		0x1A8
-> +#define QPHY_OSC_DTCT_ACTIONS				0x1AC
-> +#define QPHY_RX_SIGDET_LVL				0x1D8
-> +#define QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_LSB		0x1DC
-> +#define QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_MSB		0x1E0
->   
->   /* QPHY_SW_RESET bit */
->   #define SW_RESET				BIT(0)
-> @@ -580,6 +586,121 @@ static inline void qphy_clrbits(void __iomem *base, u32 offset, u32 val)
->   	.mask_pcs_ready		= PHYSTATUS,
->   };
->   
-> +static const struct qmp_phy_init_tbl ipq8074_pcie_serdes_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CLKBUFLR_EN, 0x18),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_ENABLE1, 0x10),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TRIM, 0xf),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP_EN, 0x1),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_MAP, 0x0),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER1, 0x1f),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER2, 0x3f),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CMN_CONFIG, 0x6),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_IVCO, 0xf),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_HSCLK_SEL, 0x0),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SVS_MODE_CLK_SEL, 0x1),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CORE_CLK_EN, 0x20),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CORECLK_DIV, 0xa),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_RESETSM_CNTRL, 0x20),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TIMER, 0xa),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_EN_SEL, 0xa),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_DEC_START_MODE0, 0x82),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START3_MODE0, 0x3),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START2_MODE0, 0x55),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START1_MODE0, 0x55),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP3_MODE0, 0x0),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP2_MODE0, 0xD),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP1_MODE0, 0xD04),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_SELECT, 0x33),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SYS_CLK_CTRL, 0x2),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_BUF_ENABLE, 0x1f),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CP_CTRL_MODE0, 0xb),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_RCTRL_MODE0, 0x16),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_CCTRL_MODE0, 0x28),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN1_MODE0, 0x0),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN0_MODE0, 0x80),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CTRL_BY_PSM, 0x1),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_CTRL, 0xa),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_EN_CENTER, 0x1),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER1, 0x31),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER2, 0x1),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER1, 0x2),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER2, 0x0),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE1, 0x2f),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE2, 0x19),
-> +	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_EP_DIV, 0x19),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_CNTRL, 0x7),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl ipq8074_pcie_tx_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_DRVR_EN, 0x45),
-> +	QMP_PHY_INIT_CFG(QSERDES_TX_LANE_MODE, 0x6),
-> +	QMP_PHY_INIT_CFG(QSERDES_TX_RES_CODE_LANE_OFFSET, 0x2),
-> +	QMP_PHY_INIT_CFG(QSERDES_TX_RCV_DETECT_LVL_2, 0x12),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl ipq8074_pcie_rx_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_ENABLES, 0x1c),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_DEGLITCH_CNTRL, 0x14),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2, 0x1),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL3, 0x0),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL4, 0xdb),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_SATURATION_AND_ENABLE, 0x4b),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN, 0x4),
-> +	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN_HALF, 0x4),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl ipq8074_pcie_pcs_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QPHY_ENDPOINT_REFCLK_DRIVE, 0x4),
-> +	QMP_PHY_INIT_CFG(QPHY_OSC_DTCT_ACTIONS, 0x0),
-> +	QMP_PHY_INIT_CFG(QPHY_PWRUP_RESET_DLY_TIME_AUXCLK, 0x40),
-> +	QMP_PHY_INIT_CFG(QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_MSB, 0x0),
-> +	QMP_PHY_INIT_CFG(QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_LSB, 0x40),
-> +	QMP_PHY_INIT_CFG(QPHY_PLL_LOCK_CHK_DLY_TIME_AUXCLK_LSB, 0x0),
-> +	QMP_PHY_INIT_CFG(QPHY_LP_WAKEUP_DLY_TIME_AUXCLK, 0x40),
-> +	QMP_PHY_INIT_CFG_L(QPHY_PLL_LOCK_CHK_DLY_TIME, 0x73),
-> +	QMP_PHY_INIT_CFG(QPHY_RX_SIGDET_LVL, 0x99),
-> +	QMP_PHY_INIT_CFG(QPHY_TXDEEMPH_M6DB_V0, 0x15),
-> +	QMP_PHY_INIT_CFG(QPHY_TXDEEMPH_M3P5DB_V0, 0xe),
-> +	QMP_PHY_INIT_CFG_L(QPHY_SW_RESET, 0x0),
-> +	QMP_PHY_INIT_CFG_L(QPHY_START_CTRL, 0x3),
-> +};
-> +
-> +/* list of resets */
-> +static const char * const ipq8074_pciephy_reset_l[] = {
-> +	"phy", "phy_phy",
-> +};
+Under normal circumstances, extended tags capability is a reserved field on
+v1 that's expected to be 0.
 
-Just a nit in this patch.
-Can you arrange these data inline to how they are currently in the driver?
-So please place the init tables along with other tables, and the reset and
-other driver data also along side other such definitions.
-Thanks
+Code is checking for extended tags capability being non-zero next
+before setting/clearing the bit.
 
+It should be safe to rely on capability being 0 on v1. However, we can go
+paranoid and add the check above to not even look at the capability like I
+did it. 
 
-Regards
-vivek
+That's why, I thought this is redundant. 
 
-> +
-> +static const struct qmp_phy_cfg ipq8074_pciephy_cfg = {
-> +	.type			= PHY_TYPE_PCIE,
-> +	.nlanes			= 1,
-> +
-> +	.serdes_tbl		= ipq8074_pcie_serdes_tbl,
-> +	.serdes_tbl_num		= ARRAY_SIZE(ipq8074_pcie_serdes_tbl),
-> +	.tx_tbl			= ipq8074_pcie_tx_tbl,
-> +	.tx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_tx_tbl),
-> +	.rx_tbl			= ipq8074_pcie_rx_tbl,
-> +	.rx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_rx_tbl),
-> +	.pcs_tbl		= ipq8074_pcie_pcs_tbl,
-> +	.pcs_tbl_num		= ARRAY_SIZE(ipq8074_pcie_pcs_tbl),
-> +	.clk_list		= NULL,
-> +	.num_clks		= 0,
-> +	.reset_list		= ipq8074_pciephy_reset_l,
-> +	.num_resets		= ARRAY_SIZE(ipq8074_pciephy_reset_l),
-> +	.vreg_list		= NULL,
-> +	.num_vregs		= 0,
-> +	.regs			= pciephy_regs_layout,
-> +
-> +	.start_ctrl		= SERDES_START | PCS_START,
-> +	.pwrdn_ctrl		= SW_PWRDN | REFCLK_DRV_DSBL,
-> +	.mask_pcs_ready		= PHYSTATUS,
-> +
-> +	.has_phy_com_ctrl	= false,
-> +	.has_lane_rst		= false,
-> +	.has_pwrdn_delay	= true,
-> +	.pwrdn_delay_min	= 995,		/* us */
-> +	.pwrdn_delay_max	= 1005,		/* us */
-> +};
-> +
->   static void qcom_qmp_phy_configure(void __iomem *base,
->   				   const unsigned int *regs,
->   				   const struct qmp_phy_init_tbl tbl[],
-> @@ -1042,6 +1163,9 @@ int qcom_qmp_phy_create(struct device *dev, struct device_node *np, int id)
->   	}, {
->   		.compatible = "qcom,msm8996-qmp-usb3-phy",
->   		.data = &msm8996_usb3phy_cfg,
-> +	}, {
-> +		.compatible = "qcom,ipq8074-qmp-pcie-phy",
-> +		.data = &ipq8074_pciephy_cfg,
->   	},
->   	{ },
->   };
+I'll wait until Bjorn chimes in. It is OK to keep the code as it is. It is
+just doing too much validation in my opinion. Somebody can always say
+play safe.
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
