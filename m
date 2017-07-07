@@ -1,65 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32838 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751704AbdGaGei (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 02:34:38 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v6 2/7] dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-Date: Mon, 31 Jul 2017 12:04:12 +0530
-Message-Id: <1501482857-14100-3-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
-References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <1499260748-21860-1-git-send-email-okaya@codeaurora.org>
+References: <1499260748-21860-1-git-send-email-okaya@codeaurora.org>
+From: Jike Song <albcamus@gmail.com>
+Date: Fri, 7 Jul 2017 13:04:16 +0800
+Message-ID: <CANE52Ki_B0pitpyNMBjrtEJBX6Cspe8-m3hZuEFCWuBN2osh-g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Do not enable extended tags on pre-dated (v1.x)
+ systems
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ wim.ten.have@oracle.com, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-IPQ8074 uses QMP phy controller that provides support to PCIe and
-USB. Adding dt binding information for the same.
+On Wed, Jul 5, 2017 at 9:19 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+> According to extended tags ECN document, all PCIe receivers are expected
+> to support extended tags support. It should be safe to enable extended
+> tags on endpoints without checking compatibility.
+>
+> This assumption seems to be working fine except for the legacy systems.
+> The ECN has been written against PCIE spec version 2.0. Therefore, we need
+> to exclude all version 1.0 devices from this change as there is HW out
+> there that can't handle extended tags.
+>
+> Note that the default value of Extended Tags Enable bit is implementation
+> specific. Therefore, we are clearing the bit by default when incompatible
+> HW is found without assuming that value is zero.
+>
+> Reported-by: Wim ten Have <wim.ten.have@oracle.com>
+> Link: https://pcisig.com/sites/default/files/specification_documents/ECN_Extended_Tag_Enable_Default_05Sept2008_final.pdf
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+> Tested-by: Wim ten Have <wim.ten.have@oracle.com>
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/probe.c | 52 +++++++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 45 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index 19c8950..5e39013 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1684,21 +1684,58 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+>          */
+>  }
+>
+> -static void pci_configure_extended_tags(struct pci_dev *dev)
+> +static bool pcie_bus_exttags_supported(struct pci_bus *bus)
+> +{
+> +       bool exttags_supported = true;
+> +       struct pci_dev *bridge;
+> +       int rc;
+> +       u16 flags;
+> +
+> +       bridge = bus->self;
+> +       while (bridge) {
+> +               if (pci_is_pcie(bridge)) {
+> +                       rc = pcie_capability_read_word(bridge, PCI_EXP_FLAGS,
+> +                                                      &flags);
+> +                       if (!rc && ((flags & PCI_EXP_FLAGS_VERS) < 2)) {
+> +                               exttags_supported = false;
+> +                               break;
+> +                       }
+> +               }
+> +               if (!bridge->bus->parent)
+> +                       break;
+> +               bridge = bridge->bus->parent->self;
+> +       }
+> +
+> +       return exttags_supported;
+> +}
+> +
+> +static int pcie_bus_configure_exttags(struct pci_dev *dev, void *data)
+>  {
+>         u32 dev_cap;
+>         int ret;
+> +       bool supported;
+>
+>         if (!pci_is_pcie(dev))
+> -               return;
+> +               return 0;
+>
+>         ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &dev_cap);
+>         if (ret)
+> -               return;
+> +               return 0;
+>
+> -       if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG)
+> -               pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+> -                                        PCI_EXP_DEVCTL_EXT_TAG);
+> +       if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG) {
+> +               supported = pcie_bus_exttags_supported(dev->bus);
+> +
 
-Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Maybe checking the version of this endpoint at first? Do you expect a
+v1 endpoint
+to be working under v2+ ports?
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-index 5d7a51f..802af1b 100644
---- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-@@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
- 
- Required properties:
-  - compatible: compatible list, contains:
-+	       "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
- 	       "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
- 	       "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
- 
-@@ -38,6 +39,8 @@ Required properties:
- 		 "phy", "common", "cfg".
- 		For "qcom,msm8996-qmp-usb3-phy" must contain
- 		 "phy", "common".
-+		For "qcom,ipq8074-qmp-pcie-phy" must contain:
-+		 "phy", "common".
- 
-  - vdda-phy-supply: Phandle to a regulator supply to PHY core block.
-  - vdda-pll-supply: Phandle to 1.8V regulator supply to PHY refclk pll block.
-@@ -63,6 +66,11 @@ Required properties for child node:
-  - clock-output-names: Name of the phy clock that will be the parent for
- 		       the above pipe clock.
- 
-+	For "qcom,ipq8074-qmp-pcie-phy":
-+		- "pcie20_phy0_pipe_clk"	Pipe Clock parent
-+			(or)
-+		  "pcie20_phy1_pipe_clk"
-+
-  - resets: a list of phandles and reset controller specifier pairs,
- 	   one for each entry in reset-names.
-  - reset-names: Must contain following for pcie qmp phys:
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Thanks,
+Jike
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
