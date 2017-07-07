@@ -1,18 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 4 Jul 2017 10:15:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-Message-ID: <20170704151502.GH13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
- <20170703181128.GD4902@n2100.armlinux.org.uk>
+Subject: Re: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
+ systems
+To: wim.ten.have@oracle.com
+References: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <7d6e99b9-bdef-845a-a542-2c47f429eb12@codeaurora.org>
+Date: Fri, 7 Jul 2017 11:01:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170703181128.GD4902@n2100.armlinux.org.uk>
+In-Reply-To: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,54 +16,49 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- LKML <linux-kernel@vger.kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Thomas Gleixner <tglx@linutronix.de>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 03, 2017 at 07:11:28PM +0100, Russell King - ARM Linux wrote:
-> On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
-> > The problem is serializing vs. memory accesses, since they don't use
-> > any wrappers.  However, they are ioremapped(), so it's at least
-> > conceivable that another solution would be to use VM to trap those
-> > accesses.  I'm not a VM person, so I don't know whether that's
-> > feasible in Linux.
+Hi Wim,
+
+On 7/7/2017 10:53 AM, Sinan Kaya wrote:
+> According to extended tags ECN document, all PCIe receivers are expected
+> to support extended tags support. It should be safe to enable extended
+> tags on endpoints without checking compatibility.
 > 
-> Bjorn,
+> This assumption seems to be working fine except for the legacy systems.
+> The ECN has been written against PCIE spec version 2.0. Therefore, we need
+> to exclude all version 1.0 devices from this change as there is HW out
+> there that can't handle extended tags.
 > 
-> You're forgetting that MMIO (iow, memory returned by ioremap()) must
-> be accessed through the appropriate accessors, and must not be
-> directly dereferenced in C.  (We do have buggy drivers that do that
-> but they are buggy, and in many cases are getting attention to fix
-> that.)
+> Note that the default value of Extended Tags Enable bit is implementation
+> specific. Therefore, we are clearing the bit by default when incompatible
+> HW is found without assuming that value is zero.
+> 
+> Reported-by: Wim ten Have <wim.ten.have@oracle.com>
+> Link: https://pcisig.com/sites/default/files/specification_documents/ECN_Extended_Tag_Enable_Default_05Sept2008_final.pdf
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
 
-Oh, you're right, thank you!  I guess you're referring to readb()
-and friends.  I haven't found an actual prohibition on directly
-dereferencing addresses returned from ioremap(), but
-Documentation/driver-api/device-io.rst is clear that they're
-suitable for passing to readb(), etc.
+Can you also give this a spin? I don't have a system with v1 PCIe bridges.
+I only tested v2 and later code path.
 
-I recently told someone else my mistaken idea that ioremap() must
-return a valid virtual address.  I wish I remembered who it was, so I
-could correct that.  Documentation/DMA-API-HOWTO.txt also suggests
-that ioremap() returns a virtual address -- I think I wrote that, and
-maybe that virtual address reference should be tweaked a bit.
+I tried to address Jike Song concerns on this version and removed your tested-by
+since the code changed.
 
-Another wrinkle is that the pci_mmap_resource() interface is exposed
-via sysfs and allows direct userspace mmap of PCI MMIO resources.  In
-that case, there is no accessor available.  I wonder if we need some
-way to disable this mmap when readb() is non-trivial.
+Sinan
 
-Bjorn
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
