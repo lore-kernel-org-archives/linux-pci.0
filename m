@@ -1,80 +1,51 @@
-Return-Path: <SRS0=JYXB=6Q=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=JYXB=6Q=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, vikrams@codeaurora.org,
- Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
- <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
-Date: Thu, 13 Jul 2017 11:44:12 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com"
+ <ashok.raj@intel.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Michael
+ Werner" <werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
+ <l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
+ <will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
+ <davem@davemloft.net>, "alexander.duyck@gmail.com"
+ <alexander.duyck@gmail.com>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
+ <netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Sat, 8 Jul 2017 00:30:12 +0000
+Message-ID: <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>,
+ <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
+In-Reply-To: <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/13/2017 8:17 AM, Bjorn Helgaas wrote:
->> he spec is calling to wait up to 1 seconds if the device is sending CRS.
->> The NVMe device seems to be requiring more. Relax this up to 60 seconds.
-> Can you add a pointer to the "1 second" requirement in the spec here?
-> We use 60 seconds in pci_scan_device() and acpiphp_add_context().  Is
-> there a basis in the spec for the 60 second timeout?
+  By the way, it ~seems~ like the patch set confuses the idea of the PCIe Capability Device Control[Relaxed Ordering Enable] with the device's ability to handle incoming TLPs with the Relaxed Ordering Attribute set.  These are completely different things.  The PCIe Capability Device Control[Relaxed Ordering Enable] solely governs the ability of the device to _send_ TLPs with the Relaxed Ordering Attribute set.  It has nothing whatsoever to do with the handling of incoming TLPs with the Relaxed Ordering Attribute set.  In fact, there is any standard way to disable receipt processing of such TLPs.  That's kind of the whole point of the majority of the patch.  If there was a separate "Ignore Incoming Relaxed Ordering Attributes" then we'd mostly just have a quirk which would set that for problematic devices.
 
-This does not specify a hard limit above on how long SW need to wait. 
+  Worse yet, if I'm reading the patch right, it _is_ turning off the PCIe Capability Device Control[Relaxed Ordering Enable] for the devices that we've identified with problematic receive handling.  Not only does this not solve the problem that we've been talking about, it actually almost certainly introduces a huge Graphics Performance Bug.  The Relaxed Ordering Attribute was originally developed for Graphics Device support in order to download textures, etc. to a graphics devices as fast as possible and only ensure ordering at points where needed.  For instance, as far as I know, the Intel Root Complexes that we've been talking about have no issues whatsoever in generating downstream TLPs with the Relaxed Ordering Attribute set.  By turning off the PCIe Capability Device Control[Relaxed Ordering Enable] on these Root Complexes, this patch prevents the generation of downstream TLPs with the Relaxed Ordering Attribute set targeted at devices like graphics adapters.
 
-"6.6.2 Function Level Reset
-After an FLR has been initiated by writing a 1b to the Initiate Function Level Reset bit, 
-the Function must complete the FLR within 100 ms.
-
-While a Function is required to complete the FLR operation within the time limit described above,
-the subsequent Function-specific initialization sequence may require additional time. 
-If additional time is required, the Function must return a Configuration Request Retry Status (CRS) 
-Completion Status when a Configuration Request is received 15 after the time limit above. 
-After the Function responds to a Configuration Request with a Completion status other than CRS, 
-it is not permitted to return CRS until it is reset again."
-
-However, another indirect reference here tells us it is capped by 1 second below.
-
-"6.23. Readiness Notifications (RN)
-Readiness Notifications (RN) is intended to reduce the time software needs to
-wait before issuing Configuration Requests to a Device or Function following DRS
-Events or FRS Events. RN includes both the Device Readiness Status (DRS) and
-Function Readiness Status (FRS) mechanisms. These mechanisms provide a direct
-indication of Configuration-Readiness (see 5 Terms and Acronyms entry for “Configuration-Ready”). 
-
-When used, DRS and FRS allow an improved behavior over the CRS mechanism, and eliminate
-its associated periodic polling time of up to 1 second following a reset."
-
-If I remember it right from CRS commit messages, 60 seconds was coming from
-some PCIe switch taking too long to boot.
-
-> 
-> What's the NVMe excuse for requiring more time than the spec allows?
-> Is this a hardware erratum?  Is there some PCIe ECN pending to address
-> this?
-
-We have seen the issue with Intel 750 and Intel P3600 NVMe drives. I don't
-have access to the errata document for either of the drives.
-
-> 
-> I try to avoid adding generic changes based on one specific piece of
-> hardware because it can penalize everybody else who actually bothered
-> to follow the spec.  For example, if FLR fails because a non-NVMe
-> device is broken, it will now take 60 seconds to notice that instead
-> of 1 second.
-> 
-
-We can look for a better number like 3-4 seconds and put some nice warning
-that HW might be broken (violating the spec) and could be in need of
-a FW/BIOS update.
-
-What do you think?
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Casey
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
