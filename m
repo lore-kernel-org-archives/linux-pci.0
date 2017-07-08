@@ -1,113 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:36508 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751776AbdGaXhT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:37:19 -0400
-Received: by mail-pf0-f182.google.com with SMTP id z129so350762pfb.3
-        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:37:19 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        corbet@lwn.net
-Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 2/4] netvsc: add documentation
-Date: Mon, 31 Jul 2017 16:37:10 -0700
-Message-Id: <20170731233712.12087-3-sthemmin@microsoft.com>
-In-Reply-To: <20170731233712.12087-1-sthemmin@microsoft.com>
-References: <20170731233712.12087-1-sthemmin@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Sat, 8 Jul 2017 02:04:56 +0000
+Message-ID: <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+ <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>,
+ <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
+In-Reply-To: <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ Ding Tianhong <dingtianhong@huawei.com>, Michael
+ Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "amira@mellanox.com" <amira@mellanox.com>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add some background documentation on netvsc device options
-and limitations.
+  Okay, thanks for the note Alexander.	I'll have to look more closely at
+the patch on Monday and try it out on one of the targeted systems to verify
+the semantics you describe.
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- Documentation/networking/netvsc.txt | 63 +++++++++++++++++++++++++++++++++++++
- MAINTAINERS                         |  1 +
- 2 files changed, 64 insertions(+)
- create mode 100644 Documentation/networking/netvsc.txt
+  However, that said, there is no way to tell a priori where a device will
+send TLPs.  To simply assume that all TLPs will be directed towards the Root
+Complex is a big assumption.  Only the device and the code controlling it
+know where the TLPs will be directed.  That's why there are changes required
+in the cxgb4 driver.  For instance, the code in
+drivers/net/ethernet/chelsio./cxgb4/sge.c: t4_sge_alloc_rxq() knows that
+it's allocating Free List Buffers in Host Memory and that the RX Queues that
+it's allocating in the Hardware will eventually send Ingress Data to those
+Free List Buffers.  (And similarly for the Free List Buffer Pointer Queue
+with respect to DMA Reads from the host.)  In that routine we explicitly
+configure the Hardware to use/not-use the Relaxed Ordering Attribute via the
+FW_IQ_CMD_FL0FETCHRO and FW_IQ_CMD_FL0DATARO flags.  Basically we're
+conditionally setting them based on the desirability of sending Relaxed
+Ordering TLPs to the Root Complex.  (And we would perform the same kind of
+check for an nVME application ... which brings us to ...)
 
-diff --git a/Documentation/networking/netvsc.txt b/Documentation/networking/netvsc.txt
-new file mode 100644
-index 000000000000..4ddb4e4b0426
---- /dev/null
-+++ b/Documentation/networking/netvsc.txt
-@@ -0,0 +1,63 @@
-+Hyper-V network driver
-+======================
-+
-+Compatibility
-+=============
-+
-+This driver is compatible with Windows Server 2012 R2, 2016 and
-+Windows 10.
-+
-+Features
-+========
-+
-+  Checksum offload
-+  ----------------
-+  The netvsc driver supports checksum offload as long as the
-+  Hyper-V host version does. Windows Server 2016 and Azure
-+  support checksum offload for TCP and UDP for both IPv4 and
-+  IPv6. Windows Server 2012 only supports checksum offload for TCP.
-+
-+  Receive Side Scaling
-+  --------------------
-+  Hyper-V supports receive side scaling. For TCP, packets are
-+  distributed among available queues based on IP address and port
-+  number. Current versions of Hyper-V host, only distribute UDP
-+  packets based on the IP source and destination address.
-+  The port number is not used as part of the hash value for UDP.
-+  Fragmented IP packets are not distributed between queues;
-+  all fragmented packets arrive on the first channel.
-+
-+  Generic Receive Offload, aka GRO
-+  --------------------------------
-+  The driver supports GRO and it is enabled by default. GRO coalesces
-+  like packets and significantly reduces CPU usage under heavy Rx
-+  load.
-+
-+  SR-IOV support
-+  --------------
-+  Hyper-V supports SR-IOV as a hardware acceleration option. If SR-IOV
-+  is enabled in both the vSwitch and the guest configuration, then the
-+  Virtual Function (VF) device is passed to the guest as a PCI
-+  device. In this case, both a synthetic (netvsc) and VF device are
-+  visible in the guest OS and both NIC's have the same MAC address.
-+
-+  The VF is enslaved by netvsc device.  The netvsc driver will transparently
-+  switch the data path to the VF when it is available and up.
-+  Network state (addresses, firewall, etc) should be applied only to the
-+  netvsc device; the slave device should not be accessed directly in
-+  most cases.  The exceptions are if some special queue discipline or
-+  flow direction is desired, these should be applied directly to the
-+  VF slave device.
-+
-+  Receive Buffer
-+  --------------
-+  Packets are received into a receive area which is created when device
-+  is probed. The receive area is broken into MTU sized chunks and each may
-+  contain one or more packets. The number of receive sections may be changed
-+  via ethtool Rx ring parameters.
-+
-+  There is a similar send buffer which is used to aggregate packets for sending.
-+  The send area is broken into chunks of 6144 bytes, each of section may
-+  contain one or more packets. The send buffer is an optimization, the driver
-+  will use slower method to handle very large packets or if the send buffer
-+  area is exhausted.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 297e610c9163..d30c17df1deb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6294,6 +6294,7 @@ M:	Haiyang Zhang <haiyangz@microsoft.com>
- M:	Stephen Hemminger <sthemmin@microsoft.com>
- L:	devel@linuxdriverproject.org
- S:	Maintained
-+F:	Documentation/networking/netvsc.txt
- F:	arch/x86/include/asm/mshyperv.h
- F:	arch/x86/include/uapi/asm/hyperv.h
- F:	arch/x86/kernel/cpu/mshyperv.c
--- 
-2.11.0
+  And what would be the code using these patch APIs to set up a Peer-to-Peer
+nVME-style application?	 In that case we'd need the Chelsio adapter's PCIe
+Capability Device Control[Relaxed Ordering Enable] set for the nVME
+application ... and we would avoid programming the Chelsio Hardware to use
+Relaxed Ordering for TLPs directed at the Root Complex.	 Thus we would be in
+a position where some TLPs being emitted by the device to Peer devices would
+have Relaxed Ordering set and some directed at the Root Complex would not.
+And the only way for that to work is if the source device's Device
+Control[Relaxed Ordering Enable] is set ...
+
+  Finally, setting aside my disagreements with the patch, we still have the
+code in the cxgb4 driver which explicitly turns on its own Device
+Control[Relaxed Ordering Enable] in cxgb4_main.c:
+enable_pcie_relaxed_ordering().  So the patch is something of a loop if all
+we're doing is testing our own Relaxed Ordering Enable state ...
+ 
+Casey
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
