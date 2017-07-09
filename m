@@ -1,134 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:56225 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752262AbdGSJ5Y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:57:24 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 4/7] PCI: rockchip: idle the inactive PHY(s)
-Date: Wed, 19 Jul 2017 17:55:15 +0800
-Message-Id: <1500458118-139042-5-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mga06.intel.com ([134.134.136.31]:42118 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751763AbdGIJ3Z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 9 Jul 2017 05:29:25 -0400
+From: "Liu, Yi L" <yi.l.liu@intel.com>
+To: valmiki <valmikibow@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+CC: "Lan, Tianyu" <tianyu.lan@intel.com>,
+        "Tian, Kevin" <kevin.tian@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "jean-philippe.brucker@arm.com" <jean-philippe.brucker@arm.com>
+Subject: RE: Support SVM without PASID
+Date: Sun, 9 Jul 2017 09:29:21 +0000
+Message-ID: <A2975661238FB949B60364EF0F2C2574390A3432@shsmsx102.ccr.corp.intel.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+        <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+In-Reply-To: <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check the status of all lanes and idle the inactive one(s).
+> -----Original Message-----
+> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
+> bounces@lists.linux-foundation.org] On Behalf Of valmiki
+> Sent: Sunday, July 9, 2017 11:16 AM
+> To: Alex Williamson <alex.williamson@redhat.com>
+> Cc: Lan, Tianyu <tianyu.lan@intel.com>; Tian, Kevin <kevin.tian@intel.com>;
+> kvm@vger.kernel.org; linux-pci@vger.kernel.org; iommu@lists.linux-foundation.org;
+> Pan, Jacob jun <jacob.jun.pan@intel.com>
+> Subject: Re: Support SVM without PASID
+> 
+> >> Hi,
+> >>
+> >> In SMMUv3 architecture document i see "PASIDs are optional,
+> >> configurable, and of a size determined by the minimum of the
+> >> endpoint".
+> >>
+> >> So if PASID's are optional and not supported by PCIe end point, how
+> >> SVM can be achieved ?
+> >
+> > It cannot be inferred from that statement that PASID support is not
+> > required for SVM.  AIUI, SVM is a software feature enabled by numerous
+> > "optional" hardware features, including PASID.  Features that are
+> > optional per the hardware specification may be required for specific
+> > software features.  Thanks,
+> >
+> Thanks for the information Alex. Suppose if an End point doesn't support PASID, is it
+> still possible to achieve SVM ?
+> Are there any such features in SMMUv3 with which we can achieve it ?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+If endpoint has no PASID support, I don't think it is SVM capable. For SMMU, maybe
+you can get more info from Jean.
 
-Changes in v5: None
-Changes in v4:
-- return u8 for rockchip_pcie_lane_map
-
-Changes in v3:
-- use cached lanes_map to avoid powering off inactive
-  lanes twice
-
-Changes in v2: None
-
- drivers/pci/host/pcie-rockchip.c | 37 +++++++++++++++++++++++++++++++++++--
- 1 file changed, 35 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f510349..a8c51b0 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -15,6 +15,7 @@
-  * (at your option) any later version.
-  */
- 
-+#include <linux/bitrev.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
-@@ -112,6 +113,9 @@
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
- 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
-+#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
-+#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
-+#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -229,6 +233,7 @@ struct rockchip_pcie {
- 	struct	regulator *vpcie0v9; /* 0.9V power supply */
- 	struct	gpio_desc *ep_gpio;
- 	u32	lanes;
-+	u8      lanes_map;
- 	u8	root_bus_nr;
- 	int	link_gen;
- 	struct	device *dev;
-@@ -301,6 +306,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 	return 1;
- }
- 
-+static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
-+{
-+	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-+	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
-+
-+	/* The link may be using a reverse-indexed mapping. */
-+	if (val & PCIE_CORE_LANE_MAP_REVERSE)
-+		map = bitrev8(map) >> 4;
-+
-+	return map;
-+}
-+
- static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 *val)
- {
-@@ -697,6 +714,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
-+	if (!rockchip->legacy_phy) {
-+		/*  power off unused lane(s) */
-+		rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
-+		for (i = 0; i < MAX_LANE_NUM; i++) {
-+			if (rockchip->lanes_map & BIT(i))
-+				continue;
-+
-+			dev_dbg(dev, "idling lane %d\n", i);
-+			phy_power_off(rockchip->phys[i]);
-+		}
-+	}
-+
- 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
- 			    PCIE_CORE_CONFIG_VENDOR);
- 	rockchip_pcie_write(rockchip,
-@@ -1329,7 +1358,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- 	}
- 
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
--		phy_power_off(rockchip->phys[i]);
-+		/* inactive lane is already powered off */
-+		if (rockchip->lanes_map & BIT(i))
-+			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
- 	}
- 
-@@ -1575,7 +1606,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	irq_domain_remove(rockchip->irq_domain);
- 
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
--		phy_power_off(rockchip->phys[i]);
-+		/* inactive lane is already powered off */
-+		if (rockchip->lanes_map & BIT(i))
-+			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
- 	}
- 
--- 
-1.9.1
+Regards,
+Yi L
