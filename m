@@ -1,74 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 7 Jul 2017 18:08:52 +0200
-From: Wim ten Have <wim.ten.have@oracle.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
- systems
-Message-ID: <20170707180852.56b01e8b.wim.ten.have@oracle.com>
-In-Reply-To: <7d6e99b9-bdef-845a-a542-2c47f429eb12@codeaurora.org>
-References: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
- <7d6e99b9-bdef-845a-a542-2c47f429eb12@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35095 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751680AbdGIDQA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 8 Jul 2017 23:16:00 -0400
+Subject: Re: Support SVM without PASID
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        tianyu.lan@intel.com, kevin.tian@intel.com, jacob.jun.pan@intel.com
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+Date: Sun, 9 Jul 2017 08:45:57 +0530
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, Wim ten Have <wim.ten.have@oracle.com>,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170708140257.2de02d63@w520.home>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 7 Jul 2017 11:01:16 -0400
-Sinan Kaya <okaya@codeaurora.org> wrote:
+>> Hi,
+>>
+>> In SMMUv3 architecture document i see "PASIDs are optional,
+>> configurable, and of a size determined by the minimum
+>> of the endpoint".
+>>
+>> So if PASID's are optional and not supported by PCIe end point, how SVM
+>> can be achieved ?
+>
+> It cannot be inferred from that statement that PASID support is not
+> required for SVM.  AIUI, SVM is a software feature enabled by numerous
+> "optional" hardware features, including PASID.  Features that are
+> optional per the hardware specification may be required for specific
+> software features.  Thanks,
+>
+Thanks for the information Alex. Suppose if an End point doesn't support
+PASID, is it still possible to achieve SVM ?
+Are there any such features in SMMUv3 with which we can achieve it ?
 
-> Hi Wim,
-> 
-> On 7/7/2017 10:53 AM, Sinan Kaya wrote:
-> > According to extended tags ECN document, all PCIe receivers are expected
-> > to support extended tags support. It should be safe to enable extended
-> > tags on endpoints without checking compatibility.
-> > 
-> > This assumption seems to be working fine except for the legacy systems.
-> > The ECN has been written against PCIE spec version 2.0. Therefore, we need
-> > to exclude all version 1.0 devices from this change as there is HW out
-> > there that can't handle extended tags.
-> > 
-> > Note that the default value of Extended Tags Enable bit is implementation
-> > specific. Therefore, we are clearing the bit by default when incompatible
-> > HW is found without assuming that value is zero.
-> > 
-> > Reported-by: Wim ten Have <wim.ten.have@oracle.com>
-> > Link: https://pcisig.com/sites/default/files/specification_documents/ECN_Extended_Tag_Enable_Default_05Sept2008_final.pdf
-> > Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
-> > Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > ---  
-> 
-> Can you also give this a spin? I don't have a system with v1 PCIe bridges.
-> I only tested v2 and later code path.
-> 
-> I tried to address Jike Song concerns on this version and removed your tested-by
-> since the code changed.
-> 
-> Sinan
-> 
-
-Sure,
-
--- 
-Wim ten Have | Consulting Member of Technical Staff
-Oracle Linux and VM Development Engineering
-ORACLE Nederland BV | Hertogswetering 163-167 | 3543 AS Utrecht/NL
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+valmki
