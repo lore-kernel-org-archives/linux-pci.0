@@ -1,80 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:58267 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752091AbdGUVK0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:10:26 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
-        Magnus Damm <damm@opensource.se>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Ben Dooks <ben.dooks@codethink.co.uk>,
-        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Richard Fitzgerald <rf@opensource.wolfsonmicro.com>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] of: provide of_n_{addr,size}_cells wrappers for !CONFIG_OF
-Date: Fri, 21 Jul 2017 23:09:50 +0200
-Message-Id: <20170721211000.3382004-1-arnd@arndb.de>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40894 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753864AbdGJQTi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jul 2017 12:19:38 -0400
+Subject: Re: DMA_ATTR_WEAK_ORDERING defintion, was Re: [PATCH] nvme: set
+ DMA_ATTR_WEAK_ORDERING attribute on dma buffers
+To: Christoph Hellwig <hch@lst.de>
+References: <1497645290-31041-1-git-send-email-alan.adamson@oracle.com>
+ <20170617115703.GA13002@lst.de>
+ <6a32f30b-433a-9857-164f-1717405a6082@oracle.com>
+ <20170624073539.GE14580@lst.de>
+ <f485b21a-0cf7-d2f0-c957-03d234447561@oracle.com>
+ <20170705190714.GA7107@lst.de>
+Cc: Alan Adamson <alan.adamson@oracle.com>, keith.busch@intel.com,
+        axboe@fb.com, linux-nvme@lists.infradead.org, sagi@grimberg.me,
+        linux-pci@vger.kernel.org, Mark Nelson <markn@au1.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        iommu@lists.linux-foundation.org
+From: chris hyser <chris.hyser@oracle.com>
+Message-ID: <261c7733-71a0-c283-90dd-3e03f1fa08ff@oracle.com>
+Date: Mon, 10 Jul 2017 12:17:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170705190714.GA7107@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci-rcar driver is enabled for compile tests, and this has
-shown that the driver cannot build without CONFIG_OF:
+On 7/5/2017 3:07 PM, Christoph Hellwig wrote:
+> On Tue, Jun 27, 2017 at 04:46:31PM -0400, chris hyser wrote:
+>> I put this in for SPARC. In our case the host bridge/RC itself follows very
+>> strict ordering unless the relaxed order bit is set in the TLP. This works
+>> great for devices that actually allow the driver to enable it. We however
+>> also have to support an infiniband card that does not support enabling this
+>> in the HW and thus in the TLP but is actually fine with relaxed order for
+>> the data buffers (ie the streaming I/O vs the coherent control buffers). In
+>> fact w/o relaxed order the performance is absolutely atrocious ... w/
+>> exceeds x86. This flag enables the driver to signal to us when we map the
+>> buffer in the IOMMU to enable the relaxed order attribute for our HW.
+>
+> We'll really need to start writing down our semantics.  As I said
 
-drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
-drivers/pci/host/pcie-rcar.c:1039:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
-  parser->pna = of_n_addr_cells(node);
-  ^
-As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-supposed to build fine, which we can achieve if we make the
-declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-and provide an empty inline function otherwise, as we do for
-a lot of other of interfaces.
+Fair enough. This will get documented.
 
-This lets us build the rcar_pci driver again without CONFIG_OF
-for build testing. All platforms using this driver select OF,
-so this doesn't change anything for the users.
+> given how our streaming dma mappings (dma_map_single/page/sg) are
+> defined I can't think of any way how relaxed vs strict ordering would
+> matter for them, so just enabling it by default seems like the right
+> thing in this case, instead of having to patch every PCIe driver people
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Magnus Damm <damm@opensource.se>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
-Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Reviewed-by: Frank Rowand <frank.rowand@sony.com>
-Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
-I originally sent the patch in 2014 when things initially broke
-and then forgot about while it was applied in my randconfig patch
-stack. I sent it again in 2016 without reply.
+People get real squeamish about just turning on relaxed order for driver/devices we actually know something about and 
+test let alone everything. I do agree with your interpretation of the streaming DMA semantics. That does not mean every 
+driver writer did or does. :-)
 
-It's still broken and I think this is the correct fix.
-v2: modify changelog as Geert suggested.
+> might ever use on sparc to work around your bridge.
 
- include/linux/of.h | 3 +++
- 1 file changed, 3 insertions(+)
+To be clear, this isn't really a host bridge issue. Technically no driver that runs on SPARC needs this enabled -- even 
+performance critical ... if they do the HW correctly. Again, we have a necessary performance critical device which does 
+not correctly signal its okayness with relaxed order for non-control DMA. This feature of the host bridge is to enable a 
+workaround for just these cases (deemed needed by past history). Said differently, lots of devices are made for the 
+commodity market where shortcuts like this apparently do not affect performance but are critical to performance on large 
+systems.
 
-diff --git a/include/linux/of.h b/include/linux/of.h
-index 4a8a70916237..1efdbe53136c 100644
---- a/include/linux/of.h
-+++ b/include/linux/of.h
-@@ -735,6 +735,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
- 	return NULL;
- }
- 
-+static inline int of_n_addr_cells(struct device_node *np) { return 0; }
-+static inline int of_n_size_cells(struct device_node *np) { return 0; }
-+
- static inline int of_property_read_u64(const struct device_node *np,
- 				       const char *propname, u64 *out_value)
- {
--- 
-2.9.0
+-chrish
