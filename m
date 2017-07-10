@@ -1,63 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:10328 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751709AbdGUHPb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 03:15:31 -0400
-Subject: Re: [PATCH] PCI: hisi: remove unused variable driver
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <1500600366-181656-1-git-send-email-shawn.lin@rock-chips.com>
-CC: <linux-pci@vger.kernel.org>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <5971A941.2000804@hisilicon.com>
-Date: Fri, 21 Jul 2017 15:12:01 +0800
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:36135 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751817AbdGJTUb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jul 2017 15:20:31 -0400
+Received: by mail-wr0-f174.google.com with SMTP id c11so151840193wrc.3
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jul 2017 12:20:31 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1500600366-181656-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20170630052436.15212-2-aik@ozlabs.ru>
+References: <20170630052436.15212-1-aik@ozlabs.ru> <20170630052436.15212-2-aik@ozlabs.ru>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Jul 2017 14:20:09 -0500
+Message-ID: <CAErSpo6uBEMP_z0EorrKJTXy3SzOz99VqBYP7Cphutz38rEsmA@mail.gmail.com>
+Subject: Re: [PATCH kernel v4 1/6] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/7/21 9:26, Shawn Lin wrote:
-> It was never used and also introduce a warning
-> 
-> drivers/pci/dwc/pcie-hisi.c: In function 'hisi_pcie_probe':
-> drivers/pci/dwc/pcie-hisi.c:271:24: warning: variable 'driver' set but
-> not used [-Wunused-but-set-variable]
-> 
-> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Cc: Zhou Wang <wangzhou1@hisilicon.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+[+cc linux-pci]
 
-Acked-by: Zhou Wang <wangzhou1@hisilicon.com>
+On Fri, Jun 30, 2017 at 12:24 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+> From: Yongji Xie <elohimes@gmail.com>
+>
+> We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
+> which indicates interrupts of all devices on the bus are
+> managed by the hardware enabling IRQ remapping (intel naming).
+> When the capability is enabled, a given PCI device can only
+> shoot the MSIs assigned for it. In other words, the hardware
+> can protect system from invalid MSIs of the device by checking
+> the target address and data when there is something wrong
+> with MSI part in device or device driver.
 
-Thanks,
-Zhou
+This needs a reference to the spec that describes how this MSI protection works.
 
+> The new flag will be set by when the kernel decides that it is safe to
+> do so.
+
+We also need some clue about how the kernel makes this decision.  That
+clue probably doesn't belong in *this* patch, but I didn't see it
+anywhere.
+
+> With this flag enabled, we can easily know whether it's safe
+> to expose MSI-X tables of PCI BARs to userspace. Some usespace
+> drivers such as VFIO may benefit from this.
+>
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 > ---
-> 
->  drivers/pci/dwc/pcie-hisi.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-> index e51acee..6631654 100644
-> --- a/drivers/pci/dwc/pcie-hisi.c
-> +++ b/drivers/pci/dwc/pcie-hisi.c
-> @@ -268,7 +268,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
->  	struct dw_pcie *pci;
->  	struct hisi_pcie *hisi_pcie;
->  	struct resource *reg;
-> -	struct device_driver *driver;
->  	int ret;
->  
->  	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
-> @@ -282,8 +281,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
->  	pci->dev = dev;
->  	pci->ops = &dw_pcie_ops;
->  
-> -	driver = dev->driver;
-> -
->  	hisi_pcie->pci = pci;
->  
->  	hisi_pcie->soc_ops = of_device_get_match_data(dev);
-> 
+>  include/linux/pci.h | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8039f9f0ca05..2c6dbb3dd0da 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -200,6 +200,7 @@ enum pci_bus_flags {
+>         PCI_BUS_FLAGS_NO_MSI    = (__force pci_bus_flags_t) 1,
+>         PCI_BUS_FLAGS_NO_MMRBC  = (__force pci_bus_flags_t) 2,
+>         PCI_BUS_FLAGS_NO_AERSID = (__force pci_bus_flags_t) 4,
+> +       PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 8,
+>  };
+>
+>  /* These values come from the PCI Express Spec */
+> --
+> 2.11.0
+>
