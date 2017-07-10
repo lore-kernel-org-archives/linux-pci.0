@@ -1,141 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com
-Subject: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
- systems
-Date: Fri,  7 Jul 2017 10:53:13 -0400
-Message-Id: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:49228 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754218AbdGJQin (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jul 2017 12:38:43 -0400
+Date: Mon, 10 Jul 2017 11:38:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/2] MIPS/PCI: Fix pcibios_scan_bus() NULL check code path
+Message-ID: <20170710163830.GC20365@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170710123409.9043-1-lorenzo.pieralisi@arm.com>
+ <20170710123409.9043-2-lorenzo.pieralisi@arm.com>
+ <20170710145553.GA20365@bhelgaas-glaptop.roam.corp.google.com>
+ <20170710154924.GA13344@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170710154924.GA13344@red-moon>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to extended tags ECN document, all PCIe receivers are expected
-to support extended tags support. It should be safe to enable extended
-tags on endpoints without checking compatibility.
+On Mon, Jul 10, 2017 at 04:49:24PM +0100, Lorenzo Pieralisi wrote:
+> On Mon, Jul 10, 2017 at 09:55:53AM -0500, Bjorn Helgaas wrote:
+> > On Mon, Jul 10, 2017 at 01:34:09PM +0100, Lorenzo Pieralisi wrote:
+> > > If pci_scan_root_bus() fails (ie returns NULL) pcibios_scan_bus() must
+> > > return immediately since the struct pci_bus pointer it returns is not
+> > > valid and cannot be used.
+> > > 
+> > > Move code checking the pci_scan_root_bus() return value to reinstate
+> > > proper pcibios_scanbus() error path behaviour.
+> > > 
+> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Cc: Ralf Baechle <ralf@linux-mips.org>
+> > > Cc: Paul Burton <paul.burton@imgtec.com>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > 
+> > I agree this is certainly broken.  In fact, I think I broke it with
+> > 9e808eb6a768 ("PCI: Cleanup control flow") in 2015.  So probably v4.14
+> > material?
+> 
+> Yes that makes sense, I spotted it since I am preparing patches to
+> remove pci_fixup_irqs() from the kernel (by removing it from all arches
+> that still use it), I think that technically:
+> 
+> 88555b481958 ("MIPS: PCI: Support for CONFIG_PCI_DOMAINS_GENERIC")
+> 
+> created a possible breakage (ie by using the possible NULL bus pointer),
+> if you merge it in one branch for 4.14 I will base the pci_fixup_irqs()
+> removal on top of it and post the series, just let me know please.
 
-This assumption seems to be working fine except for the legacy systems.
-The ECN has been written against PCIE spec version 2.0. Therefore, we need
-to exclude all version 1.0 devices from this change as there is HW out
-there that can't handle extended tags.
+Ah, you're right.  I created some poor style (checking the return
+value after intervening code) with 9e808eb6a768, and then 88555b481958
+fell into the trap I had laid.
 
-Note that the default value of Extended Tags Enable bit is implementation
-specific. Therefore, we are clearing the bit by default when incompatible
-HW is found without assuming that value is zero.
+I put this on pci/irq-fixups for a continuation of your work and
+started it off with this patch.
 
-Reported-by: Wim ten Have <wim.ten.have@oracle.com>
-Link: https://pcisig.com/sites/default/files/specification_documents/ECN_Extended_Tag_Enable_Default_05Sept2008_final.pdf
-Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
-Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/probe.c | 45 +++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 39 insertions(+), 6 deletions(-)
+I will rebase the branch after -rc1, but that shouldn't be a problem
+for you because I normally apply patches from email rather than
+pulling them directly.  I'll be on vacation July 14-28, so that
+probably won't happen until August.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 19c8950..e3b3c18 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1684,21 +1684,51 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
- 	 */
- }
- 
--static void pci_configure_extended_tags(struct pci_dev *dev)
-+static int pcie_bus_discover_legacy(struct pci_dev *dev, void *data)
- {
-+	bool *found = data;
-+	int rc;
-+	u16 flags;
-+
-+	if (!pci_is_pcie(dev))
-+		return 0;
-+
-+	rc = pcie_capability_read_word(dev, PCI_EXP_FLAGS, &flags);
-+	if (!rc && ((flags & PCI_EXP_FLAGS_VERS) < 2))
-+		*found = true;
-+
-+	return 0;
-+}
-+
-+static int pcie_bus_configure_exttags(struct pci_dev *dev, void *legacy)
-+{
-+	bool supported = !*(bool *)legacy;
- 	u32 dev_cap;
-+	u16 flags;
- 	int ret;
- 
- 	if (!pci_is_pcie(dev))
--		return;
-+		return 0;
-+
-+	ret = pcie_capability_read_word(dev, PCI_EXP_FLAGS, &flags);
-+	if (ret || ((flags & PCI_EXP_FLAGS_VERS) < 2))
-+		return 0;
- 
- 	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &dev_cap);
--	if (ret)
--		return;
-+	if (ret || (!(dev_cap & PCI_EXP_DEVCAP_EXT_TAG)))
-+		return 0;
- 
--	if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG)
-+	if (supported) {
-+		dev_dbg(&dev->dev, "setting extended tags capability\n");
- 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
- 					 PCI_EXP_DEVCTL_EXT_TAG);
-+	} else {
-+		dev_dbg(&dev->dev, "clearing extended tags capability\n");
-+		pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-+					   PCI_EXP_DEVCTL_EXT_TAG);
-+	}
-+
-+	return 0;
- }
- 
- static void pci_configure_device(struct pci_dev *dev)
-@@ -1707,7 +1737,6 @@ static void pci_configure_device(struct pci_dev *dev)
- 	int ret;
- 
- 	pci_configure_mps(dev);
--	pci_configure_extended_tags(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-@@ -2201,6 +2230,7 @@ static int pcie_bus_configure_set(struct pci_dev *dev, void *data)
- void pcie_bus_configure_settings(struct pci_bus *bus)
- {
- 	u8 smpss = 0;
-+	bool legacy_found = false;
- 
- 	if (!bus->self)
- 		return;
-@@ -2224,6 +2254,9 @@ void pcie_bus_configure_settings(struct pci_bus *bus)
- 
- 	pcie_bus_configure_set(bus->self, &smpss);
- 	pci_walk_bus(bus, pcie_bus_configure_set, &smpss);
-+
-+	pci_walk_bus(bus, pcie_bus_discover_legacy, &legacy_found);
-+	pci_walk_bus(bus, pcie_bus_configure_exttags, &legacy_found);
- }
- EXPORT_SYMBOL_GPL(pcie_bus_configure_settings);
- 
--- 
-1.9.1
+Thanks!
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> > > ---
+> > >  arch/mips/pci/pci-legacy.c | 10 +++++-----
+> > >  1 file changed, 5 insertions(+), 5 deletions(-)
+> > > 
+> > > diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
+> > > index 174575a..71d62f8 100644
+> > > --- a/arch/mips/pci/pci-legacy.c
+> > > +++ b/arch/mips/pci/pci-legacy.c
+> > > @@ -89,16 +89,16 @@ static void pcibios_scanbus(struct pci_controller *hose)
+> > >  	pci_add_resource(&resources, hose->busn_resource);
+> > >  	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+> > >  				&resources);
+> > > -	hose->bus = bus;
+> > > -
+> > > -	need_domain_info = need_domain_info || pci_domain_nr(bus);
+> > > -	set_pci_need_domain_info(hose, need_domain_info);
+> > > -
+> > >  	if (!bus) {
+> > >  		pci_free_resource_list(&resources);
+> > >  		return;
+> > >  	}
+> > >  
+> > > +	hose->bus = bus;
+> > > +
+> > > +	need_domain_info = need_domain_info || pci_domain_nr(bus);
+> > > +	set_pci_need_domain_info(hose, need_domain_info);
+> > > +
+> > >  	next_busno = bus->busn_res.end + 1;
+> > >  	/* Don't allow 8-bit bus number overflow inside the hose -
+> > >  	   reserve some space for bridges. */
+> > > -- 
+> > > 2.10.0
+> > > 
