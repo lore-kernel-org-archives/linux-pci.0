@@ -1,114 +1,100 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:31633
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751284AbdGQNxH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Jul 2017 09:53:07 -0400
-Subject: Re: ryzen X370: iommu - unusable huge groups
-To: Andreas Hartmann <andihartmann@01019freenet.de>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <95b7f350-76f7-daff-be4a-f3fc70589ba9@01019freenet.de>
- <20170716085334.7ae210d2@w520.home>
- <ecdf6b75-4966-fa3a-00de-99b1c9fe6caa@01019freenet.de>
- <20170716125630.7cfcec1c@w520.home>
- <7b5757d3-d0dc-e70a-2c15-954d252a9834@01019freenet.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Message-ID: <73797d4e-cc94-3b2d-ae5b-c5ecf7cb9d92@amd.com>
-Date: Mon, 17 Jul 2017 20:52:55 +0700
-MIME-Version: 1.0
-In-Reply-To: <7b5757d3-d0dc-e70a-2c15-954d252a9834@01019freenet.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from foss.arm.com ([217.140.101.70]:37234 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754386AbdGJPwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jul 2017 11:52:41 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH 2/2] usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB controller
+Date: Mon, 10 Jul 2017 16:52:30 +0100
+Message-Id: <20170710155230.8622-3-marc.zyngier@arm.com>
+In-Reply-To: <20170710155230.8622-1-marc.zyngier@arm.com>
+References: <20170710155230.8622-1-marc.zyngier@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The Renesas uPD72020x XHCI controller seems to suffer from a
+really annoying bug, where it may retain some of its DMA programming
+across a XHCI reset, and despite the driver correctly programming new
+DMA addresses. This is visible if the device has been using 64bit DMA
+addresses, and is then switched to using 32bit DMA addresses. The top
+32bits of the address (now zero) are ignored are replaced by the 32bit
+from the *previous* programming. Sticking with 64bit DMA always works,
+but doesn't seem very appropriate.
 
+A PCI reset of the device restores the normal functionnality, which
+is done at probe time. Unfortunately, this has to be done before
+any quirk has been discovered, hence the intrusive nature of the fix.
 
-On 7/17/17 02:39, Andreas Hartmann wrote:
-> On 07/16/2017 at 08:56 PM, Alex Williamson wrote:
->
->> On Sun, 16 Jul 2017 18:53:11 +0200
->> Andreas Hartmann <andihartmann@01019freenet.de> wrote:
->>
->>> Hello Alex!
->>>
->>> Nice to hear you again :-)
->>>
->>>
->>>
->>> On 07/16/2017 at 04:53 PM Alex Williamson wrote:
->>>> On Sun, 16 Jul 2017 07:44:01 +0200
->>>> Andreas Hartmann <andihartmann@01019freenet.de> wrote:
->>>>
->>>>> Hello!
->>>>>
->>>>> I've got a Asus X370-Pro motherboard with enabled iommu. Unfortunately,
->>>>> the group 0 is mostly all of the system :-).
->>>>>
->>>>> [    2.602426] iommu: Adding device 0000:00:01.0 to group 0
->>>>> [    2.602440] iommu: Adding device 0000:00:01.3 to group 0
->>>>> [    2.603368] iommu: Adding device 0000:03:00.0 to group 0
->>>>> [    2.603377] iommu: Adding device 0000:03:00.1 to group 0
->>>>> [    2.603385] iommu: Adding device 0000:03:00.2 to group 0
->>>>> [    2.603396] iommu: Adding device 0000:1d:00.0 to group 0
->>>>> [    2.603406] iommu: Adding device 0000:1d:02.0 to group 0
->>>>> [    2.603417] iommu: Adding device 0000:1d:03.0 to group 0
->>>>> [    2.603428] iommu: Adding device 0000:1d:04.0 to group 0
->>>>> [    2.603439] iommu: Adding device 0000:1d:06.0 to group 0
->>>>> [    2.603450] iommu: Adding device 0000:1d:07.0 to group 0
->>>>> [    2.603466] iommu: Adding device 0000:24:00.0 to group 0
->>>>> [    2.603481] iommu: Adding device 0000:25:00.0 to group 0
->>>>> [    2.603498] iommu: Adding device 0000:26:00.0 to group 0
->>>>> [    2.603513] iommu: Adding device 0000:27:00.0 to group 0
->>>>
->>>>
->>>> Update your motherboard BIOS, AMD AGESA 1.0.0.6 is supposed to
->>>> enable ACS in the PCIe root ports.  Thanks,
->>>
->>> Group 0 is now group 10 - that's mostly all :-( - no significant change.
->>> (Version 805 which should contain AGESA 1.0.0.6).
->>>
->>>
->>> [    2.600097] iommu: Adding device 0000:03:00.0 to group 10
->>> [    2.600117] iommu: Adding device 0000:03:00.1 to group 10
->>> [    2.600136] iommu: Adding device 0000:03:00.2 to group 10
->>> [    2.600148] iommu: Adding device 0000:1d:00.0 to group 10
->>> [    2.600158] iommu: Adding device 0000:1d:02.0 to group 10
->>> [    2.600169] iommu: Adding device 0000:1d:03.0 to group 10
->>> [    2.600180] iommu: Adding device 0000:1d:04.0 to group 10
->>> [    2.600190] iommu: Adding device 0000:1d:06.0 to group 10
->>> [    2.600201] iommu: Adding device 0000:1d:07.0 to group 10
->>> [    2.600216] iommu: Adding device 0000:24:00.0 to group 10
->>> [    2.600233] iommu: Adding device 0000:25:00.0 to group 10
->>> [    2.600249] iommu: Adding device 0000:26:00.0 to group 10
->>> [    2.600266] iommu: Adding device 0000:27:00.0 to group 10
->>>
->>>
->>> All devices that are used are in the same group again.
->>>
->>> Isn't it possible to allow them to put to VM anyway if there is no peer
->>> to peer communication - same as it was possible with the previous
->>> chipset (990xa)?
->>
->> Ah, I see you have a PCIe switch with downstream ports 1d.*.0 where
->> the downstream switch ports don't support ACS (not surprising for
->> something reporting ASMedia as a subsystem capability).  So ACS was
->> broken at multiple levels and now that it's exposed at the root port
->> it's still broken by the non-ACS switch.  The endpoints downstream of
->> the switch are not sufficiently isolated to separate between VMs,
->> sorry, the hardware isn't up to the task at hand.  Thanks,
->
-> In other words, you're telling, that there can't be done anything to get it
-> working? Do you know any other board, which doesn't have this problem and could
-> work?
->
-> Gigabyte? Asrock?
->
->
-> Thanks,
-> Andreas
+Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
+---
+ drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
+ drivers/usb/host/pci-quirks.h |  1 +
+ drivers/usb/host/xhci-pci.c   |  7 +++++++
+ 3 files changed, 28 insertions(+)
 
-I have checked with the BIOS team, and they said that this is supposed to get 
-fixed in 1.0.0.7.  Sorry for inconvenience.
-
-Suravee
+diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+index a9a1e4c40480..5bed002c7dd3 100644
+--- a/drivers/usb/host/pci-quirks.c
++++ b/drivers/usb/host/pci-quirks.c
+@@ -1096,3 +1096,23 @@ static void quirk_usb_early_handoff(struct pci_dev *pdev)
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+ 			PCI_CLASS_SERIAL_USB, 8, quirk_usb_early_handoff);
++
++bool usb_xhci_needs_pci_reset(struct pci_dev *pdev)
++{
++	/*
++	 * Our dear uPD72020{1,2} friend only partially resets when
++	 * asked to via the XHCI interface, and may end-up doing DMA
++	 * at the wrong addresses, as it keeps the top 32bit of some
++	 * addresses from its previous programming under obscure
++	 * circumstances.
++	 * Give it a good wack at probe time. Unfortunately, this
++	 * needs to happen before we've had a chance to discover any
++	 * quirk, or the system will be in a rather bad state.
++	 */
++	if (pdev->vendor == PCI_VENDOR_ID_RENESAS &&
++	    (pdev->device == 0x0014 || pdev->device == 0x0015))
++		return true;
++
++	return false;
++}
++EXPORT_SYMBOL_GPL(usb_xhci_needs_pci_reset);
+diff --git a/drivers/usb/host/pci-quirks.h b/drivers/usb/host/pci-quirks.h
+index 0222195bd5b0..dcbe4b097b33 100644
+--- a/drivers/usb/host/pci-quirks.h
++++ b/drivers/usb/host/pci-quirks.h
+@@ -14,6 +14,7 @@ void usb_amd_quirk_pll_enable(void);
+ void usb_enable_intel_xhci_ports(struct pci_dev *xhci_pdev);
+ void usb_disable_xhci_ports(struct pci_dev *xhci_pdev);
+ void sb800_prefetch(struct device *dev, int on);
++bool usb_xhci_needs_pci_reset(struct pci_dev *pdev);
+ #else
+ struct pci_dev;
+ static inline void usb_amd_quirk_pll_disable(void) {}
+diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+index 1bcf971141c0..3831705c2817 100644
+--- a/drivers/usb/host/xhci-pci.c
++++ b/drivers/usb/host/xhci-pci.c
+@@ -267,6 +267,13 @@ static int xhci_pci_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 	driver = (struct hc_driver *)id->driver_data;
+ 
++	/* For some HW implementation, a XHCI reset is just not enough... */
++	if (usb_xhci_needs_pci_reset(dev)) {
++		dev_info(&dev->dev, "Resetting\n");
++		if (pci_reset_function_locked(dev))
++			dev_warn(&dev->dev, "Reset failed");
++	}
++
+ 	/* Prevent runtime suspending between USB-2 and USB-3 initialization */
+ 	pm_runtime_get_noresume(&dev->dev);
+ 
+-- 
+2.11.0
