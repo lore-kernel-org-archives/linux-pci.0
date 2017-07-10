@@ -1,52 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:58407 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751911AbdGSJie (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:38:34 -0400
-Subject: Re: [RFC PATCH v4 3/7] phy: rockcip-pcie: reconstruct driver to
- support per-lane PHYs
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
- <1500448979-93067-4-git-send-email-shawn.lin@rock-chips.com>
- <81b03327-e720-ed51-87d1-9ac0c7a9dc0a@ti.com>
- <5497c3e0-a74e-f4ae-dd02-ba321182a9ec@rock-chips.com>
-CC: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        <linux-pci@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <c3e7f755-9c36-5cec-7598-f72c9e3cba60@ti.com>
-Date: Wed, 19 Jul 2017 15:07:50 +0530
+Received: from mail.kernel.org ([198.145.29.99]:49970 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753903AbdGJQyQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jul 2017 12:54:16 -0400
+Date: Mon, 10 Jul 2017 11:53:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joerg Roedel <jroedel@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
+        Alexander Deucher <Alexander.Deucher@amd.com>,
+        Samuel Sieb <samuel@sieb.net>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Message-ID: <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+ <20170615140421.GB25710@suse.de>
+ <20170615191545.GB12735@bhelgaas-glaptop.roam.corp.google.com>
+ <20170616162923.GE25710@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <5497c3e0-a74e-f4ae-dd02-ba321182a9ec@rock-chips.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170616162923.GE25710@suse.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On Wednesday 19 July 2017 03:06 PM, Shawn Lin wrote:
-> Hi Kishon,
+On Fri, Jun 16, 2017 at 06:29:23PM +0200, Joerg Roedel wrote:
+> Hi Bjorn,
 > 
-> On 2017/7/19 16:08, Kishon Vijay Abraham I wrote:
->> Hi Shawn,
->>
->> On Wednesday 19 July 2017 12:52 PM, Shawn Lin wrote:
->>> This patch reconstructs the whole driver to support per-lane
->>> PHYs. Note that we could also support the legacy PHY if you
->>> don't provide argument to our of_xlate.
->>
->> one comment below which I failed to notice before..
+> On Thu, Jun 15, 2017 at 02:15:45PM -0500, Bjorn Helgaas wrote:
+> > It was marked "superseded" in patchwork and thus off my radar.  I
+> > don't remember if I did that or why.  I changed it back to "New" so I
+> > won't forget about it.
 > 
-> I will fix it and respin v5.
+> Great!
 > 
-> BTW, are you fine with all these patches merged via Bjorn's
-> PCI tree in order to narrow down the timing gap for testing
-> linux-next? If yes, could you kindly ack patch 3 of V5
-> if it looks good to you? :)
+> > You mention (May 24) the original bug report.  Can you include the URL
+> > for that?
+> 
+> I think there were multiple reports, here is one I could still find:
+> 
+> 	https://lists.linuxfoundation.org/pipermail/iommu/2017-March/020836.html
+> 
+> > I admit I just don't have warm fuzzies that the problem is well
+> > understood.
+> 
+> The current understanding (without my ability to debug the hardware
+> involved) is that the GPU in the Stoney systems gets into a weird state
+> when ATS invalidations are sent too fast and stops responding to the
+> iommu.
+> 
+> The iommu then can't complete the invalidation commands and the driver
+> throws completion-wait loop timeout messages out.
 
-sure!
+I'm still confused.  Per Samuel
+(6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net):
 
-Thanks
-Kishon
+Samuel> The other patch seems to fix this issue without disabling ATS.
+Samuel> Isn't that better?
+
+and Alex
+(BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd12.prod.outlook.com):
+
+Alex> I talked to our validation team and ATS was validated on Stoney,
+Alex> so this patch is just working around something else.  The other
+Alex> patch fixes it and is a valid optimization ...
+
+I'm confused about what this "other patch" is and whether we want that
+one, this one, or both.
+
+Bjorn
