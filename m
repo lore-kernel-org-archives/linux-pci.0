@@ -1,178 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35492 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751773AbdGaUQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Jul 2017 16:16:59 -0400
-Date: Mon, 31 Jul 2017 15:16:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: Re: [PATCH v3 06/16] ntb: ensure ntb_mw_get_align() is only called
- when the link is up
-Message-ID: <20170731201650.GB9303@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-7-logang@deltatee.com>
+Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: Resizeable PCI BAR support V8
+Date: Mon, 10 Jul 2017 16:59:48 +0200
+Message-Id: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170725205753.4735-7-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 25, 2017 at 02:57:43PM -0600, Logan Gunthorpe wrote:
-> With Switchtec hardware it's impossible to get the alignment parameters
-> for a peer's memory window until the peer's driver has configured it's
+Hi everyone,
 
-s/it's/its/
+This is the eighth incarnation of this set of patches. It enables device
+drivers to resize and most likely also relocate the PCI BAR of devices 
+they manage to allow the CPU to access all of the device local memory at once.
 
-> windows. Strictly speaking, the link doesn't have to be up for this,
-> but the link being up is the only way the client can tell that
-> the otherside has been configured.
+This is very useful for GFX device drivers where the default PCI BAR is only
+about 256MB in size for compatibility reasons, but the device easily have
+multiple gigabyte of local memory.
 
-s/otherside/other side/
+Some changes since the last version:
+1. Rebased on Linus current master tree, going to rebase on 4.13-rc1 as soon as that is out.
+2. Some more documentation on how to use the new functionality in drivers.
+3. Only re-enable decoding when everything looks good.
+4. Rename the new amdgpu function to better match what it is doing.
 
-> This patch converts ntb_transport and ntb_perf to use this function after
-> the link goes up. This simplifies these clients slightly because they
-> no longer have to store the alignment parameters. It also tweaks
-> ntb_tool so that peer_mw_trans will print zero if it is run before
-> the link goes up.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> ---
->  drivers/ntb/ntb_transport.c | 20 ++++++++++----------
->  drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
->  drivers/ntb/test/ntb_tool.c |  6 +++---
->  3 files changed, 22 insertions(+), 22 deletions(-)
-> 
-> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-> index b29558ddfe95..7ed745aaa213 100644
-> --- a/drivers/ntb/ntb_transport.c
-> +++ b/drivers/ntb/ntb_transport.c
-> @@ -191,8 +191,6 @@ struct ntb_transport_qp {
->  struct ntb_transport_mw {
->  	phys_addr_t phys_addr;
->  	resource_size_t phys_size;
-> -	resource_size_t xlat_align;
-> -	resource_size_t xlat_align_size;
->  	void __iomem *vbase;
->  	size_t xlat_size;
->  	size_t buff_size;
-> @@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
->  	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
->  	struct pci_dev *pdev = nt->ndev->pdev;
->  	size_t xlat_size, buff_size;
-> +	resource_size_t xlat_align;
-> +	resource_size_t xlat_align_size;
->  	int rc;
->  
->  	if (!size)
->  		return -EINVAL;
->  
-> -	xlat_size = round_up(size, mw->xlat_align_size);
-> -	buff_size = round_up(size, mw->xlat_align);
-> +	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
-> +			      &xlat_align_size, NULL);
-> +	if (rc)
-> +		return rc;
-> +
-> +	xlat_size = round_up(size, xlat_align_size);
-> +	buff_size = round_up(size, xlat_align);
->  
->  	/* No need to re-setup */
->  	if (mw->xlat_size == xlat_size)
-> @@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
->  	 * is a requirement of the hardware. It is recommended to setup CMA
->  	 * for BAR sizes equal or greater than 4MB.
->  	 */
-> -	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
-> +	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
->  		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
->  			&mw->dma_addr);
->  		ntb_free_mw(nt, num_mw);
-> @@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
->  	for (i = 0; i < mw_count; i++) {
->  		mw = &nt->mw_vec[i];
->  
-> -		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
-> -				      &mw->xlat_align_size, NULL);
-> -		if (rc)
-> -			goto err1;
-> -
->  		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
->  					  &mw->phys_size);
->  		if (rc)
-> diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
-> index 759f772fa00c..427112cf101a 100644
-> --- a/drivers/ntb/test/ntb_perf.c
-> +++ b/drivers/ntb/test/ntb_perf.c
-> @@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
->  struct perf_mw {
->  	phys_addr_t	phys_addr;
->  	resource_size_t	phys_size;
-> -	resource_size_t	xlat_align;
-> -	resource_size_t	xlat_align_size;
->  	void __iomem	*vbase;
->  	size_t		xlat_size;
->  	size_t		buf_size;
-> @@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
->  {
->  	struct perf_mw *mw = &perf->mw;
->  	size_t xlat_size, buf_size;
-> +	resource_size_t	xlat_align;
-> +	resource_size_t	xlat_align_size;
->  	int rc;
->  
->  	if (!size)
->  		return -EINVAL;
->  
-> -	xlat_size = round_up(size, mw->xlat_align_size);
-> -	buf_size = round_up(size, mw->xlat_align);
-> +	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
-> +			      &xlat_align_size, NULL);
-> +	if (rc)
-> +		return rc;
-> +
-> +	xlat_size = round_up(size, xlat_align_size);
-> +	buf_size = round_up(size, xlat_align);
->  
->  	if (mw->xlat_size == xlat_size)
->  		return 0;
-> @@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
->  
->  	mw = &perf->mw;
->  
-> -	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
-> -			      &mw->xlat_align_size, NULL);
-> -	if (rc)
-> -		return rc;
-> -
->  	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
->  	if (rc)
->  		return rc;
-> diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-> index a69815c45ce6..91526a986caa 100644
-> --- a/drivers/ntb/test/ntb_tool.c
-> +++ b/drivers/ntb/test/ntb_tool.c
-> @@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
->  
->  	phys_addr_t base;
->  	resource_size_t mw_size;
-> -	resource_size_t align_addr;
-> -	resource_size_t align_size;
-> -	resource_size_t max_size;
-> +	resource_size_t align_addr = 0;
-> +	resource_size_t align_size = 0;
-> +	resource_size_t max_size = 0;
->  
->  	buf_size = min_t(size_t, size, 512);
->  
-> -- 
-> 2.11.0
-> 
+Bjorn what's you'r feeling on getting this into 4.14?
+
+Regards,
+Christian.
