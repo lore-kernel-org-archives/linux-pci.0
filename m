@@ -1,63 +1,86 @@
-Return-Path: <SRS0=XnOz=6I=sirena.org.uk=broonie@kernel.org>
-Return-Path: <SRS0=XnOz=6I=sirena.org.uk=broonie@kernel.org>
-Date: Wed, 5 Jul 2017 13:33:04 +0100
-From: Mark Brown <broonie@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>
-Message-ID: <20170705123304.extc5iswhwjepwyp@sirena.org.uk>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
- <20170703181128.GD4902@n2100.armlinux.org.uk>
- <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f175.google.com ([209.85.128.175]:33333 "EHLO
+        mail-wr0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752088AbdGJTMD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jul 2017 15:12:03 -0400
+Received: by mail-wr0-f175.google.com with SMTP id r103so151623819wrb.0
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jul 2017 12:12:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="fkjptutfsxnlabm5"
-In-Reply-To: <0cd65cda-9a3d-8c1b-1ee9-c48f63959140@free.fr>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
+In-Reply-To: <20170630052436.15212-1-aik@ozlabs.ru>
+References: <20170630052436.15212-1-aik@ozlabs.ru>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 10 Jul 2017 14:11:41 -0500
+Message-ID: <CAErSpo5kv+oPKt6=czZiJE5XUG8soZMuqrwsDXgRYOaznVdxzg@mail.gmail.com>
+Subject: Re: [PATCH kernel v4 0/6] vfio-pci: Add support for mmapping MSI-X table
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+[+cc linux-pci]
 
---fkjptutfsxnlabm5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On Fri, Jun 30, 2017 at 12:24 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+>
+> Here is a patchset which Yongji was working on before
+> leaving IBM LTC. Since we still want to have this functionality
+> in the kernel (DPDK is the first user), here is a rebase
+> on the current upstream.
+>
+>
+> Current vfio-pci implementation disallows to mmap the page
+> containing MSI-X table in case that users can write directly
+> to MSI-X table and generate an incorrect MSIs.
+>
+> However, this will cause some performance issue when there
+> are some critical device registers in the same page as the
+> MSI-X table. We have to handle the mmio access to these
+> registers in QEMU emulation rather than in guest.
+>
+> To solve this issue, this series allows to expose MSI-X table
+> to userspace when hardware enables the capability of interrupt
+> remapping which can ensure that a given PCI device can only
+> shoot the MSIs assigned for it. And we introduce a new bus_flags
+> PCI_BUS_FLAGS_MSI_REMAP to test this capability on PCI side
+> for different archs.
+>
+>
+> This is based on sha1
+> 3c2bfbaadff6 Linus Torvalds "Merge branch 'fixes' of git://git.armlinux.org.uk/~rmk/linux-arm".
+>
+> Please comment. Thanks.
+>
+> Changes:
+> v4:
+> * rebased on recent upstream
+> * got all 6 patches from v2 (v3 was missing some)
+>
+>
+> Alexey Kardashevskiy (1):
+>   PCI: Set PCI_BUS_FLAGS_MSI_REMAP if MSI controller enables IRQ
+>     remapping
+>
+> Yongji Xie (5):
+>   PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
+>   PCI: Set PCI_BUS_FLAGS_MSI_REMAP if IOMMU have capability of IRQ
+>     remapping
+>   iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu driver initialization
+>   pci-ioda: Set PCI_BUS_FLAGS_MSI_REMAP for IODA host bridge
+>   vfio-pci: Allow to expose MSI-X table to userspace if interrupt
+>     remapping is enabled
+>
+>  include/linux/pci.h                       |  1 +
+>  arch/powerpc/platforms/powernv/pci-ioda.c |  7 +++++++
+>  drivers/iommu/iommu.c                     |  8 ++++++++
+>  drivers/pci/probe.c                       |  8 ++++++++
+>  drivers/vfio/pci/vfio_pci.c               | 17 ++++++++++++++---
+>  drivers/vfio/pci/vfio_pci_rdwr.c          |  3 ++-
+>  6 files changed, 40 insertions(+), 4 deletions(-)
 
-On Wed, Jul 05, 2017 at 01:59:55AM +0200, Mason wrote:
-
-> Do larger SoC vendors have HW devs working closely with
-> Linux devs, to avoid these design bloopers?
-
-Yes, or just internal software teams in general - hardware designs tend
-to be a lot more usable if there's good dialogue with users about what's
-useful and what isn't.  It's going to happen at some point anyway when
-people can't get the chip working well.
-
---fkjptutfsxnlabm5
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCAAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAllc3H8ACgkQJNaLcl1U
-h9BSogf8CecwiRAi+trNsmUK16kSJeNzOtmSxMAOgn7foREKBLBqlxu/k6ZcBOTh
-axM1t1OdWTydkFfV+g0+qFX62Plbi2hrNRT7/F45WTtOaevKj4qmds7ca/A7a8Ej
-jAOeL7QveC/bY0JPZ79+MK+tf/8GsGpcJGavypTJ84/c5qcwlBICV8GuP3Cn1oWy
-scTTakHr874H1/j0tiDrz2IBtO2rI7LxAOaOJnfxUMjvBh5SpKUND9WKfr4Px9bI
-1fHezYoNml2FWX89H1ImoLFV5U6mmsrJ7u57G4AO407YDm0sin6jxlRKaHG8/D7u
-zU6DMZsIwouthZ+ECXW1hAaG+CREDQ==
-=vJlJ
------END PGP SIGNATURE-----
-
---fkjptutfsxnlabm5--
+Since this modifies drivers/pci/probe.c, it should be posted to
+linux-pci@vger.kernel.org.
