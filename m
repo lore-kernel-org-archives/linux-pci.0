@@ -1,106 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Ding Tianhong <dingtianhong@huawei.com>, Alexander Duyck
- <alexander.duyck@gmail.com>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Thu, 13 Jul 2017 00:52:23 +0000
-Message-ID: <MWHPR12MB160080C62945A101FF0718DEC8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
- <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
- <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>,
- <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
-In-Reply-To: <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "ashok.raj@intel.com" <ashok.raj@intel.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
- "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
- Michael Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "amira@mellanox.com" <amira@mellanox.com>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "David.Laight@aculab.com" <David.Laight@aculab.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:37214 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754009AbdGJPwi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jul 2017 11:52:38 -0400
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH 0/2] Workaround for uPD72020x USB3 chips
+Date: Mon, 10 Jul 2017 16:52:28 +0100
+Message-Id: <20170710155230.8622-1-marc.zyngier@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=A0 Sorry again for the delay.=A0 This time at least partially caused by a =
-Chelsio-internal Customer Support request to simply disable Relaxed Orderin=
-g entirely due to the performance issues with our 100Gb/s product and relat=
-ively recent Intel Root Complexes.  Our Customer Support people are tired o=
-f asking customers to try turning off Relaxed Ordering. (sigh)
+Ard and myself have just spent quite some time lately trying to pin
+down an issue in the DMA code which was taking the form of a PCIe USB3
+controller issuing a DMA access at some bizarre address, and being
+caught red-handed by the IOMMU.
 
-  So, first off, I've mentioned a couple of times that the current cxgb4 dr=
-iver hardwired the PCIe Capability Device Control[Relaxed Ordering Enable] =
-on.  Here's the code which does it:
+After much head scratching and most of a week-end spent on tracing the
+damn thing, I'm now convinced that the DMA code is fine, the XHCI
+driver is correct, but that the HW (a Renesas uPD720202 chip) is a
+nasty piece of work.
 
-    drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c:4657:
+The issue is as follow:
 
-    static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
-    {
-        pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_=
-EN);
-    }
+- EFI initializes the controller using physical addresses above the
+  4GB limit (this is on an arm64 box where the memory starts at
+  0x80_00000000...).
 
-This is called from the PCI Probe() routine init_one() later in that file. =
- I just wanted to make sure people knew about this.  Obviously given our cu=
-rrent very difficult thread, this would either need to be diked out or chan=
-ged or a completely different mechanism put in place.
+- The kernel takes over, sends a XHCI reset to the controller, and
+  because we have an IOMMU sitting between the controller and memory,
+  provides *virtual* addresses. Trying to make things a bit faster for
+  our controller, it issues IOVAs in the low 4GB range).
 
-  Second, just to make sure everyone's on the same page, the above simply a=
-llows the device to send TLPs with the Relaxed Ordering Attribute.  It does=
-n't cause TLPs to suddenly all be sent with RO set.  The use of Relaxed Ord=
-ering is selective.  For instance, in our hardware we can configure the RX =
-Path to use RO on Ingress Packet Data delivery to Free List Buffers, but no=
-t use RO for delivery of messages noting newly delivered Ingress Packet Dat=
-a.  Doing this allows the destination PCIe target to [potentially] optimize=
- the DMA Writes to it based on local conditions (memory controller channel =
-availability, etc.), but ensure that the message noting newly delivered Ing=
-ress Packet Data isn't processed till all of the preceding TLPs with RO set=
- containing Ingress Packet Data have been processed.  (This by the way is t=
-he essence of the AMD A1100 ARM SoC bug: its Root Complex isn't obeying tha=
-t PCIe ordering rule.)
+- Low and behold, the controller is now issuing transactions with a
+  0x80 prefix in front of our IOVA. Yes, the same prefix that was
+  programmed during the EFI configuration. IOMMU fault, not happy.
 
-  Third, as noted above, I'm getting a lot of pressure to get this addresse=
-d sooner than later, so I think that we should go with something fairly sim=
-ple along the lines that you guys are proposing and I'll stop whining about=
- the problem of needing to handle Peer-to-Peer with Relaxed Ordering while =
-not using it for deliveries to the Root Complex.  We can just wait for that=
- kettle of fish to explode on us and deal with the mess then.  (Hhmmm, the =
-mixed metaphor landed in an entirely different place than I originally inte=
-nded ... :-))
+If the kernel is hacked to only generate IOVAs that are more than
+32bit wide, the HW behaves correctly. The only way I can explain this
+behaviour is that the HW latches the top 32bit of the ERST (it is
+always the ERST IOVA that appears in my traces) in some internal
+register, and that the XHCI reset fails to clear it. Writing zero in
+the top bits is not enough to clear it either.
 
-  If we try to stick as closely to Ding's latest patch set as possible, the=
-n we can probably just add the diff to remove the enable_pcie_relaxed_order=
-ing() code in cxgb4_main.c.
+So far, the only solution we have for this lovely piece of kit is to
+force a PCI reset at probe time, which puts it right. The patches are
+pretty ugly, but that's the best I could come up with so far.
 
-Casey
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
+uPD720202 controllers.
+
+Marc Zyngier (2):
+  PCI: Implement pci_reset_function_locked
+  usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
+    controller
+
+ drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
+ drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
+ drivers/usb/host/pci-quirks.h |  1 +
+ drivers/usb/host/xhci-pci.c   |  7 +++++++
+ include/linux/pci.h           |  1 +
+ 5 files changed, 64 insertions(+)
+
+-- 
+2.11.0
