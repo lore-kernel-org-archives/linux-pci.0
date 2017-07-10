@@ -1,64 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:52040 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932439AbdGSPlZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Jul 2017 11:41:25 -0400
-Subject: Re: [PATCH 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe
- controller
-To: Varadarajan Narayanan <varada@codeaurora.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kishon@ti.com,
-        sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
-        fengguang.wu@intel.com, weiyongjun1@huawei.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        smuthayy <smuthayy@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
- <1500293043-1887-8-git-send-email-varada@codeaurora.org>
- <20170717220718.GZ20973@minitux> <20170718095814.GE32439@codeaurora.org>
- <20170718164438.GE20973@minitux> <20170719064943.GA29996@codeaurora.org>
- <81d75c74-df15-cc9d-c07c-dd6f5cc30d18@mm-sol.com>
- <20170719092905.GA13546@codeaurora.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <bc243fc5-faa8-e64c-7a1e-6d1140a2e3ba@mm-sol.com>
-Date: Wed, 19 Jul 2017 18:41:21 +0300
+Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v8 4/6] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v4
+Date: Mon, 10 Jul 2017 16:59:52 +0200
+Message-Id: <1499698794-1718-5-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
+References: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <20170719092905.GA13546@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Christian König <christian.koenig@amd.com>
 
-On 07/19/2017 12:29 PM, Varadarajan Narayanan wrote:
-> Stan,
-> 
+Most BIOS don't enable this because of compatibility reasons.
 
-<cut>
+Manually enable a 64bit BAR of 64GB size so that we have
+enough room for PCI devices.
 
->> That's nice, but I think we need the Synopsys IP versions too, can you
->> provide such an information and after that we can decide how the names
->> should look like.
-> 
-> Sorry, I posted v2 before I saw this e-mail. Will post v3 based
-> on what naming style is decided.
-> 
-> The SoCs, qcom_pcie_ops version, the block IP version and
-> Synopsys IP versions are as follows.
-> 
-> 	ipq8064 - v0 - 2.1.0 - 4.01a
-> 	apq8064 - v0 - 2.1.0 - 4.01a
-> 	apq8084 - v1 - 1.0.0 - 4.11a
-> 	msm8996 - v2 - 2.3.2 - 4.21a
-> 	ipq4019 - v3 - 2.4.0 - 4.20a
-> 	ipq8074 - v4 - 2.3.3 - 4.30a
+v2: style cleanups, increase size, add resource name, set correct flags,
+    print message that windows was added
+v3: add defines for all the magic numbers, style cleanups
+v4: add some comment that the BIOS should actually allow this using
+    _PRS and _SRS.
 
-I'm not sure, with Synopsys versions the mess becomes bigger.
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ arch/x86/pci/fixup.c | 76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
 
-So I tend to agree with qcom versions (because this driver taking care
-of qcom wrappers over Synopsys IP) plus comments about Synopsys version
-used for this particular SoC, just for completeness.
-
-
-regards,
-Stan
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 11e4074..0f4088b 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -618,3 +618,79 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+ 		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
++
++#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
++#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
++#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
++#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
++
++#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
++#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
++
++#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
++#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
++#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
++#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
++
++/*
++ * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
++ * configuring host bridge windows using the _PRS and _SRS methods.
++ *
++ * But this is rarely implemented, so we manually enable a large 64bit BAR for
++ * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
++ */
++static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
++{
++	struct resource *res, *conflict;
++	u32 base, limit, high;
++	unsigned i;
++
++	for (i = 0; i < 8; ++i) {
++		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
++		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
++
++		/* Is this slot free? */
++		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
++			      AMD_141b_MMIO_BASE_WE_MASK)))
++			break;
++
++		base >>= 8;
++		base |= high << 24;
++
++		/* Abort if a slot already configures a 64bit BAR. */
++		if (base > 0x10000)
++			return;
++	}
++	if (i == 8)
++		return;
++
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
++		return;
++
++	res->name = "PCI Bus 0000:00";
++	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
++		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
++	res->start = 0x100000000ull;
++	res->end = 0xfd00000000ull - 1;
++
++	/* Just grab the free area behind system memory for this */
++	while ((conflict = request_resource_conflict(&iomem_resource, res)))
++		res->start = conflict->end + 1;
++
++	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
++
++	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
++		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
++	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
++	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
++		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
++		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
++
++	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
++	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
++	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
++
++	pci_bus_add_resource(dev->bus, res, 0);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+-- 
+2.7.4
