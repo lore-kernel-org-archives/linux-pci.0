@@ -1,88 +1,47 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
-Date: Fri, 21 Jul 2017 23:02:56 +0200
-Message-ID: <2856428.3eiZuFhSvi@aspire.rjw.lan>
-In-Reply-To: <2174120.aKGTTYRMVV@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <CAHp75VeQpmf5z1p9an2bvJDkAGeOxFyXz+VWk7OibNt+-9VMDw@mail.gmail.com> <2174120.aKGTTYRMVV@aspire.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 10 Jul 2017 10:43:44 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Rob Herring <robh@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH] Documentation/devicetree: fix dead links to PCI/OF specs
+Message-ID: <20170710174343.GA136482@google.com>
+References: <20170707004323.22550-1-briannorris@chromium.org>
+ <20170710143313.xfa7ezbgj67clkt3@rob-hp-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170710143313.xfa7ezbgj67clkt3@rob-hp-laptop>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, July 21, 2017 10:44:30 PM Rafael J. Wysocki wrote:
-> On Friday, July 21, 2017 06:45:03 PM Andy Shevchenko wrote:
-> > On Fri, Jul 21, 2017 at 3:42 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+On Mon, Jul 10, 2017 at 09:33:13AM -0500, Rob Herring wrote:
+> On Thu, Jul 06, 2017 at 05:43:23PM -0700, Brian Norris wrote:
+> > www.firmware.org doesn't resolve for me. I found these equivalent URLs
+> > by taking the redirects from the previous (openfirmware.org) URLs, as
+> > seen before commit f517256a6867 ("Documentation/devicetree: Update PCI
+> > Device Tree bindings") updated them.
 > > 
-> > > The acpi_pci_propagate_wakeup() routine is there to handle cases in
-> > > which PCI bridges (or PCIe ports) are expected to signal wakeup
-> > > for devices below them, but currently it doesn't do that correctly.
-> > >
-> > > The problem is that acpi_pci_propagate_wakeup() uses
-> > > acpi_pm_set_device_wakeup() for bridges and if that routine is
-> > > called for multiple times to disable wakeup for the same device,
-> > > it will disable it on the first invocation and the next calls
-> > > will have no effect (it works analogously when called to enable
-> > > wakeup, but that is not a problem).
-> > >
-> > > Now, say acpi_pci_propagate_wakeup() has been called for two
-> > > different devices under the same bridge and it has called
-> > > acpi_pm_set_device_wakeup() for that bridge each time.  The
-> > > bridge is now enabled to generate wakeup signals.  Next,
-> > > suppose that one of the devices below it resumes and
-> > > acpi_pci_propagate_wakeup() is called to disable wakeup for that
-> > > device.  It will then call acpi_pm_set_device_wakeup() for the bridge
-> > > and that will effectively disable remote wakeup for all devices under
-> > > it even though some of them may still be suspended and remote wakeup
-> > > may be expected to work for them.
-> > >
-> > > To address this (arguably theoretical) issue, allow
-> > > wakeup.enable_count under struct acpi_device to grow beyond 1 in
-> > > certain situations.  In particular, allow that to happen in
-> > > acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
-> > > for PCI bridges, so that wakeup is actually disabled for the
-> > > bridge when all devices under it resume and not when just one
-> > > of them does that.
-> > 
-> > > -       if (wakeup->enable_count > 0)
-> > > -               goto out;
-> > > +       if (wakeup->enable_count > 0) {
-> > > +               if (wakeup->enable_count < max_count)
-> > > +                       goto inc;
-> > > +               else
-> > > +                       goto out;
-> > > +       }
-> > 
-> > Wouldn't be simpler
+> > Signed-off-by: Brian Norris <briannorris@chromium.org>
+> > ---
+> > This is my best attempt at a resolution. I'm not sure what firmware.org is or
+> > if its owner is even legit. It does seem like openfirmware.info is a proper
+> > successor to openfirmware.org, and it's registered to a coreboot dev.
 > 
-> I'm not really sure what you mean.
-> 
-> In general, ->
-> 
-> >     if (wakeup->enable_count >= max_count)
-> >       goto out;
-> 
-> -> this is unlikely and ->>
-> 
-> >     if (wakeup->enable_count > 0)
-> >       goto inc;
-> 
-> ->> this isn't.
-> 
-> Why would checking an unlikely condition before a likely one covering it
-> ever be better?
+> This site doesn't seem to be complete. There was still a complete mirror 
+> (matching playground.sun.com) at one point, but I can't seem to find it 
+> now. Fortunately, I had archived off the whole mirror with the intention 
+> of putting it on devicetree.org. Let me get moving on that.
 
-OK, the common case is max_cout == 1 and it that case
-enable_count >= max_count is equivalent to enable_count > 0,
-so I guess fair enough.
+I don't really know what "complete" is; I just want my URLs to point
+somewhere useful :) So whatever suits you best. At least these links
+correctly have titles / reference numbers included alongside, so I can
+search for the correct thing myself.
 
-Thanks,
-Rafael
+BTW, I think I missed some other bad links in the tree. v4.12 release
+still points to these:
 
+origin/master:Documentation/devicetree/bindings/usb/usb-device.txt:5:http://www.firmware.org/1275/bindings/usb/usb-1_0.ps
+origin/master:Documentation/devicetree/booting-without-of.txt:1285:<http://www.openfirmware.org/ofwg/practice/>
+
+Regards,
+Brian
