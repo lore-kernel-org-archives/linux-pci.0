@@ -1,167 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sun, 2 Jul 2017 16:19:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for
- bios32 host controllers
-Message-ID: <20170702211950.GD18324@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
- <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
- <20170701140629.GC8977@red-moon>
+Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org
+Subject: [PATCH v8 1/6] PCI: add a define for the PCI resource type mask v2
+Date: Mon, 10 Jul 2017 16:59:49 +0200
+Message-Id: <1499698794-1718-2-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
+References: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <20170701140629.GC8977@red-moon>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
- Linus Walleij <linus.walleij@linaro.org>, Jason Cooper <jason@lakedaemon.net>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, bhelgaas@google.com,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 01, 2017 at 03:06:30PM +0100, Lorenzo Pieralisi wrote:
-> Hi Bjorn,
-> 
-> On Thu, Jun 08, 2017 at 03:13:29PM +0100, Lorenzo Pieralisi wrote:
-> > Legacy PCI host controllers (ie host controllers that set-up the PCI bus
-> > through the ARM pci_common_init() API) are currently relying on
-> > pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
-> > in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
-> > given system some of which may well be enabled by the time
-> > pci_fixup_irqs() is called (ie a system with multiple host controllers).
-> > With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
-> > possible to assign IRQs for all devices originating from a PCI host
-> > bridge at probe time; this is implemented through pci_assign_irq() that
-> > relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
-> > given device.
-> > 
-> > The benefits this brings are twofold:
-> > 
-> > - the IRQ for a device is assigned once at probe time
-> > - the IRQ assignment works also for hotplugged devices
-> > 
-> > Remove pci_fixup_irqs() call from bios32 code and rely on
-> > pci_assign_irq() to carry out the IRQ mapping at device probe
-> > time.
-> > 
-> > The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
-> > set-up in the struct pci_host_bridge created in the bios32
-> > pcibios_init_hw() function and mach-* code paths (for PCI mach
-> > implementations that require a specific struct hw_pci.(*scan) function
-> > callback).
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Jason Cooper <jason@lakedaemon.net>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Russell King <linux@armlinux.org.uk>
-> > Cc: Andrew Lunn <andrew@lunn.ch>
-> > ---
-> >  arch/arm/kernel/bios32.c    |  4 ++--
-> >  arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
-> >  arch/arm/mach-iop13xx/pci.c |  2 ++
-> >  arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
-> >  4 files changed, 29 insertions(+), 23 deletions(-)
-> 
-> As I mentioned to you, this patch is incomplete and needs an upgrade
-> (ie I misread how Orion and the gazillions board file that go with
-> it to map irqs - apologies but it is very hard to untangle).
-> 
-> I am inlining below an incremental patch to be folded in commit:
-> 
-> feaec00e757a ("ARM/PCI: Remove pci_fixup_irqs() call for bios32 host
-> controllers")
-> 
-> in your pci/irq-fixups branch, or if you prefer I can send you the
-> resulting squashed-in patch to replace this one, as you prefer.
+From: Christian König <christian.koenig@amd.com>
 
-Thanks, I folded this into pci/irq-fixups.  The resulting patch is
-merely this:
+We use this mask multiple times in the bus setup.
 
-commit 16508469c0f3198a63923aaec08efa1c63f5fbcc
-Author: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Date:   Wed Jun 28 15:14:04 2017 -0500
+v2: fix some style nit picks
 
-    ARM/PCI: Remove pci_fixup_irqs() call for bios32 host controllers
-    
-    Legacy PCI host controllers (ie host controllers that set-up the PCI bus
-    through the ARM pci_common_init() API) are currently relying on
-    pci_fixup_irqs() to assign legacy PCI irqs to devices.  This is not ideal
-    in that pci_fixup_irqs() assigns IRQs for all PCI devices present in a given
-    system some of which may well be enabled by the time pci_fixup_irqs() is
-    called (ie a system with multiple host controllers).  With the introduction
-    of struct pci_host_bridge.(*map_irq) pointer it is possible to assign IRQs
-    for all devices originating from a PCI host bridge at probe time; this is
-    implemented through pci_assign_irq() that relies on the struct
-    pci_host_bridge.map_irq pointer to map IRQ for a given device.
-    
-    The benefits this brings are twofold:
-    
-      - the IRQ for a device is assigned once at probe time
-      - the IRQ assignment works also for hotplugged devices
-    
-    Remove pci_fixup_irqs() call from bios32 code and rely on pci_assign_irq()
-    to carry out the IRQ mapping at device probe time.
-    
-    The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are set-up
-    in the struct pci_host_bridge created in the bios32 pcibios_init_hw()
-    function and mach-* code paths (for PCI mach implementations that require a
-    specific struct hw_pci.(*scan) function callback).
-    
-    Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-    [bhelgaas: folded in fixes from Lorenzo:
-    http://lkml.kernel.org/r/20170701140629.GC8977@red-moon]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Cc: Jason Cooper <jason@lakedaemon.net>
-    Cc: Russell King <linux@armlinux.org.uk>
-    Cc: Andrew Lunn <andrew@lunn.ch>
+Signed-off-by: Christian König <christian.koenig@amd.com>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+---
+ drivers/pci/pci.h       |  3 +++
+ drivers/pci/setup-bus.c | 12 +++---------
+ 2 files changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 4c7621ac389c..56dc1a3a33b4 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -484,6 +484,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
- 				break;
- 			}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 03e3d02..136a0f9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -4,6 +4,9 @@
+ #define PCI_FIND_CAP_TTL	48
  
-+			bridge->map_irq = pcibios_map_irq;
-+			bridge->swizzle_irq = pcibios_swizzle;
-+
- 			if (hw->scan)
- 				ret = hw->scan(nr, bridge);
- 			else {
-@@ -530,8 +533,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
- 	if (hw->postinit)
- 		hw->postinit();
+ #define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
++#define PCI_RES_TYPE_MASK \
++	(IORESOURCE_IO | IORESOURCE_MEM | IORESOURCE_PREFETCH |\
++	 IORESOURCE_MEM_64)
  
--	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
--
- 	list_for_each_entry(sys, &head, node) {
- 		struct pci_bus *bus = sys->bus;
+ extern const unsigned char pcie_link_speed[];
  
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 958da7d..37450d9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1523,8 +1523,6 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ {
+ 	struct pci_dev *dev = bus->self;
+ 	struct resource *r;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	unsigned old_flags = 0;
+ 	struct resource *b_res;
+ 	int idx = 1;
+@@ -1567,7 +1565,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 */
+ 	release_child_resources(r);
+ 	if (!release_resource(r)) {
+-		type = old_flags = r->flags & type_mask;
++		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
+ 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+ 					PCI_BRIDGE_RESOURCES + idx, r);
+ 		/* keep the old size */
+@@ -1758,8 +1756,6 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	enum release_type rel_type = leaf_only;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
+ 
+@@ -1818,7 +1814,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	 */
+ 	list_for_each_entry(fail_res, &fail_head, list)
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+-						 fail_res->flags & type_mask,
++						 fail_res->flags & PCI_RES_TYPE_MASK,
+ 						 rel_type);
+ 
+ 	/* restore size and flags */
+@@ -1862,8 +1858,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+@@ -1889,7 +1883,7 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	 */
+ 	list_for_each_entry(fail_res, &fail_head, list)
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+-						 fail_res->flags & type_mask,
++						 fail_res->flags & PCI_RES_TYPE_MASK,
+ 						 whole_subtree);
+ 
+ 	/* restore size and flags */
+-- 
+2.7.4
