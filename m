@@ -1,148 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:07 -0600
-Message-Id: <20170718160409.6493-15-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 14/16] switchtec_ntb: implement scratchpad registers
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42280 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754641AbdGJVCO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Jul 2017 17:02:14 -0400
+Date: Mon, 10 Jul 2017 16:02:10 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI; trivial fix for the comment of pci_vpd_srdt_{size,
+ tag}
+Message-ID: <20170710210209.GC5610@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499134595-46917-1-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1499134595-46917-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Seeing there is no dedicated hardware for this, we simply add
-these as entries in the shared memory window. Thus, we could support
-any number of them but 128 seems like enough, for now.
+On Tue, Jul 04, 2017 at 10:16:35AM +0800, Shawn Lin wrote:
+> The comment doesn't match the argument, so fix them.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 73 insertions(+), 2 deletions(-)
+Applied to pci/trivial for v4.14, thanks!
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 0bd9c8cae688..14f8ff654b57 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -67,6 +67,7 @@ struct shared_mw {
- 	u32 link_sta;
- 	u32 partition_id;
- 	u64 mw_sizes[MAX_MWS];
-+	u32 spad[128];
- };
- 
- #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-@@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
- 
- static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return ARRAY_SIZE(sndev->self_shared->spad);
- }
- 
- static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
-+		return 0;
-+
-+	if (!sndev->self_shared)
-+		return 0;
-+
-+	return sndev->self_shared->spad[idx];
- }
- 
- static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
-+		return -EINVAL;
-+
-+	if (!sndev->self_shared)
-+		return -EIO;
-+
-+	sndev->self_shared->spad[idx] = val;
-+
- 	return 0;
- }
- 
-+static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
-+					int sidx)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
-+		return 0;
-+
-+	if (!sndev->peer_shared)
-+		return 0;
-+
-+	return ioread32(&sndev->peer_shared->spad[sidx]);
-+}
-+
- static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
- 					 int sidx, u32 val)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
-+		return -EINVAL;
-+
-+	if (!sndev->peer_shared)
-+		return -EIO;
-+
-+	iowrite32(val, &sndev->peer_shared->spad[sidx]);
-+
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
-+					int sidx, phys_addr_t *spad_addr)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	unsigned long offset;
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
-+		(unsigned long)sndev->stdev->mmio;
-+
-+	if (spad_addr)
-+		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
-+
- 	return 0;
- }
- 
-@@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
- 	.spad_count		= switchtec_ntb_spad_count,
- 	.spad_read		= switchtec_ntb_spad_read,
- 	.spad_write		= switchtec_ntb_spad_write,
-+	.peer_spad_read		= switchtec_ntb_peer_spad_read,
- 	.peer_spad_write	= switchtec_ntb_peer_spad_write,
-+	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
- };
- 
- static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
--- 
-2.11.0
+> ---
+> 
+>  include/linux/pci.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index bd68ed1..a360315 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2066,7 +2066,7 @@ static inline u16 pci_vpd_lrdt_tag(const u8 *lrdt)
+>  
+>  /**
+>   * pci_vpd_srdt_size - Extracts the Small Resource Data Type length
+> - * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
+> + * @srdt: Pointer to the beginning of the Small Resource Data Type tag
+>   *
+>   * Returns the extracted Small Resource Data Type length.
+>   */
+> @@ -2077,7 +2077,7 @@ static inline u8 pci_vpd_srdt_size(const u8 *srdt)
+>  
+>  /**
+>   * pci_vpd_srdt_tag - Extracts the Small Resource Data Type Tag Item
+> - * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
+> + * @srdt: Pointer to the beginning of the Small Resource Data Type tag
+>   *
+>   * Returns the extracted Small Resource Data Type Tag Item.
+>   */
+> -- 
+> 1.9.1
+> 
+> 
