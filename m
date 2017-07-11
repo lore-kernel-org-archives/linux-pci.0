@@ -1,258 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54836 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750927AbdGMDTJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Jul 2017 23:19:09 -0400
-Date: Wed, 12 Jul 2017 22:19:06 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 11 Jul 2017 15:39:57 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/pcieport: move EH methods to struct
- pcie_port_service_driver
-Message-ID: <20170713031906.GE4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170619180458.28377-1-hch@lst.de>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 1/2] PCI: Add Extended Tags quirk for Broadcom HT2100
+ Root Port
+Message-ID: <20170711203957.GB14614@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499786735-25782-1-git-send-email-okaya@codeaurora.org>
+ <20170711195853.GA14614@bhelgaas-glaptop.roam.corp.google.com>
+ <ae4dca5b-30cf-3a14-1707-380a3660badf@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170619180458.28377-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ae4dca5b-30cf-3a14-1707-380a3660badf@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, wim.ten.have@oracle.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jun 19, 2017 at 08:04:58PM +0200, Christoph Hellwig wrote:
-> And avoid the detour throught the mostly unused pci_error_handlers
-> structure.
+On Tue, Jul 11, 2017 at 04:16:23PM -0400, Sinan Kaya wrote:
+> On 7/11/2017 3:58 PM, Bjorn Helgaas wrote:
+> > I'm trying to avoid pci_walk_bus() because it's such a minefield as
+> > far as hot-added devices.  I don't think we can avoid one in the
+> > quirk, to turn off extended tags for any devices we've already found,
+> > but I think we *can* avoid adding more i
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Jike Song asked what if you attach a PCIe endpoint that has an extended
+> tags quirk to think about the reverse direction. That's why, I was walking
+> the entire bus. 
 
-Applied to pci/aer for v4.14, thanks!
+My proposal handles endpoints, too.  The pci_walk_bus() in the quirk
+handles all devices we've already enumerated, and all devices we'll
+enumerate in the future are handled in pci_configure_device().
 
-> ---
+> We can maybe hold onto putting such a generic code until such a device
+> with quirk actually shows up.
 > 
-> Note: this is based on the pci/virtualization branch.
+> I'll pull your suggestion into a patch, give it a try and then post the
+> next version.
 > 
->  drivers/pci/pcie/aer/aerdrv.c  |  25 +---------
->  drivers/pci/pcie/portdrv_pci.c | 105 +++--------------------------------------
->  include/linux/pcieport_if.h    |   4 +-
->  3 files changed, 9 insertions(+), 125 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
-> index dea186a9d6b6..6ff5f5b4f5e6 100644
-> --- a/drivers/pci/pcie/aer/aerdrv.c
-> +++ b/drivers/pci/pcie/aer/aerdrv.c
-> @@ -32,16 +32,9 @@
->  
->  static int aer_probe(struct pcie_device *dev);
->  static void aer_remove(struct pcie_device *dev);
-> -static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
-> -	enum pci_channel_state error);
->  static void aer_error_resume(struct pci_dev *dev);
->  static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
->  
-> -static const struct pci_error_handlers aer_error_handlers = {
-> -	.error_detected = aer_error_detected,
-> -	.resume		= aer_error_resume,
-> -};
-> -
->  static struct pcie_port_service_driver aerdriver = {
->  	.name		= "aer",
->  	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-> @@ -49,9 +42,7 @@ static struct pcie_port_service_driver aerdriver = {
->  
->  	.probe		= aer_probe,
->  	.remove		= aer_remove,
-> -
-> -	.err_handler	= &aer_error_handlers,
-> -
-> +	.error_resume	= aer_error_resume,
->  	.reset_link	= aer_root_reset,
->  };
->  
-> @@ -350,20 +341,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
->  }
->  
->  /**
-> - * aer_error_detected - update severity status
-> - * @dev: pointer to Root Port's pci_dev data structure
-> - * @error: error severity being notified by port bus
-> - *
-> - * Invoked by Port Bus driver during error recovery.
-> - */
-> -static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
-> -			enum pci_channel_state error)
-> -{
-> -	/* Root Port has no impact. Always recovers. */
-> -	return PCI_ERS_RESULT_CAN_RECOVER;
-> -}
-> -
-> -/**
->   * aer_error_resume - clean up corresponding error status bits
->   * @dev: pointer to Root Port's pci_dev data structure
->   *
-> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
-> index 8aa3f14bc87d..be635f017756 100644
-> --- a/drivers/pci/pcie/portdrv_pci.c
-> +++ b/drivers/pci/pcie/portdrv_pci.c
-> @@ -21,7 +21,6 @@
->  
->  #include "../pci.h"
->  #include "portdrv.h"
-> -#include "aer/aerdrv.h"
->  
->  /* If this switch is set, PCIe port native services should not be enabled. */
->  bool pcie_ports_disabled;
-> @@ -177,108 +176,20 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
->  	pcie_port_device_remove(dev);
->  }
->  
-> -static int error_detected_iter(struct device *device, void *data)
-> -{
-> -	struct pcie_device *pcie_device;
-> -	struct pcie_port_service_driver *driver;
-> -	struct aer_broadcast_data *result_data;
-> -	pci_ers_result_t status;
-> -
-> -	result_data = (struct aer_broadcast_data *) data;
-> -
-> -	if (device->bus == &pcie_port_bus_type && device->driver) {
-> -		driver = to_service_driver(device->driver);
-> -		if (!driver ||
-> -			!driver->err_handler ||
-> -			!driver->err_handler->error_detected)
-> -			return 0;
-> -
-> -		pcie_device = to_pcie_device(device);
-> -
-> -		/* Forward error detected message to service drivers */
-> -		status = driver->err_handler->error_detected(
-> -			pcie_device->port,
-> -			result_data->state);
-> -		result_data->result =
-> -			merge_result(result_data->result, status);
-> -	}
-> -
-> -	return 0;
-> -}
-> -
->  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
->  					enum pci_channel_state error)
->  {
-> -	struct aer_broadcast_data data = {error, PCI_ERS_RESULT_CAN_RECOVER};
-> -
-> -	/* get true return value from &data */
-> -	device_for_each_child(&dev->dev, &data, error_detected_iter);
-> -	return data.result;
-> -}
-> -
-> -static int mmio_enabled_iter(struct device *device, void *data)
-> -{
-> -	struct pcie_device *pcie_device;
-> -	struct pcie_port_service_driver *driver;
-> -	pci_ers_result_t status, *result;
-> -
-> -	result = (pci_ers_result_t *) data;
-> -
-> -	if (device->bus == &pcie_port_bus_type && device->driver) {
-> -		driver = to_service_driver(device->driver);
-> -		if (driver &&
-> -			driver->err_handler &&
-> -			driver->err_handler->mmio_enabled) {
-> -			pcie_device = to_pcie_device(device);
-> -
-> -			/* Forward error message to service drivers */
-> -			status = driver->err_handler->mmio_enabled(
-> -					pcie_device->port);
-> -			*result = merge_result(*result, status);
-> -		}
-> -	}
-> -
-> -	return 0;
-> +	/* Root Port has no impact. Always recovers. */
-> +	return PCI_ERS_RESULT_CAN_RECOVER;
->  }
->  
->  static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
->  {
-> -	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
-> -
-> -	/* get true return value from &status */
-> -	device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
-> -	return status;
-> -}
-> -
-> -static int slot_reset_iter(struct device *device, void *data)
-> -{
-> -	struct pcie_device *pcie_device;
-> -	struct pcie_port_service_driver *driver;
-> -	pci_ers_result_t status, *result;
-> -
-> -	result = (pci_ers_result_t *) data;
-> -
-> -	if (device->bus == &pcie_port_bus_type && device->driver) {
-> -		driver = to_service_driver(device->driver);
-> -		if (driver &&
-> -			driver->err_handler &&
-> -			driver->err_handler->slot_reset) {
-> -			pcie_device = to_pcie_device(device);
-> -
-> -			/* Forward error message to service drivers */
-> -			status = driver->err_handler->slot_reset(
-> -					pcie_device->port);
-> -			*result = merge_result(*result, status);
-> -		}
-> -	}
-> -
-> -	return 0;
-> +	return PCI_ERS_RESULT_RECOVERED;
->  }
->  
->  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->  {
-> -	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
-> -
->  	/* If fatal, restore cfg space for possible link reset at upstream */
->  	if (dev->error_state == pci_channel_io_frozen) {
->  		dev->state_saved = true;
-> @@ -287,9 +198,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
->  		pci_enable_pcie_error_reporting(dev);
->  	}
->  
-> -	/* get true return value from &status */
-> -	device_for_each_child(&dev->dev, &status, slot_reset_iter);
-> -	return status;
-> +	return PCI_ERS_RESULT_RECOVERED;
->  }
->  
->  static int resume_iter(struct device *device, void *data)
-> @@ -299,13 +208,11 @@ static int resume_iter(struct device *device, void *data)
->  
->  	if (device->bus == &pcie_port_bus_type && device->driver) {
->  		driver = to_service_driver(device->driver);
-> -		if (driver &&
-> -			driver->err_handler &&
-> -			driver->err_handler->resume) {
-> +		if (driver && driver->error_resume) {
->  			pcie_device = to_pcie_device(device);
->  
->  			/* Forward error message to service drivers */
-> -			driver->err_handler->resume(pcie_device->port);
-> +			driver->error_resume(pcie_device->port);
->  		}
->  	}
->  
-> diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
-> index afcd130ab3a9..18edc651c070 100644
-> --- a/include/linux/pcieport_if.h
-> +++ b/include/linux/pcieport_if.h
-> @@ -50,8 +50,8 @@ struct pcie_port_service_driver {
->  	int (*suspend) (struct pcie_device *dev);
->  	int (*resume) (struct pcie_device *dev);
->  
-> -	/* Service Error Recovery Handler */
-> -	const struct pci_error_handlers *err_handler;
-> +	/* Device driver may resume normal operations */
-> +	void (*error_resume)(struct pci_dev *dev);
->  
->  	/* Link Reset Capability - AER service driver specific */
->  	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
 > -- 
-> 2.11.0
-> 
+> Sinan Kaya
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
