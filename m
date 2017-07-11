@@ -1,295 +1,133 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:44869 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753803AbdGSJ5A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:57:00 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 3/7] phy: rockcip-pcie: reconstruct driver to support per-lane PHYs
-Date: Wed, 19 Jul 2017 17:55:14 +0800
-Message-Id: <1500458118-139042-4-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=G6Vb=6O=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=G6Vb=6O=gmail.com=alexander.duyck@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+ <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
+ <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com> <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Tue, 11 Jul 2017 13:33:15 -0700
+Message-ID: <CAKgT0UfZ59Tx6D2+8xOqy=NYewJimXqpEamWm9jdDmKEREUXnw@mail.gmail.com>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com" <ashok.raj@intel.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
+	Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch reconstructs the whole driver to support per-lane
-PHYs. Note that we could also support the legacy PHY if you
-don't provide argument to our of_xlate.
+On Mon, Jul 10, 2017 at 5:01 PM, Casey Leedom <leedom@chelsio.com> wrote:
+>
+> Hey Alexander,
+>
+>   Okay, I understand your point regarding the "most likely scenario" being
+> TLPs directed upstream to the Root Complex.  But I'd still like to make sure
+> that we have an agreed upon API/methodology for doing Peer-to-Peer with
+> Relaxed Ordering and no Relaxed Ordering to the Root Complex.  I don't see
+> how the proposed APIs can be used in that fashion.
+>
+>   Right now the proposed change for cxgb4 is for it to test its own PCIe
+> Capability Device Control[Relaxed Ordering Enable] in order to use that
+> information to program the Chelsio Hardware to emit/not emit upstream TLPs
+> with the Relaxed Ordering Attribute set.  But if we're going to have the
+> mixed mode situation I describe, the PCIe Capability Device Control[Relaxed
+> Ordering Enable] will have to be set which means that we'll be programming
+> the Chelsio Hardware to send upstream TLPs with Relaxed Ordering Enable to
+> the Root Complex which is what we were trying to avoid in the first place ...
+>
+>   [[ And, as I noted on Friday evening, the currect cxgb4 Driver hardwires
+>      the Relaxed Ordering Enable on early dureing device probe, so that
+>      would minimally need to be addressed even if we decide that we don't
+>      ever want to support mixed mode Relaxed Ordering. ]]
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+So when you say "hardwires the Relaxed Ordering Enable" do you mean it
+cannot be changed by software, or are you saying the firmware is just
+setting the bit? I just want to make sure the change even works.
 
-Changes in v5:
-- don't create more number of phys if it's legacy PHY model
+Really what I was trying to get at is the Relaxed Ordering Enable bit
+doesn't have to stay as 0 if it is cleared due to the root complex not
+supporting it. If you have a device that is smart enough to be able to
+distinguish between different destinations and can change the TLPs
+depending on where they are routed then the driver should feel free to
+re-enable the relaxed ordering bit itself and do whatever it wants.
+The idea though is that in most cases it will probably be enabled by
+default since most firmwares default to that if I am not mistaken. If
+we disable it, then it is up to the drivers to figure out if they need
+to come up with a workaround.
 
-Changes in v4: None
-Changes in v3:
-- remove unnecessary forward declaration
-- keep mutex inside struct rockchip_pcie_phy
-- fix wrong check of args number
-- move de-idle lanes after deasserting the reset
+>   We need some method of telling the Chelsio Driver that it should/shouldn't
+> use Relaxed Ordering with TLPs directed at the Root Complex.  And the same
+> is true for a Peer PCIe Device.
 
-Changes in v2:
-- deprecate legacy PHY model
-- improve rockchip_pcie_phy_of_xlate
-- fix wrong calculation of pwr_cnt and add new init_cnt
-- add internal locking
-- introduce per-lane data to simply the code
+Well my thought for now is to take this in baby steps. Looking over
+the code I might suggest that Ding just drops patch 3 and just focuses
+on the first two patches for now. Patch 3 doesn't do anything from the
+sounds of it since the Relaxed Ordering Enable being cleared will
+cause the TLPs to already not set the relaxed ordering bit, do I have
+that right?
 
- drivers/phy/rockchip/phy-rockchip-pcie.c | 132 +++++++++++++++++++++++++++----
- 1 file changed, 118 insertions(+), 14 deletions(-)
+The main thing Ding cared about is making the ixgbe driver behave more
+like the cxgb4 driver in that he wanted to have us enable relaxed
+ordering by default which right now we were only doing for the SPARC
+platforms. As such we may want to look at changing patch 3 to instead
+strip the code in ixgbe so that it is enabled to use Relaxed Ordering
+by default and then let the configuration space determine if we use it
+or not.
 
-diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
-index 6904633..550499e 100644
---- a/drivers/phy/rockchip/phy-rockchip-pcie.c
-+++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
-@@ -73,10 +73,39 @@ struct rockchip_pcie_data {
- struct rockchip_pcie_phy {
- 	struct rockchip_pcie_data *phy_data;
- 	struct regmap *reg_base;
-+	struct phy_pcie_instance {
-+		struct phy *phy;
-+		u32 index;
-+	} phys[PHY_MAX_LANE_NUM];
-+	struct mutex pcie_mutex;
- 	struct reset_control *phy_rst;
- 	struct clk *clk_pciephy_ref;
-+	int pwr_cnt;
-+	int init_cnt;
- };
- 
-+static inline
-+struct rockchip_pcie_phy *to_pcie_phy(struct phy_pcie_instance *inst)
-+{
-+	return container_of(inst, struct rockchip_pcie_phy,
-+					phys[inst->index]);
-+}
-+
-+static struct phy *rockchip_pcie_phy_of_xlate(struct device *dev,
-+					      struct of_phandle_args *args)
-+{
-+	struct rockchip_pcie_phy *rk_phy = dev_get_drvdata(dev);
-+
-+	if (args->args_count == 0)
-+		return rk_phy->phys[0].phy;
-+
-+	if (WARN_ON(args->args[0] >= PHY_MAX_LANE_NUM))
-+		return ERR_PTR(-ENODEV);
-+
-+	return rk_phy->phys[args->args[0]].phy;
-+}
-+
-+
- static inline void phy_wr_cfg(struct rockchip_pcie_phy *rk_phy,
- 			      u32 addr, u32 data)
- {
-@@ -116,29 +145,59 @@ static inline u32 phy_rd_cfg(struct rockchip_pcie_phy *rk_phy,
- 
- static int rockchip_pcie_phy_power_off(struct phy *phy)
- {
--	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
-+	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
-+	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
- 	int err = 0;
- 
-+	mutex_lock(&rk_phy->pcie_mutex);
-+
-+	regmap_write(rk_phy->reg_base,
-+		     rk_phy->phy_data->pcie_laneoff,
-+		     HIWORD_UPDATE(PHY_LANE_IDLE_OFF,
-+				   PHY_LANE_IDLE_MASK,
-+				   PHY_LANE_IDLE_A_SHIFT + inst->index));
-+
-+	if (--rk_phy->pwr_cnt)
-+		goto err_out;
-+
- 	err = reset_control_assert(rk_phy->phy_rst);
- 	if (err) {
- 		dev_err(&phy->dev, "assert phy_rst err %d\n", err);
--		return err;
-+		goto err_restore;
- 	}
- 
-+err_out:
-+	mutex_unlock(&rk_phy->pcie_mutex);
- 	return 0;
-+
-+err_restore:
-+	++rk_phy->pwr_cnt;
-+	regmap_write(rk_phy->reg_base,
-+		     rk_phy->phy_data->pcie_laneoff,
-+		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
-+				   PHY_LANE_IDLE_MASK,
-+				   PHY_LANE_IDLE_A_SHIFT + inst->index));
-+	mutex_unlock(&rk_phy->pcie_mutex);
-+	return err;
- }
- 
- static int rockchip_pcie_phy_power_on(struct phy *phy)
- {
--	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
-+	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
-+	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
- 	int err = 0;
- 	u32 status;
- 	unsigned long timeout;
- 
-+	mutex_lock(&rk_phy->pcie_mutex);
-+
-+	if (rk_phy->pwr_cnt++)
-+		goto err_out;
-+
- 	err = reset_control_deassert(rk_phy->phy_rst);
- 	if (err) {
- 		dev_err(&phy->dev, "deassert phy_rst err %d\n", err);
--		return err;
-+		goto err_pwr_cnt;
- 	}
- 
- 	regmap_write(rk_phy->reg_base, rk_phy->phy_data->pcie_conf,
-@@ -146,6 +205,12 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
- 				   PHY_CFG_ADDR_MASK,
- 				   PHY_CFG_ADDR_SHIFT));
- 
-+	regmap_write(rk_phy->reg_base,
-+		     rk_phy->phy_data->pcie_laneoff,
-+		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
-+				   PHY_LANE_IDLE_MASK,
-+				   PHY_LANE_IDLE_A_SHIFT + inst->index));
-+
- 	/*
- 	 * No documented timeout value for phy operation below,
- 	 * so we make it large enough here. And we use loop-break
-@@ -214,18 +279,29 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
- 		goto err_pll_lock;
- 	}
- 
-+err_out:
-+	mutex_unlock(&rk_phy->pcie_mutex);
- 	return 0;
- 
- err_pll_lock:
- 	reset_control_assert(rk_phy->phy_rst);
-+err_pwr_cnt:
-+	--rk_phy->pwr_cnt;
-+	mutex_unlock(&rk_phy->pcie_mutex);
- 	return err;
- }
- 
- static int rockchip_pcie_phy_init(struct phy *phy)
- {
--	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
-+	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
-+	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
- 	int err = 0;
- 
-+	mutex_lock(&rk_phy->pcie_mutex);
-+
-+	if (rk_phy->init_cnt++)
-+		goto err_out;
-+
- 	err = clk_prepare_enable(rk_phy->clk_pciephy_ref);
- 	if (err) {
- 		dev_err(&phy->dev, "Fail to enable pcie ref clock.\n");
-@@ -238,20 +314,33 @@ static int rockchip_pcie_phy_init(struct phy *phy)
- 		goto err_reset;
- 	}
- 
--	return err;
-+err_out:
-+	mutex_unlock(&rk_phy->pcie_mutex);
-+	return 0;
- 
- err_reset:
-+
- 	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
- err_refclk:
-+	--rk_phy->init_cnt;
-+	mutex_unlock(&rk_phy->pcie_mutex);
- 	return err;
- }
- 
- static int rockchip_pcie_phy_exit(struct phy *phy)
- {
--	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
-+	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
-+	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
-+
-+	mutex_lock(&rk_phy->pcie_mutex);
-+
-+	if (--rk_phy->init_cnt)
-+		goto err_init_cnt;
- 
- 	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
- 
-+err_init_cnt:
-+	mutex_unlock(&rk_phy->pcie_mutex);
- 	return 0;
- }
- 
-@@ -283,10 +372,11 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct rockchip_pcie_phy *rk_phy;
--	struct phy *generic_phy;
- 	struct phy_provider *phy_provider;
- 	struct regmap *grf;
- 	const struct of_device_id *of_id;
-+	int i;
-+	u32 phy_num;
- 
- 	grf = syscon_node_to_regmap(dev->parent->of_node);
- 	if (IS_ERR(grf)) {
-@@ -305,6 +395,8 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
- 	rk_phy->phy_data = (struct rockchip_pcie_data *)of_id->data;
- 	rk_phy->reg_base = grf;
- 
-+	mutex_init(&rk_phy->pcie_mutex);
-+
- 	rk_phy->phy_rst = devm_reset_control_get(dev, "phy");
- 	if (IS_ERR(rk_phy->phy_rst)) {
- 		if (PTR_ERR(rk_phy->phy_rst) != -EPROBE_DEFER)
-@@ -319,14 +411,26 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
- 		return PTR_ERR(rk_phy->clk_pciephy_ref);
- 	}
- 
--	generic_phy = devm_phy_create(dev, dev->of_node, &ops);
--	if (IS_ERR(generic_phy)) {
--		dev_err(dev, "failed to create PHY\n");
--		return PTR_ERR(generic_phy);
-+	/* parse #phy-cells to see if it's legacy PHY model */
-+	if (of_property_read_u32(dev->of_node, "#phy-cells", &phy_num))
-+		return -ENOENT;
-+
-+	phy_num = (phy_num == 0) ? 1 : PHY_MAX_LANE_NUM;
-+	dev_dbg(dev, "phy number is %d\n", phy_num);
-+
-+	for (i = 0; i < phy_num; i++) {
-+		rk_phy->phys[i].phy = devm_phy_create(dev, dev->of_node, &ops);
-+		if (IS_ERR(rk_phy->phys[i].phy)) {
-+			dev_err(dev, "failed to create PHY%d\n", i);
-+			return PTR_ERR(rk_phy->phys[i].phy);
-+		}
-+		rk_phy->phys[i].index = i;
-+		phy_set_drvdata(rk_phy->phys[i].phy, &rk_phy->phys[i]);
- 	}
- 
--	phy_set_drvdata(generic_phy, rk_phy);
--	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+	platform_set_drvdata(pdev, rk_phy);
-+	phy_provider = devm_of_phy_provider_register(dev,
-+					rockchip_pcie_phy_of_xlate);
- 
- 	return PTR_ERR_OR_ZERO(phy_provider);
- }
--- 
-1.9.1
+>   It may be that we should approach this from the completely opposite
+> direction and instead of having quirks which identify problematic devices,
+> have quirks which identify devices which would benefit from the use of
+> Relaxed Ordering (if the sending device supports that).  That is, assume the
+> using Relaxed Ordering shouldn't be done unless the target device says "I
+> love Relaxed Ordering TLPs" ...  In such a world, an NVMe or a Graphics
+> device might declare love of Relaxed Ordering and the same for a SPARC Root
+> Complex (I think that was your example).
+
+Really I think we are probably better off enabling it by default and
+leaving it up to the configuration space of the end points to sort it
+out. The advantage is that it will let us catch issues with platforms
+that need these kind of quirks sooner since up until now we have been
+avoiding enabling relaxed ordering for most devices on x86 and as we
+get faster and faster buses we are going to need to start fully
+supporting this sooner or later anyway.
+
+>   By the way, the sole example of Data Corruption with Relaxed Ordering is
+> the AMD A1100 ARM SoC and AMD appears to have given up on that almost as
+> soon as it was released.  So what we're left with currently is a performance
+> problem on modern Intel CPUs ...  (And hopefully we'll get a Technical
+> Publication on that issue fairly soon.)
+>
+> Casey
+
+That's also assuming there aren't any other platforms with issues
+lurking out there. If something like this had been in place before
+some of the modern Intel CPUs were developed perhaps they would have
+caught the relaxed ordering issue soon enough to have resolved it in
+the silicon.
+
+Odds are this sets things up for how we will deal with future issues
+more than current ones. I'm more a fan of just letting the drivers
+configure themselves for relaxed ordering to the root complex by
+default, and then if something comes up where relaxed ordering can't
+be supported on the platform then we do workarounds for things like
+the peer-to-peer performance you mentioned before for the NVMe
+solution.
+
+- Alex
