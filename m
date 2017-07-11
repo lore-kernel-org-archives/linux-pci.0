@@ -1,44 +1,30 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Jul 2017 18:48:37 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>
-Subject: [RFC] PCI: dwc: designware: allow customize unroll registers'
- readl/writel
-Message-ID: <20170713184837.541ccf26@xhacker>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35555 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752257AbdGKJ1g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2017 05:27:36 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 0/3] constify pci attribute_group structures.
+Date: Tue, 11 Jul 2017 14:57:06 +0530
+Message-Id: <1499765228-543-1-git-send-email-arvind.yadav.cs@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao, Jingoo,
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-Now, the PCIE_GET_ATU_OUTB_UNR_REG_OFFSET macro is defined as:
+Arvind Yadav (3):
+  [PATCH 1/3] PCI: pci-sysfs: constify attribute_group structures.
+  [PATCH 2/3] PCI: pci-label: constify attribute_group structures.
+  [PATCH 3/3] PCI: hotplug: constify attribute_group structures.
 
-/* Register address builder */
-#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)        \
-                        ((0x3 << 20) | ((region) << 9))
+ drivers/pci/hotplug/rpadlpar_sysfs.c |  2 +-
+ drivers/pci/pci-label.c              |  4 ++--
+ drivers/pci/pci-sysfs.c              | 10 +++++-----
+ 3 files changed, 8 insertions(+), 8 deletions(-)
 
-I have one question: where does the (0x3 << 20) come from? 2MB space, a bit
-large. And I didn't find it in the databook. Is it platform specific?
-If yes, I want to cook one patch to customize unroll registers' readl/writel.
-
-And how does (0x3 << 20) enable DBI2 access?
-
-Thanks in advance,
-Jisheng
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+1.9.1
