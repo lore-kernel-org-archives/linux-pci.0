@@ -1,91 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34796 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751922AbdGVCF3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 22:05:29 -0400
-Subject: Re: Support SVM without PASID
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
-Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
-        kevin.tian@intel.com, jacob.jun.pan@intel.com
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
-Date: Sat, 22 Jul 2017 07:35:31 +0530
+Return-Path: <SRS0=qvcf=6O=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=qvcf=6O=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
+ systems
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+References: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
+ <20170710230911.GH5610@bhelgaas-glaptop.roam.corp.google.com>
+ <5f5119fd-64d5-5e7c-fa50-54ac6e6a36b6@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <70e56020-ec7f-9752-7236-7d4157c07205@codeaurora.org>
+Date: Mon, 10 Jul 2017 21:41:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5f5119fd-64d5-5e7c-fa50-54ac6e6a36b6@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/12/2017 10:18 PM, Jean-Philippe Brucker wrote:
-> On 12/07/17 17:27, valmiki wrote:
->> On 7/11/2017 4:26 PM, Jean-Philippe Brucker wrote:
->>> Hi Valmiki,
->>>
->>> On 09/07/17 04:15, valmiki wrote:
->>>>>> Hi,
->>>>>>
->>>>>> In SMMUv3 architecture document i see "PASIDs are optional,
->>>>>> configurable, and of a size determined by the minimum
->>>>>> of the endpoint".
->>>>>>
->>>>>> So if PASID's are optional and not supported by PCIe end point, how SVM
->>>>>> can be achieved ?
->>>>>
->>>>> It cannot be inferred from that statement that PASID support is not
->>>>> required for SVM.  AIUI, SVM is a software feature enabled by numerous
->>>>> "optional" hardware features, including PASID.  Features that are
->>>>> optional per the hardware specification may be required for specific
->>>>> software features.  Thanks,
->>>>>
->>>> Thanks for the information Alex. Suppose if an End point doesn't support
->>>> PASID, is it still possible to achieve SVM ?
->>>> Are there any such features in SMMUv3 with which we can achieve it ?
->>>
->>> Not really, we don't plan to share the non-PASID context with a process.
->>>
->>> In theory you could achieve something resembling SVM by assigning the
->>> entire endpoint to userspace using VFIO, then use ATS+PRI capabilities
->>> with a bind ioctl. If your device can do SR-IOV, then you can bind one
->>> process per virtual function.
->>>
->>> Unless we end up seeing lots of endpoints that implement PRI but not
->>> PASID, I don't plan to add this to VFIO or SMMUv3.
->>>
->>> For a PCIe endpoint, the requirements for SVM are ATS, PRI and PASID
->>> enabled. In addition, the SMMU should support DVM (broadcast TLB
->>> maintenance) and must be compatible with the MMU (page sizes, output
->>> address size, ASID bits...)
->>>
->> Thanks Jean.
->> In SMMU document it was quoted as follows
->> "When STE.S1DSS==0b10, a transaction without a SubstreamID is accepted and
->> uses the CD of Substream 0. Under this configuration, transactions that
->> arrive with SubstreamID 0 are aborted and an event recorded."
->>
->> Is this mode supported in your previous series of SMMUv3 patches ?
->> If it is supported is it achieved through VFIO ?
->
-> Yes, STE.S1DSS==0b10 is the only supported mode with my patches. And in
-> VFIO, the non-PASID context (CD 0) is managed with
-> VFIO_IOMMU_MAP/UNMAP_DMA ioctls, mirroring the current behavior for
-> devices that don't support PASID. All other CDs, with PASID > 0, are
-> managed via the new BIND ioctl.
+One more question:
 
-Thanks Jean, this helps a lot.
-So i digged through your patches and i understood that using BIND ioctls 
-satge-1 translations are setup in SMMU for an application.
-If we use VFIO_IOMMU_MAP/UNMAP_DMA ioctls they are setting up stage-2 
-translations in SMMU.
-So without PASID support we can only work with stage-2 translations ?
+On 7/10/2017 8:20 PM, Sinan Kaya wrote:
+> Sure, I can change to blacklist. I'll not enable it unless the device is blacklisted
+> via quirks.
 
+Since the quirk is at the completer, are you OK with walking the list and clearing the
+extended tags across the tree when at least one device with a quirk is found?
 
-Regards,
-valmiki
+Would you look for another solution?
+
+I was told that Linux assumes peer-to-peer is possible by default on another thread.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
