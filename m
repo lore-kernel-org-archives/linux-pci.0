@@ -1,73 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48720 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdGQMFC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:05:02 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH 4/7] phy: qcom-qmp: Handle unavailable registers
-Date: Mon, 17 Jul 2017 17:34:00 +0530
-Message-Id: <1500293043-1887-5-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35051 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755413AbdGKJ3L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2017 05:29:11 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: bhelgaas@google.com, paulus@samba.org, mpe@ellerman.id.au,
+        benh@kernel.crashing.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH 0/3] constify pci attribute_group structures.
+Date: Tue, 11 Jul 2017 14:58:43 +0530
+Message-Id: <1499765324-617-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In some implementations of the QMP phy, some registers might not
-be present. Provide a way identify such registers and not access
-those registers.
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- drivers/phy/qualcomm/phy-qcom-qmp.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+Arvind Yadav (3):
+  [PATCH 1/3] PCI: pci-sysfs: constify attribute_group structures.
+  [PATCH 2/3] PCI: pci-label: constify attribute_group structures.
+  [PATCH 3/3] PCI: hotplug: constify attribute_group structures.
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 97020ec..000ad1c 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -187,6 +187,8 @@ struct qmp_phy_init_tbl {
- 		.in_layout = 1,		\
- 	}
- 
-+#define QPHY_REG_INVAL		0xffffffffu
-+
- /* set of registers with offsets different per-PHY */
- enum qphy_reg_layout {
- 	/* Common block control registers */
-@@ -676,15 +678,18 @@ static int qcom_qmp_phy_com_init(struct qcom_qmp *qmp)
- 		qphy_setbits(serdes, cfg->regs[QPHY_COM_START_CONTROL],
- 			     SERDES_START | PCS_START);
- 
--		status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
--		mask = cfg->mask_com_pcs_ready;
--
--		ret = readl_poll_timeout(status, val, (val & mask), 10,
--					 PHY_INIT_COMPLETE_TIMEOUT);
--		if (ret) {
--			dev_err(qmp->dev,
--				"phy common block init timed-out\n");
--			goto err_com_init;
-+		if (cfg->regs[QPHY_COM_PCS_READY_STATUS] != QPHY_REG_INVAL) {
-+			status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
-+			mask = cfg->mask_com_pcs_ready;
-+
-+			ret = readl_poll_timeout(status, val, (val & mask), 10,
-+						 PHY_INIT_COMPLETE_TIMEOUT);
-+			if (ret) {
-+				dev_err(qmp->dev,
-+					"%s: phy common block init timed-out\n",
-+					__func__);
-+				goto err_com_init;
-+			}
- 		}
- 	}
- 
+ drivers/pci/hotplug/rpadlpar_sysfs.c |  2 +-
+ drivers/pci/pci-label.c              |  4 ++--
+ drivers/pci/pci-sysfs.c              | 10 +++++-----
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+1.9.1
