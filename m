@@ -1,98 +1,83 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0067.outbound.protection.outlook.com ([104.47.2.67]:27840
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750902AbdGKELP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Jul 2017 00:11:15 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+Subject: RE: [PATCH 1/3] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+Date: Tue, 11 Jul 2017 04:11:12 +0000
+Message-ID: <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
+ <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+ <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com>
+In-Reply-To: <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
- <20170613200339.GX3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
- <20170616083313.GY3187@lahna.fi.intel.com>
- <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
- <20170616120048.GC629@lahna.fi.intel.com>
- <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
- <20170619100209.GC629@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 3 Jul 2017 23:22:45 +0300
-Message-ID: <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
-Subject: Re: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO devices
- before scanning
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "minyard@acm.org" <minyard@acm.org>, John Garry <john.garry@huawei.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "olof@lixom.net" <olof@lixom.net>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 3, 2017 at 7:08 PM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
-
-JFYI: Mika on vacation.
-
-> I had a look into the MFD framework. If my understanding is correct the mfd
-> framework create a platform device for each declared mfd_cell that is passed
-> to mfd_add_devices().
-
-Right.
-
-> However there is something that I do not quite understand:
-> from
-> http://elixir.free-electrons.com/linux/latest/source/drivers/mfd/mfd-core.c#L207
-> it seems that mfd_add_device() will create the platform device using the
-> resources that are statically declared in the respective mfd_cell.
-
-It's one possibility.
-
-> In my case I'd like to have a platform device using the resources that are
-> parsed from the ACPI table (i.e. as it is done now by
-> acpi_create_platform_device()).
-
-So far so good. Nothing prevents you to do that.
-
-> If my understanding is correct, if I declared an mfd_cell for my IPMI child
-> the mfd subsystem would create a platform device for such child and
-> therefore acpi_create_platform_device() would fail to create a new platform
-> device as adev->physical_node_count will be non zero.
-> However as things stand now mfd_cell devices can only use the resources
-> that are statically defined in the code (and therefore not the ones in the
-> ACPI nodes)...am I right?
-
-You may file resources first and then register MFD cells. See many
-existing examples in the kernel.
-
--- 
-With Best Regards,
-Andy Shevchenko
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgQmpvcm4sDQoNCkR1ZSB0byBhbGwgRnJlZXNjYWxlIExheWVyc2NwZSBQQ0llIGNvbnRyb2xs
+ZXJzIGhhdmUgdG8gZml4IHRoZSBDbGFzcyBjb2RlLCBhbmQgdGhpcyBmaXh1cCBleGlzdGVkIGlu
+IGJvdGggTGF5ZXJzY2FwZSBwY2llIGRyaXZlciBhbmQgRFdDIGNvbW1vbiBjb2RlLCBzbyBJIHdh
+bnQgdG8gcmV1c2UgdGhlIGZpeHVwIGluIERXQyBjb21tb24gY29kZS4NCkNhbiB5b3UgZ2l2ZSBt
+ZSBhbnkgc3VnZ2VzdGlvbj8NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9t
+OiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0BzeW5vcHN5cy5jb21dDQo+IFNlbnQ6IDIw
+MTflubQ35pyIN+aXpSAxNjo1Mw0KPiBUbzogWi5xLiBIb3UgPHpoaXFpYW5nLmhvdUBueHAuY29t
+PjsgSm9hbyBQaW50bw0KPiA8Sm9hby5QaW50b0BzeW5vcHN5cy5jb20+OyBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tDQo+IENjOiBqaW5nb29oYW4xQGdt
+YWlsLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvM10gUENJOiBkZXNpZ253YXJlOiBhZGQg
+YWNjZXNzb3JzIGZvciB3cml0ZSBwZXJtaXNzaW9uDQo+IG9mIERCSSByZWFkLW9ubHkgcmVnaXN0
+ZXJzDQo+IA0KPiANCj4gSGkgWmhpcWlhbmcsDQo+IA0KPiDDgHMgNDo0OCBBTSBkZSA3LzcvMjAx
+NywgWi5xLiBIb3UgZXNjcmV2ZXU6DQo+ID4gSGkgSm9hbywNCj4gPg0KPiA+DQo+ID4NCj4gPiBU
+aGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMhDQo+ID4NCj4gPg0KPiA+DQo+ID4+IC0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4NCj4gPj4gRnJvbTogSm9hbyBQaW50byBbbWFpbHRv
+OkpvYW8uUGludG9Ac3lub3BzeXMuY29tXQ0KPiA+DQo+ID4+IFNlbnQ6IDIwMTflubQ35pyINuaX
+pSAxNzo0NA0KPiA+DQo+ID4+IFRvOiBaLnEuIEhvdSA8emhpcWlhbmcuaG91QG54cC5jb20+OyBs
+aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiA+DQo+ID4+IEpvYW8uUGludG9Ac3lub3BzeXMu
+Y29tDQo+ID4NCj4gPj4gQ2M6IGJoZWxnYWFzQGdvb2dsZS5jb207IGppbmdvb2hhbjFAZ21haWwu
+Y29tDQo+ID4NCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzNdIFBDSTogZGVzaWdud2FyZTog
+YWRkIGFjY2Vzc29ycyBmb3Igd3JpdGUNCj4gPj4gcGVybWlzc2lvbg0KPiA+DQo+ID4+IG9mIERC
+SSByZWFkLW9ubHkgcmVnaXN0ZXJzDQo+ID4NCj4gPj4NCj4gPg0KPiA+Pg0KPiA+DQo+ID4+IEhp
+IFpoaXFpYW5nLA0KPiA+DQo+ID4+DQo+ID4NCj4gPj4gw4BzIDc6MzMgQU0gZGUgNy82LzIwMTcs
+IFpoaXFpYW5nIEhvdSBlc2NyZXZldToNCj4gPg0KPiA+Pj4gRnJvbTogSG91IFpoaXFpYW5nIDxa
+aGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+Pj4NCj4gPg0KPiA+Pj4gVGhlIHJlYWQtb25s
+eSBEQkkgcmVnaXN0ZXJzIGNhbiBiZSB3cml0dGVuIG92ZXIgdGhlIERCSSB3aGVuIHNldCB0aGUN
+Cj4gPg0KPiA+Pj4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBEQkkiIChEQklfUk9fV1Jf
+RU4pIGZpZWxkIG9mIHRoZQ0KPiA+DQo+ID4+PiBNSVNDX0NPTlRST0xfMV9PRkYgcmVnaXN0ZXIu
+DQo+ID4NCj4gPj4NCj4gPg0KPiA+PiBJIHdvdWxkIHN1Z2dlc3QgeW91IHRvIGFkZCBhIGNvdmVy
+LWxldHRlciBuZXh0IHRpbWUgdG8gZXhwbGFpbiB0aGUNCj4gPj4gZ2xvYmFsDQo+ID4NCj4gPj4g
+cGljdHVyZSBvZiB0aGUgcGF0Y2gtc2V0Lg0KPiA+DQo+ID4NCj4gPg0KPiA+IFRoYW5rcywgSSB3
+aWxsLg0KPiA+DQo+ID4NCj4gPg0KPiA+Pg0KPiA+DQo+ID4+IEkgdW5kZXJzdGFuZCB5b3VyIG5l
+ZWQgZm9yIHRoaXMgcGF0Y2gsIGJ1dCBJIGRvbid0IGFncmVlIG9uIHRoZSBhcHByb2FjaC4NCj4g
+Pg0KPiA+DQo+ID4NCj4gPiBJbiB0aGUgRFdDIGNvbW1vbiBjb2RlLCB0aGVyZSBpcyBhIGZ1bmN0
+aW9uIHdyaXRlIGEgREJJIHJlYWQtb25seSByZWdpc3Rlcg0KPiAnRGV2aWNlIGNsYXNzIGNvZGUn
+LCBhbmQgdGhlIGZpcnN0IDIgcGF0Y2hlcyBpcyB0byBmaXggaXQuDQo+ID4NCj4gPiBUaGUgM3Jk
+IHBhdGNoIGlzIHRvIHJlZmFjdG9yIHRoZSBMYXllcnNjYXBlIFBDSWUgZHJpdmVyJ3MgaG9zdF9p
+bml0IGZ1bmN0aW9uDQo+IGFuZCByZXVzZSB0aGUgbmV3IGFkZGVkIGFjY2Vzc29ycy4NCj4gPg0K
+PiA+DQo+ID4NCj4gPj4gU29tZXRpbWVzIHRoZSBwZW9wbGUgaW4gY2hhcmdlIG9mIHRoZSBoYXJk
+d2FyZSBkZXNpZ24gLw0KPiA+PiBjb25maWd1cmF0aW9uLCBmb3JnZXQNCj4gPg0KPiA+PiB0byBz
+cGVjaWZ5IHRoZSBkZXZpY2UgY2xhc3MgYW5kIHRoYXQgY2FuIGJlIHByb2JsZW1hdGljIGZvciBz
+b21lDQo+ID4+IGRyaXZlcnMsIGFuZA0KPiA+DQo+ID4+IHNvIHRoZSB0eXBpY2FsIHdvcmthcm91
+bmQgaXMgdG8gc2V0IGl0IGluIHRoZSBkcml2ZXIgdXNpbmcgYSBxdWlyayBmb3IgZXhhbXBsZS4N
+Cj4gPg0KPiA+Pg0KPiA+DQo+ID4+IFlvdSBjYW4gc2VlIHNvbWUgZXhhbXBsZXMgaGVyZToNCj4g
+Pg0KPiA+PiBodHRwczovL3VybGRlZmVuc2UucHJvb2Zwb2ludC5jb20vdjIvdXJsP3U9aHR0cHMt
+M0FfX2dpdC5rZXJuZWwub3JnX3ANCj4gPj4gdWJfc2NtX2xpbnV4X2tlcm5lbF9naXRfdG9ydmFs
+ZHNfbGludXguZ2l0X3RyZWVfZHJpdmVyc18mZD1Ed0lHYVEmYz1EDQo+ID4+DQo+IFBMNl9YXzZK
+a1hGeDdBWFdxQjB0ZyZyPXMyZk8waGlpME9HTk92OXFReV9IUlh5LXhBSlVEMU5Ob0VjYzNpbw0K
+PiBfa3gwJm0NCj4gPj4NCj4gPTBEckJDdk9jX0o3TGFNWEJlaTFxQ1h4eGZiTHhXYVZFcktaNlJr
+bTZiVWMmcz1zT0VtRXhRRnFyQ0VtcEENCj4geDlMalNlSw0KPiA+PiBSdmtXMUQtVzgyY2tYNVdH
+Q2dGV3cmZT0NCj4gPg0KPiA+PiBwY2kvcXVpcmtzLmMNCj4gPg0KPiA+DQo+ID4NCj4gPiBJIGRv
+bid0IGtub3cgdGhlIFBDSSBxdWlya3MsIGRvIHlvdSBtZWFuIHJlbW92ZSB0aGUgcGNpIERldmlj
+ZSBDbGFzcyBmaXgNCj4gY29kZSBmcm9tIHRoZSBEV0MgY29tbW9uIGNvZGUgYW5kIGFkZCBpdCB0
+byBxdWlya3M/DQo+ID4NCj4gDQo+IEluIG15IG9waW5pb24gYWRkaW5nIGZpeGVzIHRvIGEgY29t
+bW9uIGNvZGUgaXMgbm90IGEgZ29vZCBhcHByb2FjaC4gSSB3b3VsZA0KPiBzdWdnZXN0IHRoZSBm
+aXggdG8gZ28gaW50byB0aGUgcXVpcmtzIGZpbGUuDQo+IA0KPiBAQmpvcm46IFRoZSBxdWlya3Mg
+ZmlsZSBpcyB0aGUgYmVzdCBwbGFjZSBmb3IgdGhpcyB0eXBlIG9mIGZpeGVzIHJpZ2h0Pw0KDQpU
+aGFua3MsDQpaaGlxaWFuZw0KDQoNCg==
