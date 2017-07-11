@@ -1,187 +1,158 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55122 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751978AbdGaQgQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:36:16 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Matthew Minter <matt@masarand.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Rich Felker <dalias@libc.org>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@imgtec.com>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Guan Xuetao <gxt@mprc.pku.edu.cn>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: [RFT PATCH 3/9] alpha/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
-Date: Mon, 31 Jul 2017 17:37:51 +0100
-Message-Id: <20170731163757.22629-4-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
-References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 11 Jul 2017 14:58:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V3 1/2] PCI: Add Extended Tags quirk for Broadcom HT2100
+ Root Port
+Message-ID: <20170711195853.GA14614@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499786735-25782-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <1499786735-25782-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, wim.ten.have@oracle.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_fixup_irqs() function allocates IRQs for all PCI devices present
-in a system; those PCI devices possibly belong to different PCI bus
-trees (and possibly rooted at different host bridges) and may well be
-enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
-is called when probing a given host bridge driver.
+On Tue, Jul 11, 2017 at 11:25:33AM -0400, Sinan Kaya wrote:
+> All PCIe devices are expected to be able to handle 8-bit tags.
+> 'commit 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")'
+> enabled extended tags for all devices based on the spec direction.
+> 
+> The Broadcom HT2100 seems to be having issues with handling
+> 8-bit tags. Mark it as broken.
+> 
+> Reported-by: Wim ten Have <wim.ten.have@oracle.com>
+> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/quirks.c | 12 ++++++++++++
+>  include/linux/pci.h  |  1 +
+>  2 files changed, 13 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 085fb78..073d5dd 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4664,3 +4664,15 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+> +
+> +static void quirk_exttags_completer(struct pci_dev *pdev)
+> +{
+> +	/* This device cannot handle 256 tags as a completer */
+> +	pdev->broken_exttags_completer = 1;
 
-Furthermore, current kernel code relying on pci_fixup_irqs() to assign
-legacy PCI IRQs to devices does not work at all for hotplugged devices
-in that the code carrying out the IRQ fixup is called at host bridge
-driver probe time, which just cannot take into account devices
-hotplugged after system has booted.
+I think we should print something here as a clue to the user.
 
-The introduction of map/swizzle functions hook in struct pci_host_bridge
-allows to define per-bridge map/swizzle functions, that can be used at
-device probe time in PCI core code to allocate IRQs for a given device
-(through pci_assign_irq()).
+Wim, how did you find this problem originally?  Seems like it could
+have been a hassle to track down.  I wonder if we should log a message
+in pci_configure_extended_tags() when we change the setting (either to
+enable or disable).  Maybe something in dmesg would have made it
+easier to find the problem.
 
-Convert PCI host bridge initialization code to the
-pci_scan_root_bus_bridge() API (that allows to pass a struct
-pci_host_bridge with initialized map/swizzle pointers) and remove the
-pci_fixup_irqs() call from arch code.
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140,
+> +			quirk_exttags_completer);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142,
+> +			quirk_exttags_completer);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144,
+> +			quirk_exttags_completer);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 8039f9f..0b9f42d 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -376,6 +376,7 @@ struct pci_dev {
+>  	unsigned int	irq_managed:1;
+>  	unsigned int	has_secondary_link:1;
+>  	unsigned int	non_compliant_bars:1;	/* broken BARs; ignore them */
+> +	unsigned int	broken_exttags_completer:1;
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
----
- arch/alpha/kernel/pci.c          | 27 ++++++++++++++++++++-------
- arch/alpha/kernel/sys_nautilus.c | 31 +++++++++++++++++++++++++++----
- 2 files changed, 47 insertions(+), 11 deletions(-)
+I think maybe we should put this bit in struct pci_host_bridge.  Then
+the quirk could be something like this:
 
-diff --git a/arch/alpha/kernel/pci.c b/arch/alpha/kernel/pci.c
-index 5f387ee..d558287 100644
---- a/arch/alpha/kernel/pci.c
-+++ b/arch/alpha/kernel/pci.c
-@@ -312,8 +312,9 @@ common_init_pci(void)
- {
- 	struct pci_controller *hose;
- 	struct list_head resources;
-+	struct pci_host_bridge *bridge;
- 	struct pci_bus *bus;
--	int next_busno;
-+	int ret, next_busno;
- 	int need_domain_info = 0;
- 	u32 pci_mem_end;
- 	u32 sg_base;
-@@ -336,11 +337,25 @@ common_init_pci(void)
- 		pci_add_resource_offset(&resources, hose->mem_space,
- 					hose->mem_space->start);
- 
--		bus = pci_scan_root_bus(NULL, next_busno, alpha_mv.pci_ops,
--					hose, &resources);
--		if (!bus)
-+		bridge = pci_alloc_host_bridge(0);
-+		if (!bridge)
- 			continue;
--		hose->bus = bus;
-+
-+		list_splice_init(&resources, &bridge->windows);
-+		bridge->dev.parent = NULL;
-+		bridge->sysdata = hose;
-+		bridge->busnr = next_busno;
-+		bridge->ops = alpha_mv.pci_ops;
-+		bridge->swizzle_irq = alpha_mv.pci_swizzle;
-+		bridge->map_irq = alpha_mv.pci_map_irq;
-+
-+		ret = pci_scan_root_bus_bridge(bridge);
-+		if (ret) {
-+			pci_free_host_bridge(bridge);
-+			continue;
-+		}
-+
-+		bus = hose->bus = bridge->bus;
- 		hose->need_domain_info = need_domain_info;
- 		next_busno = bus->busn_res.end + 1;
- 		/* Don't allow 8-bit bus number overflow inside the hose -
-@@ -354,7 +369,6 @@ common_init_pci(void)
- 	pcibios_claim_console_setup();
- 
- 	pci_assign_unassigned_resources();
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- 	for (hose = hose_head; hose; hose = hose->next) {
- 		bus = hose->bus;
- 		if (bus)
-@@ -362,7 +376,6 @@ common_init_pci(void)
- 	}
- }
- 
--
- struct pci_controller * __init
- alloc_pci_controller(void)
- {
-diff --git a/arch/alpha/kernel/sys_nautilus.c b/arch/alpha/kernel/sys_nautilus.c
-index 2cfaa0e..8ae04a1 100644
---- a/arch/alpha/kernel/sys_nautilus.c
-+++ b/arch/alpha/kernel/sys_nautilus.c
-@@ -194,22 +194,46 @@ static struct resource irongate_mem = {
- 	.name	= "Irongate PCI MEM",
- 	.flags	= IORESOURCE_MEM,
- };
-+static struct resource busn_resource = {
-+	.name	= "PCI busn",
-+	.start	= 0,
-+	.end	= 255,
-+	.flags	= IORESOURCE_BUS,
-+};
- 
- void __init
- nautilus_init_pci(void)
- {
- 	struct pci_controller *hose = hose_head;
-+	struct pci_host_bridge *bridge;
- 	struct pci_bus *bus;
- 	struct pci_dev *irongate;
- 	unsigned long bus_align, bus_size, pci_mem;
- 	unsigned long memtop = max_low_pfn << PAGE_SHIFT;
-+	int ret;
-+
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
-+		return;
-+
-+	pci_add_resource(&bridge->windows, &ioport_resource);
-+	pci_add_resource(&bridge->windows, &iomem_resource);
-+	pci_add_resource(&bridge->windows, &busn_resource);
-+	bridge->dev.parent = NULL;
-+	bridge->sysdata = hose;
-+	bridge->busnr = 0;
-+	bridge->ops = alpha_mv.pci_ops;
-+	bridge->swizzle_irq = alpha_mv.pci_swizzle;
-+	bridge->map_irq = alpha_mv.pci_map_irq;
- 
- 	/* Scan our single hose.  */
--	bus = pci_scan_bus(0, alpha_mv.pci_ops, hose);
--	if (!bus)
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret) {
-+		pci_free_host_bridge(bridge);
- 		return;
-+	}
- 
--	hose->bus = bus;
-+	bus = hose->bus = bridge->bus;
- 	pcibios_claim_one_bus(bus);
- 
- 	irongate = pci_get_bus_and_slot(0, 0);
-@@ -254,7 +278,6 @@ nautilus_init_pci(void)
- 	/* pci_common_swizzle() relies on bus->self being NULL
- 	   for the root bus, so just clear it. */
- 	bus->self = NULL;
--	pci_fixup_irqs(alpha_mv.pci_swizzle, alpha_mv.pci_map_irq);
- 	pci_bus_add_devices(bus);
- }
- 
--- 
-2.10.0
+  static void quirk_ext_tags_broken(struct pci_dev *pdev)
+  {
+    struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
+
+    bridge->broken_ext_tags = 1;
+    dev_info(&pdev->dev, "Extended Tag handling is broken\n");
+
+    pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
+  }
+
+and we could keep the current strategy of calling
+pci_configure_extended_tags() from pci_configure_device(), slightly
+modified like this:
+
+  void pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+  {
+    u32 cap;
+    u16 ctl;
+    int ret;
+    struct pci_host_bridge *host;
+
+    if (!pci_is_pcie(dev))
+      return;
+
+    ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+    if (ret)
+      return;
+
+    if (!(cap & PCI_EXP_DEVCAP_EXT_TAG))
+      return;
+
+    ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+    if (ret)
+      return;
+
+    host = pci_find_host_bridge(dev->bus);
+    if (host->broken_ext_tags && (ctl & PCI_EXP_DEVCTL_EXT_TAG)) {
+      dev_info(&dev->dev, "disabling Extended Tags\n");
+      pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+                                 PCI_EXP_DEVCTL_EXT_TAG);
+      return;
+    }
+
+    if (!(ctl & PCI_EXP_DEVCTL_EXT_TAG)) {
+      dev_info(&dev->dev, "enabling Extended Tags\n");
+      pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+                               PCI_EXP_DEVCTL_EXT_TAG);
+    }
+  }
+
+I'm trying to avoid pci_walk_bus() because it's such a minefield as
+far as hot-added devices.  I don't think we can avoid one in the
+quirk, to turn off extended tags for any devices we've already found,
+but I think we *can* avoid adding more in
+pcie_bus_configure_settings().
+
+>  	pci_dev_flags_t dev_flags;
+>  	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+>  
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
