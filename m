@@ -1,59 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0046.outbound.protection.outlook.com ([104.47.36.46]:60648
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750979AbdGaGkz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Jul 2017 02:40:55 -0400
-Subject: Re: [PATCH] usb: xhci: Add quirk for Certain failing HP keyboard on
- reset after resume
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Sandeep Singh <Sandeep.Singh@amd.com>
-References: <1501144509-19357-1-git-send-email-Sandeep.Singh@amd.com>
- <20170730141159.GA21849@kroah.com>
-Cc: mathias.nyman@intel.com, bhelgaas@google.com,
-        dheitmueller@kernellabs.com, stern@rowland.harvard.edu,
-        samuel.thibault@ens-lyon.org, lukas@oxygene.sk,
-        linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
-        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-        Nehal Shah <Nehal-bakulchandra.Shah@amd.com>
-From: Sandeep Singh <ssingh1@amd.com>
-Message-ID: <060e5b58-07ff-4e2c-9739-d75c3c40c085@amd.com>
-Date: Mon, 31 Jul 2017 12:10:08 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com
+Subject: [PATCH V3 1/2] PCI: Add Extended Tags quirk for Broadcom HT2100 Root
+ Port
+Date: Tue, 11 Jul 2017 11:25:33 -0400
+Message-Id: <1499786735-25782-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20170730141159.GA21849@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Greg,
+All PCIe devices are expected to be able to handle 8-bit tags.
+'commit 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")'
+enabled extended tags for all devices based on the spec direction.
 
-Thanks for review. Apart from pci_ids.h, I see only 3 options, add this id as macro in pci_quirks.c
-or pci_quirks.h or just hardcode it.
+The Broadcom HT2100 seems to be having issues with handling
+8-bit tags. Mark it as broken.
 
-please suggest what will good option as per your view.
+Reported-by: Wim ten Have <wim.ten.have@oracle.com>
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/quirks.c | 12 ++++++++++++
+ include/linux/pci.h  |  1 +
+ 2 files changed, 13 insertions(+)
 
-Regards
-Sandeep
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 085fb78..073d5dd 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4664,3 +4664,15 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
++
++static void quirk_exttags_completer(struct pci_dev *pdev)
++{
++	/* This device cannot handle 256 tags as a completer */
++	pdev->broken_exttags_completer = 1;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140,
++			quirk_exttags_completer);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142,
++			quirk_exttags_completer);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144,
++			quirk_exttags_completer);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8039f9f..0b9f42d 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -376,6 +376,7 @@ struct pci_dev {
+ 	unsigned int	irq_managed:1;
+ 	unsigned int	has_secondary_link:1;
+ 	unsigned int	non_compliant_bars:1;	/* broken BARs; ignore them */
++	unsigned int	broken_exttags_completer:1;
+ 	pci_dev_flags_t dev_flags;
+ 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+ 
+-- 
+1.9.1
 
-On 7/30/2017 7:41 PM, Greg KH wrote:
-> On Thu, Jul 27, 2017 at 02:05:09PM +0530, Sandeep Singh wrote:
->> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
->> index c71e532..d3f2296 100644
->> --- a/include/linux/pci_ids.h
->> +++ b/include/linux/pci_ids.h
->> @@ -583,6 +583,7 @@
->>  #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
->>  #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
->>  #define PCI_DEVICE_ID_AMD_KERNCZ_SMBUS  0x790b
->> +#define PCI_DEVICE_ID_AMD_TAISHAN	0x145c
->>  
->>  #define PCI_VENDOR_ID_TRIDENT		0x1023
->>  #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
-> 
-> Please read the top of this file for why you shouldn't be adding new ids
-> to it.
-> 
-> thnaks,
-> 
-> greg k-h
-> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
