@@ -1,119 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45088 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752203AbdGDWZr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 18:25:47 -0400
-Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
- functional performance enhancements causing PCI Express crashes,
-To: Wim ten Have <wim.ten.have@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
- <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
- <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
- <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <97b8c58e-7384-0519-5ccb-837fa5054d84@codeaurora.org>
-Date: Tue, 4 Jul 2017 18:25:40 -0400
+Return-Path: <SRS0=xsN6=6O=chelsio.com=leedom@kernel.org>
+Return-Path: <SRS0=xsN6=6O=chelsio.com=leedom@kernel.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+CC: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com"
+	<ashok.raj@intel.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Michael
+ Werner" <werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
+	<will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
+	<davem@davemloft.net>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Tue, 11 Jul 2017 00:01:37 +0000
+Message-ID: <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+ <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
+ <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>,<CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
+In-Reply-To: <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/4/2017 1:59 PM, Wim ten Have wrote:
-> On Tue, 4 Jul 2017 11:57:37 -0400
-> Sinan Kaya <okaya@codeaurora.org> wrote:
-> 
->> Hi,
->>
->> On 7/4/2017 11:32 AM, Bjorn Helgaas wrote:
->>> [+cc linux-pci]
->>>
->>> Thanks very much for the detailed problem report, Wim!  I'm taking the
->>> liberty to forward to the linux-pci list in case others trip over the
->>> same thing.
->>>   
->>
->> So, the spec is lying :) and reality doesn't match theory.
->>
->> "Per the ECN mentioned below, all PCIe Receivers are expected to support
->>  Extended Tags"
->>
->>> The problem is not specific to this piece of h/w.  I did pin-point the
->>> issue to specific kernel code commit  
->> <snip>
->>
->>> 60db3a4d8cc9073cf56264785197ba75ee1caca4
->>>   * <wtenhave@hagen:55> git bisect good
->>>     60db3a4d8cc9073cf56264785197ba75ee1caca4 is the first bad commit
->>>     commit 60db3a4d8cc9073cf56264785197ba75ee1caca4
->>>     Author: Sinan Kaya <okaya@codeaurora.org>
->>>     Date:   Fri Jan 20 09:16:51 2017 -0500
->>>
->>>       PCI: Enable PCIe Extended Tags if supported
->>>   
->> <snip>
->>
->>> 3. Boot and see it crash as soon it starts to operate on specific PCI
->>> Express Ethernet controller.
->>>   
->>
->> I guess we have an endpoint/system with errata that needs to be blacklisted.
->> Can you please try another endpoint with the same system?
->>
->> You have conflicting information above. I want to understand whether it
->> is the endpoint or the system that needs to be blacklisted.
-> 
->   Specific PCI Express ethernet are embedded on the systems mainboard.
->   There's only one PCI Express that requires a riser card.  It is empty.
->
->> Please also provide sudo lspci -vvv output from the system with the patch.
->> Sinan
-> 
->   Detail (lspci -vvv) is added to RedHat filed bugzilla entry; BugID 1467674
->   since the info is rather large.
-> 
-> 	https://bugzilla.redhat.com/show_bug.cgi?id=1467674
 
-I think I understand the issue better now. The ECN seems to be introduced against
-PCIE 2.0 spec. 
+Hey Alexander,
 
-The PCI Express bridge you have is a Broadcom HT 2100 bridge which seems to support
-PCI-Express V1.0 and 1.0a compliant only.
+  Okay, I understand your point regarding the "most likely scenario" being
+TLPs directed upstream to the Root Complex.  But I'd still like to make sur=
+e
+that we have an agreed upon API/methodology for doing Peer-to-Peer with
+Relaxed Ordering and no Relaxed Ordering to the Root Complex.  I don't see
+how the proposed APIs can be used in that fashion.
+=20
+  Right now the proposed change for cxgb4 is for it to test its own PCIe
+Capability Device Control[Relaxed Ordering Enable] in order to use that
+information to program the Chelsio Hardware to emit/not emit upstream TLPs
+with the Relaxed Ordering Attribute set.  But if we're going to have the
+mixed mode situation I describe, the PCIe Capability Device Control[Relaxed
+Ordering Enable] will have to be set which means that we'll be programming
+the Chelsio Hardware to send upstream TLPs with Relaxed Ordering Enable to
+the Root Complex which is what we were trying to avoid in the first place .=
+..
 
-http://www.hard-net.de/info_wissen/chipsatz/broadcom/HT-2100.pdf
+  [[ And, as I noted on Friday evening, the currect cxgb4 Driver hardwires
+     the Relaxed Ordering Enable on early dureing device probe, so that
+     would minimally need to be addressed even if we decide that we don't
+     ever want to support mixed mode Relaxed Ordering. ]]
 
-I can also see this in your lspci output. 
+  We need some method of telling the Chelsio Driver that it should/shouldn'=
+t
+use Relaxed Ordering with TLPs directed at the Root Complex.  And the same
+is true for a Peer PCIe Device.
 
-00:08.0 PCI bridge: Broadcom HT2100 PCI-Express Bridge (rev a2) (prog-if 00 [Normal decode])
-	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-	Latency: 0, Cache Line Size: 64 bytes
-	Interrupt: pin A routed to IRQ 19
-	NUMA node: 0
-	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-	I/O behind bridge: 0000f000-00000fff [empty]
-	Memory behind bridge: efe00000-efefffff [size=1M]
-	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff [empty]
-	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-	BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
-		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-	Capabilities: [a0] HyperTransport: MSI Mapping Enable+ Fixed-
-		Mapping Address Base: 00000000fee00000
-	Capabilities: [b0] Express (v1) Root Port (Slot-), MSI 00
+  It may be that we should approach this from the completely opposite
+direction and instead of having quirks which identify problematic devices,
+have quirks which identify devices which would benefit from the use of
+Relaxed Ordering (if the sending device supports that).  That is, assume th=
+e
+using Relaxed Ordering shouldn't be done unless the target device says "I
+love Relaxed Ordering TLPs" ...  In such a world, an NVMe or a Graphics
+device might declare love of Relaxed Ordering and the same for a SPARC Root
+Complex (I think that was your example).
 
-I'll post a patch to apply extended tags to systems with PCI express v2 and higher
-bridges only.
+  By the way, the sole example of Data Corruption with Relaxed Ordering is
+the AMD A1100 ARM SoC and AMD appears to have given up on that almost as
+soon as it was released.  So what we're left with currently is a performanc=
+e
+problem on modern Intel CPUs ...  (And hopefully we'll get a Technical
+Publication on that issue fairly soon.)
 
-
-> 
-> Enjoy,
-> - Wim.
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Casey
