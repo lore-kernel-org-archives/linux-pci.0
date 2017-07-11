@@ -1,50 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34930 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750917AbdGNVMQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 17:12:16 -0400
-Received: by mail-wm0-f68.google.com with SMTP id u23so12808149wma.2
-        for <linux-pci@vger.kernel.org>; Fri, 14 Jul 2017 14:12:16 -0700 (PDT)
-MIME-Version: 1.0
-From: =?UTF-8?B?SW1yZSBWYWTDoXN6?= <imrevdsz@gmail.com>
-Date: Fri, 14 Jul 2017 23:12:15 +0200
-Message-ID: <CAE5pWrnsc0a5ED14Q9iOOmVZt0ZsguddG78KuYKzVKo1Mk-ihQ@mail.gmail.com>
-Subject: [PATCH 1/2] fbsd-device: Fix fbsd-device backend on DragonFly BSD.
-To: linux-pci@vger.kernel.org
-Cc: mj@ucw.cz
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34145 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755715AbdGKJ1i (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2017 05:27:38 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/3] PCI: pci-sysfs: constify attribute_group structures.
+Date: Tue, 11 Jul 2017 14:57:07 +0530
+Message-Id: <1499765228-543-2-git-send-email-arvind.yadav.cs@gmail.com>
+In-Reply-To: <1499765228-543-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1499765228-543-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DragonFly also supports PCI domains same as FreeBSD.
+attribute_groups are not supposed to change at runtime. All functions
+working with attribute_groups provided by <linux/sysfs.h> work
+with const attribute_group. So mark the non-const structs as const.
 
-Signed-off-by: Imre Vad=C3=A1sz <imrevdsz@gmail.com>
+File size before:
+   text	   data	    bss	    dec	    hex	filename
+   8480	   2024	      4	  10508	   290c	drivers/pci/pci-sysfs.o
+
+File size After adding 'const':
+   text	   data	    bss	    dec	    hex	filename
+   8736	   1768	      4	  10508	   290c	drivers/pci/pci-sysfs.o
+
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- lib/fbsd-device.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/pci-sysfs.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/lib/fbsd-device.c b/lib/fbsd-device.c
-index ab04954..398fe68 100644
---- a/lib/fbsd-device.c
-+++ b/lib/fbsd-device.c
-@@ -77,7 +77,7 @@ fbsd_read(struct pci_dev *d, int pos, byte *buf, int len)
-   if (pos >=3D 256)
-     return 0;
-
--#if __FreeBSD_version >=3D 700053
-+#if __FreeBSD_version >=3D 700053 || defined(__DragonFly__)
-   pi.pi_sel.pc_domain =3D d->domain;
- #endif
-   pi.pi_sel.pc_bus =3D d->bus;
-@@ -120,7 +120,7 @@ fbsd_write(struct pci_dev *d, int pos, byte *buf, int l=
-en)
-   if (pos >=3D 256)
-     return 0;
-
--#if __FreeBSD_version >=3D 700053
-+#if __FreeBSD_version >=3D 700053 || defined(__DragonFly__)
-   pi.pi_sel.pc_domain =3D d->domain;
- #endif
-   pi.pi_sel.pc_bus =3D d->bus;
---
-2.12.1
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 2f3780b..2eed0dc 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1735,7 +1735,7 @@ static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
+ 	NULL,
+ };
+ 
+-static struct attribute_group pci_dev_hp_attr_group = {
++static const struct attribute_group pci_dev_hp_attr_group = {
+ 	.attrs = pci_dev_hp_attrs,
+ 	.is_visible = pci_dev_hp_attrs_are_visible,
+ };
+@@ -1759,23 +1759,23 @@ static umode_t sriov_attrs_are_visible(struct kobject *kobj,
+ 	return a->mode;
+ }
+ 
+-static struct attribute_group sriov_dev_attr_group = {
++static const struct attribute_group sriov_dev_attr_group = {
+ 	.attrs = sriov_dev_attrs,
+ 	.is_visible = sriov_attrs_are_visible,
+ };
+ #endif /* CONFIG_PCI_IOV */
+ 
+-static struct attribute_group pci_dev_attr_group = {
++static const struct attribute_group pci_dev_attr_group = {
+ 	.attrs = pci_dev_dev_attrs,
+ 	.is_visible = pci_dev_attrs_are_visible,
+ };
+ 
+-static struct attribute_group pci_bridge_attr_group = {
++static const struct attribute_group pci_bridge_attr_group = {
+ 	.attrs = pci_bridge_attrs,
+ 	.is_visible = pci_bridge_attrs_are_visible,
+ };
+ 
+-static struct attribute_group pcie_dev_attr_group = {
++static const struct attribute_group pcie_dev_attr_group = {
+ 	.attrs = pcie_dev_attrs,
+ 	.is_visible = pcie_dev_attrs_are_visible,
+ };
+-- 
+1.9.1
