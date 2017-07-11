@@ -1,65 +1,62 @@
-Return-Path: <SRS0=TCfM=6R=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=TCfM=6R=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, vikrams@codeaurora.org,
- Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
- <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
- <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
- <20170713233859.GA5944@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <46d89272-e962-d26a-6816-4f7a4615773c@codeaurora.org>
-Date: Fri, 14 Jul 2017 10:10:08 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:43320 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752023AbdGKKxZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Jul 2017 06:53:25 -0400
+Subject: Re: Support SVM without PASID
+To: valmiki <valmikibow@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
+        kevin.tian@intel.com, jacob.jun.pan@intel.com
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+Date: Tue, 11 Jul 2017 11:56:16 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170713233859.GA5944@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/13/2017 7:38 PM, Bjorn Helgaas wrote:
->> This does not specify a hard limit above on how long SW need to wait. 
-> I wouldn't expect a *maximum* time we can wait.  I'm looking for the
-> minimum times the spec requires.
+Hi Valmiki,
 
-My understanding is FLR needs to finish in 100ms max under normal circumstances.
-If an endpoint needs more, it needs to issue CRS.
+On 09/07/17 04:15, valmiki wrote:
+>>> Hi,
+>>>
+>>> In SMMUv3 architecture document i see "PASIDs are optional,
+>>> configurable, and of a size determined by the minimum
+>>> of the endpoint".
+>>>
+>>> So if PASID's are optional and not supported by PCIe end point, how SVM
+>>> can be achieved ?
+>>
+>> It cannot be inferred from that statement that PASID support is not
+>> required for SVM.  AIUI, SVM is a software feature enabled by numerous
+>> "optional" hardware features, including PASID.  Features that are
+>> optional per the hardware specification may be required for specific
+>> software features.  Thanks,
+>>
+> Thanks for the information Alex. Suppose if an End point doesn't support
+> PASID, is it still possible to achieve SVM ?
+> Are there any such features in SMMUv3 with which we can achieve it ?
 
-	"After an FLR has been initiated by writing a 1b to the Initiate Function Level Reset bit, 
-	the Function must complete the FLR within 100 ms. 
+Not really, we don't plan to share the non-PASID context with a process.
 
-	...
+In theory you could achieve something resembling SVM by assigning the
+entire endpoint to userspace using VFIO, then use ATS+PRI capabilities
+with a bind ioctl. If your device can do SR-IOV, then you can bind one
+process per virtual function.
 
-	it is recommended that software allow as much time as provided by the pre-FLR value for Completion 
-	Timeout on the device. If Completion Timeouts were disabled on the Function when FLR was issued, 
-	then the delay is system dependent but must be no less than 100 ms."
+Unless we end up seeing lots of endpoints that implement PRI but not
+PASID, I don't plan to add this to VFIO or SMMUv3.
 
-The only minimum I found is in the last paragraph where somebody actually disables
-completion timeout. I don't know why anyone would do that.
+For a PCIe endpoint, the requirements for SVM are ATS, PRI and PASID
+enabled. In addition, the SMMU should support DVM (broadcast TLB
+maintenance) and must be compatible with the MMU (page sizes, output
+address size, ASID bits...)
 
-> 
-> If you're claiming "the spec is calling to wait up to 1 second", I
-> just want to know where in the spec it says that.  That helps in the
-> future when we need to maintain code like this.
-> 
-
-Keith and I discussed this here. 
-
-https://www.spinics.net/lists/arm-kernel/msg593493.html
-
-We have a spec language problem. My interpretation of this is 1 seconds
-max for CRS.
-
-	"When used, DRS and FRS allow an improved behavior over the CRS mechanism, 
-	and eliminate its associated periodic polling time of up to 1 second
-	following a reset."
-
-The ECN is referring to conventional reset as 1 second max rather than CRS.
-	https://www.spinics.net/lists/arm-kernel/msg593500.html
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Thanks,
+Jean
