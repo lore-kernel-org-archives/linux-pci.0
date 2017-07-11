@@ -1,148 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:36616 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753704AbdGNNsw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 09:48:52 -0400
-Received: by mail-wr0-f173.google.com with SMTP id v60so1478576wrc.3
-        for <linux-pci@vger.kernel.org>; Fri, 14 Jul 2017 06:48:51 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-efi@vger.kernel.org
-Cc: linux-pci@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        matt@codeblueprint.co.uk, pjones@redhat.com, bhelgaas@google.com,
-        b.zolnierkie@samsung.com, lorenzo.pieralisi@arm.com,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH v3] drivers/fbdev: efifb: allow BAR to be moved instead of claiming it
-Date: Fri, 14 Jul 2017 14:48:34 +0100
-Message-Id: <20170714134834.14191-1-ard.biesheuvel@linaro.org>
+Received: from mail-sn1nam01on0064.outbound.protection.outlook.com ([104.47.32.64]:22992
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932750AbdGKTIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Jul 2017 15:08:05 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Joerg Roedel' <jroedel@suse.de>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        "Samuel Sieb" <samuel@sieb.net>,
+        David Woodhouse <dwmw2@infradead.org>
+Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Date: Tue, 11 Jul 2017 19:08:03 +0000
+Message-ID: <CY4PR12MB16536D76B95B9CE43CD7370AF7AE0@CY4PR12MB1653.namprd12.prod.outlook.com>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+ <20170615140421.GB25710@suse.de>
+ <20170615191545.GB12735@bhelgaas-glaptop.roam.corp.google.com>
+ <20170616162923.GE25710@suse.de>
+ <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
+ <20170711114948.GA6244@suse.de>
+In-Reply-To: <20170711114948.GA6244@suse.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On UEFI systems, the firmware may expose a Graphics Output Protocol (GOP)
-instance to which the efifb driver attempts to attach in order to provide
-a minimal, unaccelerated framebuffer. The GOP protocol itself is not very
-sophisticated, and only describes the offset and size of the framebuffer
-in memory, and the pixel format.
+> -----Original Message-----
+> From: Joerg Roedel [mailto:jroedel@suse.de]
+> Sent: Tuesday, July 11, 2017 7:50 AM
+> To: Bjorn Helgaas
+> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.or=
+g;
+> Daniel Drake; Deucher, Alexander; Samuel Sieb; David Woodhouse
+> Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+>=20
+> Hi Bjorn,
+>=20
+> On Mon, Jul 10, 2017 at 11:53:58AM -0500, Bjorn Helgaas wrote:
+> > I'm still confused.  Per Samuel
+> > (6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net):
+> >
+> > Samuel> The other patch seems to fix this issue without disabling ATS.
+> > Samuel> Isn't that better?
+> >
+> > and Alex
+> >
+> (BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd1
+> 2.prod.outlook.com):
+> >
+> > Alex> I talked to our validation team and ATS was validated on Stoney,
+> > Alex> so this patch is just working around something else.  The other
+> > Alex> patch fixes it and is a valid optimization ...
+> >
+> > I'm confused about what this "other patch" is and whether we want that
+> > one, this one, or both.
 
-If the GOP framebuffer is provided by a PCI device, it will have been
-configured and enabled by the UEFI firmware, and the GOP protocol will
-simply point into a live BAR region. However, the GOP protocol itself does
-not describe this relation, and so we have to take care not to reconfigure
-the BAR without taking efifb's dependency on it into account.
+Here's the other patch:
+https://lists.freedesktop.org/archives/amd-gfx/2017-May/009421.html
 
-Commit 55d728a40d36 ("efi/fb: Avoid reconfiguration of BAR that covers
-the framebuffer") attempted to do so by claiming the BAR resource early
-on, which prevents the PCI resource allocation routines from changing it.
-However, it turns out that this only works if the PCI device is not
-behind any bridges, since the bridge resources need to be claimed first.
+>=20
+> The other patches floating around lowered the ATS flush-rate from the
+> AMD IOMMU driver, which makes the issue disappear as well. But the issue
+> only disappeared, it is not solved and could probably still be
+> reproduced with a GPU usage pattern that increases the ATS flush-rate.
+>=20
+> So blacklisting the device for ATS is still the safest thing we could do
+> here.
 
-So instead, allow the BAR to be moved, but make the efifb driver deal
-with that gracefully. So record the resource that covers the BAR early
-on, and if it turns out to have moved by the time we probe the efifb
-driver, update the framebuffer address accordingly.
+I don't have any objection per se, but I'd hate to add a quirk to disable i=
+t only to remove it again in the future if we needed ATS related functional=
+ity later.  We are in the process of upstreaming KFD support for Carrizo (w=
+hich is a bigger version of Stoney) and that utilizes ATS related functiona=
+lity to provide GPU access to pageable memory.  There are no immediate requ=
+irements for Stoney, but that may change.
 
-While this is less likely to occur on x86, given that the firmware's
-PCI resource allocation is more likely to be preserved, this is a
-worthwhile sanity check to have in place, and so let's remove the
-preprocessor conditional that makes it !X86 only.
-
-Reviewed-by: Peter Jones <pjones@redhat.com>
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
-v3: - at the request of Bjorn, record the struct pci_dev pointer as well,
-      so that we can output something along the lines of
-
-        pci 0000:02:01.0: BAR has moved, updating efifb address
-
-    - fix missing line in commit log
-
-I will go ahead and queue this version in the EFI tree (unless anyone
-objects.
-
- drivers/video/fbdev/efifb.c | 31 ++++++++++++--------
- 1 file changed, 18 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-index b827a8113e26..3293f95700fb 100644
---- a/drivers/video/fbdev/efifb.c
-+++ b/drivers/video/fbdev/efifb.c
-@@ -146,6 +146,10 @@ ATTRIBUTE_GROUPS(efifb);
- 
- static bool pci_dev_disabled;	/* FB base matches BAR of a disabled device */
- 
-+static struct pci_dev *efifb_pci_dev;	/* dev with BAR covering the efifb */
-+static struct resource *bar_resource;
-+static u64 bar_offset;
-+
- static int efifb_probe(struct platform_device *dev)
- {
- 	struct fb_info *info;
-@@ -200,6 +204,13 @@ static int efifb_probe(struct platform_device *dev)
- 		efifb_fix.smem_start |= ext_lfb_base;
- 	}
- 
-+	if (bar_resource &&
-+	    bar_resource->start + bar_offset != efifb_fix.smem_start) {
-+		dev_info(&efifb_pci_dev->dev,
-+			 "BAR has moved, updating efifb address\n");
-+		efifb_fix.smem_start = bar_resource->start + bar_offset;
-+	}
-+
- 	efifb_defined.bits_per_pixel = screen_info.lfb_depth;
- 	efifb_defined.xres = screen_info.lfb_width;
- 	efifb_defined.yres = screen_info.lfb_height;
-@@ -364,15 +375,13 @@ static struct platform_driver efifb_driver = {
- 
- builtin_platform_driver(efifb_driver);
- 
--#if defined(CONFIG_PCI) && !defined(CONFIG_X86)
--
--static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
-+#if defined(CONFIG_PCI)
- 
--static void claim_efifb_bar(struct pci_dev *dev, int idx)
-+static void record_efifb_bar_resource(struct pci_dev *dev, int idx, u64 offset)
- {
- 	u16 word;
- 
--	pci_bar_found = true;
-+	efifb_pci_dev = dev;
- 
- 	pci_read_config_word(dev, PCI_COMMAND, &word);
- 	if (!(word & PCI_COMMAND_MEMORY)) {
-@@ -383,12 +392,8 @@ static void claim_efifb_bar(struct pci_dev *dev, int idx)
- 		return;
- 	}
- 
--	if (pci_claim_resource(dev, idx)) {
--		pci_dev_disabled = true;
--		dev_err(&dev->dev,
--			"BAR %d: failed to claim resource for efifb!\n", idx);
--		return;
--	}
-+	bar_resource = &dev->resource[idx];
-+	bar_offset = offset;
- 
- 	dev_info(&dev->dev, "BAR %d: assigned to efifb\n", idx);
- }
-@@ -399,7 +404,7 @@ static void efifb_fixup_resources(struct pci_dev *dev)
- 	u64 size = screen_info.lfb_size;
- 	int i;
- 
--	if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-+	if (efifb_pci_dev || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
- 		return;
- 
- 	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-@@ -415,7 +420,7 @@ static void efifb_fixup_resources(struct pci_dev *dev)
- 			continue;
- 
- 		if (res->start <= base && res->end >= base + size - 1) {
--			claim_efifb_bar(dev, i);
-+			record_efifb_bar_resource(dev, i, base - res->start);
- 			break;
- 		}
- 	}
--- 
-2.9.3
+Alex
