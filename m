@@ -1,69 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
- <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
- <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
- <ryder.lee@mediatek.com>
-Subject: [PATCH v2 0/5] PCI: MediaTek: Add support for new generation host
- controller
-Date: Thu, 27 Jul 2017 10:58:34 +0800
-Message-ID: <cover.1501122135.git.honghui.zhang@mediatek.com>
+Return-Path: <SRS0=5Tji=6O=suse.de=jroedel@kernel.org>
+Return-Path: <SRS0=5Tji=6O=suse.de=jroedel@kernel.org>
+Date: Tue, 11 Jul 2017 13:49:48 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
+	Alexander Deucher <Alexander.Deucher@amd.com>,
+	Samuel Sieb <samuel@sieb.net>,
+	David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Message-ID: <20170711114948.GA6244@suse.de>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+ <20170615140421.GB25710@suse.de>
+ <20170615191545.GB12735@bhelgaas-glaptop.roam.corp.google.com>
+ <20170616162923.GE25710@suse.de>
+ <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Hi Bjorn,
 
-MediaTek's PCIe host controller has two generation HWs, the new
-generation HW has two root ports, it shares most probing flow with the
-legacy controller. But the read/write config space logical is different
-from the lagacy controller.
-This patchset abstract the common probing flow, and add support for the
-new generation controller.
+On Mon, Jul 10, 2017 at 11:53:58AM -0500, Bjorn Helgaas wrote:
+> I'm still confused.  Per Samuel
+> (6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net):
+> 
+> Samuel> The other patch seems to fix this issue without disabling ATS.
+> Samuel> Isn't that better?
+> 
+> and Alex
+> (BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd12.prod.outlook.com):
+> 
+> Alex> I talked to our validation team and ATS was validated on Stoney,
+> Alex> so this patch is just working around something else.  The other
+> Alex> patch fixes it and is a valid optimization ...
+> 
+> I'm confused about what this "other patch" is and whether we want that
+> one, this one, or both.
 
-Changes since v1:
- - Fix build warnings in arm arch.
- - Using SoC specific compatible instead of generic compatible.
- - Add devicetree binding example for mt7622.
- - Unified the register define names with PCIE_ prefix.
- - Cleanup some un-necessary condition determine when starup port.
- - minor code cleanups.
+The other patches floating around lowered the ATS flush-rate from the
+AMD IOMMU driver, which makes the issue disappear as well. But the issue
+only disappeared, it is not solved and could probably still be
+reproduced with a GPU usage pattern that increases the ATS flush-rate.
 
-Ryder Lee (5):
-  PCI: mediatek: Add a structure to abstract the controller generations
-  PCI: mediatek: switch to use platform_get_resource_byname()
-  dt-bindings: PCI: rename and cleanup MediaTek binding text
-  PCI: mediatek: Add new generation controller support
-  dt-bindings: PCI: add support for new generation controller
-
- .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 -----
- .../devicetree/bindings/pci/mediatek-pcie.txt      | 283 ++++++++++
- drivers/pci/host/Kconfig                           |   5 +-
- drivers/pci/host/pcie-mediatek.c                   | 588 +++++++++++++++++++--
- 4 files changed, 829 insertions(+), 177 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-
--- 
-2.6.4
+So blacklisting the device for ATS is still the safest thing we could do
+here.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards,
+
+	Joerg
