@@ -1,152 +1,169 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36634 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.99]:41406 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752445AbdGYU6G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 16:58:06 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
+        id S1750933AbdGLWmF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jul 2017 18:42:05 -0400
+Date: Wed, 12 Jul 2017 17:42:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:51 -0600
-Message-Id: <20170725205753.4735-15-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Sadashiva Rao Pv <sadashiva.rao.pv@intel.com>,
+        Naresh Solanki <naresh.solanki@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [PATCH] PCI / PM: Fix native PME handling during system
+ suspend/resume
+Message-ID: <20170712224202.GA4020@bhelgaas-glaptop.roam.corp.google.com>
+References: <3705400.FL23FbEzsj@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3705400.FL23FbEzsj@aspire.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Seeing there is no dedicated hardware for this, we simply add
-these as entries in the shared memory window. Thus, we could support
-any number of them but 128 seems like enough, for now.
+On Thu, Jul 06, 2017 at 02:32:02AM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Commit 76cde7e49590 (PCI / PM: Make PCIe PME interrupts wake up from
+> suspend-to-idle) went too far with preventing pcie_pme_work_fn() from
+> clearing the root port's PME Status and re-enabling the PME interrupt
+> which should be done for PMEs to work correctly after system resume.
+> 
+> The failing scenario is as follows:
+> 
+>  1. pcie_pme_suspend() finds that the PME IRQ should be designated
+>     for system wakeup, so it calls enable_irq_wake() and then sets
+>     data->suspend_level to PME_SUSPEND_WAKEUP.
+> 
+>  2. PME interrupt happens at this point.
+> 
+>  3. pcie_pme_irq() runs, disables the PME interrupt and queues up
+>     the execution of pcie_pme_work_fn().
+> 
+>  4. pcie_pme_work_fn() runs before pcie_pme_resume() and breaks out
+>     of the loop right away, because data->suspend_level is not 
+>     PME_SUSPEND_NONE, and it doesn't re-enable the PME interrupt
+>     for the same reason.
+> 
+>  5. pcie_pme_resume() runs and simply calls disable_irq_wake()
+>     without re-enabling the PME interrupt (because data->suspend_level
+>     is not PME_SUSPEND_NONE), so the PME interrupt remains disabled
+>     and the PME Status remains set.
+> 
+> To fix this notice that there is no reason why pcie_pme_work_fn()
+> should behave in a special way during system resume if the PME
+> interrupt is not disabled by pcie_pme_suspend() and partially revert
+> commit 76cde7e49590 and restore the previous (and correct) behavior
+> of pcie_pme_work_fn().
+> 
+> Fixes: 76cde7e49590 (PCI / PM: Make PCIe PME interrupts wake up from suspend-to-idle)
+> Reported-by: Naresh Solanki <naresh.solanki@intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 73 insertions(+), 2 deletions(-)
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 3037ca730998..ca403ad2f7ac 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -67,6 +67,7 @@ struct shared_mw {
- 	u32 link_sta;
- 	u32 partition_id;
- 	u64 mw_sizes[MAX_MWS];
-+	u32 spad[128];
- };
- 
- #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-@@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
- 
- static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return ARRAY_SIZE(sndev->self_shared->spad);
- }
- 
- static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
-+		return 0;
-+
-+	if (!sndev->self_shared)
-+		return 0;
-+
-+	return sndev->self_shared->spad[idx];
- }
- 
- static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
-+		return -EINVAL;
-+
-+	if (!sndev->self_shared)
-+		return -EIO;
-+
-+	sndev->self_shared->spad[idx] = val;
-+
- 	return 0;
- }
- 
-+static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
-+					int sidx)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
-+		return 0;
-+
-+	if (!sndev->peer_shared)
-+		return 0;
-+
-+	return ioread32(&sndev->peer_shared->spad[sidx]);
-+}
-+
- static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
- 					 int sidx, u32 val)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
-+		return -EINVAL;
-+
-+	if (!sndev->peer_shared)
-+		return -EIO;
-+
-+	iowrite32(val, &sndev->peer_shared->spad[sidx]);
-+
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
-+					int sidx, phys_addr_t *spad_addr)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	unsigned long offset;
-+
-+	if (pidx != NTB_DEF_PEER_IDX)
-+		return -EINVAL;
-+
-+	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
-+		(unsigned long)sndev->stdev->mmio;
-+
-+	if (spad_addr)
-+		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
-+
- 	return 0;
- }
- 
-@@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
- 	.spad_count		= switchtec_ntb_spad_count,
- 	.spad_read		= switchtec_ntb_spad_read,
- 	.spad_write		= switchtec_ntb_spad_write,
-+	.peer_spad_read		= switchtec_ntb_peer_spad_read,
- 	.peer_spad_write	= switchtec_ntb_peer_spad_write,
-+	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
- };
- 
- static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
--- 
-2.11.0
+I assume you'll apply this; let me know if you need anything else from me.
+
+> ---
+>  drivers/pci/pcie/pme.c |   35 +++++++++++++----------------------
+>  1 file changed, 13 insertions(+), 22 deletions(-)
+> 
+> Index: linux-pm/drivers/pci/pcie/pme.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pcie/pme.c
+> +++ linux-pm/drivers/pci/pcie/pme.c
+> @@ -40,17 +40,11 @@ static int __init pcie_pme_setup(char *s
+>  }
+>  __setup("pcie_pme=", pcie_pme_setup);
+>  
+> -enum pme_suspend_level {
+> -	PME_SUSPEND_NONE = 0,
+> -	PME_SUSPEND_WAKEUP,
+> -	PME_SUSPEND_NOIRQ,
+> -};
+> -
+>  struct pcie_pme_service_data {
+>  	spinlock_t lock;
+>  	struct pcie_device *srv;
+>  	struct work_struct work;
+> -	enum pme_suspend_level suspend_level;
+> +	bool noirq; /* If set, keep the PME interrupt disabled. */
+>  };
+>  
+>  /**
+> @@ -228,7 +222,7 @@ static void pcie_pme_work_fn(struct work
+>  	spin_lock_irq(&data->lock);
+>  
+>  	for (;;) {
+> -		if (data->suspend_level != PME_SUSPEND_NONE)
+> +		if (data->noirq)
+>  			break;
+>  
+>  		pcie_capability_read_dword(port, PCI_EXP_RTSTA, &rtsta);
+> @@ -255,7 +249,7 @@ static void pcie_pme_work_fn(struct work
+>  		spin_lock_irq(&data->lock);
+>  	}
+>  
+> -	if (data->suspend_level == PME_SUSPEND_NONE)
+> +	if (!data->noirq)
+>  		pcie_pme_interrupt_enable(port, true);
+>  
+>  	spin_unlock_irq(&data->lock);
+> @@ -378,7 +372,7 @@ static int pcie_pme_suspend(struct pcie_
+>  {
+>  	struct pcie_pme_service_data *data = get_service_data(srv);
+>  	struct pci_dev *port = srv->port;
+> -	bool wakeup, wake_irq_enabled = false;
+> +	bool wakeup;
+>  	int ret;
+>  
+>  	if (device_may_wakeup(&port->dev)) {
+> @@ -388,19 +382,16 @@ static int pcie_pme_suspend(struct pcie_
+>  		wakeup = pcie_pme_check_wakeup(port->subordinate);
+>  		up_read(&pci_bus_sem);
+>  	}
+> -	spin_lock_irq(&data->lock);
+>  	if (wakeup) {
+>  		ret = enable_irq_wake(srv->irq);
+> -		if (ret == 0) {
+> -			data->suspend_level = PME_SUSPEND_WAKEUP;
+> -			wake_irq_enabled = true;
+> -		}
+> -	}
+> -	if (!wake_irq_enabled) {
+> -		pcie_pme_interrupt_enable(port, false);
+> -		pcie_clear_root_pme_status(port);
+> -		data->suspend_level = PME_SUSPEND_NOIRQ;
+> +		if (!ret)
+> +			return 0;
+>  	}
+> +
+> +	spin_lock_irq(&data->lock);
+> +	pcie_pme_interrupt_enable(port, false);
+> +	pcie_clear_root_pme_status(port);
+> +	data->noirq = true;
+>  	spin_unlock_irq(&data->lock);
+>  
+>  	synchronize_irq(srv->irq);
+> @@ -417,15 +408,15 @@ static int pcie_pme_resume(struct pcie_d
+>  	struct pcie_pme_service_data *data = get_service_data(srv);
+>  
+>  	spin_lock_irq(&data->lock);
+> -	if (data->suspend_level == PME_SUSPEND_NOIRQ) {
+> +	if (data->noirq) {
+>  		struct pci_dev *port = srv->port;
+>  
+>  		pcie_clear_root_pme_status(port);
+>  		pcie_pme_interrupt_enable(port, true);
+> +		data->noirq = false;
+>  	} else {
+>  		disable_irq_wake(srv->irq);
+>  	}
+> -	data->suspend_level = PME_SUSPEND_NONE;
+>  	spin_unlock_irq(&data->lock);
+>  
+>  	return 0;
+> 
