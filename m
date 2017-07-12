@@ -1,162 +1,216 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:30166 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751964AbdGEVEA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 17:04:00 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
- <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
- <594955BC.3010703@ti.com> <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
- <a6380712-214b-990b-69e3-e3889835879b@arm.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-From: Murali Karicheri <m-karicheri2@ti.com>
-Message-ID: <595D5423.50908@ti.com>
-Date: Wed, 5 Jul 2017 17:03:31 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Jul 2017 14:34:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V4] PCI: Add Extended Tags quirk for Broadcom HT2100 Root
+ Port
+Message-ID: <20170712193432.GD14614@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499832255-9845-1-git-send-email-okaya@codeaurora.org>
+ <20170712105550.6007fa06.wim.ten.have@oracle.com>
+ <CABawtvMCJy1Y0Cv-NhVRv4qKLiZ-PUWfeZhTA6uGiiiswe+g6A@mail.gmail.com>
+ <b8ccaffe-d907-db04-a793-86a3b67f61af@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <a6380712-214b-990b-69e3-e3889835879b@arm.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <b8ccaffe-d907-db04-a793-86a3b67f61af@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci <linux-pci@vger.kernel.org>, timur@codeaurora.org,
+ LKML <linux-kernel@vger.kernel.org>, Wim ten Have <wim.ten.have@oracle.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Ethan Zhao <ethan.kernel@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/05/2017 11:26 AM, Marc Zyngier wrote:
-> On 05/07/17 11:57, Joao Pinto wrote:
->> Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
->>> On 06/20/2017 12:28 PM, Joao Pinto wrote:
->>>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
->>>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
->>>>>>
->>>>>> Hi Murali,
->>>>>>
->>>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->>>>>>> Joao,
->>>>>>>
->>>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>>>>>>> This patch series adds the new interrupt api to pcie-designware
->>>>>>>> make it possible to use features like MSIX.
->>>>>>>>
->>>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
->>>>>>>> specific driver.
->>>>>>>>
->>>>>>>> The patch set was made against the Bjorn' next branch.
->>>>>>>>
->>>>>>>> Joao Pinto (9):
->>>>>>>>   pci: adding new irq api to pci-designware
->>>>>>>>   pci: exynos SoC driver adapted to new irq API
->>>>>>>>   pci: imx6 SoC driver adapted to new irq API
->>>>>>>>   pci: artpec6 SoC driver adapted to new irq API
->>>>>>>>   pci: generic PCIe DW driver adapted to new irq API
->>>>>>>>   pci: qcom SoC driver adapted to new irq API
->>>>>>>>   pci: keystone SoC driver adapted to new irq API
->>>>>>>>   pci: removing old irq api from pcie-designware
->>>>>>>>   pci: remove limitation of the number of the available IRQs
->>>>>>>>
->>>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>>>>>>
->>>>>>>
->>>>>>> I gave this a try today and it failed. Logs at
->>>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>>>>>>
->>>>>>> The first part of the log is with your patch series.
->>>>>>> The second part is before applying the patch. You will see
->>>>>>> that there is qc timeout log that shows the issue
->>>>>>>
->>>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->>>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->>>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->>>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>>>
->>>>>>> Is there any DT change I need to make for this? I didn't have a
->>>>>>> chance to review your patch w.r.t Keystone. But I see you have change
->>>>>>> the MSI IRq handling.
->>>>>>>
->>>>>>
->>>>>> There is no need to change your DT. I think I will need to debug this issue
->>>>>> further. Could you please advice a board containing this SoC?
->>>>>>
->>>>> I think I may be able to work with you on this. Keystone has different 
->>>>> register set for MSI IRQ. It is in application space. Also there are
->>>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
->>>>> please review the original code vs the changed one w.r.t to this. I haven't
->>>>> had a chance to review the code as I am in the middle of a release.
->>>>> But will be able to spend some time after two weeks. Meanwhile please
->>>>> spend some time reviewing the code and exchange email to identify
->>>>> the issue. I can add specific debug prints for you as well and provide
->>>>> you the log for analysis.
->>>>
->>>> Ok, I agree! Thanks!
->>>>
->>>>>
->>> Look at this logic in the patch where a potential issue exists for Keystone.
->>>
->>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
->>> +{
->>> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
->>> +       struct pcie_port *pp = &pci->pp;
->>> +       u64 msi_target;
->>> +
->>> +       if (pp->ops->get_msi_addr)
->>> +               msi_target = pp->ops->get_msi_addr(pp);
->>> +       else
->>> +               msi_target = virt_to_phys((void *)pp->msi_data);
->>> +
->>> +       msg->address_lo = lower_32_bits(msi_target);
->>> +       msg->address_hi = upper_32_bits(msi_target);
->>> +
->>> +       if (pp->ops->get_msi_data)
->>> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
->>> +       else
->>> +               msg->data = data->hwirq;
->>> +
->>> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
->>> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
->>> +}
->>>
->>> Keystone has 8 hw irqs, 4 multiplexed over each since the register
->>> set is different than other DWC cores. So will not work for Keystone,
->>> right?
->>
->> Well, that can be challenging, since it is a very particular operation.
->> Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
->> overide this one if necessary. What do you think?
-> 
-> At that rate, and given that keystone seems to override almost all
-> operations in this driver, wouldn't it make sense for this to be
-> implemented as a *separate* driver?
-Marc,
+On Wed, Jul 12, 2017 at 08:15:43AM -0400, Sinan Kaya wrote:
+> On 7/12/2017 5:44 AM, Ethan Zhao wrote:
+> > The dmesg yelled "...Tag handling is broken" , but didn't say how it
+> > was handled, that is weird and confusing, just because there is no
+> > device under that bridge ?
+> > 
+> > How about move the messages together "...is broken, disable Extended tag..."
 
-What you mean by separate driver? Just the MSI handling part? 
+I changed the message this:
 
-Murali
+  pci 0000:00:07.0: disabling Extended Tags (this device can't handle them)
+
+We don't see any message from 0000:01:00.0 itself because it powered up
+with Extended Tags disabled.  If it powered up with Extended Tags *enabled*
+(as allowed by the ECN), we would see this:
+
+  pci 0000:00:07.0: disabling Extended Tags (this device can't handle them)
+  pci 0000:01:00.0: disabling Extended Tags
+
+Does that seem reasonable?  Complete updated patch attached below.
+
+> This was something requested by Bjorn to inform that user has a broken HW
+> when a quirk is matched.
 > 
-> Thanks,
+> The new code will disable extended tags only if it was enabled on endpoint
+> via power on reset value or via some broken BIOS.
 > 
-> 	M.
+> It looks like we are not seeing any disabling message. This implies that
+> both the card and BIOS is good.
 > 
+> That's why, you are no longer seeing a disabling message on this system
+> and code is just not enabling extended tags.
 
 
--- 
-Murali Karicheri
-Linux Kernel, Keystone
+commit 2e6e588b99c4c7fbcea55eb48890fa8d0ab0c3d7
+Author: Sinan Kaya <okaya@codeaurora.org>
+Date:   Wed Jul 12 00:04:14 2017 -0400
+
+    PCI: Mark Broadcom HT2100 Root Port Extended Tags as broken
+    
+    Per PCIe r3.1, sec 2.2.6.2 and 7.8.4, a Requester may not use 8-bit Tags
+    unless its Extended Tag Field Enable is set, but all Receivers/Completers
+    must handle 8-bit Tags correctly regardless of their Extended Tag Field
+    Enable.
+    
+    Some devices do not handle 8-bit Tags as Completers, so add a quirk for
+    them.  If we find such a device, we disable Extended Tags for the entire
+    hierarchy to make peer-to-peer DMA possible.
+    
+    The Broadcom HT2100 seems to have issues with handling 8-bit tags.  Mark it
+    as broken.
+    
+    The pci_walk_bus() in the quirk handles devices we've enumerated in the
+    past, and pci_configure_device() handles devices we enumerate in the
+    future.
+    
+    Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+    Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+    Reported-and-tested-by: Wim ten Have <wim.ten.have@oracle.com>
+    Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+    [bhelgaas: changelog, tweak messages, rename bit and quirk]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 03e3d0285aea..9c3d123d358f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -234,6 +234,7 @@ enum pci_bar_type {
+ 	pci_bar_mem64,		/* A 64-bit memory BAR */
+ };
+ 
++int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c31310db0404..c81c9835f4c7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1745,21 +1745,50 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	 */
+ }
+ 
+-static void pci_configure_extended_tags(struct pci_dev *dev)
++int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+ {
+-	u32 dev_cap;
++	struct pci_host_bridge *host;
++	u32 cap;
++	u16 ctl;
+ 	int ret;
+ 
+ 	if (!pci_is_pcie(dev))
+-		return;
++		return 0;
+ 
+-	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &dev_cap);
++	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+ 	if (ret)
+-		return;
++		return 0;
++
++	if (!(cap & PCI_EXP_DEVCAP_EXT_TAG))
++		return 0;
+ 
+-	if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG)
++	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
++	if (ret)
++		return 0;
++
++	host = pci_find_host_bridge(dev->bus);
++	if (!host)
++		return 0;
++
++	/*
++	 * If some device in the hierarchy doesn't handle Extended Tags
++	 * correctly, make sure they're disabled.
++	 */
++	if (host->no_ext_tags) {
++		if (ctl & PCI_EXP_DEVCTL_EXT_TAG) {
++			dev_info(&dev->dev, "disabling Extended Tags\n");
++			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
++						   PCI_EXP_DEVCTL_EXT_TAG);
++		}
++		return 0;
++	}
++
++	if (!(ctl & PCI_EXP_DEVCTL_EXT_TAG)) {
++		dev_info(&dev->dev, "enabling Extended Tags\n");
+ 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+ 					 PCI_EXP_DEVCTL_EXT_TAG);
++	}
++	return 0;
+ }
+ 
+ static void pci_configure_device(struct pci_dev *dev)
+@@ -1768,7 +1797,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ 	int ret;
+ 
+ 	pci_configure_mps(dev);
+-	pci_configure_extended_tags(dev);
++	pci_configure_extended_tags(dev, NULL);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+ 	ret = pci_get_hp_params(dev, &hpp);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6967c6b4cf6b..f135765555c9 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4681,3 +4681,19 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
++
++static void quirk_no_ext_tags(struct pci_dev *pdev)
++{
++	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
++
++	if (!bridge)
++		return;
++
++	bridge->no_ext_tags = 1;
++	dev_info(&pdev->dev, "disabling Extended Tags (this device can't handle them)\n");
++
++	pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140, quirk_no_ext_tags);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142, quirk_no_ext_tags);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144, quirk_no_ext_tags);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4869e66dd659..3b968d435895 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -451,6 +451,7 @@ struct pci_host_bridge {
+ 	void *release_data;
+ 	struct msi_controller *msi;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int no_ext_tags:1;		/* no Extended Tags */
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
