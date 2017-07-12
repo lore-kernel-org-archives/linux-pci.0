@@ -1,106 +1,120 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 5 Jul 2017 13:03:59 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
-Message-ID: <20170705180359.GL13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
- <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
+Return-Path: <SRS0=qdwt=6P=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=qdwt=6P=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: Casey Leedom <leedom@chelsio.com>,
+        Alexander Duyck
+	<alexander.duyck@gmail.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+ <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
+ <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
+ <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
+CC: "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "helgaas@kernel.org"
+	<helgaas@kernel.org>,
+        Michael Werner <werner@chelsio.com>, Ganesh GR
+	<ganeshgr@chelsio.com>,
+        "asit.k.mallick@intel.com"
+	<asit.k.mallick@intel.com>,
+        "patrick.j.cramer@intel.com"
+	<patrick.j.cramer@intel.com>,
+        "Suravee.Suthikulpanit@amd.com"
+	<Suravee.Suthikulpanit@amd.com>,
+        "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+        "amira@mellanox.com"
+	<amira@mellanox.com>,
+        "gabriele.paoloni@huawei.com"
+	<gabriele.paoloni@huawei.com>,
+        "David.Laight@aculab.com"
+	<David.Laight@aculab.com>,
+        "jeffrey.t.kirsher@intel.com"
+	<jeffrey.t.kirsher@intel.com>,
+        "catalin.marinas@arm.com"
+	<catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "robin.murphy@arm.com"
+	<robin.murphy@arm.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
+Date: Wed, 12 Jul 2017 17:46:40 +0800
 MIME-Version: 1.0
-In-Reply-To: <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: DT <devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 05, 2017 at 12:55:37AM +0200, Mason wrote:
-> On 04/07/2017 22:24, Bjorn Helgaas wrote:
+
+
+On 2017/7/11 8:01, Casey Leedom wrote:
 > 
-> > On Tue, Jun 20, 2017 at 10:12:57AM +0200, Marc Gonzalez wrote:
-> >
-> >> Marc Z pointed out that posting partial series is not ideal.
-> >> Collect last-minute fixups into a single patch series.
-> >>
-> >> - Bump series to v9 to avoid any ambiguity
-> >> - Add Rob's Ack on patch 1
-> >>
-> >> Marc Gonzalez (3):
-> >>   PCI: Add DT binding for tango PCIe controller
-> >>   PCI: Add tango PCIe host bridge support
-> >>   PCI: Add tango MSI controller support
-> >>
-> >>  .../devicetree/bindings/pci/tango-pcie.txt         |  29 ++
-> >>  drivers/pci/host/Kconfig                           |   8 +
-> >>  drivers/pci/host/Makefile                          |   1 +
-> >>  drivers/pci/host/pcie-tango.c                      | 390 +++++++++++++++++++++
-> >>  include/linux/pci_ids.h                            |   2 +
-> >>  5 files changed, 430 insertions(+)
-> >>  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
-> >>  create mode 100644 drivers/pci/host/pcie-tango.c
-> > 
-> > I made the trivial changes I mentioned, added a dependency on
-> > CONFIG_BROKEN (for the config/MMIO muxing issue), and put these on
-> > pci/host-tango.  I can't build or test this, so I probably broke
-> > something in the process.  I think the combination of the boot-time
-> > warning, the taint, and CONFIG_BROKEN is a reasonable amount of
-> > warning that a user should expect issues.
-> > 
-> > Can you take a look and see if it works for you?
-> > 
-> > https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-tango
+> Hey Alexander,
 > 
-> Thanks. I'll take it for a spin ASAP.
+>   Okay, I understand your point regarding the "most likely scenario" being
+> TLPs directed upstream to the Root Complex.  But I'd still like to make sure
+> that we have an agreed upon API/methodology for doing Peer-to-Peer with
+> Relaxed Ordering and no Relaxed Ordering to the Root Complex.  I don't see
+> how the proposed APIs can be used in that fashion.
+>  
+>   Right now the proposed change for cxgb4 is for it to test its own PCIe
+> Capability Device Control[Relaxed Ordering Enable] in order to use that
+> information to program the Chelsio Hardware to emit/not emit upstream TLPs
+> with the Relaxed Ordering Attribute set.  But if we're going to have the
+> mixed mode situation I describe, the PCIe Capability Device Control[Relaxed
+> Ordering Enable] will have to be set which means that we'll be programming
+> the Chelsio Hardware to send upstream TLPs with Relaxed Ordering Enable to
+> the Root Complex which is what we were trying to avoid in the first place ...
 > 
-> TAINT_CRAP... Smirk. I didn't see that one in the docs:
-> https://www.kernel.org/doc/html/latest/admin-guide/tainted-kernels.html
+>   [[ And, as I noted on Friday evening, the currect cxgb4 Driver hardwires
+>      the Relaxed Ordering Enable on early dureing device probe, so that
+>      would minimally need to be addressed even if we decide that we don't
+>      ever want to support mixed mode Relaxed Ordering. ]]
 > 
-> Oh wait... TAINT_CRAP is "C" => a staging driver has been loaded
+>   We need some method of telling the Chelsio Driver that it should/shouldn't
+> use Relaxed Ordering with TLPs directed at the Root Complex.  And the same
+> is true for a Peer PCIe Device.
+> 
+>   It may be that we should approach this from the completely opposite
+> direction and instead of having quirks which identify problematic devices,
+> have quirks which identify devices which would benefit from the use of
+> Relaxed Ordering (if the sending device supports that).  That is, assume the
+> using Relaxed Ordering shouldn't be done unless the target device says "I
+> love Relaxed Ordering TLPs" ...  In such a world, an NVMe or a Graphics
+> device might declare love of Relaxed Ordering and the same for a SPARC Root
+> Complex (I think that was your example).
+> 
+>   By the way, the sole example of Data Corruption with Relaxed Ordering is
+> the AMD A1100 ARM SoC and AMD appears to have given up on that almost as
+> soon as it was released.  So what we're left with currently is a performance
+> problem on modern Intel CPUs ...  (And hopefully we'll get a Technical
+> Publication on that issue fairly soon.)
+> 
+> Casey
+> 
 
-I wish it had a less pejorative, more descriptive name.  But it seems like
-the closest to this situation.
+Hi Casey:
 
-> The one issue I anticipate with "depends on BROKEN" is
-> when I add support for revision 2, which isn't broken.
+After the long discuss, I think If the PCIe Capability Device Control[Relaxed Ordering
+Enable] to be cleared when the platform's RC has some problematic for RO didn't break
+anything in your driver, I think you could choose to check the
+(!pci_dev_should_disable_relaxed_ordering(root)) in the code to to enable
+ROOT_NO_RELAXED_ORDERING for your adapter, and enable the PCIe Capability Device Control
+[Relaxed Ordering Enable] bit when you need it, I think we don't have much gap here.
+And we could leave the pear-to-pear situation to be fixed later.
 
-How about this:
+Thanks
+Ding
 
-  - Rename PCIE_TANGO to PCIE_TANGO_REV1
-  - PCIE_TANGO_REV1 depends on BROKEN
-  - Add rev2 support later, enabled by PCIE_TANGO
-  - PCIE_TANGO_REV1 depends on PCIE_TANGO && BROKEN
-
-I updated pci/host-tango along these lines (without rev2 support,
-obviously).
-
-I forgot to ask for a MAINTAINERS update.  Can you send that, too,
-please?
-
-Which reminds me -- are these two addreses
-
-  Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-  Mason <slash.tmp@free.fr>
-
-different names for the same person?  Conversations are easier for me
-if I can keep who's who straight :)
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> .
+> 
