@@ -1,304 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:48095 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753517AbdGSJgg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:36:36 -0400
-Cc: shawn.lin@rock-chips.com, Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [RFC PATCH v4 3/7] phy: rockcip-pcie: reconstruct driver to
- support per-lane PHYs
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
- <1500448979-93067-4-git-send-email-shawn.lin@rock-chips.com>
- <81b03327-e720-ed51-87d1-9ac0c7a9dc0a@ti.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <5497c3e0-a74e-f4ae-dd02-ba321182a9ec@rock-chips.com>
-Date: Wed, 19 Jul 2017 17:36:25 +0800
-MIME-Version: 1.0
-In-Reply-To: <81b03327-e720-ed51-87d1-9ac0c7a9dc0a@ti.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33276 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750722AbdGLFLY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jul 2017 01:11:24 -0400
+Received: by mail-qk0-f196.google.com with SMTP id a66so802937qkb.0
+        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2017 22:11:23 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org
+Cc: Daniel Axtens <dja@axtens.net>,
+        Xinliang Liu <z.liuxinliang@hisilicon.com>,
+        Rongrong Zou <zourongrong@gmail.com>
+Subject: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving HiSilicon bridge
+Date: Wed, 12 Jul 2017 15:08:11 +1000
+Message-Id: <20170712050811.3620-1-dja@axtens.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610) that
+are not spec-compliant: the VGA Enable bit is hardwired to 0 and
+writes do not change it.
 
-On 2017/7/19 16:08, Kishon Vijay Abraham I wrote:
-> Hi Shawn,
-> 
-> On Wednesday 19 July 2017 12:52 PM, Shawn Lin wrote:
->> This patch reconstructs the whole driver to support per-lane
->> PHYs. Note that we could also support the legacy PHY if you
->> don't provide argument to our of_xlate.
-> 
-> one comment below which I failed to notice before..
+The HiSilicon engineers report that the bridge does not forward the
+0xa0000-0xbffff mem range and the 0x3b0-0x3bb and 0x3c0-0x3df I/O
+ranges.
 
-I will fix it and respin v5.
+Because the VGA Enable bit is hardwired to 0, the VGA arbiter refuses
+to mark any card behind it as the boot device. This breaks Xorg
+auto-detection.
 
-BTW, are you fine with all these patches merged via Bjorn's
-PCI tree in order to narrow down the timing gap for testing
-linux-next? If yes, could you kindly ack patch 3 of V5
-if it looks good to you? :)
+However, the hibmc VGA card (PCI ID 19e5:1711) has been tested and is
+known to work when behind these bridges. (It does not require the
+legacy resources to operate.)
 
-Thanks.
+Provide a quirk so that this combination of bridge and card is eligible
+to be the default VGA card. This fixes Xorg auto-detection on the D05.
 
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> Reviewed-by: Brian Norris <briannorris@chromium.org>
->> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->> ---
->>
->> Changes in v4: None
->> Changes in v3:
->> - remove unnecessary forward declaration
->> - keep mutex inside struct rockchip_pcie_phy
->> - fix wrong check of args number
->> - move de-idle lanes after deasserting the reset
->>
->> Changes in v2:
->> - deprecate legacy PHY model
->> - improve rockchip_pcie_phy_of_xlate
->> - fix wrong calculation of pwr_cnt and add new init_cnt
->> - add internal locking
->> - introduce per-lane data to simply the code
->>
->>   drivers/phy/rockchip/phy-rockchip-pcie.c | 124 +++++++++++++++++++++++++++----
->>   1 file changed, 110 insertions(+), 14 deletions(-)
->>
->> diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
->> index 6904633..b5005a5 100644
->> --- a/drivers/phy/rockchip/phy-rockchip-pcie.c
->> +++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
->> @@ -73,10 +73,39 @@ struct rockchip_pcie_data {
->>   struct rockchip_pcie_phy {
->>   	struct rockchip_pcie_data *phy_data;
->>   	struct regmap *reg_base;
->> +	struct phy_pcie_instance {
->> +		struct phy *phy;
->> +		u32 index;
->> +	} phys[PHY_MAX_LANE_NUM];
->> +	struct mutex pcie_mutex;
->>   	struct reset_control *phy_rst;
->>   	struct clk *clk_pciephy_ref;
->> +	int pwr_cnt;
->> +	int init_cnt;
->>   };
->>   
->> +static inline
->> +struct rockchip_pcie_phy *to_pcie_phy(struct phy_pcie_instance *inst)
->> +{
->> +	return container_of(inst, struct rockchip_pcie_phy,
->> +					phys[inst->index]);
->> +}
->> +
->> +static struct phy *rockchip_pcie_phy_of_xlate(struct device *dev,
->> +					      struct of_phandle_args *args)
->> +{
->> +	struct rockchip_pcie_phy *rk_phy = dev_get_drvdata(dev);
->> +
->> +	if (args->args_count == 0)
->> +		return rk_phy->phys[0].phy;
->> +
->> +	if (WARN_ON(args->args[0] >= PHY_MAX_LANE_NUM))
->> +		return ERR_PTR(-ENODEV);
->> +
->> +	return rk_phy->phys[args->args[0]].phy;
->> +}
->> +
->> +
->>   static inline void phy_wr_cfg(struct rockchip_pcie_phy *rk_phy,
->>   			      u32 addr, u32 data)
->>   {
->> @@ -116,29 +145,59 @@ static inline u32 phy_rd_cfg(struct rockchip_pcie_phy *rk_phy,
->>   
->>   static int rockchip_pcie_phy_power_off(struct phy *phy)
->>   {
->> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
->> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
->> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
->>   	int err = 0;
->>   
->> +	mutex_lock(&rk_phy->pcie_mutex);
->> +
->> +	regmap_write(rk_phy->reg_base,
->> +		     rk_phy->phy_data->pcie_laneoff,
->> +		     HIWORD_UPDATE(PHY_LANE_IDLE_OFF,
->> +				   PHY_LANE_IDLE_MASK,
->> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
->> +
->> +	if (--rk_phy->pwr_cnt)
->> +		goto err_out;
->> +
->>   	err = reset_control_assert(rk_phy->phy_rst);
->>   	if (err) {
->>   		dev_err(&phy->dev, "assert phy_rst err %d\n", err);
->> -		return err;
->> +		goto err_restore;
->>   	}
->>   
->> +err_out:
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->>   	return 0;
->> +
->> +err_restore:
->> +	++rk_phy->pwr_cnt;
->> +	regmap_write(rk_phy->reg_base,
->> +		     rk_phy->phy_data->pcie_laneoff,
->> +		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
->> +				   PHY_LANE_IDLE_MASK,
->> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->> +	return err;
->>   }
->>   
->>   static int rockchip_pcie_phy_power_on(struct phy *phy)
->>   {
->> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
->> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
->> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
->>   	int err = 0;
->>   	u32 status;
->>   	unsigned long timeout;
->>   
->> +	mutex_lock(&rk_phy->pcie_mutex);
->> +
->> +	if (rk_phy->pwr_cnt++)
->> +		goto err_out;
->> +
->>   	err = reset_control_deassert(rk_phy->phy_rst);
->>   	if (err) {
->>   		dev_err(&phy->dev, "deassert phy_rst err %d\n", err);
->> -		return err;
->> +		goto err_pwr_cnt;
->>   	}
->>   
->>   	regmap_write(rk_phy->reg_base, rk_phy->phy_data->pcie_conf,
->> @@ -146,6 +205,12 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
->>   				   PHY_CFG_ADDR_MASK,
->>   				   PHY_CFG_ADDR_SHIFT));
->>   
->> +	regmap_write(rk_phy->reg_base,
->> +		     rk_phy->phy_data->pcie_laneoff,
->> +		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
->> +				   PHY_LANE_IDLE_MASK,
->> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
->> +
->>   	/*
->>   	 * No documented timeout value for phy operation below,
->>   	 * so we make it large enough here. And we use loop-break
->> @@ -214,18 +279,29 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
->>   		goto err_pll_lock;
->>   	}
->>   
->> +err_out:
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->>   	return 0;
->>   
->>   err_pll_lock:
->>   	reset_control_assert(rk_phy->phy_rst);
->> +err_pwr_cnt:
->> +	--rk_phy->pwr_cnt;
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->>   	return err;
->>   }
->>   
->>   static int rockchip_pcie_phy_init(struct phy *phy)
->>   {
->> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
->> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
->> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
->>   	int err = 0;
->>   
->> +	mutex_lock(&rk_phy->pcie_mutex);
->> +
->> +	if (rk_phy->init_cnt++)
->> +		goto err_out;
->> +
->>   	err = clk_prepare_enable(rk_phy->clk_pciephy_ref);
->>   	if (err) {
->>   		dev_err(&phy->dev, "Fail to enable pcie ref clock.\n");
->> @@ -238,20 +314,33 @@ static int rockchip_pcie_phy_init(struct phy *phy)
->>   		goto err_reset;
->>   	}
->>   
->> -	return err;
->> +err_out:
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->> +	return 0;
->>   
->>   err_reset:
->> +
->>   	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
->>   err_refclk:
->> +	--rk_phy->init_cnt;
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->>   	return err;
->>   }
->>   
->>   static int rockchip_pcie_phy_exit(struct phy *phy)
->>   {
->> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
->> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
->> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
->> +
->> +	mutex_lock(&rk_phy->pcie_mutex);
->> +
->> +	if (--rk_phy->init_cnt)
->> +		goto err_init_cnt;
->>   
->>   	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
->>   
->> +err_init_cnt:
->> +	mutex_unlock(&rk_phy->pcie_mutex);
->>   	return 0;
->>   }
->>   
->> @@ -283,10 +372,10 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
->>   {
->>   	struct device *dev = &pdev->dev;
->>   	struct rockchip_pcie_phy *rk_phy;
->> -	struct phy *generic_phy;
->>   	struct phy_provider *phy_provider;
->>   	struct regmap *grf;
->>   	const struct of_device_id *of_id;
->> +	int i;
->>   
->>   	grf = syscon_node_to_regmap(dev->parent->of_node);
->>   	if (IS_ERR(grf)) {
->> @@ -305,6 +394,8 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
->>   	rk_phy->phy_data = (struct rockchip_pcie_data *)of_id->data;
->>   	rk_phy->reg_base = grf;
->>   
->> +	mutex_init(&rk_phy->pcie_mutex);
->> +
->>   	rk_phy->phy_rst = devm_reset_control_get(dev, "phy");
->>   	if (IS_ERR(rk_phy->phy_rst)) {
->>   		if (PTR_ERR(rk_phy->phy_rst) != -EPROBE_DEFER)
->> @@ -319,14 +410,19 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
->>   		return PTR_ERR(rk_phy->clk_pciephy_ref);
->>   	}
->>   
->> -	generic_phy = devm_phy_create(dev, dev->of_node, &ops);
->> -	if (IS_ERR(generic_phy)) {
->> -		dev_err(dev, "failed to create PHY\n");
->> -		return PTR_ERR(generic_phy);
->> +	for (i = 0; i < PHY_MAX_LANE_NUM; i++) {
->> +		rk_phy->phys[i].phy = devm_phy_create(dev, dev->of_node, &ops);
->> +		if (IS_ERR(rk_phy->phys[i].phy)) {
->> +			dev_err(dev, "failed to create PHY%d\n", i);
->> +			return PTR_ERR(rk_phy->phys[i].phy);
->> +		}
->> +		rk_phy->phys[i].index = i;
-> 
-> 
-> For legacy dt, it would create more number of phys than required right? it
-> would be nice to fix that.
-> 
-> Thanks
-> Kishon
-> 
-> 
-> 
+Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
+Cc: Rongrong Zou <zourongrong@gmail.com>
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+---
+
+v3: fix commit message
+v4: fix comment (forgot to git add/git commit, sorry for the noise)
+
+---
+ drivers/pci/quirks.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 16e6cd86ad71..b42324cba29e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -25,6 +25,7 @@
+ #include <linux/sched.h>
+ #include <linux/ktime.h>
+ #include <linux/mm.h>
++#include <linux/vgaarb.h>
+ #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+ #include "pci.h"
+ 
+@@ -4664,3 +4665,52 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
++
++/*
++ * The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610)
++ * that are not spec-compliant: the VGA Enable bit is hardwired to 0
++ * and writes do not change it. The bridge does not forward legacy
++ * memory or I/O resources.
++ *
++ * Because the VGA Enable bit is hardwired to 0, the VGA arbiter
++ * refuses to mark any card behind it as the boot device. However, the
++ * hibmc VGA card (PCI ID 19e5:1711) has been tested and is known to
++ * work when behind these bridges.
++ *
++ * If we have this bridge, this card, and no default card already,
++ * mark the card as default.
++ */
++static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
++{
++	struct pci_dev *bridge;
++	struct pci_bus *bus;
++	u16 config;
++
++	bus = pdev->bus;
++	bridge = bus->self;
++	if (!bridge)
++		return;
++
++	if (!pci_is_bridge(bridge))
++		return;
++
++	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
++	    bridge->device != 0x1610)
++		return;
++
++	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
++			     &config);
++	if (config & PCI_BRIDGE_CTL_VGA) {
++		/*
++		 * Weirdly, this bridge *is* spec compliant, so bail
++		 * and let vgaarb do its job
++		 */
++		return;
++	}
++
++	if (vga_default_device())
++		return;
++
++	vga_set_default_device(pdev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
+-- 
+2.11.0
