@@ -1,187 +1,136 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:36081 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752454AbdGEDvy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:51:54 -0400
-Received: by mail-pg0-f51.google.com with SMTP id u62so117540064pgb.3
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:51:49 -0700 (PDT)
-Subject: Re: [PATCH v4 2/2] PCI: iproc: add device shutdown for PCI RC
-To: Oza Pawandeep <oza.oza@broadcom.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-References: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
- <1499224139-10746-3-git-send-email-oza.oza@broadcom.com>
-From: Ray Jui <ray.jui@broadcom.com>
-Message-ID: <2b7393f8-14fb-d05e-0d65-09cb9cd352b2@broadcom.com>
-Date: Tue, 4 Jul 2017 20:51:42 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Jul 2017 15:04:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+Message-ID: <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170712050811.3620-1-dja@axtens.net>
 MIME-Version: 1.0
-In-Reply-To: <1499224139-10746-3-git-send-email-oza.oza@broadcom.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170712050811.3620-1-dja@axtens.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ Xinliang Liu <z.liuxinliang@hisilicon.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Rongrong Zou <zourongrong@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Oza,
+[+cc Catalin, Will, linux-arm-kernel]
 
-It looks like you missed my comments during the internal review. See my 
-comments inline below.
-
-
-On 7/4/2017 8:08 PM, Oza Pawandeep wrote:
-> PERST must be asserted around ~500ms before the reboot is applied.
->
-> During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
-> LCPLL clock and PERST both goes off simultaneously.
-> This will cause certain Endpoints Intel NVMe not get detected, upon
-> next boot sequence.
->
-> This is specifically happening with Intel P3700 400GB series.
-> Endpoint is expecting the clock for some amount of time after PERST is
-> asserted, which is not happening in Stingray (iproc based SOC).
-> This causes NVMe to behave in undefined way.
->
-> On the contrary Intel x86 boards, will have ref clock running, so we
-> do not see this behavior there.
->
-> Besides, PCI spec does not stipulate about such timings.
-> In-fact it does not tell us, whether PCIe device should consider
-> refclk to be available or not to be.
->
-> It is completely up to vendor to design their EP the way they want
-> with respect to ref clock availability.
->
-> 500ms is just based on the observation and taken as safe margin.
-> This patch adds platform shutdown where it should be
-> called in device_shutdown while reboot command is issued.
-> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-> followed by RC shutdown, which issues safe PERST assertion.
->
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
->
-> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-> index 90d2bdd..9512960 100644
-> --- a/drivers/pci/host/pcie-iproc-platform.c
-> +++ b/drivers/pci/host/pcie-iproc-platform.c
-> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->   	return iproc_pcie_remove(pcie);
->   }
->   
-> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
+On Wed, Jul 12, 2017 at 03:08:11PM +1000, Daniel Axtens wrote:
+> The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610) that
+> are not spec-compliant: the VGA Enable bit is hardwired to 0 and
+> writes do not change it.
+> 
+> The HiSilicon engineers report that the bridge does not forward the
+> 0xa0000-0xbffff mem range and the 0x3b0-0x3bb and 0x3c0-0x3df I/O
+> ranges.
+> 
+> Because the VGA Enable bit is hardwired to 0, the VGA arbiter refuses
+> to mark any card behind it as the boot device. This breaks Xorg
+> auto-detection.
+> 
+> However, the hibmc VGA card (PCI ID 19e5:1711) has been tested and is
+> known to work when behind these bridges. (It does not require the
+> legacy resources to operate.)
+> 
+> Provide a quirk so that this combination of bridge and card is eligible
+> to be the default VGA card. This fixes Xorg auto-detection on the D05.
+> 
+> Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
+> Cc: Rongrong Zou <zourongrong@gmail.com>
+> Signed-off-by: Daniel Axtens <dja@axtens.net>
+> ---
+> 
+> v3: fix commit message
+> v4: fix comment (forgot to git add/git commit, sorry for the noise)
+> 
+> ---
+>  drivers/pci/quirks.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 50 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 16e6cd86ad71..b42324cba29e 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -25,6 +25,7 @@
+>  #include <linux/sched.h>
+>  #include <linux/ktime.h>
+>  #include <linux/mm.h>
+> +#include <linux/vgaarb.h>
+>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+>  #include "pci.h"
+>  
+> @@ -4664,3 +4665,52 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+> +
+> +/*
+> + * The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610)
+> + * that are not spec-compliant: the VGA Enable bit is hardwired to 0
+> + * and writes do not change it. The bridge does not forward legacy
+> + * memory or I/O resources.
+> + *
+> + * Because the VGA Enable bit is hardwired to 0, the VGA arbiter
+> + * refuses to mark any card behind it as the boot device. However, the
+> + * hibmc VGA card (PCI ID 19e5:1711) has been tested and is known to
+> + * work when behind these bridges.
+> + *
+> + * If we have this bridge, this card, and no default card already,
+> + * mark the card as default.
+> + */
+> +static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
 > +{
-> +	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
+> +	struct pci_dev *bridge;
+> +	struct pci_bus *bus;
+> +	u16 config;
 > +
-> +	iproc_pcie_shutdown(pcie);
-> +}
+> +	bus = pdev->bus;
+> +	bridge = bus->self;
+> +	if (!bridge)
+> +		return;
 > +
->   static struct platform_driver iproc_pcie_pltfm_driver = {
->   	.driver = {
->   		.name = "iproc-pcie",
-> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->   	},
->   	.probe = iproc_pcie_pltfm_probe,
->   	.remove = iproc_pcie_pltfm_remove,
-> +	.shutdown = iproc_pcie_pltfm_shutdown,
->   };
->   module_platform_driver(iproc_pcie_pltfm_driver);
->   
-> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-> index b0abcd7..d1bcdc9 100644
-> --- a/drivers/pci/host/pcie-iproc.c
-> +++ b/drivers/pci/host/pcie-iproc.c
-> @@ -616,32 +616,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
->   	.write = iproc_pcie_config_write32,
->   };
->   
-> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
-> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
->   {
->   	u32 val;
->   
->   	/*
-> -	 * PAXC and the internal emulated endpoint device downstream should not
-> -	 * be reset.  If firmware has been loaded on the endpoint device at an
-> -	 * earlier boot stage, reset here causes issues.
-> +	 * The internal emulated endpoints (such as PAXC) device downstream
-> +	 * should not be reset. If firmware has been loaded on the endpoint
-> +	 * device at an earlier boot stage, reset here causes issues.
->   	 */
-
-Why is the above comment modified? Is it even related to this patch that
-implements the shutdown routine for PAXB? In addition, the original
-comment is more correct. The new comment by stating the "internal
-emulated endpoints (such as PAXC)" is wrong. PAXC is not an endpoint.
-PAXC is the root complex interface. The endpoint is Nitro.
-
-Thanks,
-
-Ray
->   	if (pcie->ep_is_internal)
->   		return;
->   
-> -	/*
-> -	 * Select perst_b signal as reset source. Put the device into reset,
-> -	 * and then bring it out of reset
-> -	 */
-> -	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> -	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-> -		~RC_PCIE_RST_OUTPUT;
-> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> -	udelay(250);
-> -
-> -	val |= RC_PCIE_RST_OUTPUT;
-> -	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> -	msleep(100);
-> +	if (assert) {
-> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> +		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-> +			~RC_PCIE_RST_OUTPUT;
-> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> +		udelay(250);
-> +	} else {
-> +		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-> +		val |= RC_PCIE_RST_OUTPUT;
-> +		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-> +		msleep(100);
+> +	if (!pci_is_bridge(bridge))
+> +		return;
+> +
+> +	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
+> +	    bridge->device != 0x1610)
+> +		return;
+> +
+> +	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+> +			     &config);
+> +	if (config & PCI_BRIDGE_CTL_VGA) {
+> +		/*
+> +		 * Weirdly, this bridge *is* spec compliant, so bail
+> +		 * and let vgaarb do its job
+> +		 */
+> +		return;
 > +	}
+> +
+> +	if (vga_default_device())
+> +		return;
+> +
+> +	vga_set_default_device(pdev);
 > +}
-> +
-> +int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-> +{
-> +	iproc_pcie_perst_ctrl(pcie, true);
-> +	msleep(500);
-> +
-> +	return 0;
->   }
-> +EXPORT_SYMBOL(iproc_pcie_shutdown);
->   
->   static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
->   {
-> @@ -1318,7 +1326,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
->   		goto err_exit_phy;
->   	}
->   
-> -	iproc_pcie_reset(pcie);
-> +	iproc_pcie_perst_ctrl(pcie, true);
-> +	iproc_pcie_perst_ctrl(pcie, false);
->   
->   	if (pcie->need_ob_cfg) {
->   		ret = iproc_pcie_map_ranges(pcie, res);
-> diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-> index 0bbe2ea..a6b55ce 100644
-> --- a/drivers/pci/host/pcie-iproc.h
-> +++ b/drivers/pci/host/pcie-iproc.h
-> @@ -110,6 +110,7 @@ struct iproc_pcie {
->   
->   int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
->   int iproc_pcie_remove(struct iproc_pcie *pcie);
-> +int iproc_pcie_shutdown(struct iproc_pcie *pcie);
->   
->   #ifdef CONFIG_PCIE_IPROC_MSI
->   int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
+
+Is this quirk useful on any arch other than arm64?  Per
+drivers/pci/dwc/Kconfig, CONFIG_PCI_HISI depends on CONFIG_ARM64.
+
+Would it make sense to put this quirk in arch/arm64/kernel/pci.c?
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
