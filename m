@@ -1,65 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
- systems
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com
-References: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
- <f95ae702-1b7b-b2d4-72bd-0518badfefbc@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <a257422d-206c-a5a9-f964-a1f476ca5850@codeaurora.org>
-Date: Fri, 7 Jul 2017 11:22:08 -0400
-MIME-Version: 1.0
-In-Reply-To: <f95ae702-1b7b-b2d4-72bd-0518badfefbc@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
+Return-Path: <SRS0=KvoV=6P=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=KvoV=6P=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V3 1/2] PCI: Add Extended Tags quirk for Broadcom HT2100
+ Root Port
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
  linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+References: <1499786735-25782-1-git-send-email-okaya@codeaurora.org>
+ <20170711195853.GA14614@bhelgaas-glaptop.roam.corp.google.com>
+ <ae4dca5b-30cf-3a14-1707-380a3660badf@codeaurora.org>
+ <20170711203957.GB14614@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <25b6bbf6-20b5-dfc8-c92a-268c07fa1f98@codeaurora.org>
+Date: Wed, 12 Jul 2017 09:07:14 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170711203957.GB14614@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/7/2017 11:07 AM, Sinan Kaya wrote:
-> On 7/7/2017 10:53 AM, Sinan Kaya wrote:
->> +	ret = pcie_capability_read_word(dev, PCI_EXP_FLAGS, &flags);
->> +	if (ret || ((flags & PCI_EXP_FLAGS_VERS) < 2))
->> +		return 0;
->>  
-> 
-> Never mind, there is a problem here. I shouldn't have added it here.
-> I'll remove these and post again.
-> 
+Hi Bjorn,
 
-I guess I'll wait until Bjorn gets a chance to review it. There is a decision
-that needs to be made here. 
+On 7/11/2017 4:39 PM, Bjorn Helgaas wrote:
+> My proposal handles endpoints, too.  The pci_walk_bus() in the quirk
+> handles all devices we've already enumerated, and all devices we'll
+> enumerate in the future are handled in pci_configure_device().
 
-Under normal circumstances, extended tags capability is a reserved field on
-v1 that's expected to be 0.
+Code clears the endpoint's extended tag capability only if a quirky host
+bridge is found. 
 
-Code is checking for extended tags capability being non-zero next
-before setting/clearing the bit.
+The question here was 
 
-It should be safe to rely on capability being 0 on v1. However, we can go
-paranoid and add the check above to not even look at the capability like I
-did it. 
+"what if you have an endpoint, it may declare extended tags capability
+and has a bug even though the host bridge is just fine"
 
-That's why, I thought this is redundant. 
+Code will enable extended tags on both the host bridge and endpoint
+if it is supported.
 
-I'll wait until Bjorn chimes in. It is OK to keep the code as it is. It is
-just doing too much validation in my opinion. Somebody can always say
-play safe.
+The host bridge will start generating 256 tags towards the endpoint
+but endpoint is unable to catch up with it. 
+
+Same thing is possible with two endpoints that try to do peer-to-peer
+communication. The first endpoint may generate 256 requests, second
+endpoint may not handle it.
+
+Again, this is a hypothetical condition with no known endpoints. I
+suggest we deal with this when time comes.
+
+Sinan 
+
 
 -- 
 Sinan Kaya
 Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
 Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
