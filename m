@@ -1,40 +1,120 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 31 Jul 2017 17:50:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: Re: [PATCH v3 01/16] switchtec: move structure definitions into a
- common header
-Message-ID: <20170731225003.GA19800@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-2-logang@deltatee.com>
- <20170731201542.GA9303@bhelgaas-glaptop.roam.corp.google.com>
- <07990806-349c-669c-ef32-3dc2f6a12296@deltatee.com>
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI / PM: Restore PME Enable after config space restoration
+Date: Wed, 12 Jul 2017 03:05:39 +0200
+Message-ID: <4782965.eeHMKbM6vL@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <07990806-349c-669c-ef32-3dc2f6a12296@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 31, 2017 at 02:51:35PM -0600, Logan Gunthorpe wrote:
-> Hey,
-> 
-> I've never found any consistency in the capitalization and prefixes
-> patch titles. I used to capitalize them all but I've seen many
-> developers use lower case. In any case, I've changed them as you requested.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Thanks!  Granted, most people don't seem to care, but I'm not
-completely alone in this; I try follow Ingo's preferences [1] for
-drivers/pci, so there is some consistency there.
+Commit dc15e71eefc7 (PCI / PM: Restore PME Enable if skipping wakeup
+setup) introduced a mechanism by which the PME Enable bit can be
+restored by pci_enable_wake() if dev->wakeup_prepared is set in
+case it has been overwritten by PCI config space restoration.
 
-Bjorn
+However, that commit overlooked the fact that on some systems (Dell
+XPS13 9360 in particular) the AML handling wakeup events checks PME
+Status and PME Enable and it won't trigger a Notify() for devices
+where those bits are not set while it is running.
 
-[1] http://lkml.kernel.org/r/20120711080446.GA17713@gmail.com
+That happens during resume from suspend-to-idle when pci_restore_state()
+invoked by pci_pm_default_resume_early() clears PME Enable before the
+wakeup events are processed by AML, effectively causing those wakeup
+events to be ignored.
+
+Fix this issue by restoring the PME Enable configuration right after
+pci_restore_state() has been called instead of doing that in
+pci_enable_wake().
+
+Fixes: dc15e71eefc7 (PCI / PM: Restore PME Enable if skipping wakeup setup)
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-driver.c |    2 ++
+ drivers/pci/pci.c        |   16 ++++++++--------
+ drivers/pci/pci.h        |    1 +
+ 3 files changed, 11 insertions(+), 8 deletions(-)
+
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -506,6 +506,7 @@ static int pci_restore_standard_config(s
+ 	}
+ 
+ 	pci_restore_state(pci_dev);
++	pci_pme_restore(pci_dev);
+ 	return 0;
+ }
+ 
+@@ -517,6 +518,7 @@ static void pci_pm_default_resume_early(
+ {
+ 	pci_power_up(pci_dev);
+ 	pci_restore_state(pci_dev);
++	pci_pme_restore(pci_dev);
+ 	pci_fixup_device(pci_fixup_resume_early, pci_dev);
+ }
+ 
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1798,7 +1798,11 @@ static void __pci_pme_active(struct pci_
+ 	pci_write_config_word(dev, dev->pm_cap + PCI_PM_CTRL, pmcsr);
+ }
+ 
+-static void pci_pme_restore(struct pci_dev *dev)
++/**
++ * pci_pme_restore - Restore PME configuration after config space restore.
++ * @dev: PCI device to update.
++ */
++void pci_pme_restore(struct pci_dev *dev)
+ {
+ 	u16 pmcsr;
+ 
+@@ -1808,6 +1812,7 @@ static void pci_pme_restore(struct pci_d
+ 	pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
+ 	if (dev->wakeup_prepared) {
+ 		pmcsr |= PCI_PM_CTRL_PME_ENABLE;
++		pmcsr &= ~PCI_PM_CTRL_PME_STATUS;
+ 	} else {
+ 		pmcsr &= ~PCI_PM_CTRL_PME_ENABLE;
+ 		pmcsr |= PCI_PM_CTRL_PME_STATUS;
+@@ -1904,14 +1909,9 @@ int pci_enable_wake(struct pci_dev *dev,
+ {
+ 	int ret = 0;
+ 
+-	/*
+-	 * Don't do the same thing twice in a row for one device, but restore
+-	 * PME Enable in case it has been updated by config space restoration.
+-	 */
+-	if (!!enable == !!dev->wakeup_prepared) {
+-		pci_pme_restore(dev);
++	/* Don't do the same thing twice in a row for one device. */
++	if (!!enable == !!dev->wakeup_prepared)
+ 		return 0;
+-	}
+ 
+ 	/*
+ 	 * According to "PCI System Architecture" 4th ed. by Tom Shanley & Don
+Index: linux-pm/drivers/pci/pci.h
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.h
++++ linux-pm/drivers/pci/pci.h
+@@ -71,6 +71,7 @@ void pci_power_up(struct pci_dev *dev);
+ void pci_disable_enabled_device(struct pci_dev *dev);
+ int pci_finish_runtime_suspend(struct pci_dev *dev);
+ int __pci_pme_wakeup(struct pci_dev *dev, void *ign);
++void pci_pme_restore(struct pci_dev *dev);
+ bool pci_dev_keep_suspended(struct pci_dev *dev);
+ void pci_dev_complete_resume(struct pci_dev *pci_dev);
+ void pci_config_pm_runtime_get(struct pci_dev *dev);
+
