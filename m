@@ -1,63 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>, Ding Tianhong
- <dingtianhong@huawei.com>
-Subject: Re: [PATCH v7 3/3] net/cxgb4: Use new
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Fri, 14 Jul 2017 00:00:07 +0000
-Message-ID: <MWHPR12MB16004FB4E5A3DFB5B8D87876C8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-4-git-send-email-dingtianhong@huawei.com>
- <CAKgT0UcBFBk9T7g0Dh-rHY6Z+6-4=5jsUWHbLcSMc+ohdTz=CA@mail.gmail.com>,
- <CAKgT0Uf8Tg6AFthXt-bJrdNHCqJ3MfzduR1yCMMsjLYoEFXb-w@mail.gmail.com>
-In-Reply-To: <CAKgT0Uf8Tg6AFthXt-bJrdNHCqJ3MfzduR1yCMMsjLYoEFXb-w@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40326 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752590AbdGLWXS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jul 2017 18:23:18 -0400
+Date: Wed, 12 Jul 2017 17:23:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-pci@vger.kernel.org, matthieu.bouron@gmail.com,
+        Victor Gu <xigu@marvell.com>, Evan Wang <xswang@marvell.com>
+Subject: [bugzilla-daemon@bugzilla.kernel.org: [Bug 196339] New:
+ pci-aardvark: kernel panics on espressobin (and upstreaming fixes from the
+ marvell tree)]
+Message-ID: <20170712222313.GK14614@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Asit K Mallick <asit.k.mallick@intel.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- LinuxArm <linuxarm@huawei.com>, Ashok Raj <ashok.raj@intel.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Jeff
- Kirsher <jeffrey.t.kirsher@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Ganesh GR <ganeshgr@chelsio.com>, Bob Shaw <Bob.Shaw@amd.com>,
- Patrick J Cramer <patrick.j.cramer@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Michael Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Amir Ancel <amira@mellanox.com>, Netdev <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- David Laight <David.Laight@aculab.com>,
- Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
- Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
- h <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[[ Sorry for the Double Send: I forgot to switch to Plain Text.  Have I men=
-tioned how much I hate modern Web-based email agents? :-) -- Casey ]]
+----- Forwarded message from bugzilla-daemon@bugzilla.kernel.org -----
 
-=A0 Yeah, I think this works  for now.=A0 We'll stumble over what to do whe=
-n we want to mix upstream  TLPs without Relaxed Ordering Attributes directe=
-d at problematic Root  Complexes, and Peer-to-Peer TLPs with Relaxed Orderi=
-ng Attributes ... or vice versa depending on which target PCIe Device has  =
-issues with Relaxed Ordering.
+Date: Wed, 12 Jul 2017 08:55:11 +0000
+From: bugzilla-daemon@bugzilla.kernel.org
+To: bugzilla.pci@gmail.com
+Subject: [Bug 196339] New: pci-aardvark: kernel panics on espressobin (and upstreaming fixes from the
+	marvell tree)
 
-=A0 Thanks for all the work!
+https://bugzilla.kernel.org/show_bug.cgi?id=196339
 
-Casey    =
+            Bug ID: 196339
+           Summary: pci-aardvark: kernel panics on espressobin (and
+                    upstreaming fixes from the marvell tree)
+           Product: Drivers
+           Version: 2.5
+    Kernel Version: 4.12
+          Hardware: ARM
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: PCI
+          Assignee: drivers_pci@kernel-bugs.osdl.org
+          Reporter: matthieu.bouron@gmail.com
+        Regression: No
 
+Booting the espressobin board with an Intel 7260 mini pcie wifi card plugged
+leads to the following kernel panic: http://sprunge.us/haED
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It happens with a bare 4.12 kernel and with the one provided by Arch Linux [1]
+which a 4.12 with the following patches (taken from the linux-arm ml) applied:
+  * ARM64: dts: marvell: armada37xx: Fix timer interrupt specifiers
+  * ARM64: dts: marvell: armada37xx: Fix GIC maintenance interrupt
+  * ARM64: dts: marvell: armada37xx: Enable memory-mapped GIC CPU interface
+  * ARM64: dts: marvell: armada37xx: Wire PMUv3
+  * ARM64: dts: marvell: armada37xx: Enable USB2 on espressobin
+  * arm64: dts: marvell: Enable second SDHCI controller in Armada 37xx
+  * arm64: dts: marvell: Add microsd card definition for the ESPRESSObin
+  * arm64: marvell: armada37xx: Add eth0 alias
+
+I found out that the marvell tree [2] have some fixes for the Aardvark PCI
+driver:
+  *
+https://github.com/MarvellEmbeddedProcessors/linux-marvell/commit/d3f1b58f7759f376cff71b0f87bd838035dee995
+  *
+https://github.com/MarvellEmbeddedProcessors/linux-marvell/commit/ca899e6ee055a938ffab20d820dbfbea531e5ee7
+  *
+https://github.com/MarvellEmbeddedProcessors/linux-marvell/commit/7ce8f8c52db804157a7bc6689cd0b7db154b3204
+  *
+https://github.com/MarvellEmbeddedProcessors/linux-marvell/commit/e2c75634d9e930b66bdb29b7a42f56f357e329f5
+
+Applying those patches to a 4.12 kernel (plus the patches that uses Arch Linux)
+fixes the kernel panic and the wifi card work properly. The kernel
+configuration I used is:
+  * make defconfig
+  * enable cfg80211 extensions compatibility
+  * enable network DSA
+  * enable marvell DSA specific drivers
+  * enable iwlwifi
+
+Let me know if you need more information.
+
+[1]
+https://github.com/archlinuxarm/PKGBUILDs/tree/master/core/linux-espressobin
+[2]
+https://github.com/MarvellEmbeddedProcessors/linux-marvell/commits/linux-4.4.52-armada-17.06
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
+
+----- End forwarded message -----
