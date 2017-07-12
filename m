@@ -1,94 +1,138 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: "Raj, Ashok" <ashok.raj@intel.com>, Casey Leedom <leedom@chelsio.com>
-References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com>
- <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
- <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
- <MWHPR12MB16007782C422082A92F4765DC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <2feff1a5-25b7-eb6c-7628-7c2257c56e95@huawei.com>
- <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20170727184251.GA205508@otc-nc-03>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <3e8a1756-86ca-0fa0-7119-b0bdfe806e8e@huawei.com>
-Date: Fri, 28 Jul 2017 10:57:55 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:59772 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751151AbdGLTzA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jul 2017 15:55:00 -0400
+Date: Wed, 12 Jul 2017 14:54:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, pjones@redhat.com,
+        linux-fbdev@vger.kernel.org, linux-efi@vger.kernel.org,
+        matt@codeblueprint.co.uk, b.zolnierkie@samsung.com,
+        lorenzo.pieralisi@arm.com
+Subject: Re: [PATCH v2] drivers/fbdev: efifb: allow BAR to be moved instead
+ of claiming it
+Message-ID: <20170712195457.GG14614@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170710211305.6475-1-ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <20170727184251.GA205508@otc-nc-03>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linuxarm@huawei.com" <linuxarm@huawei.com>,
- Alexander Duyck <alexander.duyck@gmail.com>, Sinan Kaya <okaya@codeaurora.org>,
- "amira@mellanox.com" <amira@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
- "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Michael Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Netdev <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "David.Laight@aculab.com" <David.Laight@aculab.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170710211305.6475-1-ard.biesheuvel@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2017/7/28 2:42, Raj, Ashok wrote:
-> Hi Casey
+On Mon, Jul 10, 2017 at 10:13:05PM +0100, Ard Biesheuvel wrote:
+> On UEFI systems, the firmware may expose a Graphics Output Protocol (GOP)
+> instance to which the efifb driver attempts to attach in order to provide
+> a minimal, unaccelerated framebuffer. The GOP protocol itself is not very
+> sophisticated, and only describes the offset and size of the framebuffer
+> in memory, and the pixel format.
 > 
->> | Still no Intel and AMD guys has ack this, this is what I am worried about,
->> | should I ping some man again ?
+> If the GOP framebuffer is provided by a PCI device, it will have been
+> configured and enabled by the UEFI firmware, and the GOP protocol will
+> simply point into a live BAR region. However, the GOP protocol itself does
+> not describe this relation, and so we have to take care not to reconfigure
+> the BAR without taking efifb's dependency on it into account.
 > 
+> Commit 55d728a40d36 ("efi/fb: Avoid reconfiguration of BAR that covers
+> the framebuffer") attempted to do so by claiming the BAR resource early
+> on, which prevents the PCI resource allocation routines from changing it.
+> However, it turns out that this only works if the PCI device is not
+> behind any bridges, since the bridge resources need to be claimed first.
 > 
-> I can ack the patch set for Intel specific changes. Now that the doc is made
-> public :-).
+> So instead, allow the BAR to be moved, but make the efifb driver deal
+> with that gracefully. So record the resource that covers the BAR early
+> on, and if it turns out to have moved by the time we probe the efifb
+> driver, update the framebuffer address accordingly.
 > 
-
-Good, Thanks. :)
-
-> Can you/Ding resend the patch series, i do have the most recent v7, some
-> of the commit message wasn't easy to ready. Seems like this patch has
-> gotten bigger than originally intended, but seems to be for the overall
-> good :-).
+> While this is less likely to occur on x86, given that the firmware's
+> PCI resource allocation is more likely to be preserved, this is a
+> worthwhile sanity check to have in place, and so let's remove the
 > 
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 
-OK, I will send v8 patch set and which will update the patch title and add
-Casey's new modification for his vf driver, thanks.
+I like this a lot!
 
-Ding
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-> Sorry for staying silent up until now.
+Would you be willing to save the pci_dev as well, so the pr_info() could be
+made a dev_info()?
+
+Or maybe, since I notice everything else from efifb_probe() is a pr_info()
+(although we do get a platform_device), it would be better to use a
+pr_info() but just include the related PCI device by using pci_name()?
+
+> ---
+> v2: - use pr_info() not pr_warn() for non-error condition
 > 
-> Cheers,
-> Ashok
+>  drivers/video/fbdev/efifb.c | 24 ++++++++++++--------
+>  1 file changed, 15 insertions(+), 9 deletions(-)
 > 
-> .
+> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> index ff01bed7112f..0dd7e5eb051f 100644
+> --- a/drivers/video/fbdev/efifb.c
+> +++ b/drivers/video/fbdev/efifb.c
+> @@ -146,6 +146,9 @@ ATTRIBUTE_GROUPS(efifb);
+>  
+>  static bool pci_dev_disabled;	/* FB base matches BAR of a disabled device */
+>  
+> +static struct resource *bar_resource;
+> +static u64 bar_offset;
+> +
+>  static int efifb_probe(struct platform_device *dev)
+>  {
+>  	struct fb_info *info;
+> @@ -200,6 +203,13 @@ static int efifb_probe(struct platform_device *dev)
+>  		efifb_fix.smem_start |= ext_lfb_base;
+>  	}
+>  
+> +	if (bar_resource &&
+> +	    bar_resource->start + bar_offset != efifb_fix.smem_start) {
+> +
+> +		pr_info("efifb: PCI BAR has moved, updating fb address\n");
+> +		efifb_fix.smem_start = bar_resource->start + bar_offset;
+> +	}
+> +
+>  	efifb_defined.bits_per_pixel = screen_info.lfb_depth;
+>  	efifb_defined.xres = screen_info.lfb_width;
+>  	efifb_defined.yres = screen_info.lfb_height;
+> @@ -364,11 +374,11 @@ static struct platform_driver efifb_driver = {
+>  
+>  builtin_platform_driver(efifb_driver);
+>  
+> -#if defined(CONFIG_PCI) && !defined(CONFIG_X86)
+> +#if defined(CONFIG_PCI)
+>  
+>  static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
+>  
+> -static void claim_efifb_bar(struct pci_dev *dev, int idx)
+> +static void record_efifb_bar_resource(struct pci_dev *dev, int idx, u64 offset)
+>  {
+>  	u16 word;
+>  
+> @@ -383,12 +393,8 @@ static void claim_efifb_bar(struct pci_dev *dev, int idx)
+>  		return;
+>  	}
+>  
+> -	if (pci_claim_resource(dev, idx)) {
+> -		pci_dev_disabled = true;
+> -		dev_err(&dev->dev,
+> -			"BAR %d: failed to claim resource for efifb!\n", idx);
+> -		return;
+> -	}
+> +	bar_resource = &dev->resource[idx];
+> +	bar_offset = offset;
+>  
+>  	dev_info(&dev->dev, "BAR %d: assigned to efifb\n", idx);
+>  }
+> @@ -415,7 +421,7 @@ static void efifb_fixup_resources(struct pci_dev *dev)
+>  			continue;
+>  
+>  		if (res->start <= base && res->end >= base + size - 1) {
+> -			claim_efifb_bar(dev, i);
+> +			record_efifb_bar_resource(dev, i, base - res->start);
+>  			break;
+>  		}
+>  	}
+> -- 
+> 2.11.0
 > 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
