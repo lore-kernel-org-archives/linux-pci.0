@@ -1,223 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH 1/5] PCI: mediatek: Add a structure to abstract the controller
- generations
-Date: Fri, 21 Jul 2017 10:34:45 +0800
-Message-ID: <f98c990c366927b8550d28667b8cdbfc07e6adf0.1500601172.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1500601172.git.honghui.zhang@mediatek.com>
-References: <cover.1500601172.git.honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:51162 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755861AbdGLJrZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jul 2017 05:47:25 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Ray Jui <rjui@broadcom.com>
+Subject: [PATCH] PCI: iproc: remove unused struct iproc_pcie *pcie
+Date: Wed, 12 Jul 2017 17:47:05 +0800
+Message-Id: <1499852825-64990-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+It was never used and could be removed, otherwise
+we could see a warning:
 
-Introduce a structure "mtk_pcie_soc" to abstract the differences between
-controller generations, and the .startup() hook is used to encapsulate
-some SoC-dependent related setting. In doing so, the common code which
-will be reused by future chips.
+drivers/pci/host/pcie-iproc-msi.c: In function 'iproc_msi_handler':
+drivers/pci/host/pcie-iproc-msi.c:320:21: warning: variable 'pcie' set
+but not used [-Wunused-but-set-variable]
 
-In addition, we change the approaches to waiting Gen2 training by using
-readl_poll_timeout() calls.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Cc: Ray Jui <rjui@broadcom.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 81 +++++++++++++++++++++++-----------------
- 1 file changed, 47 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 5a9d858..d6ac342 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -16,6 +16,7 @@
+ drivers/pci/host/pcie-iproc-msi.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
+index 9fad791..2d0f535 100644
+--- a/drivers/pci/host/pcie-iproc-msi.c
++++ b/drivers/pci/host/pcie-iproc-msi.c
+@@ -317,7 +317,6 @@ static void iproc_msi_handler(struct irq_desc *desc)
+ 	struct irq_chip *chip = irq_desc_get_chip(desc);
+ 	struct iproc_msi_grp *grp;
+ 	struct iproc_msi *msi;
+-	struct iproc_pcie *pcie;
+ 	u32 eq, head, tail, nr_events;
+ 	unsigned long hwirq;
+ 	int virq;
+@@ -326,7 +325,6 @@ static void iproc_msi_handler(struct irq_desc *desc)
  
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/iopoll.h>
- #include <linux/kernel.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -63,6 +64,18 @@
- #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
- #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
+ 	grp = irq_desc_get_handler_data(desc);
+ 	msi = grp->msi;
+-	pcie = msi->pcie;
+ 	eq = grp->eq;
  
-+struct mtk_pcie_port;
-+
-+/**
-+ * struct mtk_pcie_soc - differentiate between host generations
-+ * @ops: pointer to configuration access functions
-+ * @startup: pointer to controller setting functions
-+ */
-+struct mtk_pcie_soc {
-+	struct pci_ops *ops;
-+	int (*startup)(struct mtk_pcie_port *port);
-+};
-+
- /**
-  * struct mtk_pcie_port - PCIe port information
-  * @base: IO mapped register base
-@@ -96,6 +109,7 @@ struct mtk_pcie_port {
-  * @busn: bus range
-  * @offset: IO / Memory offset
-  * @ports: pointer to PCIe port information
-+ * @soc: pointer to SoC-dependent operations
-  */
- struct mtk_pcie {
- 	struct device *dev;
-@@ -111,13 +125,9 @@ struct mtk_pcie {
- 		resource_size_t io;
- 	} offset;
- 	struct list_head ports;
-+	const struct mtk_pcie_soc *soc;
- };
- 
--static inline bool mtk_pcie_link_up(struct mtk_pcie_port *port)
--{
--	return !!(readl(port->base + PCIE_LINK_STATUS) & PCIE_PORT_LINKUP);
--}
--
- static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -171,12 +181,30 @@ static struct pci_ops mtk_pcie_ops = {
- 	.write = pci_generic_config_write,
- };
- 
--static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
-+static int mtk_pcie_startup_ports(struct mtk_pcie_port *port)
- {
- 	struct mtk_pcie *pcie = port->pcie;
- 	u32 func = PCI_FUNC(port->index << 3);
- 	u32 slot = PCI_SLOT(port->index << 3);
- 	u32 val;
-+	int err;
-+
-+	/* assert port PERST_N */
-+	val = readl(pcie->base + PCIE_SYS_CFG);
-+	val |= PCIE_PORT_PERST(port->index);
-+	writel(val, pcie->base + PCIE_SYS_CFG);
-+
-+	/* de-assert port PERST_N */
-+	val = readl(pcie->base + PCIE_SYS_CFG);
-+	val &= ~PCIE_PORT_PERST(port->index);
-+	writel(val, pcie->base + PCIE_SYS_CFG);
-+
-+	/* 100ms timeout value should be enough for Gen1/2 training */
-+	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS, val,
-+				 !!(val & PCIE_PORT_LINKUP), 20,
-+				 100 * USEC_PER_MSEC);
-+	if (err)
-+		return -ETIMEDOUT;
- 
- 	/* enable interrupt */
- 	val = readl(pcie->base + PCIE_INT_ENABLE);
-@@ -209,30 +237,14 @@ static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
- 	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
- 	       pcie->base + PCIE_CFG_ADDR);
- 	writel(val, pcie->base + PCIE_CFG_DATA);
--}
- 
--static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
--{
--	struct mtk_pcie *pcie = port->pcie;
--	u32 val;
--
--	/* assert port PERST_N */
--	val = readl(pcie->base + PCIE_SYS_CFG);
--	val |= PCIE_PORT_PERST(port->index);
--	writel(val, pcie->base + PCIE_SYS_CFG);
--
--	/* de-assert port PERST_N */
--	val = readl(pcie->base + PCIE_SYS_CFG);
--	val &= ~PCIE_PORT_PERST(port->index);
--	writel(val, pcie->base + PCIE_SYS_CFG);
--
--	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
--	msleep(100);
-+	return 0;
- }
- 
- static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- {
--	struct device *dev = port->pcie->dev;
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct device *dev = pcie->dev;
- 	int err;
- 
- 	err = clk_prepare_enable(port->sys_ck);
-@@ -250,13 +262,8 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- 		goto err_phy_on;
- 	}
- 
--	mtk_pcie_assert_ports(port);
--
--	/* if link up, then setup root port configuration space */
--	if (mtk_pcie_link_up(port)) {
--		mtk_pcie_configure_rc(port);
-+	if (!pcie->soc->startup(port))
- 		return;
--	}
- 
- 	dev_info(dev, "Port%d link down\n", port->index);
- 
-@@ -480,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = pcie->dev;
--	host->ops = &mtk_pcie_ops;
-+	host->ops = pcie->soc->ops;
- 	host->map_irq = of_irq_parse_and_map_pci;
- 	host->swizzle_irq = pci_common_swizzle;
- 
-@@ -513,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(host);
- 
- 	pcie->dev = dev;
-+	pcie->soc = of_device_get_match_data(dev);
- 	platform_set_drvdata(pdev, pcie);
- 	INIT_LIST_HEAD(&pcie->ports);
- 
-@@ -537,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-+	.ops = &mtk_pcie_ops,
-+	.startup = mtk_pcie_startup_ports,
-+};
-+
- static const struct of_device_id mtk_pcie_ids[] = {
--	{ .compatible = "mediatek,mt7623-pcie"},
--	{ .compatible = "mediatek,mt2701-pcie"},
-+	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
-+	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
- 	{},
- };
- 
+ 	/*
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
