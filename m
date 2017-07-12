@@ -1,47 +1,56 @@
-Return-Path: <SRS0=JYXB=6Q=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=JYXB=6Q=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Ding Tianhong <dingtianhong@huawei.com>, leedom@chelsio.com,
- ashok.raj@intel.com, bhelgaas@google.com, helgaas@kernel.org,
- werner@chelsio.com, ganeshgr@chelsio.com, asit.k.mallick@intel.com,
- patrick.j.cramer@intel.com, Suravee.Suthikulpanit@amd.com, Bob.Shaw@amd.com,
- l.stach@pengutronix.de, amira@mellanox.com, gabriele.paoloni@huawei.com,
- David.Laight@aculab.com, jeffrey.t.kirsher@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, mark.rutland@arm.com,
- robin.murphy@arm.com, davem@davemloft.net, alexander.duyck@gmail.com,
- linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
-Date: Thu, 13 Jul 2017 17:09:55 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52534 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752617AbdGLRz2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jul 2017 13:55:28 -0400
+Date: Wed, 12 Jul 2017 12:55:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH] PCI: rockchip: fix wrong check of
+ pci_scan_root_bus_bridge
+Message-ID: <20170712175525.GC14614@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499768108-48891-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1499768108-48891-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/13/2017 10:21 AM, Ding Tianhong wrote:
-> static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	/* We should not alter the relaxed ordering bit for the VF */
-> +	if (dev->is_virtfn)
-> +		return;
-> +
-> +	/* If the releaxed ordering enable bit is not set, do nothing. */
-> +	if (!pcie_relaxed_ordering_supported(dev))
-> +		return;
-> +
-> +	if (pci_dev_should_disable_relaxed_ordering(dev)) {
-> +		pcie_clear_relaxed_ordering(dev);
-> +		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
-> +	}
-> +}
+On Tue, Jul 11, 2017 at 06:15:08PM +0800, Shawn Lin wrote:
+> It's wrong to check the return value of pci_scan_root_bus_bridge
+> here by using (!err) as 0 means it successfully scans the root
+> bridge. So the probe process will be terminated mistakenly.
+> 
+> Fixes: ae13cb9b ("PCI: rockchip: Convert PCI scan API to ...")
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-I couldn't find anywhere where you actually enable the relaxed ordering
-like the subject suggests.
+Applied with Lorenzo's ack to for-linus for v4.13, thanks!
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+> 
+>  drivers/pci/host/pcie-rockchip.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 5acf869..7bb9870 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1483,7 +1483,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  	bridge->swizzle_irq = pci_common_swizzle;
+>  
+>  	err = pci_scan_root_bus_bridge(bridge);
+> -	if (!err)
+> +	if (err < 0)
+>  		goto err_free_res;
+>  
+>  	bus = bridge->bus;
+> -- 
+> 1.9.1
+> 
+> 
