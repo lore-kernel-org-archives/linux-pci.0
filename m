@@ -1,91 +1,172 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:37072 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751336AbdGRH76 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 03:59:58 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH v3 6/7] dt-bindings: PCI: rockchip: convert to use per-lane PHY model
-Date: Tue, 18 Jul 2017 15:59:21 +0800
-Message-Id: <1500364762-98146-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500364762-98146-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
- <1500364762-98146-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, wim.ten.have@oracle.com
+Subject: [PATCH V4] PCI: Add Extended Tags quirk for Broadcom HT2100 Root Port
+Date: Wed, 12 Jul 2017 00:04:14 -0400
+Message-Id: <1499832255-9845-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate legacy PHY model and encourage to use per-lane PHY
-model.
+All PCIe devices are expected to be able to handle 8-bit tags.
+'commit 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")'
+enabled extended tags for all devices based on the spec direction.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Rob Herring <robh@kernel.org>
+The Broadcom HT2100 seems to be having issues with handling
+8-bit tags. Mark it as broken.
+
+If a device with extended tags quirk is found, disable extended tags for
+all devices in the tree assuming peer-to-peer is possible.
+
+The pci_walk_bus() in the quirk handles all devices we've already
+enumerated, and all devices we'll enumerate in the future are handled in
+pci_configure_device().
+
+Reported-by: Wim ten Have <wim.ten.have@oracle.com>
+Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
+Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/pci/pci.h    |  1 +
+ drivers/pci/probe.c  | 35 ++++++++++++++++++++++++++++++-----
+ drivers/pci/quirks.c | 19 +++++++++++++++++++
+ include/linux/pci.h  |  1 +
+ 4 files changed, 51 insertions(+), 5 deletions(-)
 
-Changes in v3: None
-Changes in v2: None
-
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 1453a73..41bced4 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -19,8 +19,6 @@ Required properties:
- 	- "pm"
- - msi-map: Maps a Requester ID to an MSI controller and associated
- 	msi-specifier data. See ./pci-msi.txt
--- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
--- phy-names:  MUST be "pcie-phy".
- - interrupts: Three interrupt entries must be specified.
- - interrupt-names: Must include the following names
- 	- "sys"
-@@ -42,6 +40,18 @@ Required properties:
- 	interrupt source. The value must be 1.
- - interrupt-map-mask and interrupt-map: standard PCI properties
- 
-+Required properties for legacy PHY model (deprecated):
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+
-+Required properties for per-lane PHY model (preferred):
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+
- Optional Property:
- - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
- 	using 24MHz OSC for RC's PHY.
-@@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
- 		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
- 	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
- 		      "pm", "pclk", "aclk";
-+	/* deprecated legacy PHY model */
- 	phys = <&pcie_phy>;
- 	phy-names = "pcie-phy";
- 	pinctrl-names = "default";
-@@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
- 		#interrupt-cells = <1>;
- 	};
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f8113e5..7153c92 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -239,6 +239,7 @@ enum pci_bar_type {
+ 	pci_bar_mem64,		/* A 64-bit memory BAR */
  };
+ 
++int pci_configure_extended_tags(struct pci_dev *dev, void *ign);
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 19c8950..bc067fb 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1684,22 +1684,47 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
+ 	 */
+ }
+ 
+-static void pci_configure_extended_tags(struct pci_dev *dev)
++int pci_configure_extended_tags(struct pci_dev *dev, void *ign)
+ {
++	struct pci_host_bridge *host;
+ 	u32 dev_cap;
+ 	int ret;
++	u16 ctl;
+ 
+ 	if (!pci_is_pcie(dev))
+-		return;
++		return 0;
+ 
+ 	ret = pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &dev_cap);
+ 	if (ret)
+-		return;
++		return 0;
 +
-+pcie0: pcie@f8000000 {
-+	...
++	if (!(dev_cap & PCI_EXP_DEVCAP_EXT_TAG))
++		return 0;
 +
-+	/* preferred per-lane PHY model */
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
++	ret = pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
++	if (ret)
++		return 0;
 +
-+	...
-+};
++	host = pci_find_host_bridge(dev->bus);
++	if (!host)
++		return 0;
+ 
+-	if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG)
++	if (host->broken_ext_tags) {
++		if (ctl & PCI_EXP_DEVCTL_EXT_TAG) {
++			dev_info(&dev->dev, "disabling Extended Tags\n");
++			pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
++						   PCI_EXP_DEVCTL_EXT_TAG);
++		}
++		return 0;
++	}
++	if (!(ctl & PCI_EXP_DEVCTL_EXT_TAG)) {
++		dev_info(&dev->dev, "enabling Extended Tags\n");
+ 		pcie_capability_set_word(dev, PCI_EXP_DEVCTL,
+ 					 PCI_EXP_DEVCTL_EXT_TAG);
++	}
++	return 0;
+ }
++EXPORT_SYMBOL(pci_configure_extended_tags);
+ 
+ static void pci_configure_device(struct pci_dev *dev)
+ {
+@@ -1707,7 +1732,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ 	int ret;
+ 
+ 	pci_configure_mps(dev);
+-	pci_configure_extended_tags(dev);
++	pci_configure_extended_tags(dev, NULL);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+ 	ret = pci_get_hp_params(dev, &hpp);
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 085fb78..b5dc99c 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4664,3 +4664,22 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
++
++static void quirk_exttags_completer(struct pci_dev *pdev)
++{
++	struct pci_host_bridge *bridge = pci_find_host_bridge(pdev->bus);
++
++	if (!bridge)
++		return;
++
++	bridge->broken_ext_tags = 1;
++	dev_info(&pdev->dev, "Extended Tag handling is broken\n");
++
++	pci_walk_bus(bridge->bus, pci_configure_extended_tags, NULL);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0140,
++			quirk_exttags_completer);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0142,
++			quirk_exttags_completer);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0144,
++			quirk_exttags_completer);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8039f9f..2b22c3e 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -441,6 +441,7 @@ struct pci_host_bridge {
+ 	void *release_data;
+ 	struct msi_controller *msi;
+ 	unsigned int ignore_reset_delay:1;	/* for entire hierarchy */
++	unsigned int broken_ext_tags:1;
+ 	/* Resource alignment requirements */
+ 	resource_size_t (*align_resource)(struct pci_dev *dev,
+ 			const struct resource *res,
 -- 
 1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
