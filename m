@@ -1,119 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:24025 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbdGYKTC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2017 06:19:02 -0400
-Subject: Re: dma_alloc_coherent fail for arm64 in pci ep framework
-To: Eric Yang <yu.yang_3@nxp.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <VI1PR04MB3071DA0C9EC142F0B2E17B578CB80@VI1PR04MB3071.eurprd04.prod.outlook.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <0525e3da-fd81-5289-7065-dc684c793d35@ti.com>
-Date: Tue, 25 Jul 2017 15:48:56 +0530
+Received: from mail-io0-f182.google.com ([209.85.223.182]:36284 "EHLO
+        mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754451AbdGLMNP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jul 2017 08:13:15 -0400
+Received: by mail-io0-f182.google.com with SMTP id z62so11365507ioi.3
+        for <linux-pci@vger.kernel.org>; Wed, 12 Jul 2017 05:13:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <VI1PR04MB3071DA0C9EC142F0B2E17B578CB80@VI1PR04MB3071.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <1886933.1k4ytioEMD@amdc3058>
+References: <CGME20170710211327epcas1p4443f6f9df236e76fd4afd91dccf45cd0@epcas1p4.samsung.com>
+ <20170710211305.6475-1-ard.biesheuvel@linaro.org> <1886933.1k4ytioEMD@amdc3058>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 12 Jul 2017 13:13:14 +0100
+Message-ID: <CAKv+Gu8pmsqZj25_en7Q-i4tHhTjfuLoO9mRatH-+KZxMgi6ag@mail.gmail.com>
+Subject: Re: [PATCH v2] drivers/fbdev: efifb: allow BAR to be moved instead of
+ claiming it
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Peter Jones <pjones@redhat.com>, linux-fbdev@vger.kernel.org,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Matt Fleming <matt@codeblueprint.co.uk>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 12 July 2017 at 11:00, Bartlomiej Zolnierkiewicz
+<b.zolnierkie@samsung.com> wrote:
+> On Monday, July 10, 2017 10:13:05 PM Ard Biesheuvel wrote:
+>> On UEFI systems, the firmware may expose a Graphics Output Protocol (GOP)
+>> instance to which the efifb driver attempts to attach in order to provide
+>> a minimal, unaccelerated framebuffer. The GOP protocol itself is not very
+>> sophisticated, and only describes the offset and size of the framebuffer
+>> in memory, and the pixel format.
+>>
+>> If the GOP framebuffer is provided by a PCI device, it will have been
+>> configured and enabled by the UEFI firmware, and the GOP protocol will
+>> simply point into a live BAR region. However, the GOP protocol itself does
+>> not describe this relation, and so we have to take care not to reconfigure
+>> the BAR without taking efifb's dependency on it into account.
+>>
+>> Commit 55d728a40d36 ("efi/fb: Avoid reconfiguration of BAR that covers
+>> the framebuffer") attempted to do so by claiming the BAR resource early
+>> on, which prevents the PCI resource allocation routines from changing it.
+>> However, it turns out that this only works if the PCI device is not
+>> behind any bridges, since the bridge resources need to be claimed first.
+>>
+>> So instead, allow the BAR to be moved, but make the efifb driver deal
+>> with that gracefully. So record the resource that covers the BAR early
+>> on, and if it turns out to have moved by the time we probe the efifb
+>> driver, update the framebuffer address accordingly.
+>>
+>> While this is less likely to occur on x86, given that the firmware's
+>> PCI resource allocation is more likely to be preserved, this is a
+>> worthwhile sanity check to have in place, and so let's remove the
+>
+> It still cuts the patch description early..
+>
 
-On Tuesday 25 July 2017 03:41 PM, Eric Yang wrote:
-> Hi, all
-> 
->  
-> 
-> I test the ep framework in qoriq ls2088a recently in 4.12, and find
-> pci_epf_alloc_space() always fail, after debug
-> 
-> I found that when a EPF device is created by pci_epf_create(), if not invoke
-> the arch_setup_dma_ops() manually
-> 
-> the dev->dma_ops will be NULL, so when dma_alloc occures, it will use the
-> default dummy_dma_ops of arm64,
-> 
-> and will cause the failure.
-> 
->  
-> 
-> For I haven’t test the ep driver entirely, I’m not sure whether this is a bug
-> or not.
+Ah yes, thanks for pointing that out. I will fix it up before queuing the patch.
 
-I think that's a bug. I faced a issue while using pci_epf_alloc_space and I
-used a fix like below. Can you try if that helps?
+>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>
+> From fbdev's side:
+>
+> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+>
 
-Thanks
-Kishon
-
-8<---------------------------------
->From 358257b8a5513d86dd44d376805da9b5b05e819e Mon Sep 17 00:00:00 2001
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Date: Wed, 5 Jul 2017 19:50:41 +0530
-Subject: [PATCH] PCI: endpoint: pci-epc-core: use of_dma_configure() to set
- initial dma mask
-
-Use of_dma_configure() to set the initial dma mask of epf device. This
-helps to get rid of "Coherent DMA mask 0x0 (pfn 0x0-0x1) covers a smaller
-range of system memory than the DMA zone pfn" warning in certain platforms
-like TI's K2G resulting in coherent dma mask not being set.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epc-core.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/endpoint/pci-epc-core.c
-b/drivers/pci/endpoint/pci-epc-core.c
-index 44ad93ff0f98..78ea9de4987c 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -21,6 +21,7 @@
- #include <linux/dma-mapping.h>
- #include <linux/slab.h>
- #include <linux/module.h>
-+#include <linux/of_device.h>
-
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
-@@ -368,6 +369,7 @@ EXPORT_SYMBOL_GPL(pci_epc_write_header);
- int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
- {
- 	unsigned long flags;
-+	struct device *dev = epc->dev.parent;
-
- 	if (IS_ERR(epc))
- 		return -EINVAL;
-@@ -375,8 +377,12 @@ int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
- 	if (epf->func_no > epc->max_functions - 1)
- 		return -EINVAL;
-
--	dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
--	epf->dev.dma_mask = epc->dev.dma_mask;
-+	if (dev->of_node) {
-+		of_dma_configure(&epf->dev, dev->of_node);
-+	} else {
-+		dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
-+		epf->dev.dma_mask = epc->dev.dma_mask;
-+	}
-
- 	spin_lock_irqsave(&epc->lock, flags);
- 	list_add_tail(&epf->list, &epc->pci_epf);
-@@ -493,6 +499,7 @@ __pci_epc_create(struct device *dev, const struct
-pci_epc_ops *ops,
- 	dma_set_coherent_mask(&epc->dev, dev->coherent_dma_mask);
- 	epc->dev.class = pci_epc_class;
- 	epc->dev.dma_mask = dev->dma_mask;
-+	epc->dev.parent = dev;
- 	epc->ops = ops;
-
- 	ret = dev_set_name(&epc->dev, "%s", dev_name(dev));
--- 
-2.11.0
-
-> 
->  
-> 
-> BR
-> 
-> Eirc
-> 
+Cheers.
