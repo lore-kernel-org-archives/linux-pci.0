@@ -1,50 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:34512 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751221AbdGPW4v (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jul 2017 18:56:51 -0400
-Received: by mail-qk0-f195.google.com with SMTP id q66so18811154qki.1
-        for <linux-pci@vger.kernel.org>; Sun, 16 Jul 2017 15:56:51 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] PCI: qcom: Use gpiod_set_value_cansleep()
-Date: Sun, 16 Jul 2017 19:56:38 -0300
-Message-Id: <1500245798-20886-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=nOzk=6Q=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=nOzk=6Q=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1499980882.2865.65.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas
+	 <helgaas@kernel.org>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Daniel Axtens
+ <dja@axtens.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>,
+        Rongrong Zou
+ <zourongrong@gmail.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will
+ Deacon <will.deacon@arm.com>,
+        "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel.vetter@intel.com>
+Date: Fri, 14 Jul 2017 07:21:22 +1000
+In-Reply-To: <20170713151146.53e9644c@w520.home>
+References: <20170712050811.3620-1-dja@axtens.net>
+	 <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+	 <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
+	 <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170713151146.53e9644c@w520.home>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+On Thu, 2017-07-13 at 15:11 -0600, Alex Williamson wrote:
+> > >       */
+> > > -   if (vga_default == NULL &&
+> > > -       ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
+> > > +   if (vga_default == NULL) {
+> > >              vgaarb_info(&pdev->dev, "setting as boot VGA device\n");
+> > >              vga_set_default_device(pdev);
+> > >      }  
+> 
+> 
+> "Legacy" is the breadcrumb we use to try to pick the same device for
+> default VGA as the system firmware used as the boot VGA.  There can be
+> multiple VGA devices in the system, the change above would simply make
+> the first discovered device be the default VGA.  That would break many,
+> many systems.  If legacy VGA ranges mean nothing on ARM64, then follow
+> the powerpc lead and make an arch quirk that simply selects the first
+> enabled VGA device as the default.  VGA routing is part of the PCI spec
+> though, so the default of selecting the device with routing enabled
+> makes sense.  Thanks,
 
-The reset GPIO can be connected to a I2C or SPI IO expander, which
-may sleep, so it is safer to use the gpiod_set_value_cansleep()
-variant instead.
+"Legacy" there iirc also means that it has decoding enabled at boot. If
+you pick the first one you may pick a device that doesn't and hasn't
+been initialized by any driver (good old BIOS-initialized text mode).
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- drivers/pci/dwc/pcie-qcom.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 68c5f2a..8359de0 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -141,13 +141,13 @@ struct qcom_pcie {
- 
- static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
- {
--	gpiod_set_value(pcie->reset, 1);
-+	gpiod_set_value_cansleep(pcie->reset, 1);
- 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
- }
- 
- static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
- {
--	gpiod_set_value(pcie->reset, 0);
-+	gpiod_set_value_cansleep(pcie->reset, 0);
- 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
- }
- 
--- 
-2.7.4
+Cheers,
+Ben.
