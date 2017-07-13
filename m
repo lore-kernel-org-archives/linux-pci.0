@@ -1,23 +1,21 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 19 Jul 2017 18:48:11 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Oza Oza <oza.oza@broadcom.com>
-Subject: Re: [RFT PATCH v2 02/42] drivers: pci: host: iproc: Convert link
- check to raw PCI config accessors
-Message-ID: <20170719174811.GA22595@red-moon>
-References: <20170608163614.GB2216@red-moon>
- <CAMSpPPe6bXfu=ntMedrt0w4UfqJLy1a9ZBu_kXy1j4B63x1Nww@mail.gmail.com>
- <20170612161358.GA32043@red-moon>
- <CAMSpPPc0uwV0JZYkegrCaemuoJ-wfWwkSXd7TMtFwENoLRXdBQ@mail.gmail.com>
- <403daa9b-c0f6-971d-9312-ef103460d738@broadcom.com>
- <CAMSpPPdDLjRURZowWAzSvagmmhmojwYFYoHVu3xYcH6i-guviQ@mail.gmail.com>
- <3d90daa1-7090-337a-b5c1-967b7eaeb2d9@broadcom.com>
- <20170614133938.GA30630@red-moon>
- <CAMSpPPe1fw7fuQMz969ZoRnuNYkaaDqdNnYugA=AvSUvufiKzQ@mail.gmail.com>
- <CAMSpPPdzmQBOvhz2Cx+TnnNoX-N-0cr92O07GTzWwp1TKidPcw@mail.gmail.com>
+From: Casey Leedom <leedom@chelsio.com>
+To: Ding Tianhong <dingtianhong@huawei.com>, Alexander Duyck
+ <alexander.duyck@gmail.com>
+Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Thu, 13 Jul 2017 00:52:23 +0000
+Message-ID: <MWHPR12MB160080C62945A101FF0718DEC8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
+ <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
+ <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
+ <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>,
+ <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
+In-Reply-To: <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CAMSpPPdzmQBOvhz2Cx+TnnNoX-N-0cr92O07GTzWwp1TKidPcw@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -25,197 +23,83 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linus Walleij <linus.walleij@linaro.org>, Will Deacon <will.deacon@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Thierry Reding <thierry.reding@gmail.com>, Ray Jui <ray.jui@broadcom.com>,
- Tanmay Inamdar <tinamdar@apm.com>, Matthew Minter <matt@masarand.com>,
- Rob Herring <robh@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Michal Simek <michal.simek@xilinx.com>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, Simon Horman <horms@verge.net.au>,
- Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Scott Branden <sbranden@broadcom.com>, Jingoo Han <jingoohan1@gmail.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ Michael Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "amira@mellanox.com" <amira@mellanox.com>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 05:43:32PM +0530, Oza Oza wrote:
-> On Wed, Jun 21, 2017 at 8:09 PM, Oza Oza <oza.oza@broadcom.com> wrote:
-> > On Wed, Jun 14, 2017 at 7:09 PM, Lorenzo Pieralisi
-> > <lorenzo.pieralisi@arm.com> wrote:
-> >> On Tue, Jun 13, 2017 at 10:18:14AM -0700, Ray Jui wrote:
-> >>> Hi Oza/Lorenzo,
-> >>>
-> >>> On 6/13/17 1:22 AM, Oza Oza wrote:
-> >>> > On Tue, Jun 13, 2017 at 12:22 AM, Ray Jui <ray.jui@broadcom.com> wrote:
-> >>> >>
-> >>> >>
-> >>> >> On 6/12/17 10:40 AM, Oza Oza wrote:
-> >>> >>> On Mon, Jun 12, 2017 at 9:43 PM, Lorenzo Pieralisi
-> >>> >>> <lorenzo.pieralisi@arm.com> wrote:
-> >>> >>>> On Sun, Jun 11, 2017 at 09:42:34AM +0530, Oza Oza wrote:
-> >>> >>>>> On Thu, Jun 8, 2017 at 10:06 PM, Lorenzo Pieralisi
-> >>> >>>>> <lorenzo.pieralisi@arm.com> wrote:
-> >>> >>>>>> [dropped rock-chips maintainers, email bounces]
-> >>> >>>>>>
-> >>> >>>>>> On Thu, Jun 08, 2017 at 08:56:05AM -0700, Ray Jui wrote:
-> >>> >>>>>>> Hi Lorenzo,
-> >>> >>>>>>>
-> >>> >>>>>>> Thanks, I'll try my best to find time to test this along 15/42 and
-> >>> >>>>>>> 33/42 patches. Hopefully I can get to that some time next week.
-> >>> >>>>>>>
-> >>> >>>>>>> I have not yet reviewed these patches in details. Do they have
-> >>> >>>>>>> dependency on other patches to the generic framework code you
-> >>> >>>>>>> changed?
-> >>> >>>>>>>
-> >>> >>>>>>> If so, is there a repo I can pull them?
-> >>> >>>>>>
-> >>> >>>>>> I added it in the cover letter but anyway here it is:
-> >>> >>>>>>
-> >>> >>>>>> git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal-v2
-> >>> >>>>>
-> >>> >>>>> Hi Lorenzo,
-> >>> >>>>>
-> >>> >>>>> I picked up your changes, and tested on iproc based SOC,
-> >>> >>>>> and ran basic fio data transfer.. and it looks okay.
-> >>> >>>>
-> >>> >>>> Thank you. If you could also check it is all OK from a legacy
-> >>> >>>> IRQ allocation (ie same as before applying series) I'd be grateful.
-> >>> >>>>
-> >>> >>>
-> >>> >>> I disabled msi and it should default to legacy IRQ, looks like there
-> >>> >>> is a problem, if I missed any change !
-> >>> >>>
-> >>> >>> before applying series:  cat /proc/interrupts
-> >>> >>> 377:        168          0          0          0          0          0
-> >>> >>>          0          0     dummy   1 Edge      nvme0q0, nvme0q1
-> >>> >>>
-> >>> >>> after applying series:
-> >>> >>> root@bcm958742k:~# dmesg | grep nvme
-> >>> >>> [    3.855466] nvme 0000:01:00.0: assign irq: got 0
-> >>> >>> [    3.855469] nvme 0000:01:00.0: assigning IRQ 00
-> >>> >>> [    3.855515] nvme nvme0: pci function 0000:01:00.0
-> >>> >>> [    4.270850] nvme 0000:01:00.0: enabling device (0000 -> 0002)
-> >>> >>> [    4.276787] nvme 0000:01:00.0: enabling bus mastering
-> >>> >>> [    4.276817] nvme nvme0: Removing after probe failure status: -22
-> >>> >>>
-> >>> >>> here is my git status of your series, let me know if I am missing any
-> >>> >>> change with respect to legacy IRQ ?
-> >>> >>>
-> >>> >>>  modified:   arch/arm/include/asm/mach/pci.h
-> >>> >>>         modified:   arch/arm/kernel/bios32.c
-> >>> >>>         modified:   arch/arm/mach-dove/pcie.c
-> >>> >>>         modified:   arch/arm/mach-iop13xx/pci.c
-> >>> >>>         modified:   arch/arm/mach-iop13xx/pci.h
-> >>> >>>         modified:   arch/arm/mach-mv78xx0/pcie.c
-> >>> >>>         modified:   arch/arm/mach-orion5x/common.h
-> >>> >>>         modified:   arch/arm/mach-orion5x/pci.c
-> >>> >>>         modified:   arch/arm64/kernel/pci.c
-> >>> >>>         modified:   drivers/of/of_pci_irq.c
-> >>> >>>         modified:   drivers/pci/Makefile
-> >>> >>>         modified:   drivers/pci/host/pci-aardvark.c
-> >>> >>>         modified:   drivers/pci/host/pci-ftpci100.c
-> >>> >>>         modified:   drivers/pci/host/pci-host-common.c
-> >>> >>>         modified:   drivers/pci/host/pci-tegra.c
-> >>> >>>         modified:   drivers/pci/host/pci-versatile.c
-> >>> >>>         modified:   drivers/pci/host/pci-xgene.c
-> >>> >>>         modified:   drivers/pci/host/pcie-altera.c
-> >>> >>>         modified:   drivers/pci/host/pcie-iproc-bcma.c
-> >>> >>>         modified:   drivers/pci/host/pcie-iproc-platform.c
-> >>> >>>         modified:   drivers/pci/host/pcie-iproc.c
-> >>> >>>         modified:   drivers/pci/host/pcie-iproc.h
-> >>> >>>         modified:   drivers/pci/host/pcie-rcar.c
-> >>> >>>         modified:   drivers/pci/host/pcie-rockchip.c
-> >>> >>>         modified:   drivers/pci/host/pcie-xilinx-nwl.c
-> >>> >>>         modified:   drivers/pci/host/pcie-xilinx.c
-> >>> >>>         modified:   drivers/pci/pci-driver.c
-> >>> >>>         modified:   drivers/pci/probe.c
-> >>> >>>         modified:   drivers/pci/setup-irq.c
-> >>> >>>         modified:   include/linux/pci.h
-> >>> >>>
-> >>> >>
-> >>> >> Did you test with or without my change in bcm/master to emulate legacy
-> >>> >> interrupt through dummy IRQ domain?
-> >>> >>
-> >>> >> Thanks,
-> >>> >>
-> >>> >> Ray
-> >>> >>
-> >>> >>
-> >>> >
-> >>> > Hi Ray,
-> >>> > yes irqdomain was missing, and with that legacy IRQ are fine now.
-> >>> > please mainline those changes.
-> >>> >
-> >>> > Hi Lorenzo,
-> >>> >
-> >>> > Legacy IRQ is working fine as well wiht your patches.
-> >>> >
-> >>> > cat /proc/interrupts
-> >>> > 122:        160          0          0          0          0          0
-> >>> >          0          0     dummy   1 Edge      nvme0q0, nvme0q1
-> >>> >
-> >>> > NVMe data transfer is also fine.
-> >>> >
-> >>> > Regards,
-> >>> > Oza.
-> >>> >
-> >>>
-> >>> Okay, so I take this as Lorenzo's changes on iProc PCIe driver have been
-> >>> sanity tested for link detection and legacy interrupt support. No
-> >>> regression is seen. Thanks, Oza.
-> >>
-> >> Yes, that's how I take it too, I did not understand what was triggering
-> >> the first regression reported - my series should work on top of mainline
-> >> if the current code works and should not depend on any other patch
-> >> being merged - please make sure that's the case to prevent unwanted
-> >> regressions in case other patches do not make it into the mainline.
-> >>
-> >> Thank you very much for your help in testing it.
-> >
-> >
-> > Hi Lorenzo,
-> >
-> > I have ported and tested my inbound memory patches on top of your
-> > patches and that work fine as well.
-> > This is mainly to do with IOVA reservations.
-> >
-> > Regards,
-> > Oza.
-> >
-> >>
-> >> Lorenzo
-> >>
-> >>>
-> >>> I'll send out the INTx irqdomain support patch when I have time.
-> >>>
-> >>> Ray
-> >>>
-> >>>
-> >>>
-> >>>
-> 
-> Hi Bjorn,
-> 
-> I have made v8 for inbound memory patches as you suggested, on top of
-> Lorenzo's patches.
-> but I can not post them since Lorenzo's patches have not made in.
+=A0 Sorry again for the delay.=A0 This time at least partially caused by a =
+Chelsio-internal Customer Support request to simply disable Relaxed Orderin=
+g entirely due to the performance issues with our 100Gb/s product and relat=
+ively recent Intel Root Complexes.  Our Customer Support people are tired o=
+f asking customers to try turning off Relaxed Ordering. (sigh)
 
-It depends on what kernel you are pulling. If you pulled v4.13-rc1
-this series would be there.
+  So, first off, I've mentioned a couple of times that the current cxgb4 dr=
+iver hardwired the PCIe Capability Device Control[Relaxed Ordering Enable] =
+on.  Here's the code which does it:
 
-Lorenzo
+    drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c:4657:
 
+    static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
+    {
+        pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_=
+EN);
+    }
+
+This is called from the PCI Probe() routine init_one() later in that file. =
+ I just wanted to make sure people knew about this.  Obviously given our cu=
+rrent very difficult thread, this would either need to be diked out or chan=
+ged or a completely different mechanism put in place.
+
+  Second, just to make sure everyone's on the same page, the above simply a=
+llows the device to send TLPs with the Relaxed Ordering Attribute.  It does=
+n't cause TLPs to suddenly all be sent with RO set.  The use of Relaxed Ord=
+ering is selective.  For instance, in our hardware we can configure the RX =
+Path to use RO on Ingress Packet Data delivery to Free List Buffers, but no=
+t use RO for delivery of messages noting newly delivered Ingress Packet Dat=
+a.  Doing this allows the destination PCIe target to [potentially] optimize=
+ the DMA Writes to it based on local conditions (memory controller channel =
+availability, etc.), but ensure that the message noting newly delivered Ing=
+ress Packet Data isn't processed till all of the preceding TLPs with RO set=
+ containing Ingress Packet Data have been processed.  (This by the way is t=
+he essence of the AMD A1100 ARM SoC bug: its Root Complex isn't obeying tha=
+t PCIe ordering rule.)
+
+  Third, as noted above, I'm getting a lot of pressure to get this addresse=
+d sooner than later, so I think that we should go with something fairly sim=
+ple along the lines that you guys are proposing and I'll stop whining about=
+ the problem of needing to handle Peer-to-Peer with Relaxed Ordering while =
+not using it for deliveries to the Root Complex.  We can just wait for that=
+ kettle of fish to explode on us and deal with the mess then.  (Hhmmm, the =
+mixed metaphor landed in an entirely different place than I originally inte=
+nded ... :-))
+
+  If we try to stick as closely to Ding's latest patch set as possible, the=
+n we can probably just add the diff to remove the enable_pcie_relaxed_order=
+ing() code in cxgb4_main.c.
+
+Casey
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
