@@ -1,111 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f174.google.com ([209.85.128.174]:34447 "EHLO
-        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755307AbdGXRd2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 13:33:28 -0400
-Received: by mail-wr0-f174.google.com with SMTP id 12so109274636wrb.1
-        for <linux-pci@vger.kernel.org>; Mon, 24 Jul 2017 10:33:27 -0700 (PDT)
+Return-Path: <SRS0=dwSL=6Q=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=dwSL=6Q=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <20170710155230.8622-1-marc.zyngier@arm.com>
+ <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Mathias Nyman <mathias.nyman@intel.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-usb <linux-usb@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <544d9c48-9d4f-29f7-1478-afa940b20dd8@arm.com>
+Date: Thu, 13 Jul 2017 08:46:45 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170723200636.3fa7f351@w520.home>
-References: <1500511611-2019-1-git-send-email-fkan@apm.com>
- <20170720162255.36e015f1@ul30vt.home> <CAL85gmBB=U_4jkChKwfZGPQR0zeoZ4=hg7e6HMnu-DS0u1-Wsg@mail.gmail.com>
- <20170723200636.3fa7f351@w520.home>
-From: Feng Kan <fkan@apm.com>
-Date: Mon, 24 Jul 2017 10:33:25 -0700
-Message-ID: <CAL85gmDZtLPqc3bmGA0s00Jb=180FfN4vvibdROyrJ05JYjcOg@mail.gmail.com>
-Subject: Re: [PATCH V2] pci: quirk: Apply APM ACS quirk to XGene devices
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 23, 2017 at 7:06 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Fri, 21 Jul 2017 13:20:18 -0700
-> Feng Kan <fkan@apm.com> wrote:
->
->> On Thu, Jul 20, 2017 at 3:22 PM, Alex Williamson
->> <alex.williamson@redhat.com> wrote:
->> > On Wed, 19 Jul 2017 17:46:51 -0700
->> > Feng Kan <fkan@apm.com> wrote:
->> >
->> >> The APM X-Gene PCIe root port does not support ACS at this point.
->> >> However, the hw provides isolation and source validation through
->> >> the SMMU. Turn on ACS but disable all the peer to peer features.
->> >>
->> >> Signed-off-by: Feng Kan <fkan@apm.com>
->> >> ---
->> >>  drivers/pci/quirks.c | 15 +++++++++++++++
->> >>  1 file changed, 15 insertions(+)
->> >>
->> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> >> index 085fb78..0f8f1cd 100644
->> >> --- a/drivers/pci/quirks.c
->> >> +++ b/drivers/pci/quirks.c
->> >> @@ -4120,6 +4120,19 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
->> >>       return acs_flags ? 0 : 1;
->> >>  }
->> >>
->> >> +static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
->> >> +{
->> >> +     /*
->> >> +      * XGene root matching this quirk do not allow peer-to-peer
->> >> +      * transactions with others, allowing masking out these bits as if they
->> >> +      * were unimplemented in the ACS capability.
->> >> +      */
->> >> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
->> >> +                    PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
->> >> +
->> >> +     return acs_flags ? 0 : 1;
->> >> +}
->> >> +
->> >>  /*
->> >>   * Many Intel PCH root ports do provide ACS-like features to disable peer
->> >>   * transactions and validate bus numbers in requests, but do not provide an
->> >> @@ -4368,6 +4381,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->> >>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
->> >>       /* Cavium ThunderX */
->> >>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
->> >> +     /* APM XGene */
->> >> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
->> >>       { 0 }
->> >>  };
->> >>
->> >
->> > Sorry, I'm not yet convinced there's an equivalent of SV, if a device
->> > spoofs a different bdf and it reaches the smmu, what prevents that from
->> > simply referencing the context for that alternate bdf?
->> Perhaps I am not understanding the question correctly. The bdf forms a
->> stream id which is used to provide an context. Since there is no actual
->> context created by an alternate bdf, the transaction would be rejected
->> by the SMMU.
->
-> Unless that context does exist.  Take for example a basic topology:
->
-> -[0000:00]-+-00.0
->            +-01.0-[01]----00.0
->            +-02.0-[02]----00.0
->
-> Assume 00:01.0 and 00:02.0 are root ports and 01:00.0 and 02:00.0 are
-> their respective downstream endpoint.  A single iommu would typically
-> handle both of these endpoints using the requester ID, aka stream ID, to
-> reference the appropriate context.  Source validation at the root port
-> makes sure that any forwarded transaction has a requester ID that falls
-> between the secondary and subordinate bus number range of the root
-> port.  For instance, if device 01:00.0 was able to generate a
-> transaction with a requester ID of 02:00.0, source validation at the
-> root port would generate an ACS violation.  If the root port does not
-> support source validation, the transaction might successfully reference
-> the iommu context for the other endpoint.  Therefore I don't understand
-> what property of the SMMU is able to prevent this spoofing technique if
-> the root port provides no protection on its own.  Thanks,
-Yes, you are right. I left out some details to our implementation. Our
-implementation
-of the stream ID is not just the BDF. The stream ID also contains a
-port ID at the
-upper bits to indicate the difference between the PCIe ports. The scenario you
-explained up above should not happen.
->
-> Alex
+On 13/07/17 07:48, Ard Biesheuvel wrote:
+> On 13 July 2017 at 04:12, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
+>>> Ard and myself have just spent quite some time lately trying to pin
+>>> down an issue in the DMA code which was taking the form of a PCIe USB3
+>>> controller issuing a DMA access at some bizarre address, and being
+>>> caught red-handed by the IOMMU.
+>>>
+>>> After much head scratching and most of a week-end spent on tracing the
+>>> damn thing, I'm now convinced that the DMA code is fine, the XHCI
+>>> driver is correct, but that the HW (a Renesas uPD720202 chip) is a
+>>> nasty piece of work.
+>>>
+>>> The issue is as follow:
+>>>
+>>> - EFI initializes the controller using physical addresses above the
+>>>   4GB limit (this is on an arm64 box where the memory starts at
+>>>   0x80_00000000...).
+>>>
+>>> - The kernel takes over, sends a XHCI reset to the controller, and
+>>>   because we have an IOMMU sitting between the controller and memory,
+>>>   provides *virtual* addresses. Trying to make things a bit faster for
+>>>   our controller, it issues IOVAs in the low 4GB range).
+>>>
+>>> - Low and behold, the controller is now issuing transactions with a
+>>>   0x80 prefix in front of our IOVA. Yes, the same prefix that was
+>>>   programmed during the EFI configuration. IOMMU fault, not happy.
+>>>
+>>> If the kernel is hacked to only generate IOVAs that are more than
+>>> 32bit wide, the HW behaves correctly. The only way I can explain this
+>>> behaviour is that the HW latches the top 32bit of the ERST (it is
+>>> always the ERST IOVA that appears in my traces) in some internal
+>>> register, and that the XHCI reset fails to clear it. Writing zero in
+>>> the top bits is not enough to clear it either.
+>>>
+>>> So far, the only solution we have for this lovely piece of kit is to
+>>> force a PCI reset at probe time, which puts it right. The patches are
+>>> pretty ugly, but that's the best I could come up with so far.
+>>>
+>>> Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
+>>> uPD720202 controllers.
+>>>
+>>> Marc Zyngier (2):
+>>>   PCI: Implement pci_reset_function_locked
+>>>   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
+>>>     controller
+>>>
+>>>  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
+>>>  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
+>>>  drivers/usb/host/pci-quirks.h |  1 +
+>>>  drivers/usb/host/xhci-pci.c   |  7 +++++++
+>>>  include/linux/pci.h           |  1 +
+>>>  5 files changed, 64 insertions(+)
+>>
+>> I provisionally applied this to pci/virtualization.  I'd like to have an
+>> XHCI ack before going further, though.
+>>
+>> I assume this only affects boxes where the firmware uses addresses above
+>> 4GB, i.e., not very many?  So this is v4.14 material?  Or do you think it's
+>> important for v4.13?
+>>
+> 
+> As I mentioned, it would be nice if this could at least go into v4.11
+> and later, given that v4.11 contains a patch that switches all PCI
+> devices to 32-bit addressing only when the IOMMU is involved in DMA,
+> and this is what triggered the issue on arm64 boards with such a PCI
+> card and no DRAM below 4 GB.
+
+Agreed. It is likely that the issue will trigger on any 64bit->32bit
+IOVA transition, not only EFI->kernel, such as a kexec from a 4.10 to a
+4.11 kernel.
+
+More importantly, this could have a dramatic effect on a system where
+both the 32bit and 64bit address ranges are valid. In my case, I was
+saved by the IOMMU blocking the DMA access, but imagine for a second the
+device was using PAs... I'm not sure that this is completely
+hypothetical, nor arm64 specific.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
