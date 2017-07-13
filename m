@@ -1,123 +1,163 @@
-Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: [PATCH v8 4/6] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v4
-Date: Mon, 10 Jul 2017 16:59:52 +0200
-Message-Id: <1499698794-1718-5-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
-References: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1499955692-26556-4-git-send-email-dingtianhong@huawei.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-4-git-send-email-dingtianhong@huawei.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Thu, 13 Jul 2017 11:14:08 -0700
+Message-ID: <CAKgT0UcBFBk9T7g0Dh-rHY6Z+6-4=5jsUWHbLcSMc+ohdTz=CA@mail.gmail.com>
+Subject: Re: [PATCH v7 3/3] net/cxgb4: Use new
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: Ding Tianhong <dingtianhong@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Asit K Mallick <asit.k.mallick@intel.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ LinuxArm <linuxarm@huawei.com>, Ashok Raj <ashok.raj@intel.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ganesh Goudar <ganeshgr@chelsio.com>, Bob Shaw <Bob.Shaw@amd.com>,
+ Casey Leedom <leedom@chelsio.com>,
+ Patrick J Cramer <patrick.j.cramer@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Michael Werner <werner@chelsio.com>,
+ linux-arm-kernel@lists.infradead.org, Amir Ancel <amira@mellanox.com>,
+ Netdev <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ David Laight <David.Laight@aculab.com>,
+ Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
+ h <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Thu, Jul 13, 2017 at 7:21 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+> From: Casey Leedom <leedom@chelsio.com>
+>
+> cxgb4 Ethernet driver now queries PCIe configuration space to determine
+> if it can send TLPs to it with the Relaxed Ordering Attribute set.
+>
+> Remove the enable_pcie_relaxed_ordering() to avoid enable PCIe Capability
+> Device Control[Relaxed Ordering Enable] at probe routine, to make sure
+> the driver will not send the Relaxed Ordering TLPs to the Root Complex which
+> could not deal the Relaxed Ordering TLPs.
+>
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
 
-Most BIOS don't enable this because of compatibility reasons.
+Ding,
 
-Manually enable a 64bit BAR of 64GB size so that we have
-enough room for PCI devices.
+You can probably just drop this patch. If I am understanding Casey
+correctly just the fact that the relaxed ordering enable bit is
+cleared in the configuration should be enough to do this for the
+device automatically.
 
-v2: style cleanups, increase size, add resource name, set correct flags,
-    print message that windows was added
-v3: add defines for all the magic numbers, style cleanups
-v4: add some comment that the BIOS should actually allow this using
-    _PRS and _SRS.
+- Alex
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
----
- arch/x86/pci/fixup.c | 76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
+> ---
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+>  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 23 +++++++++++++++++------
+>  drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+>  3 files changed, 21 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> index ef4be78..09ea62e 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+> @@ -529,6 +529,7 @@ enum {                                 /* adapter flags */
+>         USING_SOFT_PARAMS  = (1 << 6),
+>         MASTER_PF          = (1 << 7),
+>         FW_OFLD_CONN       = (1 << 9),
+> +       ROOT_NO_RELAXED_ORDERING = (1 << 10),
+>  };
+>
+>  enum {
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> index e403fa1..391e484 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+> @@ -4654,11 +4654,6 @@ static void print_port_info(const struct net_device *dev)
+>                     dev->name, adap->params.vpd.id, adap->name, buf);
+>  }
+>
+> -static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
+> -{
+> -       pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
+> -}
+> -
+>  /*
+>   * Free the following resources:
+>   * - memory used for tables
+> @@ -4908,7 +4903,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>         }
+>
+>         pci_enable_pcie_error_reporting(pdev);
+> -       enable_pcie_relaxed_ordering(pdev);
+>         pci_set_master(pdev);
+>         pci_save_state(pdev);
+>
+> @@ -4947,6 +4941,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>         adapter->msg_enable = DFLT_MSG_ENABLE;
+>         memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+>
+> +       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
+> +        * Ingress Packet Data to Free List Buffers in order to allow for
+> +        * chipset performance optimizations between the Root Complex and
+> +        * Memory Controllers.  (Messages to the associated Ingress Queue
+> +        * notifying new Packet Placement in the Free Lists Buffers will be
+> +        * send without the Relaxed Ordering Attribute thus guaranteeing that
+> +        * all preceding PCIe Transaction Layer Packets will be processed
+> +        * first.)  But some Root Complexes have various issues with Upstream
+> +        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
+> +        * The PCIe devices which under the Root Complexes will be cleared the
+> +        * Relaxed Ordering bit in the configuration space, So we check our
+> +        * PCIe configuration space to see if it's flagged with advice against
+> +        * using Relaxed Ordering.
+> +        */
+> +       if (!pcie_relaxed_ordering_supported(pdev))
+> +               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+> +
+>         spin_lock_init(&adapter->stats_lock);
+>         spin_lock_init(&adapter->tid_release_lock);
+>         spin_lock_init(&adapter->win0_lock);
+> diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> index ede1220..4ef68f6 100644
+> --- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> +++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+> @@ -2719,6 +2719,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>         struct fw_iq_cmd c;
+>         struct sge *s = &adap->sge;
+>         struct port_info *pi = netdev_priv(dev);
+> +       int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+>
+>         /* Size needs to be multiple of 16, including status entry. */
+>         iq->size = roundup(iq->size, 16);
+> @@ -2772,8 +2773,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+>
+>                 flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+>                 c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+> -                                            FW_IQ_CMD_FL0FETCHRO_F |
+> -                                            FW_IQ_CMD_FL0DATARO_F |
+> +                                            FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
+> +                                            FW_IQ_CMD_FL0DATARO_V(relaxed) |
+>                                              FW_IQ_CMD_FL0PADEN_F);
+>                 if (cong >= 0)
+>                         c.iqns_to_fl0congen |=
+> --
+> 1.8.3.1
+>
+>
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 11e4074..0f4088b 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -618,3 +618,79 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
- 		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
-+
-+#define AMD_141b_MMIO_BASE(x)	(0x80 + (x) * 0x8)
-+#define AMD_141b_MMIO_BASE_RE_MASK		BIT(0)
-+#define AMD_141b_MMIO_BASE_WE_MASK		BIT(1)
-+#define AMD_141b_MMIO_BASE_MMIOBASE_MASK	GENMASK(31,8)
-+
-+#define AMD_141b_MMIO_LIMIT(x)	(0x84 + (x) * 0x8)
-+#define AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK	GENMASK(31,8)
-+
-+#define AMD_141b_MMIO_HIGH(x)	(0x180 + (x) * 0x4)
-+#define AMD_141b_MMIO_HIGH_MMIOBASE_MASK	GENMASK(7,0)
-+#define AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT	16
-+#define AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK	GENMASK(23,16)
-+
-+/*
-+ * The PCI Firmware Spec, rev 3.2 notes that ACPI should optionally allow
-+ * configuring host bridge windows using the _PRS and _SRS methods.
-+ *
-+ * But this is rarely implemented, so we manually enable a large 64bit BAR for
-+ * PCIe device on AMD Family 15h (Models 30h-3fh) Processors here.
-+ */
-+static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-+{
-+	struct resource *res, *conflict;
-+	u32 base, limit, high;
-+	unsigned i;
-+
-+	for (i = 0; i < 8; ++i) {
-+		pci_read_config_dword(dev, AMD_141b_MMIO_BASE(i), &base);
-+		pci_read_config_dword(dev, AMD_141b_MMIO_HIGH(i), &high);
-+
-+		/* Is this slot free? */
-+		if (!(base & (AMD_141b_MMIO_BASE_RE_MASK |
-+			      AMD_141b_MMIO_BASE_WE_MASK)))
-+			break;
-+
-+		base >>= 8;
-+		base |= high << 24;
-+
-+		/* Abort if a slot already configures a 64bit BAR. */
-+		if (base > 0x10000)
-+			return;
-+	}
-+	if (i == 8)
-+		return;
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return;
-+
-+	res->name = "PCI Bus 0000:00";
-+	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
-+		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-+	res->start = 0x100000000ull;
-+	res->end = 0xfd00000000ull - 1;
-+
-+	/* Just grab the free area behind system memory for this */
-+	while ((conflict = request_resource_conflict(&iomem_resource, res)))
-+		res->start = conflict->end + 1;
-+
-+	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-+
-+	base = ((res->start >> 8) & AMD_141b_MMIO_BASE_MMIOBASE_MASK) |
-+		AMD_141b_MMIO_BASE_RE_MASK | AMD_141b_MMIO_BASE_WE_MASK;
-+	limit = ((res->end + 1) >> 8) & AMD_141b_MMIO_LIMIT_MMIOLIMIT_MASK;
-+	high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
-+		((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
-+		 & AMD_141b_MMIO_HIGH_MMIOLIMIT_MASK);
-+
-+	pci_write_config_dword(dev, AMD_141b_MMIO_HIGH(i), high);
-+	pci_write_config_dword(dev, AMD_141b_MMIO_LIMIT(i), limit);
-+	pci_write_config_dword(dev, AMD_141b_MMIO_BASE(i), base);
-+
-+	pci_bus_add_resource(dev->bus, res, 0);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
--- 
-2.7.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
