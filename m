@@ -1,103 +1,258 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59150 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:54836 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755455AbdGXQpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Jul 2017 12:45:08 -0400
-Date: Mon, 24 Jul 2017 10:45:05 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Roland Dreier <roland.dreier@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>
-Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
-Message-ID: <20170724104505.74c67861@w520.home>
-In-Reply-To: <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com>
-References: <20170720214101.7449-1-roland@kernel.org>
-        <20170720161554.45ce1673@ul30vt.home>
-        <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com>
+        id S1750927AbdGMDTJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jul 2017 23:19:09 -0400
+Date: Wed, 12 Jul 2017 22:19:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/pcieport: move EH methods to struct
+ pcie_port_service_driver
+Message-ID: <20170713031906.GE4486@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170619180458.28377-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170619180458.28377-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 20 Jul 2017 15:53:04 -0700
-Roland Dreier <roland.dreier@gmail.com> wrote:
-
-> On Thu, Jul 20, 2017 at 3:15 PM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
+On Mon, Jun 19, 2017 at 08:04:58PM +0200, Christoph Hellwig wrote:
+> And avoid the detour throught the mostly unused pci_error_handlers
+> structure.
 > 
-> > Most of the ACS capabilities are worded as "Must be implemented by
-> > devices that implement ..."  Shouldn't a hard-wired ACS capability
-> > sufficiently describe that, or is there something wrong with how
-> > they're hard wired?  
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Applied to pci/aer for v4.14, thanks!
+
+> ---
 > 
-> Interesting question.  I just looked at what the PCI spec says about
-> the various bits for ACS functions in multi-function devices.  Many of
-> the functions are "must not be implemented."  Of the ones that are
-> "must be implemented if..." the key is that the if is for devices that
-> support peer-to-peer traffic.
+> Note: this is based on the pci/virtualization branch.
 > 
-> I think the Intel NICs are compliant with the spec - they don't
-> support any ACS mechanisms for controlling peer-to-peer traffic, but
-> they also don't implement peer-to-peer traffic.  This means that the
-> PCI standard way of knowing that it is safe to assign individual
-> functions does not prove it is safe - but with device-specific
-> knowledge we do know it is safe.  Hence a quirk to give that
-> device-specific information to the kernel.
-
-I think that the device implementing ACS and not implementing certain
-features that are "must be implemented if..." is a positive indication
-that the device does not have that behavior and therefore the ability
-to control that behavior is unnecessary.  pci_acs_flags_enabled() is
-coded with this intention:
-
-static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-{
-        int pos;
-        u16 cap, ctrl;
-
-        pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
-        if (!pos)
-                return false;
-
-        /*
-         * Except for egress control, capabilities are either required
-         * or only required if controllable.  Features missing from the
-         * capability field can therefore be assumed as hard-wired enabled.
-         */
-        pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
-        acs_flags &= (cap | PCI_ACS_EC);
-
-<Remove any requested ACS flags which are not implemented, except EC>
-
-        pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
-        return (ctrl & acs_flags) == acs_flags;
-
-<Compare what remains>
-}
-
-For example, from the spec (rev 3.1a 6.12.1.2):
-
-  ACS P2P Request Redirect: must be implemented by Functions that
-  support peer-to-peer traffic with other Functions.
-
-<Therefore if this capability within ACS is not implemented, p2p is not
-supported.>
-
-  When ACS P2P Request Redirect is enabled in a multi-Function device,
-  peer-to-peer Requests (between Functions of the device) must be
-  redirected Upstream towards the RC.
-
-<If p2p is not supported, there's no need to control this, the behavior
-is the same is if p2p were supported and this control bit is enabled>
-
-At least that's my interpretation and how I've indicated to folks at
-Intel how things should work for a device that does not support p2p.
-Of course this all hinges on having an ACS capability.  Without an ACS
-capability we must assume any sort of p2p is possible unless we have a
-quirk to tell us otherwise.  With ACS, the absence of capabilities is a
-positive indication that those forms of p2p are not possible (depending
-on the spec wording for that capability).  If the code doesn't behave
-that way, let's fix it. Thanks,
-
-Alex
+>  drivers/pci/pcie/aer/aerdrv.c  |  25 +---------
+>  drivers/pci/pcie/portdrv_pci.c | 105 +++--------------------------------------
+>  include/linux/pcieport_if.h    |   4 +-
+>  3 files changed, 9 insertions(+), 125 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aer/aerdrv.c b/drivers/pci/pcie/aer/aerdrv.c
+> index dea186a9d6b6..6ff5f5b4f5e6 100644
+> --- a/drivers/pci/pcie/aer/aerdrv.c
+> +++ b/drivers/pci/pcie/aer/aerdrv.c
+> @@ -32,16 +32,9 @@
+>  
+>  static int aer_probe(struct pcie_device *dev);
+>  static void aer_remove(struct pcie_device *dev);
+> -static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
+> -	enum pci_channel_state error);
+>  static void aer_error_resume(struct pci_dev *dev);
+>  static pci_ers_result_t aer_root_reset(struct pci_dev *dev);
+>  
+> -static const struct pci_error_handlers aer_error_handlers = {
+> -	.error_detected = aer_error_detected,
+> -	.resume		= aer_error_resume,
+> -};
+> -
+>  static struct pcie_port_service_driver aerdriver = {
+>  	.name		= "aer",
+>  	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+> @@ -49,9 +42,7 @@ static struct pcie_port_service_driver aerdriver = {
+>  
+>  	.probe		= aer_probe,
+>  	.remove		= aer_remove,
+> -
+> -	.err_handler	= &aer_error_handlers,
+> -
+> +	.error_resume	= aer_error_resume,
+>  	.reset_link	= aer_root_reset,
+>  };
+>  
+> @@ -350,20 +341,6 @@ static pci_ers_result_t aer_root_reset(struct pci_dev *dev)
+>  }
+>  
+>  /**
+> - * aer_error_detected - update severity status
+> - * @dev: pointer to Root Port's pci_dev data structure
+> - * @error: error severity being notified by port bus
+> - *
+> - * Invoked by Port Bus driver during error recovery.
+> - */
+> -static pci_ers_result_t aer_error_detected(struct pci_dev *dev,
+> -			enum pci_channel_state error)
+> -{
+> -	/* Root Port has no impact. Always recovers. */
+> -	return PCI_ERS_RESULT_CAN_RECOVER;
+> -}
+> -
+> -/**
+>   * aer_error_resume - clean up corresponding error status bits
+>   * @dev: pointer to Root Port's pci_dev data structure
+>   *
+> diff --git a/drivers/pci/pcie/portdrv_pci.c b/drivers/pci/pcie/portdrv_pci.c
+> index 8aa3f14bc87d..be635f017756 100644
+> --- a/drivers/pci/pcie/portdrv_pci.c
+> +++ b/drivers/pci/pcie/portdrv_pci.c
+> @@ -21,7 +21,6 @@
+>  
+>  #include "../pci.h"
+>  #include "portdrv.h"
+> -#include "aer/aerdrv.h"
+>  
+>  /* If this switch is set, PCIe port native services should not be enabled. */
+>  bool pcie_ports_disabled;
+> @@ -177,108 +176,20 @@ static void pcie_portdrv_remove(struct pci_dev *dev)
+>  	pcie_port_device_remove(dev);
+>  }
+>  
+> -static int error_detected_iter(struct device *device, void *data)
+> -{
+> -	struct pcie_device *pcie_device;
+> -	struct pcie_port_service_driver *driver;
+> -	struct aer_broadcast_data *result_data;
+> -	pci_ers_result_t status;
+> -
+> -	result_data = (struct aer_broadcast_data *) data;
+> -
+> -	if (device->bus == &pcie_port_bus_type && device->driver) {
+> -		driver = to_service_driver(device->driver);
+> -		if (!driver ||
+> -			!driver->err_handler ||
+> -			!driver->err_handler->error_detected)
+> -			return 0;
+> -
+> -		pcie_device = to_pcie_device(device);
+> -
+> -		/* Forward error detected message to service drivers */
+> -		status = driver->err_handler->error_detected(
+> -			pcie_device->port,
+> -			result_data->state);
+> -		result_data->result =
+> -			merge_result(result_data->result, status);
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  static pci_ers_result_t pcie_portdrv_error_detected(struct pci_dev *dev,
+>  					enum pci_channel_state error)
+>  {
+> -	struct aer_broadcast_data data = {error, PCI_ERS_RESULT_CAN_RECOVER};
+> -
+> -	/* get true return value from &data */
+> -	device_for_each_child(&dev->dev, &data, error_detected_iter);
+> -	return data.result;
+> -}
+> -
+> -static int mmio_enabled_iter(struct device *device, void *data)
+> -{
+> -	struct pcie_device *pcie_device;
+> -	struct pcie_port_service_driver *driver;
+> -	pci_ers_result_t status, *result;
+> -
+> -	result = (pci_ers_result_t *) data;
+> -
+> -	if (device->bus == &pcie_port_bus_type && device->driver) {
+> -		driver = to_service_driver(device->driver);
+> -		if (driver &&
+> -			driver->err_handler &&
+> -			driver->err_handler->mmio_enabled) {
+> -			pcie_device = to_pcie_device(device);
+> -
+> -			/* Forward error message to service drivers */
+> -			status = driver->err_handler->mmio_enabled(
+> -					pcie_device->port);
+> -			*result = merge_result(*result, status);
+> -		}
+> -	}
+> -
+> -	return 0;
+> +	/* Root Port has no impact. Always recovers. */
+> +	return PCI_ERS_RESULT_CAN_RECOVER;
+>  }
+>  
+>  static pci_ers_result_t pcie_portdrv_mmio_enabled(struct pci_dev *dev)
+>  {
+> -	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+> -
+> -	/* get true return value from &status */
+> -	device_for_each_child(&dev->dev, &status, mmio_enabled_iter);
+> -	return status;
+> -}
+> -
+> -static int slot_reset_iter(struct device *device, void *data)
+> -{
+> -	struct pcie_device *pcie_device;
+> -	struct pcie_port_service_driver *driver;
+> -	pci_ers_result_t status, *result;
+> -
+> -	result = (pci_ers_result_t *) data;
+> -
+> -	if (device->bus == &pcie_port_bus_type && device->driver) {
+> -		driver = to_service_driver(device->driver);
+> -		if (driver &&
+> -			driver->err_handler &&
+> -			driver->err_handler->slot_reset) {
+> -			pcie_device = to_pcie_device(device);
+> -
+> -			/* Forward error message to service drivers */
+> -			status = driver->err_handler->slot_reset(
+> -					pcie_device->port);
+> -			*result = merge_result(*result, status);
+> -		}
+> -	}
+> -
+> -	return 0;
+> +	return PCI_ERS_RESULT_RECOVERED;
+>  }
+>  
+>  static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>  {
+> -	pci_ers_result_t status = PCI_ERS_RESULT_RECOVERED;
+> -
+>  	/* If fatal, restore cfg space for possible link reset at upstream */
+>  	if (dev->error_state == pci_channel_io_frozen) {
+>  		dev->state_saved = true;
+> @@ -287,9 +198,7 @@ static pci_ers_result_t pcie_portdrv_slot_reset(struct pci_dev *dev)
+>  		pci_enable_pcie_error_reporting(dev);
+>  	}
+>  
+> -	/* get true return value from &status */
+> -	device_for_each_child(&dev->dev, &status, slot_reset_iter);
+> -	return status;
+> +	return PCI_ERS_RESULT_RECOVERED;
+>  }
+>  
+>  static int resume_iter(struct device *device, void *data)
+> @@ -299,13 +208,11 @@ static int resume_iter(struct device *device, void *data)
+>  
+>  	if (device->bus == &pcie_port_bus_type && device->driver) {
+>  		driver = to_service_driver(device->driver);
+> -		if (driver &&
+> -			driver->err_handler &&
+> -			driver->err_handler->resume) {
+> +		if (driver && driver->error_resume) {
+>  			pcie_device = to_pcie_device(device);
+>  
+>  			/* Forward error message to service drivers */
+> -			driver->err_handler->resume(pcie_device->port);
+> +			driver->error_resume(pcie_device->port);
+>  		}
+>  	}
+>  
+> diff --git a/include/linux/pcieport_if.h b/include/linux/pcieport_if.h
+> index afcd130ab3a9..18edc651c070 100644
+> --- a/include/linux/pcieport_if.h
+> +++ b/include/linux/pcieport_if.h
+> @@ -50,8 +50,8 @@ struct pcie_port_service_driver {
+>  	int (*suspend) (struct pcie_device *dev);
+>  	int (*resume) (struct pcie_device *dev);
+>  
+> -	/* Service Error Recovery Handler */
+> -	const struct pci_error_handlers *err_handler;
+> +	/* Device driver may resume normal operations */
+> +	void (*error_resume)(struct pci_dev *dev);
+>  
+>  	/* Link Reset Capability - AER service driver specific */
+>  	pci_ers_result_t (*reset_link) (struct pci_dev *dev);
+> -- 
+> 2.11.0
+> 
