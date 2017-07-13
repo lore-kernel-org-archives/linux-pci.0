@@ -1,59 +1,208 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36321 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753135AbdGLQX2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jul 2017 12:23:28 -0400
-Subject: Re: Support SVM without PASID
-To: Jerome Glisse <j.glisse@gmail.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <20170710193141.GA3813@gmail.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>, tianyu.lan@intel.com,
-        kevin.tian@intel.com, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        jacob.jun.pan@intel.com
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <2eef6af5-0285-fade-6c17-fad38586f4f0@gmail.com>
-Date: Wed, 12 Jul 2017 21:53:25 +0530
+Return-Path: <SRS0=oPzr=6Q=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=oPzr=6Q=huawei.com=liudongdong3@kernel.org>
+Subject: Re: PCI/DPC: Add eDPC support
+To: Sinan Kaya <okaya@codeaurora.org>, <helgaas@kernel.org>
+References: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
+ <c718120c-c8ec-0866-db6f-7ac0ac3af5ac@codeaurora.org>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <75f291f2-f820-82d5-2249-440009939a4f@huawei.com>
+Date: Thu, 13 Jul 2017 20:20:39 +0800
 MIME-Version: 1.0
-In-Reply-To: <20170710193141.GA3813@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <c718120c-c8ec-0866-db6f-7ac0ac3af5ac@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 7/11/2017 1:01 AM, Jerome Glisse wrote:
-> On Sun, Jul 09, 2017 at 08:45:57AM +0530, valmiki wrote:
->>>> Hi,
->>>>
->>>> In SMMUv3 architecture document i see "PASIDs are optional,
->>>> configurable, and of a size determined by the minimum
->>>> of the endpoint".
->>>>
->>>> So if PASID's are optional and not supported by PCIe end point, how SVM
->>>> can be achieved ?
->>>
->>> It cannot be inferred from that statement that PASID support is not
->>> required for SVM.  AIUI, SVM is a software feature enabled by numerous
->>> "optional" hardware features, including PASID.  Features that are
->>> optional per the hardware specification may be required for specific
->>> software features.  Thanks,
->>>
->> Thanks for the information Alex. Suppose if an End point doesn't support
->> PASID, is it still possible to achieve SVM ?
->> Are there any such features in SMMUv3 with which we can achieve it ?
->
-> You can achieve SVM in software, this is what HMM is for. But the hardware
-> must have an mmu with similar features as you get on CPU mmu. Device like
-> GPU do have such MMU.
->
-> You can also mix HMM with PASID/ATS to leverage device memory. HMM allows
-> you to use device memory inside process address space for device threads
-> (ie device memory is still consider as un-accessible from CPU, only device
-> can access it). Again very useful for GPU.
->
-Thanks Jerome, this is interesting and great work. Will try to explore 
-more on this option.
+Hi Sinan
 
-Regards,
-Valmiki
+Many thanks for your reveiw.
+
+在 2017/7/13 4:52, Sinan Kaya 写道:
+> On 6/24/2017 5:04 AM, Dongdong Liu wrote:
+>> This code is to add eDPC support. Get and print the RP PIO error
+>> information when the trigger condition is RP PIO error.
+>>
+>> For more information on eDPC, view the PCI-SIG eDPC ECN here:
+>> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
+>>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> ---
+>>  drivers/pci/pcie/pcie-dpc.c   | 161 ++++++++++++++++++++++++++++++++++++++++++
+>>  include/uapi/linux/pci_regs.h |  10 +++
+>>  2 files changed, 171 insertions(+)
+>>
+>> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+>> index 77d2ca9..00fdf87 100644
+>> --- a/drivers/pci/pcie/pcie-dpc.c
+>> +++ b/drivers/pci/pcie/pcie-dpc.c
+>> @@ -16,11 +16,55 @@
+>>  #include <linux/pcieport_if.h>
+>>  #include "../pci.h">
+>
+> <snip>
+>
+>> +static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
+>> +{
+>> +	struct pci_dev *pdev = dpc->dev->port;
+>> +	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
+>> +	int i;
+>> +	u16 cap;
+>> +	u16 status;
+>> +
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+>> +			      &rp_pio->status);
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
+>> +			      &rp_pio->mask);
+>> +
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
+>> +			      &rp_pio->severity);
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
+>> +			      &rp_pio->syserror);
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
+>> +			      &rp_pio->exception);
+>> +
+>> +	/* Get First Error Pointer */
+>> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
+>> +	rp_pio->first_error = (status & 0x1f00) >> 8;
+>> +
+>> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+>> +	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
+>> +	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
+>> +		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
+>> +			rp_pio->log_size);
+>> +		return;
+>> +	}
+>> +
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+>> +			      &rp_pio->header_log.dw0);
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
+>> +			      &rp_pio->header_log.dw1);
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
+>> +			      &rp_pio->header_log.dw2);
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+>> +			      &rp_pio->header_log.dw3);
+>> +	if (rp_pio->log_size == 4)
+>> +		return;
+>> +
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+>> +			      &rp_pio->impspec_log);
+>> +	for (i = 0; i < rp_pio->log_size - 5; i++)
+>> +		pci_read_config_dword(pdev,
+>> +			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+>> +			&rp_pio->tlp_prefix_log[i]);
+>> +}
+>> +
+>> +static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
+>> +{
+>
+> Why not have a stack local variable where you collect the information
+> on the first function and print it on the second function.
+>
+> What benefit the allocated memory brings?
+
+will be fixed as below.
+
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 9addc76..77fe097 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -42,7 +42,7 @@ struct dpc_dev {
+         struct work_struct      work;
+         int                     cap_pos;
+         bool                    rp;
+-   struct dpc_rp_pio_regs  *rp_pio;
++ u32                         rp_pio_status;
+  };
+
+  static const char * const rp_pio_error_string[] = {
+@@ -123,10 +123,10 @@ static void interrupt_event_handler(struct work_struct *work)
+         dpc_wait_link_inactive(pdev);
+         if (dpc->rp && dpc_wait_rp_inactive(dpc))
+                 return;
+-   if (dpc->rp && dpc->rp_pio->status)
++ if (dpc->rp && dpc->rp_pio_status)
+                 pci_write_config_dword(pdev,
+                                       dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+-                                 dpc->rp_pio->status);
++                               dpc->rp_pio_status);
+
+         pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+                 PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+@@ -139,10 +139,9 @@ static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
+                 t->dw0, t->dw1, t->dw2, t->dw3);
+  }
+
+-static void dpc_rp_pio_print_error(struct dpc_dev *dpc)
++static void dpc_rp_pio_print_error(struct dpc_dev *dpc, struct dpc_rp_pio_regs *rp_pio)
+  {
+         struct pci_dev *pdev = dpc->dev->port;
+-   struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
+         int i;
+         u32 status;
+
+@@ -172,10 +171,9 @@ static void dpc_rp_pio_print_error(struct dpc_dev *dpc)
+                         rp_pio->tlp_prefix_log[i]);
+  }
+
+-static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
++static void dpc_rp_pio_get_info(struct dpc_dev *dpc, struct dpc_rp_pio_regs *rp_pio)
+  {
+         struct pci_dev *pdev = dpc->dev->port;
+-   struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
+         int i;
+         u16 cap;
+         u16 status;
+@@ -230,8 +228,12 @@ static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
+
+  static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
+  {
+-   dpc_rp_pio_get_info(dpc);
+-   dpc_rp_pio_print_error(dpc);
++ struct dpc_rp_pio_regs rp_pio_regs;
++
++ dpc_rp_pio_get_info(dpc, &rp_pio_regs);
++ dpc_rp_pio_print_error(dpc, &rp_pio_regs);
++
++ dpc->rp_pio_status = rp_pio_regs.status;
+  }
+
+  static irqreturn_t dpc_irq(int irq, void *context)
+@@ -299,12 +301,6 @@ static int dpc_probe(struct pcie_device *dev)
+
+         dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+
+-   if (dpc->rp) {
+-           dpc->rp_pio = devm_kzalloc(&pdev->dev, sizeof(*dpc->rp_pio),
+-                                      GFP_KERNEL);
+-           if (!dpc->rp_pio)
+-                   return -ENOMEM;
+-   }
+
+Thanks
+Dongdong
+>
+>> +	dpc_rp_pio_get_info(dpc);
+>> +	dpc_rp_pio_print_error(dpc);
+>> +}
+>> +
+>
+>> @@ -144,6 +299,12 @@ static int dpc_probe(struct pcie_device *dev)
+>>
+>>  	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+>>
+>> +	if (dpc->rp) {
+>> +		dpc->rp_pio = devm_kzalloc(&pdev->dev, sizeof(*dpc->rp_pio),
+>> +					   GFP_KERNEL);
+>> +		if (!dpc->rp_pio)
+>> +			return -ENOMEM;
+>> +	}
+>>  	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+>>  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+>>
+>
