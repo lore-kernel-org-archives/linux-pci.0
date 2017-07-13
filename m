@@ -1,87 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:33087 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754518AbdGUU5M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 16:57:12 -0400
+Return-Path: <SRS0=JYXB=6Q=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=JYXB=6Q=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ alex.williamson@redhat.com, vikrams@codeaurora.org,
+ Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
+ <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
+Date: Thu, 13 Jul 2017 11:44:12 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170721202012.3360244-1-arnd@arndb.de>
-References: <20170721202012.3360244-1-arnd@arndb.de>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Fri, 21 Jul 2017 22:57:09 +0200
-Message-ID: <CAMuHMdV3Gm6S52kZ095MiJAbBMw1fr_bn1Z2TRBoDevQuhyavQ@mail.gmail.com>
-Subject: Re: [PATCH] of: provide of_n_{addr,size}_cells wrappers for !CONFIG_OF
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Grant Likely <grant.likely@linaro.org>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Magnus Damm <damm@opensource.se>,
-        Ben Dooks <ben.dooks@codethink.co.uk>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux-sh list <linux-sh@vger.kernel.org>,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
-        Alan Tull <atull@opensource.altera.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Richard Fitzgerald <rf@opensource.wolfsonmicro.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd,
+On 7/13/2017 8:17 AM, Bjorn Helgaas wrote:
+>> he spec is calling to wait up to 1 seconds if the device is sending CRS.
+>> The NVMe device seems to be requiring more. Relax this up to 60 seconds.
+> Can you add a pointer to the "1 second" requirement in the spec here?
+> We use 60 seconds in pci_scan_device() and acpiphp_add_context().  Is
+> there a basis in the spec for the 60 second timeout?
 
-On Fri, Jul 21, 2017 at 10:19 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> The pci-rcar driver is enabled for compile tests, and this has
-> now shown that the driver cannot build without CONFIG_OF,
-> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-> interrupt mapping when possible":
+This does not specify a hard limit above on how long SW need to wait. 
 
-That commit is for pci-rcar-gen2.c, not pcie-rcar.c.
+"6.6.2 Function Level Reset
+After an FLR has been initiated by writing a 1b to the Initiate Function Level Reset bit, 
+the Function must complete the FLR within 100 ms.
 
-> ../drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
-> ../drivers/pci/host/pcie-rcar.c:856:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+While a Function is required to complete the FLR operation within the time limit described above,
+the subsequent Function-specific initialization sequence may require additional time. 
+If additional time is required, the Function must return a Configuration Request Retry Status (CRS) 
+Completion Status when a Configuration Request is received 15 after the time limit above. 
+After the Function responds to a Configuration Request with a Completion status other than CRS, 
+it is not permitted to return CRS until it is reset again."
 
-The line number has changed to 1039 during the last 3 years?
+However, another indirect reference here tells us it is capped by 1 second below.
 
->   parser->pna = of_n_addr_cells(node);
->   ^
-> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-> supposed to build fine, which we can achieve if we make the
-> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-> and provide an empty inline function otherwise, as we do for
-> a lot of other of interfaces.
->
-> This lets us build the rcar_pci driver again without CONFIG_OF
-> for build testing. All platforms using this driver select OF,
-> so this doesn't change anything for the users.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: devicetree@vger.kernel.org
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Magnus Damm <damm@opensource.se>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
+"6.23. Readiness Notifications (RN)
+Readiness Notifications (RN) is intended to reduce the time software needs to
+wait before issuing Configuration Requests to a Device or Function following DRS
+Events or FRS Events. RN includes both the Device Readiness Status (DRS) and
+Function Readiness Status (FRS) mechanisms. These mechanisms provide a direct
+indication of Configuration-Readiness (see 5 Terms and Acronyms entry for “Configuration-Ready”). 
 
-Apart from that, for the actual change:
-Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+When used, DRS and FRS allow an improved behavior over the CRS mechanism, and eliminate
+its associated periodic polling time of up to 1 second following a reset."
 
-Gr{oetje,eeting}s,
+If I remember it right from CRS commit messages, 60 seconds was coming from
+some PCIe switch taking too long to boot.
 
-                        Geert
+> 
+> What's the NVMe excuse for requiring more time than the spec allows?
+> Is this a hardware erratum?  Is there some PCIe ECN pending to address
+> this?
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+We have seen the issue with Intel 750 and Intel P3600 NVMe drives. I don't
+have access to the errata document for either of the drives.
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+> 
+> I try to avoid adding generic changes based on one specific piece of
+> hardware because it can penalize everybody else who actually bothered
+> to follow the spec.  For example, if FLR fails because a non-NVMe
+> device is broken, it will now take 60 seconds to notice that instead
+> of 1 second.
+> 
+
+We can look for a better number like 3-4 seconds and put some nice warning
+that HW might be broken (violating the spec) and could be in need of
+a FW/BIOS update.
+
+What do you think?
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
