@@ -1,122 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:33442 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751537AbdGaXhQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:37:16 -0400
-Received: by mail-pg0-f48.google.com with SMTP id c14so444985pgn.0
-        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:37:16 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        corbet@lwn.net
-Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 0/4] netvsc: transparent SR-IOV VF support
-Date: Mon, 31 Jul 2017 16:37:08 -0700
-Message-Id: <20170731233712.12087-1-sthemmin@microsoft.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 13 Jul 2017 18:38:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
+Message-ID: <20170713233859.GA5944@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
+ <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
+ <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo.Pieralisi@arm.com, vikrams@codeaurora.org,
+ linux-pci@vger.kernel.org, timur@codeaurora.org, linux-kernel@vger.kernel.org,
+ alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch set changes how SR-IOV Virtual Function devices are managed
-in the Hyper-V network driver. It was part of earlier bundle, but
-is now updated.
+On Thu, Jul 13, 2017 at 11:44:12AM -0400, Sinan Kaya wrote:
+> On 7/13/2017 8:17 AM, Bjorn Helgaas wrote:
+> >> he spec is calling to wait up to 1 seconds if the device is sending CRS.
+> >> The NVMe device seems to be requiring more. Relax this up to 60 seconds.
+> > Can you add a pointer to the "1 second" requirement in the spec here?
+> > We use 60 seconds in pci_scan_device() and acpiphp_add_context().  Is
+> > there a basis in the spec for the 60 second timeout?
+> 
+> This does not specify a hard limit above on how long SW need to wait. 
 
-Background
-In Hyper-V SR-IOV can be enabled (and disabled) by changing guest settings
-on host. When SR-IOV is enabled a matching PCI device is hot plugged and
-visible on guest. The VF device is an add-on to an existing netvsc
-device, and has the same MAC address.
+I wouldn't expect a *maximum* time we can wait.  I'm looking for the
+minimum times the spec requires.
 
-How is this different?
+If you're claiming "the spec is calling to wait up to 1 second", I
+just want to know where in the spec it says that.  That helps in the
+future when we need to maintain code like this.
 
-The original support of VF relied on using bonding driver in active
-standby mode to handle the VF device.
+> If I remember it right from CRS commit messages, 60 seconds was coming from
+> some PCIe switch taking too long to boot.
 
-With the new netvsc VF logic, the Linux hyper-V network
-virtual driver will directly manage the link to SR-IOV VF device.
-When VF device is detected (hot plug) it is automatically made a
-slave device of the netvsc device. The VF device state reflects
-the state of the netvsc device; i.e. if netvsc is set down, then
-VF is set down. If netvsc is set up, then VF is brought up.
- 
-Packet flow is independent of VF status; all packets are sent and
-received as if they were associated with the netvsc device. If VF is
-removed or link is down then the synthetic VMBUS path is used.
- 
-What was wrong with using bonding script?
+If you have a pointer to this, please include it.  The earliest thing
+I can find is when Linux was imported into git (1da177e4c3f4
+("Linux-2.6.12-rc2")), which includes a 60 second timeout:
 
-A lot of work went into getting the bonding script to work on all
-distributions, but it was a major struggle. Linux network devices
-can be configured many, many ways and there is no one solution from
-userspace to make it all work. What is really hard is when
-configuration is attached to synthetic device during boot (eth0) and
-then the same addresses and firewall rules needs to also work later if
-doing bonding. The new code gets around all of this.
- 
-How does VF work during initialization?
-
-Since all packets are sent and received through the logical netvsc
-device, initialization is much easier. Just configure the regular
-netvsc Ethernet device; when/if SR-IOV is enabled it just
-works. Provisioning and cloud init only need to worry about setting up
-netvsc device (eth0). If SR-IOV is enabled (even as a later step), the
-address and rules stay the same.
- 
-What devices show up?
-
-Both netvsc and PCI devices are visible in the system. The netvsc
-device is active and named in usual manner (eth0). The PCI device is
-visible to Linux and gets renamed by udev to a persistent name
-(enP2p3s0). The PCI device name is now irrelevant now.
-
-The logic also sets the PCI VF device SLAVE flag on the network
-device so network tools can see the relationship if they are smart
-enough to understand how layered devices work.
- 
-This is a lot like how I see Windows working.
-The VF device is visible in Device Manager, but is not configured.
- 
-Is there any performance impact?
-There is no visible change in performance. The bonding
-and netvsc driver both have equivalent steps.
- 
-Is it compatible with old bonding script?
-
-It turns out that if you use the old bonding script, then everything
-still works but in a sub-optimum manner. What happens is that bonding
-is unable to steal the VF from the netvsc device so it creates a one
-legged bond.  Packet flow then is:
-	bond0 <--> eth0 <- -> VF (enP2p3s0).
-In other words, if you get it wrong it still works, just
-awkward and slower.
- 
-What if I add address or firewall rule onto the VF?
-
-Same problems occur with now as already occur with bonding, bridging,
-teaming on Linux if user incorrectly does configuration onto
-an underlying slave device. It will sort of work, packets will come in
-and out but the Linux kernel gets confused and things like ARP don’t
-work right.  There is no way to block manipulation of the slave
-device, and I am sure someone will find some special use case where
-they want it.
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/drivers/pci/probe.c?id=1da177e4c3f4#n686
 
 
-Stephen Hemminger (4):
-  netvsc: transparent VF management
-  netvsc: add documentation
-  netvsc: remove bonding setup script
-  pci-hyperv: do not sleep in compose_msi_msg
-
- Documentation/networking/netvsc.txt |  63 ++++++
- MAINTAINERS                         |   1 +
- drivers/net/hyperv/hyperv_net.h     |  12 ++
- drivers/net/hyperv/netvsc_drv.c     | 419 ++++++++++++++++++++++++++++--------
- drivers/pci/host/pci-hyperv.c       |   8 +-
- tools/hv/bondvf.sh                  | 255 ----------------------
- 6 files changed, 413 insertions(+), 345 deletions(-)
- create mode 100644 Documentation/networking/netvsc.txt
- delete mode 100755 tools/hv/bondvf.sh
-
--- 
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
