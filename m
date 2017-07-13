@@ -1,218 +1,220 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52910 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750954AbdGMCiM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Jul 2017 22:38:12 -0400
-Date: Wed, 12 Jul 2017 21:38:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravi Kiran Gummaluri <rgummal@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: Re: [PATCH] microblaze/PCI: Remove pcibios_setup_bus_{self/devices}
- dead code
-Message-ID: <20170713023808.GB4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170620130844.11109-1-lorenzo.pieralisi@arm.com>
+Return-Path: <SRS0=oPzr=6Q=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=oPzr=6Q=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH] PCI/DPC: Add eDPC support
+To: <helgaas@kernel.org>
+References: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <efdad754-9ff3-d668-314a-39d9309a7a08@huawei.com>
+Date: Thu, 13 Jul 2017 20:36:32 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170620130844.11109-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 20, 2017 at 02:08:44PM +0100, Lorenzo Pieralisi wrote:
-> commit 01cf9d524ff0 ("microblaze/PCI: Support generic Xilinx AXI PCIe Host
-> Bridge IP driver") removed pcibios calls to:
-> 
-> pcibios_setup_bus_self()
-> pcibios_setup_bus_devices()
-> 
-> Given that pcibios_fixup_bus() was the only caller of those functions
-> they have now become dead code (along with the functions they were
-> calling in turn) so they can be removed.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-> Cc: Ravi Kiran Gummaluri <rgummal@xilinx.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Michal Simek <michal.simek@xilinx.com>
 
-Applied with Michal's ack to pci/misc for v4.14, thanks!
 
-I also removed the "Fixup resources of a PCI<->PCI bridge" comment
-since it's no longer applicable.
-
+ÔÚ 2017/6/24 17:04, Dongdong Liu Ð´µÀ:
+> This code is to add eDPC support. Get and print the RP PIO error
+> information when the trigger condition is RP PIO error.
+>
+> For more information on eDPC, view the PCI-SIG eDPC ECN here:
+> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
+>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 > ---
-> Bjorn, Michal,
-> 
-> spotted this while reading microblaze code that parses legacy IRQs,
-> I am not familiar with microblaze code but as things stand those
-> pcibios calls are just unused IIUC.
-> 
-> Lorenzo
-> 
->  arch/microblaze/include/asm/pci.h |   3 -
->  arch/microblaze/pci/pci-common.c  | 131 --------------------------------------
->  2 files changed, 134 deletions(-)
-> 
-> diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-> index efd4983..114b934 100644
-> --- a/arch/microblaze/include/asm/pci.h
-> +++ b/arch/microblaze/include/asm/pci.h
-> @@ -81,9 +81,6 @@ extern pgprot_t	pci_phys_mem_access_prot(struct file *file,
->  
->  #define HAVE_ARCH_PCI_RESOURCE_TO_USER
->  
-> -extern void pcibios_setup_bus_devices(struct pci_bus *bus);
-> -extern void pcibios_setup_bus_self(struct pci_bus *bus);
-> -
->  /* This part of code was originally in xilinx-pci.h */
->  #ifdef CONFIG_PCI_XILINX
->  extern void __init xilinx_pci_init(void);
-> diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-> index 404fb38..970b3a7 100644
-> --- a/arch/microblaze/pci/pci-common.c
-> +++ b/arch/microblaze/pci/pci-common.c
-> @@ -678,138 +678,7 @@ static void pcibios_fixup_resources(struct pci_dev *dev)
+>  drivers/pci/pcie/pcie-dpc.c   | 161 ++++++++++++++++++++++++++++++++++++++++++
+>  include/uapi/linux/pci_regs.h |  10 +++
+>  2 files changed, 171 insertions(+)
+>
+> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+> index 77d2ca9..00fdf87 100644
+> --- a/drivers/pci/pcie/pcie-dpc.c
+> +++ b/drivers/pci/pcie/pcie-dpc.c
+> @@ -16,11 +16,55 @@
+>  #include <linux/pcieport_if.h>
+>  #include "../pci.h"
+>
+> +struct rp_pio_header_log_regs {
+> +	u32 dw0;
+> +	u32 dw1;
+> +	u32 dw2;
+> +	u32 dw3;
+> +};
+> +
+> +struct dpc_rp_pio_regs {
+> +	u32 status;
+> +	u32 mask;
+> +	u32 severity;
+> +	u32 syserror;
+> +	u32 exception;
+> +
+> +	struct rp_pio_header_log_regs header_log;
+> +	u32 impspec_log;
+> +	u32 tlp_prefix_log[4];
+> +	u32 log_size;
+> +	u16 first_error;
+> +};
+> +
+>  struct dpc_dev {
+>  	struct pcie_device	*dev;
+>  	struct work_struct	work;
+>  	int			cap_pos;
+>  	bool			rp;
+> +	struct dpc_rp_pio_regs	*rp_pio;
+> +};
+> +
+> +static const char * const rp_pio_error_string[] = {
+> +	"Configuration Request received UR Completion",	 /* Bit Position 0  */
+> +	"Configuration Request received CA Completion",	 /* Bit Position 1  */
+> +	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
+> +	NULL,
+> +	NULL,
+> +	NULL,
+> +	NULL,
+> +	NULL,
+> +	"I/O Request received UR Completion",		 /* Bit Position 8  */
+> +	"I/O Request received CA Completion",		 /* Bit Position 9  */
+> +	"I/O Request Completion Timeout",		 /* Bit Position 10 */
+> +	NULL,
+> +	NULL,
+> +	NULL,
+> +	NULL,
+> +	NULL,
+> +	"Memory Request received UR Completion",	 /* Bit Position 16 */
+> +	"Memory Request received CA Completion",	 /* Bit Position 17 */
+> +	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+>  };
+>
+>  static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+> @@ -79,10 +123,117 @@ static void interrupt_event_handler(struct work_struct *work)
+>  	dpc_wait_link_inactive(pdev);
+>  	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+>  		return;
+> +	if (dpc->rp && dpc->rp_pio->status)
+> +		pci_write_config_dword(pdev,
+> +				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+> +				      dpc->rp_pio->status);
+> +
+>  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+>  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
 >  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, pcibios_fixup_resources);
->  
-> -/* This function tries to figure out if a bridge resource has been initialized
-> - * by the firmware or not. It doesn't have to be absolutely bullet proof, but
-> - * things go more smoothly when it gets it right. It should covers cases such
-> - * as Apple "closed" bridge resources and bare-metal pSeries unassigned bridges
-> - */
-> -static int pcibios_uninitialized_bridge_resource(struct pci_bus *bus,
-> -						 struct resource *res)
-> -{
-> -	struct pci_controller *hose = pci_bus_to_host(bus);
-> -	struct pci_dev *dev = bus->self;
-> -	resource_size_t offset;
-> -	u16 command;
-> -	int i;
-> -
-> -	/* Job is a bit different between memory and IO */
-> -	if (res->flags & IORESOURCE_MEM) {
-> -		/* If the BAR is non-0 (res != pci_mem_offset) then it's
-> -		 * probably been initialized by somebody
-> -		 */
-> -		if (res->start != hose->pci_mem_offset)
-> -			return 0;
-> -
-> -		/* The BAR is 0, let's check if memory decoding is enabled on
-> -		 * the bridge. If not, we consider it unassigned
-> -		 */
-> -		pci_read_config_word(dev, PCI_COMMAND, &command);
-> -		if ((command & PCI_COMMAND_MEMORY) == 0)
-> -			return 1;
-> -
-> -		/* Memory decoding is enabled and the BAR is 0. If any of
-> -		 * the bridge resources covers that starting address (0 then
-> -		 * it's good enough for us for memory
-> -		 */
-> -		for (i = 0; i < 3; i++) {
-> -			if ((hose->mem_resources[i].flags & IORESOURCE_MEM) &&
-> -			   hose->mem_resources[i].start == hose->pci_mem_offset)
-> -				return 0;
-> -		}
-> -
-> -		/* Well, it starts at 0 and we know it will collide so we may as
-> -		 * well consider it as unassigned. That covers the Apple case.
-> -		 */
-> -		return 1;
-> -	} else {
-> -		/* If the BAR is non-0, then we consider it assigned */
-> -		offset = (unsigned long)hose->io_base_virt - _IO_BASE;
-> -		if (((res->start - offset) & 0xfffffffful) != 0)
-> -			return 0;
-> -
-> -		/* Here, we are a bit different than memory as typically IO
-> -		 * space starting at low addresses -is- valid. What we do
-> -		 * instead if that we consider as unassigned anything that
-> -		 * doesn't have IO enabled in the PCI command register,
-> -		 * and that's it.
-> -		 */
-> -		pci_read_config_word(dev, PCI_COMMAND, &command);
-> -		if (command & PCI_COMMAND_IO)
-> -			return 0;
-> -
-> -		/* It's starting at 0 and IO is disabled in the bridge, consider
-> -		 * it unassigned
-> -		 */
-> -		return 1;
-> -	}
-> -}
-> -
->  /* Fixup resources of a PCI<->PCI bridge */
-> -static void pcibios_fixup_bridge(struct pci_bus *bus)
-> -{
-> -	struct resource *res;
-> -	int i;
-> -
-> -	struct pci_dev *dev = bus->self;
-> -
-> -	pci_bus_for_each_resource(bus, res, i) {
-> -		if (!res)
-> -			continue;
-> -		if (!res->flags)
-> -			continue;
-> -		if (i >= 3 && bus->self->transparent)
-> -			continue;
-> -
-> -		pr_debug("PCI:%s Bus rsrc %d %016llx-%016llx [%x] fixup...\n",
-> -			 pci_name(dev), i,
-> -			 (unsigned long long)res->start,
-> -			 (unsigned long long)res->end,
-> -			 (unsigned int)res->flags);
-> -
-> -		/* Try to detect uninitialized P2P bridge resources,
-> -		 * and clear them out so they get re-assigned later
-> -		 */
-> -		if (pcibios_uninitialized_bridge_resource(bus, res)) {
-> -			res->flags = 0;
-> -			pr_debug("PCI:%s            (unassigned)\n",
-> -								pci_name(dev));
-> -		} else {
-> -			pr_debug("PCI:%s            %016llx-%016llx\n",
-> -				 pci_name(dev),
-> -				 (unsigned long long)res->start,
-> -				 (unsigned long long)res->end);
-> -		}
-> -	}
-> -}
-> -
-> -void pcibios_setup_bus_self(struct pci_bus *bus)
-> -{
-> -	/* Fix up the bus resources for P2P bridges */
-> -	if (bus->self != NULL)
-> -		pcibios_fixup_bridge(bus);
-> -}
-> -
-> -void pcibios_setup_bus_devices(struct pci_bus *bus)
-> -{
-> -	struct pci_dev *dev;
-> -
-> -	pr_debug("PCI: Fixup bus devices %d (%s)\n",
-> -		 bus->number, bus->self ? pci_name(bus->self) : "PHB");
-> -
-> -	list_for_each_entry(dev, &bus->devices, bus_list) {
-> -		/* Setup OF node pointer in archdata */
-> -		dev->dev.of_node = pci_device_to_OF_node(dev);
-> -
-> -		/* Fixup NUMA node as it may not be setup yet by the generic
-> -		 * code and is needed by the DMA init
-> -		 */
-> -		set_dev_node(&dev->dev, pcibus_to_node(dev->bus));
-> -
-> -		/* Read default IRQs and fixup if necessary */
-> -		dev->irq = of_irq_parse_and_map_pci(dev, 0, 0);
-> -	}
-> -}
-> -
->  void pcibios_fixup_bus(struct pci_bus *bus)
+>
+> +static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
+> +			       struct rp_pio_header_log_regs *t)
+> +{
+> +	dev_err(&dev->dev, "TLP Header: %08x %08x %08x %08x\n",
+> +		t->dw0, t->dw1, t->dw2, t->dw3);
+> +}
+> +
+> +static void dpc_rp_pio_print_error(struct dpc_dev *dpc)
+> +{
+> +	struct pci_dev *pdev = dpc->dev->port;
+> +	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
+> +	int i;
+> +	u32 status;
+> +
+> +	dev_err(&pdev->dev, "rp_pio_status: 0x%08x, rp_pio_mask: 0x%08x\n",
+> +			    rp_pio->status, rp_pio->mask);
+> +
+> +	dev_err(&pdev->dev, "RP PIO severity=0x%08x, syserror=0x%08x, exception=0x%08x\n",
+> +		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
+> +
+> +	status = (rp_pio->status & ~rp_pio->mask);
+> +
+> +	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
+> +		if (!(status & (1 << i)))
+> +			continue;
+> +
+> +		dev_err(&pdev->dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
+> +			rp_pio->first_error == i ? " (First)" : "");
+> +	}
+> +
+> +	dpc_rp_pio_print_tlp_header(pdev, &rp_pio->header_log);
+> +	if (rp_pio->log_size == 4)
+> +		return;
+> +	dev_err(&pdev->dev, "RP PIO ImpSpec Log %08x\n", rp_pio->impspec_log);
+> +
+> +	for (i = 0; i < rp_pio->log_size - 5; i++)
+> +		dev_err(&pdev->dev, "TLP Prefix Header: dw%d, %08x\n", i,
+> +			rp_pio->tlp_prefix_log[i]);
+> +}
+> +
+> +static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
+> +{
+> +	struct pci_dev *pdev = dpc->dev->port;
+> +	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
+> +	int i;
+> +	u16 cap;
+> +	u16 status;
+> +
+> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+> +			      &rp_pio->status);
+> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
+> +			      &rp_pio->mask);
+> +
+> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
+> +			      &rp_pio->severity);
+> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
+> +			      &rp_pio->syserror);
+> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
+> +			      &rp_pio->exception);
+> +
+> +	/* Get First Error Pointer */
+> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
+> +	rp_pio->first_error = (status & 0x1f00) >> 8;
+> +
+> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+> +	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
+> +	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
+> +		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
+> +			rp_pio->log_size);
+> +		return;
+> +	}
+> +
+> +	pci_read_config_dword(pdev,
+> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+> +			      &rp_pio->header_log.dw0);
+> +	pci_read_config_dword(pdev,
+> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
+> +			      &rp_pio->header_log.dw1);
+> +	pci_read_config_dword(pdev,
+> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
+> +			      &rp_pio->header_log.dw2);
+> +	pci_read_config_dword(pdev,
+> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+> +			      &rp_pio->header_log.dw3);
+> +	if (rp_pio->log_size == 4)
+> +		return;
+> +
+> +	pci_read_config_dword(pdev,
+> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+> +			      &rp_pio->impspec_log);
+> +	for (i = 0; i < rp_pio->log_size - 5; i++)
+> +		pci_read_config_dword(pdev,
+> +			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+> +			&rp_pio->tlp_prefix_log[i]);
+> +}
+> +
+> +static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
+> +{
+> +	dpc_rp_pio_get_info(dpc);
+> +	dpc_rp_pio_print_error(dpc);
+> +}
+> +
+>  static irqreturn_t dpc_irq(int irq, void *context)
 >  {
->  	/* nothing to do */
-> -- 
-> 2.10.0
-> 
+>  	struct dpc_dev *dpc = (struct dpc_dev *)context;
+> @@ -109,6 +260,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+>  			 (ext_reason == 0) ? "RP PIO error" :
+>  			 (ext_reason == 1) ? "software trigger" :
+>  					     "reserved error");
+> +		/* show RP PIO error detail information */
+> +		if (ext_reason == 0)
+This condition is not right, will fix in PATCH v2,
+change to
+if (reason == 3 && ext_reason == 0)
+
+Thanks
+Dongdong
