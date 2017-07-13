@@ -1,66 +1,74 @@
-Return-Path: <SRS0=DCWL=66=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=DCWL=66=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <SRS0=3Yil=6Q=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=3Yil=6Q=redhat.com=alex.williamson@kernel.org>
+Date: Thu, 13 Jul 2017 15:11:46 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>, Daniel Axtens
+ <dja@axtens.net>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Rongrong Zou
+ <zourongrong@gmail.com>, Catalin Marinas <catalin.marinas@arm.com>, Will
+ Deacon <will.deacon@arm.com>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, Benjamin Herrenschmidt
+ <benh@kernel.crashing.org>, David Airlie <airlied@linux.ie>, Daniel Vetter
+ <daniel.vetter@intel.com>
+Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+Message-ID: <20170713151146.53e9644c@w520.home>
+In-Reply-To: <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170712050811.3620-1-dja@axtens.net>
+	<20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+	<EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
+	<20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
- <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org> <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
- <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org> <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home> <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Thu, 27 Jul 2017 10:49:25 -0700
-Message-ID: <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Ding Tianhong <dingtianhong@huawei.com>
-Cc: Casey Leedom <leedom@chelsio.com>, Alex Williamson <alex.williamson@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>, "ashok.raj@intel.com" <ashok.raj@intel.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, "helgaas@kernel.org" <helgaas@kernel.org>,
-	Michael Werner <werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 26, 2017 at 6:08 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
->
->
-> On 2017/7/27 2:26, Casey Leedom wrote:
->>   By the way Ding, two issues:
->>
->>  1. Did we ever get any acknowledgement from either Intel or AMD
->>     on this patch?  I know that we can't ensure that, but it sure would
->>     be nice since the PCI Quirks that we're putting in affect their
->>     products.
->>
->
-> Still no Intel and AMD guys has ack this, this is what I am worried about, should I
-> ping some man again ?
->
-> Thanks
-> Ding
+On Thu, 13 Jul 2017 06:29:38 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
+
+> [+cc Ben, David, Daniel, Alex]
+> 
+> On Thu, Jul 13, 2017 at 10:29:25AM +0000, Gabriele Paoloni wrote:
+> > Hi Bjorn, Daniel
+> > 
+> > [...]
+> >   
+> > > 
+> > > Is this quirk useful on any arch other than arm64?  Per
+> > > drivers/pci/dwc/Kconfig, CONFIG_PCI_HISI depends on CONFIG_ARM64.
+> > > 
+> > > Would it make sense to put this quirk in arch/arm64/kernel/pci.c?  
+> > 
+> > Indeed our host controller depends on ARM64 so maybe it would make
+> > sense to move the quirk arch/arm64/kernel/pci.c; however regardless
+> > why is it strictly required for a VGA device to be legacy one in order
+> > to make it the default boot device?
+> > i.e. couldn't we have:
+> > 
+> > diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> > index 0f5b2dd..a6b606c 100644
+> > --- a/drivers/gpu/vga/vgaarb.c
+> > +++ b/drivers/gpu/vga/vgaarb.c
+> > @@ -667,8 +667,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+> >  	/* Deal with VGA default device. Use first enabled one
+> >  	 * by default if arch doesn't have it's own hook
+> >  	 */
+> > -	if (vga_default == NULL &&
+> > -	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
+> > +	if (vga_default == NULL) {
+> >  		vgaarb_info(&pdev->dev, "setting as boot VGA device\n");
+> >  		vga_set_default_device(pdev);
+> >  	}  
 
 
-I probably wouldn't worry about it too much. If anything all this
-patch is doing is disabling relaxed ordering on the platforms we know
-have issues based on what Casey originally had. If nothing else we can
-follow up once the patches are in the kernel and if somebody has an
-issue then.
+"Legacy" is the breadcrumb we use to try to pick the same device for
+default VGA as the system firmware used as the boot VGA.  There can be
+multiple VGA devices in the system, the change above would simply make
+the first discovered device be the default VGA.  That would break many,
+many systems.  If legacy VGA ranges mean nothing on ARM64, then follow
+the powerpc lead and make an arch quirk that simply selects the first
+enabled VGA device as the default.  VGA routing is part of the PCI spec
+though, so the default of selecting the device with routing enabled
+makes sense.  Thanks,
 
-You can include my acked-by, but it is mostly related to how this
-interacts with NICs, and not so much about the PCI chipsets
-themselves.
-
-Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+Alex
