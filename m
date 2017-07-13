@@ -1,55 +1,53 @@
-Return-Path: <SRS0=/l1V=6R=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=/l1V=6R=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1500076473.2865.99.camel@kernel.crashing.org>
-Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
- HiSilicon bridge
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Alex Williamson
-	 <alex.williamson@redhat.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc: Daniel Axtens <dja@axtens.net>,
-        "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>,
-        "Liuxinliang (Matthew Liu)"
- <z.liuxinliang@hisilicon.com>,
-        Rongrong Zou <zourongrong@gmail.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon
- <will.deacon@arm.com>,
-        "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
-        David Airlie <airlied@linux.ie>,
-        Daniel Vetter <daniel.vetter@intel.com>
-Date: Sat, 15 Jul 2017 09:54:33 +1000
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B39FC4@FRAEML521-MBX.china.huawei.com>
-References: <20170712050811.3620-1-dja@axtens.net>
-	 <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
-	 <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
-	 <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170713151146.53e9644c@w520.home>
-	 <1499980882.2865.65.camel@kernel.crashing.org>
-	 <EE11001F9E5DDD47B7634E2F8A612F2E40B399B4@FRAEML521-MBX.china.huawei.com>
-	 <1500040204.2865.90.camel@kernel.crashing.org>
-	 <EE11001F9E5DDD47B7634E2F8A612F2E40B39FC4@FRAEML521-MBX.china.huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53172 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751384AbdGMWND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Jul 2017 18:13:03 -0400
+Date: Thu, 13 Jul 2017 17:12:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Russell King <linux@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>
+Subject: [GIT PULL] PCI fixes for v4.13
+Message-ID: <20170713221258.GA7364@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2017-07-14 at 17:03 +0000, Gabriele Paoloni wrote:
-> > I'd rather we have no default device until a driver actually picks up
-> > though, and then, if we still have no default, use the first driver to
-> > pick up.
-> 
-> Well from my understanding the PCI host controller driver will enumerate
-> all the devices in the PCI hierarchy and call pci_device_add() for each of
-> them, that in turn will call device_add(), at this stage if there is a
-> driver available for the device such driver will probe otherwise it will not.
-> 
-> Are you suggesting to add the code above in pci_device_add() after device_add()
-> and after checking that a driver has been bound for such dev?
+PCI fixes:
 
-I don't like us turning on MEM/IO decoding on a device that has
-potentially not been initialized by its driver.
+  - fix a typo that broke Rockchip enumeration
 
-Ben.
+  - fix a new memory leak in the ARM host bridge failure path
+
+
+The following changes since commit af3c8d98508d37541d4bf57f13a984a7f73a328c:
+
+  Merge tag 'drm-for-v4.13' of git://people.freedesktop.org/~airlied/linux (2017-07-09 18:48:37 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.13-fixes-1
+
+for you to fetch changes up to 34d5ac2af644a10958e144b7bb937d289dfd158d:
+
+  PCI: rockchip: Check for pci_scan_root_bus_bridge() failure correctly (2017-07-12 12:50:11 -0500)
+
+----------------------------------------------------------------
+pci-v4.13-fixes-1
+
+----------------------------------------------------------------
+Lorenzo Pieralisi (1):
+      ARM/PCI: Fix pcibios_init_resource() struct pci_host_bridge leak
+
+Shawn Lin (1):
+      PCI: rockchip: Check for pci_scan_root_bus_bridge() failure correctly
+
+ arch/arm/kernel/bios32.c         | 2 +-
+ drivers/pci/host/pcie-rockchip.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
