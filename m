@@ -1,92 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36249 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751560AbdGSCQQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 22:16:16 -0400
-Received: by mail-pf0-f195.google.com with SMTP id a11so4679705pfj.3
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 19:16:16 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org
-Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
-        zourongrong@gmail.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, gabriele.paoloni@huawei.com,
-        bhelgaas@google.com, airlied@linux.ie, daniel.vetter@intel.com,
-        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
-Subject: [PATCH v2 2/4] vgaarb: allow non-legacy cards to be marked as default
-Date: Wed, 19 Jul 2017 12:15:14 +1000
-Message-Id: <20170719021516.24718-3-dja@axtens.net>
-In-Reply-To: <20170719021516.24718-1-dja@axtens.net>
-References: <20170719021516.24718-1-dja@axtens.net>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=7amg=6Q=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=7amg=6Q=linuxfoundation.org=gregkh@kernel.org>
+Date: Thu, 13 Jul 2017 10:26:40 +0200
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mathias Nyman <mathias.nyman@intel.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
+	Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
+Message-ID: <20170713082640.GA6367@kroah.com>
+References: <20170710155230.8622-1-marc.zyngier@arm.com>
+ <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The VGA arbiter currently only selects a card as default if it can
-decode legacy I/O and memory ranges.
+On Wed, Jul 12, 2017 at 10:12:34PM -0500, Bjorn Helgaas wrote:
+> On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
+> > Ard and myself have just spent quite some time lately trying to pin
+> > down an issue in the DMA code which was taking the form of a PCIe USB3
+> > controller issuing a DMA access at some bizarre address, and being
+> > caught red-handed by the IOMMU.
+> > 
+> > After much head scratching and most of a week-end spent on tracing the
+> > damn thing, I'm now convinced that the DMA code is fine, the XHCI
+> > driver is correct, but that the HW (a Renesas uPD720202 chip) is a
+> > nasty piece of work.
+> > 
+> > The issue is as follow:
+> > 
+> > - EFI initializes the controller using physical addresses above the
+> >   4GB limit (this is on an arm64 box where the memory starts at
+> >   0x80_00000000...).
+> > 
+> > - The kernel takes over, sends a XHCI reset to the controller, and
+> >   because we have an IOMMU sitting between the controller and memory,
+> >   provides *virtual* addresses. Trying to make things a bit faster for
+> >   our controller, it issues IOVAs in the low 4GB range).
+> > 
+> > - Low and behold, the controller is now issuing transactions with a
+> >   0x80 prefix in front of our IOVA. Yes, the same prefix that was
+> >   programmed during the EFI configuration. IOMMU fault, not happy.
+> > 
+> > If the kernel is hacked to only generate IOVAs that are more than
+> > 32bit wide, the HW behaves correctly. The only way I can explain this
+> > behaviour is that the HW latches the top 32bit of the ERST (it is
+> > always the ERST IOVA that appears in my traces) in some internal
+> > register, and that the XHCI reset fails to clear it. Writing zero in
+> > the top bits is not enough to clear it either.
+> > 
+> > So far, the only solution we have for this lovely piece of kit is to
+> > force a PCI reset at probe time, which puts it right. The patches are
+> > pretty ugly, but that's the best I could come up with so far.
+> > 
+> > Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
+> > uPD720202 controllers.
+> > 
+> > Marc Zyngier (2):
+> >   PCI: Implement pci_reset_function_locked
+> >   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
+> >     controller
+> > 
+> >  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
+> >  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
+> >  drivers/usb/host/pci-quirks.h |  1 +
+> >  drivers/usb/host/xhci-pci.c   |  7 +++++++
+> >  include/linux/pci.h           |  1 +
+> >  5 files changed, 64 insertions(+)
+> 
+> I provisionally applied this to pci/virtualization.  I'd like to have an
+> XHCI ack before going further, though.
 
-However, on some architectures, legacy PCI resources are not used.
-This has lead to a powerpc quirk, and issues on arm64.
+The xhci maintainer is on vacation, let's wait a week for him to get
+back to get this.  Given the long time that this has been broken on this
+hardware, I think we can wait another week just fine :)
 
-Allow architectures to select ARCH_WANT_VGA_ARB_FALLBACK.
-When that symbol is selected, add a PCI_FIXUP_CLASS_ENABLE hook,
-which will mark the first card that is enabled and that can control
-I/O and memory as the default card.
+thanks,
 
-Behaviour is unchanged unless arches opt-in by selecting the
-Kconfig option.
-
-Signed-off-by: Daniel Axtens <dja@axtens.net>
----
- drivers/gpu/vga/Kconfig  |  7 +++++++
- drivers/gpu/vga/vgaarb.c | 21 +++++++++++++++++++++
- 2 files changed, 28 insertions(+)
-
-diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
-index 29437eabe095..1205c6cc1ff5 100644
---- a/drivers/gpu/vga/Kconfig
-+++ b/drivers/gpu/vga/Kconfig
-@@ -17,6 +17,13 @@ config VGA_ARB_MAX_GPUS
- 	  Reserves space in the kernel to maintain resource locking for
- 	  multiple GPUS.  The overhead for each GPU is very small.
- 
-+config ARCH_WANT_VGA_ARB_FALLBACK
-+	bool
-+	help
-+	  Some architectures don't have a concept of "legacy" PCI addresses
-+	  which the VGA arbiter relies on. Instead, they can fall back to
-+	  selecting the first device that decodes memory and I/O.
-+
- config VGA_SWITCHEROO
- 	bool "Laptop Hybrid Graphics - GPU switching support"
- 	depends on X86
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 76875f6299b8..2135b04759c5 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1472,3 +1472,24 @@ static int __init vga_arb_device_init(void)
- 	return rc;
- }
- subsys_initcall(vga_arb_device_init);
-+
-+#if defined(CONFIG_ARCH_WANT_VGA_ARB_FALLBACK)
-+static void vga_arb_fallback_fixup(struct pci_dev *pdev)
-+{
-+	u16 cmd;
-+
-+	if (vga_default_device())
-+		return;
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+		vgaarb_info(&pdev->dev, "[fallback]"
-+			    " setting as default device\n");
-+		vga_set_default_device(pdev);
-+	}
-+
-+}
-+DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
-+			       PCI_CLASS_DISPLAY_VGA, 8,
-+			       vga_arb_fallback_fixup);
-+#endif
--- 
-2.11.0
+greg k-h
