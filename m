@@ -1,125 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:9765 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751339AbdGMOWK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 10:22:10 -0400
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>,
+        <robin.murphy@arm.com>, <davem@davemloft.net>,
+        <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v7 1/3] PCI: Add new PCIe Fabric End Node flag, PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Thu, 13 Jul 2017 22:21:30 +0800
+Message-ID: <1499955692-26556-2-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1500293043-1887-4-git-send-email-varada@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org> <1500293043-1887-4-git-send-email-varada@codeaurora.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Date: Wed, 19 Jul 2017 08:40:03 +0530
-Message-ID: <CAFp+6iEuGJ-AEuX84SmGk7TMPnpp+yny6W68XZyW=P85yEvjFA@mail.gmail.com>
-Subject: Re: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
-To: Varadarajan Narayanan <varada@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "robh+dt" <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, svarbanov@mm-sol.com,
-        kishon <kishon@ti.com>, Stephen Boyd <sboyd@codeaurora.org>,
-        fengguang.wu@intel.com, Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-pci@vger.kernel.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Casey Leedom <leedom@chelsio.com>
 
+The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
+Ordering Attribute should not be used on Transaction Layer Packets destined
+for the PCIe End Node so flagged.  Initially flagged this way are Intel
+E5-26xx Root Complex Ports which suffer from a Flow Control Credit
+Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
+don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
 
-On Mon, Jul 17, 2017 at 5:33 PM, Varadarajan Narayanan
-<varada@codeaurora.org> wrote:
-> Presently, the phy pipe clock's name is assumed to be either
-> usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
-> phy lane's number). However, this will not work if an SoC has
-> more than one instance of the phy. Hence, instead of assuming
-> the name of the clock, fetch it from the DT.
->
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |  2 ++
+ 2 files changed, 40 insertions(+)
 
-Looks good.
-
-Acked-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-
-
->  drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
->  1 file changed, 16 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-> index 78ca628..97020ec 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-> @@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
->   *    clk  |   +-------+   |                   +-----+
->   *         +---------------+
->   */
-> -static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
-> +static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
->  {
-> -       char name[24];
->         struct clk_fixed_rate *fixed;
->         struct clk_init_data init = { };
->
-> -       switch (qmp->cfg->type) {
-> -       case PHY_TYPE_USB3:
-> -               snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
-> -               break;
-> -       case PHY_TYPE_PCIE:
-> -               snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
-> -               break;
-> -       default:
-> +       if ((qmp->cfg->type != PHY_TYPE_USB3) &&
-> +           (qmp->cfg->type != PHY_TYPE_PCIE)) {
->                 /* not all phys register pipe clocks, so return success */
->                 return 0;
->         }
-> @@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
->         if (!fixed)
->                 return -ENOMEM;
->
-> -       init.name = name;
-> +       init.name = clk_name;
->         init.ops = &clk_fixed_rate_ops;
->
->         /* controllers using QMP phys use 125MHz pipe clock interface */
-> @@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
->
->         id = 0;
->         for_each_available_child_of_node(dev->of_node, child) {
-> +               const char *clk_name;
-> +
->                 /* Create per-lane phy */
->                 ret = qcom_qmp_phy_create(dev, child, id);
->                 if (ret) {
-> @@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
->                         return ret;
->                 }
->
-> +               ret = of_property_read_string(child, "clock-output-names",
-> +                                                       &clk_name);
-> +               if (ret) {
-> +                       dev_err(dev,
-> +                               "failed to get clock-output-names for lane%d phy, %d\n",
-> +                               id, ret);
-> +                       return ret;
-> +               }
-> +
->                 /*
->                  * Register the pipe clock provided by phy.
->                  * See function description to see details of this pipe clock.
->                  */
-> -               ret = phy_pipe_clk_register(qmp, id);
-> +               ret = phy_pipe_clk_register(qmp, clk_name);
->                 if (ret) {
->                         dev_err(qmp->dev,
->                                 "failed to register pipe clock source\n");
-> --
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6967c6b..1e1cdbe 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4016,6 +4016,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
+ 			      quirk_tw686x_class);
+ 
+ /*
++ * Some devices have problems with Transaction Layer Packets with the Relaxed
++ * Ordering Attribute set.  Such devices should mark themselves and other
++ * Device Drivers should check before sending TLPs with RO set.
++ */
++static void quirk_relaxedordering_disable(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
++}
++
++/*
++ * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
++ * cause performance problems with Upstream Transaction Layer Packets with
++ * Relaxed Ordering set.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
++ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
++ * where Upstream Transaction Layer Packets with the Relaxed Ordering
++ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
++ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
++ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
++ * November 10, 2010).  As a result, on this platform we can't use Relaxed
++ * Ordering for Upstream TLPs.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
+  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+  * values for the Attribute as were supplied in the header of the
+  * corresponding Request, except as explicitly allowed when IDO is used."
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4869e66..412ec1c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -188,6 +188,8 @@ enum pci_dev_flags {
+ 	 * the direct_complete optimization.
+ 	 */
+ 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
++	/* Don't use Relaxed Ordering for TLPs directed at this device */
++	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
+ };
+ 
+ enum pci_irq_reroute_variant {
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+1.8.3.1
