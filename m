@@ -1,57 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=tpkN=6Q=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=tpkN=6Q=intel.com=keith.busch@kernel.org>
+Date: Thu, 13 Jul 2017 13:24:33 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	timur@codeaurora.org, alex.williamson@redhat.com,
+	vikrams@codeaurora.org, Lorenzo.Pieralisi@arm.com,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
+Message-ID: <20170713172432.GB14716@localhost.localdomain>
+References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
+ <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
+ <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
+ <20170713162915.GA14716@localhost.localdomain>
+ <78020acc-c2b6-423c-38a0-251f86ffa8a9@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <2663063.mdkNhtKpS0@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <4010863.7uINOS7bBU@aspire.rjw.lan>
- <CAHp75Vdp8L7FXL85umQGGVyP-J_2dELssw0V8vKLEaCN6doMXg@mail.gmail.com> <2663063.mdkNhtKpS0@aspire.rjw.lan>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Sat, 22 Jul 2017 00:31:14 +0300
-Message-ID: <CAHp75VciK=2ZQEwHqxxn-HNnc60nTG-002n35=1PLnL=xeor9w@mail.gmail.com>
-Subject: Re: [PATCH 2/3] ACPI / PM: Split acpi_device_wakeup()
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <78020acc-c2b6-423c-38a0-251f86ffa8a9@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 22, 2017 at 12:16 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
-> On Saturday, July 22, 2017 12:19:51 AM Andy Shevchenko wrote:
->> On Fri, Jul 21, 2017 at 11:49 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->> > On Friday, July 21, 2017 06:27:39 PM Andy Shevchenko wrote:
+On Thu, Jul 13, 2017 at 12:42:44PM -0400, Sinan Kaya wrote:
+> On 7/13/2017 12:29 PM, Keith Busch wrote:
+> > That wording is just confusing. It looks to me the 1 second polling is
+> > to be used following a reset if CRS is not implemented.
+> > 
+> >   https://pcisig.com/sites/default/files/specification_documents/ECN_RN_29_Aug_2013.pdf
+> > 
+> > "
+> >   Through the mechanisms defined by this ECR, we can avoid the long,
+> >   architected, fixed delays following various forms of reset before
+> >   software is permitted to perform its first Configuration Request. These
+> >   delays are very large:
+> > 
+> >   1 second if Configuration Retry Status (CRS) is not used
+> > "
+> > 
+> > It goes on to say CRS is usually much lower, but doesn't specify an
+> > upper bound either.
+> > 
+> 
+> I see, we got caught on spec language where we don't know what 'its' is. 
 
->> >> I prefer more self-explaining labels, though it's minor here
+Well, I don't know for certain if your original interpretation is
+incorrect. Just saying the CRS intention doesn't explicitly stand out to me.
 
-...
-
->> > But if there's more to it, just please let me know. :-)
->>
->> "Choose label names which say what the goto does or why the goto exists.  An
->> example of a good name could be ``out_free_buffer:`` if the goto frees
->> ``buffer``.
->> Avoid using GW-BASIC names like ``err1:`` and ``err2:``, as you would have to
->> renumber them if you ever add or remove exit paths, and they make correctness
->> difficult to verify anyway."
->
-> This is a totally made-up argument in this particular case.
->
-> Both of the functions in question are 1 screen long and you can *see* what
-> happens in there without even scrolling them.
->
-> Second, the subsequent patch actually *does* add a label to one of the without
-> renamling the existing one or such.
->
-> "out" pretty much represents the purpose of the goto in both cases and making
-> the label longer doesn't make it any better.
-
-That's why I put "though it's a minor here".
-
-You can read my first message as "you might consider change label
-names if you like the idea".
-
--- 
-With Best Regards,
-Andy Shevchenko
+On a side note, I'll also see if I can get clarification on what
+expectations the hardware people have for this particular product. Your
+observation seems a little high to me, but I don't know if that's
+outside the product's limits.
