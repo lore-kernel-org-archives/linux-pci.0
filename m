@@ -1,72 +1,116 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51306 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752038AbdGDP5m (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 11:57:42 -0400
-Subject: Re: Fwd: Red Hat (Fedora) bug report 1467674 concerning your kernel
- functional performance enhancements causing PCI Express crashes,
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Cc: Wim ten Have <wim.ten.have@oracle.com>
-References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
- <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
-Date: Tue, 4 Jul 2017 11:57:37 -0400
+Return-Path: <SRS0=dwSL=6Q=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=dwSL=6Q=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170710155230.8622-1-marc.zyngier@arm.com>
+ <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
+ <544d9c48-9d4f-29f7-1478-afa940b20dd8@arm.com>
+ <20170713113628.GJ4486@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mathias Nyman
+ <mathias.nyman@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-usb <linux-usb@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <1ab02931-0b5e-a1f3-32f8-af7a6941c632@arm.com>
+Date: Thu, 13 Jul 2017 13:18:53 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170713113628.GJ4486@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 7/4/2017 11:32 AM, Bjorn Helgaas wrote:
-> [+cc linux-pci]
+On 13/07/17 12:36, Bjorn Helgaas wrote:
+> On Thu, Jul 13, 2017 at 08:46:45AM +0100, Marc Zyngier wrote:
+>> On 13/07/17 07:48, Ard Biesheuvel wrote:
+>>> On 13 July 2017 at 04:12, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>>>> On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
+>>>>> Ard and myself have just spent quite some time lately trying to pin
+>>>>> down an issue in the DMA code which was taking the form of a PCIe USB3
+>>>>> controller issuing a DMA access at some bizarre address, and being
+>>>>> caught red-handed by the IOMMU.
+>>>>>
+>>>>> After much head scratching and most of a week-end spent on tracing the
+>>>>> damn thing, I'm now convinced that the DMA code is fine, the XHCI
+>>>>> driver is correct, but that the HW (a Renesas uPD720202 chip) is a
+>>>>> nasty piece of work.
+>>>>>
+>>>>> The issue is as follow:
+>>>>>
+>>>>> - EFI initializes the controller using physical addresses above the
+>>>>>   4GB limit (this is on an arm64 box where the memory starts at
+>>>>>   0x80_00000000...).
+>>>>>
+>>>>> - The kernel takes over, sends a XHCI reset to the controller, and
+>>>>>   because we have an IOMMU sitting between the controller and memory,
+>>>>>   provides *virtual* addresses. Trying to make things a bit faster for
+>>>>>   our controller, it issues IOVAs in the low 4GB range).
+>>>>>
+>>>>> - Low and behold, the controller is now issuing transactions with a
+>>>>>   0x80 prefix in front of our IOVA. Yes, the same prefix that was
+>>>>>   programmed during the EFI configuration. IOMMU fault, not happy.
+>>>>>
+>>>>> If the kernel is hacked to only generate IOVAs that are more than
+>>>>> 32bit wide, the HW behaves correctly. The only way I can explain this
+>>>>> behaviour is that the HW latches the top 32bit of the ERST (it is
+>>>>> always the ERST IOVA that appears in my traces) in some internal
+>>>>> register, and that the XHCI reset fails to clear it. Writing zero in
+>>>>> the top bits is not enough to clear it either.
+>>>>>
+>>>>> So far, the only solution we have for this lovely piece of kit is to
+>>>>> force a PCI reset at probe time, which puts it right. The patches are
+>>>>> pretty ugly, but that's the best I could come up with so far.
+>>>>>
+>>>>> Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
+>>>>> uPD720202 controllers.
+>>>>>
+>>>>> Marc Zyngier (2):
+>>>>>   PCI: Implement pci_reset_function_locked
+>>>>>   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
+>>>>>     controller
+>>>>>
+>>>>>  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
+>>>>>  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
+>>>>>  drivers/usb/host/pci-quirks.h |  1 +
+>>>>>  drivers/usb/host/xhci-pci.c   |  7 +++++++
+>>>>>  include/linux/pci.h           |  1 +
+>>>>>  5 files changed, 64 insertions(+)
+>>>>
+>>>> I provisionally applied this to pci/virtualization.  I'd like to have an
+>>>> XHCI ack before going further, though.
+>>>>
+>>>> I assume this only affects boxes where the firmware uses addresses above
+>>>> 4GB, i.e., not very many?  So this is v4.14 material?  Or do you think it's
+>>>> important for v4.13?
+>>>>
+>>>
+>>> As I mentioned, it would be nice if this could at least go into v4.11
+>>> and later, given that v4.11 contains a patch that switches all PCI
+>>> devices to 32-bit addressing only when the IOMMU is involved in DMA,
+>>> and this is what triggered the issue on arm64 boards with such a PCI
+>>> card and no DRAM below 4 GB.
+>>
+>> Agreed. It is likely that the issue will trigger on any 64bit->32bit
+>> IOVA transition, not only EFI->kernel, such as a kexec from a 4.10 to a
+>> 4.11 kernel.
+>>
+>> More importantly, this could have a dramatic effect on a system where
+>> both the 32bit and 64bit address ranges are valid. In my case, I was
+>> saved by the IOMMU blocking the DMA access, but imagine for a second the
+>> device was using PAs... I'm not sure that this is completely
+>> hypothetical, nor arm64 specific.
 > 
-> Thanks very much for the detailed problem report, Wim!  I'm taking the
-> liberty to forward to the linux-pci list in case others trip over the
-> same thing.
-> 
+> I did add a v4.11+ stable tag on your behalf, so it will get
+> backported to eventually.  But your responses don't exactly answer my
+> question about whether you want to start with this in v4.13 or v4.14.  
 
-So, the spec is lying :) and reality doesn't match theory.
+Thanks for that. The sooner the better, so I'd be tempted to say 4.13,
+assuming we can have an Ack from the XHCI maintainer in a reasonable
+time frame.
 
-"Per the ECN mentioned below, all PCIe Receivers are expected to support
- Extended Tags"
+Thanks,
 
-> 
-> 
-> 
-> The problem is not specific to this piece of h/w.  I did pin-point the
-> issue to specific kernel code commit
-<snip>
-
-> 60db3a4d8cc9073cf56264785197ba75ee1caca4
->   * <wtenhave@hagen:55> git bisect good
->     60db3a4d8cc9073cf56264785197ba75ee1caca4 is the first bad commit
->     commit 60db3a4d8cc9073cf56264785197ba75ee1caca4
->     Author: Sinan Kaya <okaya@codeaurora.org>
->     Date:   Fri Jan 20 09:16:51 2017 -0500
-> 
->       PCI: Enable PCIe Extended Tags if supported
-> 
-<snip>
-
-> 3. Boot and see it crash as soon it starts to operate on specific PCI
-> Express Ethernet controller.
-> 
-
-I guess we have an endpoint/system with errata that needs to be blacklisted.
-Can you please try another endpoint with the same system?
-
-You have conflicting information above. I want to understand whether it
-is the endpoint or the system that needs to be blacklisted.
-
-Please also provide sudo lspci -vvv output from the system with the patch.
-
-Sinan
-
+	M.
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Jazz is not dead. It just smells funny...
