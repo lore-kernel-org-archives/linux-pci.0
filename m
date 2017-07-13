@@ -1,55 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:36830 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751265AbdGQJzd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 05:55:33 -0400
-Received: by mail-lf0-f52.google.com with SMTP id h22so82127140lfk.3
-        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 02:55:32 -0700 (PDT)
-Subject: Re: [PATCH] pci: ftpci100: fix of_irq_get() error check
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-References: <20170715214406.657273405@cogentembedded.com>
- <CACRpkdbwMm_YwDG=e1Dyi1B7yp-++2u5frQiL_cbw_eRTiGiiQ@mail.gmail.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <73a59815-4305-52eb-df51-22da21291e85@cogentembedded.com>
-Date: Mon, 17 Jul 2017 12:55:31 +0300
+Received: from mail.kernel.org ([198.145.29.99]:55248 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750846AbdGMDZ3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Jul 2017 23:25:29 -0400
+Date: Wed, 12 Jul 2017 22:25:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] constify pci attribute_group structures.
+Message-ID: <20170713032526.GF4486@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499765228-543-1-git-send-email-arvind.yadav.cs@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdbwMm_YwDG=e1Dyi1B7yp-++2u5frQiL_cbw_eRTiGiiQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1499765228-543-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello!
-
-On 7/17/2017 12:17 AM, Linus Walleij wrote:
-
->> of_irq_get() may return a negative error number as well as 0 on failure,
->> while the driver only checks for 0, blithely continuing with the call to
->> irq_set_chained_handler_and_data() -- that function expects *unsigned int*
->> so should probably do nothing when a large IRQ number resulting from a
->> conversion of a negative error number is passed to it. The driver then
->> probes successfully while being only partly functional...
->>
->> Check for 'irq <= 0' instead and propagate the negative error number to
->> the probe method --  that will allow the deferred probing as well...
->>
->> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
->> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+On Tue, Jul 11, 2017 at 02:57:06PM +0530, Arvind Yadav wrote:
+> attribute_groups are not supposed to change at runtime. All functions
+> working with attribute_groups provided by <linux/sysfs.h> work
+> with const attribute_group. So mark the non-const structs as const.
 > 
-> Looks correct!
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-
-    Thanks!
-
->> -               return -EINVAL;
->> +               return irq ?: -EINVAL;
+> Arvind Yadav (3):
+>   [PATCH 1/3] PCI: pci-sysfs: constify attribute_group structures.
+>   [PATCH 2/3] PCI: pci-label: constify attribute_group structures.
+>   [PATCH 3/3] PCI: hotplug: constify attribute_group structures.
 > 
-> I thought I knew C but I learn something new all the time.
-> I had no clue one can use the ternary operator like this.
+>  drivers/pci/hotplug/rpadlpar_sysfs.c |  2 +-
+>  drivers/pci/pci-label.c              |  4 ++--
+>  drivers/pci/pci-sysfs.c              | 10 +++++-----
+>  3 files changed, 8 insertions(+), 8 deletions(-)
 
-    It's not a standard C, it's gcc's trickery. :-)
+Applied to pci/misc for v4.14, thanks!
 
-> Linus Walleij
-
-MBR, Sergei
+For some reason the list got two copies of the cover letter and patch
+3 was a response to the *second* cover letter.  But I think I got the
+right stuff.
