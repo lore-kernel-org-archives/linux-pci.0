@@ -1,70 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49970 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753903AbdGJQyQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 12:54:16 -0400
-Date: Mon, 10 Jul 2017 11:53:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joerg Roedel <jroedel@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        Samuel Sieb <samuel@sieb.net>,
-        David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Message-ID: <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <20170615140421.GB25710@suse.de>
- <20170615191545.GB12735@bhelgaas-glaptop.roam.corp.google.com>
- <20170616162923.GE25710@suse.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170616162923.GE25710@suse.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=/l1V=6R=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=/l1V=6R=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1500076473.2865.99.camel@kernel.crashing.org>
+Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Alex Williamson
+	 <alex.williamson@redhat.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc: Daniel Axtens <dja@axtens.net>,
+        "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>,
+        "Liuxinliang (Matthew Liu)"
+ <z.liuxinliang@hisilicon.com>,
+        Rongrong Zou <zourongrong@gmail.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon
+ <will.deacon@arm.com>,
+        "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+        David Airlie <airlied@linux.ie>,
+        Daniel Vetter <daniel.vetter@intel.com>
+Date: Sat, 15 Jul 2017 09:54:33 +1000
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B39FC4@FRAEML521-MBX.china.huawei.com>
+References: <20170712050811.3620-1-dja@axtens.net>
+	 <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+	 <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
+	 <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170713151146.53e9644c@w520.home>
+	 <1499980882.2865.65.camel@kernel.crashing.org>
+	 <EE11001F9E5DDD47B7634E2F8A612F2E40B399B4@FRAEML521-MBX.china.huawei.com>
+	 <1500040204.2865.90.camel@kernel.crashing.org>
+	 <EE11001F9E5DDD47B7634E2F8A612F2E40B39FC4@FRAEML521-MBX.china.huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 16, 2017 at 06:29:23PM +0200, Joerg Roedel wrote:
-> Hi Bjorn,
+On Fri, 2017-07-14 at 17:03 +0000, Gabriele Paoloni wrote:
+> > I'd rather we have no default device until a driver actually picks up
+> > though, and then, if we still have no default, use the first driver to
+> > pick up.
 > 
-> On Thu, Jun 15, 2017 at 02:15:45PM -0500, Bjorn Helgaas wrote:
-> > It was marked "superseded" in patchwork and thus off my radar.  I
-> > don't remember if I did that or why.  I changed it back to "New" so I
-> > won't forget about it.
+> Well from my understanding the PCI host controller driver will enumerate
+> all the devices in the PCI hierarchy and call pci_device_add() for each of
+> them, that in turn will call device_add(), at this stage if there is a
+> driver available for the device such driver will probe otherwise it will not.
 > 
-> Great!
-> 
-> > You mention (May 24) the original bug report.  Can you include the URL
-> > for that?
-> 
-> I think there were multiple reports, here is one I could still find:
-> 
-> 	https://lists.linuxfoundation.org/pipermail/iommu/2017-March/020836.html
-> 
-> > I admit I just don't have warm fuzzies that the problem is well
-> > understood.
-> 
-> The current understanding (without my ability to debug the hardware
-> involved) is that the GPU in the Stoney systems gets into a weird state
-> when ATS invalidations are sent too fast and stops responding to the
-> iommu.
-> 
-> The iommu then can't complete the invalidation commands and the driver
-> throws completion-wait loop timeout messages out.
+> Are you suggesting to add the code above in pci_device_add() after device_add()
+> and after checking that a driver has been bound for such dev?
 
-I'm still confused.  Per Samuel
-(6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net):
+I don't like us turning on MEM/IO decoding on a device that has
+potentially not been initialized by its driver.
 
-Samuel> The other patch seems to fix this issue without disabling ATS.
-Samuel> Isn't that better?
-
-and Alex
-(BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd12.prod.outlook.com):
-
-Alex> I talked to our validation team and ATS was validated on Stoney,
-Alex> so this patch is just working around something else.  The other
-Alex> patch fixes it and is a valid optimization ...
-
-I'm confused about what this "other patch" is and whether we want that
-one, this one, or both.
-
-Bjorn
+Ben.
