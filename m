@@ -1,115 +1,298 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:34303 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751779AbdGEHmS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 03:42:18 -0400
-Received: by mail-oi0-f43.google.com with SMTP id l130so119731098oib.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jul 2017 00:42:18 -0700 (PDT)
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:35782 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750788AbdGNFKf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 01:10:35 -0400
+Received: by mail-pg0-f44.google.com with SMTP id j186so40011583pge.2
+        for <linux-pci@vger.kernel.org>; Thu, 13 Jul 2017 22:10:35 -0700 (PDT)
+Date: Thu, 13 Jul 2017 22:10:31 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [RFC PATCH 3/6] phy: rockcip-pcie: reconstruct driver to support
+ per-lane PHYs
+Message-ID: <20170714051030.GA59140@google.com>
+References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-2-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
-References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
- <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
- <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org> <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
- <97b8c58e-7384-0519-5ccb-837fa5054d84@codeaurora.org> <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
-From: Ethan Zhao <ethan.kernel@gmail.com>
-Date: Wed, 5 Jul 2017 15:42:16 +0800
-Message-ID: <CABawtvOOWV1aKk=1LBk+S0UfG02UTNMvtdJM58HQYW4JXFAyrQ@mail.gmail.com>
-Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
- functional performance enhancements causing PCI Express crashes,
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Wim ten Have <wim.ten.have@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500004366-241633-2-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sinan=EF=BC=8C
+On Fri, Jul 14, 2017 at 11:52:43AM +0800, Shawn Lin wrote:
+> This patch reconstructs the whole driver to support per-lane
+> PHYs. Note that we could also support the legacy PHY if you
+> don't provide argument to our of_xlate.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  drivers/phy/rockchip/phy-rockchip-pcie.c | 116 +++++++++++++++++++++++++++----
+>  1 file changed, 101 insertions(+), 15 deletions(-)
+> 
+> diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
+> index 6904633..da74b47 100644
+> --- a/drivers/phy/rockchip/phy-rockchip-pcie.c
+> +++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
+> @@ -73,10 +73,35 @@ struct rockchip_pcie_data {
+>  struct rockchip_pcie_phy {
+>  	struct rockchip_pcie_data *phy_data;
+>  	struct regmap *reg_base;
+> +	struct phy **phys;
+>  	struct reset_control *phy_rst;
+>  	struct clk *clk_pciephy_ref;
+> +	u32 pwr_cnt;
+> +	bool initialized;
+>  };
+>  
+> +static struct phy *rockchip_pcie_phy_of_xlate(struct device *dev,
+> +					      struct of_phandle_args *args)
+> +{
+> +	struct rockchip_pcie_phy *rk_phy = dev_get_drvdata(dev);
+> +
+> +	if (!rk_phy)
+> +		return ERR_PTR(-ENODEV);
 
-    About the patch attached, why clear the word of
-PCI_EXP_DEVCTL_EXT_TAG ?  does the device will be set by default after
-POST it is not supported ?
+Shouldn't you just check args->args_count to determine legacy vs. new
+style?
 
-   dev_info(&dev->dev, "clearing extended tags capability\n");
+> +
+> +	switch (args->args[0]) {
+> +	case 1:
+> +		return rk_phy->phys[1];
+> +	case 2:
+> +		return rk_phy->phys[2];
+> +	case 3:
+> +		return rk_phy->phys[3];
+> +	case 0:
+> +		/* keep backward compatibility to legacy phy */
+> +	default:
 
-+ pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-+   PCI_EXP_DEVCTL_EXT_TAG);
+This also ends up accepting invalid indeces. You should probably
+bounds-check args->args[0].
 
+Then this can just be:
 
-Thanks,
-Ethan
+	if (legacy)
+		return rk_phy->phys[0];
+	else
+		return rk_phy->phys[index];
 
-On Wed, Jul 5, 2017 at 9:00 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 7/4/2017 6:25 PM, Sinan Kaya wrote:
->> On 7/4/2017 1:59 PM, Wim ten Have wrote:
->>> On Tue, 4 Jul 2017 11:57:37 -0400
->>> Sinan Kaya <okaya@codeaurora.org> wrote:
->>>
->>>> Hi,
->>>>
->>>> On 7/4/2017 11:32 AM, Bjorn Helgaas wrote:
->>>>> [+cc linux-pci]
->>>>>
->>>>> Thanks very much for the detailed problem report, Wim!  I'm taking th=
-e
->>>>> liberty to forward to the linux-pci list in case others trip over the
->>>>> same thing.
->>>>>
->>>>
->>>> So, the spec is lying :) and reality doesn't match theory.
->>
->> The PCI Express bridge you have is a Broadcom HT 2100 bridge which seems=
- to support
->> PCI-Express V1.0 and 1.0a compliant only.
->>
->> http://www.hard-net.de/info_wissen/chipsatz/broadcom/HT-2100.pdf
->>
->> I can also see this in your lspci output.
->>
->> 00:08.0 PCI bridge: Broadcom HT2100 PCI-Express Bridge (rev a2) (prog-if=
- 00 [Normal decode])
->>       Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr=
-- Stepping- SERR+ FastB2B- DisINTx+
->>       Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <=
-TAbort- <MAbort- >SERR- <PERR- INTx-
->>       Latency: 0, Cache Line Size: 64 bytes
->>       Interrupt: pin A routed to IRQ 19
->>       NUMA node: 0
->>       Bus: primary=3D00, secondary=3D01, subordinate=3D01, sec-latency=
-=3D0
->>       I/O behind bridge: 0000f000-00000fff [empty]
->>       Memory behind bridge: efe00000-efefffff [size=3D1M]
->>       Prefetchable memory behind bridge: 00000000fff00000-00000000000fff=
-ff [empty]
->>       Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=3Dfast >TAbort- <=
-TAbort- <MAbort+ <SERR- <PERR-
->>       BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
->>               PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
->>       Capabilities: [a0] HyperTransport: MSI Mapping Enable+ Fixed-
->>               Mapping Address Base: 00000000fee00000
->>       Capabilities: [b0] Express (v1) Root Port (Slot-), MSI 00
->>
->> I'll post a patch to apply extended tags to systems with PCI express v2 =
-and higher
->> bridges only.
->>
->
-> Please give this patch a try. I can make the patch pretty and re-post if =
-it works for you.
->
-> You should be seeing messages like this during boot.
->
-> [    3.949621] pci 0003:01:00.0: clearing extended tags capability
-> [    3.959540] pci 0003:01:00.1: clearing extended tags capability
-> [    3.969454] pci 0003:01:00.2: clearing extended tags capability
-> [    3.979373] pci 0003:01:00.3: clearing extended tags capability
-> [    3.989290] pci 0003:01:00.4: clearing extended tags capability
->
->
->
-> --
-> Sinan Kaya
-> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Techno=
-logies, Inc.
-> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux=
- Foundation Collaborative Project.
+> +		return rk_phy->phys[0];
+> +	}
+> +}
+> +
+>  static inline void phy_wr_cfg(struct rockchip_pcie_phy *rk_phy,
+>  			      u32 addr, u32 data)
+>  {
+> @@ -114,20 +139,55 @@ static inline u32 phy_rd_cfg(struct rockchip_pcie_phy *rk_phy,
+>  	return val;
+>  }
+>  
+> -static int rockchip_pcie_phy_power_off(struct phy *phy)
+> +static int rockchip_pcie_phy_common_power_off(struct phy *phy)
+>  {
+>  	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>  	int err = 0;
+>  
+> +	if (WARN_ON(!rk_phy->pwr_cnt))
+> +		return -EINVAL;
+> +
+> +	if (rk_phy->pwr_cnt > 0)
+
+This should be:
+
+	if (--rk_phy->pwr_cnt)
+
+Also, you technically might need locking, now that multiple phys (which
+each only have their own independent mutex) are accessing the same
+refcount. Or maybe just make this an atomic variable.
+
+> +		return 0;
+> +
+>  	err = reset_control_assert(rk_phy->phy_rst);
+>  	if (err) {
+>  		dev_err(&phy->dev, "assert phy_rst err %d\n", err);
+>  		return err;
+>  	}
+>  
+> +	rk_phy->pwr_cnt--;
+
+You've got things backwards... how do you expect to ever decrement this,
+if you return earlier in the function? The effect is that you never
+power off after you've powered on. (You should try instrumenting and
+testing this better.)
+
+> +
+>  	return 0;
+>  }
+>  
+> +#define DECLARE_PHY_POWER_OFF_PER_LANE(id) \
+> +static int rockchip_pcie_lane##id##_phy_power_off(struct phy *phy) \
+
+What? All this macro magic (and duplicate generated functions) should
+not be necessary. You just need some per-phy data that keeps the index.
+
+> +{ \
+> +	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy); \
+> +\
+> +	regmap_write(rk_phy->reg_base, \
+> +		     rk_phy->phy_data->pcie_laneoff, \
+> +		     HIWORD_UPDATE(PHY_LANE_IDLE_OFF, \
+> +				   PHY_LANE_IDLE_MASK, \
+> +				   PHY_LANE_IDLE_A_SHIFT + id)); \
+> +	return rockchip_pcie_phy_common_power_off(phy); \
+> +}
+> +
+> +DECLARE_PHY_POWER_OFF_PER_LANE(0);
+> +DECLARE_PHY_POWER_OFF_PER_LANE(1);
+> +DECLARE_PHY_POWER_OFF_PER_LANE(2);
+> +DECLARE_PHY_POWER_OFF_PER_LANE(3);
+> +
+> +#define PROVIDE_PHY_OPS(id) \
+> +	{ \
+> +		.init = rockchip_pcie_phy_init, \
+> +		.exit = rockchip_pcie_phy_exit, \
+> +		.power_on = rockchip_pcie_phy_power_on, \
+> +		.power_off = rockchip_pcie_lane##id##_phy_power_off, \
+> +		.owner  = THIS_MODULE, \
+> +}
+> +
+>  static int rockchip_pcie_phy_power_on(struct phy *phy)
+>  {
+>  	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+> @@ -135,6 +195,12 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
+>  	u32 status;
+>  	unsigned long timeout;
+>  
+> +	if (WARN_ON(rk_phy->pwr_cnt > PHY_MAX_LANE_NUM))
+> +		return -EINVAL;
+> +
+> +	if (rk_phy->pwr_cnt)
+
+This could just be:
+
+	if (rk_phy->pwr_cnt++)
+
+> +		return 0;
+> +
+>  	err = reset_control_deassert(rk_phy->phy_rst);
+>  	if (err) {
+>  		dev_err(&phy->dev, "deassert phy_rst err %d\n", err);
+> @@ -214,6 +280,7 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
+>  		goto err_pll_lock;
+>  	}
+>  
+> +	rk_phy->pwr_cnt++;
+
+Similar problem to what you're doing in power_off(); you're not doing
+the refcount right.
+
+Brian
+
+>  	return 0;
+>  
+>  err_pll_lock:
+> @@ -226,6 +293,9 @@ static int rockchip_pcie_phy_init(struct phy *phy)
+>  	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>  	int err = 0;
+>  
+> +	if (rk_phy->initialized)
+> +		return 0;
+> +
+>  	err = clk_prepare_enable(rk_phy->clk_pciephy_ref);
+>  	if (err) {
+>  		dev_err(&phy->dev, "Fail to enable pcie ref clock.\n");
+> @@ -238,7 +308,9 @@ static int rockchip_pcie_phy_init(struct phy *phy)
+>  		goto err_reset;
+>  	}
+>  
+> -	return err;
+> +	rk_phy->initialized = true;
+> +
+> +	return 0;
+>  
+>  err_reset:
+>  	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
+> @@ -250,17 +322,21 @@ static int rockchip_pcie_phy_exit(struct phy *phy)
+>  {
+>  	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>  
+> +	if (!rk_phy->initialized)
+> +		return 0;
+> +
+>  	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
+>  
+> +	rk_phy->initialized = false;
+> +
+>  	return 0;
+>  }
+>  
+> -static const struct phy_ops ops = {
+> -	.init		= rockchip_pcie_phy_init,
+> -	.exit		= rockchip_pcie_phy_exit,
+> -	.power_on	= rockchip_pcie_phy_power_on,
+> -	.power_off	= rockchip_pcie_phy_power_off,
+> -	.owner		= THIS_MODULE,
+> +static const struct phy_ops ops[PHY_MAX_LANE_NUM] = {
+> +	PROVIDE_PHY_OPS(0),
+> +	PROVIDE_PHY_OPS(1),
+> +	PROVIDE_PHY_OPS(2),
+> +	PROVIDE_PHY_OPS(3),
+>  };
+>  
+>  static const struct rockchip_pcie_data rk3399_pcie_data = {
+> @@ -283,10 +359,10 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+>  	struct rockchip_pcie_phy *rk_phy;
+> -	struct phy *generic_phy;
+>  	struct phy_provider *phy_provider;
+>  	struct regmap *grf;
+>  	const struct of_device_id *of_id;
+> +	int i;
+>  
+>  	grf = syscon_node_to_regmap(dev->parent->of_node);
+>  	if (IS_ERR(grf)) {
+> @@ -319,14 +395,24 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>  		return PTR_ERR(rk_phy->clk_pciephy_ref);
+>  	}
+>  
+> -	generic_phy = devm_phy_create(dev, dev->of_node, &ops);
+> -	if (IS_ERR(generic_phy)) {
+> -		dev_err(dev, "failed to create PHY\n");
+> -		return PTR_ERR(generic_phy);
+> +	rk_phy->phys = devm_kcalloc(dev, sizeof(struct phy),
+> +				    PHY_MAX_LANE_NUM, GFP_KERNEL);
+> +	if (!rk_phy->phys)
+> +		return -ENOMEM;
+> +
+> +	for (i = 0; i < PHY_MAX_LANE_NUM; i++) {
+> +		rk_phy->phys[i] = devm_phy_create(dev, dev->of_node, &ops[i]);
+> +		if (IS_ERR(rk_phy->phys[i])) {
+> +			dev_err(dev, "failed to create PHY%d\n", i);
+> +			return PTR_ERR(rk_phy->phys[i]);
+> +		}
+> +
+> +		phy_set_drvdata(rk_phy->phys[i], rk_phy);
+>  	}
+>  
+> -	phy_set_drvdata(generic_phy, rk_phy);
+> -	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
+> +	platform_set_drvdata(pdev, rk_phy);
+> +	phy_provider = devm_of_phy_provider_register(dev,
+> +					rockchip_pcie_phy_of_xlate);
+>  
+>  	return PTR_ERR_OR_ZERO(phy_provider);
+>  }
+> -- 
+> 1.9.1
+> 
+> 
