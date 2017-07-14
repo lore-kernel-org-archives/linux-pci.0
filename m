@@ -1,90 +1,332 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
- devices before scanning
-Date: Tue, 4 Jul 2017 15:14:42 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
- <20170613200339.GX3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
- <20170616083313.GY3187@lahna.fi.intel.com>
- <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
- <20170616120048.GC629@lahna.fi.intel.com>
- <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
- <20170619100209.GC629@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
- <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
-In-Reply-To: <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:47736 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751423AbdGNGdr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 02:33:47 -0400
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [RFC PATCH 3/6] phy: rockcip-pcie: reconstruct driver to support
+ per-lane PHYs
+To: Brian Norris <briannorris@chromium.org>
+References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-2-git-send-email-shawn.lin@rock-chips.com>
+ <20170714051030.GA59140@google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <a0b188ea-71e2-8c8a-999d-754a35891ab9@rock-chips.com>
+Date: Fri, 14 Jul 2017 14:33:26 +0800
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170714051030.GA59140@google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQW5keQ0KDQpbLi4uXQ0KDQo+IA0KPiBKRllJOiBNaWthIG9uIHZhY2F0aW9uLg0KDQpUaGFu
-a3MgZm9yIGxldHRpbmcgbWUga25vdw0KDQo+IA0KPiA+IEkgaGFkIGEgbG9vayBpbnRvIHRoZSBN
-RkQgZnJhbWV3b3JrLiBJZiBteSB1bmRlcnN0YW5kaW5nIGlzIGNvcnJlY3QNCj4gdGhlIG1mZA0K
-PiA+IGZyYW1ld29yayBjcmVhdGUgYSBwbGF0Zm9ybSBkZXZpY2UgZm9yIGVhY2ggZGVjbGFyZWQg
-bWZkX2NlbGwgdGhhdCBpcw0KPiBwYXNzZWQNCj4gPiB0byBtZmRfYWRkX2RldmljZXMoKS4NCj4g
-DQo+IFJpZ2h0Lg0KPiANCj4gPiBIb3dldmVyIHRoZXJlIGlzIHNvbWV0aGluZyB0aGF0IEkgZG8g
-bm90IHF1aXRlIHVuZGVyc3RhbmQ6DQo+ID4gZnJvbQ0KPiA+IGh0dHA6Ly9lbGl4aXIuZnJlZS1l
-bGVjdHJvbnMuY29tL2xpbnV4L2xhdGVzdC9zb3VyY2UvZHJpdmVycy9tZmQvbWZkLQ0KPiBjb3Jl
-LmMjTDIwNw0KPiA+IGl0IHNlZW1zIHRoYXQgbWZkX2FkZF9kZXZpY2UoKSB3aWxsIGNyZWF0ZSB0
-aGUgcGxhdGZvcm0gZGV2aWNlIHVzaW5nDQo+IHRoZQ0KPiA+IHJlc291cmNlcyB0aGF0IGFyZSBz
-dGF0aWNhbGx5IGRlY2xhcmVkIGluIHRoZSByZXNwZWN0aXZlIG1mZF9jZWxsLg0KPiANCj4gSXQn
-cyBvbmUgcG9zc2liaWxpdHkuDQo+IA0KPiA+IEluIG15IGNhc2UgSSdkIGxpa2UgdG8gaGF2ZSBh
-IHBsYXRmb3JtIGRldmljZSB1c2luZyB0aGUgcmVzb3VyY2VzDQo+IHRoYXQgYXJlDQo+ID4gcGFy
-c2VkIGZyb20gdGhlIEFDUEkgdGFibGUgKGkuZS4gYXMgaXQgaXMgZG9uZSBub3cgYnkNCj4gPiBh
-Y3BpX2NyZWF0ZV9wbGF0Zm9ybV9kZXZpY2UoKSkuDQo+IA0KPiBTbyBmYXIgc28gZ29vZC4gTm90
-aGluZyBwcmV2ZW50cyB5b3UgdG8gZG8gdGhhdC4NCj4gDQo+ID4gSWYgbXkgdW5kZXJzdGFuZGlu
-ZyBpcyBjb3JyZWN0LCBpZiBJIGRlY2xhcmVkIGFuIG1mZF9jZWxsIGZvciBteSBJUE1JDQo+IGNo
-aWxkDQo+ID4gdGhlIG1mZCBzdWJzeXN0ZW0gd291bGQgY3JlYXRlIGEgcGxhdGZvcm0gZGV2aWNl
-IGZvciBzdWNoIGNoaWxkIGFuZA0KPiA+IHRoZXJlZm9yZSBhY3BpX2NyZWF0ZV9wbGF0Zm9ybV9k
-ZXZpY2UoKSB3b3VsZCBmYWlsIHRvIGNyZWF0ZSBhIG5ldw0KPiBwbGF0Zm9ybQ0KPiA+IGRldmlj
-ZSBhcyBhZGV2LT5waHlzaWNhbF9ub2RlX2NvdW50IHdpbGwgYmUgbm9uIHplcm8uDQo+ID4gSG93
-ZXZlciBhcyB0aGluZ3Mgc3RhbmQgbm93IG1mZF9jZWxsIGRldmljZXMgY2FuIG9ubHkgdXNlIHRo
-ZQ0KPiByZXNvdXJjZXMNCj4gPiB0aGF0IGFyZSBzdGF0aWNhbGx5IGRlZmluZWQgaW4gdGhlIGNv
-ZGUgKGFuZCB0aGVyZWZvcmUgbm90IHRoZSBvbmVzDQo+IGluIHRoZQ0KPiA+IEFDUEkgbm9kZXMp
-Li4uYW0gSSByaWdodD8NCj4gDQo+IFlvdSBtYXkgZmlsZSByZXNvdXJjZXMgZmlyc3QgYW5kIHRo
-ZW4gcmVnaXN0ZXIgTUZEIGNlbGxzLiBTZWUgbWFueQ0KPiBleGlzdGluZyBleGFtcGxlcyBpbiB0
-aGUga2VybmVsLg0KDQpXZWxsIEkgaGFkIGEgbG9vayBhcm91bmQgdGhlIEtlcm5lbCBJIGhhdmUg
-c2VlbiBubyBtZmQgY2VsbHMgdXNpbmcNClJlc291cmNlcyB0aGF0IGFyZSBub3Qgc3RhdGljYWxs
-eSBkZWZpbmVkOg0KaS5lLiBjZWxsLT5yZXNvdXJjZXMgaW4gbWZkX2FkZF9kZXZpY2UoKSBhbHdh
-eXMgcG9pbnRzIHRvIHN0YXRpY2FsbHkNCmRlZmluZWQgcmVzb3VyY2Ugc3RydWN0dXJlcy4NCg0K
-VXN1YWxseSBmb3IgQUNQSSBkZXZpY2VzIGZpcnN0IHlvdSBuZWVkIHRvIHBhcnNlIHRoZSBBQ1BJ
-IHJlc291cmNlcw0KZnJvbSB0aGUgdGFibGUgY2FsbGluZyBhY3BpX2Rldl9nZXRfcmVzb3VyY2Vz
-KCksIHRoZW4geW91IGl0ZXJhdGUgDQpvdmVyIHRoZSByZXNvdXJjZSBsaXN0IGFuZCBmaWxsIHRo
-ZSByZXNvdXJjZSBhcnJheSBieSBjYWxsaW5nDQphY3BpX3BsYXRmb3JtX2ZpbGxfcmVzdXJjZXMo
-KSAoYXMgaW4gYWNwaV9jcmVhdGVfcGxhdGZvcm1fZGV2aWNlKCkpDQoNCldpdGggcmVzcGVjdCB0
-byBteSBjYXNlIGFyZSB5b3Ugc3VnZ2VzdGluZyBkeW5hbWljYWxseSBhbGxvY2F0ZSBhDQpyZXNv
-dXJjZSBhcnJheSBhbmQgZmlsbCBpdCB1c2luZyB0aGUgc2FtZSBmYXNoaW9uIGFzIA0KYWNwaV9j
-cmVhdGVfcGxhdGZvcm1fZGV2aWNlKCksIHRoZW4gcG9pbnQgY2VsbC0+cmVzb3VyY2VzIHRvIHN1
-Y2gNCmFycmF5IGJlZm9yZSBjYWxsaW5nIG1mZF9hZGRfZGV2aWNlKCkgPw0KDQpUaGFua3MNCkdh
-Yg0KDQo+IA0KPiAtLQ0KPiBXaXRoIEJlc3QgUmVnYXJkcywNCj4gQW5keSBTaGV2Y2hlbmtvDQo=
+Hi Brian,
+
+On 2017/7/14 13:10, Brian Norris wrote:
+> On Fri, Jul 14, 2017 at 11:52:43AM +0800, Shawn Lin wrote:
+>> This patch reconstructs the whole driver to support per-lane
+>> PHYs. Note that we could also support the legacy PHY if you
+>> don't provide argument to our of_xlate.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> ---
+>>
+>>   drivers/phy/rockchip/phy-rockchip-pcie.c | 116 +++++++++++++++++++++++++++----
+>>   1 file changed, 101 insertions(+), 15 deletions(-)
+>>
+>> diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
+>> index 6904633..da74b47 100644
+>> --- a/drivers/phy/rockchip/phy-rockchip-pcie.c
+>> +++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
+>> @@ -73,10 +73,35 @@ struct rockchip_pcie_data {
+>>   struct rockchip_pcie_phy {
+>>   	struct rockchip_pcie_data *phy_data;
+>>   	struct regmap *reg_base;
+>> +	struct phy **phys;
+>>   	struct reset_control *phy_rst;
+>>   	struct clk *clk_pciephy_ref;
+>> +	u32 pwr_cnt;
+>> +	bool initialized;
+>>   };
+>>   
+>> +static struct phy *rockchip_pcie_phy_of_xlate(struct device *dev,
+>> +					      struct of_phandle_args *args)
+>> +{
+>> +	struct rockchip_pcie_phy *rk_phy = dev_get_drvdata(dev);
+>> +
+>> +	if (!rk_phy)
+>> +		return ERR_PTR(-ENODEV);
+> 
+> Shouldn't you just check args->args_count to determine legacy vs. new
+> style?
+> 
+
+args_count is 1 for legacy mode but could also means you just add one
+phy with the new per-lane mode?
+
+>> +
+>> +	switch (args->args[0]) {
+>> +	case 1:
+>> +		return rk_phy->phys[1];
+>> +	case 2:
+>> +		return rk_phy->phys[2];
+>> +	case 3:
+>> +		return rk_phy->phys[3];
+>> +	case 0:
+>> +		/* keep backward compatibility to legacy phy */
+>> +	default:
+> 
+> This also ends up accepting invalid indeces. You should probably
+> bounds-check args->args[0].
+> 
+> Then this can just be:
+> 
+> 	if (legacy)
+> 		return rk_phy->phys[0];
+> 	else
+> 		return rk_phy->phys[index];
+
+
+However, checking args_count to see if it's legacy seems to simply
+the code a lot. So I would fix that above.
+
+> 
+>> +		return rk_phy->phys[0];
+>> +	}
+>> +}
+>> +
+>>   static inline void phy_wr_cfg(struct rockchip_pcie_phy *rk_phy,
+>>   			      u32 addr, u32 data)
+>>   {
+>> @@ -114,20 +139,55 @@ static inline u32 phy_rd_cfg(struct rockchip_pcie_phy *rk_phy,
+>>   	return val;
+>>   }
+>>   
+>> -static int rockchip_pcie_phy_power_off(struct phy *phy)
+>> +static int rockchip_pcie_phy_common_power_off(struct phy *phy)
+>>   {
+>>   	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>>   	int err = 0;
+>>   
+>> +	if (WARN_ON(!rk_phy->pwr_cnt))
+>> +		return -EINVAL;
+>> +
+>> +	if (rk_phy->pwr_cnt > 0)
+> 
+> This should be:
+> 
+> 	if (--rk_phy->pwr_cnt)
+> 
+> Also, you technically might need locking, now that multiple phys (which
+> each only have their own independent mutex) are accessing the same
+> refcount. Or maybe just make this an atomic variable.
+
+Good catch!
+
+> 
+>> +		return 0;
+>> +
+>>   	err = reset_control_assert(rk_phy->phy_rst);
+>>   	if (err) {
+>>   		dev_err(&phy->dev, "assert phy_rst err %d\n", err);
+>>   		return err;
+>>   	}
+>>   
+>> +	rk_phy->pwr_cnt--;
+> 
+> You've got things backwards... how do you expect to ever decrement this,
+> if you return earlier in the function? The effect is that you never
+> power off after you've powered on. (You should try instrumenting and
+> testing this better.)
+
+Right, I should notice this if I checked the power for S3 but
+unfortunately I didn't..
+
+> 
+>> +
+>>   	return 0;
+>>   }
+>>   
+>> +#define DECLARE_PHY_POWER_OFF_PER_LANE(id) \
+>> +static int rockchip_pcie_lane##id##_phy_power_off(struct phy *phy) \
+> 
+> What? All this macro magic (and duplicate generated functions) should
+> not be necessary. You just need some per-phy data that keeps the index.
+
+I can't quite follow yours here. The only argument passing on to
+the PHY APIs is 'struct phy *phy', and how could you trace the index
+from it? The caller should save phy instead of 'rockchip_pcie_phy', in 
+which the per-phy data should be.
+
+Or could you kindly show me some example here:)
+
+
+> 
+>> +{ \
+>> +	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy); \
+>> +\
+>> +	regmap_write(rk_phy->reg_base, \
+>> +		     rk_phy->phy_data->pcie_laneoff, \
+>> +		     HIWORD_UPDATE(PHY_LANE_IDLE_OFF, \
+>> +				   PHY_LANE_IDLE_MASK, \
+>> +				   PHY_LANE_IDLE_A_SHIFT + id)); \
+>> +	return rockchip_pcie_phy_common_power_off(phy); \
+>> +}
+>> +
+>> +DECLARE_PHY_POWER_OFF_PER_LANE(0);
+>> +DECLARE_PHY_POWER_OFF_PER_LANE(1);
+>> +DECLARE_PHY_POWER_OFF_PER_LANE(2);
+>> +DECLARE_PHY_POWER_OFF_PER_LANE(3);
+>> +
+>> +#define PROVIDE_PHY_OPS(id) \
+>> +	{ \
+>> +		.init = rockchip_pcie_phy_init, \
+>> +		.exit = rockchip_pcie_phy_exit, \
+>> +		.power_on = rockchip_pcie_phy_power_on, \
+>> +		.power_off = rockchip_pcie_lane##id##_phy_power_off, \
+>> +		.owner  = THIS_MODULE, \
+>> +}
+>> +
+>>   static int rockchip_pcie_phy_power_on(struct phy *phy)
+>>   {
+>>   	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>> @@ -135,6 +195,12 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
+>>   	u32 status;
+>>   	unsigned long timeout;
+>>   
+>> +	if (WARN_ON(rk_phy->pwr_cnt > PHY_MAX_LANE_NUM))
+>> +		return -EINVAL;
+>> +
+>> +	if (rk_phy->pwr_cnt)
+> 
+> This could just be:
+> 
+> 	if (rk_phy->pwr_cnt++)
+> 
+>> +		return 0;
+>> +
+>>   	err = reset_control_deassert(rk_phy->phy_rst);
+>>   	if (err) {
+>>   		dev_err(&phy->dev, "deassert phy_rst err %d\n", err);
+>> @@ -214,6 +280,7 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
+>>   		goto err_pll_lock;
+>>   	}
+>>   
+>> +	rk_phy->pwr_cnt++;
+> 
+> Similar problem to what you're doing in power_off(); you're not doing
+> the refcount right.
+
+Will fix as well.
+
+> 
+> Brian
+> 
+>>   	return 0;
+>>   
+>>   err_pll_lock:
+>> @@ -226,6 +293,9 @@ static int rockchip_pcie_phy_init(struct phy *phy)
+>>   	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>>   	int err = 0;
+>>   
+>> +	if (rk_phy->initialized)
+>> +		return 0;
+>> +
+>>   	err = clk_prepare_enable(rk_phy->clk_pciephy_ref);
+>>   	if (err) {
+>>   		dev_err(&phy->dev, "Fail to enable pcie ref clock.\n");
+>> @@ -238,7 +308,9 @@ static int rockchip_pcie_phy_init(struct phy *phy)
+>>   		goto err_reset;
+>>   	}
+>>   
+>> -	return err;
+>> +	rk_phy->initialized = true;
+>> +
+>> +	return 0;
+>>   
+>>   err_reset:
+>>   	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
+>> @@ -250,17 +322,21 @@ static int rockchip_pcie_phy_exit(struct phy *phy)
+>>   {
+>>   	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>>   
+>> +	if (!rk_phy->initialized)
+>> +		return 0;
+>> +
+>>   	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
+>>   
+>> +	rk_phy->initialized = false;
+>> +
+>>   	return 0;
+>>   }
+>>   
+>> -static const struct phy_ops ops = {
+>> -	.init		= rockchip_pcie_phy_init,
+>> -	.exit		= rockchip_pcie_phy_exit,
+>> -	.power_on	= rockchip_pcie_phy_power_on,
+>> -	.power_off	= rockchip_pcie_phy_power_off,
+>> -	.owner		= THIS_MODULE,
+>> +static const struct phy_ops ops[PHY_MAX_LANE_NUM] = {
+>> +	PROVIDE_PHY_OPS(0),
+>> +	PROVIDE_PHY_OPS(1),
+>> +	PROVIDE_PHY_OPS(2),
+>> +	PROVIDE_PHY_OPS(3),
+>>   };
+>>   
+>>   static const struct rockchip_pcie_data rk3399_pcie_data = {
+>> @@ -283,10 +359,10 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>>   {
+>>   	struct device *dev = &pdev->dev;
+>>   	struct rockchip_pcie_phy *rk_phy;
+>> -	struct phy *generic_phy;
+>>   	struct phy_provider *phy_provider;
+>>   	struct regmap *grf;
+>>   	const struct of_device_id *of_id;
+>> +	int i;
+>>   
+>>   	grf = syscon_node_to_regmap(dev->parent->of_node);
+>>   	if (IS_ERR(grf)) {
+>> @@ -319,14 +395,24 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>>   		return PTR_ERR(rk_phy->clk_pciephy_ref);
+>>   	}
+>>   
+>> -	generic_phy = devm_phy_create(dev, dev->of_node, &ops);
+>> -	if (IS_ERR(generic_phy)) {
+>> -		dev_err(dev, "failed to create PHY\n");
+>> -		return PTR_ERR(generic_phy);
+>> +	rk_phy->phys = devm_kcalloc(dev, sizeof(struct phy),
+>> +				    PHY_MAX_LANE_NUM, GFP_KERNEL);
+>> +	if (!rk_phy->phys)
+>> +		return -ENOMEM;
+>> +
+>> +	for (i = 0; i < PHY_MAX_LANE_NUM; i++) {
+>> +		rk_phy->phys[i] = devm_phy_create(dev, dev->of_node, &ops[i]);
+>> +		if (IS_ERR(rk_phy->phys[i])) {
+>> +			dev_err(dev, "failed to create PHY%d\n", i);
+>> +			return PTR_ERR(rk_phy->phys[i]);
+>> +		}
+>> +
+>> +		phy_set_drvdata(rk_phy->phys[i], rk_phy);
+>>   	}
+>>   
+>> -	phy_set_drvdata(generic_phy, rk_phy);
+>> -	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
+>> +	platform_set_drvdata(pdev, rk_phy);
+>> +	phy_provider = devm_of_phy_provider_register(dev,
+>> +					rockchip_pcie_phy_of_xlate);
+>>   
+>>   	return PTR_ERR_OR_ZERO(phy_provider);
+>>   }
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> 
+> 
