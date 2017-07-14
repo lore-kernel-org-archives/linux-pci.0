@@ -1,47 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 10 Jul 2017 10:43:44 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Rob Herring <robh@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH] Documentation/devicetree: fix dead links to PCI/OF specs
-Message-ID: <20170710174343.GA136482@google.com>
-References: <20170707004323.22550-1-briannorris@chromium.org>
- <20170710143313.xfa7ezbgj67clkt3@rob-hp-laptop>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.141]:34991 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750786AbdGNHDq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 03:03:46 -0400
+Message-ID: <59686CCA.60804@rock-chips.com>
+Date: Fri, 14 Jul 2017 15:03:38 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170710143313.xfa7ezbgj67clkt3@rob-hp-laptop>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, devicetree@vger.kernel.org
+Subject: Re: [RFC PATCH 3/6] phy: rockcip-pcie: reconstruct driver to support
+ per-lane PHYs
+References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com> <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com> <1500004366-241633-2-git-send-email-shawn.lin@rock-chips.com> <20170714051030.GA59140@google.com> <a0b188ea-71e2-8c8a-999d-754a35891ab9@rock-chips.com>
+In-Reply-To: <a0b188ea-71e2-8c8a-999d-754a35891ab9@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 09:33:13AM -0500, Rob Herring wrote:
-> On Thu, Jul 06, 2017 at 05:43:23PM -0700, Brian Norris wrote:
-> > www.firmware.org doesn't resolve for me. I found these equivalent URLs
-> > by taking the redirects from the previous (openfirmware.org) URLs, as
-> > seen before commit f517256a6867 ("Documentation/devicetree: Update PCI
-> > Device Tree bindings") updated them.
-> > 
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > ---
-> > This is my best attempt at a resolution. I'm not sure what firmware.org is or
-> > if its owner is even legit. It does seem like openfirmware.info is a proper
-> > successor to openfirmware.org, and it's registered to a coreboot dev.
-> 
-> This site doesn't seem to be complete. There was still a complete mirror 
-> (matching playground.sun.com) at one point, but I can't seem to find it 
-> now. Fortunately, I had archived off the whole mirror with the intention 
-> of putting it on devicetree.org. Let me get moving on that.
+Hi Shawn,
 
-I don't really know what "complete" is; I just want my URLs to point
-somewhere useful :) So whatever suits you best. At least these links
-correctly have titles / reference numbers included alongside, so I can
-search for the correct thing myself.
+On 07/14/2017 02:33 PM, Shawn Lin wrote:
+>>
+>>> +        return rk_phy->phys[0];
+>>> +    }
+>>> +}
+>>> +
+>>>   static inline void phy_wr_cfg(struct rockchip_pcie_phy *rk_phy,
+>>>                     u32 addr, u32 data)
+>>>   {
+>>> @@ -114,20 +139,55 @@ static inline u32 phy_rd_cfg(struct
+>>> rockchip_pcie_phy *rk_phy,
+>>>       return val;
+>>>   }
+>>> -static int rockchip_pcie_phy_power_off(struct phy *phy)
+>>> +static int rockchip_pcie_phy_common_power_off(struct phy *phy)
+>>>   {
+>>>       struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+>>>       int err = 0;
+>>> +    if (WARN_ON(!rk_phy->pwr_cnt))
+>>> +        return -EINVAL;
+>>> +
+>>> +    if (rk_phy->pwr_cnt > 0)
+>>
+>> This should be:
+>>
+>>     if (--rk_phy->pwr_cnt)
+>>
+>> Also, you technically might need locking, now that multiple phys (which
+>> each only have their own independent mutex) are accessing the same
+>> refcount. Or maybe just make this an atomic variable.
+>
+> Good catch!
+Sounds like we need something similar to phy-core.c's power_count and 
+init_count.
 
-BTW, I think I missed some other bad links in the tree. v4.12 release
-still points to these:
-
-origin/master:Documentation/devicetree/bindings/usb/usb-device.txt:5:http://www.firmware.org/1275/bindings/usb/usb-1_0.ps
-origin/master:Documentation/devicetree/booting-without-of.txt:1285:<http://www.openfirmware.org/ofwg/practice/>
-
-Regards,
-Brian
+>>> +
+>>>       return 0;
+>>>   }
+>>> +#define DECLARE_PHY_POWER_OFF_PER_LANE(id) \
+>>> +static int rockchip_pcie_lane##id##_phy_power_off(struct phy *phy) \
+>>
+>> What? All this macro magic (and duplicate generated functions) should
+>> not be necessary. You just need some per-phy data that keeps the index.
+>
+> I can't quite follow yours here. The only argument passing on to
+> the PHY APIs is 'struct phy *phy', and how could you trace the index
+> from it? The caller should save phy instead of 'rockchip_pcie_phy', in
+> which the per-phy data should be.
+>
+> Or could you kindly show me some example here:)
+>
+Maybe add a struct rockchip_pcie_phy_data for each phy, contains their 
+index and a pointer to the common struct rockchip_pcie_phy?
