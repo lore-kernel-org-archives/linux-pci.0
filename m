@@ -1,96 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:34909 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751087AbdGPGmH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jul 2017 02:42:07 -0400
-Received: by mail-pg0-f53.google.com with SMTP id v190so6245588pgv.2
-        for <linux-pci@vger.kernel.org>; Sat, 15 Jul 2017 23:42:07 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 3/3] PCI: qcom: Allow post_init to fail
-Date: Sat, 15 Jul 2017 23:42:03 -0700
-Message-Id: <20170716064203.3406-1-bjorn.andersson@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=UZLv=6R=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=UZLv=6R=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v7 3/3] net/cxgb4: Use new
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+To: Casey Leedom <leedom@chelsio.com>,
+        Alexander Duyck
+	<alexander.duyck@gmail.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-4-git-send-email-dingtianhong@huawei.com>
+ <CAKgT0UcBFBk9T7g0Dh-rHY6Z+6-4=5jsUWHbLcSMc+ohdTz=CA@mail.gmail.com>
+ <CAKgT0Uf8Tg6AFthXt-bJrdNHCqJ3MfzduR1yCMMsjLYoEFXb-w@mail.gmail.com>
+ <MWHPR12MB1600E5A4404EE9D97CD99F88C8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
+CC: Ashok Raj <ashok.raj@intel.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Michael Werner <werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
+        Asit K Mallick <asit.k.mallick@intel.com>,
+        Patrick J Cramer <patrick.j.cramer@intel.com>,
+        Suravee Suthikulpanit
+	<Suravee.Suthikulpanit@amd.com>,
+        Bob Shaw <Bob.Shaw@amd.com>, h
+	<l.stach@pengutronix.de>,
+        Amir Ancel <amira@mellanox.com>,
+        Gabriele Paoloni
+	<gabriele.paoloni@huawei.com>,
+        David Laight <David.Laight@aculab.com>,
+        "Jeff
+ Kirsher" <jeffrey.t.kirsher@intel.com>,
+        Catalin Marinas
+	<catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Mark Rutland
+	<mark.rutland@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        David Miller
+	<davem@davemloft.net>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        Netdev <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        LinuxArm
+	<linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <d36574a1-2853-6989-25ae-5fd1b0d811ba@huawei.com>
+Date: Fri, 14 Jul 2017 18:23:51 +0800
+MIME-Version: 1.0
+In-Reply-To: <MWHPR12MB1600E5A4404EE9D97CD99F88C8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-host_init should detect and propagate errors from post_init.
+Hi Casey, Alexander:
 
-In addition, by acknowleding that post_init can fail we must disable the
-post_init resources in a step separate from the deinit, so that we don't
-try to disable the post_init resources a second time.
+Thanks for the great efforts from both of you, It looks like we have reached a consensus finally,
+could you please add a confirmation message just like Reviewed-by or something else, thanks. :)
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/pci/dwc/pcie-qcom.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+Ding
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 7b703741a3fd..26e84a957c35 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -124,6 +124,7 @@ struct qcom_pcie_ops {
- 	int (*init)(struct qcom_pcie *pcie);
- 	int (*post_init)(struct qcom_pcie *pcie);
- 	void (*deinit)(struct qcom_pcie *pcie);
-+	void (*post_deinit)(struct qcom_pcie *pcie);
- 	void (*ltssm_enable)(struct qcom_pcie *pcie);
- };
- 
-@@ -517,13 +518,19 @@ static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
- 
--	clk_disable_unprepare(res->pipe_clk);
- 	clk_disable_unprepare(res->slave_clk);
- 	clk_disable_unprepare(res->master_clk);
- 	clk_disable_unprepare(res->cfg_clk);
- 	clk_disable_unprepare(res->aux_clk);
- }
- 
-+static void qcom_pcie_post_deinit_v2(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
-+
-+	clk_disable_unprepare(res->pipe_clk);
-+}
-+
- static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
-@@ -907,8 +914,11 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	if (ret)
- 		goto err_deinit;
- 
--	if (pcie->ops->post_init)
--		pcie->ops->post_init(pcie);
-+	if (pcie->ops->post_init) {
-+		ret = pcie->ops->post_init(pcie);
-+		if (ret)
-+			goto err_disable_phy;
-+	}
- 
- 	dw_pcie_setup_rc(pp);
- 
-@@ -924,6 +934,9 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- err:
- 	qcom_ep_reset_assert(pcie);
-+	if (pcie->ops->post_deinit)
-+		pcie->ops->post_deinit(pcie);
-+err_disable_phy:
- 	phy_power_off(pcie->phy);
- err_deinit:
- 	pcie->ops->deinit(pcie);
-@@ -971,6 +984,7 @@ static const struct qcom_pcie_ops ops_v2 = {
- 	.init = qcom_pcie_init_v2,
- 	.post_init = qcom_pcie_post_init_v2,
- 	.deinit = qcom_pcie_deinit_v2,
-+	.post_deinit = qcom_pcie_post_deinit_v2,
- 	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
- };
- 
--- 
-2.12.0
+On 2017/7/14 2:44, Casey Leedom wrote:
+>   Yeah, I think this works for now.  We'll stumble over what to do when we want to mix upstream TLPs without Relaxed Ordering Attributes directed at problematic Root Complexes, and Peer-to-Peer TLPs with Relaxed Ordering Attributes ... or vice versa depending on which target PCIe Device has issues with Relaxed Ordering.
+> 
+> 
+>   Thanks for all the work!
+> 
+> 
+> Casey
+> 
+> 
