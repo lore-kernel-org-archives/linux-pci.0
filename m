@@ -1,56 +1,32 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f178.google.com ([209.85.216.178]:34491 "EHLO
-        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751817AbdGJTbz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Jul 2017 15:31:55 -0400
-Date: Mon, 10 Jul 2017 15:31:41 -0400
-From: Jerome Glisse <j.glisse@gmail.com>
-To: valmiki <valmikibow@gmail.com>
-Cc: Alex Williamson <alex.williamson@redhat.com>, tianyu.lan@intel.com,
-        kevin.tian@intel.com, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        jacob.jun.pan@intel.com
-Subject: Re: Support SVM without PASID
-Message-ID: <20170710193141.GA3813@gmail.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+Received: from bes.se.axis.com ([195.60.68.10]:39493 "EHLO bes.se.axis.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753626AbdGNMHu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Jul 2017 08:07:50 -0400
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>
+CC: Niklas Cassel <niklass@axis.com>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH 0/2] PCI: dwc: convert remaining dbi read/writes to dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+Date: Fri, 14 Jul 2017 14:07:33 +0200
+Message-ID: <20170714120735.11993-1-niklas.cassel@axis.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 09, 2017 at 08:45:57AM +0530, valmiki wrote:
-> > > Hi,
-> > > 
-> > > In SMMUv3 architecture document i see "PASIDs are optional,
-> > > configurable, and of a size determined by the minimum
-> > > of the endpoint".
-> > > 
-> > > So if PASID's are optional and not supported by PCIe end point, how SVM
-> > > can be achieved ?
-> > 
-> > It cannot be inferred from that statement that PASID support is not
-> > required for SVM.  AIUI, SVM is a software feature enabled by numerous
-> > "optional" hardware features, including PASID.  Features that are
-> > optional per the hardware specification may be required for specific
-> > software features.  Thanks,
-> > 
-> Thanks for the information Alex. Suppose if an End point doesn't support
-> PASID, is it still possible to achieve SVM ?
-> Are there any such features in SMMUv3 with which we can achieve it ?
+Since the introduction of the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros,
+most dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..) calls
+have been converted to dw_pcie_readX_dbi/dw_pcie_writeX_dbi calls.
+Convert the remaining calls.
 
-You can achieve SVM in software, this is what HMM is for. But the hardware
-must have an mmu with similar features as you get on CPU mmu. Device like
-GPU do have such MMU.
+Niklas Cassel (2):
+  PCI: dwc: dra7xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
+  PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+    macros
 
-You can also mix HMM with PASID/ATS to leverage device memory. HMM allows
-you to use device memory inside process address space for device threads
-(ie device memory is still consider as un-accessible from CPU, only device
-can access it). Again very useful for GPU.
+ drivers/pci/dwc/pci-dra7xx.c     | 14 ++++++--------
+ drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
+ 2 files changed, 16 insertions(+), 20 deletions(-)
 
-Cheers,
-Jérôme
-
-(1) https://lwn.net/Articles/726691/
+-- 
+2.11.0
