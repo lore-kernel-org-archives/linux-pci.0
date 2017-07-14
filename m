@@ -1,17 +1,21 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh+dt@kerenl.org>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH 2/5] PCI: mediatek: switch to use
- platform_get_resource_byname()
-Date: Fri, 21 Jul 2017 10:32:44 +0800
-Message-ID: <a453ae0e2fb32972b53c9478030fc41ec1208e33.1500601172.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1500601172.git.honghui.zhang@mediatek.com>
-References: <cover.1500601172.git.honghui.zhang@mediatek.com>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Alex Williamson
+ <alex.williamson@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: RE: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+Date: Fri, 14 Jul 2017 17:03:59 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B39FC4@FRAEML521-MBX.china.huawei.com>
+References: <20170712050811.3620-1-dja@axtens.net>
+ <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
+ <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
+ <20170713151146.53e9644c@w520.home>
+ <1499980882.2865.65.camel@kernel.crashing.org>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B399B4@FRAEML521-MBX.china.huawei.com>
+ <1500040204.2865.90.camel@kernel.crashing.org>
+In-Reply-To: <1500040204.2865.90.camel@kernel.crashing.org>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -20,69 +24,88 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
+Cc: David Airlie <airlied@linux.ie>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Rongrong Zou <zourongrong@gmail.com>, Daniel Vetter <daniel.vetter@intel.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Daniel Axtens <dja@axtens.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
-
-This is a transitional patch. We currently use platfarm_get_resource() for
-retrieving the IOMEM resources, but there might be some chips don't have
-subsys/shared registers part, which depends on platform design, and these
-will be introduced in further patches.
-
-Switch this function to use the platform_get_resource_byname() so that the
-binding can be agnostic of the resource order.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index d6ac342..5e0a2ee2 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -295,7 +295,8 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
- 		return err;
- 	}
- 
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, index + 1);
-+	snprintf(name, sizeof(name), "port%d", index);
-+	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
- 	port->base = devm_ioremap_resource(dev, regs);
- 	if (IS_ERR(port->base)) {
- 		dev_err(dev, "failed to map port%d base\n", index);
-@@ -336,12 +337,14 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- 	struct resource *regs;
- 	int err;
- 
--	/* get shared registers */
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pcie->base = devm_ioremap_resource(dev, regs);
--	if (IS_ERR(pcie->base)) {
--		dev_err(dev, "failed to map shared register\n");
--		return PTR_ERR(pcie->base);
-+	/* get shared registers, which are optional */
-+	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subsys");
-+	if (regs) {
-+		pcie->base = devm_ioremap_resource(dev, regs);
-+		if (IS_ERR(pcie->base)) {
-+			dev_err(dev, "failed to map shared register\n");
-+			return PTR_ERR(pcie->base);
-+		}
- 	}
- 
- 	pcie->free_ck = devm_clk_get(dev, "free_ck");
--- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgQWxleCwgQmVuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmVu
+amFtaW4gSGVycmVuc2NobWlkdCBbbWFpbHRvOmJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZ10NCj4g
+U2VudDogMTQgSnVseSAyMDE3IDE0OjUwDQo+IFRvOiBHYWJyaWVsZSBQYW9sb25pOyBBbGV4IFdp
+bGxpYW1zb247IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IERhbmllbCBBeHRlbnM7IGxpbnV4LXBjaUB2
+Z2VyLmtlcm5lbC5vcmc7IExpdXhpbmxpYW5nIChNYXR0aGV3DQo+IExpdSk7IFJvbmdyb25nIFpv
+dTsgQ2F0YWxpbiBNYXJpbmFzOyBXaWxsIERlYWNvbjsgbGludXgtYXJtLQ0KPiBrZXJuZWxAbGlz
+dHMuaW5mcmFkZWFkLm9yZzsgRGF2aWQgQWlybGllOyBEYW5pZWwgVmV0dGVyDQo+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggdjRdIFBDSTogU3VwcG9ydCBoaWJtYyBWR0EgY2FyZHMgYmVoaW5kIGENCj4g
+bWlzYmVoYXZpbmcgSGlTaWxpY29uIGJyaWRnZQ0KPiANCj4gT24gRnJpLCAyMDE3LTA3LTE0IGF0
+IDEyOjI2ICswMDAwLCBHYWJyaWVsZSBQYW9sb25pIHdyb3RlOg0KPiA+IGRpZmYgLS1naXQgYS9k
+cml2ZXJzL2dwdS92Z2EvdmdhYXJiLmMgYi9kcml2ZXJzL2dwdS92Z2EvdmdhYXJiLmMNCj4gPiBp
+bmRleCA5MmYxNDUyLi5hYjNhZDlhIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvZ3B1L3ZnYS92
+Z2FhcmIuYw0KPiA+ICsrKyBiL2RyaXZlcnMvZ3B1L3ZnYS92Z2FhcmIuYw0KPiA+IEBAIC0xNDI0
+LDYgKzE0MjQsMTQgQEAgc3RhdGljIGludCBfX2luaXQgdmdhX2FyYl9kZXZpY2VfaW5pdCh2b2lk
+KQ0KPiA+DQo+ID4gwqDCoMKgwqDCoMKgwqDCoGxpc3RfZm9yX2VhY2hfZW50cnkodmdhZGV2LCAm
+dmdhX2xpc3QsIGxpc3QpIHsNCj4gPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0
+cnVjdCBkZXZpY2UgKmRldiA9ICZ2Z2FkZXYtPnBkZXYtPmRldjsNCj4gPiArDQo+ID4gK8KgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoC8qIGlmIG5vIGxlZ2FjeSBkZXZpY2UgaGFzIGJlZW4g
+c2V0IGFzIGRlZmF1bHQgVkdBDQo+ID4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCAq
+IGRldmljZSwganVzdCBwaWNrIHVwIHRoZSBmaXJzdCBvbmUgaW4gdGhlIGxpc3QgKi8NCj4gPiAr
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaWYgKHZnYV9kZWZhdWx0ID09IE5VTEwpIHsN
+Cj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHZnYWFy
+Yl9pbmZvKGRldiwgInNldHRpbmcgYXMgYm9vdCBWR0ENCj4gZGV2aWNlXG4iKTsNCj4gPiArwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHZnYV9zZXRfZGVmYXVs
+dF9kZXZpY2UodmdhZGV2LT5wZGV2KTsNCj4gPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgfQ0KPiA+ICsNCj4gPiDCoCNpZiBkZWZpbmVkKENPTkZJR19YODYpIHx8IGRlZmluZWQoQ09O
+RklHX0lBNjQpDQo+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAvKg0KPiA+IMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgICogT3ZlcnJpZGUgdmdhX2FyYml0ZXJfYWRk
+X3BjaV9kZXZpY2UoKSdzIEkvTyBiYXNlZA0KPiBkZXRlY3Rpb24NCj4gPg0KPiA+IEFib3ZlIGFm
+dGVyIHdlIGhhdmUgZmlsbGVkIHRoZSBsaXN0IG9mIFZHQSBkZXZpY2VzIGJ5IGl0ZXJhdGluZyBv
+dmVyDQo+IGFsbA0KPiA+IFBDSSBkZXZpY2VzIHdlIGNoZWNrIGlmIG5vIGxlZ2FjeSBvbmUgaGFz
+IGJlZW4gc2V0IGFzIGRlZmF1bHQgVkdBDQo+IGRldmljZQ0KPiA+IHlldDogdGhlcmVmb3JlIHdl
+IHNldCB0aGUgZmlyc3QgVkdBIGRldmljZSBpbiB0aGUgbGlzdCBhcyBkZWZhdWx0DQo+IG9uZS4u
+Lg0KPiA+DQo+ID4gRG8geW91IHRoaW5rIGl0IHdvdWxkIHdvcms/DQo+IA0KPiBJIGhvbmVzdGx5
+IGRvbid0IHJlbWVtYmVyIGFsbCBvZiB0aGUgZGV0YWlscyBvZiB0aGUgYXJiaXRlciBidXQganVz
+dA0KPiBtYWtlIHN1cmUgdGhhdCBpdCB3b24ndCB0aGluayB0aGF0IGRldmljZSBpcyBlbmFibGVk
+IGZvciB0aGluZ3MgbGlrZQ0KPiBWR0EgZXRjLi4uIGlmIGl0J3MgbWVtb3J5L0lPIGRlY29kZSB3
+ZXJlbid0IGVuYWJsZWQuDQo+IA0KDQpJIHRoaW5rIHRoZSBmb2xsb3dpbmcgb25lIHNob3VsZCBt
+YWtlIHN1cmUgdGhhdCBNRU0vSU8gcmVzcG9uc2UgYXJlDQplbmFibGVkIChhbHNvIGFzIHN1Z2dl
+c3RlZCBieSBBbGV4KQ0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvdmdhL3ZnYWFyYi5jIGIv
+ZHJpdmVycy9ncHUvdmdhL3ZnYWFyYi5jDQppbmRleCA5MmYxNDUyLi5hOTBjNDhjIDEwMDY0NA0K
+LS0tIGEvZHJpdmVycy9ncHUvdmdhL3ZnYWFyYi5jDQorKysgYi9kcml2ZXJzL2dwdS92Z2Evdmdh
+YXJiLmMNCkBAIC0xNDI0LDYgKzE0MjQsMjEgQEAgc3RhdGljIGludCBfX2luaXQgdmdhX2FyYl9k
+ZXZpY2VfaW5pdCh2b2lkKQ0KIA0KIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KHZnYWRldiwgJnZnYV9s
+aXN0LCBsaXN0KSB7DQogCQlzdHJ1Y3QgZGV2aWNlICpkZXYgPSAmdmdhZGV2LT5wZGV2LT5kZXY7
+DQorDQorCQkvKiBpZiBubyBsZWdhY3kgZGV2aWNlIGhhcyBiZWVuIHNldCBhcyBkZWZhdWx0IFZH
+QSBkZXZpY2UsDQorCQkgKiBqdXN0cGljayB1cCB0aGUgZmlyc3Qgb25lIGluIHRoZSBsaXN0IGNh
+cGFibGUgb2YgcmVzcG9uZGluZyB0bw0KKwkJICogbWVtIGFuZCBpbyByZXF1ZXN0cyovDQorCQlp
+ZiAodmdhX2RlZmF1bHQgPT0gTlVMTCkgew0KKwkJCXUxNiBjbWQ7DQorDQorCQkJcGNpX3JlYWRf
+Y29uZmlnX3dvcmQodmdhZGV2LT5wZGV2LCBQQ0lfQ09NTUFORCwgJmNtZCk7DQorCQkJaWYgKChj
+bWQgJiAoUENJX0NPTU1BTkRfSU8gfCBQQ0lfQ09NTUFORF9NRU1PUlkpKSB8fA0KKwkJCQkJIXZn
+YV9kZWZhdWx0X2RldmljZSgpKSB7DQorCQkJCXZnYV9zZXRfZGVmYXVsdF9kZXZpY2UodmdhZGV2
+LT5wZGV2KTsNCisJCQkJdmdhYXJiX2luZm8oZGV2LCAic2V0dGluZyBhcyBib290IFZHQSBkZXZp
+Y2VcbiIpOw0KKwkJCX0NCisJCX0NCisNCiAjaWYgZGVmaW5lZChDT05GSUdfWDg2KSB8fCBkZWZp
+bmVkKENPTkZJR19JQTY0KQ0KIAkJLyoNCiAJCSAqIE92ZXJyaWRlIHZnYV9hcmJpdGVyX2FkZF9w
+Y2lfZGV2aWNlKCkncyBJL08gYmFzZWQgZGV0ZWN0aW9uDQoNCg0KQWxzbyB0aGUgYWJvdmUgb25l
+IGNvdWxkIGFsbG93IHVzIHRvIGdldCByaWQgb2YgZml4dXBfdmdhIGluIHBvd2VycGMuLi4uDQoN
+Cg0KPiBJJ2QgcmF0aGVyIHdlIGhhdmUgbm8gZGVmYXVsdCBkZXZpY2UgdW50aWwgYSBkcml2ZXIg
+YWN0dWFsbHkgcGlja3MgdXANCj4gdGhvdWdoLCBhbmQgdGhlbiwgaWYgd2Ugc3RpbGwgaGF2ZSBu
+byBkZWZhdWx0LCB1c2UgdGhlIGZpcnN0IGRyaXZlciB0bw0KPiBwaWNrIHVwLg0KDQpXZWxsIGZy
+b20gbXkgdW5kZXJzdGFuZGluZyB0aGUgUENJIGhvc3QgY29udHJvbGxlciBkcml2ZXIgd2lsbCBl
+bnVtZXJhdGUNCmFsbCB0aGUgZGV2aWNlcyBpbiB0aGUgUENJIGhpZXJhcmNoeSBhbmQgY2FsbCBw
+Y2lfZGV2aWNlX2FkZCgpIGZvciBlYWNoIG9mDQp0aGVtLCB0aGF0IGluIHR1cm4gd2lsbCBjYWxs
+IGRldmljZV9hZGQoKSwgYXQgdGhpcyBzdGFnZSBpZiB0aGVyZSBpcyBhDQpkcml2ZXIgYXZhaWxh
+YmxlIGZvciB0aGUgZGV2aWNlIHN1Y2ggZHJpdmVyIHdpbGwgcHJvYmUgb3RoZXJ3aXNlIGl0IHdp
+bGwgbm90Lg0KDQpBcmUgeW91IHN1Z2dlc3RpbmcgdG8gYWRkIHRoZSBjb2RlIGFib3ZlIGluIHBj
+aV9kZXZpY2VfYWRkKCkgYWZ0ZXIgZGV2aWNlX2FkZCgpDQphbmQgYWZ0ZXIgY2hlY2tpbmcgdGhh
+dCBhIGRyaXZlciBoYXMgYmVlbiBib3VuZCBmb3Igc3VjaCBkZXY/DQoNClRoYW5rcw0KR2FiDQoN
+Cg0KPiANCj4gQmVuLg0KDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxp
+c3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9saW51eC1hcm0ta2VybmVsCg==
