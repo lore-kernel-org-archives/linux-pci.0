@@ -1,88 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52632 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751050AbdGMLhJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Jul 2017 07:37:09 -0400
-Date: Thu, 13 Jul 2017 06:37:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-usb@vger.kernel.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
-Message-ID: <20170713113706.GK4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170710155230.8622-1-marc.zyngier@arm.com>
- <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
- <20170713082640.GA6367@kroah.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170713082640.GA6367@kroah.com>
+Received: from lucky1.263xmail.com ([211.157.147.132]:36751 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753241AbdGNDxK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:53:10 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH 4/6] PCI: rockchip: idle the inactive PHY(s)
+Date: Fri, 14 Jul 2017 11:52:44 +0800
+Message-Id: <1500004366-241633-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 13, 2017 at 10:26:40AM +0200, Greg Kroah-Hartman wrote:
-> On Wed, Jul 12, 2017 at 10:12:34PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
-> > > Ard and myself have just spent quite some time lately trying to pin
-> > > down an issue in the DMA code which was taking the form of a PCIe USB3
-> > > controller issuing a DMA access at some bizarre address, and being
-> > > caught red-handed by the IOMMU.
-> > > 
-> > > After much head scratching and most of a week-end spent on tracing the
-> > > damn thing, I'm now convinced that the DMA code is fine, the XHCI
-> > > driver is correct, but that the HW (a Renesas uPD720202 chip) is a
-> > > nasty piece of work.
-> > > 
-> > > The issue is as follow:
-> > > 
-> > > - EFI initializes the controller using physical addresses above the
-> > >   4GB limit (this is on an arm64 box where the memory starts at
-> > >   0x80_00000000...).
-> > > 
-> > > - The kernel takes over, sends a XHCI reset to the controller, and
-> > >   because we have an IOMMU sitting between the controller and memory,
-> > >   provides *virtual* addresses. Trying to make things a bit faster for
-> > >   our controller, it issues IOVAs in the low 4GB range).
-> > > 
-> > > - Low and behold, the controller is now issuing transactions with a
-> > >   0x80 prefix in front of our IOVA. Yes, the same prefix that was
-> > >   programmed during the EFI configuration. IOMMU fault, not happy.
-> > > 
-> > > If the kernel is hacked to only generate IOVAs that are more than
-> > > 32bit wide, the HW behaves correctly. The only way I can explain this
-> > > behaviour is that the HW latches the top 32bit of the ERST (it is
-> > > always the ERST IOVA that appears in my traces) in some internal
-> > > register, and that the XHCI reset fails to clear it. Writing zero in
-> > > the top bits is not enough to clear it either.
-> > > 
-> > > So far, the only solution we have for this lovely piece of kit is to
-> > > force a PCI reset at probe time, which puts it right. The patches are
-> > > pretty ugly, but that's the best I could come up with so far.
-> > > 
-> > > Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
-> > > uPD720202 controllers.
-> > > 
-> > > Marc Zyngier (2):
-> > >   PCI: Implement pci_reset_function_locked
-> > >   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
-> > >     controller
-> > > 
-> > >  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
-> > >  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
-> > >  drivers/usb/host/pci-quirks.h |  1 +
-> > >  drivers/usb/host/xhci-pci.c   |  7 +++++++
-> > >  include/linux/pci.h           |  1 +
-> > >  5 files changed, 64 insertions(+)
-> > 
-> > I provisionally applied this to pci/virtualization.  I'd like to have an
-> > XHCI ack before going further, though.
-> 
-> The xhci maintainer is on vacation, let's wait a week for him to get
-> back to get this.  Given the long time that this has been broken on this
-> hardware, I think we can wait another week just fine :)
+Check the status of all lanes and idle the inactive one(s).
 
-I'll be on vacation myself until the beginning of August, so no problem
-with that.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
+
+ drivers/pci/host/pcie-rockchip.c | 31 ++++++++++++++++++++++++++++++-
+ 1 file changed, 30 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index a3dc7bd..d678a93 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -15,6 +15,7 @@
+  * (at your option) any later version.
+  */
+ 
++#include <linux/bitrev.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+@@ -112,6 +113,9 @@
+ #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+ #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+ 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
++#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
++#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
++#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -311,6 +315,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 	return 1;
+ }
+ 
++static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
++{
++	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
++	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
++
++	/* The link may be using a reverse-indexed mapping. */
++	if (val & PCIE_CORE_LANE_MAP_REVERSE)
++		map = bitrev8(map) >> 4;
++
++	return map;
++}
++
+ static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
+ 				     int where, int size, u32 *val)
+ {
+@@ -618,7 +634,8 @@ static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
+ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	int err;
++	int err, i;
++	u8 lane_map;
+ 	u32 status;
+ 
+ 	gpiod_set_value(rockchip->ep_gpio, 0);
+@@ -791,6 +808,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
+ 	dev_dbg(dev, "current link width is x%d\n", status);
+ 
++	if (!rockchip->legacy_phy) {
++		/*  power off unused lane(s) */
++		lane_map = rockchip_pcie_lane_map(rockchip);
++		for (i = 0; i < MAX_LANE_NUM; i++) {
++			if (lane_map & BIT(i))
++				continue;
++
++			dev_err(dev, "idling lane %d\n", i);
++			phy_power_off(rockchip->phys[i]);
++		}
++	}
++
+ 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
+ 			    PCIE_CORE_CONFIG_VENDOR);
+ 	rockchip_pcie_write(rockchip,
+-- 
+1.9.1
