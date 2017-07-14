@@ -1,86 +1,71 @@
-Return-Path: <SRS0=3Pfe=6Q=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=3Pfe=6Q=linaro.org=ard.biesheuvel@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170710155230.8622-1-marc.zyngier@arm.com> <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 13 Jul 2017 07:48:16 +0100
-Message-ID: <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
-Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Mathias Nyman <mathias.nyman@intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:51769 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753346AbdGNDsz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:48:55 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH 1/6] PCI: rockchip: split out rockchip_pcie_get_phys
+Date: Fri, 14 Jul 2017 11:48:16 +0800
+Message-Id: <1500004101-240296-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13 July 2017 at 04:12, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
->> Ard and myself have just spent quite some time lately trying to pin
->> down an issue in the DMA code which was taking the form of a PCIe USB3
->> controller issuing a DMA access at some bizarre address, and being
->> caught red-handed by the IOMMU.
->>
->> After much head scratching and most of a week-end spent on tracing the
->> damn thing, I'm now convinced that the DMA code is fine, the XHCI
->> driver is correct, but that the HW (a Renesas uPD720202 chip) is a
->> nasty piece of work.
->>
->> The issue is as follow:
->>
->> - EFI initializes the controller using physical addresses above the
->>   4GB limit (this is on an arm64 box where the memory starts at
->>   0x80_00000000...).
->>
->> - The kernel takes over, sends a XHCI reset to the controller, and
->>   because we have an IOMMU sitting between the controller and memory,
->>   provides *virtual* addresses. Trying to make things a bit faster for
->>   our controller, it issues IOVAs in the low 4GB range).
->>
->> - Low and behold, the controller is now issuing transactions with a
->>   0x80 prefix in front of our IOVA. Yes, the same prefix that was
->>   programmed during the EFI configuration. IOMMU fault, not happy.
->>
->> If the kernel is hacked to only generate IOVAs that are more than
->> 32bit wide, the HW behaves correctly. The only way I can explain this
->> behaviour is that the HW latches the top 32bit of the ERST (it is
->> always the ERST IOVA that appears in my traces) in some internal
->> register, and that the XHCI reset fails to clear it. Writing zero in
->> the top bits is not enough to clear it either.
->>
->> So far, the only solution we have for this lovely piece of kit is to
->> force a PCI reset at probe time, which puts it right. The patches are
->> pretty ugly, but that's the best I could come up with so far.
->>
->> Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
->> uPD720202 controllers.
->>
->> Marc Zyngier (2):
->>   PCI: Implement pci_reset_function_locked
->>   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
->>     controller
->>
->>  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
->>  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
->>  drivers/usb/host/pci-quirks.h |  1 +
->>  drivers/usb/host/xhci-pci.c   |  7 +++++++
->>  include/linux/pci.h           |  1 +
->>  5 files changed, 64 insertions(+)
->
-> I provisionally applied this to pci/virtualization.  I'd like to have an
-> XHCI ack before going further, though.
->
-> I assume this only affects boxes where the firmware uses addresses above
-> 4GB, i.e., not very many?  So this is v4.14 material?  Or do you think it's
-> important for v4.13?
->
+We plan to introduce per-lanes PHY, so split out new
+function to make it easy in the future. No functional
+change intended.
 
-As I mentioned, it would be nice if this could at least go into v4.11
-and later, given that v4.11 contains a patch that switches all PCI
-devices to 32-bit addressing only when the IOMMU is involved in DMA,
-and this is what triggered the issue on arm64 boards with such a PCI
-card and no DRAM below 4 GB.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Thanks,
-Ard.
+ drivers/pci/host/pcie-rockchip.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 5acf869..6632a51 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -853,6 +853,19 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
+ 
++static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++
++	rockchip->phy = devm_phy_get(dev, "pcie-phy");
++	if (IS_ERR(rockchip->phy)) {
++		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
++			dev_err(dev, "missing phy\n");
++		return PTR_ERR(rockchip->phy);
++	}
++
++	return 0;
++}
+ 
+ /**
+  * rockchip_pcie_parse_dt - Parse Device Tree
+@@ -883,12 +896,8 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	if (IS_ERR(rockchip->apb_base))
+ 		return PTR_ERR(rockchip->apb_base);
+ 
+-	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+-	if (IS_ERR(rockchip->phy)) {
+-		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
+-			dev_err(dev, "missing phy\n");
++	if (rockchip_pcie_get_phys(rockchip))
+ 		return PTR_ERR(rockchip->phy);
+-	}
+ 
+ 	rockchip->lanes = 1;
+ 	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+-- 
+1.9.1
