@@ -1,71 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:34560 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965050AbdGTVlH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 17:41:07 -0400
-Received: by mail-pf0-f176.google.com with SMTP id q85so16634177pfq.1
-        for <linux-pci@vger.kernel.org>; Thu, 20 Jul 2017 14:41:07 -0700 (PDT)
-From: Roland Dreier <roland@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        Emil Tantilov <emil.s.tantilov@intel.com>
-Subject: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
-Date: Thu, 20 Jul 2017 14:41:01 -0700
-Message-Id: <20170720214101.7449-1-roland@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=MAUI=6R=arm.com=will.deacon@kernel.org>
+Return-Path: <SRS0=MAUI=6R=arm.com=will.deacon@kernel.org>
+Date: Fri, 14 Jul 2017 02:35:30 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Daniel Axtens <dja@axtens.net>, linux-pci@vger.kernel.org,
+	Xinliang Liu <z.liuxinliang@hisilicon.com>,
+	Rongrong Zou <zourongrong@gmail.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+Message-ID: <20170714013529.GF22336@arm.com>
+References: <20170712050811.3620-1-dja@axtens.net>
+ <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Roland Dreier <roland@purestorage.com>
+Hi Bjorn,
 
-Add one more variant of the 82599 plus the device IDs for X540 and X550
-variants.  Intel has confirmed that none of these devices does peer-to-peer
-between functions.  The X540 and X550 have added ACS capabilities in their
-PCI config space, but the ACS control register is hard-wired to 0 for both
-devices, so we still need the quirk for IOMMU grouping to allow assignment
-of individual SR-IOV functions.
+On Wed, Jul 12, 2017 at 03:04:30PM -0500, Bjorn Helgaas wrote:
+> [+cc Catalin, Will, linux-arm-kernel]
+> 
+> On Wed, Jul 12, 2017 at 03:08:11PM +1000, Daniel Axtens wrote:
+> > The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610) that
+> > are not spec-compliant: the VGA Enable bit is hardwired to 0 and
+> > writes do not change it.
+> > 
+> > The HiSilicon engineers report that the bridge does not forward the
+> > 0xa0000-0xbffff mem range and the 0x3b0-0x3bb and 0x3c0-0x3df I/O
+> > ranges.
+> > 
+> > Because the VGA Enable bit is hardwired to 0, the VGA arbiter refuses
+> > to mark any card behind it as the boot device. This breaks Xorg
+> > auto-detection.
+> > 
+> > However, the hibmc VGA card (PCI ID 19e5:1711) has been tested and is
+> > known to work when behind these bridges. (It does not require the
+> > legacy resources to operate.)
+> > 
+> > Provide a quirk so that this combination of bridge and card is eligible
+> > to be the default VGA card. This fixes Xorg auto-detection on the D05.
+> > 
+> > Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
+> > Cc: Rongrong Zou <zourongrong@gmail.com>
+> > Signed-off-by: Daniel Axtens <dja@axtens.net>
+> > ---
+> > 
+> > v3: fix commit message
+> > v4: fix comment (forgot to git add/git commit, sorry for the noise)
+> > 
+> > ---
+> >  drivers/pci/quirks.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 50 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 16e6cd86ad71..b42324cba29e 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -25,6 +25,7 @@
+> >  #include <linux/sched.h>
+> >  #include <linux/ktime.h>
+> >  #include <linux/mm.h>
+> > +#include <linux/vgaarb.h>
+> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
+> >  #include "pci.h"
+> >  
+> > @@ -4664,3 +4665,52 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
+> >  }
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+> > +
+> > +/*
+> > + * The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610)
+> > + * that are not spec-compliant: the VGA Enable bit is hardwired to 0
+> > + * and writes do not change it. The bridge does not forward legacy
+> > + * memory or I/O resources.
+> > + *
+> > + * Because the VGA Enable bit is hardwired to 0, the VGA arbiter
+> > + * refuses to mark any card behind it as the boot device. However, the
+> > + * hibmc VGA card (PCI ID 19e5:1711) has been tested and is known to
+> > + * work when behind these bridges.
+> > + *
+> > + * If we have this bridge, this card, and no default card already,
+> > + * mark the card as default.
+> > + */
+> > +static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
+> > +{
+> > +	struct pci_dev *bridge;
+> > +	struct pci_bus *bus;
+> > +	u16 config;
+> > +
+> > +	bus = pdev->bus;
+> > +	bridge = bus->self;
+> > +	if (!bridge)
+> > +		return;
+> > +
+> > +	if (!pci_is_bridge(bridge))
+> > +		return;
+> > +
+> > +	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
+> > +	    bridge->device != 0x1610)
+> > +		return;
+> > +
+> > +	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
+> > +			     &config);
+> > +	if (config & PCI_BRIDGE_CTL_VGA) {
+> > +		/*
+> > +		 * Weirdly, this bridge *is* spec compliant, so bail
+> > +		 * and let vgaarb do its job
+> > +		 */
+> > +		return;
+> > +	}
+> > +
+> > +	if (vga_default_device())
+> > +		return;
+> > +
+> > +	vga_set_default_device(pdev);
+> > +}
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
+> 
+> Is this quirk useful on any arch other than arm64?  Per
+> drivers/pci/dwc/Kconfig, CONFIG_PCI_HISI depends on CONFIG_ARM64.
+> 
+> Would it make sense to put this quirk in arch/arm64/kernel/pci.c?
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/pci/quirks.c | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+We've resisted adding PCI quirks in the arch directory so far, so I'd rather
+it lived in the PCI code if you don't have a strong objection to that.
+Hardware vendors have a tendency to reuse broken IP, so it's not beyond the
+realms of imagination that this quirk might be needed for another part some
+day (e.g. based on 32-bit ARM).
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b4cf6b..b939db671326 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4335,12 +4335,33 @@ static const struct pci_dev_acs_enabled {
- 	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1528, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x154A, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1560, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x1563, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15AA, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15AC, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15AD, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15AE, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15B0, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15C2, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15C3, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15C4, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15C6, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15C7, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15C8, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15CE, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15E4, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15E5, pci_quirk_mf_endpoint_acs },
-+	{ PCI_VENDOR_ID_INTEL, 0x15D1, pci_quirk_mf_endpoint_acs },
- 	/* 82580 */
- 	{ PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
- 	{ PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
--- 
-2.11.0
+Will
