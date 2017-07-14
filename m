@@ -1,104 +1,72 @@
-Return-Path: <SRS0=Oxd5=6N=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=Oxd5=6N=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Casey Leedom <leedom@chelsio.com>,
-        Alexander Duyck
-	<alexander.duyck@gmail.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
- <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
-CC: "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        Michael Werner <werner@chelsio.com>, Ganesh GR
-	<ganeshgr@chelsio.com>,
-        "asit.k.mallick@intel.com"
-	<asit.k.mallick@intel.com>,
-        "patrick.j.cramer@intel.com"
-	<patrick.j.cramer@intel.com>,
-        "Suravee.Suthikulpanit@amd.com"
-	<Suravee.Suthikulpanit@amd.com>,
-        "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "amira@mellanox.com"
-	<amira@mellanox.com>,
-        "gabriele.paoloni@huawei.com"
-	<gabriele.paoloni@huawei.com>,
-        "David.Laight@aculab.com"
-	<David.Laight@aculab.com>,
-        "jeffrey.t.kirsher@intel.com"
-	<jeffrey.t.kirsher@intel.com>,
-        "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "robin.murphy@arm.com"
-	<robin.murphy@arm.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <0df11d6f-c9cb-3c6b-ba08-d5e5c45754ae@huawei.com>
-Date: Mon, 10 Jul 2017 18:49:02 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: Pratyush Anand <pratyush.anand@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH 2/2] PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
+Date: Fri, 14 Jul 2017 14:07:35 +0200
+Message-ID: <20170714120735.11993-3-niklas.cassel@axis.com>
+In-Reply-To: <20170714120735.11993-1-niklas.cassel@axis.com>
+References: <20170714120735.11993-1-niklas.cassel@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Casey:
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
+ 1 file changed, 10 insertions(+), 12 deletions(-)
 
-On 2017/7/8 10:04, Casey Leedom wrote:
->   Okay, thanks for the note Alexander.	I'll have to look more closely at
-> the patch on Monday and try it out on one of the targeted systems to verify
-> the semantics you describe.
-> 
-
-All the modification is only clearing the device's Device Control{Relaxed Ordering
-Enable]bit when distinguish that the platform should not support RO and did nothing
-to the RC configuration, so I don't think it will break anything compare to the
-first version from yours.
-
->   However, that said, there is no way to tell a priori where a device will
-> send TLPs.  To simply assume that all TLPs will be directed towards the Root
-> Complex is a big assumption.  Only the device and the code controlling it
-> know where the TLPs will be directed.  That's why there are changes required
-> in the cxgb4 driver.  For instance, the code in
-> drivers/net/ethernet/chelsio./cxgb4/sge.c: t4_sge_alloc_rxq() knows that
-> it's allocating Free List Buffers in Host Memory and that the RX Queues that
-> it's allocating in the Hardware will eventually send Ingress Data to those
-> Free List Buffers.  (And similarly for the Free List Buffer Pointer Queue
-> with respect to DMA Reads from the host.)  In that routine we explicitly
-> configure the Hardware to use/not-use the Relaxed Ordering Attribute via the
-> FW_IQ_CMD_FL0FETCHRO and FW_IQ_CMD_FL0DATARO flags.  Basically we're
-> conditionally setting them based on the desirability of sending Relaxed
-> Ordering TLPs to the Root Complex.  (And we would perform the same kind of
-> check for an nVME application ... which brings us to ...)
-> 
->   And what would be the code using these patch APIs to set up a Peer-to-Peer
-> nVME-style application?	 In that case we'd need the Chelsio adapter's PCIe
-> Capability Device Control[Relaxed Ordering Enable] set for the nVME
-> application ... and we would avoid programming the Chelsio Hardware to use
-> Relaxed Ordering for TLPs directed at the Root Complex.	 Thus we would be in
-> a position where some TLPs being emitted by the device to Peer devices would
-> have Relaxed Ordering set and some directed at the Root Complex would not.
-> And the only way for that to work is if the source device's Device
-> Control[Relaxed Ordering Enable] is set ...
-> 
->   Finally, setting aside my disagreements with the patch, we still have the
-> code in the cxgb4 driver which explicitly turns on its own Device
-> Control[Relaxed Ordering Enable] in cxgb4_main.c:
-> enable_pcie_relaxed_ordering().  So the patch is something of a loop if all
-> we're doing is testing our own Relaxed Ordering Enable state ...
->  
-> Casey
-> 
-> .
-> 
+diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
+index 80897291e0fb..7ebfbf6086fe 100644
+--- a/drivers/pci/dwc/pcie-spear13xx.c
++++ b/drivers/pci/dwc/pcie-spear13xx.c
+@@ -92,34 +92,32 @@ static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx_pcie)
+ 	 * default value in capability register is 512 bytes. So force
+ 	 * it to 128 here.
+ 	 */
+-	dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
++	val = dw_pcie_readw_dbi(pci, exp_cap_off + PCI_EXP_DEVCTL);
+ 	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_write(pci->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
++	dw_pcie_writew_dbi(pci, exp_cap_off + PCI_EXP_DEVCTL, val);
+ 
+-	dw_pcie_write(pci->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
+-	dw_pcie_write(pci->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
++	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, 0x104A);
++	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, 0xCD80);
+ 
+ 	/*
+ 	 * if is_gen1 is set then handle it, so that some buggy card
+ 	 * also works
+ 	 */
+ 	if (spear13xx_pcie->is_gen1) {
+-		dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
+-			     4, &val);
++		val = dw_pcie_readl_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_write(pci->dbi_base + exp_cap_off +
+-				      PCI_EXP_LNKCAP, 4, val);
++			dw_pcie_writel_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP,
++					   val);
+ 		}
+ 
+-		dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
+-			     2, &val);
++		val = dw_pcie_readw_dbi(pci, exp_cap_off + PCI_EXP_LNKCTL2);
+ 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+ 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+ 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-			dw_pcie_write(pci->dbi_base + exp_cap_off +
+-				      PCI_EXP_LNKCTL2, 2, val);
++			dw_pcie_writew_dbi(pci, exp_cap_off + PCI_EXP_LNKCTL2,
++					   val);
+ 		}
+ 	}
+ 
+-- 
+2.11.0
