@@ -1,63 +1,112 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:35052 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753927AbdGJMcg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 08:32:36 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@imgtec.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/2] MIPS/PCI: Fix pcibios_scan_bus() NULL check code path
-Date: Mon, 10 Jul 2017 13:34:09 +0100
-Message-Id: <20170710123409.9043-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170710123409.9043-1-lorenzo.pieralisi@arm.com>
-References: <20170710123409.9043-1-lorenzo.pieralisi@arm.com>
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:34954 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751066AbdGNUrQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 16:47:16 -0400
+Received: by mail-pg0-f46.google.com with SMTP id j186so50638287pge.2
+        for <linux-pci@vger.kernel.org>; Fri, 14 Jul 2017 13:47:16 -0700 (PDT)
+Date: Fri, 14 Jul 2017 13:47:13 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [RFC PATCH 6/6] dt-bindings: PCI: rockchip: convert to use
+ per-lane PHY model
+Message-ID: <20170714204711.GA13174@google.com>
+References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500004366-241633-5-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500004366-241633-5-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If pci_scan_root_bus() fails (ie returns NULL) pcibios_scan_bus() must
-return immediately since the struct pci_bus pointer it returns is not
-valid and cannot be used.
+Hi Shawn,
 
-Move code checking the pci_scan_root_bus() return value to reinstate
-proper pcibios_scanbus() error path behaviour.
+On Fri, Jul 14, 2017 at 11:52:46AM +0800, Shawn Lin wrote:
+> Deprecate legacy PHY model and encourage to use per-lane PHY
+> model.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> 
+> ---
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
+>  1 file changed, 23 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> index 1453a73..78d4469 100644
+> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+> @@ -19,8 +19,6 @@ Required properties:
+>  	- "pm"
+>  - msi-map: Maps a Requester ID to an MSI controller and associated
+>  	msi-specifier data. See ./pci-msi.txt
+> -- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+> -- phy-names:  MUST be "pcie-phy".
+>  - interrupts: Three interrupt entries must be specified.
+>  - interrupt-names: Must include the following names
+>  	- "sys"
+> @@ -42,6 +40,18 @@ Required properties:
+>  	interrupt source. The value must be 1.
+>  - interrupt-map-mask and interrupt-map: standard PCI properties
+>  
+> +Required properties for legacy PHY model (deprecated):
+> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+> +- phy-names:  MUST be "pcie-phy".
+> +
+> +Required properties for per-lane PHY model:
+> +- phys: Must contain an phandle to a PHY for each entry in phy-names.
+> +- phy-names: Must include an entry for each active lane. Note that the number
+> +  of entries does not have to (though usually will) be equal to the specified
+> +  number of lanes in the num-lanes property. Entries are of the form
+> +  "pcie-phy-N": where N ranges from 0 to the value specified of (num-lanes - 1).
+> +  (see example below)
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/mips/pci/pci-legacy.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+So (for the non-legacy case) are you requiring listing all 4 PHY lanes,
+or not? If you aren't, then you need to make the PHY driver handle the
+case were lanes {X..3} were never "powered on", but we want them idled.
+IIUC, your current (broken) implementation is trying (incorrectly) to
+only idle a lane once it has been powered on and then back off. But that
+won't ever happen if we only request (for example) PHY lane 0.
 
-diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-index 174575a..71d62f8 100644
---- a/arch/mips/pci/pci-legacy.c
-+++ b/arch/mips/pci/pci-legacy.c
-@@ -89,16 +89,16 @@ static void pcibios_scanbus(struct pci_controller *hose)
- 	pci_add_resource(&resources, hose->busn_resource);
- 	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
- 				&resources);
--	hose->bus = bus;
--
--	need_domain_info = need_domain_info || pci_domain_nr(bus);
--	set_pci_need_domain_info(hose, need_domain_info);
--
- 	if (!bus) {
- 		pci_free_resource_list(&resources);
- 		return;
- 	}
- 
-+	hose->bus = bus;
-+
-+	need_domain_info = need_domain_info || pci_domain_nr(bus);
-+	set_pci_need_domain_info(hose, need_domain_info);
-+
- 	next_busno = bus->busn_res.end + 1;
- 	/* Don't allow 8-bit bus number overflow inside the hose -
- 	   reserve some space for bridges. */
--- 
-2.10.0
+It's also misleading that it's possible to specify only some subset of
+the PHY lanes, but the driver might still try to use them all.
+
+Brian
+
+> +
+>  Optional Property:
+>  - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+>  	using 24MHz OSC for RC's PHY.
+> @@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
+>  		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
+>  	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
+>  		      "pm", "pclk", "aclk";
+> +	/* deprecated legacy PHY model */
+>  	phys = <&pcie_phy>;
+>  	phy-names = "pcie-phy";
+>  	pinctrl-names = "default";
+> @@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
+>  		#interrupt-cells = <1>;
+>  	};
+>  };
+> +
+> +pcie0: pcie@f8000000 {
+> +	...
+> +
+> +	/* preferred per-lane PHY model */
+> +	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
+> +	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
+> +
+> +	...
+> +};
+> -- 
+> 1.9.1
+> 
+> 
