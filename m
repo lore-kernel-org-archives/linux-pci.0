@@ -1,83 +1,303 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0067.outbound.protection.outlook.com ([104.47.2.67]:27840
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750902AbdGKELP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Jul 2017 00:11:15 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>
-CC: "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-Subject: RE: [PATCH 1/3] PCI: designware: add accessors for write permission
- of DBI read-only registers
-Date: Tue, 11 Jul 2017 04:11:12 +0000
-Message-ID: <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
- <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
- <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com>
-In-Reply-To: <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mout.kundenserver.de ([212.227.17.13]:54747 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751004AbdGNWKm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 18:10:42 -0400
+From: =?UTF-8?q?Imre=20Vad=C3=A1sz?= <ivadasz@google.com>
+Date: Fri, 14 Jul 2017 23:05:53 +0200
+Subject: [PATCH] fbsd-device: Use PCIOCGETCONF and PCIOCGETBAR when /dev/pci
+ fd is readonly.
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Message-Id: <71397e2da7be0ede@vdsz.de>
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNCkR1ZSB0byBhbGwgRnJlZXNjYWxlIExheWVyc2NwZSBQQ0llIGNvbnRyb2xs
-ZXJzIGhhdmUgdG8gZml4IHRoZSBDbGFzcyBjb2RlLCBhbmQgdGhpcyBmaXh1cCBleGlzdGVkIGlu
-IGJvdGggTGF5ZXJzY2FwZSBwY2llIGRyaXZlciBhbmQgRFdDIGNvbW1vbiBjb2RlLCBzbyBJIHdh
-bnQgdG8gcmV1c2UgdGhlIGZpeHVwIGluIERXQyBjb21tb24gY29kZS4NCkNhbiB5b3UgZ2l2ZSBt
-ZSBhbnkgc3VnZ2VzdGlvbj8NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9t
-OiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0BzeW5vcHN5cy5jb21dDQo+IFNlbnQ6IDIw
-MTflubQ35pyIN+aXpSAxNjo1Mw0KPiBUbzogWi5xLiBIb3UgPHpoaXFpYW5nLmhvdUBueHAuY29t
-PjsgSm9hbyBQaW50bw0KPiA8Sm9hby5QaW50b0BzeW5vcHN5cy5jb20+OyBsaW51eC1wY2lAdmdl
-ci5rZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tDQo+IENjOiBqaW5nb29oYW4xQGdt
-YWlsLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvM10gUENJOiBkZXNpZ253YXJlOiBhZGQg
-YWNjZXNzb3JzIGZvciB3cml0ZSBwZXJtaXNzaW9uDQo+IG9mIERCSSByZWFkLW9ubHkgcmVnaXN0
-ZXJzDQo+IA0KPiANCj4gSGkgWmhpcWlhbmcsDQo+IA0KPiDDgHMgNDo0OCBBTSBkZSA3LzcvMjAx
-NywgWi5xLiBIb3UgZXNjcmV2ZXU6DQo+ID4gSGkgSm9hbywNCj4gPg0KPiA+DQo+ID4NCj4gPiBU
-aGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMhDQo+ID4NCj4gPg0KPiA+DQo+ID4+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4NCj4gPj4gRnJvbTogSm9hbyBQaW50byBbbWFpbHRv
-OkpvYW8uUGludG9Ac3lub3BzeXMuY29tXQ0KPiA+DQo+ID4+IFNlbnQ6IDIwMTflubQ35pyINuaX
-pSAxNzo0NA0KPiA+DQo+ID4+IFRvOiBaLnEuIEhvdSA8emhpcWlhbmcuaG91QG54cC5jb20+OyBs
-aW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiA+DQo+ID4+IEpvYW8uUGludG9Ac3lub3BzeXMu
-Y29tDQo+ID4NCj4gPj4gQ2M6IGJoZWxnYWFzQGdvb2dsZS5jb207IGppbmdvb2hhbjFAZ21haWwu
-Y29tDQo+ID4NCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzNdIFBDSTogZGVzaWdud2FyZTog
-YWRkIGFjY2Vzc29ycyBmb3Igd3JpdGUNCj4gPj4gcGVybWlzc2lvbg0KPiA+DQo+ID4+IG9mIERC
-SSByZWFkLW9ubHkgcmVnaXN0ZXJzDQo+ID4NCj4gPj4NCj4gPg0KPiA+Pg0KPiA+DQo+ID4+IEhp
-IFpoaXFpYW5nLA0KPiA+DQo+ID4+DQo+ID4NCj4gPj4gw4BzIDc6MzMgQU0gZGUgNy82LzIwMTcs
-IFpoaXFpYW5nIEhvdSBlc2NyZXZldToNCj4gPg0KPiA+Pj4gRnJvbTogSG91IFpoaXFpYW5nIDxa
-aGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+Pj4NCj4gPg0KPiA+Pj4gVGhlIHJlYWQtb25s
-eSBEQkkgcmVnaXN0ZXJzIGNhbiBiZSB3cml0dGVuIG92ZXIgdGhlIERCSSB3aGVuIHNldCB0aGUN
-Cj4gPg0KPiA+Pj4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBEQkkiIChEQklfUk9fV1Jf
-RU4pIGZpZWxkIG9mIHRoZQ0KPiA+DQo+ID4+PiBNSVNDX0NPTlRST0xfMV9PRkYgcmVnaXN0ZXIu
-DQo+ID4NCj4gPj4NCj4gPg0KPiA+PiBJIHdvdWxkIHN1Z2dlc3QgeW91IHRvIGFkZCBhIGNvdmVy
-LWxldHRlciBuZXh0IHRpbWUgdG8gZXhwbGFpbiB0aGUNCj4gPj4gZ2xvYmFsDQo+ID4NCj4gPj4g
-cGljdHVyZSBvZiB0aGUgcGF0Y2gtc2V0Lg0KPiA+DQo+ID4NCj4gPg0KPiA+IFRoYW5rcywgSSB3
-aWxsLg0KPiA+DQo+ID4NCj4gPg0KPiA+Pg0KPiA+DQo+ID4+IEkgdW5kZXJzdGFuZCB5b3VyIG5l
-ZWQgZm9yIHRoaXMgcGF0Y2gsIGJ1dCBJIGRvbid0IGFncmVlIG9uIHRoZSBhcHByb2FjaC4NCj4g
-Pg0KPiA+DQo+ID4NCj4gPiBJbiB0aGUgRFdDIGNvbW1vbiBjb2RlLCB0aGVyZSBpcyBhIGZ1bmN0
-aW9uIHdyaXRlIGEgREJJIHJlYWQtb25seSByZWdpc3Rlcg0KPiAnRGV2aWNlIGNsYXNzIGNvZGUn
-LCBhbmQgdGhlIGZpcnN0IDIgcGF0Y2hlcyBpcyB0byBmaXggaXQuDQo+ID4NCj4gPiBUaGUgM3Jk
-IHBhdGNoIGlzIHRvIHJlZmFjdG9yIHRoZSBMYXllcnNjYXBlIFBDSWUgZHJpdmVyJ3MgaG9zdF9p
-bml0IGZ1bmN0aW9uDQo+IGFuZCByZXVzZSB0aGUgbmV3IGFkZGVkIGFjY2Vzc29ycy4NCj4gPg0K
-PiA+DQo+ID4NCj4gPj4gU29tZXRpbWVzIHRoZSBwZW9wbGUgaW4gY2hhcmdlIG9mIHRoZSBoYXJk
-d2FyZSBkZXNpZ24gLw0KPiA+PiBjb25maWd1cmF0aW9uLCBmb3JnZXQNCj4gPg0KPiA+PiB0byBz
-cGVjaWZ5IHRoZSBkZXZpY2UgY2xhc3MgYW5kIHRoYXQgY2FuIGJlIHByb2JsZW1hdGljIGZvciBz
-b21lDQo+ID4+IGRyaXZlcnMsIGFuZA0KPiA+DQo+ID4+IHNvIHRoZSB0eXBpY2FsIHdvcmthcm91
-bmQgaXMgdG8gc2V0IGl0IGluIHRoZSBkcml2ZXIgdXNpbmcgYSBxdWlyayBmb3IgZXhhbXBsZS4N
-Cj4gPg0KPiA+Pg0KPiA+DQo+ID4+IFlvdSBjYW4gc2VlIHNvbWUgZXhhbXBsZXMgaGVyZToNCj4g
-Pg0KPiA+PiBodHRwczovL3VybGRlZmVuc2UucHJvb2Zwb2ludC5jb20vdjIvdXJsP3U9aHR0cHMt
-M0FfX2dpdC5rZXJuZWwub3JnX3ANCj4gPj4gdWJfc2NtX2xpbnV4X2tlcm5lbF9naXRfdG9ydmFs
-ZHNfbGludXguZ2l0X3RyZWVfZHJpdmVyc18mZD1Ed0lHYVEmYz1EDQo+ID4+DQo+IFBMNl9YXzZK
-a1hGeDdBWFdxQjB0ZyZyPXMyZk8waGlpME9HTk92OXFReV9IUlh5LXhBSlVEMU5Ob0VjYzNpbw0K
-PiBfa3gwJm0NCj4gPj4NCj4gPTBEckJDdk9jX0o3TGFNWEJlaTFxQ1h4eGZiTHhXYVZFcktaNlJr
-bTZiVWMmcz1zT0VtRXhRRnFyQ0VtcEENCj4geDlMalNlSw0KPiA+PiBSdmtXMUQtVzgyY2tYNVdH
-Q2dGV3cmZT0NCj4gPg0KPiA+PiBwY2kvcXVpcmtzLmMNCj4gPg0KPiA+DQo+ID4NCj4gPiBJIGRv
-bid0IGtub3cgdGhlIFBDSSBxdWlya3MsIGRvIHlvdSBtZWFuIHJlbW92ZSB0aGUgcGNpIERldmlj
-ZSBDbGFzcyBmaXgNCj4gY29kZSBmcm9tIHRoZSBEV0MgY29tbW9uIGNvZGUgYW5kIGFkZCBpdCB0
-byBxdWlya3M/DQo+ID4NCj4gDQo+IEluIG15IG9waW5pb24gYWRkaW5nIGZpeGVzIHRvIGEgY29t
-bW9uIGNvZGUgaXMgbm90IGEgZ29vZCBhcHByb2FjaC4gSSB3b3VsZA0KPiBzdWdnZXN0IHRoZSBm
-aXggdG8gZ28gaW50byB0aGUgcXVpcmtzIGZpbGUuDQo+IA0KPiBAQmpvcm46IFRoZSBxdWlya3Mg
-ZmlsZSBpcyB0aGUgYmVzdCBwbGFjZSBmb3IgdGhpcyB0eXBlIG9mIGZpeGVzIHJpZ2h0Pw0KDQpU
-aGFua3MsDQpaaGlxaWFuZw0KDQoNCg==
+This way we can at least fulfill some of the common requests without root
+privileges. This allows various applications (for example the google chrome
+webbrowser) to successfully probe the list of PCI devices without needing
+read-write access to the /dev/pci device file.
+
+Signed-off-by: Imre Vadász <imrevdsz@gmail.com>
+---
+ lib/fbsd-device.c | 209 +++++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 201 insertions(+), 8 deletions(-)
+
+diff --git a/lib/fbsd-device.c b/lib/fbsd-device.c
+index 7cebb0d..78067dc 100644
+--- a/lib/fbsd-device.c
++++ b/lib/fbsd-device.c
+@@ -3,6 +3,7 @@
+  *
+  *	Copyright (c) 1999 Jari Kirma <kirma@cs.hut.fi>
+  *	Updated in 2003 by Samy Al Bahra <samy@kerneled.com>
++ *	Updated in 2017 by Imre Vadász <imrevdsz@gmail.com>
+  *
+  *	Can be freely distributed and used under the terms of the GNU GPL.
+  */
+@@ -10,6 +11,7 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
+ #include <osreldate.h>
+@@ -54,16 +56,195 @@ static void
+ fbsd_init(struct pci_access *a)
+ {
+   char *name = pci_get_param(a, "fbsd.path");
++  int fd;
+ 
+-  a->fd = open(name, O_RDWR, 0);
+-  if (a->fd < 0)
+-    a->error("fbsd_init: %s open failed", name);
++  a->fd = -1;
++  a->fd_rw = -1;
++  /*
++   * When opening /dev/pci as read-write fails, retry with readonly which
++   * will still allow us to gain some information via the PCIOCGETCONF and
++   * PCIOCGETBAR IOCTLs, even without generic read access to the PCI config
++   * space.
++   */
++  fd = open(name, O_RDWR, 0);
++  if (fd < 0)
++    {
++      fd = open(name, O_RDONLY, 0);
++      if (fd < 0)
++	a->error("fbsd_init: %s open failed", name);
++      else
++	{
++	  a->debug("fbsd_init: Fallback to read-only opened %s", name);
++	  a->fd = fd;
++	}
++    }
++  else
++    a->fd_rw = fd;
+ }
+ 
+ static void
+ fbsd_cleanup(struct pci_access *a)
+ {
+-  close(a->fd);
++  if (a->fd >= 0)
++    {
++      close(a->fd);
++      a->fd = -1;
++    }
++  if (a->fd_rw >= 0)
++    {
++      close(a->fd_rw);
++      a->fd_rw = -1;
++    }
++}
++
++static void
++fbsd_scan(struct pci_access *a)
++{
++  struct pci_conf_io conf;
++  struct pci_conf *matches;
++  struct pci_dev *t;
++  uint32_t offset = 0;
++  unsigned int i;
++
++  matches = calloc(32, sizeof(struct pci_conf));
++  if (matches == NULL)
++    {
++      a->error("calloc: %s", strerror(errno));
++      return;
++    }
++
++  conf.generation = 0;
++  do
++    {
++      conf.pat_buf_len = 0;
++      conf.num_patterns = 0;
++      conf.patterns = NULL;
++      conf.match_buf_len = 32 * sizeof(struct pci_conf);
++      conf.num_matches = 32;
++      conf.matches = matches;
++      conf.offset = offset;
++      conf.status = 0;
++      if (ioctl(a->fd_rw >= 0 ? a->fd_rw : a->fd, PCIOCGETCONF, &conf) < 0)
++	{
++	  if (errno == ENODEV)
++	    break;
++	  a->error("fbsd_scan: ioctl(PCIOCGETCONF) failed: %s",
++	      strerror(errno));
++	}
++      /* PCI_GETCONF_LIST_CHANGED would require us to start over. */
++      if (conf.status == PCI_GETCONF_ERROR ||
++	  conf.status == PCI_GETCONF_LIST_CHANGED)
++	{
++	  a->error("fbsd_scan: ioctl(PCIOCGETCONF) failed");
++	  break;
++	}
++      for (i = 0; i < conf.num_matches; i++)
++        {
++	  t = pci_alloc_dev(a);
++	  t->bus = matches[i].pc_sel.pc_bus;
++	  t->dev = matches[i].pc_sel.pc_dev;
++	  t->dev = matches[i].pc_sel.pc_dev;
++	  t->domain = matches[i].pc_sel.pc_domain;
++	  t->domain_16 = matches[i].pc_sel.pc_domain;
++	  t->vendor_id = matches[i].pc_vendor;
++	  t->device_id = matches[i].pc_device;
++	  t->known_fields = PCI_FILL_IDENT;
++	  t->hdrtype = matches[i].pc_hdr;
++	  pci_link_dev(a, t);
++	}
++      offset += conf.num_matches;
++    }
++  while (conf.status == PCI_GETCONF_MORE_DEVS);
++
++  free(matches);
++}
++
++static int
++fbsd_fill_info(struct pci_dev *d, int flags)
++{
++  struct pci_conf_io conf;
++  struct pci_bar_io bar;
++  struct pci_match_conf pattern;
++  struct pci_conf match;
++  int i;
++
++  if (d->access->fd_rw >= 0)
++    return pci_generic_fill_info(d, flags);
++
++  /*
++   * Can only handle PCI_FILL_IDENT, PCI_FILL_CLASS, PCI_FILL_BASES and
++   * PCI_FILL_SIZES requests with the PCIOCGETCONF and PCIOCGETBAR IOCTLs.
++   */
++
++  conf.pat_buf_len = sizeof(struct pci_match_conf);
++  conf.num_patterns = 1;
++  conf.patterns = &pattern;
++  conf.match_buf_len = sizeof(struct pci_conf);
++  conf.num_matches = 1;
++  conf.matches = &match;
++  conf.offset = 0;
++  conf.generation = 0;
++  conf.status = 0;
++
++  pattern.pc_sel.pc_domain = d->domain;
++  pattern.pc_sel.pc_bus = d->bus;
++  pattern.pc_sel.pc_dev = d->dev;
++  pattern.pc_sel.pc_func = d->func;
++  pattern.flags = PCI_GETCONF_MATCH_DOMAIN | PCI_GETCONF_MATCH_BUS |
++	  PCI_GETCONF_MATCH_DEV | PCI_GETCONF_MATCH_FUNC;
++
++  if (ioctl(d->access->fd, PCIOCGETCONF, &conf) < 0)
++    {
++      if (errno == ENODEV)
++        return 0;
++      d->access->error("fbsd_fill_info: ioctl(PCIOCGETCONF) failed: %s", strerror(errno));
++    }
++
++  if (flags & PCI_FILL_IDENT)
++    {
++      d->vendor_id = match.pc_vendor;
++      d->device_id = match.pc_device;
++    }
++  if (flags & PCI_FILL_CLASS)
++    {
++      d->device_class = match.pc_class | (match.pc_subclass << 8);
++    }
++  if (flags & (PCI_FILL_BASES | PCI_FILL_SIZES))
++    {
++      d->rom_base_addr = 0;
++      d->rom_size = 0;
++      for (i = 0; i < 6; i++)
++        {
++	  bar.pbi_sel.pc_domain = d->domain;
++	  bar.pbi_sel.pc_bus = d->bus;
++	  bar.pbi_sel.pc_dev = d->dev;
++	  bar.pbi_sel.pc_func = d->func;
++	  bar.pbi_reg = 0x10 + 4*i;
++	  bar.pbi_enabled = 0;
++	  bar.pbi_base = 0;
++	  bar.pbi_length = 0;
++	  if (ioctl(d->access->fd, PCIOCGETBAR, &bar) < 0)
++	    {
++	      if (errno == ENODEV)
++		return 0;
++	      if (errno == EINVAL)
++	        {
++		  d->base_addr[i] = 0;
++		  d->size[i] = 0;
++		}
++	      else
++	        d->access->error("fbsd_fill_info: ioctl(PCIOCGETBAR) failed: %s", strerror(errno));
++	    }
++	  else
++	    {
++	      d->base_addr[i] = bar.pbi_base;
++	      d->size[i] = bar.pbi_length;
++	    }
++	}
++    }
++
++  return flags & (PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_BASES |
++		  PCI_FILL_SIZES);
+ }
+ 
+ static int
+@@ -71,6 +252,12 @@ fbsd_read(struct pci_dev *d, int pos, byte *buf, int len)
+ {
+   struct pci_io pi;
+ 
++  if (d->access->fd_rw < 0)
++    {
++      d->access->warn("fbsd_read: missing permissions");
++      return 0;
++    }
++
+   if (!(len == 1 || len == 2 || len == 4))
+     return pci_generic_block_read(d, pos, buf, len);
+ 
+@@ -87,7 +274,7 @@ fbsd_read(struct pci_dev *d, int pos, byte *buf, int len)
+   pi.pi_reg = pos;
+   pi.pi_width = len;
+ 
+-  if (ioctl(d->access->fd, PCIOCREAD, &pi) < 0)
++  if (ioctl(d->access->fd_rw, PCIOCREAD, &pi) < 0)
+     {
+       if (errno == ENODEV)
+ 	return 0;
+@@ -114,6 +301,12 @@ fbsd_write(struct pci_dev *d, int pos, byte *buf, int len)
+ {
+   struct pci_io pi;
+ 
++  if (d->access->fd_rw < 0)
++    {
++      d->access->warn("fbsd_write: missing permissions");
++      return 0;
++    }
++
+   if (!(len == 1 || len == 2 || len == 4))
+     return pci_generic_block_write(d, pos, buf, len);
+ 
+@@ -143,7 +336,7 @@ fbsd_write(struct pci_dev *d, int pos, byte *buf, int len)
+       break;
+     }
+ 
+-  if (ioctl(d->access->fd, PCIOCWRITE, &pi) < 0)
++  if (ioctl(d->access->fd_rw, PCIOCWRITE, &pi) < 0)
+     {
+       if (errno == ENODEV)
+ 	return 0;
+@@ -160,8 +353,8 @@ struct pci_methods pm_fbsd_device = {
+   fbsd_detect,
+   fbsd_init,
+   fbsd_cleanup,
+-  pci_generic_scan,
+-  pci_generic_fill_info,
++  fbsd_scan,
++  fbsd_fill_info,
+   fbsd_read,
+   fbsd_write,
+   NULL,                                 /* read_vpd */
+-- 
+2.12.1
