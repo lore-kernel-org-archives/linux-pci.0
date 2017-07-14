@@ -1,61 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55478 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750857AbdGMD3u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Jul 2017 23:29:50 -0400
-Date: Wed, 12 Jul 2017 22:29:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ray Jui <rjui@broadcom.com>
-Subject: Re: [PATCH] PCI: iproc: remove unused struct iproc_pcie *pcie
-Message-ID: <20170713032947.GG4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499852825-64990-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas
+ <helgaas@kernel.org>
+Subject: RE: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
+ HiSilicon bridge
+Date: Fri, 14 Jul 2017 12:14:01 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B39943@FRAEML521-MBX.china.huawei.com>
+References: <20170712050811.3620-1-dja@axtens.net>
+ <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
+ <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
+ <1499978726.2865.59.camel@kernel.crashing.org>
+In-Reply-To: <1499978726.2865.59.camel@kernel.crashing.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499852825-64990-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David Airlie <airlied@linux.ie>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Rongrong Zou <zourongrong@gmail.com>, Daniel Vetter <daniel.vetter@intel.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Daniel Axtens <dja@axtens.net>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 12, 2017 at 05:47:05PM +0800, Shawn Lin wrote:
-> It was never used and could be removed, otherwise
-> we could see a warning:
-> 
-> drivers/pci/host/pcie-iproc-msi.c: In function 'iproc_msi_handler':
-> drivers/pci/host/pcie-iproc-msi.c:320:21: warning: variable 'pcie' set
-> but not used [-Wunused-but-set-variable]
-> 
-> Cc: Ray Jui <rjui@broadcom.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Applied to pci/host-iproc for v4.14, thanks!
-
-> ---
-> 
->  drivers/pci/host/pcie-iproc-msi.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-iproc-msi.c b/drivers/pci/host/pcie-iproc-msi.c
-> index 9fad791..2d0f535 100644
-> --- a/drivers/pci/host/pcie-iproc-msi.c
-> +++ b/drivers/pci/host/pcie-iproc-msi.c
-> @@ -317,7 +317,6 @@ static void iproc_msi_handler(struct irq_desc *desc)
->  	struct irq_chip *chip = irq_desc_get_chip(desc);
->  	struct iproc_msi_grp *grp;
->  	struct iproc_msi *msi;
-> -	struct iproc_pcie *pcie;
->  	u32 eq, head, tail, nr_events;
->  	unsigned long hwirq;
->  	int virq;
-> @@ -326,7 +325,6 @@ static void iproc_msi_handler(struct irq_desc *desc)
->  
->  	grp = irq_desc_get_handler_data(desc);
->  	msi = grp->msi;
-> -	pcie = msi->pcie;
->  	eq = grp->eq;
->  
->  	/*
-> -- 
-> 1.9.1
-> 
-> 
+SGkgQmVuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQmVuamFtaW4g
+SGVycmVuc2NobWlkdCBbbWFpbHRvOmJlbmhAa2VybmVsLmNyYXNoaW5nLm9yZ10NCj4gU2VudDog
+MTMgSnVseSAyMDE3IDIxOjQ1DQo+IFRvOiBCam9ybiBIZWxnYWFzOyBHYWJyaWVsZSBQYW9sb25p
+DQo+IENjOiBEYW5pZWwgQXh0ZW5zOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBMaXV4aW5s
+aWFuZyAoTWF0dGhldw0KPiBMaXUpOyBSb25ncm9uZyBab3U7IENhdGFsaW4gTWFyaW5hczsgV2ls
+bCBEZWFjb247IGxpbnV4LWFybS0NCj4ga2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7IERhdmlk
+IEFpcmxpZTsgRGFuaWVsIFZldHRlcjsgQWxleA0KPiBXaWxsaWFtc29uDQo+IFN1YmplY3Q6IFJl
+OiBbUEFUQ0ggdjRdIFBDSTogU3VwcG9ydCBoaWJtYyBWR0EgY2FyZHMgYmVoaW5kIGENCj4gbWlz
+YmVoYXZpbmcgSGlTaWxpY29uIGJyaWRnZQ0KPiANCj4gT24gVGh1LCAyMDE3LTA3LTEzIGF0IDA2
+OjI5IC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+ID4gSW5kZWVkIG91ciBob3N0IGNv
+bnRyb2xsZXIgZGVwZW5kcyBvbiBBUk02NCBzbyBtYXliZSBpdCB3b3VsZCBtYWtlDQo+ID4gPiBz
+ZW5zZSB0byBtb3ZlIHRoZSBxdWlyayBhcmNoL2FybTY0L2tlcm5lbC9wY2kuYzsgaG93ZXZlciBy
+ZWdhcmRsZXNzDQo+ID4gPiB3aHkgaXMgaXQgc3RyaWN0bHkgcmVxdWlyZWQgZm9yIGEgVkdBIGRl
+dmljZSB0byBiZSBsZWdhY3kgb25lIGluDQo+IG9yZGVyDQo+ID4gPiB0byBtYWtlIGl0IHRoZSBk
+ZWZhdWx0IGJvb3QgZGV2aWNlPw0KPiA+ID4gaS5lLiBjb3VsZG4ndCB3ZSBoYXZlOg0KPiA+ID4N
+Cj4gPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS92Z2EvdmdhYXJiLmMgYi9kcml2ZXJzL2dw
+dS92Z2EvdmdhYXJiLmMNCj4gPiA+IGluZGV4IDBmNWIyZGQuLmE2YjYwNmMgMTAwNjQ0DQo+ID4g
+PiAtLS0gYS9kcml2ZXJzL2dwdS92Z2EvdmdhYXJiLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvZ3B1
+L3ZnYS92Z2FhcmIuYw0KPiA+ID4gQEAgLTY2Nyw4ICs2NjcsNyBAQCBzdGF0aWMgYm9vbCB2Z2Ff
+YXJiaXRlcl9hZGRfcGNpX2RldmljZShzdHJ1Y3QNCj4gcGNpX2RldiAqcGRldikNCj4gPiA+IMKg
+wqDCoMKgwqDCoMKgLyogRGVhbCB3aXRoIFZHQSBkZWZhdWx0IGRldmljZS4gVXNlIGZpcnN0IGVu
+YWJsZWQgb25lDQo+ID4gPiDCoMKgwqDCoMKgwqDCoCAqIGJ5IGRlZmF1bHQgaWYgYXJjaCBkb2Vz
+bid0IGhhdmUgaXQncyBvd24gaG9vaw0KPiA+ID4gwqDCoMKgwqDCoMKgwqAgKi8NCj4gPiA+IC3C
+oMKgwqDCoMKgaWYgKHZnYV9kZWZhdWx0ID09IE5VTEwgJiYNCj4gPiA+IC3CoMKgwqDCoMKgwqDC
+oMKgICgodmdhZGV2LT5vd25zICYgVkdBX1JTUkNfTEVHQUNZX01BU0spID09DQo+IFZHQV9SU1JD
+X0xFR0FDWV9NQVNLKSkgew0KPiA+ID4gK8KgwqDCoMKgwqBpZiAodmdhX2RlZmF1bHQgPT0gTlVM
+TCkgew0KPiA+ID4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdmdhYXJiX2luZm8oJnBk
+ZXYtPmRldiwgInNldHRpbmcgYXMgYm9vdCBWR0ENCj4gZGV2aWNlXG4iKTsNCj4gPiA+IMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHZnYV9zZXRfZGVmYXVsdF9kZXZpY2UocGRldik7DQo+
+ID4gPiDCoMKgwqDCoMKgwqDCoH0NCj4gPg0KPiA+IEkgZG9uJ3Qga25vdyBlbm91Z2ggYWJvdXQg
+dGhlIFZHQSBhcmJpdGVyIHRvIGFuc3dlciB0aGlzLsKgIFRoaXMgdGVzdA0KPiB3YXMNCj4gPiBw
+YXJ0IG9mIHRoZSBpbml0aWFsIGltcGxlbWVudGF0aW9uOiBkZWIyZDJlY2Q0M2QgKCJQQ0kvR1BV
+OiBpbXBsZW1lbnQNCj4gVkdBDQo+ID4gYXJiaXRyYXRpb24gb24gTGludXgiKSBieSBCZW4uDQo+
+IA0KPiBUaGUgYWJvdmUgc2ltcGx5IHVzZXMgdGhlIGZpcnN0IGRldmljZSB0aGF0IGhhcyBtZW1v
+cnkgYW5kIElPIGVuYWJsZWQNCj4gYXMgdGhlIGRlZmF1bHQgZGV2aWNlICh5b3UgZG9uJ3QgbmVl
+ZCB0byBoYXZlIGEgZGVmYXVsdCBkZXZpY2UpLg0KPiANCj4gVGhpcyBpcyBlc3NlbnRpYWxseSBw
+aWNraW5nIHVwIHdoYXRldmVyIGRldmljZSBoYWQgYmVlbiBpbml0aWFsaXplZA0KPiBieSB0aGUg
+QklPUy9maXJtd2FyZSBhcyBkZWZhdWx0LiBUaGlzIGlzIG5lZWRlZCBmb3IgZXhhbXBsZSBvbiB4
+ODYNCj4gd2hlcmUgdGhlIEJJT1MgdGVuZHMgdG8gb25seSBpbml0aWFsaXplIG9uZSBkZXZpY2Uu
+DQo+IA0KPiBJJ20gbm90IHN1cmUgd2hhdCBwcm9ibGVtIHlvdSBhcmUgdHJ5aW5nIHRvIHNvbHZl
+IGhlcmUgPw0KDQpXZWxsIG91ciBob3N0IHBsYXRmb3JtIGRvZXMgbm90IHN1cHBvcnQgbGVnYWN5
+IGRldmljZXMgYW5kIHRoZXJlZm9yZSB3ZSBmaW5kDQpvdXJzZWx2ZXMgd2l0aG91dCBhIGRlZmF1
+bHQgVkdBIGRldmljZS4uLg0KDQpJIHdhcyB0cnlpbmcgdG8gdW5kZXJzdGFuZCB3aHkgYSBkZWZh
+dWx0IGRldmljZSBoYXMgdG8gYmUgbGVnYWN5Li4uYnV0IEkgdGhpbmsNCnRoaXMgd2FzIGFuc3dl
+cmVkIGJ5IGJvdGggeW91IGFuZCBBbGV4IGluIG90aGVyIGZvbGxvd3MtdXAuLi4NCg0KVGhhbmtz
+DQpHYWIgDQoNCj4gDQo+IENoZWVycywNCj4gQmVuLg0KDQpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdAps
+aW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVh
+ZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
