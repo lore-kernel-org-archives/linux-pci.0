@@ -1,185 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36298 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751316AbdGQTlY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 15:41:24 -0400
-Received: by mail-qk0-f195.google.com with SMTP id d136so2356587qkg.3
-        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 12:41:23 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Z.q. Hou'" <zhiqiang.hou@nxp.com>,
-        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com> <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com> <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com> <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com> <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-In-Reply-To: <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-Subject: Re: [PATCH 1/3] PCI: designware: add accessors for write permission of DBI read-only registers
-Date: Mon, 17 Jul 2017 15:41:21 -0400
-Message-ID: <000d01d2ff34$ab71cd30$02556790$@gmail.com>
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:35238 "EHLO
+        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751182AbdGOVoL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 Jul 2017 17:44:11 -0400
+Received: by mail-lf0-f45.google.com with SMTP id w198so1475847lff.2
+        for <linux-pci@vger.kernel.org>; Sat, 15 Jul 2017 14:44:10 -0700 (PDT)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-Id: <20170715214406.657273405@cogentembedded.com>
+Date: Sun, 16 Jul 2017 00:43:10 +0300
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Linus Walleij <linus.walleij@linaro.org>,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH] pci: ftpci100: fix of_irq_get() error check
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-15
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, July 11, 2017 12:11 AM, Z.q. Hou wrote:
->=20
-> Hi Bjorn,
->=20
-> Due to all Freescale Layerscpe PCIe controllers have to fix the Class =
-code,
-> and this fixup existed in both Layerscape pcie driver and DWC common =
-code,
-> so I want to reuse the fixup in DWC common code.
-> Can you give me any suggestion?
+of_irq_get() may return a negative error number as well as 0 on failure,
+while the driver only checks for 0, blithely continuing with the call to
+irq_set_chained_handler_and_data() -- that function expects *unsigned int*
+so should probably do nothing when a large IRQ number resulting from a
+conversion of a negative error number is passed to it. The driver then
+probes successfully while being only partly functional...
 
-Please don't add your comment on top of the email.
+Check for 'irq <= 0' instead and propagate the negative error number to
+the probe method --  that will allow the deferred probing as well...
 
+Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
->=20
-> > -----Original Message-----
-> > From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
-> > Sent: 2017=E5=B9=B47=E6=9C=887=E6=97=A5 16:53
-> > To: Z.q. Hou <zhiqiang.hou@nxp.com>; Joao Pinto
-> > <Joao.Pinto@synopsys.com>; linux-pci@vger.kernel.org;
-> > bhelgaas@google.com
-> > Cc: jingoohan1@gmail.com
-> > Subject: Re: [PATCH 1/3] PCI: designware: add accessors for write
-> permission
-> > of DBI read-only registers
-> >
-> >
-> > Hi Zhiqiang,
-> >
-> > =C3=80s 4:48 AM de 7/7/2017, Z.q. Hou escreveu:
-> > > Hi Joao,
-> > >
-> > >
-> > >
-> > > Thanks a lot for your comments!
-> > >
-> > >
-> > >
-> > >> -----Original Message-----
-> > >
-> > >> From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
-> > >
-> > >> Sent: 2017=E5=B9=B47=E6=9C=886=E6=97=A5 17:44
-> > >
-> > >> To: Z.q. Hou <zhiqiang.hou@nxp.com>; linux-pci@vger.kernel.org;
-> > >
-> > >> Joao.Pinto@synopsys.com
-> > >
-> > >> Cc: bhelgaas@google.com; jingoohan1@gmail.com
-> > >
-> > >> Subject: Re: [PATCH 1/3] PCI: designware: add accessors for write
-> > >> permission
-> > >
-> > >> of DBI read-only registers
-> > >
-> > >>
-> > >
-> > >>
-> > >
-> > >> Hi Zhiqiang,
-> > >
-> > >>
-> > >
-> > >> =C3=80s 7:33 AM de 7/6/2017, Zhiqiang Hou escreveu:
-> > >
-> > >>> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > >
-> > >>>
-> > >
-> > >>> The read-only DBI registers can be written over the DBI when set =
-the
-> > >
-> > >>> "Write to RO Registers Using DBI" (DBI_RO_WR_EN) field of the
-> > >
-> > >>> MISC_CONTROL_1_OFF register.
-> > >
-> > >>
-> > >
-> > >> I would suggest you to add a cover-letter next time to explain =
-the
-> > >> global
-> > >
-> > >> picture of the patch-set.
-> > >
-> > >
-> > >
-> > > Thanks, I will.
-> > >
-> > >
-> > >
-> > >>
-> > >
-> > >> I understand your need for this patch, but I don't agree on the
-> approach.
-> > >
-> > >
-> > >
-> > > In the DWC common code, there is a function write a DBI read-only
-> register
-> > 'Device class code', and the first 2 patches is to fix it.
-> > >
-> > > The 3rd patch is to refactor the Layerscape PCIe driver's =
-host_init
-> function
-> > and reuse the new added accessors.
-> > >
-> > >
-> > >
-> > >> Sometimes the people in charge of the hardware design /
-> > >> configuration, forget
-> > >
-> > >> to specify the device class and that can be problematic for some
-> > >> drivers, and
-> > >
-> > >> so the typical workaround is to set it in the driver using a =
-quirk
-> for example.
-> > >
-> > >>
-> > >
-> > >> You can see some examples here:
-> > >
-> > >> =
-https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__git.kernel.org_p
-> > >> =
-ub_scm_linux_kernel_git_torvalds_linux.git_tree_drivers_&d=3DDwIGaQ&c=3DD=
+---
+ drivers/pci/host/pci-ftpci100.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> > >>
-> > PL6_X_6JkXFx7AXWqB0tg&r=3Ds2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io
-> > _kx0&m
-> > >>
-> > =3D0DrBCvOc_J7LaMXBei1qCXxxfbLxWaVErKZ6Rkm6bUc&s=3DsOEmExQFqrCEmpA
-> > x9LjSeK
-> > >> RvkW1D-W82ckX5WGCgFWw&e=3D
-> > >
-> > >> pci/quirks.c
-> > >
-> > >
-> > >
-> > > I don't know the PCI quirks, do you mean remove the pci Device =
-Class
-> fix
-> > code from the DWC common code and add it to quirks?
-> > >
-> >
-> > In my opinion adding fixes to a common code is not a good approach. =
-I
-> would
-> > suggest the fix to go into the quirks file.
-
-Your answer should be added to here.
-Then, it will help other people follow this email thread.
-
-Best regards,
-Jingoo Han
-
-> >
-> > @Bjorn: The quirks file is the best place for this type of fixes =
-right?
->=20
-> Thanks,
-> Zhiqiang
->=20
+Index: pci/drivers/pci/host/pci-ftpci100.c
+===================================================================
+--- pci.orig/drivers/pci/host/pci-ftpci100.c
++++ pci/drivers/pci/host/pci-ftpci100.c
+@@ -350,9 +350,9 @@ static int faraday_pci_setup_cascaded_ir
+ 
+ 	/* All PCI IRQs cascade off this one */
+ 	irq = of_irq_get(intc, 0);
+-	if (!irq) {
++	if (irq <= 0) {
+ 		dev_err(p->dev, "failed to get parent IRQ\n");
+-		return -EINVAL;
++		return irq ?: -EINVAL;
+ 	}
+ 
+ 	p->irqdomain = irq_domain_add_linear(intc, 4,
