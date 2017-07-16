@@ -1,39 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:9097 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750784AbdGCFzL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jul 2017 01:55:11 -0400
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, Ryder Lee <ryder.lee@mediatek.com>
-Subject: [PATCH] PCI: mediatek: Remove unnecessary PCI_REASSIGN_* flags
-Date: Mon, 3 Jul 2017 13:55:00 +0800
-Message-ID: <1499061300-55951-1-git-send-email-ryder.lee@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33313 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751244AbdGPVQf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jul 2017 17:16:35 -0400
+Received: by mail-qk0-f196.google.com with SMTP id a66so17589497qkb.0
+        for <linux-pci@vger.kernel.org>; Sun, 16 Jul 2017 14:16:34 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: thomas.petazzoni@free-electrons.com, jason@lakedaemon.net,
+        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
+Subject: [PATCH] PCI: mvebu: Remove unneeded gpiod NULL check
+Date: Sun, 16 Jul 2017 18:16:13 -0300
+Message-Id: <1500239773-15632-1-git-send-email-festevam@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI_REASSIGN_ALL_RSRC and PCI_REASSIGN_ALL_BUS flags are not needed,
-since we should automatically assign resources if the firmware hasn't done it.
+From: Fabio Estevam <fabio.estevam@nxp.com>
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+The gpiod API checks for NULL descriptors, so there is no need to
+duplicate the check in the driver.
+
+Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 ---
- drivers/pci/host/pcie-mediatek.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/host/pci-mvebu.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 51c6118..5a9d858 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -478,7 +478,6 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 	struct pci_bus *child;
- 	int err;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index f353a6e..fa227d8 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -1186,8 +1186,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
+  */
+ static void mvebu_pcie_powerdown(struct mvebu_pcie_port *port)
+ {
+-	if (port->reset_gpio)
+-		gpiod_set_value_cansleep(port->reset_gpio, 1);
++	gpiod_set_value_cansleep(port->reset_gpio, 1);
  
--	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = pcie->dev;
- 	host->ops = &mtk_pcie_ops;
+ 	clk_disable_unprepare(port->clk);
+ }
 -- 
-1.9.1
+2.7.4
