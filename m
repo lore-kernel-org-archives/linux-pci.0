@@ -1,82 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f173.google.com ([209.85.128.173]:36915 "EHLO
-        mail-wr0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753527AbdGUUUT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 16:20:19 -0400
-Received: by mail-wr0-f173.google.com with SMTP id 33so29772895wrz.4
-        for <linux-pci@vger.kernel.org>; Fri, 21 Jul 2017 13:20:19 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:56664 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751230AbdGPS4b (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 16 Jul 2017 14:56:31 -0400
+Date: Sun, 16 Jul 2017 12:56:30 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Andreas Hartmann <andihartmann@01019freenet.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: Re: ryzen X370: iommu - unusable huge groups
+Message-ID: <20170716125630.7cfcec1c@w520.home>
+In-Reply-To: <ecdf6b75-4966-fa3a-00de-99b1c9fe6caa@01019freenet.de>
+References: <95b7f350-76f7-daff-be4a-f3fc70589ba9@01019freenet.de>
+        <20170716085334.7ae210d2@w520.home>
+        <ecdf6b75-4966-fa3a-00de-99b1c9fe6caa@01019freenet.de>
 MIME-Version: 1.0
-In-Reply-To: <20170720162255.36e015f1@ul30vt.home>
-References: <1500511611-2019-1-git-send-email-fkan@apm.com> <20170720162255.36e015f1@ul30vt.home>
-From: Feng Kan <fkan@apm.com>
-Date: Fri, 21 Jul 2017 13:20:18 -0700
-Message-ID: <CAL85gmBB=U_4jkChKwfZGPQR0zeoZ4=hg7e6HMnu-DS0u1-Wsg@mail.gmail.com>
-Subject: Re: [PATCH V2] pci: quirk: Apply APM ACS quirk to XGene devices
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 20, 2017 at 3:22 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
-> On Wed, 19 Jul 2017 17:46:51 -0700
-> Feng Kan <fkan@apm.com> wrote:
->
->> The APM X-Gene PCIe root port does not support ACS at this point.
->> However, the hw provides isolation and source validation through
->> the SMMU. Turn on ACS but disable all the peer to peer features.
->>
->> Signed-off-by: Feng Kan <fkan@apm.com>
->> ---
->>  drivers/pci/quirks.c | 15 +++++++++++++++
->>  1 file changed, 15 insertions(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 085fb78..0f8f1cd 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -4120,6 +4120,19 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
->>       return acs_flags ? 0 : 1;
->>  }
->>
->> +static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
->> +{
->> +     /*
->> +      * XGene root matching this quirk do not allow peer-to-peer
->> +      * transactions with others, allowing masking out these bits as if they
->> +      * were unimplemented in the ACS capability.
->> +      */
->> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
->> +                    PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
->> +
->> +     return acs_flags ? 0 : 1;
->> +}
->> +
->>  /*
->>   * Many Intel PCH root ports do provide ACS-like features to disable peer
->>   * transactions and validate bus numbers in requests, but do not provide an
->> @@ -4368,6 +4381,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
->>       /* Cavium ThunderX */
->>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
->> +     /* APM XGene */
->> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
->>       { 0 }
->>  };
->>
->
-> Sorry, I'm not yet convinced there's an equivalent of SV, if a device
-> spoofs a different bdf and it reaches the smmu, what prevents that from
-> simply referencing the context for that alternate bdf?
-Perhaps I am not understanding the question correctly. The bdf forms a
-stream id which is used to provide an context. Since there is no actual
-context created by an alternate bdf, the transaction would be rejected
-by the SMMU.
+On Sun, 16 Jul 2017 18:53:11 +0200
+Andreas Hartmann <andihartmann@01019freenet.de> wrote:
 
-The point of
-> root port SV is to ensure that any forwarded transaction is within the
-> downstream bdf range.  Thanks,
->
-> Alex
+> Hello Alex!
+> 
+> Nice to hear you again :-)
+> 
+> 
+> 
+> On 07/16/2017 at 04:53 PM Alex Williamson wrote:
+> > On Sun, 16 Jul 2017 07:44:01 +0200
+> > Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+> >   
+> >> Hello!
+> >>
+> >> I've got a Asus X370-Pro motherboard with enabled iommu. Unfortunately,
+> >> the group 0 is mostly all of the system :-).
+> >>
+> >> [    2.602426] iommu: Adding device 0000:00:01.0 to group 0
+> >> [    2.602440] iommu: Adding device 0000:00:01.3 to group 0
+> >> [    2.603368] iommu: Adding device 0000:03:00.0 to group 0
+> >> [    2.603377] iommu: Adding device 0000:03:00.1 to group 0
+> >> [    2.603385] iommu: Adding device 0000:03:00.2 to group 0
+> >> [    2.603396] iommu: Adding device 0000:1d:00.0 to group 0
+> >> [    2.603406] iommu: Adding device 0000:1d:02.0 to group 0
+> >> [    2.603417] iommu: Adding device 0000:1d:03.0 to group 0
+> >> [    2.603428] iommu: Adding device 0000:1d:04.0 to group 0
+> >> [    2.603439] iommu: Adding device 0000:1d:06.0 to group 0
+> >> [    2.603450] iommu: Adding device 0000:1d:07.0 to group 0
+> >> [    2.603466] iommu: Adding device 0000:24:00.0 to group 0
+> >> [    2.603481] iommu: Adding device 0000:25:00.0 to group 0
+> >> [    2.603498] iommu: Adding device 0000:26:00.0 to group 0
+> >> [    2.603513] iommu: Adding device 0000:27:00.0 to group 0  
+> > 
+> > 
+> > Update your motherboard BIOS, AMD AGESA 1.0.0.6 is supposed to
+> > enable ACS in the PCIe root ports.  Thanks,  
+> 
+> Group 0 is now group 10 - that's mostly all :-( - no significant change.
+> (Version 805 which should contain AGESA 1.0.0.6).
+> 
+> 
+> [    2.600097] iommu: Adding device 0000:03:00.0 to group 10
+> [    2.600117] iommu: Adding device 0000:03:00.1 to group 10
+> [    2.600136] iommu: Adding device 0000:03:00.2 to group 10
+> [    2.600148] iommu: Adding device 0000:1d:00.0 to group 10
+> [    2.600158] iommu: Adding device 0000:1d:02.0 to group 10
+> [    2.600169] iommu: Adding device 0000:1d:03.0 to group 10
+> [    2.600180] iommu: Adding device 0000:1d:04.0 to group 10
+> [    2.600190] iommu: Adding device 0000:1d:06.0 to group 10
+> [    2.600201] iommu: Adding device 0000:1d:07.0 to group 10
+> [    2.600216] iommu: Adding device 0000:24:00.0 to group 10
+> [    2.600233] iommu: Adding device 0000:25:00.0 to group 10
+> [    2.600249] iommu: Adding device 0000:26:00.0 to group 10
+> [    2.600266] iommu: Adding device 0000:27:00.0 to group 10
+> 
+> 
+> All devices that are used are in the same group again.
+> 
+> Isn't it possible to allow them to put to VM anyway if there is no peer
+> to peer communication - same as it was possible with the previous
+> chipset (990xa)?
+
+Ah, I see you have a PCIe switch with downstream ports 1d.*.0 where
+the downstream switch ports don't support ACS (not surprising for
+something reporting ASMedia as a subsystem capability).  So ACS was
+broken at multiple levels and now that it's exposed at the root port
+it's still broken by the non-ACS switch.  The endpoints downstream of
+the switch are not sufficiently isolated to separate between VMs,
+sorry, the hardware isn't up to the task at hand.  Thanks,
+
+Alex
