@@ -1,100 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49228 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754218AbdGJQin (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 12:38:43 -0400
-Date: Mon, 10 Jul 2017 11:38:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@imgtec.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 2/2] MIPS/PCI: Fix pcibios_scan_bus() NULL check code path
-Message-ID: <20170710163830.GC20365@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170710123409.9043-1-lorenzo.pieralisi@arm.com>
- <20170710123409.9043-2-lorenzo.pieralisi@arm.com>
- <20170710145553.GA20365@bhelgaas-glaptop.roam.corp.google.com>
- <20170710154924.GA13344@red-moon>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:32918 "EHLO
+        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdGQTev (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 15:34:51 -0400
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+        "'Carlos Palminha'" <CARLOS.PALMINHA@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Cc: <bhelgaas@google.com>
+References: <20170717131334.1761-1-palminha@synopsys.com> <18cf8549-c1c6-bed2-60f2-202abc06d6b3@synopsys.com>
+In-Reply-To: <18cf8549-c1c6-bed2-60f2-202abc06d6b3@synopsys.com>
+Subject: Re: [PATCH] PCI: dwc: designware: make dw_pcie_prog_*_atu_unroll() static
+Date: Mon, 17 Jul 2017 15:34:48 -0400
+Message-ID: <000c01d2ff33$c1202510$43606f30$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170710154924.GA13344@red-moon>
+Content-Type: text/plain;
+        charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 04:49:24PM +0100, Lorenzo Pieralisi wrote:
-> On Mon, Jul 10, 2017 at 09:55:53AM -0500, Bjorn Helgaas wrote:
-> > On Mon, Jul 10, 2017 at 01:34:09PM +0100, Lorenzo Pieralisi wrote:
-> > > If pci_scan_root_bus() fails (ie returns NULL) pcibios_scan_bus() must
-> > > return immediately since the struct pci_bus pointer it returns is not
-> > > valid and cannot be used.
-> > > 
-> > > Move code checking the pci_scan_root_bus() return value to reinstate
-> > > proper pcibios_scanbus() error path behaviour.
-> > > 
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Cc: Ralf Baechle <ralf@linux-mips.org>
-> > > Cc: Paul Burton <paul.burton@imgtec.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > 
-> > I agree this is certainly broken.  In fact, I think I broke it with
-> > 9e808eb6a768 ("PCI: Cleanup control flow") in 2015.  So probably v4.14
-> > material?
-> 
-> Yes that makes sense, I spotted it since I am preparing patches to
-> remove pci_fixup_irqs() from the kernel (by removing it from all arches
-> that still use it), I think that technically:
-> 
-> 88555b481958 ("MIPS: PCI: Support for CONFIG_PCI_DOMAINS_GENERIC")
-> 
-> created a possible breakage (ie by using the possible NULL bus pointer),
-> if you merge it in one branch for 4.14 I will base the pci_fixup_irqs()
-> removal on top of it and post the series, just let me know please.
+On Monday, July 17, 2017 9:28 AM, Joao Pinto wrote:
+>=20
+>=20
+> Hi Carlos,
+>=20
+> =C3=80s 2:13 PM de 7/17/2017, Carlos Palminha escreveu:
+> > Helper functions dw_pcie_prog_*_atu_unroll don't need to be in =
+global
+> scope,
+> > so make it static.
+> >
+> > Cleans up sparse warnings:
+> > - symbol 'dw_pcie_prog_outbound_atu_unroll' was not declared. Should =
+it
+> be static?
+> > - symbol 'dw_pcie_prog_inbound_atu_unroll' was not declared. Should =
+it
+> be static?
+> >
+> > Signed-off-by: Carlos Palminha <palminha@synopsys.com>
+> > ---
+> > Patch made against linux-next tree, tag next-20170714
+> >
+> >  drivers/pci/dwc/pcie-designware.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/dwc/pcie-designware.c =
+b/drivers/pci/dwc/pcie-
+> designware.c
+> > index 0e03af279259..48d6d0712ea8 100644
+> > --- a/drivers/pci/dwc/pcie-designware.c
+> > +++ b/drivers/pci/dwc/pcie-designware.c
+> > @@ -107,7 +107,7 @@ static void dw_pcie_writel_ob_unroll(struct =
+dw_pcie
+> *pci, u32 index, u32 reg,
+> >  	dw_pcie_writel_dbi(pci, offset + reg, val);
+> >  }
+> >
+> > -void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int =
+index,
+> int type,
+> > +static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, =
+int
+> index, int type,
+> >  				      u64 cpu_addr, u64 pci_addr, u32 size)
+> >  {
+> >  	u32 retries, val;
+> > @@ -200,7 +200,7 @@ static void dw_pcie_writel_ib_unroll(struct =
+dw_pcie
+> *pci, u32 index, u32 reg,
+> >  	dw_pcie_writel_dbi(pci, offset + reg, val);
+> >  }
+> >
+> > -int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index, =
+int
+> bar,
+> > +static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int
+> index, int bar,
+> >  				    u64 cpu_addr, enum dw_pcie_as_type as_type)
+> >  {
+> >  	int type;
+> > --
+> > 2.11.0
+> >
+>=20
+> That indeed escaped in the refactoring :) Thanks!
+>=20
+> Acked-by: Joao Pinto <jpinto@synopsys.com>
 
-Ah, you're right.  I created some poor style (checking the return
-value after intervening code) with 9e808eb6a768, and then 88555b481958
-fell into the trap I had laid.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-I put this on pci/irq-fixups for a continuation of your work and
-started it off with this patch.
-
-I will rebase the branch after -rc1, but that shouldn't be a problem
-for you because I normally apply patches from email rather than
-pulling them directly.  I'll be on vacation July 14-28, so that
-probably won't happen until August.
-
-Thanks!
-
-> > > ---
-> > >  arch/mips/pci/pci-legacy.c | 10 +++++-----
-> > >  1 file changed, 5 insertions(+), 5 deletions(-)
-> > > 
-> > > diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-> > > index 174575a..71d62f8 100644
-> > > --- a/arch/mips/pci/pci-legacy.c
-> > > +++ b/arch/mips/pci/pci-legacy.c
-> > > @@ -89,16 +89,16 @@ static void pcibios_scanbus(struct pci_controller *hose)
-> > >  	pci_add_resource(&resources, hose->busn_resource);
-> > >  	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
-> > >  				&resources);
-> > > -	hose->bus = bus;
-> > > -
-> > > -	need_domain_info = need_domain_info || pci_domain_nr(bus);
-> > > -	set_pci_need_domain_info(hose, need_domain_info);
-> > > -
-> > >  	if (!bus) {
-> > >  		pci_free_resource_list(&resources);
-> > >  		return;
-> > >  	}
-> > >  
-> > > +	hose->bus = bus;
-> > > +
-> > > +	need_domain_info = need_domain_info || pci_domain_nr(bus);
-> > > +	set_pci_need_domain_info(hose, need_domain_info);
-> > > +
-> > >  	next_busno = bus->busn_res.end + 1;
-> > >  	/* Don't allow 8-bit bus number overflow inside the hose -
-> > >  	   reserve some space for bridges. */
-> > > -- 
-> > > 2.10.0
-> > > 
+Best regards,
+Jingoo Han
