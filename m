@@ -1,136 +1,101 @@
-Return-Path: <SRS0=tjpD=6G=axtens.net=dja@kernel.org>
-Return-Path: <SRS0=tjpD=6G=axtens.net=dja@kernel.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Xinliang Liu <z.liuxinliang@hisilicon.com>, Rongrong Zou <zourongrong@gmail.com>
-Subject: Re: [PATCH v2] PCI: Support hibmc VGA cards behind a misbehaving HiSilicon bridge
-In-Reply-To: <20170620174759.GA3363@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170620013302.528-1-dja@axtens.net> <20170620174759.GA3363@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 03 Jul 2017 14:15:43 +1000
-Message-ID: <878tk6nok0.fsf@linkitivity.dja.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:33434 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbdGQHiB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 03:38:01 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 4/7] PCI: rockchip: idle the inactive PHY(s)
+Date: Mon, 17 Jul 2017 15:36:19 +0800
+Message-Id: <1500276982-208439-5-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Check the status of all lanes and idle the inactive one(s).
 
-> How exactly is this bridge broken?  Apparently the PCI_BRIDGE_CTL_VGA
-> is a read-only zero.  Does the bridge then *always* forward the
-> 0xa0000-0xbffff mem range and the 0x3b0-0x3bb and 0x3c0-0x3df I/O
-> ranges?  (This is from the PCI-to-PCI Bridge Spec, r1.2, sec
-> 3.2.5.18).
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-So I asked the HiSilicon hardware folk, and they said "no". My
-understanding is that the resources are never forwarded. The
-justification I was given is that "this legacy mem range and IO are not
-used in ARM". (The D05 is an arm64 system.)
+ drivers/pci/host/pcie-rockchip.c | 31 ++++++++++++++++++++++++++++++-
+ 1 file changed, 30 insertions(+), 1 deletion(-)
 
-> I don't know whether the hibmc VGA card requires those legacy VGA
-> resources, so the fact that the card works doesn't answer the
-> question -- the driver may be able to operate the card without those
-> legacy resources.
-
-I also asked the HiSilicon folk; and yes, the driver operates the card
-without the legacy resources.
-
-> But if the system contains multiple VGA devices, we may not be able to
-> arbitrate between them correctly if this bit doesn't work.  For
-> example, if the bridge always forwards the legacy VGA resources, and a
-> second VGA devices behind a different bridge requires those resources,
-> we'll have a problem: a read may receive two responses.
->
-> The fact that this patch doesn't save any kind of "vga_broken" bit for
-> later use by the VGA arbiter makes me suspect that we're making the
-> device work in the current configuration, but things might break if we
-> add another VGA card.
-
-All the PCI ports on the system I have access to are behind these
-bridges, so:
-
- - it looks like VGA cards will only work if their drivers support
-   operating the card without legacy resources.
-
- - the vga default device should be set only when this quirk activates:
-   normal VGA devices will fail the bridge capability test in
-   vgaarb.c. If there are mutiple BMC cards then the check for an
-   existing default device will ensure the default device is only set
-   once.
-
-Having said that, I am happy to write a patch to disable the arbiter if
-you want - I'm just not sure quite how that would work.
-
-Regards,
-Daniel
-
->
->> Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
->> Cc: Rongrong Zou <zourongrong@gmail.com>
->> Signed-off-by: Daniel Axtens <dja@axtens.net>
->> ---
->>  drivers/pci/quirks.c | 46 ++++++++++++++++++++++++++++++++++++++++++++++
->>  1 file changed, 46 insertions(+)
->> 
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 16e6cd86ad71..86d7c848f3e2 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -25,6 +25,7 @@
->>  #include <linux/sched.h>
->>  #include <linux/ktime.h>
->>  #include <linux/mm.h>
->> +#include <linux/vgaarb.h>
->>  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->>  #include "pci.h"
->>  
->> @@ -4664,3 +4665,48 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
->>  }
->>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
->>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
->> +
->> +/*
->> + * The hibmc card on a HiSilicon D05 board sits behind a non-compliant
->> + * bridge. The bridge has the PCI_BRIDGE_CTL_VGA config bit fixed at 0
->> + * in hardware. This prevents the vgaarb from marking a card behind it
->> + * as boot VGA device.
->> + *
->> + * However, the hibmc card is known to still work, so if we have that
->> + * card behind that particular bridge (19e5:1610), mark it as the
->> + * default device if none has been detected.
->> + */
->> +static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
->> +{
->> +	struct pci_dev *bridge;
->> +	struct pci_bus *bus;
->> +	u16 config;
->> +
->> +	bus = pdev->bus;
->> +	bridge = bus->self;
->> +	if (!bridge)
->> +		return;
->> +
->> +	if (!pci_is_bridge(bridge))
->> +		return;
->> +
->> +	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
->> +	    bridge->device != 0x1610)
->> +		return;
->> +
->> +	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
->> +			     &config);
->> +	if (config & PCI_BRIDGE_CTL_VGA) {
->> +		/*
->> +		 * Weirdly, this bridge *is* spec compliant, so bail
->> +		 * and let vgaarb do its job
->> +		 */
->> +		return;
->> +	}
->> +
->> +	if (vga_default_device())
->> +		return;
->> +
->> +	vga_set_default_device(pdev);
->> +}
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
->> -- 
->> 2.11.0
->> 
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index f755df5..fa30ffb 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -15,6 +15,7 @@
+  * (at your option) any later version.
+  */
+ 
++#include <linux/bitrev.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+@@ -112,6 +113,9 @@
+ #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+ #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+ 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
++#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
++#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
++#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -311,6 +315,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 	return 1;
+ }
+ 
++static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
++{
++	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
++	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
++
++	/* The link may be using a reverse-indexed mapping. */
++	if (val & PCIE_CORE_LANE_MAP_REVERSE)
++		map = bitrev8(map) >> 4;
++
++	return map;
++}
++
+ static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
+ 				     int where, int size, u32 *val)
+ {
+@@ -624,7 +640,8 @@ static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
+ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	int err;
++	int err, i;
++	u8 lane_map;
+ 	u32 status;
+ 
+ 	gpiod_set_value(rockchip->ep_gpio, 0);
+@@ -797,6 +814,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
+ 	dev_dbg(dev, "current link width is x%d\n", status);
+ 
++	if (!rockchip->legacy_phy) {
++		/*  power off unused lane(s) */
++		lane_map = rockchip_pcie_lane_map(rockchip);
++		for (i = 0; i < MAX_LANE_NUM; i++) {
++			if (lane_map & BIT(i))
++				continue;
++
++			dev_dbg(dev, "idling lane %d\n", i);
++			phy_power_off(rockchip->phys[i]);
++		}
++	}
++
+ 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
+ 			    PCIE_CORE_CONFIG_VENDOR);
+ 	rockchip_pcie_write(rockchip,
+-- 
+1.9.1
