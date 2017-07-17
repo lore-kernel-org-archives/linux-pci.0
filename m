@@ -1,135 +1,74 @@
-Return-Path: <SRS0=MAUI=6R=arm.com=will.deacon@kernel.org>
-Return-Path: <SRS0=MAUI=6R=arm.com=will.deacon@kernel.org>
-Date: Fri, 14 Jul 2017 02:35:30 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Daniel Axtens <dja@axtens.net>, linux-pci@vger.kernel.org,
-	Xinliang Liu <z.liuxinliang@hisilicon.com>,
-	Rongrong Zou <zourongrong@gmail.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
- HiSilicon bridge
-Message-ID: <20170714013529.GF22336@arm.com>
-References: <20170712050811.3620-1-dja@axtens.net>
- <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48406 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751280AbdGQMEq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:04:46 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH 2/7] dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+Date: Mon, 17 Jul 2017 17:33:58 +0530
+Message-Id: <1500293043-1887-3-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+IPQ8074 uses QMP phy controller that provides support to PCIe and
+USB. Adding dt binding information for the same.
 
-On Wed, Jul 12, 2017 at 03:04:30PM -0500, Bjorn Helgaas wrote:
-> [+cc Catalin, Will, linux-arm-kernel]
-> 
-> On Wed, Jul 12, 2017 at 03:08:11PM +1000, Daniel Axtens wrote:
-> > The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610) that
-> > are not spec-compliant: the VGA Enable bit is hardwired to 0 and
-> > writes do not change it.
-> > 
-> > The HiSilicon engineers report that the bridge does not forward the
-> > 0xa0000-0xbffff mem range and the 0x3b0-0x3bb and 0x3c0-0x3df I/O
-> > ranges.
-> > 
-> > Because the VGA Enable bit is hardwired to 0, the VGA arbiter refuses
-> > to mark any card behind it as the boot device. This breaks Xorg
-> > auto-detection.
-> > 
-> > However, the hibmc VGA card (PCI ID 19e5:1711) has been tested and is
-> > known to work when behind these bridges. (It does not require the
-> > legacy resources to operate.)
-> > 
-> > Provide a quirk so that this combination of bridge and card is eligible
-> > to be the default VGA card. This fixes Xorg auto-detection on the D05.
-> > 
-> > Cc: Xinliang Liu <z.liuxinliang@hisilicon.com>
-> > Cc: Rongrong Zou <zourongrong@gmail.com>
-> > Signed-off-by: Daniel Axtens <dja@axtens.net>
-> > ---
-> > 
-> > v3: fix commit message
-> > v4: fix comment (forgot to git add/git commit, sorry for the noise)
-> > 
-> > ---
-> >  drivers/pci/quirks.c | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 50 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 16e6cd86ad71..b42324cba29e 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -25,6 +25,7 @@
-> >  #include <linux/sched.h>
-> >  #include <linux/ktime.h>
-> >  #include <linux/mm.h>
-> > +#include <linux/vgaarb.h>
-> >  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
-> >  #include "pci.h"
-> >  
-> > @@ -4664,3 +4665,52 @@ static void quirk_intel_no_flr(struct pci_dev *dev)
-> >  }
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
-> >  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
-> > +
-> > +/*
-> > + * The HiSilicon D05 board has some PCI bridges (PCI ID 19e5:1610)
-> > + * that are not spec-compliant: the VGA Enable bit is hardwired to 0
-> > + * and writes do not change it. The bridge does not forward legacy
-> > + * memory or I/O resources.
-> > + *
-> > + * Because the VGA Enable bit is hardwired to 0, the VGA arbiter
-> > + * refuses to mark any card behind it as the boot device. However, the
-> > + * hibmc VGA card (PCI ID 19e5:1711) has been tested and is known to
-> > + * work when behind these bridges.
-> > + *
-> > + * If we have this bridge, this card, and no default card already,
-> > + * mark the card as default.
-> > + */
-> > +static void hibmc_fixup_vgaarb(struct pci_dev *pdev)
-> > +{
-> > +	struct pci_dev *bridge;
-> > +	struct pci_bus *bus;
-> > +	u16 config;
-> > +
-> > +	bus = pdev->bus;
-> > +	bridge = bus->self;
-> > +	if (!bridge)
-> > +		return;
-> > +
-> > +	if (!pci_is_bridge(bridge))
-> > +		return;
-> > +
-> > +	if (bridge->vendor != PCI_VENDOR_ID_HUAWEI ||
-> > +	    bridge->device != 0x1610)
-> > +		return;
-> > +
-> > +	pci_read_config_word(bridge, PCI_BRIDGE_CONTROL,
-> > +			     &config);
-> > +	if (config & PCI_BRIDGE_CTL_VGA) {
-> > +		/*
-> > +		 * Weirdly, this bridge *is* spec compliant, so bail
-> > +		 * and let vgaarb do its job
-> > +		 */
-> > +		return;
-> > +	}
-> > +
-> > +	if (vga_default_device())
-> > +		return;
-> > +
-> > +	vga_set_default_device(pdev);
-> > +}
-> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI, 0x1711, hibmc_fixup_vgaarb);
-> 
-> Is this quirk useful on any arch other than arm64?  Per
-> drivers/pci/dwc/Kconfig, CONFIG_PCI_HISI depends on CONFIG_ARM64.
-> 
-> Would it make sense to put this quirk in arch/arm64/kernel/pci.c?
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ .../devicetree/bindings/phy/qcom-qmp-phy.txt       | 28 ++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
-We've resisted adding PCI quirks in the arch directory so far, so I'd rather
-it lived in the PCI code if you don't have a strong objection to that.
-Hardware vendors have a tendency to reuse broken IP, so it's not beyond the
-realms of imagination that this quirk might be needed for another part some
-day (e.g. based on 32-bit ARM).
-
-Will
+diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+index 5d7a51f..80d766b 100644
+--- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
++++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+@@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
+ 
+ Required properties:
+  - compatible: compatible list, contains:
++	       "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
+ 	       "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
+ 	       "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
+ 
+@@ -107,3 +108,30 @@ Example:
+ 		...
+ 		...
+ 	};
++
++	phy@86000 {
++		compatible = "qcom,ipq8074-qmp-pcie-phy";
++		reg = <0x86000 0x1000>;
++
++		#clock-cells = <1>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++		resets = <&gcc GCC_PCIE0_PHY_BCR>,
++			 <&gcc GCC_PCIE0PHY_PHY_BCR>;
++		reset-names = "phy",
++			      "phy_phy";
++
++		status = "ok";
++
++		pciephy_0: lane@86000 {
++			reg = <0x86200 0x130>,
++				<0x86400 0x200>,
++				<0x86800 0x1f8>;
++			#phy-cells = <0>;
++			clocks = <&gcc GCC_PCIE0_PIPE_CLK>;
++			clock-names = "pipe0";
++			clock-output-names = "pcie20_phy0_pipe_clk";
++		};
++	};
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
