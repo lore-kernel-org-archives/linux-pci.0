@@ -1,34 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43789 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753881AbdGCLJt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Jul 2017 07:09:49 -0400
-Date: Mon, 3 Jul 2017 14:09:19 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-pci@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] PCI: fix pci_try_reset_function()
-Message-ID: <20170701135323.x5vaj4e2wcs2mcro@mwanda>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from lucky1.263xmail.com ([211.157.147.135]:34530 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbdGQHjJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 03:39:09 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 7/7] Documentation: bindings: convert to use per-lane Rockchip PCIe PHY
+Date: Mon, 17 Jul 2017 15:38:42 +0800
+Message-Id: <1500277122-21835-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500277122-21835-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500277122-21835-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There is a reversed if condition so the function doesn't work.
+This patch deprecate the legacy PCIe PHY and encourage user
+to use per-lane PHY mode by setting #phy-cells to 1.
 
-Fixes: e94fae7aeef4 ("PCI: Protect pci_error_handlers->reset_notify() usage with device_lock()")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 5b49d662f996..3bf28bf04c3d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4269,7 +4269,7 @@ int pci_try_reset_function(struct pci_dev *dev)
- 	if (rc)
- 		return rc;
+ Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
+index 0f6222a..b496042 100644
+--- a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
++++ b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
+@@ -3,7 +3,6 @@ Rockchip PCIE PHY
  
--	if (pci_dev_trylock(dev))
-+	if (!pci_dev_trylock(dev))
- 		return -EAGAIN;
+ Required properties:
+  - compatible: rockchip,rk3399-pcie-phy
+- - #phy-cells: must be 0
+  - clocks: Must contain an entry in clock-names.
+ 	See ../clocks/clock-bindings.txt for details.
+  - clock-names: Must be "refclk"
+@@ -11,6 +10,12 @@ Required properties:
+ 	See ../reset/reset.txt for details.
+  - reset-names: Must be "phy"
  
- 	pci_dev_save_and_disable(dev);
++Required properties for legacy PHY mode (deprecated):
++ - #phy-cells: must be 0
++
++Required properties for per-lane PHY mode (preferred):
++ - #phy-cells: must be 1
++
+ Example:
+ 
+ grf: syscon@ff770000 {
+-- 
+1.9.1
