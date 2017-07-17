@@ -1,101 +1,326 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:36764 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751465AbdGRUcA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 16:32:00 -0400
-Received: by mail-pf0-f174.google.com with SMTP id o88so10202051pfk.3
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 13:31:59 -0700 (PDT)
-Date: Tue, 18 Jul 2017 13:31:57 -0700
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:33588 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751325AbdGQUOT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 16:14:19 -0400
+Received: by mail-pg0-f48.google.com with SMTP id k14so218729pgr.0
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 13:14:19 -0700 (PDT)
+Date: Mon, 17 Jul 2017 13:14:16 -0700
 From: Brian Norris <briannorris@chromium.org>
 To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
         Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh@kernel.org>,
         Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
         linux-rockchip@lists.infradead.org,
         Jeffy Chen <jeffy.chen@rock-chips.com>,
         devicetree@vger.kernel.org
-Subject: Re: [RFC PATCH v3 1/7] PCI: rockchip: split out
- rockchip_pcie_get_phys
-Message-ID: <20170718203156.GB116895@google.com>
-References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
- <1500364623-97041-2-git-send-email-shawn.lin@rock-chips.com>
+Subject: Re: [PATCH 2/7] PCI: rockchip: introduce per-lanes PHYs support
+Message-ID: <20170717201415.GB6856@google.com>
+References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500276982-208439-3-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500364623-97041-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500276982-208439-3-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
-
-Some nitpicks :)
-
-On Tue, Jul 18, 2017 at 03:56:57PM +0800, Shawn Lin wrote:
-> We plan to introduce per-lanes PHY, so split out new
-> function to make it easy in the future. No functional
-> change intended.
+On Mon, Jul 17, 2017 at 03:36:17PM +0800, Shawn Lin wrote:
+> We distinguish the legacy PHY with the newer per-lane
+> PHYs by adding legacy_phy flag and consolidate all
+> the phy operations into a single function to simply the
+> code. Note that the legacy phy is still the first option
+> to be searched in order not to break the backward compatibility
+> of DT blob, althoug we use devm_phy_optional_get instead which
+> seams to violate the original statement of pcie-rockchip's DT
+> document.
 > 
 > Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 > ---
 > 
-> Changes in v3: None
-> Changes in v2: None
-> 
->  drivers/pci/host/pcie-rockchip.c | 19 ++++++++++++++-----
->  1 file changed, 14 insertions(+), 5 deletions(-)
+>  drivers/pci/host/pcie-rockchip.c | 144 ++++++++++++++++++++++++++++++++-------
+>  1 file changed, 118 insertions(+), 26 deletions(-)
 > 
 > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 5acf869..6632a51 100644
+> index 6632a51..f755df5 100644
 > --- a/drivers/pci/host/pcie-rockchip.c
 > +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -853,6 +853,19 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
->  	chained_irq_exit(chip, desc);
+> @@ -47,6 +47,7 @@
+>  #define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
+>  
+>  #define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
+> +#define MAX_LANE_NUM			4
+>  
+>  #define PCIE_CLIENT_BASE		0x0
+>  #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
+> @@ -210,7 +211,9 @@
+>  struct rockchip_pcie {
+>  	void	__iomem *reg_base;		/* DT axi-base */
+>  	void	__iomem *apb_base;		/* DT apb-base */
+> +	bool	legacy_phy;
+>  	struct	phy *phy;
+> +	struct  phy **phys;
+
+Would this be simpler as just an array?
+
+	struct phy *phys[MAX_LANE_NUM};
+
+You can probably also combine it with the 'phy' field, and just treat it
+differently based on the 'legacy_phy' switch.
+
+>  	struct	reset_control *core_rst;
+>  	struct	reset_control *mgmt_rst;
+>  	struct	reset_control *mgmt_sticky_rst;
+> @@ -242,6 +245,15 @@ struct rockchip_pcie {
+>  	phys_addr_t mem_bus_addr;
+>  };
+>  
+> +enum phy_ops_type {
+> +	PHY_INIT,
+> +	PHY_PWR_ON,
+> +	PHY_PWR_OFF,
+> +	PHY_EXIT,
+> +};
+> +
+> +const char *phy_ops_name[] = {"init", "power on", "power off", "exit"};
+
+This could be 'static'. But if it's only for printing error
+messages...do you really even need this? Somebody could easily refer
+back to the driver if they need to convert an int/enum to something
+meaningful.
+
+> +
+>  static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+>  {
+>  	return readl(rockchip->apb_base + reg);
+> @@ -507,6 +519,104 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
 >  }
 >  
 > +static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
 > +{
 > +	struct device *dev = rockchip->dev;
+> +	struct phy *phy;
+> +	char *name;
+> +	u32 i;
 > +
 > +	rockchip->phy = devm_phy_get(dev, "pcie-phy");
 > +	if (IS_ERR(rockchip->phy)) {
-> +		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
-> +			dev_err(dev, "missing phy\n");
-> +		return PTR_ERR(rockchip->phy);
+> +		if (PTR_ERR(rockchip->phy) == -EPROBE_DEFER)
+> +			return PTR_ERR(rockchip->phy);
+> +		dev_dbg(dev, "missing legacy phy, and search for per-lane PHY\n");
+> +	} else {
+> +		rockchip->legacy_phy = true;
+> +		dev_warn(dev, "legacy phy model is deprecated!\n");
+> +		return 0;
+> +	}
+> +
+> +	/* per-lane PHYs */
+> +	rockchip->phys = devm_kcalloc(dev, sizeof(phy), MAX_LANE_NUM,
+> +				      GFP_KERNEL);
+> +	if (!rockchip->phys)
+> +		return -ENOMEM;
+> +
+> +	for (i = 0; i < MAX_LANE_NUM; i++) {
+> +		name = kasprintf(GFP_KERNEL, "%s-%u", "pcie-phy", i);
+
+Since the string is constant, this could just be:
+
+		kasprintf(..., "pcie-phy-%u", i);
+
+> +		if (!name)
+> +			return -ENOMEM;
+> +
+> +		phy = devm_of_phy_get(rockchip->dev,
+> +				      rockchip->dev->of_node, name);
+> +		kfree(name);
+> +
+> +		if (IS_ERR(phy)) {
+> +			if (PTR_ERR(phy) != -EPROBE_DEFER)
+> +				dev_err(dev, "missing phy for lane %d: %ld\n",
+> +					i, PTR_ERR(phy));
+> +			return PTR_ERR(phy);
+> +		}
+> +
+> +		rockchip->phys[i] = phy;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
+> +					 enum phy_ops_type type)
+> +{
+> +	int i, phy_num, err;
+> +	struct device *dev = rockchip->dev;
+> +	struct phy *phy;
+> +
+> +	phy_num = rockchip->legacy_phy ? 1 : MAX_LANE_NUM;
+> +
+> +	for (i = 0; i < phy_num; i++) {
+> +		phy = rockchip->legacy_phy ? rockchip->phy :
+> +					     rockchip->phys[i];
+> +		switch (type) {
+> +		case PHY_INIT:
+> +			if (phy->init_count > phy_num)
+
+This looks illegal and badly designed. Illegal, because this looks to be
+a count that should only be touched by the PHY core (and protected by
+its mutex). Badly designed, because this is *not* the right way to
+handle overflow/underflow. You should make sure that this driver does
+init/exit and power on/off in a properly-balanced fashion. And that
+doesn't mean just "skip" it when the count is too high; it means this
+driver should know on its own when is the right time to power on/off the
+phy/lane.
+
+And this logic doesn't even make sense. Why should I be allowed to init
+lane 0 only once, but I can init lane 3 up to 4 times?
+
+> +				continue;
+> +			err = phy_init(phy);
+> +			break;
+> +		case PHY_PWR_ON:
+> +			if (phy->power_count > phy_num)
+
+Same goes here.
+
+> +				continue;
+> +			err = phy_power_on(phy);
+> +			break;
+> +		case PHY_PWR_OFF:
+> +			if (!phy->power_count)
+
+And here.
+
+> +				continue;
+> +			err = phy_power_off(phy);
+> +			break;
+> +		case PHY_EXIT:
+> +			if (!phy->init_count)
+
+And here.
+
+> +				continue;
+> +			err = phy_exit(phy);
+> +			break;
+> +		default:
+> +			dev_err(dev, "unsupported phy_ops_type\n");
+> +			return -EOPNOTSUPP;
+> +		}
+> +
+> +		if (err < 0) {
+> +			if (rockchip->legacy_phy)
+> +				dev_err(dev, "fail to %s legacy PHY, err %d\n",
+> +					phy_ops_name[type], err);
+> +			else
+> +				dev_err(dev, "fail to %s per-lane PHY#%u, err %d\n",
+> +					phy_ops_name[type], i, err);
+> +			return err;
+> +		}
 > +	}
 > +
 > +	return 0;
 > +}
 
-You promptly relocate this entire function in the next patch. Would be
-nice if you picked one place and kept it there. (I believe this is
-partly because of how the previous revision had some more complicated
-functions added nearby that were related. But you've killed that now.)
+Really, I think you should kill this whole function, and code the loop
+elsewhere.
 
->  
+> +
 >  /**
->   * rockchip_pcie_parse_dt - Parse Device Tree
-> @@ -883,12 +896,8 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->  	if (IS_ERR(rockchip->apb_base))
->  		return PTR_ERR(rockchip->apb_base);
+>   * rockchip_pcie_init_port - Initialize hardware
+>   * @rockchip: PCIe port information
+> @@ -537,11 +647,9 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		return err;
+>  	}
 >  
+> -	err = phy_init(rockchip->phy);
+> -	if (err < 0) {
+> -		dev_err(dev, "fail to init phy, err %d\n", err);
+> +	err = rockchip_pcie_manipulate_phys(rockchip, PHY_INIT);
+> +	if (err < 0)
+>  		return err;
+> -	}
+>  
+>  	err = reset_control_assert(rockchip->core_rst);
+>  	if (err) {
+> @@ -602,11 +710,9 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  			    PCIE_CLIENT_MODE_RC,
+>  			    PCIE_CLIENT_CONFIG);
+>  
+> -	err = phy_power_on(rockchip->phy);
+> -	if (err) {
+> -		dev_err(dev, "fail to power on phy, err %d\n", err);
+> +	err = rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_ON);
+> +	if (err)
+>  		return err;
+> -	}
+>  
+>  	/*
+>  	 * Please don't reorder the deassert sequence of the following
+> @@ -853,20 +959,6 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+>  	chained_irq_exit(chip, desc);
+>  }
+>  
+> -static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+> -{
+> -	struct device *dev = rockchip->dev;
+> -
 > -	rockchip->phy = devm_phy_get(dev, "pcie-phy");
 > -	if (IS_ERR(rockchip->phy)) {
 > -		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
 > -			dev_err(dev, "missing phy\n");
-> +	if (rockchip_pcie_get_phys(rockchip))
->  		return PTR_ERR(rockchip->phy);
+> -		return PTR_ERR(rockchip->phy);
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  /**
+>   * rockchip_pcie_parse_dt - Parse Device Tree
+>   * @rockchip: PCIe port information
+> @@ -1295,8 +1387,8 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+>  		return ret;
+>  	}
+>  
+> -	phy_power_off(rockchip->phy);
+> -	phy_exit(rockchip->phy);
+> +	rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_OFF);
+> +	rockchip_pcie_manipulate_phys(rockchip, PHY_EXIT);
 
-In the next patch you (correctly) change this to actually capture the
-return code from rockchip_pcie_get_phys(). Seems like you should just do
-that in this patch.
+What's wrong with this (once you unify the 'phys' array)?
+
+	for (i = 0; i < MAX_LANE_NUM; i++) {
+		if (rockchip->phys[i]) { // Not necessarily required;
+					 // phy APIs handle NULL
+			phy_power_off(rockchip->phys[i]);
+			phy_exit(rockchip->phys[i]);
+		}
+	}
+
+Similar for all other uses, AFAICT.
+
+Once you actually need to prevent multiple power-offs (when you power
+down some lanes, but not others), you can avoid the illegal access to
+PHY-internal counters by just keeping your own mask of on/off PHYs.
+
+>  
+>  	clk_disable_unprepare(rockchip->clk_pcie_pm);
+>  	clk_disable_unprepare(rockchip->hclk_pcie);
+> @@ -1538,8 +1630,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>  	pci_unmap_iospace(rockchip->io);
+>  	irq_domain_remove(rockchip->irq_domain);
+>  
+> -	phy_power_off(rockchip->phy);
+> -	phy_exit(rockchip->phy);
+> +	rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_OFF);
+> +	rockchip_pcie_manipulate_phys(rockchip, PHY_EXIT);
+
+Same here.
 
 Brian
 
-> -	}
 >  
->  	rockchip->lanes = 1;
->  	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+>  	clk_disable_unprepare(rockchip->clk_pcie_pm);
+>  	clk_disable_unprepare(rockchip->hclk_pcie);
 > -- 
 > 1.9.1
 > 
