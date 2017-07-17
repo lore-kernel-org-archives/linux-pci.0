@@ -1,98 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: linux-kernel@vger.kernel.org
-Cc: Philipp Zabel <p.zabel@pengutronix.de>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org
-Subject: [PATCH 054/102] PCI: rockchip: explicitly request exclusive reset control
-Date: Wed, 19 Jul 2017 17:25:58 +0200
-Message-Id: <20170719152646.25903-55-p.zabel@pengutronix.de>
-In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
-References: <20170719152646.25903-1-p.zabel@pengutronix.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:31633
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751284AbdGQNxH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Jul 2017 09:53:07 -0400
+Subject: Re: ryzen X370: iommu - unusable huge groups
+To: Andreas Hartmann <andihartmann@01019freenet.de>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <95b7f350-76f7-daff-be4a-f3fc70589ba9@01019freenet.de>
+ <20170716085334.7ae210d2@w520.home>
+ <ecdf6b75-4966-fa3a-00de-99b1c9fe6caa@01019freenet.de>
+ <20170716125630.7cfcec1c@w520.home>
+ <7b5757d3-d0dc-e70a-2c15-954d252a9834@01019freenet.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Message-ID: <73797d4e-cc94-3b2d-ae5b-c5ecf7cb9d92@amd.com>
+Date: Mon, 17 Jul 2017 20:52:55 +0700
+MIME-Version: 1.0
+In-Reply-To: <7b5757d3-d0dc-e70a-2c15-954d252a9834@01019freenet.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
-reset lines") started to transition the reset control request API calls
-to explicitly state whether the driver needs exclusive or shared reset
-control behavior. Convert all drivers requesting exclusive resets to the
-explicit API call so the temporary transition helpers can be removed.
 
-No functional changes.
 
-Cc: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Heiko Stuebner <heiko@sntech.de>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-rockchip@lists.infradead.org
-Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
----
- drivers/pci/host/pcie-rockchip.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
+On 7/17/17 02:39, Andreas Hartmann wrote:
+> On 07/16/2017 at 08:56 PM, Alex Williamson wrote:
+>
+>> On Sun, 16 Jul 2017 18:53:11 +0200
+>> Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+>>
+>>> Hello Alex!
+>>>
+>>> Nice to hear you again :-)
+>>>
+>>>
+>>>
+>>> On 07/16/2017 at 04:53 PM Alex Williamson wrote:
+>>>> On Sun, 16 Jul 2017 07:44:01 +0200
+>>>> Andreas Hartmann <andihartmann@01019freenet.de> wrote:
+>>>>
+>>>>> Hello!
+>>>>>
+>>>>> I've got a Asus X370-Pro motherboard with enabled iommu. Unfortunately,
+>>>>> the group 0 is mostly all of the system :-).
+>>>>>
+>>>>> [    2.602426] iommu: Adding device 0000:00:01.0 to group 0
+>>>>> [    2.602440] iommu: Adding device 0000:00:01.3 to group 0
+>>>>> [    2.603368] iommu: Adding device 0000:03:00.0 to group 0
+>>>>> [    2.603377] iommu: Adding device 0000:03:00.1 to group 0
+>>>>> [    2.603385] iommu: Adding device 0000:03:00.2 to group 0
+>>>>> [    2.603396] iommu: Adding device 0000:1d:00.0 to group 0
+>>>>> [    2.603406] iommu: Adding device 0000:1d:02.0 to group 0
+>>>>> [    2.603417] iommu: Adding device 0000:1d:03.0 to group 0
+>>>>> [    2.603428] iommu: Adding device 0000:1d:04.0 to group 0
+>>>>> [    2.603439] iommu: Adding device 0000:1d:06.0 to group 0
+>>>>> [    2.603450] iommu: Adding device 0000:1d:07.0 to group 0
+>>>>> [    2.603466] iommu: Adding device 0000:24:00.0 to group 0
+>>>>> [    2.603481] iommu: Adding device 0000:25:00.0 to group 0
+>>>>> [    2.603498] iommu: Adding device 0000:26:00.0 to group 0
+>>>>> [    2.603513] iommu: Adding device 0000:27:00.0 to group 0
+>>>>
+>>>>
+>>>> Update your motherboard BIOS, AMD AGESA 1.0.0.6 is supposed to
+>>>> enable ACS in the PCIe root ports.  Thanks,
+>>>
+>>> Group 0 is now group 10 - that's mostly all :-( - no significant change.
+>>> (Version 805 which should contain AGESA 1.0.0.6).
+>>>
+>>>
+>>> [    2.600097] iommu: Adding device 0000:03:00.0 to group 10
+>>> [    2.600117] iommu: Adding device 0000:03:00.1 to group 10
+>>> [    2.600136] iommu: Adding device 0000:03:00.2 to group 10
+>>> [    2.600148] iommu: Adding device 0000:1d:00.0 to group 10
+>>> [    2.600158] iommu: Adding device 0000:1d:02.0 to group 10
+>>> [    2.600169] iommu: Adding device 0000:1d:03.0 to group 10
+>>> [    2.600180] iommu: Adding device 0000:1d:04.0 to group 10
+>>> [    2.600190] iommu: Adding device 0000:1d:06.0 to group 10
+>>> [    2.600201] iommu: Adding device 0000:1d:07.0 to group 10
+>>> [    2.600216] iommu: Adding device 0000:24:00.0 to group 10
+>>> [    2.600233] iommu: Adding device 0000:25:00.0 to group 10
+>>> [    2.600249] iommu: Adding device 0000:26:00.0 to group 10
+>>> [    2.600266] iommu: Adding device 0000:27:00.0 to group 10
+>>>
+>>>
+>>> All devices that are used are in the same group again.
+>>>
+>>> Isn't it possible to allow them to put to VM anyway if there is no peer
+>>> to peer communication - same as it was possible with the previous
+>>> chipset (990xa)?
+>>
+>> Ah, I see you have a PCIe switch with downstream ports 1d.*.0 where
+>> the downstream switch ports don't support ACS (not surprising for
+>> something reporting ASMedia as a subsystem capability).  So ACS was
+>> broken at multiple levels and now that it's exposed at the root port
+>> it's still broken by the non-ACS switch.  The endpoints downstream of
+>> the switch are not sufficiently isolated to separate between VMs,
+>> sorry, the hardware isn't up to the task at hand.  Thanks,
+>
+> In other words, you're telling, that there can't be done anything to get it
+> working? Do you know any other board, which doesn't have this problem and could
+> work?
+>
+> Gigabyte? Asrock?
+>
+>
+> Thanks,
+> Andreas
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 7bb9870f6d8ce..e50d6f5a81f4b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -903,49 +903,50 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
- 		rockchip->link_gen = 2;
- 
--	rockchip->core_rst = devm_reset_control_get(dev, "core");
-+	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
- 	if (IS_ERR(rockchip->core_rst)) {
- 		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing core reset property in node\n");
- 		return PTR_ERR(rockchip->core_rst);
- 	}
- 
--	rockchip->mgmt_rst = devm_reset_control_get(dev, "mgmt");
-+	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
- 	if (IS_ERR(rockchip->mgmt_rst)) {
- 		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing mgmt reset property in node\n");
- 		return PTR_ERR(rockchip->mgmt_rst);
- 	}
- 
--	rockchip->mgmt_sticky_rst = devm_reset_control_get(dev, "mgmt-sticky");
-+	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
-+								     "mgmt-sticky");
- 	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
- 		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing mgmt-sticky reset property in node\n");
- 		return PTR_ERR(rockchip->mgmt_sticky_rst);
- 	}
- 
--	rockchip->pipe_rst = devm_reset_control_get(dev, "pipe");
-+	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
- 	if (IS_ERR(rockchip->pipe_rst)) {
- 		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing pipe reset property in node\n");
- 		return PTR_ERR(rockchip->pipe_rst);
- 	}
- 
--	rockchip->pm_rst = devm_reset_control_get(dev, "pm");
-+	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
- 	if (IS_ERR(rockchip->pm_rst)) {
- 		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing pm reset property in node\n");
- 		return PTR_ERR(rockchip->pm_rst);
- 	}
- 
--	rockchip->pclk_rst = devm_reset_control_get(dev, "pclk");
-+	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
- 	if (IS_ERR(rockchip->pclk_rst)) {
- 		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing pclk reset property in node\n");
- 		return PTR_ERR(rockchip->pclk_rst);
- 	}
- 
--	rockchip->aclk_rst = devm_reset_control_get(dev, "aclk");
-+	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
- 	if (IS_ERR(rockchip->aclk_rst)) {
- 		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
- 			dev_err(dev, "missing aclk reset property in node\n");
--- 
-2.11.0
+I have checked with the BIOS team, and they said that this is supposed to get 
+fixed in 1.0.0.7.  Sorry for inconvenience.
+
+Suravee
