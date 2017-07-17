@@ -1,267 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36103 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751471AbdGRQE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jul 2017 12:04:26 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:04 -0600
-Message-Id: <20170718160409.6493-12-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 11/16] switchtec_ntb: add skeleton NTB driver
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:35792 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751461AbdGQVDr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 17:03:47 -0400
+Received: by mail-pf0-f172.google.com with SMTP id e199so742840pfh.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 14:03:47 -0700 (PDT)
+Date: Mon, 17 Jul 2017 14:03:44 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2] phy-rockchip-pcie: add set_mode callback
+Message-ID: <20170717210342.GA115703@google.com>
+References: <1497601068-181656-1-git-send-email-shawn.lin@rock-chips.com>
+ <cea27b15-2c2d-a4a9-76f8-f4798c152101@ti.com>
+ <CA+ASDXOpPdk+mrVQxrDmhsL-SUNSnQ_CqGXuW-Vrh_D7Gh8jxA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+ASDXOpPdk+mrVQxrDmhsL-SUNSnQ_CqGXuW-Vrh_D7Gh8jxA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a skeleton NTB driver which will be filled out in subsequent patches.
+On Mon, Jul 10, 2017 at 10:20:32PM -0700, Brian Norris wrote:
+> Hi Kishon,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 148 +++++++++++++++++++++++++++++++++++-
- include/linux/ntb.h                 |   3 +
- 2 files changed, 150 insertions(+), 1 deletion(-)
+Hi again Kishon,
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 852dc9869a3e..20f2fdda4644 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -18,6 +18,7 @@
- #include <linux/delay.h>
- #include <linux/kthread.h>
- #include <linux/interrupt.h>
-+#include <linux/ntb.h>
- 
- MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
- MODULE_VERSION("0.1");
-@@ -71,6 +72,7 @@ struct shared_mw {
- #define LUT_SIZE SZ_64K
- 
- struct switchtec_ntb {
-+	struct ntb_dev ntb;
- 	struct switchtec_dev *stdev;
- 
- 	int self_partition;
-@@ -161,10 +163,148 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 	return -EIO;
- }
- 
-+static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
-+				      int widx, resource_size_t *addr_align,
-+				      resource_size_t *size_align,
-+				      resource_size_t *size_max)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
-+				      dma_addr_t addr, resource_size_t size)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
-+					  phys_addr_t *base,
-+					  resource_size_t *size)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
-+				    enum ntb_speed *speed,
-+				    enum ntb_width *width)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
-+				     enum ntb_speed max_speed,
-+				     enum ntb_width max_width)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
-+					 int sidx, u32 val)
-+{
-+	return 0;
-+}
-+
-+static const struct ntb_dev_ops switchtec_ntb_ops = {
-+	.mw_count		= switchtec_ntb_mw_count,
-+	.mw_get_align		= switchtec_ntb_mw_get_align,
-+	.mw_set_trans		= switchtec_ntb_mw_set_trans,
-+	.peer_mw_count		= switchtec_ntb_peer_mw_count,
-+	.peer_mw_get_addr	= switchtec_ntb_peer_mw_get_addr,
-+	.link_is_up		= switchtec_ntb_link_is_up,
-+	.link_enable		= switchtec_ntb_link_enable,
-+	.link_disable		= switchtec_ntb_link_disable,
-+	.db_valid_mask		= switchtec_ntb_db_valid_mask,
-+	.db_vector_count	= switchtec_ntb_db_vector_count,
-+	.db_vector_mask		= switchtec_ntb_db_vector_mask,
-+	.db_read		= switchtec_ntb_db_read,
-+	.db_clear		= switchtec_ntb_db_clear,
-+	.db_set_mask		= switchtec_ntb_db_set_mask,
-+	.db_clear_mask		= switchtec_ntb_db_clear_mask,
-+	.peer_db_set		= switchtec_ntb_peer_db_set,
-+	.spad_count		= switchtec_ntb_spad_count,
-+	.spad_read		= switchtec_ntb_spad_read,
-+	.spad_write		= switchtec_ntb_spad_write,
-+	.peer_spad_write	= switchtec_ntb_peer_spad_write,
-+};
-+
- static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
- {
- 	u64 part_map;
- 
-+	sndev->ntb.pdev = sndev->stdev->pdev;
-+	sndev->ntb.topo = NTB_TOPO_SWITCH;
-+	sndev->ntb.ops = &switchtec_ntb_ops;
-+
- 	sndev->self_partition = sndev->stdev->partition;
- 
- 	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-@@ -512,7 +652,6 @@ static int switchtec_ntb_add(struct device *dev,
- 		return -ENOMEM;
- 
- 	sndev->stdev = stdev;
--
- 	switchtec_ntb_init_sndev(sndev);
- 	switchtec_ntb_init_mw(sndev);
- 	switchtec_ntb_init_db(sndev);
-@@ -532,11 +671,17 @@ static int switchtec_ntb_add(struct device *dev,
- 
- 	switchtec_ntb_init_mw(sndev);
- 
-+	rc = ntb_register_device(&sndev->ntb);
-+	if (rc)
-+		goto deinit_and_exit;
-+
- 	stdev->sndev = sndev;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
- 
-+deinit_and_exit:
-+	switchtec_ntb_deinit_db_msg_irq(sndev);
- deinit_shared_and_exit:
- 	switchtec_ntb_deinit_shared_mw(sndev);
- free_and_exit:
-@@ -555,6 +700,7 @@ void switchtec_ntb_remove(struct device *dev,
- 		return;
- 
- 	stdev->sndev = NULL;
-+	ntb_unregister_device(&sndev->ntb);
- 	switchtec_ntb_deinit_db_msg_irq(sndev);
- 	switchtec_ntb_deinit_shared_mw(sndev);
- 	kfree(sndev);
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 47f2966cfd7f..c308964777eb 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -70,6 +70,7 @@ struct pci_dev;
-  * @NTB_TOPO_SEC:	On secondary side of remote ntb.
-  * @NTB_TOPO_B2B_USD:	On primary side of local ntb upstream of remote ntb.
-  * @NTB_TOPO_B2B_DSD:	On primary side of local ntb downstream of remote ntb.
-+ * @NTB_TOPO_SWITCH:	Connected via a switch which supports ntb.
-  */
- enum ntb_topo {
- 	NTB_TOPO_NONE = -1,
-@@ -77,6 +78,7 @@ enum ntb_topo {
- 	NTB_TOPO_SEC,
- 	NTB_TOPO_B2B_USD,
- 	NTB_TOPO_B2B_DSD,
-+	NTB_TOPO_SWITCH,
- };
- 
- static inline int ntb_topo_is_b2b(enum ntb_topo topo)
-@@ -97,6 +99,7 @@ static inline char *ntb_topo_string(enum ntb_topo topo)
- 	case NTB_TOPO_SEC:	return "NTB_TOPO_SEC";
- 	case NTB_TOPO_B2B_USD:	return "NTB_TOPO_B2B_USD";
- 	case NTB_TOPO_B2B_DSD:	return "NTB_TOPO_B2B_DSD";
-+	case NTB_TOPO_SWITCH:	return "NTB_TOPO_SWITCH";
- 	}
- 	return "NTB_TOPO_INVALID";
- }
--- 
-2.11.0
+I didn't get a response from you, but Shawn is continuing to send
+several versions of a patchset implementing one of these suggestions.
+I'd like to ping back here, in the hopes of getting an answer.
+
+> On Mon, Jul 10, 2017 at 9:45 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+> > On Friday 16 June 2017 01:47 PM, Shawn Lin wrote:
+> > > phy_mode was added for switching USB mode purposely as
+> > > well as phy_set_mode API. However other types of PHY could
+> > > also have some miscellaneous setting/modes need to be
+> > > handled. This patch is gonna support this callback for
+> > > phy-rockchip-pcie and do some power-saving work there.
+> > > Note that we just stuff in some other values other that the
+> > > existing phy_mode and convert it in the coressponding driver
+> > > instead, otherwise we should extend the phy_mode again which
+> > > it doesn't make sense to add in new driver's specificed value.
+> > > Overall it looks fine to me as the controller's driver and the
+> > > phy's driver are paired so that the caller and the consumer should
+> > > be able to keep the value(mode) in consistent.
+> >
+> > I really don't prefer using an API other that what it is intended for. We have
+> > to come up with a better way for handling this.
+> >
+> > IIUC this patch sets unused lanes in idle mode? If yes, then can't we model
+> > each lane as a separate phy, so that we can power-on/power-off each lane
+> > independently.
+> 
+> I suggested the same to Shawn previously. I'm interested in seeing his response.
+
+Judging by Shawn's subsequent patches, I guess he saw no problem with
+this. I'm still not so sure.
+
+> But personally I'm still not sure if that's the most accurate way to
+> describe this PHY, except for the fact that inevitably, most device
+> tree bindings get molded to match the related kernel APIs, rather than
+> the other way around. What if instead, we added an enum mode entry
+> that represents "finished link training", at which point the PHY would
+> then know it can power down the unused lanes (that's assuming the PHY
+> can figure that part out)?
+
+Can I get an answer here? Is it possible that we extend the PHY API with
+either a new 'phy_mode', or with some other PCIe-specific extension? As
+I said above, it doesn't actually seem like a natural description of the
+hardware to say that there are 4 PHYs here, instead of just 1. And then
+it puts more burden on the provider/consumer drivers to do a lot of
+weird accounting, just so that this single piece of hardware can fit the
+current limited set of APIs.
+
+This is not the first time that some concept isn't so easy to fit into
+the existing framework. I think it would be prudent to consider ways to
+better extend the API to support modes specific to device classes.
+You've already done that for some USB pieces, and I think it would make
+sense to extend this to PCIe. For instance, we could have the PHY export
+things like "number of PCIe lanes", and support callbacks for "disable
+unused lanes".
+
+> Or if we did re-model this PHY, how are we supposed to handle backward
+> compatibility? Can the same PHY driver support 2 different of_xlate
+> methods? I guess we'd have to provide an implementation that sets the
+> driver up to behave completely differently based on the number of
+> #phy-cells?
+
+I guess Shawn was able to work out some of this. But all the extra
+state-tracking and reference counting appears to be hard to get right...
+
+Brian
