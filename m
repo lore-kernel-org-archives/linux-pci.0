@@ -1,63 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:34037 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933025AbdGSP3S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 11:29:18 -0400
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: linux-kernel@vger.kernel.org
-Cc: Philipp Zabel <p.zabel@pengutronix.de>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Hunter <jonathanh@nvidia.com>,
-        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 053/102] PCI: tegra: explicitly request exclusive reset control
-Date: Wed, 19 Jul 2017 17:25:57 +0200
-Message-Id: <20170719152646.25903-54-p.zabel@pengutronix.de>
-In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
-References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+Received: from mail-lf0-f52.google.com ([209.85.215.52]:36830 "EHLO
+        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751265AbdGQJzd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 05:55:33 -0400
+Received: by mail-lf0-f52.google.com with SMTP id h22so82127140lfk.3
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 02:55:32 -0700 (PDT)
+Subject: Re: [PATCH] pci: ftpci100: fix of_irq_get() error check
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <20170715214406.657273405@cogentembedded.com>
+ <CACRpkdbwMm_YwDG=e1Dyi1B7yp-++2u5frQiL_cbw_eRTiGiiQ@mail.gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <73a59815-4305-52eb-df51-22da21291e85@cogentembedded.com>
+Date: Mon, 17 Jul 2017 12:55:31 +0300
+MIME-Version: 1.0
+In-Reply-To: <CACRpkdbwMm_YwDG=e1Dyi1B7yp-++2u5frQiL_cbw_eRTiGiiQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
-reset lines") started to transition the reset control request API calls
-to explicitly state whether the driver needs exclusive or shared reset
-control behavior. Convert all drivers requesting exclusive resets to the
-explicit API call so the temporary transition helpers can be removed.
+Hello!
 
-No functional changes.
+On 7/17/2017 12:17 AM, Linus Walleij wrote:
 
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Hunter <jonathanh@nvidia.com>
-Cc: linux-tegra@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
----
- drivers/pci/host/pci-tegra.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+>> of_irq_get() may return a negative error number as well as 0 on failure,
+>> while the driver only checks for 0, blithely continuing with the call to
+>> irq_set_chained_handler_and_data() -- that function expects *unsigned int*
+>> so should probably do nothing when a large IRQ number resulting from a
+>> conversion of a negative error number is passed to it. The driver then
+>> probes successfully while being only partly functional...
+>>
+>> Check for 'irq <= 0' instead and propagate the negative error number to
+>> the probe method --  that will allow the deferred probing as well...
+>>
+>> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> 
+> Looks correct!
+> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index b3722b7709df8..a64bd0a191767 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -1147,15 +1147,15 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 
--	pcie->pex_rst = devm_reset_control_get(dev, "pex");
-+	pcie->pex_rst = devm_reset_control_get_exclusive(dev, "pex");
- 	if (IS_ERR(pcie->pex_rst))
- 		return PTR_ERR(pcie->pex_rst);
- 
--	pcie->afi_rst = devm_reset_control_get(dev, "afi");
-+	pcie->afi_rst = devm_reset_control_get_exclusive(dev, "afi");
- 	if (IS_ERR(pcie->afi_rst))
- 		return PTR_ERR(pcie->afi_rst);
- 
--	pcie->pcie_xrst = devm_reset_control_get(dev, "pcie_x");
-+	pcie->pcie_xrst = devm_reset_control_get_exclusive(dev, "pcie_x");
- 	if (IS_ERR(pcie->pcie_xrst))
- 		return PTR_ERR(pcie->pcie_xrst);
- 
--- 
-2.11.0
+    Thanks!
+
+>> -               return -EINVAL;
+>> +               return irq ?: -EINVAL;
+> 
+> I thought I knew C but I learn something new all the time.
+> I had no clue one can use the ternary operator like this.
+
+    It's not a standard C, it's gcc's trickery. :-)
+
+> Linus Walleij
+
+MBR, Sergei
