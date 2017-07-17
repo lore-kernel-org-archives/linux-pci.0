@@ -1,49 +1,55 @@
-Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Mark Rutland <mark.rutland@arm.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
- <16622817-8ccd-107b-be08-676b576f6e8a@sigmadesigns.com>
- <20170704155855.GI13824@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <877fefdf-969d-bc46-3233-f988ccfe4c74@free.fr>
-Date: Wed, 5 Jul 2017 01:42:47 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f194.google.com ([209.85.223.194]:33539 "EHLO
+        mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751318AbdGQUQe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 16:16:34 -0400
+Date: Mon, 17 Jul 2017 15:16:31 -0500
+From: Rob Herring <robh@kernel.org>
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: bhelgaas@google.com, mark.rutland@arm.com, svarbanov@mm-sol.com,
+        kishon@ti.com, sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
+        fengguang.wu@intel.com, weiyongjun1@huawei.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 2/7] dt-bindings: phy: qmp: Add support for QMP phy in
+ IPQ8074
+Message-ID: <20170717201631.abhtg7rcn4bz4lux@rob-hp-laptop>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-3-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <20170704155855.GI13824@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500293043-1887-3-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/2017 17:58, Bjorn Helgaas wrote:
+On Mon, Jul 17, 2017 at 05:33:58PM +0530, Varadarajan Narayanan wrote:
+> IPQ8074 uses QMP phy controller that provides support to PCIe and
+> USB. Adding dt binding information for the same.
+> 
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
+>  .../devicetree/bindings/phy/qcom-qmp-phy.txt       | 28 ++++++++++++++++++++++
+>  1 file changed, 28 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> index 5d7a51f..80d766b 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> @@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
+>  
+>  Required properties:
+>   - compatible: compatible list, contains:
+> +	       "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
+>  	       "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
+>  	       "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
+>  
+> @@ -107,3 +108,30 @@ Example:
+>  		...
+>  		...
+>  	};
+> +
+> +	phy@86000 {
 
-> It's definitely a hassle to support chips with different register
-> layouts.  Your hardware guys are really making your life hard :)
+Only a new compatible doesn't warrant another example.
 
-Now where did I put my foam bat...
-
-> If the chips are fundamentally different, i.e., if they *operate*
-> differently in addition to having a different register layout, you
-> could make two separate drivers.
-
-It's the exact same underlying IP. Revision 2 is only a
-bug fix rev. IIUC, some of the fixes lead to adding a
-register here, removing a register there... and I don't
-think the HW dev ever considered the pain of supporting
-both revs within a single driver.
-
-This dual support explains some of the peculiarities
-you noted in my submission.
-
-Regards.
+Rob
