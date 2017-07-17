@@ -1,93 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:43884 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751754AbdGSH2B (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:28:01 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH v4 6/7] dt-bindings: PCI: rockchip: convert to use per-lane PHY model
-Date: Wed, 19 Jul 2017 15:27:37 +0800
-Message-Id: <1500449258-101663-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
- <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC] PCI: dwc: designware: allow customize unroll registers'
+ readl/writel
+To: Jisheng Zhang <jszhang@marvell.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
+References: <20170713184837.541ccf26@xhacker> <20170713185213.0b04a4fc@xhacker>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <825636e2-f685-738e-46d9-bbc483e95606@synopsys.com>
+Date: Mon, 17 Jul 2017 09:59:14 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170713185213.0b04a4fc@xhacker>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate legacy PHY model and encourage to use per-lane PHY
-model.
-
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
-
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 1453a73..41bced4 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -19,8 +19,6 @@ Required properties:
- 	- "pm"
- - msi-map: Maps a Requester ID to an MSI controller and associated
- 	msi-specifier data. See ./pci-msi.txt
--- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
--- phy-names:  MUST be "pcie-phy".
- - interrupts: Three interrupt entries must be specified.
- - interrupt-names: Must include the following names
- 	- "sys"
-@@ -42,6 +40,18 @@ Required properties:
- 	interrupt source. The value must be 1.
- - interrupt-map-mask and interrupt-map: standard PCI properties
- 
-+Required properties for legacy PHY model (deprecated):
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+
-+Required properties for per-lane PHY model (preferred):
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+
- Optional Property:
- - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
- 	using 24MHz OSC for RC's PHY.
-@@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
- 		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
- 	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
- 		      "pm", "pclk", "aclk";
-+	/* deprecated legacy PHY model */
- 	phys = <&pcie_phy>;
- 	phy-names = "pcie-phy";
- 	pinctrl-names = "default";
-@@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
- 		#interrupt-cells = <1>;
- 	};
- };
-+
-+pcie0: pcie@f8000000 {
-+	...
-+
-+	/* preferred per-lane PHY model */
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+
-+	...
-+};
--- 
-1.9.1
+SGkgSmlzaGVuZywKCsOAcyAxMTo1MiBBTSBkZSA3LzEzLzIwMTcsIEppc2hlbmcgWmhhbmcgZXNj
+cmV2ZXU6Cj4gT24gVGh1LCAxMyBKdWwgMjAxNyAxODo0ODozNyArMDgwMCBKaXNoZW5nIFpoYW5n
+IHdyb3RlOgo+IAo+PiBIaSBKb2FvLCBKaW5nb28sCj4+Cj4+IE5vdywgdGhlIFBDSUVfR0VUX0FU
+VV9PVVRCX1VOUl9SRUdfT0ZGU0VUIG1hY3JvIGlzIGRlZmluZWQgYXM6Cj4+Cj4+IC8qIFJlZ2lz
+dGVyIGFkZHJlc3MgYnVpbGRlciAqLwo+PiAjZGVmaW5lIFBDSUVfR0VUX0FUVV9PVVRCX1VOUl9S
+RUdfT0ZGU0VUKHJlZ2lvbikgICAgICAgIFwKPj4gICAgICAgICAgICAgICAgICAgICAgICAgKCgw
+eDMgPDwgMjApIHwgKChyZWdpb24pIDw8IDkpKQo+Pgo+PiBJIGhhdmUgb25lIHF1ZXN0aW9uOiB3
+aGVyZSBkb2VzIHRoZSAoMHgzIDw8IDIwKSBjb21lIGZyb20/IDJNQiBzcGFjZSwgYSBiaXQKCkZy
+b20sIHRoZSBQQ0llIENvcmUgNC44MCB5b3UgaGF2ZSB0aGUgbmV3IGZlYXR1cmUgVW5yb2xsLCB3
+aGljaCB3YXMgZGV2ZWxvcGVkCmZvciBib3RoIGlBVFUgYW5kIERNQS4KVG8gaW5mb3JtIHRoZSBD
+b3JlIHRoYXQgeW91IHdhbnQgdG8gYWNjZXNzIGFuIFVucm9sbCByZWdpc3RlciBhZGRyZXNzLCBi
+aXRzIDIwCmFuZCAyMSBtdXN0IGJlIHNldCwgYW5kIHRoYXRzIHdoZXJlIDB4MyBjb21lcyBmcm9t
+LgoKSWYgaXQgaXMgbm90IGNsZWFyIHBsZWFzZSBsZXQgbWUga25vdy4KCj4gCj4gc29ycnksIHR5
+cG8uICgweDMgPDwgMjApIHNob3VsZCBiZSAzTUIuCj4gCj4+IGxhcmdlLiBBbmQgSSBkaWRuJ3Qg
+ZmluZCBpdCBpbiB0aGUgZGF0YWJvb2suIElzIGl0IHBsYXRmb3JtIHNwZWNpZmljPwo+PiBJZiB5
+ZXMsIEkgd2FudCB0byBjb29rIG9uZSBwYXRjaCB0byBjdXN0b21pemUgdW5yb2xsIHJlZ2lzdGVy
+cycgcmVhZGwvd3JpdGVsLgo+Pgo+PiBBbmQgaG93IGRvZXMgKDB4MyA8PCAyMCkgZW5hYmxlIERC
+STIgYWNjZXNzPwo+Pgo+PiBUaGFua3MgaW4gYWR2YW5jZSwKPj4gSmlzaGVuZwo+IAoKVGhhbmtz
+LApKb2FvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwps
+aW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJh
+ZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51
+eC1hcm0ta2VybmVsCg==
