@@ -1,96 +1,69 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:46493 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751757AbdGGI7p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 7 Jul 2017 04:59:45 -0400
-Subject: Re: [PATCH v2 9/9] pci: remove limitation of the number of the
- available IRQs
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-CC: <m-karicheri2@ti.com>, <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <jespern@axis.com>,
-        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <3839dbf866a10034298b758f63fe019873b829bc.1496677911.git.jpinto@synopsys.com>
- <255c8d6f-603f-645f-c467-694352bd2dcf@axis.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <2685b00d-c865-a6dc-63ce-723dc9e4a317@synopsys.com>
-Date: Fri, 7 Jul 2017 09:59:27 +0100
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:35541 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751725AbdGQWav (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 18:30:51 -0400
+Received: by mail-pg0-f46.google.com with SMTP id v190so1705165pgv.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 15:30:51 -0700 (PDT)
+Date: Mon, 17 Jul 2017 15:30:47 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
+Message-ID: <20170717223047.GA20973@minitux>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-4-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <255c8d6f-603f-645f-c467-694352bd2dcf@axis.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500293043-1887-4-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon 17 Jul 05:03 PDT 2017, Varadarajan Narayanan wrote:
 
-Hi Niklas,
+> Presently, the phy pipe clock's name is assumed to be either
+> usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+> phy lane's number). However, this will not work if an SoC has
+> more than one instance of the phy. Hence, instead of assuming
+> the name of the clock, fetch it from the DT.
+> 
 
-Às 3:22 PM de 7/6/2017, Niklas Cassel escreveu:
-> On 06/05/2017 06:19 PM, Joao Pinto wrote:
->> The Synopsys PCIe Controller supports up to 256 IRQs distributed
->> by 8 controller registers.
->>
->> Having this in mind, the number of the maximum number of
->> IRQs was changed to 256 and now the number of controllers is
->> calculated based on the number of vectors used by the specific
->> SoC driver.
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
->> Change v1->v2:
->> - New patch
->>
->>  drivers/pci/dwc/pcie-designware-host.c | 12 ++++++++----
->>  drivers/pci/dwc/pcie-designware.h      | 10 +++-------
->>  2 files changed, 11 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
->> index 6c771cc..31c7ccd 100644
->> --- a/drivers/pci/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/dwc/pcie-designware-host.c
->> @@ -73,11 +73,13 @@ static struct msi_domain_info dw_pcie_msi_domain_info = {
->>  /* MSI int handler */
->>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->>  {
->> -	u32 val;
->>  	int i, pos, irq;
->> +	u32 val, num_ctrls;
->>  	irqreturn_t ret = IRQ_NONE;
->>  
->> -	for (i = 0; i < MAX_MSI_CTRLS; i++) {
->> +	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
->> +
->> +	for (i = 0; i < num_ctrls; i++) {
->>  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
->>  				    &val);
-> 
-> Hello Joao
-> 
-> 
-> Nice to see that we now have support for all 8 controllers,
-> good job!
-> 
-> Older versions of the DesignWare IP only had support for a
-> combined msi irq (msi_ctrl_int), but since recent versions
-> of the IP also supports a dedicated irq line per controller
-> (msi_ctrl_int_vec[7:0]), do you	think that it makes sense
-> to take this into consideration for this patchset?
-> 
-> By doing so, dw_handle_msi_irq would not have to iterate
-> over all 8 controllers, as the irq itself would tell us
-> what controller to read the status from (to finally see
-> which irq(s) that actually triggered).
+Adding the support to fetch this from DT looks reasonable, but you
+should make sure to fall back to the old logic in case you don't find a
+"clock-output-names" property.
 
-This would be interesting, thanks for the tips!
+[..]
+> @@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>  
+>  	id = 0;
+>  	for_each_available_child_of_node(dev->of_node, child) {
+> +		const char *clk_name;
+> +
+>  		/* Create per-lane phy */
+>  		ret = qcom_qmp_phy_create(dev, child, id);
+>  		if (ret) {
+> @@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>  			return ret;
+>  		}
+>  
+> +		ret = of_property_read_string(child, "clock-output-names",
+> +							&clk_name);
+> +		if (ret) {
 
-Joao
+This would be the case for any existing dts files, so you're not allowed
+to treat this as an error.
 
-> 
-> 
-> Regards,
-> Niklas
-> 
+> +			dev_err(dev,
+> +				"failed to get clock-output-names for lane%d phy, %d\n",
+> +				id, ret);
+> +			return ret;
+> +		}
+> +
+
+Regards,
+Bjorn
