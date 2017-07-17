@@ -1,94 +1,185 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:39398 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753476AbdGSJ6Z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:58:25 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 6/7] dt-bindings: PCI: rockchip: convert to use per-lane PHY model
-Date: Wed, 19 Jul 2017 17:57:57 +0800
-Message-Id: <1500458278-203082-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500458278-203082-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
- <1500458278-203082-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:36298 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdGQTlY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 15:41:24 -0400
+Received: by mail-qk0-f195.google.com with SMTP id d136so2356587qkg.3
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 12:41:23 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Z.q. Hou'" <zhiqiang.hou@nxp.com>,
+        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com> <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com> <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com> <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com> <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+In-Reply-To: <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+Subject: Re: [PATCH 1/3] PCI: designware: add accessors for write permission of DBI read-only registers
+Date: Mon, 17 Jul 2017 15:41:21 -0400
+Message-ID: <000d01d2ff34$ab71cd30$02556790$@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+        charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate legacy PHY model and encourage to use per-lane PHY
-model.
+On Tuesday, July 11, 2017 12:11 AM, Z.q. Hou wrote:
+>=20
+> Hi Bjorn,
+>=20
+> Due to all Freescale Layerscpe PCIe controllers have to fix the Class =
+code,
+> and this fixup existed in both Layerscape pcie driver and DWC common =
+code,
+> so I want to reuse the fixup in DWC common code.
+> Can you give me any suggestion?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
+Please don't add your comment on top of the email.
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
 
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+>=20
+> > -----Original Message-----
+> > From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
+> > Sent: 2017=E5=B9=B47=E6=9C=887=E6=97=A5 16:53
+> > To: Z.q. Hou <zhiqiang.hou@nxp.com>; Joao Pinto
+> > <Joao.Pinto@synopsys.com>; linux-pci@vger.kernel.org;
+> > bhelgaas@google.com
+> > Cc: jingoohan1@gmail.com
+> > Subject: Re: [PATCH 1/3] PCI: designware: add accessors for write
+> permission
+> > of DBI read-only registers
+> >
+> >
+> > Hi Zhiqiang,
+> >
+> > =C3=80s 4:48 AM de 7/7/2017, Z.q. Hou escreveu:
+> > > Hi Joao,
+> > >
+> > >
+> > >
+> > > Thanks a lot for your comments!
+> > >
+> > >
+> > >
+> > >> -----Original Message-----
+> > >
+> > >> From: Joao Pinto [mailto:Joao.Pinto@synopsys.com]
+> > >
+> > >> Sent: 2017=E5=B9=B47=E6=9C=886=E6=97=A5 17:44
+> > >
+> > >> To: Z.q. Hou <zhiqiang.hou@nxp.com>; linux-pci@vger.kernel.org;
+> > >
+> > >> Joao.Pinto@synopsys.com
+> > >
+> > >> Cc: bhelgaas@google.com; jingoohan1@gmail.com
+> > >
+> > >> Subject: Re: [PATCH 1/3] PCI: designware: add accessors for write
+> > >> permission
+> > >
+> > >> of DBI read-only registers
+> > >
+> > >>
+> > >
+> > >>
+> > >
+> > >> Hi Zhiqiang,
+> > >
+> > >>
+> > >
+> > >> =C3=80s 7:33 AM de 7/6/2017, Zhiqiang Hou escreveu:
+> > >
+> > >>> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> > >
+> > >>>
+> > >
+> > >>> The read-only DBI registers can be written over the DBI when set =
+the
+> > >
+> > >>> "Write to RO Registers Using DBI" (DBI_RO_WR_EN) field of the
+> > >
+> > >>> MISC_CONTROL_1_OFF register.
+> > >
+> > >>
+> > >
+> > >> I would suggest you to add a cover-letter next time to explain =
+the
+> > >> global
+> > >
+> > >> picture of the patch-set.
+> > >
+> > >
+> > >
+> > > Thanks, I will.
+> > >
+> > >
+> > >
+> > >>
+> > >
+> > >> I understand your need for this patch, but I don't agree on the
+> approach.
+> > >
+> > >
+> > >
+> > > In the DWC common code, there is a function write a DBI read-only
+> register
+> > 'Device class code', and the first 2 patches is to fix it.
+> > >
+> > > The 3rd patch is to refactor the Layerscape PCIe driver's =
+host_init
+> function
+> > and reuse the new added accessors.
+> > >
+> > >
+> > >
+> > >> Sometimes the people in charge of the hardware design /
+> > >> configuration, forget
+> > >
+> > >> to specify the device class and that can be problematic for some
+> > >> drivers, and
+> > >
+> > >> so the typical workaround is to set it in the driver using a =
+quirk
+> for example.
+> > >
+> > >>
+> > >
+> > >> You can see some examples here:
+> > >
+> > >> =
+https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__git.kernel.org_p
+> > >> =
+ub_scm_linux_kernel_git_torvalds_linux.git_tree_drivers_&d=3DDwIGaQ&c=3DD=
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 1453a73..41bced4 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -19,8 +19,6 @@ Required properties:
- 	- "pm"
- - msi-map: Maps a Requester ID to an MSI controller and associated
- 	msi-specifier data. See ./pci-msi.txt
--- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
--- phy-names:  MUST be "pcie-phy".
- - interrupts: Three interrupt entries must be specified.
- - interrupt-names: Must include the following names
- 	- "sys"
-@@ -42,6 +40,18 @@ Required properties:
- 	interrupt source. The value must be 1.
- - interrupt-map-mask and interrupt-map: standard PCI properties
- 
-+Required properties for legacy PHY model (deprecated):
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+
-+Required properties for per-lane PHY model (preferred):
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include 4 entries for all 4 lanes even if some of
-+  them won't be used for your cases. Entries are of the form "pcie-phy-N":
-+  where N ranges from 0 to 3.
-+  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
-+  for changing the #phy-cells of phy node to support it)
-+
- Optional Property:
- - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
- 	using 24MHz OSC for RC's PHY.
-@@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
- 		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
- 	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
- 		      "pm", "pclk", "aclk";
-+	/* deprecated legacy PHY model */
- 	phys = <&pcie_phy>;
- 	phy-names = "pcie-phy";
- 	pinctrl-names = "default";
-@@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
- 		#interrupt-cells = <1>;
- 	};
- };
-+
-+pcie0: pcie@f8000000 {
-+	...
-+
-+	/* preferred per-lane PHY model */
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+
-+	...
-+};
--- 
-1.9.1
+> > >>
+> > PL6_X_6JkXFx7AXWqB0tg&r=3Ds2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io
+> > _kx0&m
+> > >>
+> > =3D0DrBCvOc_J7LaMXBei1qCXxxfbLxWaVErKZ6Rkm6bUc&s=3DsOEmExQFqrCEmpA
+> > x9LjSeK
+> > >> RvkW1D-W82ckX5WGCgFWw&e=3D
+> > >
+> > >> pci/quirks.c
+> > >
+> > >
+> > >
+> > > I don't know the PCI quirks, do you mean remove the pci Device =
+Class
+> fix
+> > code from the DWC common code and add it to quirks?
+> > >
+> >
+> > In my opinion adding fixes to a common code is not a good approach. =
+I
+> would
+> > suggest the fix to go into the quirks file.
+
+Your answer should be added to here.
+Then, it will help other people follow this email thread.
+
+Best regards,
+Jingoo Han
+
+> >
+> > @Bjorn: The quirks file is the best place for this type of fixes =
+right?
+>=20
+> Thanks,
+> Zhiqiang
+>=20
