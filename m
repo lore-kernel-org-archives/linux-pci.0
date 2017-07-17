@@ -1,117 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750789AbdGaFzk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:55:40 -0400
-Subject: Re: [PATCH v5 3/7] phy: qcom-qmp: Fix phy pipe clock name
-To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
-        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
- <1501479594-18285-4-git-send-email-varada@codeaurora.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Message-ID: <9e2bf426-8489-a5a7-2d92-d3909349fde3@codeaurora.org>
-Date: Mon, 31 Jul 2017 11:25:33 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
+ "'Bjorn Andersson'" <bjorn.andersson@linaro.org>
+References: <20170716063947.3272-1-bjorn.andersson@linaro.org>
+ <73b9c442-38f6-cc5b-c6e0-4ce7187dc0a8@synopsys.com>
+In-Reply-To: <73b9c442-38f6-cc5b-c6e0-4ce7187dc0a8@synopsys.com>
+Subject: Re: [PATCH 1/3] PCI: dwc: Handle host_init failures
+Date: Mon, 17 Jul 2017 15:28:13 -0400
+Message-ID: <000a01d2ff32$d5d59e00$8180da00$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1501479594-18285-4-git-send-email-varada@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "'open list:PCI DRIVER FOR TI DRA7XX'" <linux-pci@vger.kernel.org>,
+ 'Binghui Wang' <wangbinghui@hisilicon.com>,
+ "'open list:PCIE DRIVER FOR AXIS ARTPEC'" <linux-arm-kernel@axis.com>,
+ 'Jesper Nilsson' <jesper.nilsson@axis.com>,
+ "'moderated list:PCI DRIVER FOR SAMSUNG EXYNOS'"
+ <linux-samsung-soc@vger.kernel.org>,
+ 'Pratyush Anand' <pratyush.anand@gmail.com>,
+ 'Krzysztof Kozlowski' <krzk@kernel.org>,
+ 'Kishon Vijay Abraham I' <kishon@ti.com>, 'Kukjin Kim' <kgene@kernel.org>,
+ 'Xiaowei Song' <songxiaowei@hisilicon.com>,
+ 'Richard Zhu' <hongxing.zhu@nxp.com>,
+ "'open list:PCIE DRIVER FOR QUALCOMM MSM'" <linux-arm-msm@vger.kernel.org>,
+ 'Niklas Cassel' <niklas.cassel@axis.com>,
+ 'Murali Karicheri' <m-karicheri2@ti.com>,
+ 'Bjorn Helgaas' <bhelgaas@google.com>, 'Mingkai Hu' <mingkai.hu@freescale.com>,
+ "'open list:PCI DRIVER FOR TI DRA7XX'" <linux-omap@vger.kernel.org>,
+ "'moderated list:PCI DRIVER FOR SAMSUNG EXYNOS'"
+ <linux-arm-kernel@lists.infradead.org>,
+ 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+ "'open list:PCI DRIVER FOR FREESCALE LAYERSCAPE'"
+ <linuxppc-dev@lists.ozlabs.org>, 'open list' <linux-kernel@vger.kernel.org>,
+ 'Stanimir Varbanov' <svarbanov@mm-sol.com>,
+ 'Minghuan Lian' <minghuan.Lian@freescale.com>,
+ 'Roy Zang' <tie-fei.zang@freescale.com>,
+ 'Lucas Stach' <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-
-On 07/31/2017 11:09 AM, Varadarajan Narayanan wrote:
-> Presently, the phy pipe clock's name is assumed to be either
-> usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
-> phy lane's number). However, this will not work if an SoC has
-> more than one instance of the phy. Hence, instead of assuming
-> the name of the clock, fetch it from the DT.
->
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
->   drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++--------------
->   1 file changed, 14 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-> index 78ca628..464049c 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-> @@ -925,29 +925,28 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
->    *    clk  |   +-------+   |                   +-----+
->    *         +---------------+
->    */
-> -static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
-> +static int phy_pipe_clk_register(struct qcom_qmp *qmp, struct device_node *np)
->   {
-> -	char name[24];
->   	struct clk_fixed_rate *fixed;
->   	struct clk_init_data init = { };
-> +	int ret;
->   
-> -	switch (qmp->cfg->type) {
-> -	case PHY_TYPE_USB3:
-> -		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
-> -		break;
-> -	case PHY_TYPE_PCIE:
-> -		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
-> -		break;
-> -	default:
-> +	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
-> +	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
->   		/* not all phys register pipe clocks, so return success */
->   		return 0;
->   	}
->   
-> +	ret = of_property_read_string(np, "clock-output-names", &init.name);
-> +	if (ret) {
-> +		dev_err(qmp->dev, "%s: No clock-output-names\n", np->name);
-> +		return ret;
-> +	}
-> +
->   	fixed = devm_kzalloc(qmp->dev, sizeof(*fixed), GFP_KERNEL);
->   	if (!fixed)
->   		return -ENOMEM;
->   
-> -	init.name = name;
->   	init.ops = &clk_fixed_rate_ops;
->   
->   	/* controllers using QMP phys use 125MHz pipe clock interface */
-> @@ -1110,6 +1109,7 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
->   
->   	id = 0;
->   	for_each_available_child_of_node(dev->of_node, child) {
-> +
-Minor nits - this extra line not needed.
-
->   		/* Create per-lane phy */
->   		ret = qcom_qmp_phy_create(dev, child, id);
->   		if (ret) {
-> @@ -1119,10 +1119,10 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
->   		}
->   
->   		/*
-> -		 * Register the pipe clock provided by phy.
-> -		 * See function description to see details of this pipe clock.
-> +		 * Register the pipe clock provided by phy. See function
-> +		 * description to see details of this pipe clock.
-
-Is there some whitespace fixed here? Otherwise unnecessary hunk.
-
-With these minor nits fixed,
-
-Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-
->   		 */
-> -		ret = phy_pipe_clk_register(qmp, id);
-> +		ret = phy_pipe_clk_register(qmp, child);
->   		if (ret) {
->   			dev_err(qmp->dev,
->   				"failed to register pipe clock source\n");
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+T24gTW9uZGF5LCBKdWx5IDE3LCAyMDE3IDc6MTggQU0sIEpvYW8gUGludG8gd3JvdGU6Cj4gCj4g
+SGkgQmpvcm4gQW5kZXJzc29uLAo+IAo+IMOAcyA3OjM5IEFNIGRlIDcvMTYvMjAxNywgQmpvcm4g
+QW5kZXJzc29uIGVzY3JldmV1Ogo+ID4gSW4gc2V2ZXJhbCBkd2MgYmFzZWQgZHJpdmVycyBob3N0
+X2luaXQgY2FuIGZhaWwsIHNvIG1ha2Ugc3VyZSB0bwo+ID4gcHJvcGFnYXRlIGFuZCBoYW5kbGUg
+dGhpcyB0byBhdm9pZCBjb250aW51aW5nIG9wZXJhdGlvbiBvZiBhIGRyaXZlciBvcgo+ID4gaGFy
+ZHdhcmUgaW4gYW4gaW52YWxpZCBzdGF0ZS4KPiA+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBCam9ybiBB
+bmRlcnNzb24gPGJqb3JuLmFuZGVyc3NvbkBsaW5hcm8ub3JnPgo+ID4gLS0tCj4gPiAgZHJpdmVy
+cy9wY2kvZHdjL3BjaS1kcmE3eHguYyAgICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9w
+Y2kvZHdjL3BjaS1leHlub3MuYyAgICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9wY2kv
+ZHdjL3BjaS1pbXg2LmMgICAgICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9wY2kvZHdj
+L3BjaS1rZXlzdG9uZS5jICAgICAgICAgfCAgNCArKystCj4gPiAgZHJpdmVycy9wY2kvZHdjL3Bj
+aS1sYXllcnNjYXBlLmMgICAgICAgfCAxNCArKysrKysrKysrLS0tLQo+ID4gIGRyaXZlcnMvcGNp
+L2R3Yy9wY2llLWFybWFkYThrLmMgICAgICAgIHwgIDQgKysrLQo+ID4gIGRyaXZlcnMvcGNpL2R3
+Yy9wY2llLWFydHBlYzYuYyAgICAgICAgIHwgIDQgKysrLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
+Y2llLWRlc2lnbndhcmUtaG9zdC5jIHwgIDcgKysrKystLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
+Y2llLWRlc2lnbndhcmUtcGxhdC5jIHwgIDQgKysrLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ll
+LWRlc2lnbndhcmUuaCAgICAgIHwgIDIgKy0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJp
+bi5jICAgICAgICAgICB8ICA0ICsrKy0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpZS1xY29tLmMg
+ICAgICAgICAgICB8ICA2ICsrKystLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLXNwZWFyMTN4
+eC5jICAgICAgIHwgIDQgKysrLQo+ID4gIDEzIGZpbGVzIGNoYW5nZWQsIDQ3IGluc2VydGlvbnMo
+KyksIDE4IGRlbGV0aW9ucygtKQo+ID4KClsuLi4uLl0KCj4gCj4gQSBzdGVwIGluIHRoZSByaWdo
+dCBkaXJlY3Rpb24gOikuIEluIHRoZSBmdXR1cmUgd2Ugc2hvdWxkIGFkZCBob3N0IGluaXQKPiB2
+YWxpZGF0aW9uIGluIHRoZSBzcGVjaWZpYyBTb0MgZHJpdmVycywgbGlrZSBMYXllcnNjYXBlIGFu
+ZCBRY29tIGhhdmUsIHRvCj4gYXNzdXJlCj4gdGhhdCBhbnkgcHJvYmxlbSBpcyB0cmVhdGVkIHBy
+b3Blcmx5IGluIHRoZSBjb3JlIGRyaXZlci4KCkkgYWdyZWUgd2l0aCB5b3VyIG9waW5pb24uCgo+
+IAo+IEFja2VkLWJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMuY29tPgoKQWNrZWQtYnk6
+IEppbmdvbyBIYW4gPGppbmdvb2hhbjFAZ21haWwuY29tPgoKQmVzdCByZWdhcmRzLApKaW5nb28g
+SGFuCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGlu
+dXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
+YWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgt
+YXJtLWtlcm5lbAo=
