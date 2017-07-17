@@ -1,99 +1,102 @@
-Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=5qxz=6H=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-To: Peter Zijlstra <peterz@infradead.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- Thomas Gleixner <tglx@linutronix.de>, linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- LKML <linux-kernel@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Mark Rutland <mark.rutland@arm.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Ingo Molnar <mingo@kernel.org>, Daniel Thompson <daniel.thompson@linaro.org>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <e57debab-3457-1d9c-a72e-ecdf7d4f742e@sigmadesigns.com>
- <baf9866b-04ba-698c-3012-a957ec0123d1@sigmadesigns.com>
- <20170704070958.oolhapyx7uy2fly4@hirez.programming.kicks-ass.net>
- <c80ce48f-5a7d-48d2-fd60-0d87eb0fcc0a@free.fr>
- <20170704142758.GB7287@worktop>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <d64a48bd-c593-2f0e-e4e9-8863fba38176@free.fr>
-Date: Tue, 4 Jul 2017 17:18:33 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170704142758.GB7287@worktop>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48554 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751280AbdGQMEy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:04:54 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
+Date: Mon, 17 Jul 2017 17:33:59 +0530
+Message-Id: <1500293043-1887-4-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/07/2017 16:27, Peter Zijlstra wrote:
+Presently, the phy pipe clock's name is assumed to be either
+usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+phy lane's number). However, this will not work if an SoC has
+more than one instance of the phy. Hence, instead of assuming
+the name of the clock, fetch it from the DT.
 
-> Mason wrote:
->
->> 	if (IS_ENABLED(CONFIG_DEBUG_PREEMPT) && in_atomic_preempt_off()) {
->> 		pr_err("Preemption disabled at:");
->> 		print_ip_sym(preempt_disable_ip);
->> 		pr_cont("\n");
->> 	}
->>
->> BTW, why didn't print_ip_sym(preempt_disable_ip); say
->> where preemption had been disabled?
-> 
-> It does, but it might be non-obvious. We only store the first 0->!0
-> transition IP in there.
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-The output was:
-
-[    1.079483] Preemption disabled at:[    1.082820] [<  (null)>]   (null)
-
-so preempt_disable_ip was NULL, right?
-
-Has it been already clobbered?
-
-
->> Here's the high-level view. My HW is borked and muxes
->> config space and mem space. So I need a way to freeze
->> the entire system, make the config space access, and
->> then return the system to normal. (AFAICT, config space
->> accesses are rare, so if I kill performance for these
->> accesses, the system might remain usable.)
->>
->> Is there a way to do this? Mark suggested stop_machine
->> but it seems using it in my situation is not quite
->> straight-forward.
-> 
-> *groan*... so yeah, broken hardware demands crazy stuff... stop machine
-> is tricky here because I'm not sure we can demand all PCI accessors to
-> allow sleeping.
-> 
-> And given that PCI lock is irqsave, we can't even assume IRQs are
-> enabled.
-> 
-> Does your platform have NMIs? If so, you can do yuck things like the
-> kgdb sync. NMI IPI all other CPUs and have them spin-wait on your state.
-> 
-> Then be careful not to deadlock when two CPUs do that concurrently.
-
-My platform is arch/arm/mach-tango (Cortex A9, ARMv7-A)
-
-This looks similar to what you described:
-https://www.linaro.org/blog/core-dump/debugging-arm-kernels-using-nmifiq/
-(I CCed Daniel Thompson)
-
-Quote article:
-
-> Note: On ARMv7-A devices that have security extensions (TrustZone)
-> FIQ can only be used by the kernel if it is possible to run Linux in
-> secure mode. It is therefore not possible to exploit FIQ for
-> debugging and run a secure monitor simultaneously. At the end of this
-> blog post we will discuss potential future work to mitigate this
-> problem.
-
-On my platform, Linux runs in non-secure mode...
-
-Sounds like I don't have many options left for this driver :-(
-
-Regards.
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 78ca628..97020ec 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+  *    clk  |   +-------+   |                   +-----+
+  *         +---------------+
+  */
+-static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
++static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
+ {
+-	char name[24];
+ 	struct clk_fixed_rate *fixed;
+ 	struct clk_init_data init = { };
+ 
+-	switch (qmp->cfg->type) {
+-	case PHY_TYPE_USB3:
+-		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+-		break;
+-	case PHY_TYPE_PCIE:
+-		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+-		break;
+-	default:
++	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
++	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
+ 		/* not all phys register pipe clocks, so return success */
+ 		return 0;
+ 	}
+@@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+ 	if (!fixed)
+ 		return -ENOMEM;
+ 
+-	init.name = name;
++	init.name = clk_name;
+ 	init.ops = &clk_fixed_rate_ops;
+ 
+ 	/* controllers using QMP phys use 125MHz pipe clock interface */
+@@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 
+ 	id = 0;
+ 	for_each_available_child_of_node(dev->of_node, child) {
++		const char *clk_name;
++
+ 		/* Create per-lane phy */
+ 		ret = qcom_qmp_phy_create(dev, child, id);
+ 		if (ret) {
+@@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 			return ret;
+ 		}
+ 
++		ret = of_property_read_string(child, "clock-output-names",
++							&clk_name);
++		if (ret) {
++			dev_err(dev,
++				"failed to get clock-output-names for lane%d phy, %d\n",
++				id, ret);
++			return ret;
++		}
++
+ 		/*
+ 		 * Register the pipe clock provided by phy.
+ 		 * See function description to see details of this pipe clock.
+ 		 */
+-		ret = phy_pipe_clk_register(qmp, id);
++		ret = phy_pipe_clk_register(qmp, clk_name);
+ 		if (ret) {
+ 			dev_err(qmp->dev,
+ 				"failed to register pipe clock source\n");
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
