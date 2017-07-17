@@ -1,98 +1,114 @@
-Return-Path: <SRS0=Kl3l=67=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=Kl3l=67=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Alexander Duyck <alexander.duyck@gmail.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
- <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
- <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
- <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
- <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
-CC: Casey Leedom <leedom@chelsio.com>,
-        Alex Williamson
-	<alex.williamson@redhat.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "bhelgaas@google.com"
-	<bhelgaas@google.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "Michael
- Werner" <werner@chelsio.com>,
-        Ganesh GR <ganeshgr@chelsio.com>,
-        "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-        "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-        "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-        "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>,
-        "amira@mellanox.com" <amira@mellanox.com>,
-        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-        "David.Laight@aculab.com" <David.Laight@aculab.com>,
-        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "davem@davemloft.net"
-	<davem@davemloft.net>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
-Date: Fri, 28 Jul 2017 11:00:49 +0800
-MIME-Version: 1.0
-In-Reply-To: <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48996 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751280AbdGQMFP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:05:15 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH 6/7] dt-bindings: pci: qcom: Add support for IPQ8074
+Date: Mon, 17 Jul 2017 17:34:02 +0530
+Message-Id: <1500293043-1887-7-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
+lane, two PCIe root complex with support for MSI and legacy interrupts, and
+it conforms to PCI Express Base 2.1 specification.
 
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          | 67 ++++++++++++++++++++++
+ 1 file changed, 67 insertions(+)
 
-On 2017/7/28 1:49, Alexander Duyck wrote:
-> On Wed, Jul 26, 2017 at 6:08 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
->>
->>
->> On 2017/7/27 2:26, Casey Leedom wrote:
->>>   By the way Ding, two issues:
->>>
->>>  1. Did we ever get any acknowledgement from either Intel or AMD
->>>     on this patch?  I know that we can't ensure that, but it sure would
->>>     be nice since the PCI Quirks that we're putting in affect their
->>>     products.
->>>
->>
->> Still no Intel and AMD guys has ack this, this is what I am worried about, should I
->> ping some man again ?
->>
->> Thanks
->> Ding
-> 
-> 
-> I probably wouldn't worry about it too much. If anything all this
-> patch is doing is disabling relaxed ordering on the platforms we know
-> have issues based on what Casey originally had. If nothing else we can
-> follow up once the patches are in the kernel and if somebody has an
-> issue then.
-> 
-> You can include my acked-by, but it is mostly related to how this
-> interacts with NICs, and not so much about the PCI chipsets
-> themselves.
-> 
-> Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> 
-
-Thanks, Alex. :)
-
-> .
-> 
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 9d418b7..643bcc2 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -9,6 +9,7 @@
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 			- "qcom,pcie-ipq4019" for ipq4019
++			- "qcom,pcie-ipq8074" for ipq8074
+ 
+ - reg:
+ 	Usage: required
+@@ -261,3 +262,69 @@
+ 		pinctrl-0 = <&pcie0_pins_default>;
+ 		pinctrl-names = "default";
+ 	};
++
++* Example for ipq8074
++	pcie0: pci@20000000 {
++		compatible = "qcom,pcie-ipq8074";
++		reg =  <0x20000000 0xf1d
++			0x20000F20 0xa8
++			0x80000 0x2000
++			0x20100000 0x1000>;
++		reg-names = "dbi", "elbi", "parf", "config";
++		device_type = "pci";
++		linux,pci-domain = <0>;
++		bus-range = <0x00 0xff>;
++		num-lanes = <1>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++
++		phys = <&pciephy_0>;
++		phy-names = "pciephy";
++
++		ranges = <0x81000000 0 0x20200000 0x20200000
++			  0 0x00100000   /* downstream I/O */
++			  0x82000000 0 0x20300000 0x20300000
++			  0 0x00d00000>; /* non-prefetchable memory */
++
++		interrupts = <0 52 0>;
++		interrupt-names = "msi";
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0 0 0 0x7>;
++		interrupt-map = <0 0 0 1 &intc 0 75
++				 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
++				<0 0 0 2 &intc 0 78
++				 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
++				<0 0 0 3 &intc 0 79
++				 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
++				<0 0 0 4 &intc 0 83
++				 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
++
++		clocks =	<&gcc GCC_SYS_NOC_PCIE0_AXI_CLK>,
++				<&gcc GCC_PCIE0_AXI_M_CLK>,
++				<&gcc GCC_PCIE0_AXI_S_CLK>,
++				<&gcc GCC_PCIE0_AHB_CLK>,
++				<&gcc GCC_PCIE0_AUX_CLK>;
++		clock-names =	"sys_noc",
++				"axi_m",
++				"axi_s",
++				"ahb",
++				"aux";
++
++		resets = <&gcc GCC_PCIE0_PIPE_ARES>,
++			 <&gcc GCC_PCIE0_SLEEP_ARES>,
++			 <&gcc GCC_PCIE0_CORE_STICKY_ARES>,
++			 <&gcc GCC_PCIE0_AXI_MASTER_ARES>,
++			 <&gcc GCC_PCIE0_AXI_SLAVE_ARES>,
++			 <&gcc GCC_PCIE0_AHB_ARES>,
++			 <&gcc GCC_PCIE0_AXI_MASTER_STICKY_ARES>;
++		reset-names = "pipe",
++			      "sleep",
++			      "sticky",
++			      "axi_m",
++			      "axi_s",
++			      "ahb",
++			      "axi_m_sticky";
++
++		perst-gpio = <&tlmm 58 1>;
++		status = "disabled";
++	};
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
