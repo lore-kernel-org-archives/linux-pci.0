@@ -1,52 +1,68 @@
-Return-Path: <SRS0=kNUL=6Q=chelsio.com=leedom@kernel.org>
-Return-Path: <SRS0=kNUL=6Q=chelsio.com=leedom@kernel.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Ding Tianhong <dingtianhong@huawei.com>, Alexander Duyck
-	<alexander.duyck@gmail.com>
-CC: "ashok.raj@intel.com" <ashok.raj@intel.com>, "helgaas@kernel.org"
-	<helgaas@kernel.org>, Michael Werner <werner@chelsio.com>, Ganesh GR
-	<ganeshgr@chelsio.com>, "asit.k.mallick@intel.com"
-	<asit.k.mallick@intel.com>, "patrick.j.cramer@intel.com"
-	<patrick.j.cramer@intel.com>, "Suravee.Suthikulpanit@amd.com"
-	<Suravee.Suthikulpanit@amd.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "amira@mellanox.com"
-	<amira@mellanox.com>, "gabriele.paoloni@huawei.com"
-	<gabriele.paoloni@huawei.com>, "David.Laight@aculab.com"
-	<David.Laight@aculab.com>, "jeffrey.t.kirsher@intel.com"
-	<jeffrey.t.kirsher@intel.com>, "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>, "robin.murphy@arm.com"
-	<robin.murphy@arm.com>, "davem@davemloft.net" <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Thu, 13 Jul 2017 02:28:37 +0000
-Message-ID: <MWHPR12MB160000E5BC855DAC525C5745C8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
- <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
- <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
- <MWHPR12MB160080C62945A101FF0718DEC8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>,<3aed2e2d-025d-b35c-46fa-bced87789037@huawei.com>
-In-Reply-To: <3aed2e2d-025d-b35c-46fa-bced87789037@huawei.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:32860 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751261AbdGQHhQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 03:37:16 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH v2 0/7] Reconstruct rockchip's PCIe and PCIe-PHY driver for per-lane PHY model
+Date: Mon, 17 Jul 2017 15:36:15 +0800
+Message-Id: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-| From: Ding Tianhong <dingtianhong@huawei.com>
-| Sent: Wednesday, July 12, 2017 6:18 PM
-|=20
-| If no other more suggestion, I will send a new version and remove the
-| enable_pcie_relaxed_ordering(), thanks.=A0 :)
 
-   Sounds good to me.  (And sorry for forgetting to justify that last messa=
-ge.
-I hate working with web-based email agents.)
+This patchset is trying to reconstruct PCIe and PCIe-PHY driver
+for rockchip platform in order to support per-lane PHY mode. And
+we could idle the inactive lane(s) finally.
 
-Casey=
+We deprecate the legacy PHY mode but the code could still support
+it in order not to break backware compatibility of DTB. And I organize
+the patches carefully so that we don't introduce git-bisect issue.
+
+Hi Brian & Jeffy,
+
+I tested it by backporting all things into my kernel 4.4 tree, and it
+works fine for both legacy PHY mode and per-lane PHY model. However I
+couldn't run 4.12 for my rk3399-evb now, so it would be nice if you
+can test it with your chrome devices running v4.12.
+
+Hi Rob,
+
+Does the changes for rockchip-pcie.txt in patch 6 & 7 look good to you
+from the perspective of DT?
+
+
+Changes in v2:
+- deprecate legacy PHY model
+- improve rockchip_pcie_phy_of_xlate
+- fix wrong calculation of pwr_cnt and add new init_cnt
+- add internal locking
+- introduce per-lane data to simply the code
+- convert that for all rk3399 platforms
+- make listing all 4 lanes as mandatory
+
+Shawn Lin (7):
+  PCI: rockchip: split out rockchip_pcie_get_phys
+  PCI: rockchip: introduce per-lanes PHYs support
+  phy: rockcip-pcie: reconstruct driver to support per-lane PHYs
+  PCI: rockchip: idle the inactive PHY(s)
+  arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339
+  dt-bindings: PCI: rockchip: convert to use per-lane PHY model
+  Documentation: bindings: convert to use per-lane Rockchip PCIe PHY
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |  25 ++-
+ .../devicetree/bindings/phy/rockchip-pcie-phy.txt  |   7 +-
+ arch/arm64/boot/dts/rockchip/rk3399.dtsi           |   8 +-
+ drivers/pci/host/pcie-rockchip.c                   | 168 ++++++++++++++++++---
+ drivers/phy/rockchip/phy-rockchip-pcie.c           | 128 ++++++++++++++--
+ 5 files changed, 297 insertions(+), 39 deletions(-)
+
+-- 
+1.9.1
