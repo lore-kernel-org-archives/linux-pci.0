@@ -1,81 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:34627 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751560AbdGSB3t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:49 -0400
-Received: by mail-pg0-f67.google.com with SMTP id v190so4872924pgv.1
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:49 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org
-Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
-        zourongrong@gmail.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, gabriele.paoloni@huawei.com,
-        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
-        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>,
-        Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 3/4] powerpc: replace vga_fixup() with generic code
-Date: Wed, 19 Jul 2017 11:28:38 +1000
-Message-Id: <20170719012839.20124-6-dja@axtens.net>
-In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
-References: <20170719012839.20124-1-dja@axtens.net>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36006 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751316AbdGQTpK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 15:45:10 -0400
+Date: Mon, 17 Jul 2017 14:45:08 -0500
+From: Rob Herring <robh@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 6/7] dt-bindings: PCI: rockchip: convert to use per-lane
+ PHY model
+Message-ID: <20170717194508.3cvxs57ydwhk2mlr@rob-hp-laptop>
+References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500277122-21835-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500277122-21835-2-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500277122-21835-2-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently, we do a PCI fixup to mark a default card so that Xorg
-autoconfiguration works.
+On Mon, Jul 17, 2017 at 03:38:41PM +0800, Shawn Lin wrote:
+> Deprecate legacy PHY model and encourage to use per-lane PHY
+> model.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
+>  1 file changed, 23 insertions(+), 2 deletions(-)
 
-There is a new generic method to do this sort of vga fixup.
-
-Code-wise, it is identical, however instead of firing at the
-FIXUP_FINAL stage it fires at the FIXUP_ENABLE stage. This means
-a card will not be marked as default unless a driver enables it.
-
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Signed-off-by: Daniel Axtens <dja@axtens.net>
-
----
-
-Tested with xeyes on qemu TCG, which does use this code path.
----
- arch/powerpc/Kconfig             |  1 +
- arch/powerpc/kernel/pci-common.c | 15 ---------------
- 2 files changed, 1 insertion(+), 15 deletions(-)
-
-diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
-index 36f858c37ca7..c28b8eb1dce1 100644
---- a/arch/powerpc/Kconfig
-+++ b/arch/powerpc/Kconfig
-@@ -140,6 +140,7 @@ config PPC
- 	select ARCH_USE_BUILTIN_BSWAP
- 	select ARCH_USE_CMPXCHG_LOCKREF		if PPC64
- 	select ARCH_WANT_IPC_PARSE_VERSION
-+	select ARCH_WANT_VGA_ARB_FALLBACK
- 	select ARCH_WEAK_RELEASE_ACQUIRE
- 	select BINFMT_ELF
- 	select BUILDTIME_EXTABLE_SORT
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index c95fdda3a2dc..7b093a4fa85d 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -1741,18 +1741,3 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
- }
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
--
--static void fixup_vga(struct pci_dev *pdev)
--{
--	u16 cmd;
--
--	if (vga_default_device())
--		return;
--
--	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
--	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
--		vga_set_default_device(pdev);
--
--}
--DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
--			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
--- 
-2.11.0
+Acked-by: Rob Herring <robh@kernel.org>
