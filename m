@@ -1,57 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42280 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754641AbdGJVCO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 17:02:14 -0400
-Date: Mon, 10 Jul 2017 16:02:10 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI; trivial fix for the comment of pci_vpd_srdt_{size,
- tag}
-Message-ID: <20170710210209.GC5610@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499134595-46917-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-it0-f65.google.com ([209.85.214.65]:36777 "EHLO
+        mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751320AbdGQURe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 16:17:34 -0400
+Date: Mon, 17 Jul 2017 15:17:31 -0500
+From: Rob Herring <robh@kernel.org>
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: bhelgaas@google.com, mark.rutland@arm.com, svarbanov@mm-sol.com,
+        kishon@ti.com, sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
+        fengguang.wu@intel.com, weiyongjun1@huawei.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 6/7] dt-bindings: pci: qcom: Add support for IPQ8074
+Message-ID: <20170717201731.fbltmwsxo5lqesnf@rob-hp-laptop>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-7-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499134595-46917-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500293043-1887-7-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 04, 2017 at 10:16:35AM +0800, Shawn Lin wrote:
-> The comment doesn't match the argument, so fix them.
+On Mon, Jul 17, 2017 at 05:34:02PM +0530, Varadarajan Narayanan wrote:
+> Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
+> lane, two PCIe root complex with support for MSI and legacy interrupts, and
+> it conforms to PCI Express Base 2.1 specification.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-Applied to pci/trivial for v4.14, thanks!
-
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 > ---
+>  .../devicetree/bindings/pci/qcom,pcie.txt          | 67 ++++++++++++++++++++++
+>  1 file changed, 67 insertions(+)
 > 
->  include/linux/pci.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index bd68ed1..a360315 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -2066,7 +2066,7 @@ static inline u16 pci_vpd_lrdt_tag(const u8 *lrdt)
+> diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> index 9d418b7..643bcc2 100644
+> --- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+> @@ -9,6 +9,7 @@
+>  			- "qcom,pcie-apq8084" for apq8084
+>  			- "qcom,pcie-msm8996" for msm8996 or apq8096
+>  			- "qcom,pcie-ipq4019" for ipq4019
+> +			- "qcom,pcie-ipq8074" for ipq8074
 >  
->  /**
->   * pci_vpd_srdt_size - Extracts the Small Resource Data Type length
-> - * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
-> + * @srdt: Pointer to the beginning of the Small Resource Data Type tag
->   *
->   * Returns the extracted Small Resource Data Type length.
->   */
-> @@ -2077,7 +2077,7 @@ static inline u8 pci_vpd_srdt_size(const u8 *srdt)
->  
->  /**
->   * pci_vpd_srdt_tag - Extracts the Small Resource Data Type Tag Item
-> - * @lrdt: Pointer to the beginning of the Small Resource Data Type tag
-> + * @srdt: Pointer to the beginning of the Small Resource Data Type tag
->   *
->   * Returns the extracted Small Resource Data Type Tag Item.
->   */
-> -- 
-> 1.9.1
-> 
-> 
+>  - reg:
+>  	Usage: required
+> @@ -261,3 +262,69 @@
+>  		pinctrl-0 = <&pcie0_pins_default>;
+>  		pinctrl-names = "default";
+>  	};
+> +
+> +* Example for ipq8074
+> +	pcie0: pci@20000000 {
+
+Same here. Just a new compatible doesn't need an example.
+
+Rob
