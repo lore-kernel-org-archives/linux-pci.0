@@ -1,100 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:59039 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751962AbdGSAvG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 20:51:06 -0400
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org
-Subject: Re: [RFC PATCH v3 0/7] Reconstruct rockchip's PCIe and PCIe-PHY
- driver for per-lane PHY model
-To: Brian Norris <briannorris@chromium.org>
-References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
- <20170718202951.GA116895@google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <6b886181-9d6d-e003-730a-f966fce48278@rock-chips.com>
-Date: Wed, 19 Jul 2017 08:51:02 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170718202951.GA116895@google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:34914 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751977AbdGRAp5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 20:45:57 -0400
+Received: by mail-pf0-f174.google.com with SMTP id e199so2848092pfh.2
+        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 17:45:57 -0700 (PDT)
+From: Feng Kan <fkan@apm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, alex.williamson@redhat.com
+Cc: Feng Kan <fkan@apm.com>
+Subject: [PATCH] pci: quirk: Apply APM ACS quirk to XGene devices
+Date: Mon, 17 Jul 2017 17:45:52 -0700
+Message-Id: <1500338752-30576-1-git-send-email-fkan@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brian,
+The APM X-Gene PCIe root port does not support ACS at this point.
+Since the root does not allow peer to peer transactions, mask out
+ACS capability flag bits.
 
-On 2017/7/19 4:29, Brian Norris wrote:
-> On Tue, Jul 18, 2017 at 03:56:56PM +0800, Shawn Lin wrote:
->>
->> This patchset is trying to reconstruct PCIe and PCIe-PHY driver
->> for rockchip platform in order to support per-lane PHY mode. And
->> we could idle the inactive lane(s) finally.
->>
->> We deprecate the legacy PHY mode but the code could still
->> support it in order not to break backware compatibility of DTB. And I
->> organize the patches carefully so that we don't introduce git-bisect
->> issue.
->>
->> Note that I carry on Jeffy's test tag from v2 as he has locally tested
->> my v3 patchset.
-> 
-> I have a few nits for the patchset (will reply shortly), but otherwise
-> (if we're *really* going to go with this approach; I still would
-> appreciate a reply from Kishon on the original patchset, where I
-> suggested alternatives) at least the code is much better this time
-> around. So for the whole thing:
-> 
-> Reviewed-by: Brian Norris <briannorris@chromium.org>
+Signed-off-by: Feng Kan <fkan@apm.com>
+---
+ drivers/pci/quirks.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks for your review and Jeffy's test!
-
-I probably will respin my v4 soon and wait for Kishon's final decision.
-If Kishon prefer to ack your alternative solution, I'm fine to commit
-some other bits as your alternatives seem a much simpler way.
-
-> 
->> Changes in v3:
->> - kill rockchip_pcie_manipulate_phys and related stuff
->> - use phys array
->> - improve the commit msg
->> - remove unnecessary forward declaration
->> - keep mutex inside struct rockchip_pcie_phy
->> - fix wrong check of args number
->> - move de-idle lanes after deasserting the reset
->> - use cached lanes_map to avoid powering off inactive
->>    lanes twice
->> - rename the commit tile
->>
->> Changes in v2:
->> - deprecate legacy PHY model
->> - improve rockchip_pcie_phy_of_xlate
->> - fix wrong calculation of pwr_cnt and add new init_cnt
->> - add internal locking
->> - introduce per-lane data to simply the code
->>
->> Shawn Lin (7):
->>    PCI: rockchip: split out rockchip_pcie_get_phys
->>    PCI: rockchip: introduce per-lanes PHYs support
->>    phy: rockcip-pcie: reconstruct driver to support per-lane PHYs
->>    PCI: rockchip: idle the inactive PHY(s)
->>    arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339
->>    dt-bindings: PCI: rockchip: convert to use per-lane PHY model
->>    dt-bindings: phy: convert to use per-lane Rockchip PCIe PHY
->>
->>   .../devicetree/bindings/pci/rockchip-pcie.txt      |  25 ++++-
->>   .../devicetree/bindings/phy/rockchip-pcie-phy.txt  |   7 +-
->>   arch/arm64/boot/dts/rockchip/rk3399.dtsi           |   8 +-
->>   drivers/pci/host/pcie-rockchip.c                   | 123 ++++++++++++++++----
->>   drivers/phy/rockchip/phy-rockchip-pcie.c           | 124 ++++++++++++++++++---
->>   5 files changed, 245 insertions(+), 42 deletions(-)
->>
->> -- 
->> 1.9.1
->>
->>
-> 
-> 
-> 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 085fb78..951064d 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4368,6 +4368,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
+ 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+ 	/* Cavium ThunderX */
+ 	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
++	/* APM XGene */
++	{ PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_mf_endpoint_acs },
+ 	{ 0 }
+ };
+ 
+-- 
+1.8.3.1
