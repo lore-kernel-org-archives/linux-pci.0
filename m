@@ -1,44 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:35114 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751211AbdGPGjy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jul 2017 02:39:54 -0400
-Received: by mail-pf0-f170.google.com with SMTP id e199so1807147pfh.2
-        for <linux-pci@vger.kernel.org>; Sat, 15 Jul 2017 23:39:54 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org (open list:PCIE DRIVER FOR QUALCOMM MSM),
-        linux-arm-msm@vger.kernel.org (open list:PCIE DRIVER FOR QUALCOMM MSM),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH 2/3] PCI: qcom: Don't unroll init if init fails
-Date: Sat, 15 Jul 2017 23:39:46 -0700
-Message-Id: <20170716063947.3272-2-bjorn.andersson@linaro.org>
-In-Reply-To: <20170716063947.3272-1-bjorn.andersson@linaro.org>
-References: <20170716063947.3272-1-bjorn.andersson@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55584 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751391AbdGRSQT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Jul 2017 14:16:19 -0400
+Date: Tue, 18 Jul 2017 12:16:18 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Feng Kan <fkan@apm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        "Jonglih (Daniel) Yu" <jyu@apm.com>,
+        "jcm@redhat.com" <jcm@redhat.com>
+Subject: Re: [PATCH] pci: quirk: Apply APM ACS quirk to XGene devices
+Message-ID: <20170718121618.6eea460f@w520.home>
+In-Reply-To: <CAL85gmAsjSiThTujA=tbhceOd71ee3AVmGDaFhc3FMFWDsQ4HA@mail.gmail.com>
+References: <1500338752-30576-1-git-send-email-fkan@apm.com>
+        <20170717202324.105e993c@w520.home>
+        <CAL85gmAsjSiThTujA=tbhceOd71ee3AVmGDaFhc3FMFWDsQ4HA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the init op fails it will restore the state of the resources, so we
-should not disable them one more time when this happens.
+On Tue, 18 Jul 2017 10:42:40 -0700
+Feng Kan <fkan@apm.com> wrote:
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/pci/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Mon, Jul 17, 2017 at 7:23 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> > On Mon, 17 Jul 2017 17:45:52 -0700
+> > Feng Kan <fkan@apm.com> wrote:
+> >  
+> >> The APM X-Gene PCIe root port does not support ACS at this point.
+> >> Since the root does not allow peer to peer transactions, mask out
+> >> ACS capability flag bits.
+> >>
+> >> Signed-off-by: Feng Kan <fkan@apm.com>
+> >> ---
+> >>  drivers/pci/quirks.c | 2 ++
+> >>  1 file changed, 2 insertions(+)
+> >>
+> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >> index 085fb78..951064d 100644
+> >> --- a/drivers/pci/quirks.c
+> >> +++ b/drivers/pci/quirks.c
+> >> @@ -4368,6 +4368,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
+> >>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+> >>       /* Cavium ThunderX */
+> >>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+> >> +     /* APM XGene */
+> >> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_mf_endpoint_acs },
+> >>       { 0 }
+> >>  };  
+> >
+> >
+> > You're using the "mf_enpoint" quirk for something that is not an
+> > endpoint and may or may not be multi-function.  Downstream ports have
+> > different rules than multi-function endpoints and the quirk function is
+> > commented to reflect why certain fields are relevant or not to
+> > multi-function endpoints.  I don't think it's valid to use this quirk
+> > for other device types, we'd only need to accidentally test the assumed
+> > device type in that function to break you in the future.  
+> Would creating another function like what Cavium did be sufficient?
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index d15657dc3990..7b703741a3fd 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -901,7 +901,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
- 
- 	ret = pcie->ops->init(pcie);
- 	if (ret)
--		goto err_deinit;
-+		return ret;
- 
- 	ret = phy_power_on(pcie->phy);
- 	if (ret)
--- 
-2.12.0
+A function that exposes the actual isolation capabilities of the
+hardware would be better, yes.
+
+> Additionally,
+> > lack of peer to peer does not necessarily imply functionality like
+> > Source Validation, without which a device can spoof the requester ID.
+> > Thanks,  
+> I can remove the statement.
+
+I don't know what that means, does the hardware support an equivalent
+to source validation or not?  What's the response of the root port if
+the downstream device issues a transaction spoofing devices not within
+the bus number ranges of the bridge?
+
+> Alex, the goal here is to enable virtualization to work correctly.
+> Please let me know if the
+> above is sufficient. Much thanks.
+
+Of course, but that means that the hardware vendor is vouching that
+this device provides the equivalent isolation for each of the missing
+components of ACS.  Claiming to have isolation capabilities that don't
+exist would be irresponsible and put users of that hardware at risk.
+Thanks,
+
+Alex
