@@ -1,61 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:38495 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753527AbdGTAq4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 20:46:56 -0400
-Received: by mail-pg0-f44.google.com with SMTP id s4so7054831pgr.5
-        for <linux-pci@vger.kernel.org>; Wed, 19 Jul 2017 17:46:56 -0700 (PDT)
-From: Feng Kan <fkan@apm.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, alex.williamson@redhat.com
-Cc: Feng Kan <fkan@apm.com>
-Subject: [PATCH V2] pci: quirk: Apply APM ACS quirk to XGene devices
-Date: Wed, 19 Jul 2017 17:46:51 -0700
-Message-Id: <1500511611-2019-1-git-send-email-fkan@apm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:04:07 -0600
+Message-Id: <20170718160409.6493-15-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 14/16] switchtec_ntb: implement scratchpad registers
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The APM X-Gene PCIe root port does not support ACS at this point.
-However, the hw provides isolation and source validation through
-the SMMU. Turn on ACS but disable all the peer to peer features.
+Seeing there is no dedicated hardware for this, we simply add
+these as entries in the shared memory window. Thus, we could support
+any number of them but 128 seems like enough, for now.
 
-Signed-off-by: Feng Kan <fkan@apm.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/pci/quirks.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 085fb78..0f8f1cd 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4120,6 +4120,19 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
- 	return acs_flags ? 0 : 1;
- }
- 
-+static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
-+{
-+	/*
-+	 * XGene root matching this quirk do not allow peer-to-peer
-+	 * transactions with others, allowing masking out these bits as if they
-+	 * were unimplemented in the ACS capability.
-+	 */
-+	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-+		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-+
-+	return acs_flags ? 0 : 1;
-+}
-+
- /*
-  * Many Intel PCH root ports do provide ACS-like features to disable peer
-  * transactions and validate bus numbers in requests, but do not provide an
-@@ -4368,6 +4381,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
- 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
- 	/* Cavium ThunderX */
- 	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
-+	/* APM XGene */
-+	{ PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
- 	{ 0 }
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 0bd9c8cae688..14f8ff654b57 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -67,6 +67,7 @@ struct shared_mw {
+ 	u32 link_sta;
+ 	u32 partition_id;
+ 	u64 mw_sizes[MAX_MWS];
++	u32 spad[128];
  };
  
+ #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
+@@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ 
+ static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return ARRAY_SIZE(sndev->self_shared->spad);
+ }
+ 
+ static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return 0;
++
++	if (!sndev->self_shared)
++		return 0;
++
++	return sndev->self_shared->spad[idx];
+ }
+ 
+ static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->self_shared)
++		return -EIO;
++
++	sndev->self_shared->spad[idx] = val;
++
+ 	return 0;
+ }
+ 
++static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
++					int sidx)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return 0;
++
++	if (!sndev->peer_shared)
++		return 0;
++
++	return ioread32(&sndev->peer_shared->spad[sidx]);
++}
++
+ static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
+ 					 int sidx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->peer_shared)
++		return -EIO;
++
++	iowrite32(val, &sndev->peer_shared->spad[sidx]);
++
++	return 0;
++}
++
++static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
++					int sidx, phys_addr_t *spad_addr)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
++		(unsigned long)sndev->stdev->mmio;
++
++	if (spad_addr)
++		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
++
+ 	return 0;
+ }
+ 
+@@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+ 	.spad_write		= switchtec_ntb_spad_write,
++	.peer_spad_read		= switchtec_ntb_peer_spad_read,
+ 	.peer_spad_write	= switchtec_ntb_peer_spad_write,
++	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
+ };
+ 
+ static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
 -- 
-1.8.3.1
+2.11.0
