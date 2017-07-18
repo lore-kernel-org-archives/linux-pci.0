@@ -1,206 +1,352 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47852 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751755AbdGELNc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 07:13:32 -0400
-Date: Wed, 5 Jul 2017 13:13:12 +0200
-From: Wim ten Have <wim.ten.have@oracle.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Wim ten Have <wim.ten.have@oracle.com>
-Subject: Re: Red Hat (Fedora) bug report 1467674 concerning your kernel
- functional performance enhancements causing PCI Express crashes,
-Message-ID: <20170705131312.6073b8aa.wim.ten.have@oracle.com>
-In-Reply-To: <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
-References: <20170704161352.1cdb2670.wim.ten.have@oracle.com>
-        <CAErSpo7PbSZgRtPJiXuOd6FPgLK5AGki51fTUm_-KUDZ96sRww@mail.gmail.com>
-        <2acc9a73-0c2c-31f3-fcdf-42289213860e@codeaurora.org>
-        <20170704195916.43fbe6e4.wim.ten.have@oracle.com>
-        <97b8c58e-7384-0519-5ccb-837fa5054d84@codeaurora.org>
-        <17f06c42-a96f-d1da-38e5-95117626eb29@codeaurora.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:46341 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750899AbdGRCgu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 22:36:50 -0400
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh@kernel.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [PATCH 2/7] PCI: rockchip: introduce per-lanes PHYs support
+To: Brian Norris <briannorris@chromium.org>
+References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500276982-208439-3-git-send-email-shawn.lin@rock-chips.com>
+ <20170717201415.GB6856@google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <6eb842b5-4603-0c9b-2cee-9f8399f457df@rock-chips.com>
+Date: Tue, 18 Jul 2017 10:36:40 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170717201415.GB6856@google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Jul 2017 21:00:03 -0400
-Sinan Kaya <okaya@codeaurora.org> wrote:
+Hi Brian,
 
-> On 7/4/2017 6:25 PM, Sinan Kaya wrote:
-> > 
-> > I can also see this in your lspci output. 
-> > 
-> > 00:08.0 PCI bridge: Broadcom HT2100 PCI-Express Bridge (rev a2) (prog-if 00 [Normal decode])
-> > 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-> > 	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> > 	Latency: 0, Cache Line Size: 64 bytes
-> > 	Interrupt: pin A routed to IRQ 19
-> > 	NUMA node: 0
-> > 	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
-> > 	I/O behind bridge: 0000f000-00000fff [empty]
-> > 	Memory behind bridge: efe00000-efefffff [size=1M]
-> > 	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff [empty]
-> > 	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-> > 	BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
-> > 		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-> > 	Capabilities: [a0] HyperTransport: MSI Mapping Enable+ Fixed-
-> > 		Mapping Address Base: 00000000fee00000
-> > 	Capabilities: [b0] Express (v1) Root Port (Slot-), MSI 00
-> > 
-> > I'll post a patch to apply extended tags to systems with PCI express v2 and higher
-> > bridges only.
+On 2017/7/18 4:14, Brian Norris wrote:
+> On Mon, Jul 17, 2017 at 03:36:17PM +0800, Shawn Lin wrote:
+>> We distinguish the legacy PHY with the newer per-lane
+>> PHYs by adding legacy_phy flag and consolidate all
+>> the phy operations into a single function to simply the
+>> code. Note that the legacy phy is still the first option
+>> to be searched in order not to break the backward compatibility
+>> of DT blob, althoug we use devm_phy_optional_get instead which
+>> seams to violate the original statement of pcie-rockchip's DT
+>> document.
+>>
+>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>> ---
+>>
+>>   drivers/pci/host/pcie-rockchip.c | 144 ++++++++++++++++++++++++++++++++-------
+>>   1 file changed, 118 insertions(+), 26 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+>> index 6632a51..f755df5 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -47,6 +47,7 @@
+>>   #define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
+>>   
+>>   #define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
+>> +#define MAX_LANE_NUM			4
+>>   
+>>   #define PCIE_CLIENT_BASE		0x0
+>>   #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
+>> @@ -210,7 +211,9 @@
+>>   struct rockchip_pcie {
+>>   	void	__iomem *reg_base;		/* DT axi-base */
+>>   	void	__iomem *apb_base;		/* DT apb-base */
+>> +	bool	legacy_phy;
+>>   	struct	phy *phy;
+>> +	struct  phy **phys;
 > 
-> Please give this patch a try. I can make the patch pretty and re-post if it works for you. 
-
-    Howdy,
-
-  I setup your patch under an /usr/src/kernel/rpmbuild tree for current
-  "kernel-4.11.8-200.fc25.src.rpm" and made below change to kernel.spec
-  file together with an rpmbuild -ba cycle on SPECS/kernel.spec.
-
-  Your patch under the SOURCE/PATCH tree
-
-	<wtenhave@hagen:55> ls -l SOURCES/0001-pci-do-not-enable-extended-tags-on-pre-dated-v1.x-sy.patch 
-	-rw-r--r-- 1 wtenhave users 2658 Jul  5 09:45 SOURCES/0001-pci-do-not-enable-extended-tags-on-pre-dated-v1.x-sy.patch
-
-  Change to the kernel.spec file
-
-	<wtenhave@hagen:56> rcsdiff -u SPECS/kernel.spec
-	===================================================================
-	RCS file: SPECS/kernel.spec,v
-	retrieving revision 1.1
-	diff -u -r1.1 SPECS/kernel.spec
-	--- SPECS/kernel.spec	2017/07/05 07:54:17	1.1
-	+++ SPECS/kernel.spec	2017/07/05 07:54:20
-	@@ -635,6 +635,9 @@
-	 # rhbz 1459326
-	 Patch683: RFC-audit-fix-a-race-condition-with-the-auditd-tracking-code.patch
-	 
-	+# rhbz 1467674
-	+Patch700: 0001-pci-do-not-enable-extended-tags-on-pre-dated-v1.x-sy.patch
-	+
-	 # END OF PATCH DEFINITIONS
-	 
-	 %endif
-
-  From an 'rpmbuild -ba kernel.spec' nicely proceeded and generated all
-  package.  They all installed and the system boots and works like a charm!
-
-> You should be seeing messages like this during boot.
+> Would this be simpler as just an array?
 > 
-> [    3.949621] pci 0003:01:00.0: clearing extended tags capability
-> [    3.959540] pci 0003:01:00.1: clearing extended tags capability
-> [    3.969454] pci 0003:01:00.2: clearing extended tags capability
-> [    3.979373] pci 0003:01:00.3: clearing extended tags capability
-> [    3.989290] pci 0003:01:00.4: clearing extended tags capability
+> 	struct phy *phys[MAX_LANE_NUM};
+> 
+> You can probably also combine it with the 'phy' field, and just treat it
+> differently based on the 'legacy_phy' switch.
 
-  Correct ... see excerpt below.
+Make sense.
 
-	[    0.000000] Linux version 4.11.8-200.fc25.x86_64 (root@hagen) (gcc version 6.3.1 20161221 (Red Hat 6.3.1-1) (GCC) ) #1 SMP Wed Jul 5 10:37:18 CEST 2017
-	[    0.000000] Command line: BOOT_IMAGE=/vmlinuz-4.11.8-200.fc25.x86_64 root=/dev/mapper/fedora_hagen-root ro rd.lvm.lv=fedora_hagen/root rd.lvm.lv=fedora_hagen/swap audit=0
-	[    0.000000] x86/fpu: x87 FPU will use FXSAVE
-	[    0.000000] e820: BIOS-provided physical RAM map:
-		...
-	[    0.532911] PCI host bridge to bus 0000:00
-	[    0.533104] pci_bus 0000:00: root bus resource [io  0x0000-0x0cf7 window]
-	[    0.533301] pci_bus 0000:00: root bus resource [io  0xd000-0xefff window]
-	[    0.533501] pci_bus 0000:00: root bus resource [io  0x0d00-0x0fff window]
-	[    0.533699] pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
-	[    0.534039] pci_bus 0000:00: root bus resource [mem 0xf0000000-0xf1ffffff window]
-	[    0.534376] pci_bus 0000:00: root bus resource [mem 0xefb00000-0xefffffff window]
-	[    0.534722] pci_bus 0000:00: root bus resource [mem 0xe0000000-0xe7ffffff window]
-	[    0.535060] pci_bus 0000:00: root bus resource [bus 00-fd]
-	[    0.535264] pci 0000:00:01.0: [1166:0036] type 01 class 0x060400
-	[    0.535299] pci 0000:00:01.0: Enabling HT MSI Mapping
-	[    0.535552] pci 0000:00:01.0: System wakeup disabled by ACPI
-	[    0.535786] pci 0000:00:02.0: [1166:0205] type 00 class 0x060000
-	[    0.535882] pci 0000:00:02.1: [1166:0214] type 00 class 0x01018a
-	[    0.535904] pci 0000:00:02.1: reg 0x10: [io  0x01f0-0x01f7]
-	[    0.535912] pci 0000:00:02.1: reg 0x14: [io  0x03f4-0x03f7]
-	[    0.535920] pci 0000:00:02.1: reg 0x18: [io  0x0170-0x0177]
-	[    0.535929] pci 0000:00:02.1: reg 0x1c: [io  0x0374-0x0377]
-	[    0.535937] pci 0000:00:02.1: reg 0x20: [io  0x08c0-0x08cf]
-	[    0.535956] pci 0000:00:02.1: legacy IDE quirk: reg 0x10: [io  0x01f0-0x01f7]
-	[    0.536154] pci 0000:00:02.1: legacy IDE quirk: reg 0x14: [io  0x03f6]
-	[    0.536350] pci 0000:00:02.1: legacy IDE quirk: reg 0x18: [io  0x0170-0x0177]
-	[    0.536551] pci 0000:00:02.1: legacy IDE quirk: reg 0x1c: [io  0x0376]
-	[    0.536814] pci 0000:00:02.2: [1166:0234] type 00 class 0x060100
-	[    0.536951] pci 0000:00:03.0: [1166:0223] type 00 class 0x0c0310
-	[    0.536967] pci 0000:00:03.0: reg 0x10: [mem 0xefbed000-0xefbedfff]
-	[    0.536976] pci 0000:00:03.0: reg 0x14: [io  0xd000-0xd0ff]
-	[    0.537089] pci 0000:00:03.1: [1166:0223] type 00 class 0x0c0310
-	[    0.537104] pci 0000:00:03.1: reg 0x10: [mem 0xefbee000-0xefbeefff]
-	[    0.537113] pci 0000:00:03.1: reg 0x14: [io  0xd400-0xd4ff]
-	[    0.537222] pci 0000:00:03.2: [1166:0223] type 00 class 0x0c0320
-	[    0.537237] pci 0000:00:03.2: reg 0x10: [mem 0xefbef000-0xefbeffff]
-	[    0.537246] pci 0000:00:03.2: reg 0x14: [io  0xd800-0xd8ff]
-	[    0.537311] pci 0000:00:03.2: supports D1 D2
-	[    0.537312] pci 0000:00:03.2: PME# supported from D0 D1 D2 D3hot
-	[    0.537373] pci 0000:00:04.0: [1002:515e] type 00 class 0x030000
-	[    0.537389] pci 0000:00:04.0: reg 0x10: [mem 0xe0000000-0xe7ffffff pref]
-	[    0.537398] pci 0000:00:04.0: reg 0x14: [io  0xdc00-0xdcff]
-	[    0.537407] pci 0000:00:04.0: reg 0x18: [mem 0xefbf0000-0xefbfffff]
-	[    0.537440] pci 0000:00:04.0: reg 0x30: [mem 0x00000000-0x0001ffff pref]
-	[    0.537468] pci 0000:00:04.0: supports D1 D2
-	[    0.537513] pci 0000:00:07.0: [1166:0140] type 01 class 0x060400
-	[    0.537550] pci 0000:00:07.0: PME# supported from D0 D3hot D3cold
-	[    0.537603] pci 0000:00:08.0: [1166:0142] type 01 class 0x060400
-	[    0.537639] pci 0000:00:08.0: PME# supported from D0 D3hot D3cold
-	[    0.537666] pci 0000:00:08.0: System wakeup disabled by ACPI
-	[    0.537893] pci 0000:00:09.0: [1166:0144] type 01 class 0x060400
-	[    0.537936] pci 0000:00:09.0: PME# supported from D0 D3hot D3cold
-	[    0.537964] pci 0000:00:09.0: System wakeup disabled by ACPI
-	[    0.538187] pci 0000:00:0a.0: [1166:0142] type 01 class 0x060400
-	[    0.538221] pci 0000:00:0a.0: PME# supported from D0 D3hot D3cold
-	[    0.538248] pci 0000:00:0a.0: System wakeup disabled by ACPI
-	[    0.538478] pci 0000:00:0b.0: [1166:0144] type 01 class 0x060400
-	[    0.538512] pci 0000:00:0b.0: PME# supported from D0 D3hot D3cold
-	[    0.538577] pci 0000:00:18.0: [1022:1200] type 00 class 0x060000
-	[    0.538629] pci 0000:00:18.1: [1022:1201] type 00 class 0x060000
-	[    0.538683] pci 0000:00:18.2: [1022:1202] type 00 class 0x060000
-	[    0.538729] pci 0000:00:18.3: [1022:1203] type 00 class 0x060000
-	[    0.538778] pci 0000:00:18.4: [1022:1204] type 00 class 0x060000
-	[    0.538827] pci 0000:00:19.0: [1022:1200] type 00 class 0x060000
-	[    0.538885] pci 0000:00:19.1: [1022:1201] type 00 class 0x060000
-	[    0.538945] pci 0000:00:19.2: [1022:1202] type 00 class 0x060000
-	[    0.538993] pci 0000:00:19.3: [1022:1203] type 00 class 0x060000
-	[    0.539045] pci 0000:00:19.4: [1022:1204] type 00 class 0x060000
-	[    0.539152] pci 0000:03:0d.0: [1166:0104] type 01 class 0x060400
-	[    0.539228] pci 0000:03:0e.0: [1166:024b] type 00 class 0x01018f
-	[    0.539238] pci 0000:03:0e.0: reg 0x10: [io  0xecb0-0xecb7]
-	[    0.539244] pci 0000:03:0e.0: reg 0x14: [io  0xeca0-0xeca3]
-	[    0.539250] pci 0000:03:0e.0: reg 0x18: [io  0xecb8-0xecbf]
-	[    0.539255] pci 0000:03:0e.0: reg 0x1c: [io  0xeca4-0xeca7]
-	[    0.539261] pci 0000:03:0e.0: reg 0x20: [io  0xece0-0xecef]
-	[    0.539267] pci 0000:03:0e.0: reg 0x24: [mem 0xefdfe000-0xefdfffff]
-	[    0.539273] pci 0000:03:0e.0: reg 0x30: [mem 0x00000000-0x0001ffff pref]
-	[    0.539337] pci 0000:00:01.0: PCI bridge to [bus 03-04]
-	[    0.539537] pci 0000:00:01.0:   bridge window [io  0xe000-0xefff]
-	[    0.539540] pci 0000:00:01.0:   bridge window [mem 0xefc00000-0xefdfffff]
-	[    0.539598] pci 0000:03:0d.0: PCI bridge to [bus 04]
-	[    0.539828] pci 0000:00:07.0: PCI bridge to [bus 05]
-	[    0.540068] pci 0000:01:00.0: [14e4:1659] type 00 class 0x020000
-	[    0.540087] pci 0000:01:00.0: reg 0x10: [mem 0xefef0000-0xefefffff 64bit]
-	[    0.540185] pci 0000:01:00.0: PME# supported from D3hot D3cold
-	[    0.542890] pci 0000:00:08.0: PCI bridge to [bus 01]
-	[    0.543094] pci 0000:00:08.0:   bridge window [mem 0xefe00000-0xefefffff]
-	[    0.543155] pci 0000:02:00.0: [14e4:1659] type 00 class 0x020000
-	[    0.543175] pci 0000:02:00.0: reg 0x10: [mem 0xefff0000-0xefffffff 64bit]
-	[    0.543277] pci 0000:02:00.0: PME# supported from D3hot D3cold
-	[    0.545889] pci 0000:00:09.0: PCI bridge to [bus 02]
-	[    0.546088] pci 0000:00:09.0:   bridge window [mem 0xeff00000-0xefffffff]
-	[    0.546130] pci 0000:00:0a.0: PCI bridge to [bus 06]
-	[    0.546351] pci 0000:00:0b.0: PCI bridge to [bus 07]
-***>	[    0.546570] pci 0000:01:00.0: clearing extended tags capability
-***>	[    0.546773] pci 0000:02:00.0: clearing extended tags capability
-		...
+> 
+>>   	struct	reset_control *core_rst;
+>>   	struct	reset_control *mgmt_rst;
+>>   	struct	reset_control *mgmt_sticky_rst;
+>> @@ -242,6 +245,15 @@ struct rockchip_pcie {
+>>   	phys_addr_t mem_bus_addr;
+>>   };
+>>   
+>> +enum phy_ops_type {
+>> +	PHY_INIT,
+>> +	PHY_PWR_ON,
+>> +	PHY_PWR_OFF,
+>> +	PHY_EXIT,
+>> +};
+>> +
+>> +const char *phy_ops_name[] = {"init", "power on", "power off", "exit"};
+> 
+> This could be 'static'. But if it's only for printing error
+> messages...do you really even need this? Somebody could easily refer
+> back to the driver if they need to convert an int/enum to something
+> meaningful.
 
-	<wtenhave@hagen:60> uname -a
-	Linux hagen 4.11.8-200.fc25.x86_64 #1 SMP Wed Jul 5 10:37:18 CEST 2017 x86_64 x86_64 x86_64 GNU/Linux
+ok, I will kill all these above including the following ugly
+rockchip_pcie_manipulate_phys.
 
-  I'll update RHT Bugzilla entry 1467674 with this info. 
-  Hope someone picks this up for Fedora25 and Fedora26 (next week).
+> 
+>> +
+>>   static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
+>>   {
+>>   	return readl(rockchip->apb_base + reg);
+>> @@ -507,6 +519,104 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+>>   	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
+>>   }
+>>   
+>> +static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+>> +{
+>> +	struct device *dev = rockchip->dev;
+>> +	struct phy *phy;
+>> +	char *name;
+>> +	u32 i;
+>> +
+>> +	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+>> +	if (IS_ERR(rockchip->phy)) {
+>> +		if (PTR_ERR(rockchip->phy) == -EPROBE_DEFER)
+>> +			return PTR_ERR(rockchip->phy);
+>> +		dev_dbg(dev, "missing legacy phy, and search for per-lane PHY\n");
+>> +	} else {
+>> +		rockchip->legacy_phy = true;
+>> +		dev_warn(dev, "legacy phy model is deprecated!\n");
+>> +		return 0;
+>> +	}
+>> +
+>> +	/* per-lane PHYs */
+>> +	rockchip->phys = devm_kcalloc(dev, sizeof(phy), MAX_LANE_NUM,
+>> +				      GFP_KERNEL);
+>> +	if (!rockchip->phys)
+>> +		return -ENOMEM;
+>> +
+>> +	for (i = 0; i < MAX_LANE_NUM; i++) {
+>> +		name = kasprintf(GFP_KERNEL, "%s-%u", "pcie-phy", i);
+> 
+> Since the string is constant, this could just be:
+> 
+> 		kasprintf(..., "pcie-phy-%u", i);
+> 
 
-Regards,
-- Wim.
+Looks good, and will improve it.
+
+>> +		if (!name)
+>> +			return -ENOMEM;
+>> +
+>> +		phy = devm_of_phy_get(rockchip->dev,
+>> +				      rockchip->dev->of_node, name);
+>> +		kfree(name);
+>> +
+>> +		if (IS_ERR(phy)) {
+>> +			if (PTR_ERR(phy) != -EPROBE_DEFER)
+>> +				dev_err(dev, "missing phy for lane %d: %ld\n",
+>> +					i, PTR_ERR(phy));
+>> +			return PTR_ERR(phy);
+>> +		}
+>> +
+>> +		rockchip->phys[i] = phy;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +
+>> +static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
+>> +					 enum phy_ops_type type)
+>> +{
+>> +	int i, phy_num, err;
+>> +	struct device *dev = rockchip->dev;
+>> +	struct phy *phy;
+>> +
+>> +	phy_num = rockchip->legacy_phy ? 1 : MAX_LANE_NUM;
+>> +
+>> +	for (i = 0; i < phy_num; i++) {
+>> +		phy = rockchip->legacy_phy ? rockchip->phy :
+>> +					     rockchip->phys[i];
+>> +		switch (type) {
+>> +		case PHY_INIT:
+>> +			if (phy->init_count > phy_num)
+> 
+> This looks illegal and badly designed. Illegal, because this looks to be
+> a count that should only be touched by the PHY core (and protected by
+> its mutex). Badly designed, because this is *not* the right way to
+> handle overflow/underflow. You should make sure that this driver does
+> init/exit and power on/off in a properly-balanced fashion. And that
+> doesn't mean just "skip" it when the count is too high; it means this
+> driver should know on its own when is the right time to power on/off the
+> phy/lane.
+
+right,  init_cout/power_count should be kept inside the phy core but
+we didn't want to duplicate it for consumer. I will try to kill all
+of these.
+
+> 
+> And this logic doesn't even make sense. Why should I be allowed to init
+> lane 0 only once, but I can init lane 3 up to 4 time >
+>> +				continue;
+>> +			err = phy_init(phy);
+>> +			break;
+>> +		case PHY_PWR_ON:
+>> +			if (phy->power_count > phy_num)
+> 
+> Same goes here.
+> 
+>> +				continue;
+>> +			err = phy_power_on(phy);
+>> +			break;
+>> +		case PHY_PWR_OFF:
+>> +			if (!phy->power_count)
+> 
+> And here.
+> 
+>> +				continue;
+>> +			err = phy_power_off(phy);
+>> +			break;
+>> +		case PHY_EXIT:
+>> +			if (!phy->init_count)
+> 
+> And here.
+> 
+>> +				continue;
+>> +			err = phy_exit(phy);
+>> +			break;
+>> +		default:
+>> +			dev_err(dev, "unsupported phy_ops_type\n");
+>> +			return -EOPNOTSUPP;
+>> +		}
+>> +
+>> +		if (err < 0) {
+>> +			if (rockchip->legacy_phy)
+>> +				dev_err(dev, "fail to %s legacy PHY, err %d\n",
+>> +					phy_ops_name[type], err);
+>> +			else
+>> +				dev_err(dev, "fail to %s per-lane PHY#%u, err %d\n",
+>> +					phy_ops_name[type], i, err);
+>> +			return err;
+>> +		}
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+> 
+> Really, I think you should kill this whole function, and code the loop
+> elsewhere.
+> 
+>> +
+>>   /**
+>>    * rockchip_pcie_init_port - Initialize hardware
+>>    * @rockchip: PCIe port information
+>> @@ -537,11 +647,9 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>>   		return err;
+>>   	}
+>>   
+>> -	err = phy_init(rockchip->phy);
+>> -	if (err < 0) {
+>> -		dev_err(dev, "fail to init phy, err %d\n", err);
+>> +	err = rockchip_pcie_manipulate_phys(rockchip, PHY_INIT);
+>> +	if (err < 0)
+>>   		return err;
+>> -	}
+>>   
+>>   	err = reset_control_assert(rockchip->core_rst);
+>>   	if (err) {
+>> @@ -602,11 +710,9 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>>   			    PCIE_CLIENT_MODE_RC,
+>>   			    PCIE_CLIENT_CONFIG);
+>>   
+>> -	err = phy_power_on(rockchip->phy);
+>> -	if (err) {
+>> -		dev_err(dev, "fail to power on phy, err %d\n", err);
+>> +	err = rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_ON);
+>> +	if (err)
+>>   		return err;
+>> -	}
+>>   
+>>   	/*
+>>   	 * Please don't reorder the deassert sequence of the following
+>> @@ -853,20 +959,6 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+>>   	chained_irq_exit(chip, desc);
+>>   }
+>>   
+>> -static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+>> -{
+>> -	struct device *dev = rockchip->dev;
+>> -
+>> -	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+>> -	if (IS_ERR(rockchip->phy)) {
+>> -		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
+>> -			dev_err(dev, "missing phy\n");
+>> -		return PTR_ERR(rockchip->phy);
+>> -	}
+>> -
+>> -	return 0;
+>> -}
+>> -
+>>   /**
+>>    * rockchip_pcie_parse_dt - Parse Device Tree
+>>    * @rockchip: PCIe port information
+>> @@ -1295,8 +1387,8 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+>>   		return ret;
+>>   	}
+>>   
+>> -	phy_power_off(rockchip->phy);
+>> -	phy_exit(rockchip->phy);
+>> +	rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_OFF);
+>> +	rockchip_pcie_manipulate_phys(rockchip, PHY_EXIT);
+> 
+> What's wrong with this (once you unify the 'phys' array)?
+> 
+> 	for (i = 0; i < MAX_LANE_NUM; i++) {
+> 		if (rockchip->phys[i]) { // Not necessarily required;
+> 					 // phy APIs handle NULL
+> 			phy_power_off(rockchip->phys[i]);
+> 			phy_exit(rockchip->phys[i]);
+> 		}
+> 	}
+> 
+> Similar for all other uses, AFAICT.
+> 
+> Once you actually need to prevent multiple power-offs (when you power
+> down some lanes, but not others), you can avoid the illegal access to
+> PHY-internal counters by just keeping your own mask of on/off PHYs.
+
+I would like to see if I could reconstruct the phy consumer/provider
+to avoid all these counters and fix all corner cases . :)
+
+
+> 
+>>   
+>>   	clk_disable_unprepare(rockchip->clk_pcie_pm);
+>>   	clk_disable_unprepare(rockchip->hclk_pcie);
+>> @@ -1538,8 +1630,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>>   	pci_unmap_iospace(rockchip->io);
+>>   	irq_domain_remove(rockchip->irq_domain);
+>>   
+>> -	phy_power_off(rockchip->phy);
+>> -	phy_exit(rockchip->phy);
+>> +	rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_OFF);
+>> +	rockchip_pcie_manipulate_phys(rockchip, PHY_EXIT);
+> 
+> Same here.
+> 
+> Brian
+> 
+>>   
+>>   	clk_disable_unprepare(rockchip->clk_pcie_pm);
+>>   	clk_disable_unprepare(rockchip->hclk_pcie);
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> 
+> 
