@@ -1,84 +1,191 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, vikrams@codeaurora.org
-Subject: [PATCH V4] PCI: handle CRS returned by device after FLR
-Date: Thu,  6 Jul 2017 17:07:14 -0400
-Message-Id: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo.Pieralisi@arm.com, linux-arm-msm@vger.kernel.org,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36115 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751379AbdGRQE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Jul 2017 12:04:26 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:04:06 -0600
+Message-Id: <20170718160409.6493-14-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 13/16] switchtec_ntb: implement doorbell registers
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An endpoint is allowed to issue Configuration Request Retry Status (CRS)
-following a Function Level Reset (FLR) request to indicate that it is not
-ready to accept new requests.
+Pretty straightforward implementation of doorbell registers.
+The shift and mask were setup in an earlier patch and this just hooks
+up the appropriate portion of the IDB register as the local doorbells
+and the opposite portion of ODB as the peer doorbells. The DB mask is
+protected by a spinlock to avoid concurrent read-modify-write accesses.
 
-Seen a timeout message with Intel 750 NVMe drive and FLR reset.
-
-Kernel enables CRS visibility in pci_enable_crs() function for each bridge
-it discovers. The OS observes a special vendor ID read value of 0xFFFF0001
-in this case. We need to keep polling until this special read value
-disappears. pci_bus_read_dev_vendor_id() takes care of CRS handling for a
-given vendor id read request under the covers.
-
-Adding a vendor ID read if this is a physical function before attempting
-to read any other registers on the endpoint. A CRS indication will only
-be given if the address to be read is vendor ID register.
-
-Note that virtual functions report their vendor ID through another
-mechanism.
-
-The spec is calling to wait up to 1 seconds if the device is sending CRS.
-The NVMe device seems to be requiring more. Relax this up to 60 seconds.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/pci/pci.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 89 +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 85 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aab9d51..83a9784 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3723,10 +3723,16 @@ static void pci_flr_wait(struct pci_dev *dev)
- 	int i = 0;
- 	u32 id;
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index dba14188ba95..0bd9c8cae688 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -98,6 +98,9 @@ struct switchtec_ntb {
+ 	int db_shift;
+ 	int db_peer_shift;
  
--	do {
--		msleep(100);
--		pci_read_config_dword(dev, PCI_COMMAND, &id);
--	} while (i++ < 10 && id == ~0);
-+	if (dev->is_virtfn) {
-+		do {
-+			msleep(100);
-+			pci_read_config_dword(dev, PCI_COMMAND, &id);
-+		} while (i++ < 10 && id == ~0);
-+	} else {
-+		if (!pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-+						60*1000))
-+			id = ~0;
++	/* synchronize rmw access of db_mask and hw reg */
++	spinlock_t db_mask_lock;
++
+ 	int nr_direct_mw;
+ 	int nr_lut_mw;
+ 	int direct_mw_to_bar[MAX_DIRECT_MW];
+@@ -338,41 +341,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+ 
+ static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	return 1;
+ }
+ 
+ static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_vector < 0 || db_vector > 1)
++		return 0;
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
+ {
+-	return 0;
++	u64 ret;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
++
++	return ret & sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++	{
++		sndev->db_mask |= db_bits << sndev->db_shift;
++		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
 +	}
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
+ 	return 0;
+ }
  
- 	if (id == ~0)
- 		dev_warn(&dev->dev, "Failed to return from FLR\n");
+ static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++	{
++		sndev->db_mask &= ~(db_bits << sndev->db_shift);
++		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	}
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
++	return 0;
++}
++
++static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
++}
++
++static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
++				      phys_addr_t *db_addr,
++				      resource_size_t *db_size)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
++		(unsigned long)sndev->stdev->mmio;
++
++	offset += sndev->db_shift / 8;
++
++	if (db_addr)
++		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
++	if (db_size)
++		*db_size = sizeof(u32);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_peer_shift,
++		  &sndev->mmio_self_dbmsg->odb);
++
+ 	return 0;
+ }
+ 
+@@ -413,6 +490,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.db_clear		= switchtec_ntb_db_clear,
+ 	.db_set_mask		= switchtec_ntb_db_set_mask,
+ 	.db_clear_mask		= switchtec_ntb_db_clear_mask,
++	.db_read_mask		= switchtec_ntb_db_read_mask,
++	.peer_db_addr		= switchtec_ntb_peer_db_addr,
+ 	.peer_db_set		= switchtec_ntb_peer_db_set,
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+@@ -680,6 +759,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
+ 
+ 	dev_dbg(&sndev->stdev->dev, "doorbell\n");
+ 
++	ntb_db_event(&sndev->ntb, 0);
++
+ 	return IRQ_HANDLED;
+ }
+ 
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
