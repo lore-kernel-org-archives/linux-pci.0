@@ -1,79 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <bhelgaas@google.com>, <robh+dt@kernel.org>
-Subject: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
-Date: Thu, 6 Jul 2017 17:39:44 +0800
-Message-ID: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:04:00 -0600
+Message-Id: <20170718160409.6493-8-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 07/16] ntb: ntb_test: ensure the link is up before trying to configure the mws
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+After the link tests, there is a race on one side of the test for
+the link coming up. It's possible, in some cases, for the test script
+to write to the 'peer_trans' files before the link has come up.
 
-The ls1088a and ls2088a has the same PCIe controller, so the ls1088a
-will reuse the ls2088a's pcie compatible.
+To fix this, we simply use the link event file to ensure both sides
+see the link as up before continuning.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- Documentation/devicetree/bindings/pci/layerscape-pci.txt | 1 +
- drivers/pci/dwc/pci-layerscape.c                         | 9 +++++++++
- 2 files changed, 10 insertions(+)
+ tools/testing/selftests/ntb/ntb_test.sh | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-index ee1c72d5..cb735e1 100644
---- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
-@@ -15,6 +15,7 @@ Required properties:
- - compatible: should contain the platform identifier such as:
-         "fsl,ls1021a-pcie", "snps,dw-pcie"
-         "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
-+        "fsl,ls2088a-pcie", "fsl,ls1088a-pcie"
-         "fsl,ls1046a-pcie"
- - reg: base addresses and lengths of the PCIe controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 9bed3cd..0df8189 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -239,12 +239,21 @@ static struct ls_pcie_drvdata ls2080_drvdata = {
- 	.dw_pcie_ops = &dw_ls_pcie_ops,
- };
+diff --git a/tools/testing/selftests/ntb/ntb_test.sh b/tools/testing/selftests/ntb/ntb_test.sh
+index 1c12b5855e4f..5fc7ad359e21 100755
+--- a/tools/testing/selftests/ntb/ntb_test.sh
++++ b/tools/testing/selftests/ntb/ntb_test.sh
+@@ -333,6 +333,10 @@ function ntb_tool_tests()
+ 	link_test $LOCAL_TOOL $REMOTE_TOOL
+ 	link_test $REMOTE_TOOL $LOCAL_TOOL
  
-+static struct ls_pcie_drvdata ls2088_drvdata = {
-+	.lut_offset = 0x80000,
-+	.ltssm_shift = 0,
-+	.lut_dbg = 0x407fc,
-+	.ops = &ls_pcie_host_ops,
-+	.dw_pcie_ops = &dw_ls_pcie_ops,
-+};
++	#Ensure the link is up on both sides before continuing
++	write_file Y $LOCAL_TOOL/link_event
++	write_file Y $REMOTE_TOOL/link_event
 +
- static const struct of_device_id ls_pcie_of_match[] = {
- 	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
- 	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
- 	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
- 	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
- 	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
-+	{ .compatible = "fsl,ls2088a-pcie", .data = &ls2088_drvdata },
- 	{ },
- };
- 
+ 	for PEER_TRANS in $(ls $LOCAL_TOOL/peer_trans*); do
+ 		PT=$(basename $PEER_TRANS)
+ 		write_file $MW_SIZE $LOCAL_TOOL/$PT
 -- 
-2.1.0.27.g96db324
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
