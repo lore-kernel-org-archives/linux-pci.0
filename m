@@ -1,146 +1,201 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Matthew Minter <matt@masarand.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Rich Felker <dalias@libc.org>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@imgtec.com>,
-        Guan Xuetao <gxt@mprc.pku.edu.cn>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: [RFT PATCH 6/9] tile/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
-Date: Mon, 31 Jul 2017 17:37:54 +0100
-Message-Id: <20170731163757.22629-7-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
-References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-tegra@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Subject: [PATCH] PCI: Convert to using %pOF instead of full_name
+Date: Tue, 18 Jul 2017 16:43:21 -0500
+Message-Id: <20170718214339.7774-41-robh@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_fixup_irqs() function allocates IRQs for all PCI devices present
-in a system; those PCI devices possibly belong to different PCI bus
-trees (and possibly rooted at different host bridges) and may well be
-enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
-is called when probing a given host bridge driver.
+Now that we have a custom printf format specifier, convert users of
+full_name to use %pOF instead. This is preparation to remove storing
+of the full path string for each node.
 
-Furthermore, current kernel code relying on pci_fixup_irqs() to assign
-legacy PCI IRQs to devices does not work at all for hotplugged devices
-in that the code carrying out the IRQ fixup is called at host bridge
-driver probe time, which just cannot take into account devices
-hotplugged after system has booted.
-
-The introduction of map/swizzle functions hook in struct pci_host_bridge
-allows to define per-bridge map/swizzle functions, that can be used at
-device probe time in PCI core code to allocate IRQs for a given device
-(through pci_assign_irq()).
-
-Convert PCI host bridge initialization code to the
-pci_scan_root_bus_bridge() API (that allows to pass a struct
-pci_host_bridge with initializedmap/swizzle pointers) and remove the
-pci_fixup_irqs() call from arch code.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Rob Herring <robh@kernel.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
 Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Chris Metcalf <cmetcalf@mellanox.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-tegra@vger.kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
 ---
- arch/tile/kernel/pci.c    | 21 ++++++++++++++++-----
- arch/tile/kernel/pci_gx.c | 21 ++++++++++++++++-----
- 2 files changed, 32 insertions(+), 10 deletions(-)
+ drivers/pci/host/pci-mvebu.c        | 8 ++++----
+ drivers/pci/host/pci-tegra.c        | 3 +--
+ drivers/pci/hotplug/pnv_php.c       | 4 ++--
+ drivers/pci/hotplug/rpadlpar_core.c | 4 ++--
+ drivers/pci/hotplug/rpaphp_core.c   | 2 +-
+ drivers/pci/hotplug/rpaphp_pci.c    | 4 ++--
+ drivers/pci/hotplug/rpaphp_slot.c   | 4 ++--
+ drivers/pci/pci-sysfs.c             | 4 ++--
+ drivers/pci/pci.c                   | 4 ++--
+ 9 files changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/arch/tile/kernel/pci.c b/arch/tile/kernel/pci.c
-index bc6656b..8848261 100644
---- a/arch/tile/kernel/pci.c
-+++ b/arch/tile/kernel/pci.c
-@@ -274,6 +274,7 @@ static void fixup_read_and_payload_sizes(void)
-  */
- int __init pcibios_init(void)
- {
-+	struct pci_host_bridge *bridge;
- 	int i;
- 
- 	pr_info("PCI: Probing PCI hardware\n");
-@@ -306,16 +307,26 @@ int __init pcibios_init(void)
- 
- 			pci_add_resource(&resources, &ioport_resource);
- 			pci_add_resource(&resources, &iomem_resource);
--			bus = pci_scan_root_bus(NULL, 0, controller->ops,
--						controller, &resources);
-+
-+			bridge = pci_alloc_host_bridge(0);
-+			if (!bridge)
-+				break;
-+
-+			list_splice_init(&resources, &bridge->windows);
-+			bridge->dev.parent = NULL;
-+			bridge->sysdata = controller;
-+			bridge->busnr = 0;
-+			bridge->ops = controller->ops;
-+			bridge->swizzle_irq = pci_common_swizzle;
-+			bridge->map_irq = tile_map_irq;
-+
-+			pci_scan_root_bus_bridge(bridge);
-+			bus = bridge->bus;
- 			controller->root_bus = bus;
- 			controller->last_busno = bus->busn_res.end;
+diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+index f353a6eb2f01..424982997eb9 100644
+--- a/drivers/pci/host/pci-mvebu.c
++++ b/drivers/pci/host/pci-mvebu.c
+@@ -1054,8 +1054,8 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+ 	port->pcie = pcie;
+
+ 	if (of_property_read_u32(child, "marvell,pcie-port", &port->port)) {
+-		dev_warn(dev, "ignoring %s, missing pcie-port property\n",
+-			 of_node_full_name(child));
++		dev_warn(dev, "ignoring %pOF, missing pcie-port property\n",
++			 child);
+ 		goto skip;
+ 	}
+
+@@ -1106,8 +1106,8 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
  		}
+
+ 		if (flags & OF_GPIO_ACTIVE_LOW) {
+-			dev_info(dev, "%s: reset gpio is active low\n",
+-				 of_node_full_name(child));
++			dev_info(dev, "%pOF: reset gpio is active low\n",
++				 child);
+ 			gpio_flags = GPIOF_ACTIVE_LOW |
+ 				     GPIOF_OUT_INIT_LOW;
+ 		} else {
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index b3722b7709df..7eb9be5ae357 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1703,8 +1703,7 @@ static int tegra_pcie_get_legacy_regulators(struct tegra_pcie *pcie)
+ 		pcie->num_supplies = 2;
+
+ 	if (pcie->num_supplies == 0) {
+-		dev_err(dev, "device %s not supported in legacy mode\n",
+-			np->full_name);
++		dev_err(dev, "device %pOF not supported in legacy mode\n", np);
+ 		return -ENODEV;
  	}
- 
--	/* Do machine dependent PCI interrupt routing */
--	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
--
- 	/*
- 	 * This comes from the generic Linux PCI driver.
- 	 *
-diff --git a/arch/tile/kernel/pci_gx.c b/arch/tile/kernel/pci_gx.c
-index b554a68..e683170 100644
---- a/arch/tile/kernel/pci_gx.c
-+++ b/arch/tile/kernel/pci_gx.c
-@@ -669,6 +669,7 @@ int __init pcibios_init(void)
- 	resource_size_t offset;
- 	LIST_HEAD(resources);
- 	int next_busno;
-+	struct pci_host_bridge *bridge;
- 	int i;
- 
- 	tile_pci_init();
-@@ -881,15 +882,25 @@ int __init pcibios_init(void)
- 					controller->mem_offset);
- 		pci_add_resource(&resources, &controller->io_space);
- 		controller->first_busno = next_busno;
--		bus = pci_scan_root_bus(NULL, next_busno, controller->ops,
--					controller, &resources);
-+
-+		bridge = pci_alloc_host_bridge(0);
-+		if (!bridge)
-+			break;
-+
-+		list_splice_init(&resources, &bridge->windows);
-+		bridge->dev.parent = NULL;
-+		bridge->sysdata = controller;
-+		bridge->busnr = next_busno;
-+		bridge->ops = controller->ops;
-+		bridge->swizzle_irq = pci_common_swizzle;
-+		bridge->map_irq = tile_map_irq;
-+
-+		pci_scan_root_bus_bridge(bridge);
-+		bus = bridge->bus;
- 		controller->root_bus = bus;
- 		next_busno = bus->busn_res.end + 1;
+
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index 7c203198b582..74f6a17e4614 100644
+--- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -163,8 +163,8 @@ static void pnv_php_detach_device_nodes(struct device_node *parent)
+ 		of_node_put(dn);
+ 		refcount = kref_read(&dn->kobj.kref);
+ 		if (refcount != 1)
+-			pr_warn("Invalid refcount %d on <%s>\n",
+-				refcount, of_node_full_name(dn));
++			pr_warn("Invalid refcount %d on <%pOF>\n",
++				refcount, dn);
+
+ 		of_detach_node(dn);
  	}
- 
--	/* Do machine dependent PCI interrupt routing */
--	pci_fixup_irqs(pci_common_swizzle, tile_map_irq);
--
- 	/*
- 	 * This comes from the generic Linux PCI driver.
- 	 *
--- 
-2.10.0
+diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+index 3f93a4e79595..a3449d717a99 100644
+--- a/drivers/pci/hotplug/rpadlpar_core.c
++++ b/drivers/pci/hotplug/rpadlpar_core.c
+@@ -150,8 +150,8 @@ static void dlpar_pci_add_bus(struct device_node *dn)
+ 	/* Add EADS device to PHB bus, adding new entry to bus->devices */
+ 	dev = of_create_pci_dev(dn, phb->bus, pdn->devfn);
+ 	if (!dev) {
+-		printk(KERN_ERR "%s: failed to create pci dev for %s\n",
+-				__func__, dn->full_name);
++		printk(KERN_ERR "%s: failed to create pci dev for %pOF\n",
++				__func__, dn);
+ 		return;
+ 	}
+
+diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+index 8d132024f06e..1e29abaaea08 100644
+--- a/drivers/pci/hotplug/rpaphp_core.c
++++ b/drivers/pci/hotplug/rpaphp_core.c
+@@ -318,7 +318,7 @@ int rpaphp_add_slot(struct device_node *dn)
+ 	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
+ 		return 0;
+
+-	dbg("Entry %s: dn->full_name=%s\n", __func__, dn->full_name);
++	dbg("Entry %s: dn=%pOF\n", __func__, dn);
+
+ 	/* register PCI devices */
+ 	name = (char *) &names[1];
+diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+index ea41ea1d3c00..32aabc533be8 100644
+--- a/drivers/pci/hotplug/rpaphp_pci.c
++++ b/drivers/pci/hotplug/rpaphp_pci.c
+@@ -95,7 +95,7 @@ int rpaphp_enable_slot(struct slot *slot)
+
+ 	bus = pci_find_bus_by_node(slot->dn);
+ 	if (!bus) {
+-		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
++		err("%s: no pci_bus for dn %pOF\n", __func__, slot->dn);
+ 		return -EINVAL;
+ 	}
+
+@@ -125,7 +125,7 @@ int rpaphp_enable_slot(struct slot *slot)
+
+ 		if (rpaphp_debug) {
+ 			struct pci_dev *dev;
+-			dbg("%s: pci_devs of slot[%s]\n", __func__, slot->dn->full_name);
++			dbg("%s: pci_devs of slot[%pOF]\n", __func__, slot->dn);
+ 			list_for_each_entry(dev, &bus->devices, bus_list)
+ 				dbg("\t%s\n", pci_name(dev));
+ 		}
+diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+index 388c4d8fcdd1..489862360f2c 100644
+--- a/drivers/pci/hotplug/rpaphp_slot.c
++++ b/drivers/pci/hotplug/rpaphp_slot.c
+@@ -122,8 +122,8 @@ int rpaphp_register_slot(struct slot *slot)
+ 	int retval;
+ 	int slotno = -1;
+
+-	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
+-		__func__, slot->dn->full_name, slot->index, slot->name,
++	dbg("%s registering slot:path[%pOF] index[%x], name[%s] pdomain[%x] type[%d]\n",
++		__func__, slot->dn, slot->index, slot->name,
+ 		slot->power_domain, slot->type);
+
+ 	/* should not try to register the same slot twice */
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 2f3780b50723..33d4df7ed591 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -556,9 +556,9 @@ static ssize_t devspec_show(struct device *dev,
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 	struct device_node *np = pci_device_to_OF_node(pdev);
+
+-	if (np == NULL || np->full_name == NULL)
++	if (np == NULL)
+ 		return 0;
+-	return sprintf(buf, "%s", np->full_name);
++	return sprintf(buf, "%pOF", np);
+ }
+ static DEVICE_ATTR_RO(devspec);
+ #endif
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc3456dc1..e8e40dea2842 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5363,8 +5363,8 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+ 		use_dt_domains = 0;
+ 		domain = pci_get_new_domain_nr();
+ 	} else {
+-		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+-			parent->of_node->full_name);
++		dev_err(parent, "Node %pOF has inconsistent \"linux,pci-domain\" property in DT\n",
++			parent->of_node);
+ 		domain = -1;
+ 	}
+
+--
+2.11.0
