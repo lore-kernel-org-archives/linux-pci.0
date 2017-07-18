@@ -1,168 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:33142 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752469AbdGEDJe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:09:34 -0400
-Received: by mail-wr0-f182.google.com with SMTP id r103so256298811wrb.0
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:09:34 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v4 2/2] PCI: iproc: add device shutdown for PCI RC
-Date: Wed,  5 Jul 2017 08:38:59 +0530
-Message-Id: <1499224139-10746-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
-References: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 18 Jul 2017 14:24:47 +0530
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
+Message-ID: <20170718085440.GD32439@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-4-git-send-email-varada@codeaurora.org>
+ <20170717223047.GA20973@minitux>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170717223047.GA20973@minitux>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PERST must be asserted around ~500ms before the reboot is applied.
+Bjorn,
 
-During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
-LCPLL clock and PERST both goes off simultaneously.
-This will cause certain Endpoints Intel NVMe not get detected, upon
-next boot sequence.
+On Mon, Jul 17, 2017 at 03:30:47PM -0700, Bjorn Andersson wrote:
+> On Mon 17 Jul 05:03 PDT 2017, Varadarajan Narayanan wrote:
+>
+> > Presently, the phy pipe clock's name is assumed to be either
+> > usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+> > phy lane's number). However, this will not work if an SoC has
+> > more than one instance of the phy. Hence, instead of assuming
+> > the name of the clock, fetch it from the DT.
+> >
+>
+> Adding the support to fetch this from DT looks reasonable, but you
+> should make sure to fall back to the old logic in case you don't find a
+> "clock-output-names" property.
 
-This is specifically happening with Intel P3700 400GB series.
-Endpoint is expecting the clock for some amount of time after PERST is
-asserted, which is not happening in Stingray (iproc based SOC).
-This causes NVMe to behave in undefined way.
+If more than one instance of the IP block is instantiated in the
+SoC, it will try to register the same clock (i.e.
+pcie_0_pipe_clk_src or usb3_phy_pipe_clk_src) more than once and
+devm_clk_hw_register() will fail for the second and subsequent
+instances of the IP, resulting in the pipe_clk not being able to
+find its parent.
 
-On the contrary Intel x86 boards, will have ref clock running, so we
-do not see this behavior there.
+Additionally, the clock name itself differs between SoCs. For
+example, in MSM8996 it is usb3_phy_pipe_clk_src for USB and
+pcie_X_pipe_clk_src (where X is lane number 0, 1 or 2). In
+IPQ8074 it is usb3phy_X_cc_pipe_clk or pcie20_phyX_pipe_clk
+(where X is IP instance number 0 or 1).
 
-Besides, PCI spec does not stipulate about such timings.
-In-fact it does not tell us, whether PCIe device should consider
-refclk to be available or not to be.
+MSM8996, has one instance of the IP with 3 different lanes,
+whereas IPQ8074 has two instances with one lane in each instance.
+A future SoC might have multiple instances with each instance
+having different number of lanes and the clock's name might have
+X & Y to indicate instance number and lane numbers.
 
-It is completely up to vendor to design their EP the way they want
-with respect to ref clock availability.
+Hence, if the "clock-output-names" property is not available
+there is no logic that can correctly "guess" the clock's name.
+The old logic incorrectly assumes the format of the clock name,
+resulting in devm_clk_hw_register() failures and pipe_clk not
+being linked to its proper parent.
 
-500ms is just based on the observation and taken as safe margin.
-This patch adds platform shutdown where it should be
-called in device_shutdown while reboot command is issued.
-So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-followed by RC shutdown, which issues safe PERST assertion.
+> [..]
+> > @@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+> >
+> >  	id = 0;
+> >  	for_each_available_child_of_node(dev->of_node, child) {
+> > +		const char *clk_name;
+> > +
+> >  		/* Create per-lane phy */
+> >  		ret = qcom_qmp_phy_create(dev, child, id);
+> >  		if (ret) {
+> > @@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+> >  			return ret;
+> >  		}
+> >
+> > +		ret = of_property_read_string(child, "clock-output-names",
+> > +							&clk_name);
+> > +		if (ret) {
+>
+> This would be the case for any existing dts files, so you're not allowed
+> to treat this as an error.
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Since, there are no dts files that presently enable this driver,
+wouldn't it be better to flag this as an error now itself instead
+of having to fall back to old handling (which as mentioned above
+is incomplete). Please let me know.
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index 90d2bdd..9512960 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	return iproc_pcie_remove(pcie);
- }
- 
-+static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-+{
-+	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	iproc_pcie_shutdown(pcie);
-+}
-+
- static struct platform_driver iproc_pcie_pltfm_driver = {
- 	.driver = {
- 		.name = "iproc-pcie",
-@@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	},
- 	.probe = iproc_pcie_pltfm_probe,
- 	.remove = iproc_pcie_pltfm_remove,
-+	.shutdown = iproc_pcie_pltfm_shutdown,
- };
- module_platform_driver(iproc_pcie_pltfm_driver);
- 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index b0abcd7..d1bcdc9 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -616,32 +616,40 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	.write = iproc_pcie_config_write32,
- };
- 
--static void iproc_pcie_reset(struct iproc_pcie *pcie)
-+static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
- {
- 	u32 val;
- 
- 	/*
--	 * PAXC and the internal emulated endpoint device downstream should not
--	 * be reset.  If firmware has been loaded on the endpoint device at an
--	 * earlier boot stage, reset here causes issues.
-+	 * The internal emulated endpoints (such as PAXC) device downstream
-+	 * should not be reset. If firmware has been loaded on the endpoint
-+	 * device at an earlier boot stage, reset here causes issues.
- 	 */
- 	if (pcie->ep_is_internal)
- 		return;
- 
--	/*
--	 * Select perst_b signal as reset source. Put the device into reset,
--	 * and then bring it out of reset
--	 */
--	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
--	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
--		~RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	udelay(250);
--
--	val |= RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	msleep(100);
-+	if (assert) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-+			~RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(250);
-+	} else {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val |= RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		msleep(100);
-+	}
-+}
-+
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-+{
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	msleep(500);
-+
-+	return 0;
- }
-+EXPORT_SYMBOL(iproc_pcie_shutdown);
- 
- static int iproc_pcie_check_link(struct iproc_pcie *pcie, struct pci_bus *bus)
- {
-@@ -1318,7 +1326,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		goto err_exit_phy;
- 	}
- 
--	iproc_pcie_reset(pcie);
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	iproc_pcie_perst_ctrl(pcie, false);
- 
- 	if (pcie->need_ob_cfg) {
- 		ret = iproc_pcie_map_ranges(pcie, res);
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 0bbe2ea..a6b55ce 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -110,6 +110,7 @@ struct iproc_pcie {
- 
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie);
- 
- #ifdef CONFIG_PCIE_IPROC_MSI
- int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
--- 
-1.9.1
+Thanks
+Varada
+
+> > +			dev_err(dev,
+> > +				"failed to get clock-output-names for lane%d phy, %d\n",
+> > +				id, ret);
+> > +			return ret;
+> > +		}
+> > +
+>
+> Regards,
+> Bjorn
+
+--
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
