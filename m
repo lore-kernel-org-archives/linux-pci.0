@@ -1,218 +1,109 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
-Date: Fri, 21 Jul 2017 14:42:06 +0200
-Message-ID: <4853865.5aRGCM4CdQ@aspire.rjw.lan>
-In-Reply-To: <3116391.JNS1F4DjTg@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0047.outbound.protection.outlook.com ([104.47.2.47]:53393
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751351AbdGRDBB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Jul 2017 23:01:01 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Jingoo Han <jingoohan1@gmail.com>,
+        'Joao Pinto' <Joao.Pinto@synopsys.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>
+Subject: RE: [PATCH 1/3] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+Date: Tue, 18 Jul 2017 03:00:59 +0000
+Message-ID: <AM5PR0402MB2771C36475339618766F736584A10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
+ <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+ <7cebf6a4-bedd-015f-9d1a-1e82fa42d41d@synopsys.com>
+ <AM5PR0402MB2771C3717050F4D2D69EB74384AE0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+ <000d01d2ff34$ab71cd30$02556790$@gmail.com>
+In-Reply-To: <000d01d2ff34$ab71cd30$02556790$@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-The acpi_pci_propagate_wakeup() routine is there to handle cases in
-which PCI bridges (or PCIe ports) are expected to signal wakeup
-for devices below them, but currently it doesn't do that correctly.
-
-The problem is that acpi_pci_propagate_wakeup() uses
-acpi_pm_set_device_wakeup() for bridges and if that routine is
-called for multiple times to disable wakeup for the same device,
-it will disable it on the first invocation and the next calls
-will have no effect (it works analogously when called to enable
-wakeup, but that is not a problem).
-
-Now, say acpi_pci_propagate_wakeup() has been called for two
-different devices under the same bridge and it has called
-acpi_pm_set_device_wakeup() for that bridge each time.  The
-bridge is now enabled to generate wakeup signals.  Next,
-suppose that one of the devices below it resumes and
-acpi_pci_propagate_wakeup() is called to disable wakeup for that
-device.  It will then call acpi_pm_set_device_wakeup() for the bridge
-and that will effectively disable remote wakeup for all devices under
-it even though some of them may still be suspended and remote wakeup
-may be expected to work for them.
-
-To address this (arguably theoretical) issue, allow
-wakeup.enable_count under struct acpi_device to grow beyond 1 in
-certain situations.  In particular, allow that to happen in
-acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
-for PCI bridges, so that wakeup is actually disabled for the
-bridge when all devices under it resume and not when just one
-of them does that.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |   49 +++++++++++++++++++++++++++++------------------
- drivers/pci/pci-acpi.c   |    4 +--
- include/acpi/acpi_bus.h  |   14 +++++++++++--
- 3 files changed, 45 insertions(+), 22 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -682,19 +682,8 @@ static void acpi_pm_notify_work_func(str
- 
- static DEFINE_MUTEX(acpi_wakeup_lock);
- 
--/**
-- * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-- * @adev: ACPI device to enable wakeup functionality for.
-- * @target_state: State the system is transitioning into.
-- *
-- * Enable the GPE associated with @adev so that it can generate wakeup signals
-- * for the device in response to external (remote) events and enable wakeup
-- * power for it.
-- *
-- * Callers must ensure that @adev is a valid ACPI device node before executing
-- * this function.
-- */
--static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
-+static int __acpi_device_wakeup_enable(struct acpi_device *adev,
-+				       u32 target_state, int max_count)
- {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
- 	acpi_status status;
-@@ -702,8 +691,12 @@ static int acpi_device_wakeup_enable(str
- 
- 	mutex_lock(&acpi_wakeup_lock);
- 
--	if (wakeup->enable_count > 0)
--		goto out;
-+	if (wakeup->enable_count > 0) {
-+		if (wakeup->enable_count < max_count)
-+			goto inc;
-+		else
-+			goto out;
-+	}
- 
- 	error = acpi_enable_wakeup_device_power(adev, target_state);
- 	if (error)
-@@ -716,6 +709,7 @@ static int acpi_device_wakeup_enable(str
- 		goto out;
- 	}
- 
-+inc:
- 	wakeup->enable_count++;
- 
- out:
-@@ -724,6 +718,23 @@ out:
- }
- 
- /**
-+ * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-+ * @adev: ACPI device to enable wakeup functionality for.
-+ * @target_state: State the system is transitioning into.
-+ *
-+ * Enable the GPE associated with @adev so that it can generate wakeup signals
-+ * for the device in response to external (remote) events and enable wakeup
-+ * power for it.
-+ *
-+ * Callers must ensure that @adev is a valid ACPI device node before executing
-+ * this function.
-+ */
-+static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
-+{
-+	return __acpi_device_wakeup_enable(adev, target_state, 1);
-+}
-+
-+/**
-  * acpi_device_wakeup_disable - Disable wakeup functionality for device.
-  * @adev: ACPI device to disable wakeup functionality for.
-  *
-@@ -754,8 +765,9 @@ out:
-  * acpi_pm_set_device_wakeup - Enable/disable remote wakeup for given device.
-  * @dev: Device to enable/disable to generate wakeup events.
-  * @enable: Whether to enable or disable the wakeup functionality.
-+ * @max_count: Maximum value of the enable reference counter.
-  */
--int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
- {
- 	struct acpi_device *adev;
- 	int error;
-@@ -775,13 +787,14 @@ int acpi_pm_set_device_wakeup(struct dev
- 		return 0;
- 	}
- 
--	error = acpi_device_wakeup_enable(adev, acpi_target_system_state());
-+	error = __acpi_device_wakeup_enable(adev, acpi_target_system_state(),
-+					    max_count);
- 	if (!error)
- 		dev_dbg(dev, "Wakeup enabled by ACPI\n");
- 
- 	return error;
- }
--EXPORT_SYMBOL(acpi_pm_set_device_wakeup);
-+EXPORT_SYMBOL(__acpi_pm_set_device_wakeup);
- 
- /**
-  * acpi_dev_pm_low_power - Put ACPI device into a low-power state.
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -605,7 +605,7 @@ acpi_status acpi_add_pm_notifier(struct
- acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
- bool acpi_pm_device_can_wakeup(struct device *dev);
- int acpi_pm_device_sleep_state(struct device *, int *, int);
--int acpi_pm_set_device_wakeup(struct device *dev, bool enable);
-+int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count);
- #else
- static inline void acpi_pm_wakeup_event(struct device *dev)
- {
-@@ -632,12 +632,22 @@ static inline int acpi_pm_device_sleep_s
- 	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3_COLD) ?
- 		m : ACPI_STATE_D0;
- }
--static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+static inline int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
- {
- 	return -ENODEV;
- }
- #endif
- 
-+static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+{
-+	return __acpi_pm_set_device_wakeup(dev, enable, 1);
-+}
-+
-+static inline int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
-+{
-+	return __acpi_pm_set_device_wakeup(dev, enable, INT_MAX);
-+}
-+
- #ifdef CONFIG_ACPI_SLEEP
- u32 acpi_target_system_state(void);
- #else
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -573,7 +573,7 @@ static int acpi_pci_propagate_wakeup(str
- {
- 	while (bus->parent) {
- 		if (acpi_pm_device_can_wakeup(&bus->self->dev))
--			return acpi_pm_set_device_wakeup(&bus->self->dev, enable);
-+			return acpi_pm_set_bridge_wakeup(&bus->self->dev, enable);
- 
- 		bus = bus->parent;
- 	}
-@@ -581,7 +581,7 @@ static int acpi_pci_propagate_wakeup(str
- 	/* We have reached the root bus. */
- 	if (bus->bridge) {
- 		if (acpi_pm_device_can_wakeup(bus->bridge))
--			return acpi_pm_set_device_wakeup(bus->bridge, enable);
-+			return acpi_pm_set_bridge_wakeup(bus->bridge, enable);
- 	}
- 	return 0;
- }
-
+SGkgSmluZ29vIEhhbiwNCg0KVGhhbmtzIGZvciB5b3VyIGNvbW1lbnRzIQ0KDQo+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEppbmdvbyBIYW4gW21haWx0bzpqaW5nb29oYW4x
+QGdtYWlsLmNvbV0NCj4gU2VudDogMjAxN+W5tDfmnIgxOOaXpSAzOjQxDQo+IFRvOiBaLnEuIEhv
+dSA8emhpcWlhbmcuaG91QG54cC5jb20+OyAnSm9hbyBQaW50bycNCj4gPEpvYW8uUGludG9Ac3lu
+b3BzeXMuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhlbGdhYXNAZ29vZ2xl
+LmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvM10gUENJOiBkZXNpZ253YXJlOiBhZGQgYWNj
+ZXNzb3JzIGZvciB3cml0ZSBwZXJtaXNzaW9uDQo+IG9mIERCSSByZWFkLW9ubHkgcmVnaXN0ZXJz
+DQo+IA0KPiBPbiBUdWVzZGF5LCBKdWx5IDExLCAyMDE3IDEyOjExIEFNLCBaLnEuIEhvdSB3cm90
+ZToNCj4gPg0KPiA+IEhpIEJqb3JuLA0KPiA+DQo+ID4gRHVlIHRvIGFsbCBGcmVlc2NhbGUgTGF5
+ZXJzY3BlIFBDSWUgY29udHJvbGxlcnMgaGF2ZSB0byBmaXggdGhlIENsYXNzDQo+ID4gY29kZSwg
+YW5kIHRoaXMgZml4dXAgZXhpc3RlZCBpbiBib3RoIExheWVyc2NhcGUgcGNpZSBkcml2ZXIgYW5k
+IERXQw0KPiA+IGNvbW1vbiBjb2RlLCBzbyBJIHdhbnQgdG8gcmV1c2UgdGhlIGZpeHVwIGluIERX
+QyBjb21tb24gY29kZS4NCj4gPiBDYW4geW91IGdpdmUgbWUgYW55IHN1Z2dlc3Rpb24/DQo+IA0K
+PiBQbGVhc2UgZG9uJ3QgYWRkIHlvdXIgY29tbWVudCBvbiB0b3Agb2YgdGhlIGVtYWlsLg0KDQpP
+aywgZ290IGl0Lg0KDQo+IA0KPiANCj4gPg0KPiA+ID4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0t
+LS0NCj4gPiA+IEZyb206IEpvYW8gUGludG8gW21haWx0bzpKb2FvLlBpbnRvQHN5bm9wc3lzLmNv
+bV0NCj4gPiA+IFNlbnQ6IDIwMTflubQ35pyIN+aXpSAxNjo1Mw0KPiA+ID4gVG86IFoucS4gSG91
+IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT47IEpvYW8gUGludG8NCj4gPiA+IDxKb2FvLlBpbnRvQHN5
+bm9wc3lzLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gPiBiaGVsZ2Fhc0Bn
+b29nbGUuY29tDQo+ID4gPiBDYzogamluZ29vaGFuMUBnbWFpbC5jb20NCj4gPiA+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggMS8zXSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nlc3NvcnMgZm9yIHdyaXRl
+DQo+ID4gcGVybWlzc2lvbg0KPiA+ID4gb2YgREJJIHJlYWQtb25seSByZWdpc3RlcnMNCj4gPiA+
+DQo+ID4gPg0KPiA+ID4gSGkgWmhpcWlhbmcsDQo+ID4gPg0KPiA+ID4gw4BzIDQ6NDggQU0gZGUg
+Ny83LzIwMTcsIFoucS4gSG91IGVzY3JldmV1Og0KPiA+ID4gPiBIaSBKb2FvLA0KPiA+ID4gPg0K
+PiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBUaGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMh
+DQo+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+DQo+ID4gPiA+PiAtLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KPiA+ID4gPg0KPiA+ID4gPj4gRnJvbTogSm9hbyBQaW50byBbbWFpbHRvOkpvYW8u
+UGludG9Ac3lub3BzeXMuY29tXQ0KPiA+ID4gPg0KPiA+ID4gPj4gU2VudDogMjAxN+W5tDfmnIg2
+5pelIDE3OjQ0DQo+ID4gPiA+DQo+ID4gPiA+PiBUbzogWi5xLiBIb3UgPHpoaXFpYW5nLmhvdUBu
+eHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gPiA+ID4NCj4gPiA+ID4+IEpv
+YW8uUGludG9Ac3lub3BzeXMuY29tDQo+ID4gPiA+DQo+ID4gPiA+PiBDYzogYmhlbGdhYXNAZ29v
+Z2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb20NCj4gPiA+ID4NCj4gPiA+ID4+IFN1YmplY3Q6
+IFJlOiBbUEFUQ0ggMS8zXSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nlc3NvcnMgZm9yIHdyaXRl
+DQo+ID4gPiA+PiBwZXJtaXNzaW9uDQo+ID4gPiA+DQo+ID4gPiA+PiBvZiBEQkkgcmVhZC1vbmx5
+IHJlZ2lzdGVycw0KPiA+ID4gPg0KPiA+ID4gPj4NCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4gPiA+
+DQo+ID4gPiA+PiBIaSBaaGlxaWFuZywNCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4gPiA+DQo+ID4g
+PiA+PiDDgHMgNzozMyBBTSBkZSA3LzYvMjAxNywgWmhpcWlhbmcgSG91IGVzY3JldmV1Og0KPiA+
+ID4gPg0KPiA+ID4gPj4+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+
+DQo+ID4gPiA+DQo+ID4gPiA+Pj4NCj4gPiA+ID4NCj4gPiA+ID4+PiBUaGUgcmVhZC1vbmx5IERC
+SSByZWdpc3RlcnMgY2FuIGJlIHdyaXR0ZW4gb3ZlciB0aGUgREJJIHdoZW4gc2V0DQo+ID4gPiA+
+Pj4gdGhlDQo+ID4gPiA+DQo+ID4gPiA+Pj4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBE
+QkkiIChEQklfUk9fV1JfRU4pIGZpZWxkIG9mIHRoZQ0KPiA+ID4gPg0KPiA+ID4gPj4+IE1JU0Nf
+Q09OVFJPTF8xX09GRiByZWdpc3Rlci4NCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4gPiA+DQo+ID4g
+PiA+PiBJIHdvdWxkIHN1Z2dlc3QgeW91IHRvIGFkZCBhIGNvdmVyLWxldHRlciBuZXh0IHRpbWUg
+dG8gZXhwbGFpbg0KPiA+ID4gPj4gdGhlIGdsb2JhbA0KPiA+ID4gPg0KPiA+ID4gPj4gcGljdHVy
+ZSBvZiB0aGUgcGF0Y2gtc2V0Lg0KPiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBU
+aGFua3MsIEkgd2lsbC4NCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4+DQo+ID4g
+PiA+DQo+ID4gPiA+PiBJIHVuZGVyc3RhbmQgeW91ciBuZWVkIGZvciB0aGlzIHBhdGNoLCBidXQg
+SSBkb24ndCBhZ3JlZSBvbiB0aGUNCj4gPiBhcHByb2FjaC4NCj4gPiA+ID4NCj4gPiA+ID4NCj4g
+PiA+ID4NCj4gPiA+ID4gSW4gdGhlIERXQyBjb21tb24gY29kZSwgdGhlcmUgaXMgYSBmdW5jdGlv
+biB3cml0ZSBhIERCSSByZWFkLW9ubHkNCj4gPiByZWdpc3Rlcg0KPiA+ID4gJ0RldmljZSBjbGFz
+cyBjb2RlJywgYW5kIHRoZSBmaXJzdCAyIHBhdGNoZXMgaXMgdG8gZml4IGl0Lg0KPiA+ID4gPg0K
+PiA+ID4gPiBUaGUgM3JkIHBhdGNoIGlzIHRvIHJlZmFjdG9yIHRoZSBMYXllcnNjYXBlIFBDSWUg
+ZHJpdmVyJ3MNCj4gPiA+ID4gaG9zdF9pbml0DQo+ID4gZnVuY3Rpb24NCj4gPiA+IGFuZCByZXVz
+ZSB0aGUgbmV3IGFkZGVkIGFjY2Vzc29ycy4NCj4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4NCj4g
+PiA+ID4+IFNvbWV0aW1lcyB0aGUgcGVvcGxlIGluIGNoYXJnZSBvZiB0aGUgaGFyZHdhcmUgZGVz
+aWduIC8NCj4gPiA+ID4+IGNvbmZpZ3VyYXRpb24sIGZvcmdldA0KPiA+ID4gPg0KPiA+ID4gPj4g
+dG8gc3BlY2lmeSB0aGUgZGV2aWNlIGNsYXNzIGFuZCB0aGF0IGNhbiBiZSBwcm9ibGVtYXRpYyBm
+b3Igc29tZQ0KPiA+ID4gPj4gZHJpdmVycywgYW5kDQo+ID4gPiA+DQo+ID4gPiA+PiBzbyB0aGUg
+dHlwaWNhbCB3b3JrYXJvdW5kIGlzIHRvIHNldCBpdCBpbiB0aGUgZHJpdmVyIHVzaW5nIGENCj4g
+PiA+ID4+IHF1aXJrDQo+ID4gZm9yIGV4YW1wbGUuDQo+ID4gPiA+DQo+ID4gPiA+Pg0KPiA+ID4g
+Pg0KPiA+ID4gPj4gWW91IGNhbiBzZWUgc29tZSBleGFtcGxlcyBoZXJlOg0KPiA+ID4gPg0KPiA+
+ID4gPj4gaHR0cHM6Ly91cmxkZWZlbnNlLnByb29mcG9pbnQuY29tL3YyL3VybD91PWh0dHBzLTNB
+X19naXQua2VybmVsLm8NCj4gPiA+ID4+IHJnX3ANCj4gPiA+ID4+IHViX3NjbV9saW51eF9rZXJu
+ZWxfZ2l0X3RvcnZhbGRzX2xpbnV4LmdpdF90cmVlX2RyaXZlcnNfJmQ9RHdJR2FRDQo+ID4gPiA+
+PiAmYz1EDQo+ID4gPiA+Pg0KPiA+ID4NCj4gUEw2X1hfNkprWEZ4N0FYV3FCMHRnJnI9czJmTzBo
+aWkwT0dOT3Y5cVF5X0hSWHkteEFKVUQxTk5vRWNjM2lvDQo+ID4gPiBfa3gwJm0NCj4gPiA+ID4+
+DQo+ID4gPg0KPiA9MERyQkN2T2NfSjdMYU1YQmVpMXFDWHh4ZmJMeFdhVkVyS1o2UmttNmJVYyZz
+PXNPRW1FeFFGcXJDRW1wQQ0KPiA+ID4geDlMalNlSw0KPiA+ID4gPj4gUnZrVzFELVc4MmNrWDVX
+R0NnRld3JmU9DQo+ID4gPiA+DQo+ID4gPiA+PiBwY2kvcXVpcmtzLmMNCj4gPiA+ID4NCj4gPiA+
+ID4NCj4gPiA+ID4NCj4gPiA+ID4gSSBkb24ndCBrbm93IHRoZSBQQ0kgcXVpcmtzLCBkbyB5b3Ug
+bWVhbiByZW1vdmUgdGhlIHBjaSBEZXZpY2UNCj4gPiA+ID4gQ2xhc3MNCj4gPiBmaXgNCj4gPiA+
+IGNvZGUgZnJvbSB0aGUgRFdDIGNvbW1vbiBjb2RlIGFuZCBhZGQgaXQgdG8gcXVpcmtzPw0KPiA+
+ID4gPg0KPiA+ID4NCj4gPiA+IEluIG15IG9waW5pb24gYWRkaW5nIGZpeGVzIHRvIGEgY29tbW9u
+IGNvZGUgaXMgbm90IGEgZ29vZCBhcHByb2FjaC4NCj4gPiA+IEkNCj4gPiB3b3VsZA0KPiA+ID4g
+c3VnZ2VzdCB0aGUgZml4IHRvIGdvIGludG8gdGhlIHF1aXJrcyBmaWxlLg0KPiANCj4gWW91ciBh
+bnN3ZXIgc2hvdWxkIGJlIGFkZGVkIHRvIGhlcmUuDQo+IFRoZW4sIGl0IHdpbGwgaGVscCBvdGhl
+ciBwZW9wbGUgZm9sbG93IHRoaXMgZW1haWwgdGhyZWFkLg0KPiANCg0KWWVzLCBhbmQgZG8geW91
+IGtub3cgd2h5IHdyaXRlIHRvIHRoZSBEQkkgcmVhZC1vbmx5IHJlZ2lzdGVyKGNsYXNzIGNvZGUp
+IHdpdGhvdXQgZW5hYmxlIHRoZSB3cml0ZSBwZXJtaXNzaW9uIG9mIERCSSByZWFkLW9ubHkgcmVn
+aXN0ZXJzPw0KQ2FuIHlvdSBnaXZlIHNvbWUgc3VnZ2VzdGlvbnM/DQoNClRoYW5rcywNClpoaXFp
+YW5nDQo=
