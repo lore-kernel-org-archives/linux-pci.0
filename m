@@ -1,191 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36115 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751379AbdGRQE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jul 2017 12:04:26 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:06 -0600
-Message-Id: <20170718160409.6493-14-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 13/16] switchtec_ntb: implement doorbell registers
+Received: from lucky1.263xmail.com ([211.157.147.132]:59328 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751445AbdGRH5h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 03:57:37 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH v3 1/7] PCI: rockchip: split out rockchip_pcie_get_phys
+Date: Tue, 18 Jul 2017 15:56:57 +0800
+Message-Id: <1500364623-97041-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pretty straightforward implementation of doorbell registers.
-The shift and mask were setup in an earlier patch and this just hooks
-up the appropriate portion of the IDB register as the local doorbells
-and the opposite portion of ODB as the peer doorbells. The DB mask is
-protected by a spinlock to avoid concurrent read-modify-write accesses.
+We plan to introduce per-lanes PHY, so split out new
+function to make it easy in the future. No functional
+change intended.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- drivers/ntb/hw/mscc/switchtec_ntb.c | 89 +++++++++++++++++++++++++++++++++++--
- 1 file changed, 85 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index dba14188ba95..0bd9c8cae688 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -98,6 +98,9 @@ struct switchtec_ntb {
- 	int db_shift;
- 	int db_peer_shift;
- 
-+	/* synchronize rmw access of db_mask and hw reg */
-+	spinlock_t db_mask_lock;
-+
- 	int nr_direct_mw;
- 	int nr_lut_mw;
- 	int direct_mw_to_bar[MAX_DIRECT_MW];
-@@ -338,41 +341,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
- 
- static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return sndev->db_valid_mask;
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-rockchip.c | 19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 5acf869..6632a51 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -853,6 +853,19 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
  }
  
- static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
- {
--	return 0;
-+	return 1;
- }
- 
- static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
 +
-+	if (db_vector < 0 || db_vector > 1)
-+		return 0;
-+
-+	return sndev->db_valid_mask;
- }
- 
- static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
- {
--	return 0;
-+	u64 ret;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
-+
-+	return ret & sndev->db_valid_mask;
- }
- 
- static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- {
-+	unsigned long irqflags;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (db_bits & ~sndev->db_valid_mask)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
-+	{
-+		sndev->db_mask |= db_bits << sndev->db_shift;
-+		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++	rockchip->phy = devm_phy_get(dev, "pcie-phy");
++	if (IS_ERR(rockchip->phy)) {
++		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
++			dev_err(dev, "missing phy\n");
++		return PTR_ERR(rockchip->phy);
 +	}
-+	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
- {
-+	unsigned long irqflags;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (db_bits & ~sndev->db_valid_mask)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
-+	{
-+		sndev->db_mask &= ~(db_bits << sndev->db_shift);
-+		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
-+	}
-+	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
 +
 +	return 0;
 +}
-+
-+static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
-+}
-+
-+static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
-+				      phys_addr_t *db_addr,
-+				      resource_size_t *db_size)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	unsigned long offset;
-+
-+	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
-+		(unsigned long)sndev->stdev->mmio;
-+
-+	offset += sndev->db_shift / 8;
-+
-+	if (db_addr)
-+		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
-+	if (db_size)
-+		*db_size = sizeof(u32);
-+
- 	return 0;
- }
  
- static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	iowrite64(db_bits << sndev->db_peer_shift,
-+		  &sndev->mmio_self_dbmsg->odb);
-+
- 	return 0;
- }
+ /**
+  * rockchip_pcie_parse_dt - Parse Device Tree
+@@ -883,12 +896,8 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	if (IS_ERR(rockchip->apb_base))
+ 		return PTR_ERR(rockchip->apb_base);
  
-@@ -413,6 +490,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
- 	.db_clear		= switchtec_ntb_db_clear,
- 	.db_set_mask		= switchtec_ntb_db_set_mask,
- 	.db_clear_mask		= switchtec_ntb_db_clear_mask,
-+	.db_read_mask		= switchtec_ntb_db_read_mask,
-+	.peer_db_addr		= switchtec_ntb_peer_db_addr,
- 	.peer_db_set		= switchtec_ntb_peer_db_set,
- 	.spad_count		= switchtec_ntb_spad_count,
- 	.spad_read		= switchtec_ntb_spad_read,
-@@ -680,6 +759,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
+-	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+-	if (IS_ERR(rockchip->phy)) {
+-		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
+-			dev_err(dev, "missing phy\n");
++	if (rockchip_pcie_get_phys(rockchip))
+ 		return PTR_ERR(rockchip->phy);
+-	}
  
- 	dev_dbg(&sndev->stdev->dev, "doorbell\n");
- 
-+	ntb_db_event(&sndev->ntb, 0);
-+
- 	return IRQ_HANDLED;
- }
- 
+ 	rockchip->lanes = 1;
+ 	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
 -- 
-2.11.0
+1.9.1
