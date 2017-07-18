@@ -1,187 +1,140 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <5952D144.8060609@oracle.com>
-References: <5952D144.8060609@oracle.com>
-From: Ethan Zhao <ethan.kernel@gmail.com>
-Date: Mon, 3 Jul 2017 09:55:07 +0800
-Message-ID: <CABawtvOHnQ12WvSNDn2gZRLAqLjAXUGXc8PObtdU5uBS6rpe_Q@mail.gmail.com>
-Subject: Re: [PATCH v4] PCI: Workaround wrong flags completions for IDT switch
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Yinghai Lu <yinghai@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36048 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751412AbdGRQEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Jul 2017 12:04:24 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:03:56 -0600
+Message-Id: <20170718160409.6493-4-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 03/16] switchtec: add NTB hardware register definitions
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-James,
+There are two additional regions: ctrl and dbmsg. The first is
+for generic NTB control and memory windows. The second is for doorbells
+and message registers. This patch also adds a number of related
+constants for using these registers.
 
-On Wed, Jun 28, 2017 at 5:42 AM, James Puthukattukaran
-<james.puthukattukaran@oracle.com> wrote:
-> From: James Puthukattukaran <james.puthukattukaran@oracle.com>
->
-> The IDT switch incorrectly flags an ACS source violation on a read config
-> request to an end point device on the completion (IDT 89H32H8G3-YC,
-> errata #36) even though the PCI Express spec states that completions are
-> never affected by ACS source violation (PCI Spec 3.1, Section 6.12.1.1).
->
-> The suggested workaround by IDT is to issue a configuration write to the
-> downstream device before issuing the first config read. This allows the
-> downstream device to capture its bus number, thus avoiding the ACS
-> violation on the completion.
->
-> The patch does the following -
->
-> 1. Disable ACS source violation if enabled
-> 2. Wait for config space access to become available by reading vendor id
-> 3. Do a config write to the end point (errata workaround)
-> 4. Enable ACS source validation (if it was enabled to begin with)
->
-> -v2: move workaround to pci_bus_read_dev_vendor_id() from
-> pci_bus_check_dev()
->      and move enable_acs_sv to drivers/pci/pci.c -- by Yinghai
-> -v3: add bus->self check for root bus and virtual bus for sriov vfs.
-> -v4: only do workaround for IDT switches
->
-> Signed-off-by: James Puthukattukaran <james.puthukattukaran@oracle.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->
-> --
->
->  drivers/pci/pci.c   | 33 +++++++++++++++++++++++++++++++++
->  drivers/pci/pci.h   |  1 +
->  drivers/pci/probe.c | 38 ++++++++++++++++++++++++++++++++++++--
->  3 files changed, 70 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 563901c..a7a2e2b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2835,6 +2835,39 @@ static bool pci_acs_flags_enabled(struct pci_dev
-> *pdev, u16 acs_flags)
->  }
->
->  /**
-> + *  pci_std_enable_acs_sv - enable/disable ACS source validation if
-> supported by the switch
-> + *  @dev - pcie switch/RP
-> + *  @enable - enable (1) or disable (0) source validation
-> + *
-> + *  Returns : < 0 on failure
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ include/linux/switchtec.h | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
 
-You didn't define the meaning of 0 and >0, but you check it later against >0,
-Then what does it mean 0 and >0 ?
-
-> + *           previous acs_sv state
-> + */
-> +int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable)
-> +{
-> +       int pos;
-> +       u16 cap;
-> +       u16 ctrl;
-> +       int retval;
-> +
-> +       pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ACS);
-> +       if (!pos)
-> +               return -ENODEV;
-> +
-> +       pci_read_config_word(dev, pos + PCI_ACS_CAP, &cap);
-> +       pci_read_config_word(dev, pos + PCI_ACS_CTRL, &ctrl);
-> +
-> +       retval = !!(ctrl & cap & PCI_ACS_SV);
-
-If the device's ACS SV( ACS Source Validation) capability wasn't
-implemented, the return value of this function will still tell us the
-operation of enabling is successful ? though it might be rare case.
-
-
-Thanks,
-Ethan
-
-> +       if (enable)
-> +               ctrl |= (cap & PCI_ACS_SV);
-> +       else
-> +               ctrl &= ~(cap & PCI_ACS_SV);
-> +
-> +       pci_write_config_word(dev, pos + PCI_ACS_CTRL, ctrl);
-> +
-> +       return retval;
-> +}
-> +
-> +/**
->   * pci_acs_enabled - test ACS against required flags for a given device
->   * @pdev: device to test
->   * @acs_flags: required PCI ACS flags
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index f8113e5..3960c2a 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -343,6 +343,7 @@ static inline resource_size_t
-> pci_resource_alignment(struct pci_dev *dev,
->  }
->
->  void pci_enable_acs(struct pci_dev *dev);
-> +int pci_std_enable_acs_sv(struct pci_dev *dev, bool enable);
->
->  #ifdef CONFIG_PCIE_PTM
->  void pci_ptm_init(struct pci_dev *dev);
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 19c8950..c154a90 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1763,8 +1763,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
->  }
->  EXPORT_SYMBOL(pci_alloc_dev);
->
-> -bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-> -                               int crs_timeout)
-> +static bool __pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn,
-> +                                        u32 *l, int crs_timeout)
->  {
->         int delay = 1;
->
-> @@ -1801,6 +1801,40 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus,
-> int devfn, u32 *l,
->
->         return true;
->  }
-> +
-> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
-> +                               int crs_timeout)
-> +{
-> +       int found;
-> +       int enable = -1;
-> +       int idt_workaround = (bus->self && (bus->self->vendor ==
-> PCI_VENDOR_ID_IDT));
-> +       /*
-> +        * Some IDT switches flag an ACS violation for config reads
-> +        * even though the PCI spec allows for it (PCIe 3.1, 6.1.12.1)
-> +        * It flags it because the bus number is not properly set in the
-> +        * completion. The workaround is to do a dummy write to properly
-> +        * latch number once the device is ready for config operations
-> +        */
-> +
-> +       if (idt_workaround)
-> +               enable = pci_std_enable_acs_sv(bus->self, false);
-> +
-> +       found = __pci_bus_read_dev_vendor_id(bus, devfn, l, crs_timeout);
-> +
-> +       /*
-> +        * The fact that we can read the vendor id indicates that the device
-> +        * is ready for config operations. Do the write as part of the
-> errata
-> +        * workaround.
-> +        */
-> +       if (idt_workaround) {
-> +               if (found)
-> +                       pci_bus_write_config_word(bus, devfn, PCI_VENDOR_ID,
-> 0);
-> +               if (enable > 0)
-> +                       pci_std_enable_acs_sv(bus->self, enable);
-> +       }
-> +
-> +       return found;
-> +}
->  EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
->
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 18e388101855..9c2be7631257 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -156,6 +156,12 @@ struct flash_info_regs {
+ 	struct partition_info vendor[8];
+ };
+ 
++enum {
++	SWITCHTEC_NTB_REG_INFO_OFFSET   = 0x0000,
++	SWITCHTEC_NTB_REG_CTRL_OFFSET   = 0x4000,
++	SWITCHTEC_NTB_REG_DBMSG_OFFSET  = 0x64000,
++};
++
+ struct ntb_info_regs {
+ 	u8  partition_count;
+ 	u8  partition_id;
+@@ -191,6 +197,84 @@ struct part_cfg_regs {
+ } __packed;
+ 
+ enum {
++	NTB_CTRL_PART_OP_LOCK = 0x1,
++	NTB_CTRL_PART_OP_CFG = 0x2,
++	NTB_CTRL_PART_OP_RESET = 0x3,
++
++	NTB_CTRL_PART_STATUS_NORMAL = 0x1,
++	NTB_CTRL_PART_STATUS_LOCKED = 0x2,
++	NTB_CTRL_PART_STATUS_LOCKING = 0x3,
++	NTB_CTRL_PART_STATUS_CONFIGURING = 0x4,
++	NTB_CTRL_PART_STATUS_RESETTING = 0x5,
++
++	NTB_CTRL_BAR_VALID = 1 << 0,
++	NTB_CTRL_BAR_DIR_WIN_EN = 1 << 4,
++	NTB_CTRL_BAR_LUT_WIN_EN = 1 << 5,
++
++	NTB_CTRL_REQ_ID_EN = 1 << 0,
++
++	NTB_CTRL_LUT_EN = 1 << 0,
++
++	NTB_PART_CTRL_ID_PROT_DIS = 1 << 0,
++};
++
++struct ntb_ctrl_regs {
++	u32 partition_status;
++	u32 partition_op;
++	u32 partition_ctrl;
++	u32 bar_setup;
++	u32 bar_error;
++	u16 lut_table_entries;
++	u16 lut_table_offset;
++	u32 lut_error;
++	u16 req_id_table_size;
++	u16 req_id_table_offset;
++	u32 req_id_error;
++	u32 reserved1[7];
++	struct {
++		u32 ctl;
++		u32 win_size;
++		u64 xlate_addr;
++	} bar_entry[6];
++	u32 reserved2[216];
++	u32 req_id_table[256];
++	u32 reserved3[512];
++	u64 lut_entry[512];
++} __packed;
++
++#define NTB_DBMSG_IMSG_STATUS BIT_ULL(32)
++#define NTB_DBMSG_IMSG_MASK   BIT_ULL(40)
++
++struct ntb_dbmsg_regs {
++	u32 reserved1[1024];
++	u64 odb;
++	u64 odb_mask;
++	u64 idb;
++	u64 idb_mask;
++	u8  idb_vec_map[64];
++	u32 msg_map;
++	u32 reserved2;
++	struct {
++		u32 msg;
++		u32 status;
++	} omsg[4];
++
++	struct {
++		u32 msg;
++		u8  status;
++		u8  mask;
++		u8  src;
++		u8  reserved;
++	} imsg[4];
++
++	u8 reserved3[3928];
++	u8 msix_table[1024];
++	u8 reserved4[3072];
++	u8 pba[24];
++	u8 reserved5[4072];
++} __packed;
++
++enum {
+ 	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
+ 	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
+ 	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
+-- 
+2.11.0
