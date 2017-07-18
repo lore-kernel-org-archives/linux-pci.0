@@ -1,54 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44928 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752494AbdGULge (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 07:36:34 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v4 1/7] dt-bindings: phy: qmp: Add output-clock-names
-Date: Fri, 21 Jul 2017 17:06:11 +0530
-Message-Id: <1500636977-11934-2-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
-References: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:33618 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751470AbdGRUdj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 16:33:39 -0400
+Received: by mail-pg0-f54.google.com with SMTP id k14so18691629pgr.0
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 13:33:38 -0700 (PDT)
+Date: Tue, 18 Jul 2017 13:33:36 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Rob Herring <robh@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [RFC PATCH v3 2/7] PCI: rockchip: introduce per-lanes PHYs
+ support
+Message-ID: <20170718203335.GC116895@google.com>
+References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500364623-97041-3-git-send-email-shawn.lin@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500364623-97041-3-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The phy outputs a clock that will act as the parent for
-the phy's pipe clock. Add the name of this clock to the
-lane's DT node.
+Hi,
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
- 1 file changed, 3 insertions(+)
+On Tue, Jul 18, 2017 at 03:56:58PM +0800, Shawn Lin wrote:
+> We distinguish the legacy PHY with the newer per-lane
+> PHYs by adding legacy_phy flag. Note that the legacy phy
+> is still the first option to be searched in order not to
+> break the backward compatibility of DTB.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
+> 
+> Changes in v3:
+> - kill rockchip_pcie_manipulate_phys and related stuff
+> - use phys array
+> - improve the commit msg
+> 
+> Changes in v2: None
+> 
+>  drivers/pci/host/pcie-rockchip.c | 100 +++++++++++++++++++++++++++------------
+>  1 file changed, 69 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 6632a51..4cc6aec 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-index e11c563..5d7a51f 100644
---- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-@@ -60,6 +60,8 @@ Required properties for child node:
- 	   one for each entry in clock-names.
-  - clock-names: Must contain following for pcie and usb qmp phys:
- 		 "pipe<lane-number>" for pipe clock specific to each lane.
-+ - clock-output-names: Name of the phy clock that will be the parent for
-+		       the above pipe clock.
- 
-  - resets: a list of phandles and reset controller specifier pairs,
- 	   one for each entry in reset-names.
-@@ -96,6 +98,7 @@ Example:
- 
- 			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
- 			clock-names = "pipe0";
-+			clock-output-names = "pcie_0_pipe_clk_src";
- 			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
- 			reset-names = "lane0";
- 		};
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+...
+
+> @@ -537,10 +579,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  		return err;
+>  	}
+>  
+> -	err = phy_init(rockchip->phy);
+> -	if (err < 0) {
+> -		dev_err(dev, "fail to init phy, err %d\n", err);
+> -		return err;
+> +	for (i = 0; i < MAX_LANE_NUM; i++) {
+> +		err = phy_init(rockchip->phys[i]);
+> +		if (err) {
+> +			dev_err(dev, "init phy err %d\n", err);
+
+Include the PHY index in the error message?
+
+> +			return err;
+> +		}
+>  	}
+>  
+>  	err = reset_control_assert(rockchip->core_rst);
+> @@ -602,10 +646,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  			    PCIE_CLIENT_MODE_RC,
+>  			    PCIE_CLIENT_CONFIG);
+>  
+> -	err = phy_power_on(rockchip->phy);
+> -	if (err) {
+> -		dev_err(dev, "fail to power on phy, err %d\n", err);
+> -		return err;
+> +	for (i = 0; i < MAX_LANE_NUM; i++) {
+> +		err = phy_power_on(rockchip->phys[i]);
+> +		if (err) {
+> +			dev_err(dev, "power on phy err %d\n", err);
+
+Same?
+
+> +			return err;
+> +		}
+>  	}
+>  
+>  	/*
+
+...
+
+Brian
