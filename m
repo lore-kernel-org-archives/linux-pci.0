@@ -1,84 +1,450 @@
-Return-Path: <SRS0=xsN6=6O=chelsio.com=leedom@kernel.org>
-Return-Path: <SRS0=xsN6=6O=chelsio.com=leedom@kernel.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com"
-	<ashok.raj@intel.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Michael
- Werner" <werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
-	<will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
-	<davem@davemloft.net>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Tue, 11 Jul 2017 00:01:37 +0000
-Message-ID: <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
- <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>,<CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
-In-Reply-To: <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
-Content-Type: text/plain; charset="iso-8859-1"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36052 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751418AbdGRQEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Jul 2017 12:04:24 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:04:02 -0600
+Message-Id: <20170718160409.6493-10-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 09/16] switchtec_ntb: initialize hardware for memory windows
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add the code to initialize the memory windows in the hardware.
+This includes setting up the requester ID table, and figuring out
+which bar corresponds to which memory window. (Seeing the switch
+can be configured with any number of bars.)
 
-Hey Alexander,
+Also, seeing the device doesn't have hardware for scratchpads or
+determining the link status, we create a shared memory window that has
+these features. A magic number with a version copmonent will be used
+to determine if the otherside's driver is actually up.
 
-  Okay, I understand your point regarding the "most likely scenario" being
-TLPs directed upstream to the Root Complex.  But I'd still like to make sur=
-e
-that we have an agreed upon API/methodology for doing Peer-to-Peer with
-Relaxed Ordering and no Relaxed Ordering to the Root Complex.  I don't see
-how the proposed APIs can be used in that fashion.
-=20
-  Right now the proposed change for cxgb4 is for it to test its own PCIe
-Capability Device Control[Relaxed Ordering Enable] in order to use that
-information to program the Chelsio Hardware to emit/not emit upstream TLPs
-with the Relaxed Ordering Attribute set.  But if we're going to have the
-mixed mode situation I describe, the PCIe Capability Device Control[Relaxed
-Ordering Enable] will have to be set which means that we'll be programming
-the Chelsio Hardware to send upstream TLPs with Relaxed Ordering Enable to
-the Root Complex which is what we were trying to avoid in the first place .=
-..
+The shared memory window also informs the other side of the
+size and count of the local memory windows.
 
-  [[ And, as I noted on Friday evening, the currect cxgb4 Driver hardwires
-     the Relaxed Ordering Enable on early dureing device probe, so that
-     would minimally need to be addressed even if we decide that we don't
-     ever want to support mixed mode Relaxed Ordering. ]]
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 355 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 355 insertions(+)
 
-  We need some method of telling the Chelsio Driver that it should/shouldn'=
-t
-use Relaxed Ordering with TLPs directed at the Root Complex.  And the same
-is true for a Peer PCIe Device.
-
-  It may be that we should approach this from the completely opposite
-direction and instead of having quirks which identify problematic devices,
-have quirks which identify devices which would benefit from the use of
-Relaxed Ordering (if the sending device supports that).  That is, assume th=
-e
-using Relaxed Ordering shouldn't be done unless the target device says "I
-love Relaxed Ordering TLPs" ...  In such a world, an NVMe or a Graphics
-device might declare love of Relaxed Ordering and the same for a SPARC Root
-Complex (I think that was your example).
-
-  By the way, the sole example of Data Corruption with Relaxed Ordering is
-the AMD A1100 ARM SoC and AMD appears to have given up on that almost as
-soon as it was released.  So what we're left with currently is a performanc=
-e
-problem on modern Intel CPUs ...  (And hopefully we'll get a Technical
-Publication on that issue fairly soon.)
-
-Casey
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 253efba72275..1596757413f5 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -15,37 +15,391 @@
+ 
+ #include <linux/switchtec.h>
+ #include <linux/module.h>
++#include <linux/delay.h>
++#include <linux/kthread.h>
+ 
+ MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
+ MODULE_VERSION("0.1");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Microsemi Corporation");
+ 
++static bool use_lut_mws;
++module_param(use_lut_mws, bool, 0644);
++MODULE_PARM_DESC(use_lut_mws,
++		 "Enable the use of the LUT based memory windows");
++
++#ifndef ioread64
++#ifdef readq
++#define ioread64 readq
++#else
++#define ioread64 _ioread64
++static inline u64 _ioread64(void __iomem *mmio)
++{
++	u64 low, high;
++
++	low = ioread32(mmio);
++	high = ioread32(mmio + sizeof(u32));
++	return low | (high << 32);
++}
++#endif
++#endif
++
++#ifndef iowrite64
++#ifdef writeq
++#define iowrite64 writeq
++#else
++#define iowrite64 _iowrite64
++static inline void _iowrite64(u64 val, void __iomem *mmio)
++{
++	iowrite32(val, mmio);
++	iowrite32(val >> 32, mmio + sizeof(u32));
++}
++#endif
++#endif
++
++#define SWITCHTEC_NTB_MAGIC 0x45CC0001
++#define MAX_MWS     128
++
++struct shared_mw {
++	u32 magic;
++	u32 partition_id;
++	u64 mw_sizes[MAX_MWS];
++};
++
++#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
++#define LUT_SIZE SZ_64K
++
+ struct switchtec_ntb {
+ 	struct switchtec_dev *stdev;
++
++	int self_partition;
++	int peer_partition;
++
++	struct ntb_info_regs __iomem *mmio_ntb;
++	struct ntb_ctrl_regs __iomem *mmio_ctrl;
++	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
++	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
++	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
++	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
++
++	struct shared_mw *self_shared;
++	struct shared_mw __iomem *peer_shared;
++	dma_addr_t self_shared_dma;
++
++	int nr_direct_mw;
++	int nr_lut_mw;
++	int direct_mw_to_bar[MAX_DIRECT_MW];
++
++	int peer_nr_direct_mw;
++	int peer_nr_lut_mw;
++	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
+ };
+ 
++static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
++				 struct ntb_ctrl_regs __iomem *ctl,
++				 u32 op, int wait_status)
++{
++	static const char * const op_text[] = {
++		[NTB_CTRL_PART_OP_LOCK] = "lock",
++		[NTB_CTRL_PART_OP_CFG] = "configure",
++		[NTB_CTRL_PART_OP_RESET] = "reset",
++	};
++
++	int i;
++	u32 ps;
++	int status;
++
++	switch (op) {
++	case NTB_CTRL_PART_OP_LOCK:
++		status = NTB_CTRL_PART_STATUS_LOCKING;
++		break;
++	case NTB_CTRL_PART_OP_CFG:
++		status = NTB_CTRL_PART_STATUS_CONFIGURING;
++		break;
++	case NTB_CTRL_PART_OP_RESET:
++		status = NTB_CTRL_PART_STATUS_RESETTING;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	iowrite32(op, &ctl->partition_op);
++
++	for (i = 0; i < 1000; i++) {
++		if (msleep_interruptible(50) != 0) {
++			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
++			return -EINTR;
++		}
++
++		ps = ioread32(&ctl->partition_status) & 0xFFFF;
++
++		if (ps != status)
++			break;
++	}
++
++	if (ps == wait_status)
++		return 0;
++
++	if (ps == status) {
++		dev_err(&sndev->stdev->dev,
++			"Timed out while peforming %s (%d). (%08x)",
++			op_text[op], op,
++			ioread32(&ctl->partition_status));
++
++		return -ETIMEDOUT;
++	}
++
++	return -EIO;
++}
++
++static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
++{
++	u64 part_map;
++
++	sndev->self_partition = sndev->stdev->partition;
++
++	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
++	part_map = ioread64(&sndev->mmio_ntb->ep_map);
++	part_map &= ~(1 << sndev->self_partition);
++	sndev->peer_partition = ffs(part_map) - 1;
++
++	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
++		sndev->self_partition, sndev->stdev->partition_count,
++		part_map);
++
++	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
++		SWITCHTEC_NTB_REG_CTRL_OFFSET;
++	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
++		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
++
++	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
++	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
++	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
++}
++
++static int map_bars(int *map, struct ntb_ctrl_regs __iomem *ctrl)
++{
++	int i;
++	int cnt = 0;
++
++	for (i = 0; i < ARRAY_SIZE(ctrl->bar_entry); i++) {
++		u32 r = ioread32(&ctrl->bar_entry[i].ctl);
++
++		if (r & NTB_CTRL_BAR_VALID)
++			map[cnt++] = i;
++	}
++
++	return cnt;
++}
++
++static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
++{
++	sndev->nr_direct_mw = map_bars(sndev->direct_mw_to_bar,
++				       sndev->mmio_self_ctrl);
++
++	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
++	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
++
++	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
++		sndev->nr_direct_mw, sndev->nr_lut_mw);
++
++	sndev->peer_nr_direct_mw = map_bars(sndev->peer_direct_mw_to_bar,
++					    sndev->mmio_peer_ctrl);
++
++	sndev->peer_nr_lut_mw =
++		ioread16(&sndev->mmio_peer_ctrl->lut_table_entries);
++	sndev->peer_nr_lut_mw = rounddown_pow_of_two(sndev->peer_nr_lut_mw);
++
++	dev_dbg(&sndev->stdev->dev, "Peer MWs: %d direct, %d lut",
++		sndev->peer_nr_direct_mw, sndev->peer_nr_lut_mw);
++
++}
++
++static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
++{
++	int rc = 0;
++	u16 req_id = ioread16(&sndev->mmio_ntb->requester_id);
++	u32 error;
++
++	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
++		dev_err(&sndev->stdev->dev,
++			"Not enough requester IDs available.");
++		return -EFAULT;
++	}
++
++	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
++				   NTB_CTRL_PART_OP_LOCK,
++				   NTB_CTRL_PART_STATUS_LOCKED);
++	if (rc)
++		return rc;
++
++	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
++		  &sndev->mmio_self_ctrl->partition_ctrl);
++
++	// Root Complex Requester ID
++	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
++		  &sndev->mmio_self_ctrl->req_id_table[0]);
++
++	// Host Bridge Requester ID
++	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
++		  &sndev->mmio_self_ctrl->req_id_table[1]);
++
++	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
++				   NTB_CTRL_PART_OP_CFG,
++				   NTB_CTRL_PART_STATUS_NORMAL);
++
++	if (rc == -EIO) {
++		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
++		dev_err(&sndev->stdev->dev,
++			"Error setting up the requester ID table: %08x",
++			error);
++	}
++
++	return rc;
++}
++
++static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
++{
++	int i;
++
++	memset(sndev->self_shared, 0, LUT_SIZE);
++	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
++	sndev->self_shared->partition_id = sndev->stdev->partition;
++
++	for (i = 0; i < sndev->nr_direct_mw; i++) {
++		int bar = sndev->direct_mw_to_bar[i];
++		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
++
++		if (i == 0)
++			sz = min_t(resource_size_t, sz,
++				   LUT_SIZE * sndev->nr_lut_mw);
++
++		sndev->self_shared->mw_sizes[i] = sz;
++	}
++
++	for (i = 0; i < sndev->nr_lut_mw; i++) {
++		int idx = sndev->nr_direct_mw + i;
++
++		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
++	}
++}
++
++static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
++{
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++	int bar = sndev->direct_mw_to_bar[0];
++	u32 ctl_val;
++	int rc;
++
++	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
++						 LUT_SIZE,
++						 &sndev->self_shared_dma,
++						 GFP_KERNEL);
++	if (!sndev->self_shared) {
++		dev_err(&sndev->stdev->dev,
++			"unable to allocate memory for shared mw");
++		return -ENOMEM;
++	}
++
++	switchtec_ntb_init_shared(sndev);
++
++	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
++				   NTB_CTRL_PART_STATUS_LOCKED);
++	if (rc)
++		goto unalloc_and_exit;
++
++	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
++	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
++	ctl_val &= 0xFF;
++	ctl_val |= ilog2(LUT_SIZE) << 8;
++	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
++	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
++
++	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
++		   sndev->self_shared_dma),
++		  &ctl->lut_entry[0]);
++
++	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
++				   NTB_CTRL_PART_STATUS_NORMAL);
++	if (rc) {
++		u32 bar_error, lut_error;
++
++		bar_error = ioread32(&ctl->bar_error);
++		lut_error = ioread32(&ctl->lut_error);
++		dev_err(&sndev->stdev->dev,
++			"Error setting up shared MW: %08x / %08x",
++			bar_error, lut_error);
++		goto unalloc_and_exit;
++	}
++
++	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
++	if (!sndev->peer_shared) {
++		rc = -ENOMEM;
++		goto unalloc_and_exit;
++	}
++
++	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
++	return 0;
++
++unalloc_and_exit:
++	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
++			  sndev->self_shared, sndev->self_shared_dma);
++
++	return rc;
++}
++
++static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
++{
++	if (sndev->peer_shared)
++		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
++
++	if (sndev->self_shared)
++		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
++				  sndev->self_shared,
++				  sndev->self_shared_dma);
++}
++
+ static int switchtec_ntb_add(struct device *dev,
+ 			     struct class_interface *class_intf)
+ {
+ 	struct switchtec_dev *stdev = to_stdev(dev);
+ 	struct switchtec_ntb *sndev;
++	int rc;
+ 
+ 	stdev->sndev = NULL;
+ 
+ 	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
+ 		return -ENODEV;
+ 
++	if (stdev->partition_count != 2)
++		dev_warn(dev, "ntb driver only supports 2 partitions");
++
+ 	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
+ 	if (!sndev)
+ 		return -ENOMEM;
+ 
+ 	sndev->stdev = stdev;
+ 
++	switchtec_ntb_init_sndev(sndev);
++	switchtec_ntb_init_mw(sndev);
++
++	rc = switchtec_ntb_init_req_id_table(sndev);
++	if (rc)
++		goto free_and_exit;
++
++	rc = switchtec_ntb_init_shared_mw(sndev);
++	if (rc)
++		goto free_and_exit;
++
+ 	stdev->sndev = sndev;
+ 	dev_info(dev, "NTB device registered");
+ 
+ 	return 0;
++
++free_and_exit:
++	kfree(sndev);
++	dev_err(dev, "failed to register ntb device: %d", rc);
++	return rc;
+ }
+ 
+ void switchtec_ntb_remove(struct device *dev,
+@@ -58,6 +412,7 @@ void switchtec_ntb_remove(struct device *dev,
+ 		return;
+ 
+ 	stdev->sndev = NULL;
++	switchtec_ntb_deinit_shared_mw(sndev);
+ 	kfree(sndev);
+ 	dev_info(dev, "ntb device unregistered");
+ }
+-- 
+2.11.0
