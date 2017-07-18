@@ -1,53 +1,167 @@
-Return-Path: <SRS0=mM5K=6K=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=mM5K=6K=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <43e01fca-a746-90d2-fdfa-c63f1d56ef5f@huawei.com>
- <065edbdb-3a7f-2608-3cc0-3876f55d414b@huawei.com>
- <20170706171729.GP13824@bhelgaas-glaptop.roam.corp.google.com>
-CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <werner@chelsio.com>,
-        <ganeshgr@chelsio.com>, <asit.k.mallick@intel.com>,
-        <patrick.j.cramer@intel.com>, <Suravee.Suthikulpanit@amd.com>,
-        <Bob.Shaw@amd.com>, <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <a0ae357d-8f84-257a-0caa-eec8e2820de6@huawei.com>
-Date: Fri, 7 Jul 2017 09:03:52 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170706171729.GP13824@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36053 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751430AbdGRQEY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Jul 2017 12:04:24 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:03:58 -0600
+Message-Id: <20170718160409.6493-6-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 05/16] ntb: ensure ntb_mw_get_align() is only called when the link is up
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+With Switchtec hardware it's impossible to get the alignment parameters
+for a peer's memory window until the peer's driver has configured it's
+windows. Strictly speaking, the link doesn't have to be up for this,
+but the link being up is the only way the client can tell that
+the otherside has been configured.
 
+This patch converts ntb_transport and ntb_perf to use this function after
+the link goes up. This simplifies these clients slightly because they
+no longer have to store the alignment parameters. It also tweaks
+ntb_tool so that peer_mw_trans will print zero if it is run before
+the link goes up.
 
-On 2017/7/7 1:17, Bjorn Helgaas wrote:
-> On Thu, Jul 06, 2017 at 08:58:51PM +0800, Ding Tianhong wrote:
->> Hi Bjorn:
->>
->> Could you please give some feedback about this patchset, it looks like no more comments for more than a week,
->> thanks. :)
-> 
-> I was on vacation when you posted it, but don't worry, it's still in
-> the queue:
-> 
->   https://patchwork.ozlabs.org/project/linux-pci/list
-> 
-> v4.12 was just released, so it's obviously too late for that.  The
-> v4.13 merge window is open, so it's too late for v4.13 as well (we
-> need stuff in -next before the merge window).
-> 
-> There's still plenty of time to work on this for v4.14.
-> 
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/ntb/ntb_transport.c | 20 ++++++++++----------
+ drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
+ drivers/ntb/test/ntb_tool.c |  6 +++---
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
-OK, thanks.
-
-> Bjorn
-> 
-> .
-> 
+diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+index b29558ddfe95..7ed745aaa213 100644
+--- a/drivers/ntb/ntb_transport.c
++++ b/drivers/ntb/ntb_transport.c
+@@ -191,8 +191,6 @@ struct ntb_transport_qp {
+ struct ntb_transport_mw {
+ 	phys_addr_t phys_addr;
+ 	resource_size_t phys_size;
+-	resource_size_t xlat_align;
+-	resource_size_t xlat_align_size;
+ 	void __iomem *vbase;
+ 	size_t xlat_size;
+ 	size_t buff_size;
+@@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
+ 	struct pci_dev *pdev = nt->ndev->pdev;
+ 	size_t xlat_size, buff_size;
++	resource_size_t xlat_align;
++	resource_size_t xlat_align_size;
+ 	int rc;
+ 
+ 	if (!size)
+ 		return -EINVAL;
+ 
+-	xlat_size = round_up(size, mw->xlat_align_size);
+-	buff_size = round_up(size, mw->xlat_align);
++	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
++			      &xlat_align_size, NULL);
++	if (rc)
++		return rc;
++
++	xlat_size = round_up(size, xlat_align_size);
++	buff_size = round_up(size, xlat_align);
+ 
+ 	/* No need to re-setup */
+ 	if (mw->xlat_size == xlat_size)
+@@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+ 	 * is a requirement of the hardware. It is recommended to setup CMA
+ 	 * for BAR sizes equal or greater than 4MB.
+ 	 */
+-	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
++	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
+ 		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
+ 			&mw->dma_addr);
+ 		ntb_free_mw(nt, num_mw);
+@@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+ 	for (i = 0; i < mw_count; i++) {
+ 		mw = &nt->mw_vec[i];
+ 
+-		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
+-				      &mw->xlat_align_size, NULL);
+-		if (rc)
+-			goto err1;
+-
+ 		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
+ 					  &mw->phys_size);
+ 		if (rc)
+diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
+index 759f772fa00c..427112cf101a 100644
+--- a/drivers/ntb/test/ntb_perf.c
++++ b/drivers/ntb/test/ntb_perf.c
+@@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
+ struct perf_mw {
+ 	phys_addr_t	phys_addr;
+ 	resource_size_t	phys_size;
+-	resource_size_t	xlat_align;
+-	resource_size_t	xlat_align_size;
+ 	void __iomem	*vbase;
+ 	size_t		xlat_size;
+ 	size_t		buf_size;
+@@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
+ {
+ 	struct perf_mw *mw = &perf->mw;
+ 	size_t xlat_size, buf_size;
++	resource_size_t	xlat_align;
++	resource_size_t	xlat_align_size;
+ 	int rc;
+ 
+ 	if (!size)
+ 		return -EINVAL;
+ 
+-	xlat_size = round_up(size, mw->xlat_align_size);
+-	buf_size = round_up(size, mw->xlat_align);
++	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
++			      &xlat_align_size, NULL);
++	if (rc)
++		return rc;
++
++	xlat_size = round_up(size, xlat_align_size);
++	buf_size = round_up(size, xlat_align);
+ 
+ 	if (mw->xlat_size == xlat_size)
+ 		return 0;
+@@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
+ 
+ 	mw = &perf->mw;
+ 
+-	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
+-			      &mw->xlat_align_size, NULL);
+-	if (rc)
+-		return rc;
+-
+ 	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
+ 	if (rc)
+ 		return rc;
+diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
+index a69815c45ce6..91526a986caa 100644
+--- a/drivers/ntb/test/ntb_tool.c
++++ b/drivers/ntb/test/ntb_tool.c
+@@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
+ 
+ 	phys_addr_t base;
+ 	resource_size_t mw_size;
+-	resource_size_t align_addr;
+-	resource_size_t align_size;
+-	resource_size_t max_size;
++	resource_size_t align_addr = 0;
++	resource_size_t align_size = 0;
++	resource_size_t max_size = 0;
+ 
+ 	buf_size = min_t(size_t, size, 512);
+ 
+-- 
+2.11.0
