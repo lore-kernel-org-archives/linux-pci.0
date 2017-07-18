@@ -1,115 +1,219 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:55172 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751978AbdGaQgW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:36:22 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Paul Burton <paul.burton@imgtec.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Matthew Minter <matt@masarand.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Rich Felker <dalias@libc.org>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        Guan Xuetao <gxt@mprc.pku.edu.cn>,
-        "David S. Miller" <davem@davemloft.net>
-Subject: [RFT PATCH 5/9] MIPS/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
-Date: Mon, 31 Jul 2017 17:37:53 +0100
-Message-Id: <20170731163757.22629-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
-References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 18 Jul 2017 10:04:01 -0600
+Message-Id: <20170718160409.6493-9-logang@deltatee.com>
+In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
+References: <20170718160409.6493-1-logang@deltatee.com>
+Subject: [PATCH v2 08/16] switchtec_ntb: introduce initial NTB driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_fixup_irqs() function allocates IRQs for all PCI devices present
-in a system; those PCI devices possibly belong to different PCI bus
-trees (and possibly rooted at different host bridges) and may well be
-enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
-is called when probing a given host bridge driver.
+Seeing the Switchtec NTB hardware shares the same endpoint as the
+management endpoint we utilize the class_interface API to register
+an NTB driver for every Switchtec device in the system that has the
+NTB class code.
 
-Furthermore, current kernel code relying on pci_fixup_irqs() to assign
-legacy PCI IRQs to devices does not work at all for hotplugged devices
-in that the code carrying out the IRQ fixup is called at host bridge
-driver probe time, which just cannot take into account devices
-hotplugged after system has booted.
-
-The introduction of map/swizzle functions hook in struct pci_host_bridge
-allows to define per-bridge map/swizzle functions, that can be used at
-device probe time in PCI core code to allocate IRQs for a given device
-(through pci_assign_irq()).
-
-Convert PCI host bridge initialization code to the
-pci_scan_root_bus_bridge() API (that allows to pass a struct
-pci_host_bridge with initialized map/swizzle pointers) and remove the
-pci_fixup_irqs() call from arch code.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- arch/mips/pci/pci-legacy.c | 24 +++++++++++++++++-------
- 1 file changed, 17 insertions(+), 7 deletions(-)
+ MAINTAINERS                         |  1 +
+ drivers/ntb/hw/Kconfig              |  1 +
+ drivers/ntb/hw/Makefile             |  1 +
+ drivers/ntb/hw/mscc/Kconfig         |  9 +++++
+ drivers/ntb/hw/mscc/Makefile        |  1 +
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 81 +++++++++++++++++++++++++++++++++++++
+ drivers/pci/switch/switchtec.c      |  3 ++
+ include/linux/switchtec.h           |  4 ++
+ 8 files changed, 101 insertions(+)
+ create mode 100644 drivers/ntb/hw/mscc/Kconfig
+ create mode 100644 drivers/ntb/hw/mscc/Makefile
+ create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
 
-diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
-index 71d62f8..fc77260 100644
---- a/arch/mips/pci/pci-legacy.c
-+++ b/arch/mips/pci/pci-legacy.c
-@@ -78,6 +78,12 @@ static void pcibios_scanbus(struct pci_controller *hose)
- 	static int need_domain_info;
- 	LIST_HEAD(resources);
- 	struct pci_bus *bus;
-+	struct pci_host_bridge *bridge;
-+	int ret;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4ff2ad7c1c7b..6e491ce5e876 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -10147,6 +10147,7 @@ F:	Documentation/ABI/testing/sysfs-class-switchtec
+ F:	drivers/pci/switch/switchtec*
+ F:	include/uapi/linux/switchtec_ioctl.h
+ F:	include/linux/switchtec.h
++F:	drivers/ntb/hw/mscc/
+ 
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+diff --git a/drivers/ntb/hw/Kconfig b/drivers/ntb/hw/Kconfig
+index a89243c9fdd3..e51b581fd102 100644
+--- a/drivers/ntb/hw/Kconfig
++++ b/drivers/ntb/hw/Kconfig
+@@ -1,3 +1,4 @@
+ source "drivers/ntb/hw/amd/Kconfig"
+ source "drivers/ntb/hw/idt/Kconfig"
+ source "drivers/ntb/hw/intel/Kconfig"
++source "drivers/ntb/hw/mscc/Kconfig"
+diff --git a/drivers/ntb/hw/Makefile b/drivers/ntb/hw/Makefile
+index 87332c3905f0..923c442db750 100644
+--- a/drivers/ntb/hw/Makefile
++++ b/drivers/ntb/hw/Makefile
+@@ -1,3 +1,4 @@
+ obj-$(CONFIG_NTB_AMD)	+= amd/
+ obj-$(CONFIG_NTB_IDT)	+= idt/
+ obj-$(CONFIG_NTB_INTEL)	+= intel/
++obj-$(CONFIG_NTB_SWITCHTEC) += mscc/
+diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
+new file mode 100644
+index 000000000000..013ed6716438
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/Kconfig
+@@ -0,0 +1,9 @@
++config NTB_SWITCHTEC
++	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
++	select PCI_SW_SWITCHTEC
++	help
++	 Enables NTB support for Switchtec PCI switches. This also
++	 selects the Switchtec management driver as they share the same
++	 hardware interface.
 +
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
++	 If unsure, say N.
+diff --git a/drivers/ntb/hw/mscc/Makefile b/drivers/ntb/hw/mscc/Makefile
+new file mode 100644
+index 000000000000..21907b364e19
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_NTB_SWITCHTEC) += switchtec_ntb.o
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+new file mode 100644
+index 000000000000..253efba72275
+--- /dev/null
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -0,0 +1,81 @@
++/*
++ * Microsemi Switchtec(tm) PCIe Management Driver
++ * Copyright (c) 2017, Microsemi Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ */
++
++#include <linux/switchtec.h>
++#include <linux/module.h>
++
++MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
++MODULE_VERSION("0.1");
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Microsemi Corporation");
++
++struct switchtec_ntb {
++	struct switchtec_dev *stdev;
++};
++
++static int switchtec_ntb_add(struct device *dev,
++			     struct class_interface *class_intf)
++{
++	struct switchtec_dev *stdev = to_stdev(dev);
++	struct switchtec_ntb *sndev;
++
++	stdev->sndev = NULL;
++
++	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
++		return -ENODEV;
++
++	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
++	if (!sndev)
++		return -ENOMEM;
++
++	sndev->stdev = stdev;
++
++	stdev->sndev = sndev;
++	dev_info(dev, "NTB device registered");
++
++	return 0;
++}
++
++void switchtec_ntb_remove(struct device *dev,
++			  struct class_interface *class_intf)
++{
++	struct switchtec_dev *stdev = to_stdev(dev);
++	struct switchtec_ntb *sndev = stdev->sndev;
++
++	if (!sndev)
 +		return;
++
++	stdev->sndev = NULL;
++	kfree(sndev);
++	dev_info(dev, "ntb device unregistered");
++}
++
++static struct class_interface switchtec_interface  = {
++	.add_dev = switchtec_ntb_add,
++	.remove_dev = switchtec_ntb_remove,
++};
++
++static int __init switchtec_ntb_init(void)
++{
++	switchtec_interface.class = switchtec_class;
++	return class_interface_register(&switchtec_interface);
++}
++module_init(switchtec_ntb_init);
++
++static void __exit switchtec_ntb_exit(void)
++{
++	class_interface_unregister(&switchtec_interface);
++}
++module_exit(switchtec_ntb_exit);
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 807569e62bee..0666e33c305b 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1275,6 +1275,9 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
+ 	struct switchtec_dev *stdev;
+ 	int rc;
  
- 	if (hose->get_busno && pci_has_flag(PCI_PROBE_ONLY))
- 		next_busno = (*hose->get_busno)();
-@@ -87,14 +93,20 @@ static void pcibios_scanbus(struct pci_controller *hose)
- 	pci_add_resource_offset(&resources,
- 				hose->io_resource, hose->io_offset);
- 	pci_add_resource(&resources, hose->busn_resource);
--	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
--				&resources);
--	if (!bus) {
--		pci_free_resource_list(&resources);
-+	list_splice_init(&resources, &bridge->windows);
-+	bridge->dev.parent = NULL;
-+	bridge->sysdata = hose;
-+	bridge->busnr = next_busno;
-+	bridge->ops = hose->pci_ops;
-+	bridge->swizzle_irq = pci_common_swizzle;
-+	bridge->map_irq = pcibios_map_irq;
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret) {
-+		pci_free_host_bridge(bridge);
- 		return;
- 	}
++	if (pdev->class == MICROSEMI_NTB_CLASSCODE)
++		request_module_nowait("switchtec_ntb");
++
+ 	stdev = stdev_create(pdev);
+ 	if (IS_ERR(stdev))
+ 		return PTR_ERR(stdev);
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index d8159944f013..09d73d0d1aa8 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -320,6 +320,8 @@ struct pff_csr_regs {
+ 	u32 reserved4[174];
+ } __packed;
  
--	hose->bus = bus;
-+	hose->bus = bus = bridge->bus;
++struct switchtec_ntb;
++
+ struct switchtec_dev {
+ 	struct pci_dev *pdev;
+ 	struct device dev;
+@@ -357,6 +359,8 @@ struct switchtec_dev {
+ 	struct work_struct link_event_work;
+ 	void (*link_notifier)(struct switchtec_dev *stdev);
+ 	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
++
++	struct switchtec_ntb *sndev;
+ };
  
- 	need_domain_info = need_domain_info || pci_domain_nr(bus);
- 	set_pci_need_domain_info(hose, need_domain_info);
-@@ -224,8 +236,6 @@ static int __init pcibios_init(void)
- 	list_for_each_entry(hose, &controllers, list)
- 		pcibios_scanbus(hose);
- 
--	pci_fixup_irqs(pci_common_swizzle, pcibios_map_irq);
--
- 	pci_initialized = 1;
- 
- 	return 0;
+ static inline struct switchtec_dev *to_stdev(struct device *dev)
 -- 
-2.10.0
+2.11.0
