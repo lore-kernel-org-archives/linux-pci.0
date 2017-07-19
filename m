@@ -1,85 +1,59 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: RE: [PATCH v9 5/7] ACPI: Translate the I/O range of non-MMIO
- devices before scanning
-Date: Tue, 4 Jul 2017 16:22:11 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B16310@FRAEML521-MBX.china.huawei.com>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E40AAE3DA@FRAEML521-MBX.china.huawei.com>
- <20170613151013.GT3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AAF0BF@FRAEML521-MBX.china.huawei.com>
- <20170613200339.GX3187@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40AB537A@FRAEML521-MBX.china.huawei.com>
- <20170616083313.GY3187@lahna.fi.intel.com>
- <CAJZ5v0gWGL=M1+T2DxFfwAi=gCbBBnLFVyp4u+1EVem-mcSNQg@mail.gmail.com>
- <20170616120048.GC629@lahna.fi.intel.com>
- <CAJZ5v0g+qVui6RU=Hy3c_3qAAWngqaAu6B3JxGOpqF06kitbzA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFB8D@FRAEML521-MBX.china.huawei.com>
- <20170619100209.GC629@lahna.fi.intel.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40ACFC3D@FRAEML521-MBX.china.huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B10487@FRAEML521-MBX.china.huawei.com>
- <CAHp75VevOno613gk8QHDA7kmLZJj9TLZRiu7oJUs_xaRzcbpnw@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B15AA2@FRAEML521-MBX.china.huawei.com>
- <CAHp75VccwpesvDxMcxZ+349rhrAq8QxNoau9XmquMnv9DBLBfA@mail.gmail.com>
-In-Reply-To: <CAHp75VccwpesvDxMcxZ+349rhrAq8QxNoau9XmquMnv9DBLBfA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:57070 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753408AbdGSNg5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Jul 2017 09:36:57 -0400
+Subject: Re: [PATCH] pci: shpchp: set the bridge busmaster if MSI are enabled
+To: Aleksandr Bezzubikov <zuban32s@gmail.com>,
+        linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, Michael Tsirkin <mst@redhat.com>
+References: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+From: Marcel Apfelbaum <marcel@redhat.com>
+Message-ID: <b0c85887-38f1-337e-4cc4-d671a200ff7d@redhat.com>
+Date: Wed, 19 Jul 2017 16:36:50 +0300
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>, Linuxarm <linuxarm@huawei.com>,
- "frowand.list@gmail.com" <frowand.list@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "xuwei \(O\)" <xuwei5@hisilicon.com>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "minyard@acm.org" <minyard@acm.org>, John Garry <john.garry@huawei.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Mika Westerberg <mika.westerberg@linux.intel.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "olof@lixom.net" <olof@lixom.net>,
- "brian.starkey@arm.com" <brian.starkey@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Andy
+On 18/07/2017 17:12, Aleksandr Bezzubikov wrote:
+> An MSI-based SHPC built in PCI bridges can configure hotplugged devices
+> only if they notify the bridge with MSI.
+> But they can't trigger interrupt without the bridge being busmaster,
+> that's why it should be enabled.
 
-[...]
+Hi Aleksandr,
 
-> 
-> You may do it on stack. Define your cell statically (but not const)
-> and apply resources just before mfd_add_devices() call.
-
-Ok thanks got it
-
-> There are examples in the existing drivers. Intel LPC comes to my mind
-> and perhaps PMC (Broxton), though latter has too much other stuff
-> around.
-
-Uh yes I see now in lpc_ich.c (base address is read from PCI config space
-and resources are set accordingly).
-
-Cheers
-Gab
+Hot-plugging an empty bridge does require making it bus-master,
+otherwise we end up with an unusable pci brigde.
 
 > 
-> --
-> With Best Regards,
-> Andy Shevchenko
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
+> ---
+>   drivers/pci/hotplug/shpchp_hpc.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
+> index de0ea47..e5824c7 100644
+> --- a/drivers/pci/hotplug/shpchp_hpc.c
+> +++ b/drivers/pci/hotplug/shpchp_hpc.c
+> @@ -1062,6 +1062,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
+>   		if (rc) {
+>   			ctrl_info(ctrl, "Can't get msi for the hotplug controller\n");
+>   			ctrl_info(ctrl, "Use INTx for the hotplug controller\n");
+> +		} else {
+> +			pci_set_master(pdev);
+>   		}
+>   
+>   		rc = request_irq(ctrl->pci_dev->irq, shpc_isr, IRQF_SHARED,
+> 
+
+
+I am not really familiar with the shpc code,
+but the change looks OK to me.
+
+Reviewed-by: Marcel Apfelbaum <marcel@redhat.com>
+
+Thanks,
+Marcel
