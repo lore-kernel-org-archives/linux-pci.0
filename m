@@ -1,43 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:35413 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964882AbdGTWxZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 18:53:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170720161554.45ce1673@ul30vt.home>
-References: <20170720214101.7449-1-roland@kernel.org> <20170720161554.45ce1673@ul30vt.home>
-From: Roland Dreier <roland.dreier@gmail.com>
-Date: Thu, 20 Jul 2017 15:53:04 -0700
-Message-ID: <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33718 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751560AbdGSB3n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:43 -0400
+Received: by mail-pg0-f66.google.com with SMTP id z1so4871688pgs.0
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:42 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
+Subject: [PATCH 3/3] extend to arm
+Date: Wed, 19 Jul 2017 11:28:37 +1000
+Message-Id: <20170719012839.20124-5-dja@axtens.net>
+In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
+References: <20170719012839.20124-1-dja@axtens.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 20, 2017 at 3:15 PM, Alex Williamson
-<alex.williamson@redhat.com> wrote:
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+---
+ arch/arm64/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-> Most of the ACS capabilities are worded as "Must be implemented by
-> devices that implement ..."  Shouldn't a hard-wired ACS capability
-> sufficiently describe that, or is there something wrong with how
-> they're hard wired?
-
-Interesting question.  I just looked at what the PCI spec says about
-the various bits for ACS functions in multi-function devices.  Many of
-the functions are "must not be implemented."  Of the ones that are
-"must be implemented if..." the key is that the if is for devices that
-support peer-to-peer traffic.
-
-I think the Intel NICs are compliant with the spec - they don't
-support any ACS mechanisms for controlling peer-to-peer traffic, but
-they also don't implement peer-to-peer traffic.  This means that the
-PCI standard way of knowing that it is safe to assign individual
-functions does not prove it is safe - but with device-specific
-knowledge we do know it is safe.  Hence a quirk to give that
-device-specific information to the kernel.
-
- - R.
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index cae4e677a181..e88081b515d2 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -20,6 +20,7 @@ config ARM64
+ 	select ARCH_SUPPORTS_NUMA_BALANCING
+ 	select ARCH_WANT_COMPAT_IPC_PARSE_VERSION
+ 	select ARCH_WANT_FRAME_POINTERS
++	select ARCH_WANT_VGA_ARB_FALLBACK
+ 	select ARCH_HAS_UBSAN_SANITIZE_ALL
+ 	select ARM_AMBA
+ 	select ARM_ARCH_TIMER
+-- 
+2.11.0
