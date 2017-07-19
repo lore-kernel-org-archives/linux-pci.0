@@ -1,69 +1,99 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58886 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751969AbdGSDIG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 23:08:06 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20170718165644.GF20973@minitux>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
- <1500293043-1887-4-git-send-email-varada@codeaurora.org> <20170717223047.GA20973@minitux>
- <20170718085440.GD32439@codeaurora.org> <20170718165644.GF20973@minitux>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Date: Wed, 19 Jul 2017 08:38:03 +0530
-Message-ID: <CAFp+6iEeu6rubQ+uDauCMbZa6LJoWaNJV04xb5AWL715U-e2Yw@mail.gmail.com>
-Subject: Re: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
-To: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Varadarajan Narayanan <varada@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "robh+dt" <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>, svarbanov@mm-sol.com,
-        kishon <kishon@ti.com>, Stephen Boyd <sboyd@codeaurora.org>,
-        fengguang.wu@intel.com, Wei Yongjun <weiyongjun1@huawei.com>,
-        linux-pci@vger.kernel.org,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
+References: <20170719012839.20124-1-dja@axtens.net>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 19 Jul 2017 09:25:40 +0100
+Message-ID: <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
+Subject: Re: [PATCH 0/4] Allow non-legacy cards to be vgaarb default
+To: Daniel Axtens <dja@axtens.net>, Laszlo Ersek <lersek@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Airlie <airlied@linux.ie>, linux-pci <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>, zourongrong@gmail.com,
+ daniel.vetter@intel.com, helgass@kernel.org,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 18, 2017 at 10:26 PM, Bjorn Andersson
-<bjorn.andersson@linaro.org> wrote:
-> On Tue 18 Jul 01:54 PDT 2017, Varadarajan Narayanan wrote:
->> On Mon, Jul 17, 2017 at 03:30:47PM -0700, Bjorn Andersson wrote:
-> [..]
->> >
->> > This would be the case for any existing dts files, so you're not allowed
->> > to treat this as an error.
->>
->> Since, there are no dts files that presently enable this driver,
->> wouldn't it be better to flag this as an error now itself instead
->> of having to fall back to old handling (which as mentioned above
->> is incomplete). Please let me know.
->>
+(+ Laszlo)
+
+On 19 July 2017 at 02:28, Daniel Axtens <dja@axtens.net> wrote:
+> Hi all,
 >
-> You're right, hopefully we can introduce it in the upstream dts for
-> v4.14...
+> Previously I posted a patch that provided a quirk for a hibmc card
+> behind a particular Huawei bridge that allowed it to be marked as the
+> default device in the VGA arbiter.[0] This lead to some discussion.[1]
+> It was broadly suggested that a more generic solution would be better,
+> something in the style of powerpc's fixup_vga() quirk.
 >
-> So it does make sense to fix this up now, rather than live with the
-> fallback forever. Can you ensure we get an "ack" from Vivek on this?
-
-Right, it makes sense to get this name from the dt (since same
-will be also available in the clock entry), and not assume the name
-based on some logic.
-And since we don't have any already existing bindings, it's good that
-we fix it now.
-
+> Here is my suggested solution:
 >
-> Regards,
-> Bjorn
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  - Create a Kconfig option ARCH_WANT_VGA_ARB_FALLBACK
+>
+>  - if an arch selects that option, install PCI_FIXUP_CLASS_ENABLE
+>    hook. This hook fires when a card is enabled, which will require
+>    that a driver has been bound.
+>
+>  - if there is no default device when the hook fires, and the device
+>    can control memory and I/O, mark it as default.
+>
+> The patches are as follows:
+>
+>  (1) powerpc: simplify and fix VGA default device behaviour
+>
+>      This cleans up some quirks in the powerpc implementation of the
+>      vga_fixup. It should make the behaviour match the original
+>      intention.
+>
+>  (2) vgaarb: allow non-legacy cards to be marked as default
+>
+>      Add the Kconfig option, and create the fixup in vgaarb.c gated
+>      behind the option. Nothing happens at this stage because no arch
+>      has selected the option yet.
+>
+>  (3) powerpc: replace vga_fixup() with generic code
+>
+>      Select the option on powerpc and remove the old code. The only
+>      change is that it moves from being a final fixup to an enable
+>      fixup.
+>
+>  (4) arm64: allow non-legacy VGA devices to be default
+>
+>      Select the option on arm64. This solves my problem with the D05,
+>      but may cause other cards to be marked as default on other
+>      boards. This shouldn't cause any real issues but is worth being
+>      aware of.
+>
 
+Hi Daniel,
 
+Given that the whole point of the VGA arbiter is the ability to share
+the legacy mem+io ranges between different cards, why do we care about
+the VGA arbiter in the first place on arm64?
+
+AFAIK, there have been some recent changes in Xorg to address the
+auto-detection problem. I don't remember the exact details, but I have
+added Laszlo, who was involved with this at the time.
 
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Ard.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
