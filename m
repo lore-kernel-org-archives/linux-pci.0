@@ -1,52 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:34037 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S933025AbdGSP3S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 11:29:18 -0400
+From: Philipp Zabel <p.zabel@pengutronix.de>
+To: linux-kernel@vger.kernel.org
+Cc: Philipp Zabel <p.zabel@pengutronix.de>,
+        Thierry Reding <thierry.reding@gmail.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:53 -0600
-Message-Id: <20170725205753.4735-17-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 16/16] switchtec_ntb: update switchtec documentation with notes for NTB
-Sender: linux-kernel-owner@vger.kernel.org
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        linux-tegra@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 053/102] PCI: tegra: explicitly request exclusive reset control
+Date: Wed, 19 Jul 2017 17:25:57 +0200
+Message-Id: <20170719152646.25903-54-p.zabel@pengutronix.de>
+In-Reply-To: <20170719152646.25903-1-p.zabel@pengutronix.de>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The switchtec_ntb driver has a couple requirements on the switchec's
-hardware configuration so we add these notes to the documentation.
+Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+reset lines") started to transition the reset control request API calls
+to explicitly state whether the driver needs exclusive or shared reset
+control behavior. Convert all drivers requesting exclusive resets to the
+explicit API call so the temporary transition helpers can be removed.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+No functional changes.
+
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
+Cc: linux-tegra@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
 ---
- Documentation/switchtec.txt | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/pci/host/pci-tegra.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
-index a0a9c7b3d4d5..f788264921ff 100644
---- a/Documentation/switchtec.txt
-+++ b/Documentation/switchtec.txt
-@@ -78,3 +78,15 @@ The following IOCTLs are also supported by the device:
-   between PCI Function Framework number (used by the event system)
-   and Switchtec Logic Port ID and Partition number (which is more
-   user friendly).
-+
-+
-+Non-Transparent Bridge (NTB) Driver
-+===================================
-+
-+An NTB driver is provided for the switchtec hardware in switchtec_ntb.
-+Currently, it only supports switches configured with exactly 2
-+partitions. It also requires the following configuration settings:
-+
-+* Both partitions must be able to access each other's GAS spaces.
-+  Thus, the bits in the GAS Access Vector under Management Settings
-+  must be set to support this.
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index b3722b7709df8..a64bd0a191767 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -1147,15 +1147,15 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 
+-	pcie->pex_rst = devm_reset_control_get(dev, "pex");
++	pcie->pex_rst = devm_reset_control_get_exclusive(dev, "pex");
+ 	if (IS_ERR(pcie->pex_rst))
+ 		return PTR_ERR(pcie->pex_rst);
+ 
+-	pcie->afi_rst = devm_reset_control_get(dev, "afi");
++	pcie->afi_rst = devm_reset_control_get_exclusive(dev, "afi");
+ 	if (IS_ERR(pcie->afi_rst))
+ 		return PTR_ERR(pcie->afi_rst);
+ 
+-	pcie->pcie_xrst = devm_reset_control_get(dev, "pcie_x");
++	pcie->pcie_xrst = devm_reset_control_get_exclusive(dev, "pcie_x");
+ 	if (IS_ERR(pcie->pcie_xrst))
+ 		return PTR_ERR(pcie->pcie_xrst);
+ 
 -- 
 2.11.0
