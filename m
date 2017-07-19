@@ -1,127 +1,130 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f46.google.com ([74.125.83.46]:33987 "EHLO
-        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751465AbdGRUjR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 16:39:17 -0400
-Received: by mail-pg0-f46.google.com with SMTP id 123so18733742pgj.1
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 13:39:17 -0700 (PDT)
-Date: Tue, 18 Jul 2017 13:39:14 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org
-Subject: Re: [RFC PATCH v3 4/7] PCI: rockchip: idle the inactive PHY(s)
-Message-ID: <20170718203913.GD116895@google.com>
-References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
- <1500364623-97041-5-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-io0-f196.google.com ([209.85.223.196]:34510 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753409AbdGSKCO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 06:02:14 -0400
+Received: by mail-io0-f196.google.com with SMTP id f66so4069635iof.1
+        for <linux-pci@vger.kernel.org>; Wed, 19 Jul 2017 03:02:14 -0700 (PDT)
+Subject: Re: [PATCH kernel v4 4/6] iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu
+ driver initialization
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+        Jike Song <jike.song@intel.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <20170630052436.15212-1-aik@ozlabs.ru>
+ <20170630052436.15212-5-aik@ozlabs.ru>
+ <CAErSpo4pAZfDx5p_S9Z8jR_ctH=ZrkgG6aNaNmPaN2H77dgEgQ@mail.gmail.com>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
+Date: Wed, 19 Jul 2017 20:02:04 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500364623-97041-5-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <CAErSpo4pAZfDx5p_S9Z8jR_ctH=ZrkgG6aNaNmPaN2H77dgEgQ@mail.gmail.com>
+Content-Type: text/plain; charset=koi8-r
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Tue, Jul 18, 2017 at 03:57:00PM +0800, Shawn Lin wrote:
-> Check the status of all lanes and idle the inactive one(s).
+On 11/07/17 05:23, Bjorn Helgaas wrote:
+> [+cc Joerg, iommu]
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
+> On Fri, Jun 30, 2017 at 12:24 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+>> From: Yongji Xie <elohimes@gmail.com>
+>>
+>> Some iommu drivers would be initialized after PCI device
+>> enumeration. So PCI_BUS_FLAGS_MSI_REMAP would not be set
+>> when probing PCI devices although IOMMU enables capability
+>> of IRQ remapping. This patch tests this capability and
+>> set the flag when iommu driver is initialized.
+>>
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>> ---
+>>  drivers/iommu/iommu.c | 8 ++++++++
+>>  drivers/pci/probe.c   | 1 +
+>>  2 files changed, 9 insertions(+)
+>>
+>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>> index cf7ca7e70777..0b5881ddca09 100644
+>> --- a/drivers/iommu/iommu.c
+>> +++ b/drivers/iommu/iommu.c
+>> @@ -1063,6 +1063,14 @@ static int add_iommu_group(struct device *dev, void *data)
+>>         const struct iommu_ops *ops = cb->ops;
+>>         int ret;
+>>
+>> +       /*
+>> +        * Set PCI_BUS_FLAGS_MSI_REMAP for all PCI buses when IOMMU
+>> +        * have capability of IRQ remapping.
+>> +        */
+>> +       if (dev_is_pci(dev) && ops->capable &&
+>> +                       ops->capable(IOMMU_CAP_INTR_REMAP))
+>> +               to_pci_dev(dev)->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
 > 
-> Changes in v3:
-> - use cached lanes_map to avoid powering off inactive
->   lanes twice
+> This isn't my area, but this addition is really ugly.  It doesn't look
+> anything like the rest of the code in add_iommu_group(), so it just
+> feels like a wart.
+
+
+It does look like a wart, however it did not cause immediate rejection
+after first couple of revisions of this before I took it over...
+
+So. Here is the problem - deliver an MSIX isolation flag from IOMMU to
+VFIO-PCI driver. The options are:
+
+1. PCI_BUS_FLAGS_MSI_REMAP on a PCI bus - MSIX isolation is not really a
+PCI bus property and it is "like a wart".
+
+2. Introduce "flags" in iommu_group and define IOMMU_GROUP_MSIX_ISOLATED
+and set it when an IOMMU group is created; VFIO-PCI has ways to get to the
+group and read the flag.
+
+3. Create IOMMU_DOMAIN_UNMANAGED IOMMU domains for PPC64/powernv IOMMU
+groups and only define capable() hook to report IOMMU_CAP_INTR_REMAP;
+others already use these IOMMU domains. VFIO-PCI's mmap() hook could then
+check the capability via iommu_capable(bus). The problems is as Robin said:
+"iommu_capable() is a fundamentally broken and unworkable interface
+anyway"; however it is still not clear to me why it is unworkable in this
+particular case of isolation checking.
+
+I am missing knowledge about ARM, is there a good overview of these MSIX
+domains vs. IOMMU on ARM (as MSIX remapping seems not to be an IOMMU property)?
+
+
+Which one to pick? Thanks.
+
+
+
 > 
-> Changes in v2: None
+>>         if (!ops->add_device)
+>>                 return 0;
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index f2393b7d7ebf..14aac9df3d17 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -17,6 +17,7 @@
+>>  #include <linux/acpi.h>
+>>  #include <linux/irqdomain.h>
+>>  #include <linux/pm_runtime.h>
+>> +#include <linux/iommu.h>
 > 
->  drivers/pci/host/pcie-rockchip.c | 36 ++++++++++++++++++++++++++++++++++--
->  1 file changed, 34 insertions(+), 2 deletions(-)
+> This obviously belongs in another patch, as the compile error showed.
 > 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 4cc6aec..d73223f 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -15,6 +15,7 @@
->   * (at your option) any later version.
->   */
->  
-> +#include <linux/bitrev.h>
->  #include <linux/clk.h>
->  #include <linux/delay.h>
->  #include <linux/gpio/consumer.h>
-> @@ -112,6 +113,9 @@
->  #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
->  #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
->  		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
-> +#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
-> +#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
-> +#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
->  #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
->  #define   PCIE_CORE_INT_PRFPE			BIT(0)
->  #define   PCIE_CORE_INT_CRFPE			BIT(1)
-> @@ -229,6 +233,7 @@ struct rockchip_pcie {
->  	struct	regulator *vpcie0v9; /* 0.9V power supply */
->  	struct	gpio_desc *ep_gpio;
->  	u32	lanes;
-> +	u8      lanes_map;
->  	u8	root_bus_nr;
->  	int	link_gen;
->  	struct	device *dev;
-> @@ -301,6 +306,17 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
->  	return 1;
->  }
->  
-> +static void rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
-> +{
-> +	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-> +
-> +	rockchip->lanes_map = val & PCIE_CORE_LANE_MAP_MASK;
-> +
-> +	/* The link may be using a reverse-indexed mapping. */
-> +	if (val & PCIE_CORE_LANE_MAP_REVERSE)
-> +		rockchip->lanes_map = bitrev8(rockchip->lanes_map) >> 4;
+>>  #include "pci.h"
+>>
+>>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+>> --
+>> 2.11.0
+>>
 
-This might just be a matter of taste, but it seems to make more sense
-for this function to just return a u8, and the caller can assign it to
-'rockchip->lane_map'.
 
-> +}
-> +
->  static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
->  				     int where, int size, u32 *val)
->  {
-> @@ -737,6 +753,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  			  PCIE_CORE_PL_CONF_LANE_SHIFT);
->  	dev_dbg(dev, "current link width is x%d\n", status);
->  
-> +	if (!rockchip->legacy_phy) {
-> +		/*  power off unused lane(s) */
-> +		rockchip_pcie_lane_map(rockchip);
-
-My above comment would make it a lot clearer that the above line...
-
-> +		for (i = 0; i < MAX_LANE_NUM; i++) {
-> +			if (rockchip->lanes_map & BIT(i))
-
-...is determining the behavior here.
-
-> +				continue;
-> +
-> +			dev_dbg(dev, "idling lane %d\n", i);
-> +			phy_power_off(rockchip->phys[i]);
-> +		}
-> +	}
-> +
->  	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
->  			    PCIE_CORE_CONFIG_VENDOR);
->  	rockchip_pcie_write(rockchip,
-
-...
-
-Brian
+-- 
+Alexey
