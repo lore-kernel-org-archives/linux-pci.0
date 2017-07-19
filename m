@@ -1,92 +1,286 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50348 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751876AbdGBU7y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 2 Jul 2017 16:59:54 -0400
-Date: Sun, 2 Jul 2017 15:59:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, thejoe@gmail.com,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>, Chen Yu <yu.c.chen@intel.com>
-Subject: [PATCH] PCI: Work around poweroff & suspend-to-RAM issue on Macbook
- Pro 11
-Message-ID: <20170702205948.GB18324@bhelgaas-glaptop.roam.corp.google.com>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:34546 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753050AbdGSIJe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:09:34 -0400
+Subject: Re: [RFC PATCH v4 3/7] phy: rockcip-pcie: reconstruct driver to
+ support per-lane PHYs
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500448979-93067-4-git-send-email-shawn.lin@rock-chips.com>
+CC: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        <linux-pci@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <81b03327-e720-ed51-87d1-9ac0c7a9dc0a@ti.com>
+Date: Wed, 19 Jul 2017 13:38:45 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500448979-93067-4-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Neither soft poweroff (transition to ACPI power state S5) nor
-suspend-to-RAM (transition to state S3) works on the Macbook Pro 11,4 and
-11,5.
+Hi Shawn,
 
-The problem is related to the [mem 0x7fa00000-0x7fbfffff] space.  When we
-use that space, e.g., by assigning it to the 00:1c.0 Root Port, the ACPI
-Power Management 1 Control Register (PM1_CNT) at [io 0x1804] doesn't work
-anymore.
+On Wednesday 19 July 2017 12:52 PM, Shawn Lin wrote:
+> This patch reconstructs the whole driver to support per-lane
+> PHYs. Note that we could also support the legacy PHY if you
+> don't provide argument to our of_xlate.
 
-Linux does a soft poweroff (transition to S5) by writing to PM1_CNT.  The
-theory about why this doesn't work is:
+one comment below which I failed to notice before..
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> ---
+> 
+> Changes in v4: None
+> Changes in v3:
+> - remove unnecessary forward declaration
+> - keep mutex inside struct rockchip_pcie_phy
+> - fix wrong check of args number
+> - move de-idle lanes after deasserting the reset
+> 
+> Changes in v2:
+> - deprecate legacy PHY model
+> - improve rockchip_pcie_phy_of_xlate
+> - fix wrong calculation of pwr_cnt and add new init_cnt
+> - add internal locking
+> - introduce per-lane data to simply the code
+> 
+>  drivers/phy/rockchip/phy-rockchip-pcie.c | 124 +++++++++++++++++++++++++++----
+>  1 file changed, 110 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
+> index 6904633..b5005a5 100644
+> --- a/drivers/phy/rockchip/phy-rockchip-pcie.c
+> +++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
+> @@ -73,10 +73,39 @@ struct rockchip_pcie_data {
+>  struct rockchip_pcie_phy {
+>  	struct rockchip_pcie_data *phy_data;
+>  	struct regmap *reg_base;
+> +	struct phy_pcie_instance {
+> +		struct phy *phy;
+> +		u32 index;
+> +	} phys[PHY_MAX_LANE_NUM];
+> +	struct mutex pcie_mutex;
+>  	struct reset_control *phy_rst;
+>  	struct clk *clk_pciephy_ref;
+> +	int pwr_cnt;
+> +	int init_cnt;
+>  };
+>  
+> +static inline
+> +struct rockchip_pcie_phy *to_pcie_phy(struct phy_pcie_instance *inst)
+> +{
+> +	return container_of(inst, struct rockchip_pcie_phy,
+> +					phys[inst->index]);
+> +}
+> +
+> +static struct phy *rockchip_pcie_phy_of_xlate(struct device *dev,
+> +					      struct of_phandle_args *args)
+> +{
+> +	struct rockchip_pcie_phy *rk_phy = dev_get_drvdata(dev);
+> +
+> +	if (args->args_count == 0)
+> +		return rk_phy->phys[0].phy;
+> +
+> +	if (WARN_ON(args->args[0] >= PHY_MAX_LANE_NUM))
+> +		return ERR_PTR(-ENODEV);
+> +
+> +	return rk_phy->phys[args->args[0]].phy;
+> +}
+> +
+> +
+>  static inline void phy_wr_cfg(struct rockchip_pcie_phy *rk_phy,
+>  			      u32 addr, u32 data)
+>  {
+> @@ -116,29 +145,59 @@ static inline u32 phy_rd_cfg(struct rockchip_pcie_phy *rk_phy,
+>  
+>  static int rockchip_pcie_phy_power_off(struct phy *phy)
+>  {
+> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
+> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
+>  	int err = 0;
+>  
+> +	mutex_lock(&rk_phy->pcie_mutex);
+> +
+> +	regmap_write(rk_phy->reg_base,
+> +		     rk_phy->phy_data->pcie_laneoff,
+> +		     HIWORD_UPDATE(PHY_LANE_IDLE_OFF,
+> +				   PHY_LANE_IDLE_MASK,
+> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
+> +
+> +	if (--rk_phy->pwr_cnt)
+> +		goto err_out;
+> +
+>  	err = reset_control_assert(rk_phy->phy_rst);
+>  	if (err) {
+>  		dev_err(&phy->dev, "assert phy_rst err %d\n", err);
+> -		return err;
+> +		goto err_restore;
+>  	}
+>  
+> +err_out:
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+>  	return 0;
+> +
+> +err_restore:
+> +	++rk_phy->pwr_cnt;
+> +	regmap_write(rk_phy->reg_base,
+> +		     rk_phy->phy_data->pcie_laneoff,
+> +		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
+> +				   PHY_LANE_IDLE_MASK,
+> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+> +	return err;
+>  }
+>  
+>  static int rockchip_pcie_phy_power_on(struct phy *phy)
+>  {
+> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
+> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
+>  	int err = 0;
+>  	u32 status;
+>  	unsigned long timeout;
+>  
+> +	mutex_lock(&rk_phy->pcie_mutex);
+> +
+> +	if (rk_phy->pwr_cnt++)
+> +		goto err_out;
+> +
+>  	err = reset_control_deassert(rk_phy->phy_rst);
+>  	if (err) {
+>  		dev_err(&phy->dev, "deassert phy_rst err %d\n", err);
+> -		return err;
+> +		goto err_pwr_cnt;
+>  	}
+>  
+>  	regmap_write(rk_phy->reg_base, rk_phy->phy_data->pcie_conf,
+> @@ -146,6 +205,12 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
+>  				   PHY_CFG_ADDR_MASK,
+>  				   PHY_CFG_ADDR_SHIFT));
+>  
+> +	regmap_write(rk_phy->reg_base,
+> +		     rk_phy->phy_data->pcie_laneoff,
+> +		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
+> +				   PHY_LANE_IDLE_MASK,
+> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
+> +
+>  	/*
+>  	 * No documented timeout value for phy operation below,
+>  	 * so we make it large enough here. And we use loop-break
+> @@ -214,18 +279,29 @@ static int rockchip_pcie_phy_power_on(struct phy *phy)
+>  		goto err_pll_lock;
+>  	}
+>  
+> +err_out:
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+>  	return 0;
+>  
+>  err_pll_lock:
+>  	reset_control_assert(rk_phy->phy_rst);
+> +err_pwr_cnt:
+> +	--rk_phy->pwr_cnt;
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+>  	return err;
+>  }
+>  
+>  static int rockchip_pcie_phy_init(struct phy *phy)
+>  {
+> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
+> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
+>  	int err = 0;
+>  
+> +	mutex_lock(&rk_phy->pcie_mutex);
+> +
+> +	if (rk_phy->init_cnt++)
+> +		goto err_out;
+> +
+>  	err = clk_prepare_enable(rk_phy->clk_pciephy_ref);
+>  	if (err) {
+>  		dev_err(&phy->dev, "Fail to enable pcie ref clock.\n");
+> @@ -238,20 +314,33 @@ static int rockchip_pcie_phy_init(struct phy *phy)
+>  		goto err_reset;
+>  	}
+>  
+> -	return err;
+> +err_out:
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+> +	return 0;
+>  
+>  err_reset:
+> +
+>  	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
+>  err_refclk:
+> +	--rk_phy->init_cnt;
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+>  	return err;
+>  }
+>  
+>  static int rockchip_pcie_phy_exit(struct phy *phy)
+>  {
+> -	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
+> +	struct phy_pcie_instance *inst = phy_get_drvdata(phy);
+> +	struct rockchip_pcie_phy *rk_phy = to_pcie_phy(inst);
+> +
+> +	mutex_lock(&rk_phy->pcie_mutex);
+> +
+> +	if (--rk_phy->init_cnt)
+> +		goto err_init_cnt;
+>  
+>  	clk_disable_unprepare(rk_phy->clk_pciephy_ref);
+>  
+> +err_init_cnt:
+> +	mutex_unlock(&rk_phy->pcie_mutex);
+>  	return 0;
+>  }
+>  
+> @@ -283,10 +372,10 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+>  	struct rockchip_pcie_phy *rk_phy;
+> -	struct phy *generic_phy;
+>  	struct phy_provider *phy_provider;
+>  	struct regmap *grf;
+>  	const struct of_device_id *of_id;
+> +	int i;
+>  
+>  	grf = syscon_node_to_regmap(dev->parent->of_node);
+>  	if (IS_ERR(grf)) {
+> @@ -305,6 +394,8 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>  	rk_phy->phy_data = (struct rockchip_pcie_data *)of_id->data;
+>  	rk_phy->reg_base = grf;
+>  
+> +	mutex_init(&rk_phy->pcie_mutex);
+> +
+>  	rk_phy->phy_rst = devm_reset_control_get(dev, "phy");
+>  	if (IS_ERR(rk_phy->phy_rst)) {
+>  		if (PTR_ERR(rk_phy->phy_rst) != -EPROBE_DEFER)
+> @@ -319,14 +410,19 @@ static int rockchip_pcie_phy_probe(struct platform_device *pdev)
+>  		return PTR_ERR(rk_phy->clk_pciephy_ref);
+>  	}
+>  
+> -	generic_phy = devm_phy_create(dev, dev->of_node, &ops);
+> -	if (IS_ERR(generic_phy)) {
+> -		dev_err(dev, "failed to create PHY\n");
+> -		return PTR_ERR(generic_phy);
+> +	for (i = 0; i < PHY_MAX_LANE_NUM; i++) {
+> +		rk_phy->phys[i].phy = devm_phy_create(dev, dev->of_node, &ops);
+> +		if (IS_ERR(rk_phy->phys[i].phy)) {
+> +			dev_err(dev, "failed to create PHY%d\n", i);
+> +			return PTR_ERR(rk_phy->phys[i].phy);
+> +		}
+> +		rk_phy->phys[i].index = i;
 
-  - The write to PM1_CNT causes an SMI
-  - The BIOS SMI handler depends on something in
-    [mem 0x7fa00000-0x7fbfffff]
-  - When Linux assigns [mem 0x7fa00000-0x7fbfffff] to the 00:1c.0 Port, it
-    covers up whatever the SMI handler uses, so the SMI handler no longer
-    works correctly
 
-Reserve the [mem 0x7fa00000-0x7fbfffff] space so we don't assign it to
-anything.
+For legacy dt, it would create more number of phys than required right? it
+would be nice to fix that.
 
-This is voodoo programming, since we don't know what the real conflict is,
-but we've failed to find the root cause.
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=103211
-Tested-by: thejoe@gmail.com
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Cc: stable@vger.kernel.org
-Cc: Rafael J. Wysocki <rafael@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: Chen Yu <yu.c.chen@intel.com>
-
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 6d52b94f4bb9..20fa7c84109d 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -571,3 +571,35 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-+
-+/*
-+ * Apple MacBook Pro: Avoid [mem 0x7fa00000-0x7fbfffff]
-+ *
-+ * Using the [mem 0x7fa00000-0x7fbfffff] region, e.g., by assigning it to
-+ * the 00:1c.0 Root Port, causes a conflict with [io 0x1804], which is used
-+ * for soft poweroff and suspend-to-RAM.
-+ *
-+ * As far as we know, this is related to the address space, not to the Root
-+ * Port itself.  Attaching the quirk to the Root Port is a convenience, but
-+ * it could probably also be a standalone DMI quirk.
-+ *
-+ * https://bugzilla.kernel.org/show_bug.cgi?id=103211
-+ */
-+static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct resource *res;
-+
-+	if ((!dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,4") &&
-+	     !dmi_match(DMI_PRODUCT_NAME, "MacBookPro11,5")) ||
-+	    pdev->bus->number != 0 || pdev->devfn != PCI_DEVFN(0x1c, 0))
-+		return;
-+
-+	res = request_mem_region(0x7fa00000, 0x200000,
-+				 "MacBook Pro poweroff workaround");
-+	if (res)
-+		dev_info(dev, "claimed %s %pR\n", res->name, res);
-+	else
-+		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
+Thanks
+Kishon
