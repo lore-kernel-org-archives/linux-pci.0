@@ -1,127 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 5 Jul 2017 16:34:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
-Message-ID: <20170705213419.GD25063@bhelgaas-glaptop.roam.corp.google.com>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
- <6256cab3-dd77-c0f6-66b8-be261695bbb1@free.fr>
- <20170705180359.GL13824@bhelgaas-glaptop.roam.corp.google.com>
- <5a1207cb-31fd-6b85-86af-8c37bd57ad4f@free.fr>
-MIME-Version: 1.0
-In-Reply-To: <5a1207cb-31fd-6b85-86af-8c37bd57ad4f@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: DT <devicetree@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:39398 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753476AbdGSJ6Z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:58:25 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 6/7] dt-bindings: PCI: rockchip: convert to use per-lane PHY model
+Date: Wed, 19 Jul 2017 17:57:57 +0800
+Message-Id: <1500458278-203082-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500458278-203082-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500458278-203082-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 05, 2017 at 10:39:19PM +0200, Mason wrote:
-> On 05/07/2017 20:03, Bjorn Helgaas wrote:
-> 
-> > On Wed, Jul 05, 2017 at 12:55:37AM +0200, Mason wrote:
-> >
-> >> On 04/07/2017 22:24, Bjorn Helgaas wrote:
-> >>
-> >>> I made the trivial changes I mentioned, added a dependency on
-> >>> CONFIG_BROKEN (for the config/MMIO muxing issue), and put these on
-> >>> pci/host-tango.  I can't build or test this, so I probably broke
-> >>> something in the process.  I think the combination of the boot-time
-> >>> warning, the taint, and CONFIG_BROKEN is a reasonable amount of
-> >>> warning that a user should expect issues.
-> >>>
-> >>> Can you take a look and see if it works for you?
-> >>>
-> >>> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-tango
-> >>
-> >> Thanks. I'll take it for a spin ASAP.
-> >>
-> >> TAINT_CRAP... Smirk. I didn't see that one in the docs:
-> >> https://www.kernel.org/doc/html/latest/admin-guide/tainted-kernels.html
-> >>
-> >> Oh wait... TAINT_CRAP is "C" => a staging driver has been loaded
-> > 
-> > I wish it had a less pejorative, more descriptive name.  But it seems like
-> > the closest to this situation.
-> 
-> Maybe it is not too late to submit a patch to Linus
-> renaming TAINT_CRAP?
-> 
-> Here are a few candidates, off the top of my head:
-> 
-> TAINT_STAGING
-> TAINT_STAGING_DRIVER
-> TAINT_BROKEN_HW
-> TAINT_BROKEN_HARDWARE
-> TAINT_USE_AT_YOUR_OWN_RISK
+Deprecate legacy PHY model and encourage to use per-lane PHY
+model.
 
-I personally wouldn't object, but it's not a PCI thing so that can all
-be separate from this driver.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
 
-> >> The one issue I anticipate with "depends on BROKEN" is
-> >> when I add support for revision 2, which isn't broken.
-> > 
-> > How about this:
-> > 
-> >   - Rename PCIE_TANGO to PCIE_TANGO_REV1
-> >   - PCIE_TANGO_REV1 depends on BROKEN
-> >   - Add rev2 support later, enabled by PCIE_TANGO
-> >   - PCIE_TANGO_REV1 depends on PCIE_TANGO && BROKEN
-> > 
-> > I updated pci/host-tango along these lines (without rev2 support,
-> > obviously).
-> 
-> And support for REV1 wouldn't be compiled in, unless
-> BROKEN is selected? Yes, I think that could fly.
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
-Right.
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
 
-> Don't you think the naming should follow the DT
-> convention of using the first SoC embedding the
-> IP (for the compatible string) ?
-> 
-> PCIE_TANGO_REV1 vs PCIE_TANGO_SMP8759
-
-Sounds reasonable.  So v2 will be something other than SMP8759?
-I renamed it to CONFIG_PCIE_TANGO_SMP8759.
-
-> > I forgot to ask for a MAINTAINERS update.  Can you send that, too,
-> > please?
-> 
-> There's a "catch-all" rule for everything tango-related:
-> 
-> ARM/TANGO ARCHITECTURE
-> M:	Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> L:	linux-arm-kernel@lists.infradead.org
-> S:	Maintained
-> N:	tango
-> 
-> Is that enough?
-
-Yep, sorry I didn't notice that.  That's enough for
-scripts/get_maintainer.pl to work, which is what I'm looking for.
-
-If you confirm that
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-tango&id=d752a8b29345
-works for you, I'll include it in my v4.13 pull request.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index 1453a73..41bced4 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -19,8 +19,6 @@ Required properties:
+ 	- "pm"
+ - msi-map: Maps a Requester ID to an MSI controller and associated
+ 	msi-specifier data. See ./pci-msi.txt
+-- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+-- phy-names:  MUST be "pcie-phy".
+ - interrupts: Three interrupt entries must be specified.
+ - interrupt-names: Must include the following names
+ 	- "sys"
+@@ -42,6 +40,18 @@ Required properties:
+ 	interrupt source. The value must be 1.
+ - interrupt-map-mask and interrupt-map: standard PCI properties
+ 
++Required properties for legacy PHY model (deprecated):
++- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
++- phy-names:  MUST be "pcie-phy".
++
++Required properties for per-lane PHY model (preferred):
++- phys: Must contain an phandle to a PHY for each entry in phy-names.
++- phy-names: Must include 4 entries for all 4 lanes even if some of
++  them won't be used for your cases. Entries are of the form "pcie-phy-N":
++  where N ranges from 0 to 3.
++  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
++  for changing the #phy-cells of phy node to support it)
++
+ Optional Property:
+ - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+ 	using 24MHz OSC for RC's PHY.
+@@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
+ 		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
+ 	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
+ 		      "pm", "pclk", "aclk";
++	/* deprecated legacy PHY model */
+ 	phys = <&pcie_phy>;
+ 	phy-names = "pcie-phy";
+ 	pinctrl-names = "default";
+@@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
+ 		#interrupt-cells = <1>;
+ 	};
+ };
++
++pcie0: pcie@f8000000 {
++	...
++
++	/* preferred per-lane PHY model */
++	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
++	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
++
++	...
++};
+-- 
+1.9.1
