@@ -1,269 +1,99 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1501126281.20860.11.camel@mtksdaap41>
-Subject: Re: [PATCH v2 5/5] dt-bindings: PCI: add support for new generation
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56510 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753290AbdGSJ3j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:29:39 -0400
+Date: Wed, 19 Jul 2017 14:59:13 +0530
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kishon@ti.com,
+        sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
+        fengguang.wu@intel.com, weiyongjun1@huawei.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        smuthayy <smuthayy@codeaurora.org>
+Subject: Re: [PATCH 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe
  controller
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>
-Date: Thu, 27 Jul 2017 11:31:21 +0800
-In-Reply-To: <06c9b3439431221794fc9f723fef52ff59be7ec6.1501122135.git.honghui.zhang@mediatek.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
- <06c9b3439431221794fc9f723fef52ff59be7ec6.1501122135.git.honghui.zhang@mediatek.com>
+Message-ID: <20170719092905.GA13546@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-8-git-send-email-varada@codeaurora.org>
+ <20170717220718.GZ20973@minitux>
+ <20170718095814.GE32439@codeaurora.org>
+ <20170718164438.GE20973@minitux>
+ <20170719064943.GA29996@codeaurora.org>
+ <81d75c74-df15-cc9d-c07c-dd6f5cc30d18@mm-sol.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, robh+dt@kernel.org, yt.shen@mediatek.com,
- robh@kerenl.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
- matthias.bgg@gmail.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <81d75c74-df15-cc9d-c07c-dd6f5cc30d18@mm-sol.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-07-27 at 10:58 +0800, honghui.zhang@mediatek.com wrote:
-> From: Ryder Lee <ryder.lee@mediatek.com>
-> 
-> Add support for MediaTek new generation controller and update related
-> properities.
-> 
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> ---
->  .../devicetree/bindings/pci/mediatek-pcie.txt      | 168 ++++++++++++++++++++-
->  1 file changed, 161 insertions(+), 7 deletions(-)
-> 
+Stan,
 
-Sorry about the disturb, I send the wrong local version  of this patch.
-[PATCH v2 5/5] dt-bindings: PCI: add support for new generation
- controller
+On Wed, Jul 19, 2017 at 10:12:45AM +0300, Stanimir Varbanov wrote:
+> Hi,
+>
+> On 07/19/2017 09:49 AM, Varadarajan Narayanan wrote:
+> > On Tue, Jul 18, 2017 at 09:44:38AM -0700, Bjorn Andersson wrote:
+> >> On Tue 18 Jul 02:58 PDT 2017, Varadarajan Narayanan wrote:
+> >>
+> >>> On Mon, Jul 17, 2017 at 03:07:18PM -0700, Bjorn Andersson wrote:
+> >>>> On Mon 17 Jul 05:04 PDT 2017, Varadarajan Narayanan wrote:
+> >> [..]
+> >>>>
+> >>>> Can you confirm that this is actually version 4 of this block? Or are we
+> >>>> just incrementing an arbitrary number here?
+> >>>
+> >>> This is not exactly the 4th version of the block. However, it is
+> >>> a different version than the ones that are already supported in
+> >>> this driver. Since the existing driver didn't exactly tie it with
+> >>> the block IP version, I too followed the same versioning
+> >>> convention.
+> >>>
+> >>
+> >> Do you have a block IP version that you could base your numbering on, to
+> >> break the trend? (We should go back and fix up the others as well)
+> >
+> > Presently, the driver supports the ipq8064, apq8064, apq8084,
+> > msm8996, ipq4019 and ipq8074. The SoCs, qcom_pcie_ops version and
+> > the block IP versions are as follows.
+> >
+> > 	ipq8064 - v0 - 2.1.0
+> > 	apq8064 - v0 - 2.1.0
+> > 	apq8084 - v1 - 1.0.0
+> > 	msm8996 - v2 - 2.3.2
+> > 	ipq4019 - v3 - 2.4.0
+> > 	ipq8074 - v4 - 2.3.3
+>
+> That's nice, but I think we need the Synopsys IP versions too, can you
+> provide such an information and after that we can decide how the names
+> should look like.
 
-The right version for this patch have been re-send.
+Sorry, I posted v2 before I saw this e-mail. Will post v3 based
+on what naming style is decided.
 
-thanks.
+The SoCs, qcom_pcie_ops version, the block IP version and
+Synopsys IP versions are as follows.
 
-> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> index a968f25..179329b 100644
-> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> @@ -3,18 +3,31 @@ MediaTek Gen2 PCIe controller
->  Required properties:
->  - compatible: Should contain one of the following string:
->  	"mediatek,mt2701-pcie"
-> +	"mediatek,mt2712-pcie"
-> +	"mediatek,mt7622-pcie"
->  	"mediatek,mt7623-pcie"
->  - device_type: Must be "pci"
-> -- reg: Base addresses and lengths of the PCIe controller.
-> +- reg: Base addresses and lengths of the PICe subsys and root ports.
-> +- reg-names: Names of the above areas to use during resource look-up.
->  - #address-cells: Address representation for root ports (must be 3)
->  - #size-cells: Size representation for root ports (must be 2)
->  - clocks: Must contain an entry for each entry in clock-names.
->    See ../clocks/clock-bindings.txt for details.
-> -- clock-names: Must include the following entries:
-> -  - free_ck :for reference clock of PCIe subsys
-> -  - sys_ck0 :for clock of Port0
-> -  - sys_ck1 :for clock of Port1
-> -  - sys_ck2 :for clock of Port2
-> +- clock-names:
-> +  Mandatory entries:
-> +   - sys_ckN :transaction layer and data link layer clock
-> +  Required entries for MT2701/MT7623:
-> +   - free_ck :for reference clock of PCIe subsys
-> +  Required entries for MT2712/MT7622:
-> +   - ahb_ckN :AHB slave interface operating clock for CSR access and RC
-> +	      initiated MMIO access
-> +  Required entries for MT7622:
-> +   - axi_ckN :application layer MMIO channel operating clock
-> +   - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-> +	      pcie_mac_ck/pcie_pipe_ck is turned off
-> +   - obff_ckN :OBFF functional block operating clock
-> +   - pipe_ckN :LTSSM and phy/mac layer operating clock
-> +  where N starting from 0 to the maximum number of root ports.
->  - phys: List of PHY specifiers (used by generic PHY framework).
->  - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
->    number of PHYs as specified in *phys* property.
-> @@ -33,6 +46,10 @@ Required properties for MT7623/MT2701:
->  - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
->    number of root ports.
->  
-> +Required properties for MT2712/MT7622:
-> +-interrupts: A list of interrupt outputs of the controller, must have one
-> +	     entry for each PCIe port
-> +
->  In addition, the device tree node must have sub-nodes describing each
->  PCIe port interface, having the following mandatory properties:
->  
-> @@ -50,7 +67,7 @@ Required properties:
->    property is sufficient.
->  - num-lanes: Number of lanes to use for this port.
->  
-> -Examples:
-> +Examples for MT7623:
->  
->  	hifsys: syscon@1a000000 {
->  		compatible = "mediatek,mt7623-hifsys",
-> @@ -68,6 +85,7 @@ Examples:
->  		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
->  		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
->  		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
-> +		reg-names = "subsys", "port0", "port1", "port2";
->  		#address-cells = <3>;
->  		#size-cells = <2>;
->  		#interrupt-cells = <1>;
-> @@ -127,3 +145,139 @@ Examples:
->  			num-lanes = <1>;
->  		};
->  	};
-> +
-> +Examples for MT2712:
-> +	pcie: pcie@11700000 {
-> +		compatible = "mediatek,generic-pcie-v2";
-> +		device_type = "pci";
-> +		reg = <0 0x11700000 0 0x1000>,
-> +		      <0 0x112ff000 0 0x1000>;
-> +		reg-names = "port0", "port1";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-> +			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-> +		clocks = <&pericfg CLK_PERI_PCIE0>,
-> +			 <&pericfg CLK_PERI_PCIE1>,
-> +			 <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
-> +			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>;
-> +		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1";
-> +		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
-> +		phy-names = "pcie-phy0", "pcie-phy1";
-> +		bus-range = <0x00 0xff>;
-> +		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-> +
-> +		pcie0: pcie@0,0 {
-> +			device_type = "pci";
-> +			reg = <0x0000 0 0 0 0>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			#interrupt-cells = <1>;
-> +			ranges;
-> +			num-lanes = <1>;
-> +			interrupt-map-mask = <0 0 0 7>;
-> +			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-> +					<0 0 0 2 &pcie_intc0 1>,
-> +					<0 0 0 3 &pcie_intc0 2>,
-> +					<0 0 0 4 &pcie_intc0 3>;
-> +			pcie_intc0: interrupt-controller {
-> +				interrupt-controller;
-> +				#address-cells = <0>;
-> +				#interrupt-cells = <1>;
-> +			};
-> +		};
-> +
-> +		pcie1: pcie@1,0 {
-> +			device_type = "pci";
-> +			reg = <0x0800 0 0 0 0>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			#interrupt-cells = <1>;
-> +			ranges;
-> +			num-lanes = <1>;
-> +			interrupt-map-mask = <0 0 0 7>;
-> +			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-> +					<0 0 0 2 &pcie_intc1 1>,
-> +					<0 0 0 3 &pcie_intc1 2>,
-> +					<0 0 0 4 &pcie_intc1 3>;
-> +			pcie_intc1: interrupt-controller {
-> +				interrupt-controller;
-> +				#address-cells = <0>;
-> +				#interrupt-cells = <1>;
-> +			};
-> +		};
-> +	};
-> +
-> +Examples for MT7622:
-> +	pcie: pcie@1a140000 {
-> +		compatible = "mediatek,generic-pcie-v2";
-> +		device_type = "pci";
-> +		reg = <0 0x1a140000 0 0x1000>,
-> +		      <0 0x1a143000 0 0x1000>,
-> +		      <0 0x1a145000 0 0x1000>;
-> +		reg-names = "subsys", "port0", "port1";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_LOW>,
-> +			     <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
-> +		clocks = <&pciesys CLK_PCIE_P0_MAC_EN>,
-> +			 <&pciesys CLK_PCIE_P1_MAC_EN>,
-> +			 <&pciesys CLK_PCIE_P0_AHB_EN>,
-> +			 <&pciesys CLK_PCIE_P1_AHB_EN>,
-> +			 <&pciesys CLK_PCIE_P0_AUX_EN>,
-> +			 <&pciesys CLK_PCIE_P1_AUX_EN>,
-> +			 <&pciesys CLK_PCIE_P0_AXI_EN>,
-> +			 <&pciesys CLK_PCIE_P1_AXI_EN>,
-> +			 <&pciesys CLK_PCIE_P0_OBFF_EN>,
-> +			 <&pciesys CLK_PCIE_P1_OBFF_EN>,
-> +			 <&pciesys CLK_PCIE_P0_PIPE_EN>,
-> +			 <&pciesys CLK_PCIE_P1_PIPE_EN>;
-> +		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1",
-> +			      "aux_ck0", "aux_ck1", "axi_ck0", "axi_ck1",
-> +			      "obff_ck0", "obff_ck1", "pipe_ck0", "pipe_ck1";
-> +		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
-> +		phy-names = "pcie-phy0", "pcie-phy1";
-> +		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
-> +		bus-range = <0x00 0xff>;
-> +		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-> +
-> +		pcie0: pcie@0,0 {
-> +			device_type = "pci";
-> +			reg = <0x0000 0 0 0 0>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			#interrupt-cells = <1>;
-> +			ranges;
-> +			num-lanes = <1>;
-> +			interrupt-map-mask = <0 0 0 7>;
-> +			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-> +					<0 0 0 2 &pcie_intc0 1>,
-> +					<0 0 0 3 &pcie_intc0 2>,
-> +					<0 0 0 4 &pcie_intc0 3>;
-> +			pcie_intc0: interrupt-controller {
-> +				interrupt-controller;
-> +				#address-cells = <0>;
-> +				#interrupt-cells = <1>;
-> +			};
-> +		};
-> +
-> +		pcie1: pcie@1,0 {
-> +			device_type = "pci";
-> +			reg = <0x0800 0 0 0 0>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			#interrupt-cells = <1>;
-> +			ranges;
-> +			num-lanes = <1>;
-> +			interrupt-map-mask = <0 0 0 7>;
-> +			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-> +					<0 0 0 2 &pcie_intc1 1>,
-> +					<0 0 0 3 &pcie_intc1 2>,
-> +					<0 0 0 4 &pcie_intc1 3>;
-> +			pcie_intc1: interrupt-controller {
-> +				interrupt-controller;
-> +				#address-cells = <0>;
-> +				#interrupt-cells = <1>;
-> +			};
-> +		};
-> +	};
+	ipq8064 - v0 - 2.1.0 - 4.01a
+	apq8064 - v0 - 2.1.0 - 4.01a
+	apq8084 - v1 - 1.0.0 - 4.11a
+	msm8996 - v2 - 2.3.2 - 4.21a
+	ipq4019 - v3 - 2.4.0 - 4.20a
+	ipq8074 - v4 - 2.3.3 - 4.30a
 
+Thanks
+Varada
 
+> > I will rename the qcom_pcie_ops structure and related functions
+> > with the block IP version instead of vX numbering and post the
+> > patch.
+>
+>
+>
+> regards,
+> Stan
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
