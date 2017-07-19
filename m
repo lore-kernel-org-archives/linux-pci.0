@@ -1,92 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35440 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751906AbdGSB3a (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:30 -0400
-Received: by mail-pg0-f67.google.com with SMTP id d193so4849274pgc.2
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:30 -0700 (PDT)
-From: Daniel Axtens <dja@axtens.net>
-To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org
-Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
-        zourongrong@gmail.com, catalin.marinas@arm.com,
-        will.deacon@arm.com, gabriele.paoloni@huawei.com,
-        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
-        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
-Subject: [PATCH 2/4] vgaarb: allow non-legacy cards to be marked as default
-Date: Wed, 19 Jul 2017 11:28:35 +1000
-Message-Id: <20170719012839.20124-3-dja@axtens.net>
-In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
-References: <20170719012839.20124-1-dja@axtens.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50264 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753162AbdGSIoF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:05 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v2 1/8] dt-bindings: phy: qmp: Add output-clock-names
+Date: Wed, 19 Jul 2017 14:13:32 +0530
+Message-Id: <1500453819-5223-2-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The VGA arbiter currently only selects a card as default if it can
-decode legacy I/O and memory ranges.
+The phy outputs a clock that will act as the parent for
+the phy's pipe clock. Add the name of this clock to the
+lane's DT node.
 
-However, on some architectures, legacy PCI resources are not used.
-This has lead to a powerpc quirk, and issues on arm64.
-
-Allow architectures to select ARCH_WANT_VGA_ARB_FALLBACK.
-When that symbol is selected, add a PCI_FIXUP_CLASS_ENABLE hook,
-which will mark the first card that is enabled and that can control
-I/O and memory as the default card.
-
-Behaviour is unchanged unless arches opt-in by selecting the
-Kconfig option.
-
-Signed-off-by: Daniel Axtens <dja@axtens.net>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
- drivers/gpu/vga/Kconfig  |  7 +++++++
- drivers/gpu/vga/vgaarb.c | 21 +++++++++++++++++++++
- 2 files changed, 28 insertions(+)
+ Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
-index 29437eabe095..1205c6cc1ff5 100644
---- a/drivers/gpu/vga/Kconfig
-+++ b/drivers/gpu/vga/Kconfig
-@@ -17,6 +17,13 @@ config VGA_ARB_MAX_GPUS
- 	  Reserves space in the kernel to maintain resource locking for
- 	  multiple GPUS.  The overhead for each GPU is very small.
+diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+index e11c563..5d7a51f 100644
+--- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
++++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+@@ -60,6 +60,8 @@ Required properties for child node:
+ 	   one for each entry in clock-names.
+  - clock-names: Must contain following for pcie and usb qmp phys:
+ 		 "pipe<lane-number>" for pipe clock specific to each lane.
++ - clock-output-names: Name of the phy clock that will be the parent for
++		       the above pipe clock.
  
-+config ARCH_WANT_VGA_ARB_FALLBACK
-+	bool
-+	help
-+	  Some architectures don't have a concept of "legacy" PCI addresses
-+	  which the VGA arbiter relies on. Instead, they can fall back to
-+	  selecting the first device that decodes memory and I/O.
-+
- config VGA_SWITCHEROO
- 	bool "Laptop Hybrid Graphics - GPU switching support"
- 	depends on X86
-diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-index 76875f6299b8..2135b04759c5 100644
---- a/drivers/gpu/vga/vgaarb.c
-+++ b/drivers/gpu/vga/vgaarb.c
-@@ -1472,3 +1472,24 @@ static int __init vga_arb_device_init(void)
- 	return rc;
- }
- subsys_initcall(vga_arb_device_init);
-+
-+#if defined(CONFIG_ARCH_WANT_VGA_ARB_FALLBACK)
-+static void vga_arb_fallback_fixup(struct pci_dev *pdev)
-+{
-+	u16 cmd;
-+
-+	if (vga_default_device())
-+		return;
-+
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
-+		vgaarb_info(&pdev->dev, "[fallback]"
-+			    " setting as default device\n");
-+		vga_set_default_device(pdev);
-+	}
-+
-+}
-+DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
-+			       PCI_CLASS_DISPLAY_VGA, 8,
-+			       vga_arb_fallback_fixup);
-+#endif
+  - resets: a list of phandles and reset controller specifier pairs,
+ 	   one for each entry in reset-names.
+@@ -96,6 +98,7 @@ Example:
+ 
+ 			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+ 			clock-names = "pipe0";
++			clock-output-names = "pcie_0_pipe_clk_src";
+ 			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
+ 			reset-names = "lane0";
+ 		};
 -- 
-2.11.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
