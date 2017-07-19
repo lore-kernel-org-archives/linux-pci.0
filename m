@@ -1,111 +1,201 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
- <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
- <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
- <ryder.lee@mediatek.com>
-Subject: [PATCH v2 3/5] dt-bindings: PCI: rename and cleanup MediaTek binding
- text
-Date: Thu, 27 Jul 2017 10:58:37 +0800
-Message-ID: <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1501122135.git.honghui.zhang@mediatek.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:55713 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753096AbdGSJ4o (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:56:44 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 2/7] PCI: rockchip: introduce per-lanes PHYs support
+Date: Wed, 19 Jul 2017 17:55:13 +0800
+Message-Id: <1500458118-139042-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+We distinguish the legacy PHY with the newer per-lane
+PHYs by adding legacy_phy flag. Note that the legacy phy
+is still the first option to be searched in order not to
+break the backward compatibility of DTB.
 
-In order to accommodate other SoC generations, this patch updates filename
-to make it more generic, regroups specific properties by SoCs, and removes
-redundant descriptions.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 29 +++++++++++-----------
- 1 file changed, 14 insertions(+), 15 deletions(-)
- rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (91%)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-similarity index 91%
-rename from Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-rename to Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index fe80dda..a968f25 100644
---- a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -1,18 +1,13 @@
--MediaTek Gen2 PCIe controller which is available on MT7623 series SoCs
--
--PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
--ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
-+MediaTek Gen2 PCIe controller
+Changes in v5: None
+Changes in v4:
+- move rockchip_pcie_get_phys to where it stands in
+  patch 1.
+- print PHY index in err output log
+
+Changes in v3:
+- kill rockchip_pcie_manipulate_phys and related stuff
+- use phys array
+- improve the commit msg
+
+Changes in v2: None
+
+ drivers/pci/host/pcie-rockchip.c | 77 +++++++++++++++++++++++++++++-----------
+ 1 file changed, 57 insertions(+), 20 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c42feab..f510349 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -47,6 +47,7 @@
+ #define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
  
- Required properties:
--- compatible: Should contain "mediatek,mt7623-pcie".
-+- compatible: Should contain one of the following string:
-+	"mediatek,mt2701-pcie"
-+	"mediatek,mt7623-pcie"
- - device_type: Must be "pci"
- - reg: Base addresses and lengths of the PCIe controller.
- - #address-cells: Address representation for root ports (must be 3)
- - #size-cells: Size representation for root ports (must be 2)
--- #interrupt-cells: Size representation for interrupts (must be 1)
--- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
--  Please refer to the standard PCI bus binding document for a more detailed
--  explanation.
- - clocks: Must contain an entry for each entry in clock-names.
-   See ../clocks/clock-bindings.txt for details.
- - clock-names: Must include the following entries:
-@@ -20,12 +15,6 @@ Required properties:
-   - sys_ck0 :for clock of Port0
-   - sys_ck1 :for clock of Port1
-   - sys_ck2 :for clock of Port2
--- resets: Must contain an entry for each entry in reset-names.
--  See ../reset/reset.txt for details.
--- reset-names: Must include the following entries:
--  - pcie-rst0 :port0 reset
--  - pcie-rst1 :port1 reset
--  - pcie-rst2 :port2 reset
- - phys: List of PHY specifiers (used by generic PHY framework).
- - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-   number of PHYs as specified in *phys* property.
-@@ -34,6 +23,16 @@ Required properties:
- - bus-range: Range of bus numbers associated with this controller.
- - ranges: Ranges for the PCI memory and I/O regions.
+ #define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
++#define MAX_LANE_NUM			4
  
-+Required properties for MT7623/MT2701:
-+- #interrupt-cells: Size representation for interrupts (must be 1)
-+- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+- resets: Must contain an entry for each entry in reset-names.
-+  See ../reset/reset.txt for details.
-+- reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
-+  number of root ports.
+ #define PCIE_CLIENT_BASE		0x0
+ #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
+@@ -210,7 +211,8 @@
+ struct rockchip_pcie {
+ 	void	__iomem *reg_base;		/* DT axi-base */
+ 	void	__iomem *apb_base;		/* DT apb-base */
+-	struct	phy *phy;
++	bool    legacy_phy;
++	struct  phy *phys[MAX_LANE_NUM];
+ 	struct	reset_control *core_rst;
+ 	struct	reset_control *mgmt_rst;
+ 	struct	reset_control *mgmt_sticky_rst;
+@@ -514,7 +516,7 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+-	int err;
++	int err, i;
+ 	u32 status;
+ 
+ 	gpiod_set_value(rockchip->ep_gpio, 0);
+@@ -537,10 +539,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		return err;
+ 	}
+ 
+-	err = phy_init(rockchip->phy);
+-	if (err < 0) {
+-		dev_err(dev, "fail to init phy, err %d\n", err);
+-		return err;
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		err = phy_init(rockchip->phys[i]);
++		if (err) {
++			dev_err(dev, "init phy%d err %d\n", i, err);
++			return err;
++		}
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->core_rst);
+@@ -602,10 +606,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			    PCIE_CLIENT_MODE_RC,
+ 			    PCIE_CLIENT_CONFIG);
+ 
+-	err = phy_power_on(rockchip->phy);
+-	if (err) {
+-		dev_err(dev, "fail to power on phy, err %d\n", err);
+-		return err;
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		err = phy_power_on(rockchip->phys[i]);
++		if (err) {
++			dev_err(dev, "power on phy%d err %d\n", i, err);
++			return err;
++		}
+ 	}
+ 
+ 	/*
+@@ -856,12 +862,38 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
++	struct phy *phy;
++	char *name;
++	u32 i;
 +
- In addition, the device tree node must have sub-nodes describing each
- PCIe port interface, having the following mandatory properties:
++	rockchip->phys[0] = devm_phy_get(dev, "pcie-phy");
++	if (IS_ERR(rockchip->phys[0])) {
++		if (PTR_ERR(rockchip->phys[0]) == -EPROBE_DEFER)
++			return PTR_ERR(rockchip->phys[0]);
++		dev_dbg(dev, "missing legacy phy, and search for per-lane PHY\n");
++	} else {
++		rockchip->legacy_phy = true;
++		dev_warn(dev, "legacy phy model is deprecated!\n");
++		return 0;
++	}
++
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		name = kasprintf(GFP_KERNEL, "pcie-phy-%u", i);
++		if (!name)
++			return -ENOMEM;
++
++		phy = devm_of_phy_get(rockchip->dev,
++				      rockchip->dev->of_node, name);
++		kfree(name);
  
+-	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+-	if (IS_ERR(rockchip->phy)) {
+-		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
+-			dev_err(dev, "missing phy\n");
+-		return PTR_ERR(rockchip->phy);
++		if (IS_ERR(phy)) {
++			if (PTR_ERR(phy) != -EPROBE_DEFER)
++				dev_err(dev, "missing phy for lane %d: %ld\n",
++					i, PTR_ERR(phy));
++			return PTR_ERR(phy);
++		}
++
++		rockchip->phys[i] = phy;
+ 	}
+ 
+ 	return 0;
+@@ -1283,7 +1315,7 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
+ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+-	int ret;
++	int ret, i;
+ 
+ 	/* disable core and cli int since we don't need to ack PME_ACK */
+ 	rockchip_pcie_write(rockchip, (PCIE_CLIENT_INT_CLI << 16) |
+@@ -1296,8 +1328,10 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ 		return ret;
+ 	}
+ 
+-	phy_power_off(rockchip->phy);
+-	phy_exit(rockchip->phy);
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		phy_power_off(rockchip->phys[i]);
++		phy_exit(rockchip->phys[i]);
++	}
+ 
+ 	clk_disable_unprepare(rockchip->clk_pcie_pm);
+ 	clk_disable_unprepare(rockchip->hclk_pcie);
+@@ -1533,14 +1567,17 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
++	int i;
+ 
+ 	pci_stop_root_bus(rockchip->root_bus);
+ 	pci_remove_root_bus(rockchip->root_bus);
+ 	pci_unmap_iospace(rockchip->io);
+ 	irq_domain_remove(rockchip->irq_domain);
+ 
+-	phy_power_off(rockchip->phy);
+-	phy_exit(rockchip->phy);
++	for (i = 0; i < MAX_LANE_NUM; i++) {
++		phy_power_off(rockchip->phys[i]);
++		phy_exit(rockchip->phys[i]);
++	}
+ 
+ 	clk_disable_unprepare(rockchip->clk_pcie_pm);
+ 	clk_disable_unprepare(rockchip->hclk_pcie);
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
