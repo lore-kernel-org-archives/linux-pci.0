@@ -1,67 +1,100 @@
-Return-Path: <SRS0=wQcV=6G=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=wQcV=6G=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:59039 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751962AbdGSAvG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 20:51:06 -0400
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Rob Herring <robh@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org
+Subject: Re: [RFC PATCH v3 0/7] Reconstruct rockchip's PCIe and PCIe-PHY
+ driver for per-lane PHY model
+To: Brian Norris <briannorris@chromium.org>
+References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170718202951.GA116895@google.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <6b886181-9d6d-e003-730a-f966fce48278@rock-chips.com>
+Date: Wed, 19 Jul 2017 08:51:02 +0800
 MIME-Version: 1.0
-In-Reply-To: <20170703181128.GD4902@n2100.armlinux.org.uk>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com> <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com> <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
- <20170703181128.GD4902@n2100.armlinux.org.uk>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 3 Jul 2017 19:44:31 +0100
-Message-ID: <CAKv+Gu8bD5X1Fo7z6_E4G1F1O-3YdC1aMmRv1CN-dufG3WQ6Ug@mail.gmail.com>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-	Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170718202951.GA116895@google.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3 July 2017 at 19:11, Russell King - ARM Linux <linux@armlinux.org.uk> wrote:
-> On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
->> The problem is serializing vs. memory accesses, since they don't use
->> any wrappers.  However, they are ioremapped(), so it's at least
->> conceivable that another solution would be to use VM to trap those
->> accesses.  I'm not a VM person, so I don't know whether that's
->> feasible in Linux.
->
-> Bjorn,
->
-> You're forgetting that MMIO (iow, memory returned by ioremap()) must
-> be accessed through the appropriate accessors, and must not be
-> directly dereferenced in C.  (We do have buggy drivers that do that
-> but they are buggy, and in many cases are getting attention to fix
-> that.)
->
-> However, adding a spinlock into them is really not nice, because it
-> adds extra overhead that's only necessary for rare cases like Sigma
-> Designs - especially when you consider that these accessors are used
-> for all MMIO accesses, not just PCI.  It would effectively mean that
-> we end up serialising all MMIO accesses throughout the kernel when
-> Sigma Designs SoCs are enabled, destroying some of the SMP benefit.
->
-> I don't think we can sanely use the MMU to trap those accesses either,
-> that would mean sending IPIs to tell other CPUs to do something, and
-> waiting for them to respond - which can deadlock if we're already in
-> an IRQ-protected region (iirc, config accesses are made with IRQs
-> off.)
->
-> I don't think there's an easy solution to this problem - and I'm not
-> sure that stop_machine() can be made to work in this path (which
-> needs a process context).  I have a suspicion that the Sigma Designs
-> PCI implementation is just soo insane that it's never going to work
-> reliably in a multi-SoC kernel without introducing severe performance
-> issues for everyone else.
->
+Hi Brian,
 
-I suppose we could perhaps use per-cpu spinlocks? That would put the
-complexity in the Sigma config space accessors, i.e., to take each
-lock before proceeding with reprogramming the outbound window, and
-other implementations wouldn't have to care. However, I do agree with
-Russell that having this complexity in the first place is hard to
-justify if the only implementation that requires it is a wacky design
-that needs lots of other quirks to operate somewhat sanely to begin
-with.
+On 2017/7/19 4:29, Brian Norris wrote:
+> On Tue, Jul 18, 2017 at 03:56:56PM +0800, Shawn Lin wrote:
+>>
+>> This patchset is trying to reconstruct PCIe and PCIe-PHY driver
+>> for rockchip platform in order to support per-lane PHY mode. And
+>> we could idle the inactive lane(s) finally.
+>>
+>> We deprecate the legacy PHY mode but the code could still
+>> support it in order not to break backware compatibility of DTB. And I
+>> organize the patches carefully so that we don't introduce git-bisect
+>> issue.
+>>
+>> Note that I carry on Jeffy's test tag from v2 as he has locally tested
+>> my v3 patchset.
+> 
+> I have a few nits for the patchset (will reply shortly), but otherwise
+> (if we're *really* going to go with this approach; I still would
+> appreciate a reply from Kishon on the original patchset, where I
+> suggested alternatives) at least the code is much better this time
+> around. So for the whole thing:
+> 
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+
+Thanks for your review and Jeffy's test!
+
+I probably will respin my v4 soon and wait for Kishon's final decision.
+If Kishon prefer to ack your alternative solution, I'm fine to commit
+some other bits as your alternatives seem a much simpler way.
+
+> 
+>> Changes in v3:
+>> - kill rockchip_pcie_manipulate_phys and related stuff
+>> - use phys array
+>> - improve the commit msg
+>> - remove unnecessary forward declaration
+>> - keep mutex inside struct rockchip_pcie_phy
+>> - fix wrong check of args number
+>> - move de-idle lanes after deasserting the reset
+>> - use cached lanes_map to avoid powering off inactive
+>>    lanes twice
+>> - rename the commit tile
+>>
+>> Changes in v2:
+>> - deprecate legacy PHY model
+>> - improve rockchip_pcie_phy_of_xlate
+>> - fix wrong calculation of pwr_cnt and add new init_cnt
+>> - add internal locking
+>> - introduce per-lane data to simply the code
+>>
+>> Shawn Lin (7):
+>>    PCI: rockchip: split out rockchip_pcie_get_phys
+>>    PCI: rockchip: introduce per-lanes PHYs support
+>>    phy: rockcip-pcie: reconstruct driver to support per-lane PHYs
+>>    PCI: rockchip: idle the inactive PHY(s)
+>>    arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339
+>>    dt-bindings: PCI: rockchip: convert to use per-lane PHY model
+>>    dt-bindings: phy: convert to use per-lane Rockchip PCIe PHY
+>>
+>>   .../devicetree/bindings/pci/rockchip-pcie.txt      |  25 ++++-
+>>   .../devicetree/bindings/phy/rockchip-pcie-phy.txt  |   7 +-
+>>   arch/arm64/boot/dts/rockchip/rk3399.dtsi           |   8 +-
+>>   drivers/pci/host/pcie-rockchip.c                   | 123 ++++++++++++++++----
+>>   drivers/phy/rockchip/phy-rockchip-pcie.c           | 124 ++++++++++++++++++---
+>>   5 files changed, 245 insertions(+), 42 deletions(-)
+>>
+>> -- 
+>> 1.9.1
+>>
+>>
+> 
+> 
+> 
