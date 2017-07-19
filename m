@@ -1,219 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:01 -0600
-Message-Id: <20170718160409.6493-9-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 08/16] switchtec_ntb: introduce initial NTB driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36249 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751560AbdGSCQQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 22:16:16 -0400
+Received: by mail-pf0-f195.google.com with SMTP id a11so4679705pfj.3
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 19:16:16 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        bhelgaas@google.com, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
+Subject: [PATCH v2 2/4] vgaarb: allow non-legacy cards to be marked as default
+Date: Wed, 19 Jul 2017 12:15:14 +1000
+Message-Id: <20170719021516.24718-3-dja@axtens.net>
+In-Reply-To: <20170719021516.24718-1-dja@axtens.net>
+References: <20170719021516.24718-1-dja@axtens.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Seeing the Switchtec NTB hardware shares the same endpoint as the
-management endpoint we utilize the class_interface API to register
-an NTB driver for every Switchtec device in the system that has the
-NTB class code.
+The VGA arbiter currently only selects a card as default if it can
+decode legacy I/O and memory ranges.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+However, on some architectures, legacy PCI resources are not used.
+This has lead to a powerpc quirk, and issues on arm64.
+
+Allow architectures to select ARCH_WANT_VGA_ARB_FALLBACK.
+When that symbol is selected, add a PCI_FIXUP_CLASS_ENABLE hook,
+which will mark the first card that is enabled and that can control
+I/O and memory as the default card.
+
+Behaviour is unchanged unless arches opt-in by selecting the
+Kconfig option.
+
+Signed-off-by: Daniel Axtens <dja@axtens.net>
 ---
- MAINTAINERS                         |  1 +
- drivers/ntb/hw/Kconfig              |  1 +
- drivers/ntb/hw/Makefile             |  1 +
- drivers/ntb/hw/mscc/Kconfig         |  9 +++++
- drivers/ntb/hw/mscc/Makefile        |  1 +
- drivers/ntb/hw/mscc/switchtec_ntb.c | 81 +++++++++++++++++++++++++++++++++++++
- drivers/pci/switch/switchtec.c      |  3 ++
- include/linux/switchtec.h           |  4 ++
- 8 files changed, 101 insertions(+)
- create mode 100644 drivers/ntb/hw/mscc/Kconfig
- create mode 100644 drivers/ntb/hw/mscc/Makefile
- create mode 100644 drivers/ntb/hw/mscc/switchtec_ntb.c
+ drivers/gpu/vga/Kconfig  |  7 +++++++
+ drivers/gpu/vga/vgaarb.c | 21 +++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 4ff2ad7c1c7b..6e491ce5e876 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10147,6 +10147,7 @@ F:	Documentation/ABI/testing/sysfs-class-switchtec
- F:	drivers/pci/switch/switchtec*
- F:	include/uapi/linux/switchtec_ioctl.h
- F:	include/linux/switchtec.h
-+F:	drivers/ntb/hw/mscc/
+diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
+index 29437eabe095..1205c6cc1ff5 100644
+--- a/drivers/gpu/vga/Kconfig
++++ b/drivers/gpu/vga/Kconfig
+@@ -17,6 +17,13 @@ config VGA_ARB_MAX_GPUS
+ 	  Reserves space in the kernel to maintain resource locking for
+ 	  multiple GPUS.  The overhead for each GPU is very small.
  
- PCI DRIVER FOR NVIDIA TEGRA
- M:	Thierry Reding <thierry.reding@gmail.com>
-diff --git a/drivers/ntb/hw/Kconfig b/drivers/ntb/hw/Kconfig
-index a89243c9fdd3..e51b581fd102 100644
---- a/drivers/ntb/hw/Kconfig
-+++ b/drivers/ntb/hw/Kconfig
-@@ -1,3 +1,4 @@
- source "drivers/ntb/hw/amd/Kconfig"
- source "drivers/ntb/hw/idt/Kconfig"
- source "drivers/ntb/hw/intel/Kconfig"
-+source "drivers/ntb/hw/mscc/Kconfig"
-diff --git a/drivers/ntb/hw/Makefile b/drivers/ntb/hw/Makefile
-index 87332c3905f0..923c442db750 100644
---- a/drivers/ntb/hw/Makefile
-+++ b/drivers/ntb/hw/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_NTB_AMD)	+= amd/
- obj-$(CONFIG_NTB_IDT)	+= idt/
- obj-$(CONFIG_NTB_INTEL)	+= intel/
-+obj-$(CONFIG_NTB_SWITCHTEC) += mscc/
-diff --git a/drivers/ntb/hw/mscc/Kconfig b/drivers/ntb/hw/mscc/Kconfig
-new file mode 100644
-index 000000000000..013ed6716438
---- /dev/null
-+++ b/drivers/ntb/hw/mscc/Kconfig
-@@ -0,0 +1,9 @@
-+config NTB_SWITCHTEC
-+	tristate "MicroSemi Switchtec Non-Transparent Bridge Support"
-+	select PCI_SW_SWITCHTEC
++config ARCH_WANT_VGA_ARB_FALLBACK
++	bool
 +	help
-+	 Enables NTB support for Switchtec PCI switches. This also
-+	 selects the Switchtec management driver as they share the same
-+	 hardware interface.
++	  Some architectures don't have a concept of "legacy" PCI addresses
++	  which the VGA arbiter relies on. Instead, they can fall back to
++	  selecting the first device that decodes memory and I/O.
 +
-+	 If unsure, say N.
-diff --git a/drivers/ntb/hw/mscc/Makefile b/drivers/ntb/hw/mscc/Makefile
-new file mode 100644
-index 000000000000..21907b364e19
---- /dev/null
-+++ b/drivers/ntb/hw/mscc/Makefile
-@@ -0,0 +1 @@
-+obj-$(CONFIG_NTB_SWITCHTEC) += switchtec_ntb.o
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-new file mode 100644
-index 000000000000..253efba72275
---- /dev/null
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -0,0 +1,81 @@
-+/*
-+ * Microsemi Switchtec(tm) PCIe Management Driver
-+ * Copyright (c) 2017, Microsemi Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms and conditions of the GNU General Public License,
-+ * version 2, as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope it will be useful, but WITHOUT
-+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-+ * more details.
-+ *
-+ */
+ config VGA_SWITCHEROO
+ 	bool "Laptop Hybrid Graphics - GPU switching support"
+ 	depends on X86
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 76875f6299b8..2135b04759c5 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1472,3 +1472,24 @@ static int __init vga_arb_device_init(void)
+ 	return rc;
+ }
+ subsys_initcall(vga_arb_device_init);
 +
-+#include <linux/switchtec.h>
-+#include <linux/module.h>
-+
-+MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
-+MODULE_VERSION("0.1");
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Microsemi Corporation");
-+
-+struct switchtec_ntb {
-+	struct switchtec_dev *stdev;
-+};
-+
-+static int switchtec_ntb_add(struct device *dev,
-+			     struct class_interface *class_intf)
++#if defined(CONFIG_ARCH_WANT_VGA_ARB_FALLBACK)
++static void vga_arb_fallback_fixup(struct pci_dev *pdev)
 +{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	struct switchtec_ntb *sndev;
++	u16 cmd;
 +
-+	stdev->sndev = NULL;
-+
-+	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
-+		return -ENODEV;
-+
-+	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
-+	if (!sndev)
-+		return -ENOMEM;
-+
-+	sndev->stdev = stdev;
-+
-+	stdev->sndev = sndev;
-+	dev_info(dev, "NTB device registered");
-+
-+	return 0;
-+}
-+
-+void switchtec_ntb_remove(struct device *dev,
-+			  struct class_interface *class_intf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	struct switchtec_ntb *sndev = stdev->sndev;
-+
-+	if (!sndev)
++	if (vga_default_device())
 +		return;
 +
-+	stdev->sndev = NULL;
-+	kfree(sndev);
-+	dev_info(dev, "ntb device unregistered");
++	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++		vgaarb_info(&pdev->dev, "[fallback]"
++			    " setting as default device\n");
++		vga_set_default_device(pdev);
++	}
++
 +}
-+
-+static struct class_interface switchtec_interface  = {
-+	.add_dev = switchtec_ntb_add,
-+	.remove_dev = switchtec_ntb_remove,
-+};
-+
-+static int __init switchtec_ntb_init(void)
-+{
-+	switchtec_interface.class = switchtec_class;
-+	return class_interface_register(&switchtec_interface);
-+}
-+module_init(switchtec_ntb_init);
-+
-+static void __exit switchtec_ntb_exit(void)
-+{
-+	class_interface_unregister(&switchtec_interface);
-+}
-+module_exit(switchtec_ntb_exit);
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 807569e62bee..0666e33c305b 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1275,6 +1275,9 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
- 	struct switchtec_dev *stdev;
- 	int rc;
- 
-+	if (pdev->class == MICROSEMI_NTB_CLASSCODE)
-+		request_module_nowait("switchtec_ntb");
-+
- 	stdev = stdev_create(pdev);
- 	if (IS_ERR(stdev))
- 		return PTR_ERR(stdev);
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index d8159944f013..09d73d0d1aa8 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -320,6 +320,8 @@ struct pff_csr_regs {
- 	u32 reserved4[174];
- } __packed;
- 
-+struct switchtec_ntb;
-+
- struct switchtec_dev {
- 	struct pci_dev *pdev;
- 	struct device dev;
-@@ -357,6 +359,8 @@ struct switchtec_dev {
- 	struct work_struct link_event_work;
- 	void (*link_notifier)(struct switchtec_dev *stdev);
- 	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
-+
-+	struct switchtec_ntb *sndev;
- };
- 
- static inline struct switchtec_dev *to_stdev(struct device *dev)
++DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_CLASS_DISPLAY_VGA, 8,
++			       vga_arb_fallback_fixup);
++#endif
 -- 
 2.11.0
