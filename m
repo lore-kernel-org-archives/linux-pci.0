@@ -1,72 +1,138 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-To: Pratyush Anand <pratyush.anand@gmail.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:32847 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752109AbdGSHvQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:51:16 -0400
+Subject: Re: [RFC PATCH v4 4/7] PCI: rockchip: idle the inactive PHY(s)
+To: Shawn Lin <shawn.lin@rock-chips.com>,
         Bjorn Helgaas <bhelgaas@google.com>
-CC: Niklas Cassel <niklass@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/2] PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
-Date: Fri, 14 Jul 2017 14:07:35 +0200
-Message-ID: <20170714120735.11993-3-niklas.cassel@axis.com>
-In-Reply-To: <20170714120735.11993-1-niklas.cassel@axis.com>
-References: <20170714120735.11993-1-niklas.cassel@axis.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500448979-93067-5-git-send-email-shawn.lin@rock-chips.com>
+CC: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        <linux-pci@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <d8194c8b-94d1-96eb-a54e-45ab5c72829d@ti.com>
+Date: Wed, 19 Jul 2017 13:20:37 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1500448979-93067-5-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
----
- drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index 80897291e0fb..7ebfbf6086fe 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -92,34 +92,32 @@ static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx_pcie)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
-+	val = dw_pcie_readw_dbi(pci, exp_cap_off + PCI_EXP_DEVCTL);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_write(pci->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
-+	dw_pcie_writew_dbi(pci, exp_cap_off + PCI_EXP_DEVCTL, val);
- 
--	dw_pcie_write(pci->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
--	dw_pcie_write(pci->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
-+	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, 0x104A);
-+	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, 0xCD80);
- 
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
--			     4, &val);
-+		val = dw_pcie_readl_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_write(pci->dbi_base + exp_cap_off +
--				      PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_writel_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP,
-+					   val);
- 		}
- 
--		dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
--			     2, &val);
-+		val = dw_pcie_readw_dbi(pci, exp_cap_off + PCI_EXP_LNKCTL2);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_write(pci->dbi_base + exp_cap_off +
--				      PCI_EXP_LNKCTL2, 2, val);
-+			dw_pcie_writew_dbi(pci, exp_cap_off + PCI_EXP_LNKCTL2,
-+					   val);
- 		}
- 	}
- 
--- 
-2.11.0
+
+On Wednesday 19 July 2017 12:52 PM, Shawn Lin wrote:
+> Check the status of all lanes and idle the inactive one(s).
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> 
+> Changes in v4:
+> - return u8 for rockchip_pcie_lane_map
+> 
+> Changes in v3:
+> - use cached lanes_map to avoid powering off inactive
+>   lanes twice
+> 
+> Changes in v2: None
+> 
+>  drivers/pci/host/pcie-rockchip.c | 37 +++++++++++++++++++++++++++++++++++--
+>  1 file changed, 35 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index f510349..a8c51b0 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -15,6 +15,7 @@
+>   * (at your option) any later version.
+>   */
+>  
+> +#include <linux/bitrev.h>
+>  #include <linux/clk.h>
+>  #include <linux/delay.h>
+>  #include <linux/gpio/consumer.h>
+> @@ -112,6 +113,9 @@
+>  #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+>  #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+>  		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
+> +#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
+> +#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
+> +#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
+>  #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+>  #define   PCIE_CORE_INT_PRFPE			BIT(0)
+>  #define   PCIE_CORE_INT_CRFPE			BIT(1)
+> @@ -229,6 +233,7 @@ struct rockchip_pcie {
+>  	struct	regulator *vpcie0v9; /* 0.9V power supply */
+>  	struct	gpio_desc *ep_gpio;
+>  	u32	lanes;
+> +	u8      lanes_map;
+>  	u8	root_bus_nr;
+>  	int	link_gen;
+>  	struct	device *dev;
+> @@ -301,6 +306,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+>  	return 1;
+>  }
+>  
+> +static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
+> +{
+> +	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
+> +	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
+> +
+> +	/* The link may be using a reverse-indexed mapping. */
+> +	if (val & PCIE_CORE_LANE_MAP_REVERSE)
+> +		map = bitrev8(map) >> 4;
+> +
+> +	return map;
+> +}
+> +
+>  static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
+>  				     int where, int size, u32 *val)
+>  {
+> @@ -697,6 +714,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  			  PCIE_CORE_PL_CONF_LANE_SHIFT);
+>  	dev_dbg(dev, "current link width is x%d\n", status);
+>  
+> +	if (!rockchip->legacy_phy) {
+> +		/*  power off unused lane(s) */
+> +		rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
+> +		for (i = 0; i < MAX_LANE_NUM; i++) {
+> +			if (rockchip->lanes_map & BIT(i))
+> +				continue;
+> +
+> +			dev_dbg(dev, "idling lane %d\n", i);
+> +			phy_power_off(rockchip->phys[i]);
+> +		}
+> +	}
+> +
+>  	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
+>  			    PCIE_CORE_CONFIG_VENDOR);
+>  	rockchip_pcie_write(rockchip,
+> @@ -1329,7 +1358,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+>  	}
+>  
+>  	for (i = 0; i < MAX_LANE_NUM; i++) {
+> -		phy_power_off(rockchip->phys[i]);
+> +		/* inactive lane is already powered off */
+> +		if (rockchip->lanes_map & BIT(i))
+> +			phy_power_off(rockchip->phys[i]);
+>  		phy_exit(rockchip->phys[i]);
+>  	}
+>  
+> @@ -1575,7 +1606,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>  	irq_domain_remove(rockchip->irq_domain);
+>  
+>  	for (i = 0; i < MAX_LANE_NUM; i++) {
+> -		phy_power_off(rockchip->phys[i]);
+> +		/* inactive lane is already powered off */
+> +		if (rockchip->lanes_map & BIT(i))
+> +			phy_power_off(rockchip->phys[i]);
+>  		phy_exit(rockchip->phys[i]);
+>  	}
+>  
+> 
