@@ -1,78 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:38601 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751452AbdG0C6t (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jul 2017 22:58:49 -0400
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v2 2/5] PCI: mediatek: switch to use platform_get_resource_byname()
-Date: Thu, 27 Jul 2017 10:58:36 +0800
-Message-ID: <5c671476c51655bc1bbc7bec5ac332c21974d80e.1501122135.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1501122135.git.honghui.zhang@mediatek.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jisheng Zhang'" <jszhang@marvell.com>, <Joao.Pinto@synopsys.com>,
+ <bhelgaas@google.com>
+References: <20170718064821.3668-1-jszhang@marvell.com>
+In-Reply-To: <20170718064821.3668-1-jszhang@marvell.com>
+Subject: Re: [PATCH v2] PCI: dwc: designware: test PCIE_ATU_ENABLE bit to
+ check enabled or not
+Date: Tue, 18 Jul 2017 23:25:24 -0400
+Message-ID: <000001d3003e$a9ad0fe0$fd072fa0$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+On Tuesday, July 18, 2017 2:48 AM, Jisheng Zhang wrote:
+> 
+> The ATU CTRL2 register is 32 bit, besides the enable bit, other bits
+> may also be set. To check whether the ATU is enabled or not, we should
+> test the enable bit.
+> 
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> Acked-by: Joao Pinto <jpinto@synopsys.com>
 
-This is a transitional patch. We currently use platfarm_get_resource() for
-retrieving the IOMEM resources, but there might be some chips don't have
-subsys/shared registers part, which depends on platform design, and these
-will be introduced in further patches.
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
 
-Switch this function to use the platform_get_resource_byname() so that the
-binding can be agnostic of the resource order.
+Best regards,
+Jingoo Han
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 17 ++++++++++-------
- 1 file changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 7f952a4..f8e2f68 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -295,7 +295,8 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
- 		return err;
- 	}
- 
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, index + 1);
-+	snprintf(name, sizeof(name), "port%d", index);
-+	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
- 	port->base = devm_ioremap_resource(dev, regs);
- 	if (IS_ERR(port->base)) {
- 		dev_err(dev, "failed to map port%d base\n", index);
-@@ -336,12 +337,14 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
- 	struct resource *regs;
- 	int err;
- 
--	/* get shared registers */
--	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pcie->base = devm_ioremap_resource(dev, regs);
--	if (IS_ERR(pcie->base)) {
--		dev_err(dev, "failed to map shared register\n");
--		return PTR_ERR(pcie->base);
-+	/* get shared registers, which are optional */
-+	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subsys");
-+	if (regs) {
-+		pcie->base = devm_ioremap_resource(dev, regs);
-+		if (IS_ERR(pcie->base)) {
-+			dev_err(dev, "failed to map shared register\n");
-+			return PTR_ERR(pcie->base);
-+		}
- 	}
- 
- 	pcie->free_ck = devm_clk_get(dev, "free_ck");
--- 
-2.6.4
+> ---
+> Since v1:
+>  - Add Joao's Ack
+>  - Fix typo in commit msg, thank Jingoo
+> 
+>  drivers/pci/dwc/pcie-designware.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-
+> designware.c
+> index 0e03af279259..6bf0b409050a 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -177,7 +177,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
+> int index, int type,
+>  	 */
+>  	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++)
+> {
+>  		val = dw_pcie_readl_dbi(pci, PCIE_ATU_CR2);
+> -		if (val == PCIE_ATU_ENABLE)
+> +		if (val & PCIE_ATU_ENABLE)
+>  			return;
+> 
+>  		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> --
+> 2.13.2
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
