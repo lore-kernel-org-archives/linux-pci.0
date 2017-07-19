@@ -1,68 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f45.google.com ([74.125.83.45]:37714 "EHLO
-        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751329AbdGaXsl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:48:41 -0400
-Received: by mail-pg0-f45.google.com with SMTP id y129so434328pgy.4
-        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:48:40 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: bhelgaas@google.com, kys@microsoft.com
-Cc: linux-pci@vger.kernel.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: [PATCH] pci-hyperv: do not sleep in compose_msi_msg
-Date: Mon, 31 Jul 2017 16:48:29 -0700
-Message-Id: <20170731234829.2344-1-sthemmin@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 1/4] powerpc: simplify and fix VGA default device behaviour
+Date: Wed, 19 Jul 2017 12:15:13 +1000
+Message-Id: <20170719021516.24718-2-dja@axtens.net>
+In-Reply-To: <20170719021516.24718-1-dja@axtens.net>
+References: <20170719021516.24718-1-dja@axtens.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: gabriele.paoloni@huawei.com, airlied@linux.ie, benh@kernel.crashing.org,
+ Brian King <brking@linux.vnet.ibm.com>, will.deacon@arm.com,
+ z.liuxinliang@hisilicon.com, bhelgaas@google.com, alex.williamson@redhat.com,
+ catalin.marinas@arm.com, zourongrong@gmail.com, daniel.vetter@intel.com,
+ Daniel Axtens <dja@axtens.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The setup of MSI with Hyper-V host was sleeping with locks held.
-This error is reported when doing SR-IOV hotplug with kernel built with lockdep.
+Some powerpc devices provide a PCI display that isn't picked up by
+the VGA arbiter, presumably because it doesn't support the PCI
+legacy VGA ranges.
 
-    BUG: sleeping function called from invalid context at kernel/sched/completion.c:93
-    in_atomic(): 1, irqs_disabled(): 1, pid: 1405, name: ip
-    3 locks held by ip/1405:
-   #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff976b10bb>] rtnetlink_rcv+0x1b/0x40
-   #1:  (&desc->request_mutex){+.+...}, at: [<ffffffff970ddd33>] __setup_irq+0xb3/0x720
-   #2:  (&irq_desc_lock_class){-.-...}, at: [<ffffffff970ddd65>] __setup_irq+0xe5/0x720
-   irq event stamp: 3476
-   hardirqs last  enabled at (3475): [<ffffffff971b3005>] get_page_from_freelist+0x225/0xc90
-   hardirqs last disabled at (3476): [<ffffffff978024e7>] _raw_spin_lock_irqsave+0x27/0x90
-   softirqs last  enabled at (2446): [<ffffffffc05ef0b0>] ixgbevf_configure+0x380/0x7c0 [ixgbevf]
-   softirqs last disabled at (2444): [<ffffffffc05ef08d>] ixgbevf_configure+0x35d/0x7c0 [ixgbevf]
+Commit c2e1d84523ad ("powerpc: Set default VGA device") introduced
+an arch quirk to mark these devices as default to fix X autoconfig.
 
-The workaround is to poll for host response instead of blocking on
-completion.
+The commit message stated that the patch:
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+    Ensures a default VGA is always set if a graphics adapter is present,
+    even if firmware did not initialize it. If more than one graphics
+    adapter is present, ensure the one initialized by firmware is set
+    as the default VGA device.
+
+The patch used the following test to decide whether or not to mark
+a device as default:
+
+  pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+  if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+          vga_set_default_device(pdev);
+
+This doesn't seem like it works quite as intended. Because of the
+logical OR, the default device will be set in 2 cases:
+
+ 1) if there is no default device
+OR
+ 2) if this device has normal memory/IO decoding turned on
+
+This will work as intended if there is only one device, but if
+there are multiple devices, we may override the device the VGA
+arbiter picked.
+
+Instead, set a device as default if there is no default device AND
+this device decodes.
+
+This will not change behaviour on single-headed systems.
+
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+
 ---
- drivers/pci/host/pci-hyperv.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 415dcc69a502..334c9a7b8991 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -50,6 +50,7 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-+#include <linux/delay.h>
- #include <linux/semaphore.h>
- #include <linux/irqdomain.h>
- #include <asm/irqdomain.h>
-@@ -1159,7 +1160,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 		goto free_int_desc;
- 	}
+Tested in TCG (the card provided by qemu doesn't automatically
+register with vgaarb, so the relevant code path has been tested)
+but I would appreciate any tests on real hardware.
+---
+ arch/powerpc/kernel/pci-common.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 341a7469cab8..c95fdda3a2dc 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
+ {
+ 	u16 cmd;
  
--	wait_for_completion(&comp.comp_pkt.host_event);
-+	/*
-+	 * Since this function is called with IRQ locks held, can't
-+	 * do normal wait for completion; instead poll.
-+	 */
-+	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
-+		udelay(100);
++	if (vga_default_device())
++		return;
++
+ 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+-	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
++	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
+ 		vga_set_default_device(pdev);
  
- 	if (comp.comp_pkt.completion_status < 0) {
- 		dev_err(&hbus->hdev->device,
+ }
 -- 
 2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
