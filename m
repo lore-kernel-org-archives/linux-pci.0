@@ -1,119 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com"
- <ashok.raj@intel.com>, "helgaas@kernel.org" <helgaas@kernel.org>, "Michael
- Werner" <werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
- "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
- "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
- <l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "David.Laight@aculab.com" <David.Laight@aculab.com>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
- <will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
- <davem@davemloft.net>, "alexander.duyck@gmail.com"
- <alexander.duyck@gmail.com>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
- <netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Fri, 7 Jul 2017 21:48:48 +0000
-Message-ID: <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:43884 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751754AbdGSH2B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:28:01 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH v4 6/7] dt-bindings: PCI: rockchip: convert to use per-lane PHY model
+Date: Wed, 19 Jul 2017 15:27:37 +0800
+Message-Id: <1500449258-101663-2-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Ding, Bjorn, Alexander, et.al.,
+Deprecate legacy PHY model and encourage to use per-lane PHY
+model.
 
-  Sorry for the insane delay in getting to this and thanks especially to
-Ding for picking up the ball on this feature.  I got side=-tracked into a
-multi-week rewrite of our Firmware/Host Driver Port Capabilities code, then
-to the recent Ethernet Plug-Fest at the University of New Hampshire for a
-week, and finally the 4th of July weekend.  Digging out from under email has
-been non-amusing.  In any case, enough excuses.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
+
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
+ 1 file changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index 1453a73..41bced4 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -19,8 +19,6 @@ Required properties:
+ 	- "pm"
+ - msi-map: Maps a Requester ID to an MSI controller and associated
+ 	msi-specifier data. See ./pci-msi.txt
+-- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+-- phy-names:  MUST be "pcie-phy".
+ - interrupts: Three interrupt entries must be specified.
+ - interrupt-names: Must include the following names
+ 	- "sys"
+@@ -42,6 +40,18 @@ Required properties:
+ 	interrupt source. The value must be 1.
+ - interrupt-map-mask and interrupt-map: standard PCI properties
  
-  I'm looking at the "v6" version of the patches.  If this isn't the corect
-version, please yell at me and I'll look at the correct one immediately.
-
-  In the change to drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c (patch
-3/3) it looks like the code is checking the Chelsio Adapter PCI Device to
-see if Relaxed Ordering is supported.  But what we really want to test is
-the Root Complex port.  I.e. something like:
-
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index 38a5c67..546538d 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -4620,6 +4620,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-        struct port_info *pi;
-        bool highdma = false;
-        struct adapter *adapter = NULL;
-+       struct pci_dev *root;
-        struct net_device *netdev;
-        void __iomem *regs;
-        u32 whoami, pl_rev;
-@@ -4726,6 +4727,24 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
-        adapter->msg_enable = DFLT_MSG_ENABLE;
-        memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
-
-+       /* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+        * Ingress Packet Data to Free List Buffers in order to allow for
-+        * chipset performance optimizations between the Root Complex and
-+        * Memory Controllers.  (Messages to the associated Ingress Queue
-+        * notifying new Packet Placement in the Free Lists Buffers will be
-+        * send without the Relaxed Ordering Attribute thus guaranteeing that
-+        * all preceding PCIe Transaction Layer Packets will be processed
-+        * first.)  But some Root Complexes have various issues with Upstream
-+        * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+        * The PCIe devices which under the Root Complexes will be cleared the
-+        * Relaxed Ordering bit in the configuration space, So we check our
-+        * PCIe configuration space to see if it's flagged with advice against
-+        * using Relaxed Ordering.
-+        */
-+       root = pci_find_pcie_root_port(pdev);
-+       if (!pcie_relaxed_ordering_supported(root))
-+               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
++Required properties for legacy PHY model (deprecated):
++- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
++- phy-names:  MUST be "pcie-phy".
 +
-        spin_lock_init(&adapter->stats_lock);
-        spin_lock_init(&adapter->tid_release_lock);
-        spin_lock_init(&adapter->win0_lock);
-
-The basic idea is that we want to find out if the Root Complex is okay with
-TLPs directed its way with the Relaxed Ordering Attribute set.
-
-  I also have to say that I'm a bit confused by the
-pcie_relaxed_ordering_supported() in use here.  It seems that it's testing
-whether the PCI Device's own Relaxed Ordering Enable is set which governs
-whether it will send TLPs with the Relaxed Ordering Attribute set.  It has
-nothing to do with whether or not the device responds well to incoming TLPs
-with the Relaxed Ordering Attribute set.  I think that we really want to use
-the pci_dev_should_disable_relaxed_ordering() API on the Root Complex Port
-because that tests whether the quirck fired on it?  I.e.:
-
-+       root = pci_find_pcie_root_port(pdev);
-+       if (!pci_dev_should_disable_relaxed_ordering(root))
-+               adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-
-
-Casey
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
++Required properties for per-lane PHY model (preferred):
++- phys: Must contain an phandle to a PHY for each entry in phy-names.
++- phy-names: Must include 4 entries for all 4 lanes even if some of
++  them won't be used for your cases. Entries are of the form "pcie-phy-N":
++  where N ranges from 0 to 3.
++  (see example below and you MUST also refer to ../phy/rockchip-pcie-phy.txt
++  for changing the #phy-cells of phy node to support it)
++
+ Optional Property:
+ - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
+ 	using 24MHz OSC for RC's PHY.
+@@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
+ 		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
+ 	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
+ 		      "pm", "pclk", "aclk";
++	/* deprecated legacy PHY model */
+ 	phys = <&pcie_phy>;
+ 	phy-names = "pcie-phy";
+ 	pinctrl-names = "default";
+@@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
+ 		#interrupt-cells = <1>;
+ 	};
+ };
++
++pcie0: pcie@f8000000 {
++	...
++
++	/* preferred per-lane PHY model */
++	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
++	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
++
++	...
++};
+-- 
+1.9.1
