@@ -1,13 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Jul 2017 07:17:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
-Message-ID: <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Daniel Axtens <dja@axtens.net>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linuxppc-dev@lists.ozlabs.org"
+ <linuxppc-dev@lists.ozlabs.org>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH v2 0/4] Allow non-legacy cards to be vgaarb default
+Date: Wed, 19 Jul 2017 08:19:54 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B57B8A@FRAEML521-MBX.china.huawei.com>
+References: <20170719021516.24718-1-dja@axtens.net>
+In-Reply-To: <20170719021516.24718-1-dja@axtens.net>
 MIME-Version: 1.0
-In-Reply-To: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,90 +18,79 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo.Pieralisi@arm.com, vikrams@codeaurora.org,
- linux-pci@vger.kernel.org, timur@codeaurora.org, linux-kernel@vger.kernel.org,
- alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Cc: "airlied@linux.ie" <airlied@linux.ie>,
+ "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, "Liuxinliang
+ \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ "zourongrong@gmail.com" <zourongrong@gmail.com>,
+ "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "daniel.vetter@intel.com" <daniel.vetter@intel.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 06, 2017 at 05:07:14PM -0400, Sinan Kaya wrote:
-> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
-> following a Function Level Reset (FLR) request to indicate that it is not
-> ready to accept new requests.
-> 
-> Seen a timeout message with Intel 750 NVMe drive and FLR reset.
-> 
-> Kernel enables CRS visibility in pci_enable_crs() function for each bridge
-> it discovers. The OS observes a special vendor ID read value of 0xFFFF0001
-> in this case. We need to keep polling until this special read value
-> disappears. pci_bus_read_dev_vendor_id() takes care of CRS handling for a
-> given vendor id read request under the covers.
-> 
-> Adding a vendor ID read if this is a physical function before attempting
-> to read any other registers on the endpoint. A CRS indication will only
-> be given if the address to be read is vendor ID register.
-> 
-> Note that virtual functions report their vendor ID through another
-> mechanism.
-> 
-> The spec is calling to wait up to 1 seconds if the device is sending CRS.
-> The NVMe device seems to be requiring more. Relax this up to 60 seconds.
+Hi Daniel many thanks for your patch
 
-Can you add a pointer to the "1 second" requirement in the spec here?
-We use 60 seconds in pci_scan_device() and acpiphp_add_context().  Is
-there a basis in the spec for the 60 second timeout?
-
-What's the NVMe excuse for requiring more time than the spec allows?
-Is this a hardware erratum?  Is there some PCIe ECN pending to address
-this?
-
-I try to avoid adding generic changes based on one specific piece of
-hardware because it can penalize everybody else who actually bothered
-to follow the spec.  For example, if FLR fails because a non-NVMe
-device is broken, it will now take 60 seconds to notice that instead
-of 1 second.
-
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
+> -----Original Message-----
+> From: Daniel Axtens [mailto:dja@axtens.net]
+> Sent: 19 July 2017 03:15
+> To: linux-pci@vger.kernel.org; linuxppc-dev@lists.ozlabs.org; linux-
+> arm-kernel@lists.infradead.org
+> Cc: benh@kernel.crashing.org; Liuxinliang (Matthew Liu);
+> zourongrong@gmail.com; catalin.marinas@arm.com; will.deacon@arm.com;
+> Gabriele Paoloni; bhelgaas@google.com; airlied@linux.ie;
+> daniel.vetter@intel.com; alex.williamson@redhat.com; Daniel Axtens
+> Subject: [PATCH v2 0/4] Allow non-legacy cards to be vgaarb default
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index aab9d51..83a9784 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3723,10 +3723,16 @@ static void pci_flr_wait(struct pci_dev *dev)
->  	int i = 0;
->  	u32 id;
->  
-> -	do {
-> -		msleep(100);
-> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
-> -	} while (i++ < 10 && id == ~0);
-> +	if (dev->is_virtfn) {
-> +		do {
-> +			msleep(100);
-> +			pci_read_config_dword(dev, PCI_COMMAND, &id);
-> +		} while (i++ < 10 && id == ~0);
-> +	} else {
-> +		if (!pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-> +						60*1000))
-> +			id = ~0;
-> +	}
->  
->  	if (id == ~0)
->  		dev_warn(&dev->dev, "Failed to return from FLR\n");
-> -- 
-> 1.9.1
+> [v2, in which I send the right patches. My apologies to you all.]
 > 
+> Hi all,
 > 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Previously I posted a patch that provided a quirk for a hibmc card
+> behind a particular Huawei bridge that allowed it to be marked as the
+> default device in the VGA arbiter.[0] This lead to some discussion.[1]
+> It was broadly suggested that a more generic solution would be better,
+> something in the style of powerpc's fixup_vga() quirk.
+> 
+> Here is my suggested solution:
+> 
+>  - Create a Kconfig option ARCH_WANT_VGA_ARB_FALLBACK and
+
+In my opinion we could avoid depending on a Kernel config options.
+I.e. we can have generic code that, after all PCI devs are enumerated:
+1) check if we have a default vga device
+2) if not check each registered PCI device and make default device the first
+   one that is a VGA device, capable to respond to IO and MEM requests
+   and that has a driver bound to it 
+
+> 
+>  - if an arch selects that option, install PCI_FIXUP_CLASS_ENABLE
+>    hook. This hook fires when a card is enabled, which will require
+>    that a driver has been bound.
+> 
+>  - if there is no default device when the hook fires, and the device
+>    can control memory and I/O, mark it as default.
+
+I am worried that the patchset you proposed has a race condition with the
+VGA arbiter. In fact you see:
+subsys_initcall(vga_arb_device_init) is not guaranteed to be called before
+subsys_initcall(acpi_init)
+
+acpi_init->acpi_scan_init->acpi_pci_root_init() at this stage the PCI enumeration
+is done and as soon as a device is added the Kernel will look for a driver
+to bind to it and therefore you quirk could be called before the VGA arbiter...
+Do you agree?
+
+What about modifying vgaarb.c to add a late_initcall() checking what I suggested
+above?
+
+Thanks
+Gab
+
+[...]
 
 _______________________________________________
 linux-arm-kernel mailing list
