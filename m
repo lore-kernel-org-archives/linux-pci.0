@@ -1,114 +1,132 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:54986 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751978AbdGaQgH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Jul 2017 12:36:07 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Paul Burton <paul.burton@imgtec.com>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Matthew Minter <matt@masarand.com>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Guan Xuetao <gxt@mprc.pku.edu.cn>
-Subject: [RFT PATCH 0/9] PCI: Remove pci_fixup_irqs()
-Date: Mon, 31 Jul 2017 17:37:48 +0100
-Message-Id: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+Received: from lucky1.263xmail.com ([211.157.147.132]:49127 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752751AbdGSH0C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:26:02 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH v4 4/7] PCI: rockchip: idle the inactive PHY(s)
+Date: Wed, 19 Jul 2017 15:22:56 +0800
+Message-Id: <1500448979-93067-5-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The pci_fixup_irqs() function allocates IRQs for all PCI devices present
-in a system; those PCI devices possibly belong to different PCI bus trees
-(and possibly rooted at different host bridges) and may well be enabled
-(ie probed and bound to a driver) by the time pci_fixup_irqs() is called
-when probing a given host bridge driver.
+Check the status of all lanes and idle the inactive one(s).
 
-Furthermore, current kernel code relying on pci_fixup_irqs() to
-assign legacy PCI IRQs to devices does not work at all for
-hotplugged devices in that the code carrying out the IRQ fixup
-is called at host bridge driver probe time, which just cannot take
-into account devices hotplugged after system has booted.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-The introduction of map/swizzle functions hook in struct pci_host_bridge
-allows to define per-bridge map/swizzle functions, that can be used at
-device probe time in PCI core code to allocate IRQs for a given device
-(through pci_assign_irq()).
+Changes in v4:
+- return u8 for rockchip_pcie_lane_map
 
-This series converts all arches still relying on pci_fixup_irqs() to
-the new pci_scan_root_bus_bridge() API and consequently remove
-pci_fixup_irqs() from the kernel in that it is not used anymore.
+Changes in v3:
+- use cached lanes_map to avoid powering off inactive
+  lanes twice
 
-Compile tested only, I do not have the necessary hardware.
+Changes in v2: None
 
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal
+ drivers/pci/host/pcie-rockchip.c | 37 +++++++++++++++++++++++++++++++++++--
+ 1 file changed, 35 insertions(+), 2 deletions(-)
 
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Paul Burton <paul.burton@imgtec.com>
-Cc: Rich Felker <dalias@libc.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Chris Metcalf <cmetcalf@mellanox.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Matthew Minter <matt@masarand.com>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Guan Xuetao <gxt@mprc.pku.edu.cn>
-
-Lorenzo Pieralisi (7):
-  sh/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping
-    hooks
-  alpha/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
-    mapping hooks
-  m68k/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
-    mapping hooks
-  MIPS/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
-    mapping hooks
-  tile/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
-    mapping hooks
-  unicore32/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
-    mapping hooks
-  sparc/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
-    mapping hooks
-
-Matthew Minter (2):
-  sh/PCI: Remove __init optimisations from IRQ mapping functions/data
-  PCI: Remove pci_fixup_irqs() function
-
- arch/alpha/kernel/pci.c                 | 27 ++++++++++++++++------
- arch/alpha/kernel/sys_nautilus.c        | 31 +++++++++++++++++++++----
- arch/m68k/coldfire/pci.c                | 36 +++++++++++++++++++++++++----
- arch/mips/pci/pci-legacy.c              | 24 +++++++++++++------
- arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
- arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
- arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
- arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 ++---
- arch/sh/drivers/pci/fixups-sdk7780.c    |  4 ++--
- arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
- arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
- arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
- arch/sh/drivers/pci/fixups-titan.c      |  4 ++--
- arch/sh/drivers/pci/pci.c               | 41 ++++++++++++++++++++-------------
- arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
- arch/sparc/kernel/leon_pci.c            | 24 ++++++++++++++-----
- arch/tile/kernel/pci.c                  | 21 +++++++++++++----
- arch/tile/kernel/pci_gx.c               | 21 +++++++++++++----
- arch/unicore32/kernel/pci.c             | 35 ++++++++++++++++++++++++----
- drivers/pci/setup-irq.c                 | 24 -------------------
- include/linux/pci.h                     |  2 --
- 21 files changed, 216 insertions(+), 98 deletions(-)
-
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index f510349..a8c51b0 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -15,6 +15,7 @@
+  * (at your option) any later version.
+  */
+ 
++#include <linux/bitrev.h>
+ #include <linux/clk.h>
+ #include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+@@ -112,6 +113,9 @@
+ #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
+ #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
+ 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
++#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
++#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
++#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
+ #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
+ #define   PCIE_CORE_INT_PRFPE			BIT(0)
+ #define   PCIE_CORE_INT_CRFPE			BIT(1)
+@@ -229,6 +233,7 @@ struct rockchip_pcie {
+ 	struct	regulator *vpcie0v9; /* 0.9V power supply */
+ 	struct	gpio_desc *ep_gpio;
+ 	u32	lanes;
++	u8      lanes_map;
+ 	u8	root_bus_nr;
+ 	int	link_gen;
+ 	struct	device *dev;
+@@ -301,6 +306,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
+ 	return 1;
+ }
+ 
++static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
++{
++	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
++	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
++
++	/* The link may be using a reverse-indexed mapping. */
++	if (val & PCIE_CORE_LANE_MAP_REVERSE)
++		map = bitrev8(map) >> 4;
++
++	return map;
++}
++
+ static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
+ 				     int where, int size, u32 *val)
+ {
+@@ -697,6 +714,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
+ 	dev_dbg(dev, "current link width is x%d\n", status);
+ 
++	if (!rockchip->legacy_phy) {
++		/*  power off unused lane(s) */
++		rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
++		for (i = 0; i < MAX_LANE_NUM; i++) {
++			if (rockchip->lanes_map & BIT(i))
++				continue;
++
++			dev_dbg(dev, "idling lane %d\n", i);
++			phy_power_off(rockchip->phys[i]);
++		}
++	}
++
+ 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
+ 			    PCIE_CORE_CONFIG_VENDOR);
+ 	rockchip_pcie_write(rockchip,
+@@ -1329,7 +1358,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ 	}
+ 
+ 	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		phy_power_off(rockchip->phys[i]);
++		/* inactive lane is already powered off */
++		if (rockchip->lanes_map & BIT(i))
++			phy_power_off(rockchip->phys[i]);
+ 		phy_exit(rockchip->phys[i]);
+ 	}
+ 
+@@ -1575,7 +1606,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+ 	irq_domain_remove(rockchip->irq_domain);
+ 
+ 	for (i = 0; i < MAX_LANE_NUM; i++) {
+-		phy_power_off(rockchip->phys[i]);
++		/* inactive lane is already powered off */
++		if (rockchip->lanes_map & BIT(i))
++			phy_power_off(rockchip->phys[i]);
+ 		phy_exit(rockchip->phys[i]);
+ 	}
+ 
 -- 
-2.10.0
+1.9.1
