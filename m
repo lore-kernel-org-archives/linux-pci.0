@@ -1,51 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0059.outbound.protection.outlook.com ([104.47.42.59]:47119
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750808AbdGMGDM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Jul 2017 02:03:12 -0400
-Subject: Re: [PATCH] microblaze/PCI: Remove pcibios_setup_bus_{self/devices}
- dead code
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravi Kiran Gummaluri <rgummal@xilinx.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>
-References: <20170620130844.11109-1-lorenzo.pieralisi@arm.com>
- <20170713023808.GB4486@bhelgaas-glaptop.roam.corp.google.com>
-From: Michal Simek <michal.simek@xilinx.com>
-Message-ID: <154db2a9-3051-71b7-384c-04e4a29c38c0@xilinx.com>
-Date: Thu, 13 Jul 2017 08:02:59 +0200
-MIME-Version: 1.0
-In-Reply-To: <20170713023808.GB4486@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:33616 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbdGSB3Y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:24 -0400
+Received: by mail-pg0-f68.google.com with SMTP id z1so4870690pgs.0
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:24 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>,
+        Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/4] powerpc: simplify and fix VGA default device behaviour
+Date: Wed, 19 Jul 2017 11:28:34 +1000
+Message-Id: <20170719012839.20124-2-dja@axtens.net>
+In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
+References: <20170719012839.20124-1-dja@axtens.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13.7.2017 04:38, Bjorn Helgaas wrote:
-> On Tue, Jun 20, 2017 at 02:08:44PM +0100, Lorenzo Pieralisi wrote:
->> commit 01cf9d524ff0 ("microblaze/PCI: Support generic Xilinx AXI PCIe Host
->> Bridge IP driver") removed pcibios calls to:
->>
->> pcibios_setup_bus_self()
->> pcibios_setup_bus_devices()
->>
->> Given that pcibios_fixup_bus() was the only caller of those functions
->> they have now become dead code (along with the functions they were
->> calling in turn) so they can be removed.
->>
->> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
->> Cc: Ravi Kiran Gummaluri <rgummal@xilinx.com>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Michal Simek <michal.simek@xilinx.com>
-> 
-> Applied with Michal's ack to pci/misc for v4.14, thanks!
-> 
-> I also removed the "Fixup resources of a PCI<->PCI bridge" comment
-> since it's no longer applicable.
+Some powerpc devices provide a PCI display that isn't picked up by
+the VGA arbiter, presumably because it doesn't support the PCI
+legacy VGA ranges.
 
-Thanks,
-Michal
+Commit c2e1d84523ad ("powerpc: Set default VGA device") introduced
+an arch quirk to mark these devices as default to fix X autoconfig.
+
+The commit message stated that the patch:
+
+    Ensures a default VGA is always set if a graphics adapter is present,
+    even if firmware did not initialize it. If more than one graphics
+    adapter is present, ensure the one initialized by firmware is set
+    as the default VGA device.
+
+The patch used the following test to decide whether or not to mark
+a device as default:
+
+  pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+  if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+          vga_set_default_device(pdev);
+
+This doesn't seem like it works quite as intended. Because of the
+logical OR, the default device will be set in 2 cases:
+
+ 1) if there is no default device
+OR
+ 2) if this device has normal memory/IO decoding turned on
+
+This will work as intended if there is only one device, but if
+there are multiple devices, we may override the device the VGA
+arbiter picked.
+
+Instead, set a device as default if there is no default device AND
+this device decodes.
+
+This will not change behaviour on single-headed systems.
+
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+
+---
+
+Tested in TCG (the card provided by qemu doesn't automatically
+register with vgaarb, so the relevant code path has been tested)
+but I would appreciate any tests on real hardware.
+---
+ arch/powerpc/kernel/pci-common.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 341a7469cab8..c95fdda3a2dc 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
+ {
+ 	u16 cmd;
+ 
++	if (vga_default_device())
++		return;
++
+ 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+-	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
++	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
+ 		vga_set_default_device(pdev);
+ 
+ }
+-- 
+2.11.0
