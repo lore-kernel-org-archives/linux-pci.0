@@ -1,136 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:40 -0600
-Message-Id: <20170725205753.4735-4-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 03/16] switchtec: add NTB hardware register definitions
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.131]:41532 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751390AbdGSH17 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:27:59 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFC PATCH v4 5/7] arm64: dts: rockchip: convert PCIe to use per-lane PHYs for rk3339
+Date: Wed, 19 Jul 2017 15:27:36 +0800
+Message-Id: <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are two additional regions: ctrl and dbmsg. The first is
-for generic NTB control and memory windows. The second is for doorbells
-and message registers. This patch also adds a number of related
-constants for using these registers.
+Convert all RK3399 platforms to use per-lane PHY model in
+order to save more power by idling the unused lane(s).
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
 ---
- include/linux/switchtec.h | 84 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
 
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 18e388101855..9c2be7631257 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -156,6 +156,12 @@ struct flash_info_regs {
- 	struct partition_info vendor[8];
- };
- 
-+enum {
-+	SWITCHTEC_NTB_REG_INFO_OFFSET   = 0x0000,
-+	SWITCHTEC_NTB_REG_CTRL_OFFSET   = 0x4000,
-+	SWITCHTEC_NTB_REG_DBMSG_OFFSET  = 0x64000,
-+};
-+
- struct ntb_info_regs {
- 	u8  partition_count;
- 	u8  partition_id;
-@@ -191,6 +197,84 @@ struct part_cfg_regs {
- } __packed;
- 
- enum {
-+	NTB_CTRL_PART_OP_LOCK = 0x1,
-+	NTB_CTRL_PART_OP_CFG = 0x2,
-+	NTB_CTRL_PART_OP_RESET = 0x3,
-+
-+	NTB_CTRL_PART_STATUS_NORMAL = 0x1,
-+	NTB_CTRL_PART_STATUS_LOCKED = 0x2,
-+	NTB_CTRL_PART_STATUS_LOCKING = 0x3,
-+	NTB_CTRL_PART_STATUS_CONFIGURING = 0x4,
-+	NTB_CTRL_PART_STATUS_RESETTING = 0x5,
-+
-+	NTB_CTRL_BAR_VALID = 1 << 0,
-+	NTB_CTRL_BAR_DIR_WIN_EN = 1 << 4,
-+	NTB_CTRL_BAR_LUT_WIN_EN = 1 << 5,
-+
-+	NTB_CTRL_REQ_ID_EN = 1 << 0,
-+
-+	NTB_CTRL_LUT_EN = 1 << 0,
-+
-+	NTB_PART_CTRL_ID_PROT_DIS = 1 << 0,
-+};
-+
-+struct ntb_ctrl_regs {
-+	u32 partition_status;
-+	u32 partition_op;
-+	u32 partition_ctrl;
-+	u32 bar_setup;
-+	u32 bar_error;
-+	u16 lut_table_entries;
-+	u16 lut_table_offset;
-+	u32 lut_error;
-+	u16 req_id_table_size;
-+	u16 req_id_table_offset;
-+	u32 req_id_error;
-+	u32 reserved1[7];
-+	struct {
-+		u32 ctl;
-+		u32 win_size;
-+		u64 xlate_addr;
-+	} bar_entry[6];
-+	u32 reserved2[216];
-+	u32 req_id_table[256];
-+	u32 reserved3[512];
-+	u64 lut_entry[512];
-+} __packed;
-+
-+#define NTB_DBMSG_IMSG_STATUS BIT_ULL(32)
-+#define NTB_DBMSG_IMSG_MASK   BIT_ULL(40)
-+
-+struct ntb_dbmsg_regs {
-+	u32 reserved1[1024];
-+	u64 odb;
-+	u64 odb_mask;
-+	u64 idb;
-+	u64 idb_mask;
-+	u8  idb_vec_map[64];
-+	u32 msg_map;
-+	u32 reserved2;
-+	struct {
-+		u32 msg;
-+		u32 status;
-+	} omsg[4];
-+
-+	struct {
-+		u32 msg;
-+		u8  status;
-+		u8  mask;
-+		u8  src;
-+		u8  reserved;
-+	} imsg[4];
-+
-+	u8 reserved3[3928];
-+	u8 msix_table[1024];
-+	u8 reserved4[3072];
-+	u8 pba[24];
-+	u8 reserved5[4072];
-+} __packed;
-+
-+enum {
- 	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
- 	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
- 	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ arch/arm64/boot/dts/rockchip/rk3399.dtsi | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399.dtsi b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+index 69c56f7..5b78ce1 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399.dtsi
+@@ -238,8 +238,10 @@
+ 		linux,pci-domain = <0>;
+ 		max-link-speed = <1>;
+ 		msi-map = <0x0 &its 0x0 0x1000>;
+-		phys = <&pcie_phy>;
+-		phy-names = "pcie-phy";
++		phys = <&pcie_phy 0>, <&pcie_phy 1>,
++		       <&pcie_phy 2>, <&pcie_phy 3>;
++		phy-names = "pcie-phy-0", "pcie-phy-1",
++			    "pcie-phy-2", "pcie-phy-3";
+ 		ranges = <0x83000000 0x0 0xfa000000 0x0 0xfa000000 0x0 0x1e00000
+ 			  0x81000000 0x0 0xfbe00000 0x0 0xfbe00000 0x0 0x100000>;
+ 		resets = <&cru SRST_PCIE_CORE>, <&cru SRST_PCIE_MGMT>,
+@@ -1295,7 +1297,7 @@
+ 			compatible = "rockchip,rk3399-pcie-phy";
+ 			clocks = <&cru SCLK_PCIEPHY_REF>;
+ 			clock-names = "refclk";
+-			#phy-cells = <0>;
++			#phy-cells = <1>;
+ 			resets = <&cru SRST_PCIEPHY>;
+ 			reset-names = "phy";
+ 			status = "disabled";
 -- 
-2.11.0
+1.9.1
