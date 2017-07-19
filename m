@@ -1,53 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Ding Tianhong <dingtianhong@huawei.com>, Alexander Duyck
- <alexander.duyck@gmail.com>
-Subject: Re: [PATCH v7 3/3] net/cxgb4: Use new
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Fri, 14 Jul 2017 17:50:21 +0000
-Message-ID: <MWHPR12MB1600415DE896360B2F1BA4C1C8AD0@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-4-git-send-email-dingtianhong@huawei.com>
- <CAKgT0UcBFBk9T7g0Dh-rHY6Z+6-4=5jsUWHbLcSMc+ohdTz=CA@mail.gmail.com>
- <CAKgT0Uf8Tg6AFthXt-bJrdNHCqJ3MfzduR1yCMMsjLYoEFXb-w@mail.gmail.com>
- <MWHPR12MB1600E5A4404EE9D97CD99F88C8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>,
- <d36574a1-2853-6989-25ae-5fd1b0d811ba@huawei.com>
-In-Reply-To: <d36574a1-2853-6989-25ae-5fd1b0d811ba@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:58407 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751911AbdGSJie (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:38:34 -0400
+Subject: Re: [RFC PATCH v4 3/7] phy: rockcip-pcie: reconstruct driver to
+ support per-lane PHYs
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500448979-93067-4-git-send-email-shawn.lin@rock-chips.com>
+ <81b03327-e720-ed51-87d1-9ac0c7a9dc0a@ti.com>
+ <5497c3e0-a74e-f4ae-dd02-ba321182a9ec@rock-chips.com>
+CC: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        <linux-pci@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <c3e7f755-9c36-5cec-7598-f72c9e3cba60@ti.com>
+Date: Wed, 19 Jul 2017 15:07:50 +0530
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Asit K Mallick <asit.k.mallick@intel.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- LinuxArm <linuxarm@huawei.com>, Ashok Raj <ashok.raj@intel.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Jeff
- Kirsher <jeffrey.t.kirsher@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Ganesh GR <ganeshgr@chelsio.com>, Bob Shaw <Bob.Shaw@amd.com>,
- Patrick J Cramer <patrick.j.cramer@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Michael Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Amir Ancel <amira@mellanox.com>, Netdev <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- David Laight <David.Laight@aculab.com>,
- Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>,
- Robin Murphy <robin.murphy@arm.com>, David Miller <davem@davemloft.net>,
- h <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <5497c3e0-a74e-f4ae-dd02-ba321182a9ec@rock-chips.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Reviewed-by: Casey Leedom <leedom@chelsio.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+On Wednesday 19 July 2017 03:06 PM, Shawn Lin wrote:
+> Hi Kishon,
+> 
+> On 2017/7/19 16:08, Kishon Vijay Abraham I wrote:
+>> Hi Shawn,
+>>
+>> On Wednesday 19 July 2017 12:52 PM, Shawn Lin wrote:
+>>> This patch reconstructs the whole driver to support per-lane
+>>> PHYs. Note that we could also support the legacy PHY if you
+>>> don't provide argument to our of_xlate.
+>>
+>> one comment below which I failed to notice before..
+> 
+> I will fix it and respin v5.
+> 
+> BTW, are you fine with all these patches merged via Bjorn's
+> PCI tree in order to narrow down the timing gap for testing
+> linux-next? If yes, could you kindly ack patch 3 of V5
+> if it looks good to you? :)
+
+sure!
+
+Thanks
+Kishon
