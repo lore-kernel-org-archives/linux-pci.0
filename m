@@ -1,92 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34670 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752048AbdGUVFF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:05:05 -0400
-Subject: Re: [PATCH] of: provide of_n_{addr,size}_cells wrappers for
- !CONFIG_OF
-To: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>
-References: <20170721202012.3360244-1-arnd@arndb.de>
-Cc: devicetree@vger.kernel.org, Grant Likely <grant.likely@linaro.org>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Magnus Damm <damm@opensource.se>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Ben Dooks <ben.dooks@codethink.co.uk>,
-        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
-        Sakari Ailus <sakari.ailus@linux.intel.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
-        Alan Tull <atull@opensource.altera.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Richard Fitzgerald <rf@opensource.wolfsonmicro.com>,
-        linux-kernel@vger.kernel.org
-From: Frank Rowand <frowand.list@gmail.com>
-Message-ID: <59726C73.6000000@gmail.com>
-Date: Fri, 21 Jul 2017 14:04:51 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170721202012.3360244-1-arnd@arndb.de>
-Content-Type: text/plain; charset=windows-1252
+Received: from smtp.codeaurora.org ([198.145.29.96]:51156 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753379AbdGSIos (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:48 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v2 7/8] dt-bindings: pci: qcom: Add support for IPQ8074
+Date: Wed, 19 Jul 2017 14:13:38 +0530
+Message-Id: <1500453819-5223-8-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/21/17 13:19, Arnd Bergmann wrote:
-> The pci-rcar driver is enabled for compile tests, and this has
-> now shown that the driver cannot build without CONFIG_OF,
-> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
-> interrupt mapping when possible":
-> 
-> ../drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
-> ../drivers/pci/host/pcie-rcar.c:856:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
->   parser->pna = of_n_addr_cells(node);
->   ^
-> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
-> supposed to build fine, which we can achieve if we make the
-> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
-> and provide an empty inline function otherwise, as we do for
-> a lot of other of interfaces.
-> 
-> This lets us build the rcar_pci driver again without CONFIG_OF
-> for build testing. All platforms using this driver select OF,
-> so this doesn't change anything for the users.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: devicetree@vger.kernel.org
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Grant Likely <grant.likely@linaro.org>
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Magnus Damm <damm@opensource.se>
-> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-sh@vger.kernel.org
-> 
-> ---
-> I originally sent the patch in 2014 when things initially broke
-> and then forgot about while it was applied in my randconfig patch
-> stack. I sent it again in 2016 without replay.
-> 
-> It's still broken and I think this is the correct fix.
-> ---
->  include/linux/of.h | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/include/linux/of.h b/include/linux/of.h
-> index 4a8a70916237..1efdbe53136c 100644
-> --- a/include/linux/of.h
-> +++ b/include/linux/of.h
-> @@ -735,6 +735,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
->  	return NULL;
->  }
->  
-> +static inline int of_n_addr_cells(struct device_node *np) { return 0; }
-> +static inline int of_n_size_cells(struct device_node *np) { return 0; }
-> +
->  static inline int of_property_read_u64(const struct device_node *np,
->  				       const char *propname, u64 *out_value)
->  {
-> 
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
+lane, two PCIe root complex with support for MSI and legacy interrupts, and
+it conforms to PCI Express Base 2.1 specification.
 
-Reviewed-by: Frank Rowand <frank.rowand@sony.com>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 9d418b7..b3e36ef 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -9,6 +9,7 @@
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 			- "qcom,pcie-ipq4019" for ipq4019
++			- "qcom,pcie-ipq8074" for ipq8074
+ 
+ - reg:
+ 	Usage: required
+@@ -105,6 +106,16 @@
+ 			- "bus_master"	Master AXI clock
+ 			- "bus_slave"	Slave AXI clock
+ 
++- clock-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "iface"	PCIe to SysNOC BIU clock
++			- "axi_m"	AXI Master clock
++			- "axi_s"	AXI Slave clock
++			- "ahb"		AHB clock
++			- "aux"		Auxiliary clock
++
+ - resets:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+@@ -144,6 +155,18 @@
+ 			- "ahb"			AHB reset
+ 			- "phy_ahb"		PHY AHB reset
+ 
++- reset-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "pipe"		PIPE reset
++			- "sleep"		Sleep reset
++			- "sticky"		Core Sticky reset
++			- "axi_m"		AXI Master reset
++			- "axi_s"		AXI Slave reset
++			- "ahb"			AHB Reset
++			- "axi_m_sticky"	AXI Master Sticky reset
++
+ - power-domains:
+ 	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
