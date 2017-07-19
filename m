@@ -1,80 +1,125 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0064.outbound.protection.outlook.com ([104.47.32.64]:22992
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932750AbdGKTIF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Jul 2017 15:08:05 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Samuel Sieb" <samuel@sieb.net>,
-        David Woodhouse <dwmw2@infradead.org>
-Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Date: Tue, 11 Jul 2017 19:08:03 +0000
-Message-ID: <CY4PR12MB16536D76B95B9CE43CD7370AF7AE0@CY4PR12MB1653.namprd12.prod.outlook.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <20170615140421.GB25710@suse.de>
- <20170615191545.GB12735@bhelgaas-glaptop.roam.corp.google.com>
- <20170616162923.GE25710@suse.de>
- <20170710165358.GD20365@bhelgaas-glaptop.roam.corp.google.com>
- <20170711114948.GA6244@suse.de>
-In-Reply-To: <20170711114948.GA6244@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1500293043-1887-4-git-send-email-varada@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org> <1500293043-1887-4-git-send-email-varada@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Date: Wed, 19 Jul 2017 08:40:03 +0530
+Message-ID: <CAFp+6iEuGJ-AEuX84SmGk7TMPnpp+yny6W68XZyW=P85yEvjFA@mail.gmail.com>
+Subject: Re: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "robh+dt" <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>, svarbanov@mm-sol.com,
+        kishon <kishon@ti.com>, Stephen Boyd <sboyd@codeaurora.org>,
+        fengguang.wu@intel.com, Wei Yongjun <weiyongjun1@huawei.com>,
+        linux-pci@vger.kernel.org,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Joerg Roedel [mailto:jroedel@suse.de]
-> Sent: Tuesday, July 11, 2017 7:50 AM
-> To: Bjorn Helgaas
-> Cc: Bjorn Helgaas; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.or=
-g;
-> Daniel Drake; Deucher, Alexander; Samuel Sieb; David Woodhouse
-> Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
->=20
-> Hi Bjorn,
->=20
-> On Mon, Jul 10, 2017 at 11:53:58AM -0500, Bjorn Helgaas wrote:
-> > I'm still confused.  Per Samuel
-> > (6dd9dbac-9b65-bc7c-bb08-413a05d09fc8@sieb.net):
-> >
-> > Samuel> The other patch seems to fix this issue without disabling ATS.
-> > Samuel> Isn't that better?
-> >
-> > and Alex
-> >
-> (BN6PR12MB1652DF4130FC792B71DD9974F7C00@BN6PR12MB1652.namprd1
-> 2.prod.outlook.com):
-> >
-> > Alex> I talked to our validation team and ATS was validated on Stoney,
-> > Alex> so this patch is just working around something else.  The other
-> > Alex> patch fixes it and is a valid optimization ...
-> >
-> > I'm confused about what this "other patch" is and whether we want that
-> > one, this one, or both.
+Hi,
 
-Here's the other patch:
-https://lists.freedesktop.org/archives/amd-gfx/2017-May/009421.html
 
->=20
-> The other patches floating around lowered the ATS flush-rate from the
-> AMD IOMMU driver, which makes the issue disappear as well. But the issue
-> only disappeared, it is not solved and could probably still be
-> reproduced with a GPU usage pattern that increases the ATS flush-rate.
->=20
-> So blacklisting the device for ATS is still the safest thing we could do
-> here.
+On Mon, Jul 17, 2017 at 5:33 PM, Varadarajan Narayanan
+<varada@codeaurora.org> wrote:
+> Presently, the phy pipe clock's name is assumed to be either
+> usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+> phy lane's number). However, this will not work if an SoC has
+> more than one instance of the phy. Hence, instead of assuming
+> the name of the clock, fetch it from the DT.
+>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
 
-I don't have any objection per se, but I'd hate to add a quirk to disable i=
-t only to remove it again in the future if we needed ATS related functional=
-ity later.  We are in the process of upstreaming KFD support for Carrizo (w=
-hich is a bigger version of Stoney) and that utilizes ATS related functiona=
-lity to provide GPU access to pageable memory.  There are no immediate requ=
-irements for Stoney, but that may change.
+Looks good.
 
-Alex
+Acked-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+
+
+>  drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
+>  1 file changed, 16 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> index 78ca628..97020ec 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> @@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+>   *    clk  |   +-------+   |                   +-----+
+>   *         +---------------+
+>   */
+> -static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+> +static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
+>  {
+> -       char name[24];
+>         struct clk_fixed_rate *fixed;
+>         struct clk_init_data init = { };
+>
+> -       switch (qmp->cfg->type) {
+> -       case PHY_TYPE_USB3:
+> -               snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+> -               break;
+> -       case PHY_TYPE_PCIE:
+> -               snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+> -               break;
+> -       default:
+> +       if ((qmp->cfg->type != PHY_TYPE_USB3) &&
+> +           (qmp->cfg->type != PHY_TYPE_PCIE)) {
+>                 /* not all phys register pipe clocks, so return success */
+>                 return 0;
+>         }
+> @@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+>         if (!fixed)
+>                 return -ENOMEM;
+>
+> -       init.name = name;
+> +       init.name = clk_name;
+>         init.ops = &clk_fixed_rate_ops;
+>
+>         /* controllers using QMP phys use 125MHz pipe clock interface */
+> @@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>
+>         id = 0;
+>         for_each_available_child_of_node(dev->of_node, child) {
+> +               const char *clk_name;
+> +
+>                 /* Create per-lane phy */
+>                 ret = qcom_qmp_phy_create(dev, child, id);
+>                 if (ret) {
+> @@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>                         return ret;
+>                 }
+>
+> +               ret = of_property_read_string(child, "clock-output-names",
+> +                                                       &clk_name);
+> +               if (ret) {
+> +                       dev_err(dev,
+> +                               "failed to get clock-output-names for lane%d phy, %d\n",
+> +                               id, ret);
+> +                       return ret;
+> +               }
+> +
+>                 /*
+>                  * Register the pipe clock provided by phy.
+>                  * See function description to see details of this pipe clock.
+>                  */
+> -               ret = phy_pipe_clk_register(qmp, id);
+> +               ret = phy_pipe_clk_register(qmp, clk_name);
+>                 if (ret) {
+>                         dev_err(qmp->dev,
+>                                 "failed to register pipe clock source\n");
+> --
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
