@@ -1,52 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:56030 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965416AbdGTWMm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jul 2017 18:12:42 -0400
-Date: Thu, 20 Jul 2017 15:56:54 -0600
-From: Scott Bauer <scott.bauer@intel.com>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
-        david.fugate@intel.com, bhelgaas@google.com
-Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
-Message-ID: <20170720215654.nyfpvgzgny2bpqny@sbauer-Z170X-UD5>
-References: <20170720202858.1918-1-scott.bauer@intel.com>
- <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
- <20170720213420.lxllowcwnp24gmxf@sbauer-Z170X-UD5>
- <a8fa0b4a-a918-6c98-169c-2b9c35bd8cdb@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <a8fa0b4a-a918-6c98-169c-2b9c35bd8cdb@intel.com>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33683 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbdGSB3h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:37 -0400
+Received: by mail-pg0-f66.google.com with SMTP id z1so4871363pgs.0
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:36 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
+Subject: [PATCH 2/3] vgaarb rework
+Date: Wed, 19 Jul 2017 11:28:36 +1000
+Message-Id: <20170719012839.20124-4-dja@axtens.net>
+In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
+References: <20170719012839.20124-1-dja@axtens.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 25, 2017 at 08:36:10PM -0600, Jon Derrick wrote:
-> On 07/20/2017 03:34 PM, Scott Bauer wrote:
-> [snip]
-> >>> +	for (i = 0; i < vmd->msix_count; i++) {
-> >>> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-> >>> +				       vmd_irq, IRQF_NO_THREAD,
-> >> The flag here looks redundant to me because the fn calls into
-> >> request_threaded_irq with no thread_fn. But since it's a bit more
-> >> verbose, can you change the other devm_request_irq to use IRQF_NO_THREAD?
-> > 
-> > I actually yanked the request irq from the other call. It was changed
-> > to NO_THREAD in April:
-> > 
-> > (3eefa790c968) PCI: host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
-> > 
-> 
-> Ah so it was. Sorry was looking at v4.12
-> 
-> 
-> I think we'll need to do more than free the irq handlers because if an
-> interrupt occurs after that, I think it'll get kicked to handle_bad_irq.
-> I think we just need to add pci_disable_device after save and
-> pcim_enable_device after restore.
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+---
+ arch/powerpc/Kconfig             |  1 +
+ arch/powerpc/kernel/pci-common.c |  2 ++
+ drivers/gpu/vga/Kconfig          |  8 ++++++++
+ drivers/gpu/vga/vgaarb.c         | 21 +++++++++++++++++++++
+ 4 files changed, 32 insertions(+)
 
-I orignally had this in the patch I was testing on SLES and took it out when
-it seemingly didn't make a difference. I didnt test yanking a drive or anything
-behind the domain while it was suspended, so I wouldn't have hit your scenario.
-
-I'll add it back in. Also, I think I need to CC stable on this one too since
-this is missing all the way since the original inception of this driver.
+diff --git a/arch/powerpc/Kconfig b/arch/powerpc/Kconfig
+index 524f71104b75..f86e4c8a9cc6 100644
+--- a/arch/powerpc/Kconfig
++++ b/arch/powerpc/Kconfig
+@@ -83,6 +83,7 @@ config PPC
+ 	select BUILDTIME_EXTABLE_SORT
+ 	select ARCH_MIGHT_HAVE_PC_PARPORT
+ 	select ARCH_MIGHT_HAVE_PC_SERIO
++	select ARCH_WANT_VGA_ARB_FALLBACK
+ 	select BINFMT_ELF
+ 	select ARCH_HAS_ELF_RANDOMIZE
+ 	select OF
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 07f05a0f59a2..e0f29a594aa1 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1740,6 +1740,7 @@ static void fixup_hide_host_resource_fsl(struct pci_dev *dev)
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MOTOROLA, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_FREESCALE, PCI_ANY_ID, fixup_hide_host_resource_fsl);
+ 
++#if !defined(CONFIG_ARCH_WANT_VGA_ARB_FALLBACK)
+ static void fixup_vga(struct pci_dev *pdev)
+ {
+ 	u16 cmd;
+@@ -1754,3 +1755,4 @@ static void fixup_vga(struct pci_dev *pdev)
+ }
+ DECLARE_PCI_FIXUP_CLASS_FINAL(PCI_ANY_ID, PCI_ANY_ID,
+ 			      PCI_CLASS_DISPLAY_VGA, 8, fixup_vga);
++#endif
+diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
+index 29437eabe095..20f6c5a9a159 100644
+--- a/drivers/gpu/vga/Kconfig
++++ b/drivers/gpu/vga/Kconfig
+@@ -17,6 +17,14 @@ config VGA_ARB_MAX_GPUS
+ 	  Reserves space in the kernel to maintain resource locking for
+ 	  multiple GPUS.  The overhead for each GPU is very small.
+ 
++config ARCH_WANT_VGA_ARB_FALLBACK
++	bool
++	depends on !(X86 || IA64)
++	help
++	  Some architectures don't have a concept of "legacy" PCI addresses
++	  which the VGA arbiter relies on. Instead, they can fall back to
++	  selecting the first device that decodes memory and I/O.
++
+ config VGA_SWITCHEROO
+ 	bool "Laptop Hybrid Graphics - GPU switching support"
+ 	depends on X86
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 0f5b2dd24507..02424dc3a58d 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1472,3 +1472,24 @@ static int __init vga_arb_device_init(void)
+ 	return rc;
+ }
+ subsys_initcall(vga_arb_device_init);
++
++#if defined(CONFIG_ARCH_WANT_VGA_ARB_FALLBACK)
++static void vga_arb_fallback_fixup(struct pci_dev *pdev)
++{
++	u16 cmd;
++
++	if (vga_default_device())
++		return;
++
++	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++		vgaarb_info(&pdev->dev, "[fallback]"
++			    " setting as default device\n");
++		vga_set_default_device(pdev);
++	}
++
++}
++DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_CLASS_DISPLAY_VGA, 8,
++			       vga_arb_fallback_fixup);
++#endif
+-- 
+2.11.0
