@@ -1,164 +1,337 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:34678 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751086AbdGFICY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Jul 2017 04:02:24 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Murali Karicheri <m-karicheri2@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, bhelgaas@google.com
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
- <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
- <594955BC.3010703@ti.com> <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
- <a6380712-214b-990b-69e3-e3889835879b@arm.com> <595D5423.50908@ti.com>
-Cc: thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <5158c0cb-cc2a-0f1b-22f7-db84c9568e80@arm.com>
-Date: Thu, 6 Jul 2017 09:02:19 +0100
-MIME-Version: 1.0
-In-Reply-To: <595D5423.50908@ti.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from smtp.codeaurora.org ([198.145.29.96]:51034 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753379AbdGSIom (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:42 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v2 6/8] PCI: dwc: qcom: Use block IP version for operations
+Date: Wed, 19 Jul 2017 14:13:37 +0530
+Message-Id: <1500453819-5223-7-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/07/17 22:03, Murali Karicheri wrote:
-> On 07/05/2017 11:26 AM, Marc Zyngier wrote:
->> On 05/07/17 11:57, Joao Pinto wrote:
->>> Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
->>>> On 06/20/2017 12:28 PM, Joao Pinto wrote:
->>>>> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
->>>>>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
->>>>>>>
->>>>>>> Hi Murali,
->>>>>>>
->>>>>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->>>>>>>> Joao,
->>>>>>>>
->>>>>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>>>>>>>> This patch series adds the new interrupt api to pcie-designware
->>>>>>>>> make it possible to use features like MSIX.
->>>>>>>>>
->>>>>>>>> The work consisted of adapting the pcie-designware-host and each SoC
->>>>>>>>> specific driver.
->>>>>>>>>
->>>>>>>>> The patch set was made against the Bjorn' next branch.
->>>>>>>>>
->>>>>>>>> Joao Pinto (9):
->>>>>>>>>   pci: adding new irq api to pci-designware
->>>>>>>>>   pci: exynos SoC driver adapted to new irq API
->>>>>>>>>   pci: imx6 SoC driver adapted to new irq API
->>>>>>>>>   pci: artpec6 SoC driver adapted to new irq API
->>>>>>>>>   pci: generic PCIe DW driver adapted to new irq API
->>>>>>>>>   pci: qcom SoC driver adapted to new irq API
->>>>>>>>>   pci: keystone SoC driver adapted to new irq API
->>>>>>>>>   pci: removing old irq api from pcie-designware
->>>>>>>>>   pci: remove limitation of the number of the available IRQs
->>>>>>>>>
->>>>>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>>>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>>>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>>>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>>>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>>>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>>>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>>>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>>>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>>>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>>>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>>>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>>>>>>>
->>>>>>>>
->>>>>>>> I gave this a try today and it failed. Logs at
->>>>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>>>>>>>
->>>>>>>> The first part of the log is with your patch series.
->>>>>>>> The second part is before applying the patch. You will see
->>>>>>>> that there is qc timeout log that shows the issue
->>>>>>>>
->>>>>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->>>>>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->>>>>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->>>>>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>>>>
->>>>>>>> Is there any DT change I need to make for this? I didn't have a
->>>>>>>> chance to review your patch w.r.t Keystone. But I see you have change
->>>>>>>> the MSI IRq handling.
->>>>>>>>
->>>>>>>
->>>>>>> There is no need to change your DT. I think I will need to debug this issue
->>>>>>> further. Could you please advice a board containing this SoC?
->>>>>>>
->>>>>> I think I may be able to work with you on this. Keystone has different 
->>>>>> register set for MSI IRQ. It is in application space. Also there are
->>>>>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
->>>>>> please review the original code vs the changed one w.r.t to this. I haven't
->>>>>> had a chance to review the code as I am in the middle of a release.
->>>>>> But will be able to spend some time after two weeks. Meanwhile please
->>>>>> spend some time reviewing the code and exchange email to identify
->>>>>> the issue. I can add specific debug prints for you as well and provide
->>>>>> you the log for analysis.
->>>>>
->>>>> Ok, I agree! Thanks!
->>>>>
->>>>>>
->>>> Look at this logic in the patch where a potential issue exists for Keystone.
->>>>
->>>> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
->>>> +{
->>>> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
->>>> +       struct pcie_port *pp = &pci->pp;
->>>> +       u64 msi_target;
->>>> +
->>>> +       if (pp->ops->get_msi_addr)
->>>> +               msi_target = pp->ops->get_msi_addr(pp);
->>>> +       else
->>>> +               msi_target = virt_to_phys((void *)pp->msi_data);
->>>> +
->>>> +       msg->address_lo = lower_32_bits(msi_target);
->>>> +       msg->address_hi = upper_32_bits(msi_target);
->>>> +
->>>> +       if (pp->ops->get_msi_data)
->>>> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
->>>> +       else
->>>> +               msg->data = data->hwirq;
->>>> +
->>>> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
->>>> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
->>>> +}
->>>>
->>>> Keystone has 8 hw irqs, 4 multiplexed over each since the register
->>>> set is different than other DWC cores. So will not work for Keystone,
->>>> right?
->>>
->>> Well, that can be challenging, since it is a very particular operation.
->>> Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
->>> overide this one if necessary. What do you think?
->>
->> At that rate, and given that keystone seems to override almost all
->> operations in this driver, wouldn't it make sense for this to be
->> implemented as a *separate* driver?
-> Marc,
-> 
-> What you mean by separate driver? Just the MSI handling part? 
+Presently, when support for a new SoC is added, the driver ops
+structures and functions are versioned with plain 1, 2, 3 etc.
+Instead use the block IP version number.
 
-The MSI part indeed. Looking at this series, KS looks like a sore spot
-on the face of rest of the MSI code, and it'd be better of opting out of
-this MSI management code and provide its own.
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ drivers/pci/dwc/pcie-qcom.c | 124 ++++++++++++++++++++++----------------------
+ 1 file changed, 62 insertions(+), 62 deletions(-)
 
-It seems to me that this would simplify the DW MSI code (no more
-indirections all over the place), and make it obvious that KW MSIs are
-managed in a very different way.
-
-Thoughts?
-
-	M.
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index d15657d..98c74d7 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -61,7 +61,7 @@
+ 
+ #define PERST_DELAY_US				1000
+ 
+-struct qcom_pcie_resources_v0 {
++struct qcom_pcie_resources_2_1_0 {
+ 	struct clk *iface_clk;
+ 	struct clk *core_clk;
+ 	struct clk *phy_clk;
+@@ -75,7 +75,7 @@ struct qcom_pcie_resources_v0 {
+ 	struct regulator *vdda_refclk;
+ };
+ 
+-struct qcom_pcie_resources_v1 {
++struct qcom_pcie_resources_1_0_0 {
+ 	struct clk *iface;
+ 	struct clk *aux;
+ 	struct clk *master_bus;
+@@ -84,7 +84,7 @@ struct qcom_pcie_resources_v1 {
+ 	struct regulator *vdda;
+ };
+ 
+-struct qcom_pcie_resources_v2 {
++struct qcom_pcie_resources_2_3_2 {
+ 	struct clk *aux_clk;
+ 	struct clk *master_clk;
+ 	struct clk *slave_clk;
+@@ -92,7 +92,7 @@ struct qcom_pcie_resources_v2 {
+ 	struct clk *pipe_clk;
+ };
+ 
+-struct qcom_pcie_resources_v3 {
++struct qcom_pcie_resources_2_4_0 {
+ 	struct clk *aux_clk;
+ 	struct clk *master_clk;
+ 	struct clk *slave_clk;
+@@ -111,10 +111,10 @@ struct qcom_pcie_resources_v3 {
+ };
+ 
+ union qcom_pcie_resources {
+-	struct qcom_pcie_resources_v0 v0;
+-	struct qcom_pcie_resources_v1 v1;
+-	struct qcom_pcie_resources_v2 v2;
+-	struct qcom_pcie_resources_v3 v3;
++	struct qcom_pcie_resources_1_0_0 v1_0_0;
++	struct qcom_pcie_resources_2_1_0 v2_1_0;
++	struct qcom_pcie_resources_2_3_2 v2_3_2;
++	struct qcom_pcie_resources_2_4_0 v2_4_0;
+ };
+ 
+ struct qcom_pcie;
+@@ -172,7 +172,7 @@ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+ 	return dw_pcie_wait_for_link(pci);
+ }
+ 
+-static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
++static void qcom_pcie_2_1_0_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+ 
+@@ -182,9 +182,9 @@ static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+ 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+ }
+ 
+-static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -232,9 +232,9 @@ static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->phy_reset);
+ }
+ 
+-static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 
+ 	reset_control_assert(res->pci_reset);
+ 	reset_control_assert(res->axi_reset);
+@@ -249,9 +249,9 @@ static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
+ 	regulator_disable(res->vdda_refclk);
+ }
+ 
+-static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -367,9 +367,9 @@ static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -397,9 +397,9 @@ static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->core);
+ }
+ 
+-static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 
+ 	reset_control_assert(res->core);
+ 	clk_disable_unprepare(res->slave_bus);
+@@ -409,9 +409,9 @@ static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
+ 	regulator_disable(res->vdda);
+ }
+ 
+-static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
++static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
+@@ -477,7 +477,7 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
++static void qcom_pcie_2_3_2_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+ 
+@@ -487,9 +487,9 @@ static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
+ 	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
+ }
+ 
+-static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -513,9 +513,9 @@ static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->pipe_clk);
+ }
+ 
+-static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 
+ 	clk_disable_unprepare(res->pipe_clk);
+ 	clk_disable_unprepare(res->slave_clk);
+@@ -524,9 +524,9 @@ static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->aux_clk);
+ }
+ 
+-static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -589,9 +589,9 @@ static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
+@@ -605,9 +605,9 @@ static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -674,9 +674,9 @@ static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 
+ 	reset_control_assert(res->axi_m_reset);
+ 	reset_control_assert(res->axi_s_reset);
+@@ -692,9 +692,9 @@ static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->slave_clk);
+ }
+ 
+-static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -952,37 +952,37 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	.rd_own_conf = qcom_pcie_rd_own_conf,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v0 = {
+-	.get_resources = qcom_pcie_get_resources_v0,
+-	.init = qcom_pcie_init_v0,
+-	.deinit = qcom_pcie_deinit_v0,
+-	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++static const struct qcom_pcie_ops ops_2_1_0 = {
++	.get_resources = qcom_pcie_get_resources_2_1_0,
++	.init = qcom_pcie_init_2_1_0,
++	.deinit = qcom_pcie_deinit_2_1_0,
++	.ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v1 = {
+-	.get_resources = qcom_pcie_get_resources_v1,
+-	.init = qcom_pcie_init_v1,
+-	.deinit = qcom_pcie_deinit_v1,
+-	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++static const struct qcom_pcie_ops ops_1_0_0 = {
++	.get_resources = qcom_pcie_get_resources_1_0_0,
++	.init = qcom_pcie_init_1_0_0,
++	.deinit = qcom_pcie_deinit_1_0_0,
++	.ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v2 = {
+-	.get_resources = qcom_pcie_get_resources_v2,
+-	.init = qcom_pcie_init_v2,
+-	.post_init = qcom_pcie_post_init_v2,
+-	.deinit = qcom_pcie_deinit_v2,
+-	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++static const struct qcom_pcie_ops ops_2_3_2 = {
++	.get_resources = qcom_pcie_get_resources_2_3_2,
++	.init = qcom_pcie_init_2_3_2,
++	.post_init = qcom_pcie_post_init_2_3_2,
++	.deinit = qcom_pcie_deinit_2_3_2,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.link_up = qcom_pcie_link_up,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v3 = {
+-	.get_resources = qcom_pcie_get_resources_v3,
+-	.init = qcom_pcie_init_v3,
+-	.deinit = qcom_pcie_deinit_v3,
+-	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++static const struct qcom_pcie_ops ops_2_4_0 = {
++	.get_resources = qcom_pcie_get_resources_2_4_0,
++	.init = qcom_pcie_init_2_4_0,
++	.deinit = qcom_pcie_deinit_2_4_0,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
+ static int qcom_pcie_probe(struct platform_device *pdev)
+@@ -1071,11 +1071,11 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct of_device_id qcom_pcie_match[] = {
+-	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
+-	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+-	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
+-	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
+-	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_v3 },
++	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
++	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
++	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
++	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
++	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
+ 	{ }
+ };
+ 
 -- 
-Jazz is not dead. It just smells funny...
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
