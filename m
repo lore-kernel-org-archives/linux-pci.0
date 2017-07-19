@@ -1,52 +1,69 @@
-Return-Path: <SRS0=ORhH=6P=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=ORhH=6P=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 19 Jul 2017 09:01:50 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v2 4/4] arm64: allow non-legacy VGA devices to be default
+Message-ID: <20170719080150.GB13642@arm.com>
+References: <20170719021516.24718-1-dja@axtens.net>
+ <20170719021516.24718-5-dja@axtens.net>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <20170712195729.GH14614@bhelgaas-glaptop.roam.corp.google.com>
-References: <4782965.eeHMKbM6vL@aspire.rjw.lan> <20170712195729.GH14614@bhelgaas-glaptop.roam.corp.google.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 12 Jul 2017 22:30:12 +0200
-Message-ID: <CAJZ5v0gAjB4w_jHk2=hgAypV5pF5GZxnxPoq7RrWTiJ7XPjGCQ@mail.gmail.com>
-Subject: Re: [PATCH] PCI / PM: Restore PME Enable after config space restoration
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linux PCI <linux-pci@vger.kernel.org>,
-	Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
-	Linux ACPI <linux-acpi@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170719021516.24718-5-dja@axtens.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, gabriele.paoloni@huawei.com, airlied@linux.ie,
+ linux-pci@vger.kernel.org, z.liuxinliang@hisilicon.com, bhelgaas@google.com,
+ alex.williamson@redhat.com, benh@kernel.crashing.org, zourongrong@gmail.com,
+ daniel.vetter@intel.com, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 12, 2017 at 9:57 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Jul 12, 2017 at 03:05:39AM +0200, Rafael J. Wysocki wrote:
->> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->>
->> Commit dc15e71eefc7 (PCI / PM: Restore PME Enable if skipping wakeup
->> setup) introduced a mechanism by which the PME Enable bit can be
->> restored by pci_enable_wake() if dev->wakeup_prepared is set in
->> case it has been overwritten by PCI config space restoration.
->>
->> However, that commit overlooked the fact that on some systems (Dell
->> XPS13 9360 in particular) the AML handling wakeup events checks PME
->> Status and PME Enable and it won't trigger a Notify() for devices
->> where those bits are not set while it is running.
->>
->> That happens during resume from suspend-to-idle when pci_restore_state()
->> invoked by pci_pm_default_resume_early() clears PME Enable before the
->> wakeup events are processed by AML, effectively causing those wakeup
->> events to be ignored.
->>
->> Fix this issue by restoring the PME Enable configuration right after
->> pci_restore_state() has been called instead of doing that in
->> pci_enable_wake().
->>
->> Fixes: dc15e71eefc7 (PCI / PM: Restore PME Enable if skipping wakeup setup)
->> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
-> Since you merged dc15e71eefc7, do you want to merge the fix as well?
-> Let me know if you'd rather have me take it.
+On Wed, Jul 19, 2017 at 12:15:16PM +1000, Daniel Axtens wrote:
+> The VGA arbiter only marks a device as default if it can decode
+> legacy I/O and memory ranges. This is often not the case on arm64,
+> which doesn't use the legacy ranges.
+> 
+> Enable the VGA arbiter to mark the first enabled VGA card as
+> default.
+> 
+> Signed-off-by: Daniel Axtens <dja@axtens.net>
 
-I will take this one.
+Acked-by: Will Deacon <will.deacon@arm.com>
 
-Thanks!
+Will
+
+> ---
+> 
+> Tested on a D05 using the hibmc card.
+> ---
+>  arch/arm64/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+> index dfd908630631..cefcbd442e4f 100644
+> --- a/arch/arm64/Kconfig
+> +++ b/arch/arm64/Kconfig
+> @@ -28,6 +28,7 @@ config ARM64
+>  	select ARCH_SUPPORTS_NUMA_BALANCING
+>  	select ARCH_WANT_COMPAT_IPC_PARSE_VERSION
+>  	select ARCH_WANT_FRAME_POINTERS
+> +	select ARCH_WANT_VGA_ARB_FALLBACK
+>  	select ARCH_HAS_UBSAN_SANITIZE_ALL
+>  	select ARM_AMBA
+>  	select ARM_ARCH_TIMER
+> -- 
+> 2.11.0
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
