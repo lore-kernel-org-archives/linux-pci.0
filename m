@@ -1,105 +1,114 @@
-Return-Path: <SRS0=dwSL=6Q=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=dwSL=6Q=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <20170710155230.8622-1-marc.zyngier@arm.com>
- <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Mathias Nyman <mathias.nyman@intel.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- linux-usb <linux-usb@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <544d9c48-9d4f-29f7-1478-afa940b20dd8@arm.com>
-Date: Thu, 13 Jul 2017 08:46:45 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35866 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753501AbdGSKGm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 06:06:42 -0400
+Subject: Re: [PATCH 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe
+ controller
+To: Varadarajan Narayanan <varada@codeaurora.org>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-8-git-send-email-varada@codeaurora.org>
+ <20170717220718.GZ20973@minitux> <20170718095814.GE32439@codeaurora.org>
+ <20170718164438.GE20973@minitux> <20170719064943.GA29996@codeaurora.org>
+ <81d75c74-df15-cc9d-c07c-dd6f5cc30d18@mm-sol.com>
+ <20170719092905.GA13546@codeaurora.org>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kishon@ti.com,
+        sboyd@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, smuthayy <smuthayy@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Message-ID: <6b9988c7-1581-05fc-ef87-4d5486381cea@codeaurora.org>
+Date: Wed, 19 Jul 2017 15:36:35 +0530
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170719092905.GA13546@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/07/17 07:48, Ard Biesheuvel wrote:
-> On 13 July 2017 at 04:12, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
->>> Ard and myself have just spent quite some time lately trying to pin
->>> down an issue in the DMA code which was taking the form of a PCIe USB3
->>> controller issuing a DMA access at some bizarre address, and being
->>> caught red-handed by the IOMMU.
->>>
->>> After much head scratching and most of a week-end spent on tracing the
->>> damn thing, I'm now convinced that the DMA code is fine, the XHCI
->>> driver is correct, but that the HW (a Renesas uPD720202 chip) is a
->>> nasty piece of work.
->>>
->>> The issue is as follow:
->>>
->>> - EFI initializes the controller using physical addresses above the
->>>   4GB limit (this is on an arm64 box where the memory starts at
->>>   0x80_00000000...).
->>>
->>> - The kernel takes over, sends a XHCI reset to the controller, and
->>>   because we have an IOMMU sitting between the controller and memory,
->>>   provides *virtual* addresses. Trying to make things a bit faster for
->>>   our controller, it issues IOVAs in the low 4GB range).
->>>
->>> - Low and behold, the controller is now issuing transactions with a
->>>   0x80 prefix in front of our IOVA. Yes, the same prefix that was
->>>   programmed during the EFI configuration. IOMMU fault, not happy.
->>>
->>> If the kernel is hacked to only generate IOVAs that are more than
->>> 32bit wide, the HW behaves correctly. The only way I can explain this
->>> behaviour is that the HW latches the top 32bit of the ERST (it is
->>> always the ERST IOVA that appears in my traces) in some internal
->>> register, and that the XHCI reset fails to clear it. Writing zero in
->>> the top bits is not enough to clear it either.
->>>
->>> So far, the only solution we have for this lovely piece of kit is to
->>> force a PCI reset at probe time, which puts it right. The patches are
->>> pretty ugly, but that's the best I could come up with so far.
->>>
->>> Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
->>> uPD720202 controllers.
->>>
->>> Marc Zyngier (2):
->>>   PCI: Implement pci_reset_function_locked
->>>   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
->>>     controller
->>>
->>>  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
->>>  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
->>>  drivers/usb/host/pci-quirks.h |  1 +
->>>  drivers/usb/host/xhci-pci.c   |  7 +++++++
->>>  include/linux/pci.h           |  1 +
->>>  5 files changed, 64 insertions(+)
+Hi,
+
+
+On 07/19/2017 02:59 PM, Varadarajan Narayanan wrote:
+> Stan,
+>
+> On Wed, Jul 19, 2017 at 10:12:45AM +0300, Stanimir Varbanov wrote:
+>> Hi,
 >>
->> I provisionally applied this to pci/virtualization.  I'd like to have an
->> XHCI ack before going further, though.
+>> On 07/19/2017 09:49 AM, Varadarajan Narayanan wrote:
+>>> On Tue, Jul 18, 2017 at 09:44:38AM -0700, Bjorn Andersson wrote:
+>>>> On Tue 18 Jul 02:58 PDT 2017, Varadarajan Narayanan wrote:
+>>>>
+>>>>> On Mon, Jul 17, 2017 at 03:07:18PM -0700, Bjorn Andersson wrote:
+>>>>>> On Mon 17 Jul 05:04 PDT 2017, Varadarajan Narayanan wrote:
+>>>> [..]
+>>>>>> Can you confirm that this is actually version 4 of this block? Or are we
+>>>>>> just incrementing an arbitrary number here?
+>>>>> This is not exactly the 4th version of the block. However, it is
+>>>>> a different version than the ones that are already supported in
+>>>>> this driver. Since the existing driver didn't exactly tie it with
+>>>>> the block IP version, I too followed the same versioning
+>>>>> convention.
+>>>>>
+>>>> Do you have a block IP version that you could base your numbering on, to
+>>>> break the trend? (We should go back and fix up the others as well)
+>>> Presently, the driver supports the ipq8064, apq8064, apq8084,
+>>> msm8996, ipq4019 and ipq8074. The SoCs, qcom_pcie_ops version and
+>>> the block IP versions are as follows.
+>>>
+>>> 	ipq8064 - v0 - 2.1.0
+>>> 	apq8064 - v0 - 2.1.0
+>>> 	apq8084 - v1 - 1.0.0
+>>> 	msm8996 - v2 - 2.3.2
+>>> 	ipq4019 - v3 - 2.4.0
+>>> 	ipq8074 - v4 - 2.3.3
+>> That's nice, but I think we need the Synopsys IP versions too, can you
+>> provide such an information and after that we can decide how the names
+>> should look like.
+> Sorry, I posted v2 before I saw this e-mail. Will post v3 based
+> on what naming style is decided.
+>
+> The SoCs, qcom_pcie_ops version, the block IP version and
+> Synopsys IP versions are as follows.
+>
+> 	ipq8064 - v0 - 2.1.0 - 4.01a
+> 	apq8064 - v0 - 2.1.0 - 4.01a
+> 	apq8084 - v1 - 1.0.0 - 4.11a
+> 	msm8996 - v2 - 2.3.2 - 4.21a
+> 	ipq4019 - v3 - 2.4.0 - 4.20a
+> 	ipq8074 - v4 - 2.3.3 - 4.30a
+
+I would have loved to say the dwc IP versions sounds better, but
+this is the qcom wrapper over dwc. So, for me it makes more sense
+to have qcom specific IP version names.
+Can we have couple or more versions of qcom pcie IPs based on
+same dwc IP version? I have not looked closely, but in that case
+too using qcom nomenclature would again make more sense.
+
+
+Thanks
+Vivek
+
+>
+> Thanks
+> Varada
+>
+>>> I will rename the qcom_pcie_ops structure and related functions
+>>> with the block IP version instead of vX numbering and post the
+>>> patch.
 >>
->> I assume this only affects boxes where the firmware uses addresses above
->> 4GB, i.e., not very many?  So this is v4.14 material?  Or do you think it's
->> important for v4.13?
 >>
-> 
-> As I mentioned, it would be nice if this could at least go into v4.11
-> and later, given that v4.11 contains a patch that switches all PCI
-> devices to 32-bit addressing only when the IOMMU is involved in DMA,
-> and this is what triggered the issue on arm64 boards with such a PCI
-> card and no DRAM below 4 GB.
+>> regards,
+>> Stan
+> --
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Agreed. It is likely that the issue will trigger on any 64bit->32bit
-IOVA transition, not only EFI->kernel, such as a kexec from a 4.10 to a
-4.11 kernel.
-
-More importantly, this could have a dramatic effect on a system where
-both the 32bit and 64bit address ranges are valid. In my case, I was
-saved by the IOMMU blocking the DMA access, but imagine for a second the
-device was using PAs... I'm not sure that this is completely
-hypothetical, nor arm64 specific.
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
