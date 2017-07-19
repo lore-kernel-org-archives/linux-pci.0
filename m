@@ -1,169 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f176.google.com ([209.85.128.176]:35171 "EHLO
-        mail-wr0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752493AbdGFDJ7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 23:09:59 -0400
-Received: by mail-wr0-f176.google.com with SMTP id k67so9588218wrc.2
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jul 2017 20:09:58 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v5 1/2] PCI: iproc: Retry request when CRS returned from EP
-Date: Thu,  6 Jul 2017 08:39:41 +0530
-Message-Id: <1499310582-21193-2-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
-References: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36100 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751560AbdGSB3z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:55 -0400
+Received: by mail-pg0-f66.google.com with SMTP id y129so4856383pgy.3
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:55 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
+Subject: [PATCH 4/4] arm64: allow non-legacy VGA devices to be default
+Date: Wed, 19 Jul 2017 11:28:39 +1000
+Message-Id: <20170719012839.20124-7-dja@axtens.net>
+In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
+References: <20170719012839.20124-1-dja@axtens.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For Configuration Requests only, following reset it is possible for a
-device to terminate the request but indicate that it is temporarily unable
-to process the Request, but will be able to process the Request in the
-future – in this case, the Configuration Request Retry Status 100 (CRS)
-Completion Status is used.
+The VGA arbiter only marks a device as default if it can decode
+legacy I/O and memory ranges. This is often not the case on arm64,
+which doesn't use the legacy ranges.
 
-As per PCI spec, CRS Software Visibility only affects config read of the
-Vendor ID, for config write or any other config read the Root must
-automatically re-issue configuration request again as a new request.
-Iproc based PCIe RC (hw) does not retry request on its own.
+Enable the VGA arbiter to mark the first enabled VGA card as
+default.
 
-As a result of the fact, PCIe RC driver (sw) should take care of CRS.
-This patch fixes the problem, and attempts to read config space again in
-case of PCIe code forwarding the CRS back to CPU.
-It implements iproc_pcie_config_read which gets called for Stingray,
-Otherwise it falls back to PCI generic APIs.
+Signed-off-by: Daniel Axtens <dja@axtens.net>
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+---
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 0f39bd2..b0abcd7 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -68,6 +68,9 @@
- #define APB_ERR_EN_SHIFT             0
- #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
- 
-+#define CFG_RETRY_STATUS             0xffff0001
-+#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
-+
- /* derive the enum index of the outbound/inbound mapping registers */
- #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
- 
-@@ -448,6 +451,55 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
- 	}
- }
- 
-+static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-+{
-+	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
-+	unsigned int ret;
-+
-+	/*
-+	 * As per PCI spec, CRS Software Visibility only
-+	 * affects config read of the Vendor ID.
-+	 * For config write or any other config read the Root must
-+	 * automatically re-issue configuration request again as a
-+	 * new request. Iproc based PCIe RC (hw) does not retry
-+	 * request on its own, so handle it here.
-+	 */
-+	do {
-+		ret = readl(cfg_data_p);
-+		if (ret == CFG_RETRY_STATUS)
-+			udelay(1);
-+		else
-+			return PCIBIOS_SUCCESSFUL;
-+	} while (timeout--);
-+
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
-+					       unsigned int busno,
-+					       unsigned int slot,
-+					       unsigned int fn,
-+					       int where)
-+{
-+	u16 offset;
-+	u32 val;
-+
-+	/* EP device access */
-+	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
-+		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
-+		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
-+		(where & CFG_ADDR_REG_NUM_MASK) |
-+		(1 & CFG_ADDR_CFG_TYPE_MASK);
-+
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
-+	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
-+
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return NULL;
-+
-+	return (pcie->base + offset);
-+}
-+
- /**
-  * Note access to the configuration registers are protected at the higher layer
-  * by 'pci_lock' in drivers/pci/access.c
-@@ -499,13 +551,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 		return (pcie->base + offset);
- }
- 
-+static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	struct iproc_pcie *pcie = iproc_data(bus);
-+	unsigned int slot = PCI_SLOT(devfn);
-+	unsigned int fn = PCI_FUNC(devfn);
-+	unsigned int busno = bus->number;
-+	void __iomem *cfg_data_p;
-+	int ret;
-+
-+	/* root complex access. */
-+	if (busno == 0)
-+		return pci_generic_config_read32(bus, devfn, where, size, val);
-+
-+	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
-+
-+	if (!cfg_data_p)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	ret = iproc_pcie_cfg_retry(cfg_data_p);
-+	if (ret)
-+		return ret;
-+
-+	*val = readl(cfg_data_p);
-+
-+	if (size <= 2)
-+		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
- 				    int where, int size, u32 *val)
- {
- 	int ret;
-+	struct iproc_pcie *pcie = iproc_data(bus);
- 
- 	iproc_pcie_apb_err_disable(bus, true);
--	ret = pci_generic_config_read32(bus, devfn, where, size, val);
-+	if (pcie->type == IPROC_PCIE_PAXB_V2)
-+		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
-+	else
-+		ret = pci_generic_config_read32(bus, devfn, where, size, val);
- 	iproc_pcie_apb_err_disable(bus, false);
- 
- 	return ret;
+Tested on a D05 using the hibmc card.
+---
+ arch/arm64/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index dfd908630631..cefcbd442e4f 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -28,6 +28,7 @@ config ARM64
+ 	select ARCH_SUPPORTS_NUMA_BALANCING
+ 	select ARCH_WANT_COMPAT_IPC_PARSE_VERSION
+ 	select ARCH_WANT_FRAME_POINTERS
++	select ARCH_WANT_VGA_ARB_FALLBACK
+ 	select ARCH_HAS_UBSAN_SANITIZE_ALL
+ 	select ARM_AMBA
+ 	select ARM_ARCH_TIMER
 -- 
-1.9.1
+2.11.0
