@@ -1,56 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 6 Jul 2017 12:17:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ding Tianhong <dingtianhong@huawei.com>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Message-ID: <20170706171729.GP13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <43e01fca-a746-90d2-fdfa-c63f1d56ef5f@huawei.com>
- <065edbdb-3a7f-2608-3cc0-3876f55d414b@huawei.com>
-MIME-Version: 1.0
-In-Reply-To: <065edbdb-3a7f-2608-3cc0-3876f55d414b@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, alexander.duyck@gmail.com,
- ashok.raj@intel.com, jeffrey.t.kirsher@intel.com, linux-pci@vger.kernel.org,
- ganeshgr@chelsio.com, Bob.Shaw@amd.com, leedom@chelsio.com,
- patrick.j.cramer@intel.com, werner@chelsio.com,
- linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
- Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, davem@davemloft.net,
- l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50778 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753271AbdGSIo2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:28 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v2 4/8] phy: qcom-qmp: Handle unavailable registers
+Date: Wed, 19 Jul 2017 14:13:35 +0530
+Message-Id: <1500453819-5223-5-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 06, 2017 at 08:58:51PM +0800, Ding Tianhong wrote:
-> Hi Bjorn:
-> 
-> Could you please give some feedback about this patchset, it looks like no more comments for more than a week,
-> thanks. :)
+In some implementations of the QMP phy, some registers might not
+be present. Provide a way identify such registers and not access
+those registers.
 
-I was on vacation when you posted it, but don't worry, it's still in
-the queue:
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-  https://patchwork.ozlabs.org/project/linux-pci/list
-
-v4.12 was just released, so it's obviously too late for that.  The
-v4.13 merge window is open, so it's too late for v4.13 as well (we
-need stuff in -next before the merge window).
-
-There's still plenty of time to work on this for v4.14.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 97020ec..000ad1c 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -187,6 +187,8 @@ struct qmp_phy_init_tbl {
+ 		.in_layout = 1,		\
+ 	}
+ 
++#define QPHY_REG_INVAL		0xffffffffu
++
+ /* set of registers with offsets different per-PHY */
+ enum qphy_reg_layout {
+ 	/* Common block control registers */
+@@ -676,15 +678,18 @@ static int qcom_qmp_phy_com_init(struct qcom_qmp *qmp)
+ 		qphy_setbits(serdes, cfg->regs[QPHY_COM_START_CONTROL],
+ 			     SERDES_START | PCS_START);
+ 
+-		status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
+-		mask = cfg->mask_com_pcs_ready;
+-
+-		ret = readl_poll_timeout(status, val, (val & mask), 10,
+-					 PHY_INIT_COMPLETE_TIMEOUT);
+-		if (ret) {
+-			dev_err(qmp->dev,
+-				"phy common block init timed-out\n");
+-			goto err_com_init;
++		if (cfg->regs[QPHY_COM_PCS_READY_STATUS] != QPHY_REG_INVAL) {
++			status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
++			mask = cfg->mask_com_pcs_ready;
++
++			ret = readl_poll_timeout(status, val, (val & mask), 10,
++						 PHY_INIT_COMPLETE_TIMEOUT);
++			if (ret) {
++				dev_err(qmp->dev,
++					"%s: phy common block init timed-out\n",
++					__func__);
++				goto err_com_init;
++			}
+ 		}
+ 	}
+ 
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
