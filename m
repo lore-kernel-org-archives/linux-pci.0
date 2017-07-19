@@ -1,73 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50778 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753271AbdGSIo2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:28 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v2 4/8] phy: qcom-qmp: Handle unavailable registers
-Date: Wed, 19 Jul 2017 14:13:35 +0530
-Message-Id: <1500453819-5223-5-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
-References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:9948 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751754AbdGSHt4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:49:56 -0400
+Subject: Re: [RFC PATCH v4 1/7] PCI: rockchip: split out
+ rockchip_pcie_get_phys
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+ <1500448979-93067-2-git-send-email-shawn.lin@rock-chips.com>
+CC: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
+        <linux-pci@vger.kernel.org>, <linux-rockchip@lists.infradead.org>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <4e11d727-47cb-9b89-5081-387b550902b4@ti.com>
+Date: Wed, 19 Jul 2017 13:17:58 +0530
+MIME-Version: 1.0
+In-Reply-To: <1500448979-93067-2-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In some implementations of the QMP phy, some registers might not
-be present. Provide a way identify such registers and not access
-those registers.
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- drivers/phy/qualcomm/phy-qcom-qmp.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 97020ec..000ad1c 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -187,6 +187,8 @@ struct qmp_phy_init_tbl {
- 		.in_layout = 1,		\
- 	}
- 
-+#define QPHY_REG_INVAL		0xffffffffu
-+
- /* set of registers with offsets different per-PHY */
- enum qphy_reg_layout {
- 	/* Common block control registers */
-@@ -676,15 +678,18 @@ static int qcom_qmp_phy_com_init(struct qcom_qmp *qmp)
- 		qphy_setbits(serdes, cfg->regs[QPHY_COM_START_CONTROL],
- 			     SERDES_START | PCS_START);
- 
--		status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
--		mask = cfg->mask_com_pcs_ready;
--
--		ret = readl_poll_timeout(status, val, (val & mask), 10,
--					 PHY_INIT_COMPLETE_TIMEOUT);
--		if (ret) {
--			dev_err(qmp->dev,
--				"phy common block init timed-out\n");
--			goto err_com_init;
-+		if (cfg->regs[QPHY_COM_PCS_READY_STATUS] != QPHY_REG_INVAL) {
-+			status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
-+			mask = cfg->mask_com_pcs_ready;
-+
-+			ret = readl_poll_timeout(status, val, (val & mask), 10,
-+						 PHY_INIT_COMPLETE_TIMEOUT);
-+			if (ret) {
-+				dev_err(qmp->dev,
-+					"%s: phy common block init timed-out\n",
-+					__func__);
-+				goto err_com_init;
-+			}
- 		}
- 	}
- 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+On Wednesday 19 July 2017 12:52 PM, Shawn Lin wrote:
+> We plan to introduce per-lanes PHY, so split out new
+> function to make it easy in the future. No functional
+> change intended.
+> 
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Reviewed-by: Brian Norris <briannorris@chromium.org>
+> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> 
+> Changes in v4:
+> - use err variable to check return value of
+>   rockchip_pcie_get_phys
+> - add Brian's tag
+> 
+> Changes in v3: None
+> Changes in v2: None
+> 
+>  drivers/pci/host/pcie-rockchip.c | 22 ++++++++++++++++------
+>  1 file changed, 16 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 5acf869..c42feab 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -853,6 +853,19 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+>  	chained_irq_exit(chip, desc);
+>  }
+>  
+> +static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+> +{
+> +	struct device *dev = rockchip->dev;
+> +
+> +	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+> +	if (IS_ERR(rockchip->phy)) {
+> +		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
+> +			dev_err(dev, "missing phy\n");
+> +		return PTR_ERR(rockchip->phy);
+> +	}
+> +
+> +	return 0;
+> +}
+>  
+>  /**
+>   * rockchip_pcie_parse_dt - Parse Device Tree
+> @@ -883,12 +896,9 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>  	if (IS_ERR(rockchip->apb_base))
+>  		return PTR_ERR(rockchip->apb_base);
+>  
+> -	rockchip->phy = devm_phy_get(dev, "pcie-phy");
+> -	if (IS_ERR(rockchip->phy)) {
+> -		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
+> -			dev_err(dev, "missing phy\n");
+> -		return PTR_ERR(rockchip->phy);
+> -	}
+> +	err = rockchip_pcie_get_phys(rockchip);
+> +	if (err)
+> +		return err;
+>  
+>  	rockchip->lanes = 1;
+>  	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+> 
