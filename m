@@ -1,75 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41530 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbdGaFuM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:50:12 -0400
-Subject: Re: [PATCH v5 2/7] dt-bindings: phy: qmp: Add support for QMP phy in
- IPQ8074
-To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
-        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
- <1501479594-18285-3-git-send-email-varada@codeaurora.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Message-ID: <55f7f87f-0302-c4a5-af9b-280c6c473943@codeaurora.org>
-Date: Mon, 31 Jul 2017 11:20:05 +0530
-MIME-Version: 1.0
-In-Reply-To: <1501479594-18285-3-git-send-email-varada@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35440 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751906AbdGSB3a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 21:29:30 -0400
+Received: by mail-pg0-f67.google.com with SMTP id d193so4849274pgc.2
+        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 18:29:30 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        helgass@kernel.org, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>
+Subject: [PATCH 2/4] vgaarb: allow non-legacy cards to be marked as default
+Date: Wed, 19 Jul 2017 11:28:35 +1000
+Message-Id: <20170719012839.20124-3-dja@axtens.net>
+In-Reply-To: <20170719012839.20124-1-dja@axtens.net>
+References: <20170719012839.20124-1-dja@axtens.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The VGA arbiter currently only selects a card as default if it can
+decode legacy I/O and memory ranges.
 
+However, on some architectures, legacy PCI resources are not used.
+This has lead to a powerpc quirk, and issues on arm64.
 
-On 07/31/2017 11:09 AM, Varadarajan Narayanan wrote:
-> IPQ8074 uses QMP phy controller that provides support to PCIe and
-> USB. Adding dt binding information for the same.
->
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
+Allow architectures to select ARCH_WANT_VGA_ARB_FALLBACK.
+When that symbol is selected, add a PCI_FIXUP_CLASS_ENABLE hook,
+which will mark the first card that is enabled and that can control
+I/O and memory as the default card.
 
-Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Behaviour is unchanged unless arches opt-in by selecting the
+Kconfig option.
 
->   Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 8 ++++++++
->   1 file changed, 8 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> index 5d7a51f..802af1b 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> @@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
->   
->   Required properties:
->    - compatible: compatible list, contains:
-> +	       "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
->   	       "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
->   	       "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
->   
-> @@ -38,6 +39,8 @@ Required properties:
->   		 "phy", "common", "cfg".
->   		For "qcom,msm8996-qmp-usb3-phy" must contain
->   		 "phy", "common".
-> +		For "qcom,ipq8074-qmp-pcie-phy" must contain:
-> +		 "phy", "common".
->   
->    - vdda-phy-supply: Phandle to a regulator supply to PHY core block.
->    - vdda-pll-supply: Phandle to 1.8V regulator supply to PHY refclk pll block.
-> @@ -63,6 +66,11 @@ Required properties for child node:
->    - clock-output-names: Name of the phy clock that will be the parent for
->   		       the above pipe clock.
->   
-> +	For "qcom,ipq8074-qmp-pcie-phy":
-> +		- "pcie20_phy0_pipe_clk"	Pipe Clock parent
-> +			(or)
-> +		  "pcie20_phy1_pipe_clk"
-> +
->    - resets: a list of phandles and reset controller specifier pairs,
->   	   one for each entry in reset-names.
->    - reset-names: Must contain following for pcie qmp phys:
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+---
+ drivers/gpu/vga/Kconfig  |  7 +++++++
+ drivers/gpu/vga/vgaarb.c | 21 +++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
+diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
+index 29437eabe095..1205c6cc1ff5 100644
+--- a/drivers/gpu/vga/Kconfig
++++ b/drivers/gpu/vga/Kconfig
+@@ -17,6 +17,13 @@ config VGA_ARB_MAX_GPUS
+ 	  Reserves space in the kernel to maintain resource locking for
+ 	  multiple GPUS.  The overhead for each GPU is very small.
+ 
++config ARCH_WANT_VGA_ARB_FALLBACK
++	bool
++	help
++	  Some architectures don't have a concept of "legacy" PCI addresses
++	  which the VGA arbiter relies on. Instead, they can fall back to
++	  selecting the first device that decodes memory and I/O.
++
+ config VGA_SWITCHEROO
+ 	bool "Laptop Hybrid Graphics - GPU switching support"
+ 	depends on X86
+diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+index 76875f6299b8..2135b04759c5 100644
+--- a/drivers/gpu/vga/vgaarb.c
++++ b/drivers/gpu/vga/vgaarb.c
+@@ -1472,3 +1472,24 @@ static int __init vga_arb_device_init(void)
+ 	return rc;
+ }
+ subsys_initcall(vga_arb_device_init);
++
++#if defined(CONFIG_ARCH_WANT_VGA_ARB_FALLBACK)
++static void vga_arb_fallback_fixup(struct pci_dev *pdev)
++{
++	u16 cmd;
++
++	if (vga_default_device())
++		return;
++
++	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
++	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) {
++		vgaarb_info(&pdev->dev, "[fallback]"
++			    " setting as default device\n");
++		vga_set_default_device(pdev);
++	}
++
++}
++DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
++			       PCI_CLASS_DISPLAY_VGA, 8,
++			       vga_arb_fallback_fixup);
++#endif
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.11.0
