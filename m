@@ -1,54 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47902 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751784AbdGETtf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Jul 2017 15:49:35 -0400
-Date: Wed, 5 Jul 2017 14:49:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: kys@microsoft.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        devel@linuxdriverproject.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: Re: [PATCH] hv: fix msi affinity when device requests all possible
- CPU's
-Message-ID: <20170705194933.GN13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170628232204.15227-1-sthemmin@microsoft.com>
- <20170702213819.GF18324@bhelgaas-glaptop.roam.corp.google.com>
- <20170704145942.53390432@xeon-e3>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170704145942.53390432@xeon-e3>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50606 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753271AbdGSIoU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:20 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v2 3/8] phy: qcom-qmp: Fix phy pipe clock name
+Date: Wed, 19 Jul 2017 14:13:34 +0530
+Message-Id: <1500453819-5223-4-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 04, 2017 at 02:59:42PM -0700, Stephen Hemminger wrote:
-> On Sun, 2 Jul 2017 16:38:19 -0500
-> Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > On Wed, Jun 28, 2017 at 04:22:04PM -0700, Stephen Hemminger wrote:
-> > > When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV,
-> > > the driver requests affinity with all possible CPU's (0-239) even
-> > > those CPU's are not online (and will never be). Because of this the device
-> > > is unable to correctly get MSI interrupt's setup.
-> > > 
-> > > This was caused by the change in 4.12 that converted this affinity
-> > > into all possible CPU's (0-31) but then host reports
-> > > an error since this is larger than the number of online cpu's.
-> > > 
-> > > Previously, this worked (up to 4.12-rc1) because only online cpu's
-> > > would be put in mask passed to the host.
-> > > 
-> > > This patch applies only to 4.12.
-> > > The driver in linux-next needs a a different fix because of the changes
-> > > to PCI host protocol version.  
-> > 
-> > If Linus decides to postpone v4.12 a week, I can ask him to pull this.  But
-> > I suspect he will release v4.12 today.  In that case, I don't know what to
-> > do with this other than maybe send it to Greg for a -stable release.
-> 
-> Looks like this will have to be queued for 4.12 stable.
+Presently, the phy pipe clock's name is assumed to be either
+usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+phy lane's number). However, this will not work if an SoC has
+more than one instance of the phy. Hence, instead of assuming
+the name of the clock, fetch it from the DT.
 
-I assume you'll take care of this, right?  It sounds like there's nothing
-to do for upstream because it needs a different fix.
+Acked-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-Bjorn
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 78ca628..97020ec 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+  *    clk  |   +-------+   |                   +-----+
+  *         +---------------+
+  */
+-static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
++static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
+ {
+-	char name[24];
+ 	struct clk_fixed_rate *fixed;
+ 	struct clk_init_data init = { };
+ 
+-	switch (qmp->cfg->type) {
+-	case PHY_TYPE_USB3:
+-		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+-		break;
+-	case PHY_TYPE_PCIE:
+-		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+-		break;
+-	default:
++	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
++	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
+ 		/* not all phys register pipe clocks, so return success */
+ 		return 0;
+ 	}
+@@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+ 	if (!fixed)
+ 		return -ENOMEM;
+ 
+-	init.name = name;
++	init.name = clk_name;
+ 	init.ops = &clk_fixed_rate_ops;
+ 
+ 	/* controllers using QMP phys use 125MHz pipe clock interface */
+@@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 
+ 	id = 0;
+ 	for_each_available_child_of_node(dev->of_node, child) {
++		const char *clk_name;
++
+ 		/* Create per-lane phy */
+ 		ret = qcom_qmp_phy_create(dev, child, id);
+ 		if (ret) {
+@@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 			return ret;
+ 		}
+ 
++		ret = of_property_read_string(child, "clock-output-names",
++							&clk_name);
++		if (ret) {
++			dev_err(dev,
++				"failed to get clock-output-names for lane%d phy, %d\n",
++				id, ret);
++			return ret;
++		}
++
+ 		/*
+ 		 * Register the pipe clock provided by phy.
+ 		 * See function description to see details of this pipe clock.
+ 		 */
+-		ret = phy_pipe_clk_register(qmp, id);
++		ret = phy_pipe_clk_register(qmp, clk_name);
+ 		if (ret) {
+ 			dev_err(qmp->dev,
+ 				"failed to register pipe clock source\n");
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
