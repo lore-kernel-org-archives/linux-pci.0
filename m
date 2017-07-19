@@ -1,47 +1,185 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC] PCI: dwc: designware: allow customize unroll registers'
- readl/writel
-To: Jisheng Zhang <jszhang@marvell.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>
-References: <20170713184837.541ccf26@xhacker> <20170713185213.0b04a4fc@xhacker>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <825636e2-f685-738e-46d9-bbc483e95606@synopsys.com>
-Date: Mon, 17 Jul 2017 09:59:14 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:45178 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753538AbdGSPWP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Jul 2017 11:22:15 -0400
+From: "Latif, Faisal" <faisal.latif@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>,
+        Doug Ledford <dledford@redhat.com>,
+        "Hefty, Sean" <sean.hefty@intel.com>,
+        Hal Rosenstock <hal.rosenstock@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: PCI/IB: add support for pci driver attribute groups
+Date: Wed, 19 Jul 2017 15:22:11 +0000
+Message-ID: <1EEBC91386407A4A8D1EBE1DD5AA5212818DE784@FMSMSX114.amr.corp.intel.com>
+References: <20170719130106.GE17776@kroah.com>
+In-Reply-To: <20170719130106.GE17776@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20170713185213.0b04a4fc@xhacker>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSmlzaGVuZywKCsOAcyAxMTo1MiBBTSBkZSA3LzEzLzIwMTcsIEppc2hlbmcgWmhhbmcgZXNj
-cmV2ZXU6Cj4gT24gVGh1LCAxMyBKdWwgMjAxNyAxODo0ODozNyArMDgwMCBKaXNoZW5nIFpoYW5n
-IHdyb3RlOgo+IAo+PiBIaSBKb2FvLCBKaW5nb28sCj4+Cj4+IE5vdywgdGhlIFBDSUVfR0VUX0FU
-VV9PVVRCX1VOUl9SRUdfT0ZGU0VUIG1hY3JvIGlzIGRlZmluZWQgYXM6Cj4+Cj4+IC8qIFJlZ2lz
-dGVyIGFkZHJlc3MgYnVpbGRlciAqLwo+PiAjZGVmaW5lIFBDSUVfR0VUX0FUVV9PVVRCX1VOUl9S
-RUdfT0ZGU0VUKHJlZ2lvbikgICAgICAgIFwKPj4gICAgICAgICAgICAgICAgICAgICAgICAgKCgw
-eDMgPDwgMjApIHwgKChyZWdpb24pIDw8IDkpKQo+Pgo+PiBJIGhhdmUgb25lIHF1ZXN0aW9uOiB3
-aGVyZSBkb2VzIHRoZSAoMHgzIDw8IDIwKSBjb21lIGZyb20/IDJNQiBzcGFjZSwgYSBiaXQKCkZy
-b20sIHRoZSBQQ0llIENvcmUgNC44MCB5b3UgaGF2ZSB0aGUgbmV3IGZlYXR1cmUgVW5yb2xsLCB3
-aGljaCB3YXMgZGV2ZWxvcGVkCmZvciBib3RoIGlBVFUgYW5kIERNQS4KVG8gaW5mb3JtIHRoZSBD
-b3JlIHRoYXQgeW91IHdhbnQgdG8gYWNjZXNzIGFuIFVucm9sbCByZWdpc3RlciBhZGRyZXNzLCBi
-aXRzIDIwCmFuZCAyMSBtdXN0IGJlIHNldCwgYW5kIHRoYXRzIHdoZXJlIDB4MyBjb21lcyBmcm9t
-LgoKSWYgaXQgaXMgbm90IGNsZWFyIHBsZWFzZSBsZXQgbWUga25vdy4KCj4gCj4gc29ycnksIHR5
-cG8uICgweDMgPDwgMjApIHNob3VsZCBiZSAzTUIuCj4gCj4+IGxhcmdlLiBBbmQgSSBkaWRuJ3Qg
-ZmluZCBpdCBpbiB0aGUgZGF0YWJvb2suIElzIGl0IHBsYXRmb3JtIHNwZWNpZmljPwo+PiBJZiB5
-ZXMsIEkgd2FudCB0byBjb29rIG9uZSBwYXRjaCB0byBjdXN0b21pemUgdW5yb2xsIHJlZ2lzdGVy
-cycgcmVhZGwvd3JpdGVsLgo+Pgo+PiBBbmQgaG93IGRvZXMgKDB4MyA8PCAyMCkgZW5hYmxlIERC
-STIgYWNjZXNzPwo+Pgo+PiBUaGFua3MgaW4gYWR2YW5jZSwKPj4gSmlzaGVuZwo+IAoKVGhhbmtz
-LApKb2FvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwps
-aW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJh
-ZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51
-eC1hcm0ta2VybmVsCg==
+Thanks!
+Faisal
+
+>-----Original Message-----
+>From: Greg KH [mailto:gregkh@linuxfoundation.org]
+>Sent: Wednesday, July 19, 2017 8:01 AM
+>To: Latif, Faisal <faisal.latif@intel.com>; Doug Ledford
+><dledford@redhat.com>; Hefty, Sean <sean.hefty@intel.com>; Hal Rosenstock
+><hal.rosenstock@gmail.com>; Bjorn Helgaas <bhelgaas@google.com>
+>Cc: linux-rdma@vger.kernel.org; linux-pci@vger.kernel.org; linux-
+>kernel@vger.kernel.org
+>Subject: PCI/IB: add support for pci driver attribute groups
+>
+>From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+>Some drivers (specifically the nes IB driver), want to create a lot of sysfs driver
+>attributes.  Instead of open-coding the creation and removal of these files (and
+>getting it wrong btw), it's a better idea to let the driver core handle all of this
+>logic for us.
+>
+>So add a new field to the pci driver structure, **groups, that allows pci drivers
+>to specify an attribute group list it wishes to have created when it is registered
+>with the driver core.
+>
+>Big bonus is now the driver doesn't race with userspace when the sysfs files are
+>created vs. when the kobject is announced, so any script/tool that actually
+>wanted to use these files will not have to poll waiting for them to show up.
+>
+>Cc: Faisal Latif <faisal.latif@intel.com>
+>Cc: Doug Ledford <dledford@redhat.com>
+>Cc: Sean Hefty <sean.hefty@intel.com>
+>Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+>Cc: Bjorn Helgaas <bhelgaas@google.com>
+>Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>
+>---
+> drivers/infiniband/hw/nes/nes.c |   69 +++++++++++++---------------------------
+> drivers/pci/pci-driver.c        |    1
+> include/linux/pci.h             |    1
+> 3 files changed, 26 insertions(+), 45 deletions(-)
+>
+>--- a/drivers/infiniband/hw/nes/nes.c
+>+++ b/drivers/infiniband/hw/nes/nes.c
+>@@ -808,13 +808,6 @@ static void nes_remove(struct pci_dev *p  }
+>
+>
+>-static struct pci_driver nes_pci_driver = {
+>-	.name = DRV_NAME,
+>-	.id_table = nes_pci_table,
+>-	.probe = nes_probe,
+>-	.remove = nes_remove,
+>-};
+>-
+> static ssize_t adapter_show(struct device_driver *ddp, char *buf)  {
+> 	unsigned int  devfn = 0xffffffff;
+>@@ -1156,35 +1149,29 @@ static DRIVER_ATTR_RW(idx_addr);  static
+>DRIVER_ATTR_RW(idx_data);  static DRIVER_ATTR_RW(wqm_quanta);
+>
+>-static int nes_create_driver_sysfs(struct pci_driver *drv) -{
+>-	int error;
+>-	error  = driver_create_file(&drv->driver, &driver_attr_adapter);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_cmd);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_data);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_flash_cmd);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_flash_data);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_addr);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_data);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_idx_addr);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_idx_data);
+>-	error |= driver_create_file(&drv->driver, &driver_attr_wqm_quanta);
+>-	return error;
+>-}
+>-
+>-static void nes_remove_driver_sysfs(struct pci_driver *drv) -{
+>-	driver_remove_file(&drv->driver, &driver_attr_adapter);
+>-	driver_remove_file(&drv->driver, &driver_attr_eeprom_cmd);
+>-	driver_remove_file(&drv->driver, &driver_attr_eeprom_data);
+>-	driver_remove_file(&drv->driver, &driver_attr_flash_cmd);
+>-	driver_remove_file(&drv->driver, &driver_attr_flash_data);
+>-	driver_remove_file(&drv->driver, &driver_attr_nonidx_addr);
+>-	driver_remove_file(&drv->driver, &driver_attr_nonidx_data);
+>-	driver_remove_file(&drv->driver, &driver_attr_idx_addr);
+>-	driver_remove_file(&drv->driver, &driver_attr_idx_data);
+>-	driver_remove_file(&drv->driver, &driver_attr_wqm_quanta);
+>-}
+>+static struct attribute *nes_attrs[] = {
+>+	&driver_attr_adapter,
+>+	&driver_attr_eeprom_cmd,
+>+	&driver_attr_eeprom_data,
+>+	&driver_attr_flash_cmd,
+>+	&driver_attr_flash_data,
+>+	&driver_attr_nonidx_addr,
+>+	&driver_attr_nonidx_data,
+>+	&driver_attr_idx_addr,
+>+	&driver_attr_idx_data,
+>+	&driver_attr_wqm_quanta,
+>+	NULL,
+>+};
+>+ATTRIBUTE_GROUPS(nes);
+>+
+>+static struct pci_driver nes_pci_driver = {
+>+	.name = DRV_NAME,
+>+	.id_table = nes_pci_table,
+>+	.probe = nes_probe,
+>+	.remove = nes_remove,
+>+	.groups = nes_groups,
+>+};
+>+
+>
+> /**
+>  * nes_init_module - module initialization entry point @@ -1192,20 +1179,13
+>@@ static void nes_remove_driver_sysfs(stru  static int __init
+>nes_init_module(void)  {
+> 	int retval;
+>-	int retval1;
+>
+> 	retval = nes_cm_start();
+> 	if (retval) {
+> 		printk(KERN_ERR PFX "Unable to start NetEffect iWARP
+>CM.\n");
+> 		return retval;
+> 	}
+>-	retval = pci_register_driver(&nes_pci_driver);
+>-	if (retval >= 0) {
+>-		retval1 = nes_create_driver_sysfs(&nes_pci_driver);
+>-		if (retval1 < 0)
+>-			printk(KERN_ERR PFX "Unable to create NetEffect sys
+>files.\n");
+>-	}
+>-	return retval;
+>+	return pci_register_driver(&nes_pci_driver);
+> }
+>
+>
+>@@ -1215,7 +1195,6 @@ static int __init nes_init_module(void)  static void
+>__exit nes_exit_module(void)  {
+> 	nes_cm_stop();
+>-	nes_remove_driver_sysfs(&nes_pci_driver);
+>
+> 	pci_unregister_driver(&nes_pci_driver);
+> }
+>--- a/drivers/pci/pci-driver.c
+>+++ b/drivers/pci/pci-driver.c
+>@@ -1307,6 +1307,7 @@ int __pci_register_driver(struct pci_dri
+> 	drv->driver.bus = &pci_bus_type;
+> 	drv->driver.owner = owner;
+> 	drv->driver.mod_name = mod_name;
+>+	drv->driver.groups = drv->groups;
+>
+> 	spin_lock_init(&drv->dynids.lock);
+> 	INIT_LIST_HEAD(&drv->dynids.list);
+>--- a/include/linux/pci.h
+>+++ b/include/linux/pci.h
+>@@ -729,6 +729,7 @@ struct pci_driver {
+> 	void (*shutdown) (struct pci_dev *dev);
+> 	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
+> 	const struct pci_error_handlers *err_handler;
+>+	const struct attribute_group **groups;
+> 	struct device_driver	driver;
+> 	struct pci_dynids dynids;
+> };
