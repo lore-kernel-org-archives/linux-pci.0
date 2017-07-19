@@ -1,166 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0043.outbound.protection.outlook.com ([104.47.34.43]:16780
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753128AbdGFGuU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Jul 2017 02:50:20 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
-        Minghuan Lian <Minghuan.Lian@nxp.com>
-Subject: [PATCH 3/3] PCI: layerscape: refactor the host_init function
-Date: Thu, 6 Jul 2017 14:33:49 +0800
-Message-ID: <1499322829-23018-3-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:60138 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752794AbdGSNBN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 09:01:13 -0400
+Date: Wed, 19 Jul 2017 15:01:06 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Faisal Latif <faisal.latif@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Sean Hefty <sean.hefty@intel.com>,
+        Hal Rosenstock <hal.rosenstock@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: PCI/IB: add support for pci driver attribute groups
+Message-ID: <20170719130106.GE17776@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Main changes:
-- Make the ls1021a's host_init reuse layerscape platform's common
-  host_init function.
-- Will not use the outbound windows configured by bootloader, but
-  introduce DWC common setup function dw_pcie_setup_rc and disable
-  the bootloader configured outbound windows. And remove the duplicate
-  class field fix code.
+Some drivers (specifically the nes IB driver), want to create a lot of
+sysfs driver attributes.  Instead of open-coding the creation and
+removal of these files (and getting it wrong btw), it's a better idea to
+let the driver core handle all of this logic for us.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
+So add a new field to the pci driver structure, **groups, that allows
+pci drivers to specify an attribute group list it wishes to have created
+when it is registered with the driver core.
+
+Big bonus is now the driver doesn't race with userspace when the sysfs
+files are created vs. when the kobject is announced, so any script/tool
+that actually wanted to use these files will not have to poll waiting
+for them to show up.
+
+Cc: Faisal Latif <faisal.latif@intel.com>
+Cc: Doug Ledford <dledford@redhat.com>
+Cc: Sean Hefty <sean.hefty@intel.com>
+Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- drivers/pci/dwc/pci-layerscape.c | 85 ++++++++++++++++++++++------------------
- 1 file changed, 46 insertions(+), 39 deletions(-)
+ drivers/infiniband/hw/nes/nes.c |   69 +++++++++++++---------------------------
+ drivers/pci/pci-driver.c        |    1 
+ include/linux/pci.h             |    1 
+ 3 files changed, 26 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index fd86128..9bed3cd 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -33,7 +33,8 @@
+--- a/drivers/infiniband/hw/nes/nes.c
++++ b/drivers/infiniband/hw/nes/nes.c
+@@ -808,13 +808,6 @@ static void nes_remove(struct pci_dev *p
+ }
  
- /* PEX Internal Configuration Registers */
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
--#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
-+
-+#define PCIE_IATU_NUM		6
  
- struct ls_pcie_drvdata {
- 	u32 lut_offset;
-@@ -69,15 +70,9 @@ static void ls_pcie_clear_multifunction(struct ls_pcie *pcie)
+-static struct pci_driver nes_pci_driver = {
+-	.name = DRV_NAME,
+-	.id_table = nes_pci_table,
+-	.probe = nes_probe,
+-	.remove = nes_remove,
+-};
+-
+ static ssize_t adapter_show(struct device_driver *ddp, char *buf)
  {
- 	struct dw_pcie *pci = pcie->pci;
+ 	unsigned int  devfn = 0xffffffff;
+@@ -1156,35 +1149,29 @@ static DRIVER_ATTR_RW(idx_addr);
+ static DRIVER_ATTR_RW(idx_data);
+ static DRIVER_ATTR_RW(wqm_quanta);
  
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	iowrite8(PCI_HEADER_TYPE_BRIDGE, pci->dbi_base + PCI_HEADER_TYPE);
+-static int nes_create_driver_sysfs(struct pci_driver *drv)
+-{
+-	int error;
+-	error  = driver_create_file(&drv->driver, &driver_attr_adapter);
+-	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_cmd);
+-	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_data);
+-	error |= driver_create_file(&drv->driver, &driver_attr_flash_cmd);
+-	error |= driver_create_file(&drv->driver, &driver_attr_flash_data);
+-	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_addr);
+-	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_data);
+-	error |= driver_create_file(&drv->driver, &driver_attr_idx_addr);
+-	error |= driver_create_file(&drv->driver, &driver_attr_idx_data);
+-	error |= driver_create_file(&drv->driver, &driver_attr_wqm_quanta);
+-	return error;
 -}
 -
--/* Fix class value */
--static void ls_pcie_fix_class(struct ls_pcie *pcie)
+-static void nes_remove_driver_sysfs(struct pci_driver *drv)
 -{
--	struct dw_pcie *pci = pcie->pci;
--
--	iowrite16(PCI_CLASS_BRIDGE_PCI, pci->dbi_base + PCI_CLASS_DEVICE);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- }
- 
- /* Drop MSG TLP except for Vendor MSG */
-@@ -91,6 +86,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
- 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
- }
- 
-+static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
-+{
-+	int i;
-+
-+	for (i = 0; i < PCIE_IATU_NUM; i++)
-+		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
-+}
-+
- static int ls1021_pcie_link_up(struct dw_pcie *pci)
- {
- 	u32 state;
-@@ -108,33 +111,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
- 	return 1;
- }
- 
--static void ls1021_pcie_host_init(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct ls_pcie *pcie = to_ls_pcie(pci);
--	struct device *dev = pci->dev;
--	u32 index[2];
--
--	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
--						     "fsl,pcie-scfg");
--	if (IS_ERR(pcie->scfg)) {
--		dev_err(dev, "No syscfg phandle specified\n");
--		pcie->scfg = NULL;
--		return;
--	}
--
--	if (of_property_read_u32_array(dev->of_node,
--				       "fsl,pcie-scfg", index, 2)) {
--		pcie->scfg = NULL;
--		return;
--	}
--	pcie->index = index[1];
--
--	dw_pcie_setup_rc(pp);
--
--	ls_pcie_drop_msg_tlp(pcie);
+-	driver_remove_file(&drv->driver, &driver_attr_adapter);
+-	driver_remove_file(&drv->driver, &driver_attr_eeprom_cmd);
+-	driver_remove_file(&drv->driver, &driver_attr_eeprom_data);
+-	driver_remove_file(&drv->driver, &driver_attr_flash_cmd);
+-	driver_remove_file(&drv->driver, &driver_attr_flash_data);
+-	driver_remove_file(&drv->driver, &driver_attr_nonidx_addr);
+-	driver_remove_file(&drv->driver, &driver_attr_nonidx_data);
+-	driver_remove_file(&drv->driver, &driver_attr_idx_addr);
+-	driver_remove_file(&drv->driver, &driver_attr_idx_data);
+-	driver_remove_file(&drv->driver, &driver_attr_wqm_quanta);
 -}
--
- static int ls_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
-@@ -155,11 +131,42 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
++static struct attribute *nes_attrs[] = {
++	&driver_attr_adapter,
++	&driver_attr_eeprom_cmd,
++	&driver_attr_eeprom_data,
++	&driver_attr_flash_cmd,
++	&driver_attr_flash_data,
++	&driver_attr_nonidx_addr,
++	&driver_attr_nonidx_data,
++	&driver_attr_idx_addr,
++	&driver_attr_idx_data,
++	&driver_attr_wqm_quanta,
++	NULL,
++};
++ATTRIBUTE_GROUPS(nes);
++
++static struct pci_driver nes_pci_driver = {
++	.name = DRV_NAME,
++	.id_table = nes_pci_table,
++	.probe = nes_probe,
++	.remove = nes_remove,
++	.groups = nes_groups,
++};
++
  
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--	ls_pcie_fix_class(pcie);
-+	/*
-+	 * Disable the outbound windows configured by bootloader to avoid
-+	 * one transaction hitting multiple outbound windows and the function
-+	 * dw_pcie_setup_rc will re-configure the outbound windows.
-+	 */
-+	ls_pcie_disable_outbound_atus(pcie);
-+
- 	ls_pcie_clear_multifunction(pcie);
- 	ls_pcie_drop_msg_tlp(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+
-+	dw_pcie_setup_rc(pp);
-+}
-+
-+static void ls1021_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	struct device *dev = pci->dev;
-+	u32 index[2];
-+
-+	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-+						     "fsl,pcie-scfg");
-+	if (IS_ERR(pcie->scfg)) {
-+		dev_err(dev, "No syscfg phandle specified\n");
-+		pcie->scfg = NULL;
-+		return;
-+	}
-+
-+	if (of_property_read_u32_array(dev->of_node,
-+				       "fsl,pcie-scfg", index, 2)) {
-+		pcie->scfg = NULL;
-+		return;
-+	}
-+	pcie->index = index[1];
-+
-+	ls_pcie_host_init(pp);
+ /**
+  * nes_init_module - module initialization entry point
+@@ -1192,20 +1179,13 @@ static void nes_remove_driver_sysfs(stru
+ static int __init nes_init_module(void)
+ {
+ 	int retval;
+-	int retval1;
+ 
+ 	retval = nes_cm_start();
+ 	if (retval) {
+ 		printk(KERN_ERR PFX "Unable to start NetEffect iWARP CM.\n");
+ 		return retval;
+ 	}
+-	retval = pci_register_driver(&nes_pci_driver);
+-	if (retval >= 0) {
+-		retval1 = nes_create_driver_sysfs(&nes_pci_driver);
+-		if (retval1 < 0)
+-			printk(KERN_ERR PFX "Unable to create NetEffect sys files.\n");
+-	}
+-	return retval;
++	return pci_register_driver(&nes_pci_driver);
  }
  
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
--- 
-2.1.0.27.g96db324
+ 
+@@ -1215,7 +1195,6 @@ static int __init nes_init_module(void)
+ static void __exit nes_exit_module(void)
+ {
+ 	nes_cm_stop();
+-	nes_remove_driver_sysfs(&nes_pci_driver);
+ 
+ 	pci_unregister_driver(&nes_pci_driver);
+ }
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1307,6 +1307,7 @@ int __pci_register_driver(struct pci_dri
+ 	drv->driver.bus = &pci_bus_type;
+ 	drv->driver.owner = owner;
+ 	drv->driver.mod_name = mod_name;
++	drv->driver.groups = drv->groups;
+ 
+ 	spin_lock_init(&drv->dynids.lock);
+ 	INIT_LIST_HEAD(&drv->dynids.list);
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -729,6 +729,7 @@ struct pci_driver {
+ 	void (*shutdown) (struct pci_dev *dev);
+ 	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
+ 	const struct pci_error_handlers *err_handler;
++	const struct attribute_group **groups;
+ 	struct device_driver	driver;
+ 	struct pci_dynids dynids;
+ };
