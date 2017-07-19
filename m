@@ -1,125 +1,104 @@
-Return-Path: <SRS0=KvoV=6P=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=KvoV=6P=codeaurora.org=okaya@kernel.org>
-Subject: Re: PCI/DPC: Add eDPC support
-To: Dongdong Liu <liudongdong3@huawei.com>, helgaas@kernel.org
-Cc: linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
- charles.chenxin@huawei.com, linuxarm@huawei.com
-References: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <c718120c-c8ec-0866-db6f-7ac0ac3af5ac@codeaurora.org>
-Date: Wed, 12 Jul 2017 16:52:00 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48104 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751228AbdGSGuG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 02:50:06 -0400
+Date: Wed, 19 Jul 2017 12:19:50 +0530
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, smuthayy <smuthayy@codeaurora.org>
+Subject: Re: [PATCH 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe
+ controller
+Message-ID: <20170719064943.GA29996@codeaurora.org>
+References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+ <1500293043-1887-8-git-send-email-varada@codeaurora.org>
+ <20170717220718.GZ20973@minitux>
+ <20170718095814.GE32439@codeaurora.org>
+ <20170718164438.GE20973@minitux>
 MIME-Version: 1.0
-In-Reply-To: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170718164438.GE20973@minitux>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 6/24/2017 5:04 AM, Dongdong Liu wrote:
-> This code is to add eDPC support. Get and print the RP PIO error
-> information when the trigger condition is RP PIO error.
-> 
-> For more information on eDPC, view the PCI-SIG eDPC ECN here:
-> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
-> 
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> ---
->  drivers/pci/pcie/pcie-dpc.c   | 161 ++++++++++++++++++++++++++++++++++++++++++
->  include/uapi/linux/pci_regs.h |  10 +++
->  2 files changed, 171 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index 77d2ca9..00fdf87 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -16,11 +16,55 @@
->  #include <linux/pcieport_if.h>
->  #include "../pci.h">  
+On Tue, Jul 18, 2017 at 09:44:38AM -0700, Bjorn Andersson wrote:
+> On Tue 18 Jul 02:58 PDT 2017, Varadarajan Narayanan wrote:
+>
+> > On Mon, Jul 17, 2017 at 03:07:18PM -0700, Bjorn Andersson wrote:
+> > > On Mon 17 Jul 05:04 PDT 2017, Varadarajan Narayanan wrote:
+> [..]
+> > >
+> > > Can you confirm that this is actually version 4 of this block? Or are we
+> > > just incrementing an arbitrary number here?
+> >
+> > This is not exactly the 4th version of the block. However, it is
+> > a different version than the ones that are already supported in
+> > this driver. Since the existing driver didn't exactly tie it with
+> > the block IP version, I too followed the same versioning
+> > convention.
+> >
+>
+> Do you have a block IP version that you could base your numbering on, to
+> break the trend? (We should go back and fix up the others as well)
 
-<snip>
+Presently, the driver supports the ipq8064, apq8064, apq8084,
+msm8996, ipq4019 and ipq8074. The SoCs, qcom_pcie_ops version and
+the block IP versions are as follows.
 
-> +static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
-> +{
-> +	struct pci_dev *pdev = dpc->dev->port;
-> +	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
-> +	int i;
-> +	u16 cap;
-> +	u16 status;
-> +
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-> +			      &rp_pio->status);
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
-> +			      &rp_pio->mask);
-> +
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
-> +			      &rp_pio->severity);
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
-> +			      &rp_pio->syserror);
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
-> +			      &rp_pio->exception);
-> +
-> +	/* Get First Error Pointer */
-> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-> +	rp_pio->first_error = (status & 0x1f00) >> 8;
-> +
-> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
-> +	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
-> +	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
-> +		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
-> +			rp_pio->log_size);
-> +		return;
-> +	}
-> +
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
-> +			      &rp_pio->header_log.dw0);
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
-> +			      &rp_pio->header_log.dw1);
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
-> +			      &rp_pio->header_log.dw2);
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
-> +			      &rp_pio->header_log.dw3);
-> +	if (rp_pio->log_size == 4)
-> +		return;
-> +
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
-> +			      &rp_pio->impspec_log);
-> +	for (i = 0; i < rp_pio->log_size - 5; i++)
-> +		pci_read_config_dword(pdev,
-> +			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
-> +			&rp_pio->tlp_prefix_log[i]);
-> +}
-> +
-> +static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
-> +{
+	ipq8064 - v0 - 2.1.0
+	apq8064 - v0 - 2.1.0
+	apq8084 - v1 - 1.0.0
+	msm8996 - v2 - 2.3.2
+	ipq4019 - v3 - 2.4.0
+	ipq8074 - v4 - 2.3.3
 
-Why not have a stack local variable where you collect the information
-on the first function and print it on the second function.
+I will rename the qcom_pcie_ops structure and related functions
+with the block IP version instead of vX numbering and post the
+patch.
 
-What benefit the allocated memory brings?
+> [..]
+> > > > +static int qcom_pcie_enable_resources_v4(struct qcom_pcie *pcie)
+> > > > +{
+> > > > +	struct qcom_pcie_resources_v4 *res = &pcie->res.v4;
+> > > > +	struct dw_pcie *pci = pcie->pci;
+> > > > +	struct device *dev = pci->dev;
+> > > > +	int ret;
+> > > > +
+> > > > +	ret = clk_prepare_enable(res->sys_noc_clk);
+> > > > +	if (ret) {
+> > > > +		dev_err(dev, "cannot prepare/enable core clock\n");
+> > > > +		return ret;
+> > > > +	}
+> > >
+> > > Should these clocks really be handled explicitly in the driver? Are
+> > > these not the bus clocks, to be handled by "msm_bus"?
+> >
+> > This not the bus clock. This clock is for the Bus Interface Unit
+> > between the PCIe module and the System NOC.
+> >
+>
+> Right, that was the piece I meant. Sorry for not using the right
+> nomenclature.
+>
+> So then it would be handled by the msm_bus in the downstream kernel?
+>
+>
+> Perhaps we can merge it like this and once we have the interconnect
+> framework setup we can make this the fallback method.
 
-> +	dpc_rp_pio_get_info(dpc);
-> +	dpc_rp_pio_print_error(dpc);
-> +}
-> +
+Agree that this has to be handled by the interconnect framework.
+For now will rename this as "iface" similar to v0 and v1.
 
-> @@ -144,6 +299,12 @@ static int dpc_probe(struct pcie_device *dev)
->  
->  	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
->  
-> +	if (dpc->rp) {
-> +		dpc->rp_pio = devm_kzalloc(&pdev->dev, sizeof(*dpc->rp_pio),
-> +					   GFP_KERNEL);
-> +		if (!dpc->rp_pio)
-> +			return -ENOMEM;
-> +	}
->  	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
->  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
->  
+Thanks
+Varada
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> Thanks,
+> Bjorn
+
+--
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
