@@ -1,47 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:36873 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751314AbdGVUZc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 22 Jul 2017 16:25:32 -0400
-Received: by mail-qt0-f195.google.com with SMTP id n43so9119280qtc.4
-        for <linux-pci@vger.kernel.org>; Sat, 22 Jul 2017 13:25:32 -0700 (PDT)
-From: Fabio Estevam <festevam@gmail.com>
-To: bhelgaas@google.com
-Cc: thomas.petazzoni@free-electrons.com, linux-pci@vger.kernel.org,
-        Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH v2] PCI: armada8k: Check the return value from clk_prepare_enable()
-Date: Sat, 22 Jul 2017 17:25:19 -0300
-Message-Id: <1500755119-19983-1-git-send-email-festevam@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39688 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933797AbdGTFfg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 01:35:36 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v3 7/8] dt-bindings: pci: qcom: Add support for IPQ8074
+Date: Thu, 20 Jul 2017 11:04:39 +0530
+Message-Id: <1500528880-25804-8-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
+References: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
+lane, two PCIe root complex with support for MSI and legacy interrupts, and
+it conforms to PCI Express Base 2.1 specification.
 
-clk_prepare_enable() may fail, so we should better check its return value
-and propagate it in the case of error.
-
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
-Changes since v1:
-- Improve Subject style
+ .../devicetree/bindings/pci/qcom,pcie.txt          | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
- drivers/pci/dwc/pcie-armada8k.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index ea8f34a..7297223 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -226,7 +226,9 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(pcie->clk))
- 		return PTR_ERR(pcie->clk);
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 9d418b7..b3e36ef 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -9,6 +9,7 @@
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 			- "qcom,pcie-ipq4019" for ipq4019
++			- "qcom,pcie-ipq8074" for ipq8074
  
--	clk_prepare_enable(pcie->clk);
-+	ret = clk_prepare_enable(pcie->clk);
-+	if (ret)
-+		return ret;
+ - reg:
+ 	Usage: required
+@@ -105,6 +106,16 @@
+ 			- "bus_master"	Master AXI clock
+ 			- "bus_slave"	Slave AXI clock
  
- 	/* Get the dw-pcie unit configuration/control registers base. */
- 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
++- clock-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "iface"	PCIe to SysNOC BIU clock
++			- "axi_m"	AXI Master clock
++			- "axi_s"	AXI Slave clock
++			- "ahb"		AHB clock
++			- "aux"		Auxiliary clock
++
+ - resets:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+@@ -144,6 +155,18 @@
+ 			- "ahb"			AHB reset
+ 			- "phy_ahb"		PHY AHB reset
+ 
++- reset-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "pipe"		PIPE reset
++			- "sleep"		Sleep reset
++			- "sticky"		Core Sticky reset
++			- "axi_m"		AXI Master reset
++			- "axi_s"		AXI Slave reset
++			- "ahb"			AHB Reset
++			- "axi_m_sticky"	AXI Master Sticky reset
++
+ - power-domains:
+ 	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
 -- 
-2.7.4
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
