@@ -1,52 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35238 "EHLO
-        mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751182AbdGOVoL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 Jul 2017 17:44:11 -0400
-Received: by mail-lf0-f45.google.com with SMTP id w198so1475847lff.2
-        for <linux-pci@vger.kernel.org>; Sat, 15 Jul 2017 14:44:10 -0700 (PDT)
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-Id: <20170715214406.657273405@cogentembedded.com>
-Date: Sun, 16 Jul 2017 00:43:10 +0300
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH] pci: ftpci100: fix of_irq_get() error check
+Received: from mga06.intel.com ([134.134.136.31]:56030 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965416AbdGTWMm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 18:12:42 -0400
+Date: Thu, 20 Jul 2017 15:56:54 -0600
+From: Scott Bauer <scott.bauer@intel.com>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
+        david.fugate@intel.com, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
+Message-ID: <20170720215654.nyfpvgzgny2bpqny@sbauer-Z170X-UD5>
+References: <20170720202858.1918-1-scott.bauer@intel.com>
+ <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
+ <20170720213420.lxllowcwnp24gmxf@sbauer-Z170X-UD5>
+ <a8fa0b4a-a918-6c98-169c-2b9c35bd8cdb@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a8fa0b4a-a918-6c98-169c-2b9c35bd8cdb@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-of_irq_get() may return a negative error number as well as 0 on failure,
-while the driver only checks for 0, blithely continuing with the call to
-irq_set_chained_handler_and_data() -- that function expects *unsigned int*
-so should probably do nothing when a large IRQ number resulting from a
-conversion of a negative error number is passed to it. The driver then
-probes successfully while being only partly functional...
+On Tue, Jul 25, 2017 at 08:36:10PM -0600, Jon Derrick wrote:
+> On 07/20/2017 03:34 PM, Scott Bauer wrote:
+> [snip]
+> >>> +	for (i = 0; i < vmd->msix_count; i++) {
+> >>> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+> >>> +				       vmd_irq, IRQF_NO_THREAD,
+> >> The flag here looks redundant to me because the fn calls into
+> >> request_threaded_irq with no thread_fn. But since it's a bit more
+> >> verbose, can you change the other devm_request_irq to use IRQF_NO_THREAD?
+> > 
+> > I actually yanked the request irq from the other call. It was changed
+> > to NO_THREAD in April:
+> > 
+> > (3eefa790c968) PCI: host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
+> > 
+> 
+> Ah so it was. Sorry was looking at v4.12
+> 
+> 
+> I think we'll need to do more than free the irq handlers because if an
+> interrupt occurs after that, I think it'll get kicked to handle_bad_irq.
+> I think we just need to add pci_disable_device after save and
+> pcim_enable_device after restore.
 
-Check for 'irq <= 0' instead and propagate the negative error number to
-the probe method --  that will allow the deferred probing as well...
+I orignally had this in the patch I was testing on SLES and took it out when
+it seemingly didn't make a difference. I didnt test yanking a drive or anything
+behind the domain while it was suspended, so I wouldn't have hit your scenario.
 
-Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-
----
- drivers/pci/host/pci-ftpci100.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-Index: pci/drivers/pci/host/pci-ftpci100.c
-===================================================================
---- pci.orig/drivers/pci/host/pci-ftpci100.c
-+++ pci/drivers/pci/host/pci-ftpci100.c
-@@ -350,9 +350,9 @@ static int faraday_pci_setup_cascaded_ir
- 
- 	/* All PCI IRQs cascade off this one */
- 	irq = of_irq_get(intc, 0);
--	if (!irq) {
-+	if (irq <= 0) {
- 		dev_err(p->dev, "failed to get parent IRQ\n");
--		return -EINVAL;
-+		return irq ?: -EINVAL;
- 	}
- 
- 	p->irqdomain = irq_domain_add_linear(intc, 4,
+I'll add it back in. Also, I think I need to CC stable on this one too since
+this is missing all the way since the original inception of this driver.
