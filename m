@@ -1,66 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36617 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752502AbdGYU6E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 16:58:04 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:39 -0600
-Message-Id: <20170725205753.4735-3-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 02/16] switchtec: export class symbol for use in upper layer driver
+Received: from smtp.codeaurora.org ([198.145.29.96]:39138 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933924AbdGTFfV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 01:35:21 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v3 4/8] phy: qcom-qmp: Handle unavailable registers
+Date: Thu, 20 Jul 2017 11:04:36 +0530
+Message-Id: <1500528880-25804-5-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
+References: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We export the class pointer symbol and add an extern define in the
-Switchtec header file.
+In some implementations of the QMP phy, some registers might not
+be present. Provide a way identify such registers and not access
+those registers.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
- drivers/pci/switch/switchtec.c | 4 +++-
- include/linux/switchtec.h      | 2 ++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 5b75d3008ff8..39c9218d733f 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -33,9 +33,11 @@ module_param(max_devices, int, 0644);
- MODULE_PARM_DESC(max_devices, "max number of switchtec device instances");
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 97020ec..000ad1c 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -187,6 +187,8 @@ struct qmp_phy_init_tbl {
+ 		.in_layout = 1,		\
+ 	}
  
- static dev_t switchtec_devt;
--static struct class *switchtec_class;
- static DEFINE_IDA(switchtec_minor_ida);
- 
-+struct class *switchtec_class;
-+EXPORT_SYMBOL_GPL(switchtec_class);
++#define QPHY_REG_INVAL		0xffffffffu
 +
- enum mrpc_state {
- 	MRPC_IDLE = 0,
- 	MRPC_QUEUED,
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 1cbd0e63b0ab..18e388101855 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -276,4 +276,6 @@ static inline struct switchtec_dev *to_stdev(struct device *dev)
- 	return container_of(dev, struct switchtec_dev, dev);
- }
+ /* set of registers with offsets different per-PHY */
+ enum qphy_reg_layout {
+ 	/* Common block control registers */
+@@ -676,15 +678,18 @@ static int qcom_qmp_phy_com_init(struct qcom_qmp *qmp)
+ 		qphy_setbits(serdes, cfg->regs[QPHY_COM_START_CONTROL],
+ 			     SERDES_START | PCS_START);
  
-+extern struct class *switchtec_class;
+-		status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
+-		mask = cfg->mask_com_pcs_ready;
+-
+-		ret = readl_poll_timeout(status, val, (val & mask), 10,
+-					 PHY_INIT_COMPLETE_TIMEOUT);
+-		if (ret) {
+-			dev_err(qmp->dev,
+-				"phy common block init timed-out\n");
+-			goto err_com_init;
++		if (cfg->regs[QPHY_COM_PCS_READY_STATUS] != QPHY_REG_INVAL) {
++			status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
++			mask = cfg->mask_com_pcs_ready;
 +
- #endif
++			ret = readl_poll_timeout(status, val, (val & mask), 10,
++						 PHY_INIT_COMPLETE_TIMEOUT);
++			if (ret) {
++				dev_err(qmp->dev,
++					"%s: phy common block init timed-out\n",
++					__func__);
++				goto err_com_init;
++			}
+ 		}
+ 	}
+ 
 -- 
-2.11.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
