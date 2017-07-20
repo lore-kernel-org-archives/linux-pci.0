@@ -1,122 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
- counters
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <20170726151314.GA10696@hc> <20170726153502.GE28875@nazgul.tnic>
- <20170726154515.GA11453@hc> <20170726155548.GF28875@nazgul.tnic>
- <20170726161949.GB15426@kroah.com> <20170726163049.GG28875@nazgul.tnic>
- <20170726173353.GB21705@kroah.com>
- <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
- <20170726200802.GA17722@kroah.com>
- <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
- <20170727022907.GC1398@kroah.com>
-From: David Daney <ddaney.cavm@gmail.com>
-Message-ID: <4f58aeab-7b8d-50dc-5497-6ac42536e0c0@gmail.com>
-Date: Thu, 27 Jul 2017 10:29:53 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:49850 "EHLO
+        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S965897AbdGTXqY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 19:46:24 -0400
+Date: Fri, 21 Jul 2017 00:46:13 +0100
+From: Ben Hutchings <ben@decadent.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, linux-pci@vger.kernel.org
+Message-ID: <20170720234613.GF18698@decadent.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <20170727022907.GC1398@kroah.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jan Glauber <jan.glauber@caviumnetworks.com>, Borislav Petkov <bp@alien8.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="v2Uk6McLiE8OV1El"
+Subject: [PATCH] PCI: designware: Fix dw_handle_msi_irq() on 64-bit BE configs
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/26/2017 07:29 PM, Greg KH wrote:
-> On Wed, Jul 26, 2017 at 02:02:42PM -0700, David Daney wrote:
->> On 07/26/2017 01:08 PM, Greg KH wrote:
->>> On Wed, Jul 26, 2017 at 01:02:38PM -0700, David Daney wrote:
->>>> On 07/26/2017 10:33 AM, Greg KH wrote:
->>>>> On Wed, Jul 26, 2017 at 06:30:49PM +0200, Borislav Petkov wrote:
->>>>>> On Wed, Jul 26, 2017 at 09:19:49AM -0700, Greg KH wrote:
->>>>>>> On Wed, Jul 26, 2017 at 05:55:48PM +0200, Borislav Petkov wrote:
->>>>>>>> On Wed, Jul 26, 2017 at 05:45:15PM +0200, Jan Glauber wrote:
->>>>>>>>> The PMU/EDAC devices are all PCI devices do I need the 'struct pci_dev *'.
->>>>>>>>> I'm not aware of other ways to access these devices. Please enlighten
->>>>>>>>> me if I'm missing something.
->>>>>>>>
->>>>>>>> Me enlighten you on Cavium hardware?! You're funny.
->>>>>>>>
->>>>>>>> So I don't know whether the PCI hotplug code can run more than one
->>>>>>>> function upon PCI ID detection. Probably Greg will say, write a
->>>>>>>> multiplexer wrapper. :-)
->>>>>>>
->>>>>>> -ENOCONTEXT....
->>>>>>>
->>>>>>> Anyway, pci questions are best asked on the linux-pci@vger list.  And
->>>>>>> yes, all PCI devices end up with a 'struct pci_dev *' automatically.
->>>>>>
->>>>>> Simple: so they have a PCI ID of a memory contoller and want to hotplug
->>>>>> two drivers for it. And those two drivers should remain independent from
->>>>>> each other.
->>>>>
->>>>> Hahahahaha, no.  That's crazy, you were right in guessing what my answer
->>>>> was going to be :)
->>>>>
->>>>
->>>>
->>>> Just to be clear about the situation, the device is a memory controller.  It
->>>> has two main behaviors we are interested in:
->>>>
->>>> A) Error Detection And Correction (EDAC).  This should be connected to the
->>>> kernel's EDAC subsystem.  An existing driver (drivers/edac/thunderx_edac.c)
->>>> does exactly this.
->>>>
->>>> B) Performance Counters for actions taken in the corresponding memory. This
->>>> should be connected to the kernel's perf framework as an uncore-PMU (the
->>>> subject of this patch set).
->>>>
->>>> It is a single PCI device.  What should the driver architecture look like to
->>>> connect it to two different kernel subsystems?
->>>
->>> Modify the drivers/edac/thunderx_edac.c code to add support for
->>> performance counters.
->>>
->>
->> Thanks Greg.  This adds some clarity to the situation.
->>
->> This technique does slightly complicate the mapping of files and directories
->> in the kernel source tree to maintainers.
->>
->> Also, if a given configuration disables CONFIG_EDAC there is some hackery
->> needed to get the perf portion of the driver included.
-> 
-> Well, you all deserve it for trying to have a single PCI device do
-> multiple things at the same time.  There's no real good reason for
-> creating hardware that way, PCI devices are "free", you should go throw
-> a printed copy of the PCI spec at the firmware developers who did this
-> to you.
 
-The problem lies in something even more congealed than the "firmware". 
-The PCI topology is etched in to the very fabric of the silicon of the SoC.
+--v2Uk6McLiE8OV1El
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Commit 1b497e6493c4 "PCI: dwc: Fix uninitialized variable in
+dw_handle_msi_irq()" fixed one problem for 64-bit architectures but
+left another.  The find_next_bit() function assumes native ordering of
+bits within each word (unsigned long), so passing a pointer to a u32
+variable will cause it to scan the following 32 bits on a 64-bit
+big-endian configuration.  Alternately it could result in an alignment
+fault on some architectures.
 
-> 
-> Then get them to fix the firmware so you have multiple PCI devices...
-> 
-> good luck!
+Copy the status to an unsigned long variable before using
+find_next_bit().
 
-We'll use all of that we can get!  Thanks.
+Fixes: 1b497e6493c4 ("PCI: dwc: Fix uninitialized variable in ...")
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+This is compile-tested only.
 
+Ben.
 
-> 
-> greg k-h
-> 
+ drivers/pci/dwc/pcie-designware-host.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-=
+designware-host.c
+index d29c020da082..511fc9188f98 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -57,6 +57,7 @@ static struct irq_chip dw_msi_irq_chip =3D {
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+ 	u32 val;
++	unsigned long bits;
+ 	int i, pos, irq;
+ 	irqreturn_t ret =3D IRQ_NONE;
+=20
+@@ -65,11 +66,11 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 				    &val);
+ 		if (!val)
+ 			continue;
++		bits =3D val;
+=20
+ 		ret =3D IRQ_HANDLED;
+ 		pos =3D 0;
+-		while ((pos =3D find_next_bit((unsigned long *) &val, 32,
+-					    pos)) !=3D 32) {
++		while ((pos =3D find_next_bit(&bits, 32, pos)) !=3D 32) {
+ 			irq =3D irq_find_mapping(pp->irq_domain, i * 32 + pos);
+ 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
+ 					    4, 1 << pos);
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--v2Uk6McLiE8OV1El
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIVAwUBWXFAxee/yOyVhhEJAQp7Xw/+I2vML77tresOROOS7My/1bwEXu5MVzOu
+lVHOBK6H5INpANp4hJNxprpO5msgWAguom8Fw3A6kRu+yVKugkwl5BiMAq+MX0ju
+U8VC6gidt8w+C2kW2x64phRq2russys85Ur3kd0OKWhXnKcoHLbKsUc7pYY6orSG
+yWx3OvKg9FzFz8ZZvLdreiINVHxnUpAMpQfs3t6hEiA5x1Pc9Ka25JjxJNRBGLKt
+QKozxsDplHQ17nJnwkeFyi7d/3vJiv1cLjgcUWpHkf2stT42lrM/bSnqf7M2pPOm
+EBjEw20SwVbaQcSTiq4q81ZIPHiLV3WaqX9WUdtmi8sPOBhjV/HIfJ0GYhudlt+g
+PQNKjkFPbH3JbLTYNV4Ndc2myUEGCahBEmhnxur4kOGrdyodDihiTu/CCo0JW/p3
+4aWQT5gn34PO4JoB/941szn1S/g5agQ2LFyR8RoDUjeK2xC095dsLO++8ffzSsd4
+4s1I+WQ0Cw0IElwF8RrUU9arfRgTQc6JNKaC/GOgesQnLSQzfqZz3jZjyzgk7CUN
+8+tpj7Gbm3MQR/J5I98GG45r6ByGXVi1vo3NGrVhlDxFvmVzh5j5x+tNHKyib9VM
+e0qChunwTHPlKq/uK2v9ZDinHNITSH0mk7egQYVJ3+U5AOY6hLwrAIMi1ka2yR5Y
+6evo8jpA2mA=
+=Zsuj
+-----END PGP SIGNATURE-----
+
+--v2Uk6McLiE8OV1El--
