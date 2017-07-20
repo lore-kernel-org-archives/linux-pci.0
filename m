@@ -1,69 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 19 Jul 2017 09:01:50 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Daniel Axtens <dja@axtens.net>
-Subject: Re: [PATCH v2 4/4] arm64: allow non-legacy VGA devices to be default
-Message-ID: <20170719080150.GB13642@arm.com>
-References: <20170719021516.24718-1-dja@axtens.net>
- <20170719021516.24718-5-dja@axtens.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:7938 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964809AbdGTWQD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 18:16:03 -0400
+Date: Thu, 20 Jul 2017 16:15:54 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Roland Dreier <roland@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        netdev@vger.kernel.org, Emil Tantilov <emil.s.tantilov@intel.com>
+Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+Message-ID: <20170720161554.45ce1673@ul30vt.home>
+In-Reply-To: <20170720214101.7449-1-roland@kernel.org>
+References: <20170720214101.7449-1-roland@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170719021516.24718-5-dja@axtens.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, gabriele.paoloni@huawei.com, airlied@linux.ie,
- linux-pci@vger.kernel.org, z.liuxinliang@hisilicon.com, bhelgaas@google.com,
- alex.williamson@redhat.com, benh@kernel.crashing.org, zourongrong@gmail.com,
- daniel.vetter@intel.com, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jul 19, 2017 at 12:15:16PM +1000, Daniel Axtens wrote:
-> The VGA arbiter only marks a device as default if it can decode
-> legacy I/O and memory ranges. This is often not the case on arm64,
-> which doesn't use the legacy ranges.
+On Thu, 20 Jul 2017 14:41:01 -0700
+Roland Dreier <roland@kernel.org> wrote:
+
+> From: Roland Dreier <roland@purestorage.com>
 > 
-> Enable the VGA arbiter to mark the first enabled VGA card as
-> default.
+> Add one more variant of the 82599 plus the device IDs for X540 and X550
+> variants.  Intel has confirmed that none of these devices does peer-to-peer
+> between functions.  The X540 and X550 have added ACS capabilities in their
+> PCI config space, but the ACS control register is hard-wired to 0 for both
+> devices, so we still need the quirk for IOMMU grouping to allow assignment
+> of individual SR-IOV functions.
+
+Most of the ACS capabilities are worded as "Must be implemented by
+devices that implement ..."  Shouldn't a hard-wired ACS capability
+sufficiently describe that, or is there something wrong with how
+they're hard wired?  Thanks,
+
+Alex
+
 > 
-> Signed-off-by: Daniel Axtens <dja@axtens.net>
-
-Acked-by: Will Deacon <will.deacon@arm.com>
-
-Will
-
+> Signed-off-by: Roland Dreier <roland@purestorage.com>
 > ---
+>  drivers/pci/quirks.c | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
 > 
-> Tested on a D05 using the hibmc card.
-> ---
->  arch/arm64/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index dfd908630631..cefcbd442e4f 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -28,6 +28,7 @@ config ARM64
->  	select ARCH_SUPPORTS_NUMA_BALANCING
->  	select ARCH_WANT_COMPAT_IPC_PARSE_VERSION
->  	select ARCH_WANT_FRAME_POINTERS
-> +	select ARCH_WANT_VGA_ARB_FALLBACK
->  	select ARCH_HAS_UBSAN_SANITIZE_ALL
->  	select ARM_AMBA
->  	select ARM_ARCH_TIMER
-> -- 
-> 2.11.0
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6967c6b4cf6b..b939db671326 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4335,12 +4335,33 @@ static const struct pci_dev_acs_enabled {
+>  	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x1528, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x154A, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x1560, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x1563, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15AA, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15AC, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15AD, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15AE, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15B0, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15C2, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15C3, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15C4, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15C6, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15C7, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15C8, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15CE, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15E4, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15E5, pci_quirk_mf_endpoint_acs },
+> +	{ PCI_VENDOR_ID_INTEL, 0x15D1, pci_quirk_mf_endpoint_acs },
+>  	/* 82580 */
+>  	{ PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
+>  	{ PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
