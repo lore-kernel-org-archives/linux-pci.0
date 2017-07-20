@@ -1,102 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48554 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdGQMEy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:04:54 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH 3/7] phy: qcom-qmp: Fix phy pipe clock name
-Date: Mon, 17 Jul 2017 17:33:59 +0530
-Message-Id: <1500293043-1887-4-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:34560 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965050AbdGTVlH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 17:41:07 -0400
+Received: by mail-pf0-f176.google.com with SMTP id q85so16634177pfq.1
+        for <linux-pci@vger.kernel.org>; Thu, 20 Jul 2017 14:41:07 -0700 (PDT)
+From: Roland Dreier <roland@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+        Emil Tantilov <emil.s.tantilov@intel.com>
+Subject: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+Date: Thu, 20 Jul 2017 14:41:01 -0700
+Message-Id: <20170720214101.7449-1-roland@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Presently, the phy pipe clock's name is assumed to be either
-usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
-phy lane's number). However, this will not work if an SoC has
-more than one instance of the phy. Hence, instead of assuming
-the name of the clock, fetch it from the DT.
+From: Roland Dreier <roland@purestorage.com>
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+Add one more variant of the 82599 plus the device IDs for X540 and X550
+variants.  Intel has confirmed that none of these devices does peer-to-peer
+between functions.  The X540 and X550 have added ACS capabilities in their
+PCI config space, but the ACS control register is hard-wired to 0 for both
+devices, so we still need the quirk for IOMMU grouping to allow assignment
+of individual SR-IOV functions.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+ drivers/pci/quirks.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 78ca628..97020ec 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
-  *    clk  |   +-------+   |                   +-----+
-  *         +---------------+
-  */
--static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
-+static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
- {
--	char name[24];
- 	struct clk_fixed_rate *fixed;
- 	struct clk_init_data init = { };
- 
--	switch (qmp->cfg->type) {
--	case PHY_TYPE_USB3:
--		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
--		break;
--	case PHY_TYPE_PCIE:
--		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
--		break;
--	default:
-+	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
-+	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
- 		/* not all phys register pipe clocks, so return success */
- 		return 0;
- 	}
-@@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
- 	if (!fixed)
- 		return -ENOMEM;
- 
--	init.name = name;
-+	init.name = clk_name;
- 	init.ops = &clk_fixed_rate_ops;
- 
- 	/* controllers using QMP phys use 125MHz pipe clock interface */
-@@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
- 
- 	id = 0;
- 	for_each_available_child_of_node(dev->of_node, child) {
-+		const char *clk_name;
-+
- 		/* Create per-lane phy */
- 		ret = qcom_qmp_phy_create(dev, child, id);
- 		if (ret) {
-@@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
- 			return ret;
- 		}
- 
-+		ret = of_property_read_string(child, "clock-output-names",
-+							&clk_name);
-+		if (ret) {
-+			dev_err(dev,
-+				"failed to get clock-output-names for lane%d phy, %d\n",
-+				id, ret);
-+			return ret;
-+		}
-+
- 		/*
- 		 * Register the pipe clock provided by phy.
- 		 * See function description to see details of this pipe clock.
- 		 */
--		ret = phy_pipe_clk_register(qmp, id);
-+		ret = phy_pipe_clk_register(qmp, clk_name);
- 		if (ret) {
- 			dev_err(qmp->dev,
- 				"failed to register pipe clock source\n");
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6967c6b4cf6b..b939db671326 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4335,12 +4335,33 @@ static const struct pci_dev_acs_enabled {
+ 	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x1528, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x154A, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x1560, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x1563, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15AA, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15AC, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15AD, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15AE, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15B0, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15C2, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15C3, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15C4, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15C6, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15C7, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15C8, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15CE, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15E4, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15E5, pci_quirk_mf_endpoint_acs },
++	{ PCI_VENDOR_ID_INTEL, 0x15D1, pci_quirk_mf_endpoint_acs },
+ 	/* 82580 */
+ 	{ PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
+ 	{ PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
