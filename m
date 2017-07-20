@@ -1,71 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:37214 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754009AbdGJPwi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 11:52:38 -0400
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-usb@vger.kernel.org,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH 0/2] Workaround for uPD72020x USB3 chips
-Date: Mon, 10 Jul 2017 16:52:28 +0100
-Message-Id: <20170710155230.8622-1-marc.zyngier@arm.com>
+Received: from mail-pg0-f44.google.com ([74.125.83.44]:38495 "EHLO
+        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753527AbdGTAq4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 20:46:56 -0400
+Received: by mail-pg0-f44.google.com with SMTP id s4so7054831pgr.5
+        for <linux-pci@vger.kernel.org>; Wed, 19 Jul 2017 17:46:56 -0700 (PDT)
+From: Feng Kan <fkan@apm.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, alex.williamson@redhat.com
+Cc: Feng Kan <fkan@apm.com>
+Subject: [PATCH V2] pci: quirk: Apply APM ACS quirk to XGene devices
+Date: Wed, 19 Jul 2017 17:46:51 -0700
+Message-Id: <1500511611-2019-1-git-send-email-fkan@apm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ard and myself have just spent quite some time lately trying to pin
-down an issue in the DMA code which was taking the form of a PCIe USB3
-controller issuing a DMA access at some bizarre address, and being
-caught red-handed by the IOMMU.
+The APM X-Gene PCIe root port does not support ACS at this point.
+However, the hw provides isolation and source validation through
+the SMMU. Turn on ACS but disable all the peer to peer features.
 
-After much head scratching and most of a week-end spent on tracing the
-damn thing, I'm now convinced that the DMA code is fine, the XHCI
-driver is correct, but that the HW (a Renesas uPD720202 chip) is a
-nasty piece of work.
+Signed-off-by: Feng Kan <fkan@apm.com>
+---
+ drivers/pci/quirks.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-The issue is as follow:
-
-- EFI initializes the controller using physical addresses above the
-  4GB limit (this is on an arm64 box where the memory starts at
-  0x80_00000000...).
-
-- The kernel takes over, sends a XHCI reset to the controller, and
-  because we have an IOMMU sitting between the controller and memory,
-  provides *virtual* addresses. Trying to make things a bit faster for
-  our controller, it issues IOVAs in the low 4GB range).
-
-- Low and behold, the controller is now issuing transactions with a
-  0x80 prefix in front of our IOVA. Yes, the same prefix that was
-  programmed during the EFI configuration. IOMMU fault, not happy.
-
-If the kernel is hacked to only generate IOVAs that are more than
-32bit wide, the HW behaves correctly. The only way I can explain this
-behaviour is that the HW latches the top 32bit of the ERST (it is
-always the ERST IOVA that appears in my traces) in some internal
-register, and that the XHCI reset fails to clear it. Writing zero in
-the top bits is not enough to clear it either.
-
-So far, the only solution we have for this lovely piece of kit is to
-force a PCI reset at probe time, which puts it right. The patches are
-pretty ugly, but that's the best I could come up with so far.
-
-Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
-uPD720202 controllers.
-
-Marc Zyngier (2):
-  PCI: Implement pci_reset_function_locked
-  usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
-    controller
-
- drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
- drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
- drivers/usb/host/pci-quirks.h |  1 +
- drivers/usb/host/xhci-pci.c   |  7 +++++++
- include/linux/pci.h           |  1 +
- 5 files changed, 64 insertions(+)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 085fb78..0f8f1cd 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4120,6 +4120,19 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return acs_flags ? 0 : 1;
+ }
+ 
++static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
++{
++	/*
++	 * XGene root matching this quirk do not allow peer-to-peer
++	 * transactions with others, allowing masking out these bits as if they
++	 * were unimplemented in the ACS capability.
++	 */
++	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
++		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
++
++	return acs_flags ? 0 : 1;
++}
++
+ /*
+  * Many Intel PCH root ports do provide ACS-like features to disable peer
+  * transactions and validate bus numbers in requests, but do not provide an
+@@ -4368,6 +4381,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
+ 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+ 	/* Cavium ThunderX */
+ 	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
++	/* APM XGene */
++	{ PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
+ 	{ 0 }
+ };
+ 
 -- 
-2.11.0
+1.8.3.1
