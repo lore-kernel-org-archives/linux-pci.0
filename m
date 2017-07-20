@@ -1,98 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
- counters
-To: Greg KH <gregkh@linuxfoundation.org>
-References: <131179fe-42e7-f286-5bd4-801f4c93d5f9@arm.com>
- <20170726145522.GC28875@nazgul.tnic> <20170726151314.GA10696@hc>
- <20170726153502.GE28875@nazgul.tnic> <20170726154515.GA11453@hc>
- <20170726155548.GF28875@nazgul.tnic> <20170726161949.GB15426@kroah.com>
- <20170726163049.GG28875@nazgul.tnic> <20170726173353.GB21705@kroah.com>
- <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
- <20170726200802.GA17722@kroah.com>
-From: David Daney <ddaney.cavm@gmail.com>
-Message-ID: <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
-Date: Wed, 26 Jul 2017 14:02:42 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170726200802.GA17722@kroah.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jan Glauber <jan.glauber@caviumnetworks.com>, Borislav Petkov <bp@alien8.de>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:26275 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936121AbdGTX17 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 19:27:59 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Scott Bauer <scott.bauer@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 1/2] vmd: Reserve IRQ pre-vector for better affinity
+Date: Thu, 20 Jul 2017 19:33:53 -0400
+Message-Id: <1500593634-4558-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/26/2017 01:08 PM, Greg KH wrote:
-> On Wed, Jul 26, 2017 at 01:02:38PM -0700, David Daney wrote:
->> On 07/26/2017 10:33 AM, Greg KH wrote:
->>> On Wed, Jul 26, 2017 at 06:30:49PM +0200, Borislav Petkov wrote:
->>>> On Wed, Jul 26, 2017 at 09:19:49AM -0700, Greg KH wrote:
->>>>> On Wed, Jul 26, 2017 at 05:55:48PM +0200, Borislav Petkov wrote:
->>>>>> On Wed, Jul 26, 2017 at 05:45:15PM +0200, Jan Glauber wrote:
->>>>>>> The PMU/EDAC devices are all PCI devices do I need the 'struct pci_dev *'.
->>>>>>> I'm not aware of other ways to access these devices. Please enlighten
->>>>>>> me if I'm missing something.
->>>>>>
->>>>>> Me enlighten you on Cavium hardware?! You're funny.
->>>>>>
->>>>>> So I don't know whether the PCI hotplug code can run more than one
->>>>>> function upon PCI ID detection. Probably Greg will say, write a
->>>>>> multiplexer wrapper. :-)
->>>>>
->>>>> -ENOCONTEXT....
->>>>>
->>>>> Anyway, pci questions are best asked on the linux-pci@vger list.  And
->>>>> yes, all PCI devices end up with a 'struct pci_dev *' automatically.
->>>>
->>>> Simple: so they have a PCI ID of a memory contoller and want to hotplug
->>>> two drivers for it. And those two drivers should remain independent from
->>>> each other.
->>>
->>> Hahahahaha, no.  That's crazy, you were right in guessing what my answer
->>> was going to be :)
->>>
->>
->>
->> Just to be clear about the situation, the device is a memory controller.  It
->> has two main behaviors we are interested in:
->>
->> A) Error Detection And Correction (EDAC).  This should be connected to the
->> kernel's EDAC subsystem.  An existing driver (drivers/edac/thunderx_edac.c)
->> does exactly this.
->>
->> B) Performance Counters for actions taken in the corresponding memory. This
->> should be connected to the kernel's perf framework as an uncore-PMU (the
->> subject of this patch set).
->>
->> It is a single PCI device.  What should the driver architecture look like to
->> connect it to two different kernel subsystems?
-> 
-> Modify the drivers/edac/thunderx_edac.c code to add support for
-> performance counters.
-> 
+The driver has a special purpose for the vmd device's first, so this
+one shouldn't be considered for irq affinity.
 
-Thanks Greg.  This adds some clarity to the situation.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/host/vmd.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-This technique does slightly complicate the mapping of files and 
-directories in the kernel source tree to maintainers.
-
-Also, if a given configuration disables CONFIG_EDAC there is some 
-hackery needed to get the perf portion of the driver included.
-
-David Daney
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index e27ad2a..8cddf30 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -662,6 +662,14 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	struct vmd_dev *vmd;
+ 	int i, err;
+ 
++	/*
++	 * The first vector is reserved for special use, so start affinity at
++	 * the second vector
++	 */
++	struct irq_affinity affd = {
++		.pre_vectors = 1,
++	};
++
+ 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+ 		return -ENOMEM;
+ 
+@@ -687,8 +695,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	if (vmd->msix_count < 0)
+ 		return -ENODEV;
+ 
+-	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
+-					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
++	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
++					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
+ 	if (vmd->msix_count < 0)
+ 		return vmd->msix_count;
+ 
+-- 
+2.5.5
