@@ -1,56 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:33405 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751281AbdGQNOm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 09:14:42 -0400
-From: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>,
-        Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
-Subject: [PATCH] PCI: dwc: designware: make dw_pcie_prog_*_atu_unroll() static
-Date: Mon, 17 Jul 2017 14:13:34 +0100
-Message-ID: <20170717131334.1761-1-palminha@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga03.intel.com ([134.134.136.65]:26275 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934727AbdGTX2A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 19:28:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Scott Bauer <scott.bauer@intel.com>,
+        Jonathan Derrick <jonathan.derrick@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 2/2] vmd: Assign vector zero to all bridges
+Date: Thu, 20 Jul 2017 19:33:54 -0400
+Message-Id: <1500593634-4558-2-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1500593634-4558-1-git-send-email-keith.busch@intel.com>
+References: <1500593634-4558-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Helper functions dw_pcie_prog_*_atu_unroll don't need to be in global scope,
-so make it static.
+We don't want slower IRQ handlers impacting faster devices that happen
+to be assigned the same VMD interrupt vector. The driver was trying to
+separate such devices by checking if MSI-x wasn't used, but really we
+just don't want to end devices to share with bridges. Most bridges may
+use MSI currently, so that criteria happened to work, but newer ones may
+use MSI-x, so this patch explicity checks the device type when choosing
+a vector.
 
-Cleans up sparse warnings:
-- symbol 'dw_pcie_prog_outbound_atu_unroll' was not declared. Should it be static?
-- symbol 'dw_pcie_prog_inbound_atu_unroll' was not declared. Should it be static?
-
-Signed-off-by: Carlos Palminha <palminha@synopsys.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
-Patch made against linux-next tree, tag next-20170714
+ drivers/pci/host/vmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/pci/dwc/pcie-designware.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 0e03af279259..48d6d0712ea8 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -107,7 +107,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
- 	dw_pcie_writel_dbi(pci, offset + reg, val);
- }
-
--void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, int type,
-+static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, int type,
- 				      u64 cpu_addr, u64 pci_addr, u32 size)
- {
- 	u32 retries, val;
-@@ -200,7 +200,7 @@ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
- 	dw_pcie_writel_dbi(pci, offset + reg, val);
- }
-
--int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index, int bar,
-+static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index, int bar,
- 				    u64 cpu_addr, enum dw_pcie_as_type as_type)
- {
- 	int type;
---
-2.11.0
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 8cddf30..031eef2 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -183,7 +183,7 @@ static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *d
+ 	int i, best = 1;
+ 	unsigned long flags;
+ 
+-	if (!desc->msi_attrib.is_msix || vmd->msix_count == 1)
++	if (pci_is_bridge(msi_desc_to_pci_dev(desc)) || vmd->msix_count == 1)
+ 		return &vmd->irqs[0];
+ 
+ 	raw_spin_lock_irqsave(&list_lock, flags);
+-- 
+2.5.5
