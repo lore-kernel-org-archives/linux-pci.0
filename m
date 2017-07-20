@@ -1,69 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Sun, 2 Jul 2017 16:42:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: srinivas.kandagatla@linaro.org
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: qcom: limit TPL size to 2K to fix hw issue
-Message-ID: <20170702214254.GG18324@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170629153455.11995-1-srinivas.kandagatla@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:8902 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S966006AbdGTWuP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 18:50:15 -0400
+From: "Tantilov, Emil S" <emil.s.tantilov@intel.com>
+To: Roland Dreier <roland@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+Date: Thu, 20 Jul 2017 22:50:13 +0000
+Message-ID: <87618083B2453E4A8714035B62D67992B3EABA2F@FMSMSX105.amr.corp.intel.com>
+References: <20170720214101.7449-1-roland@kernel.org>
+In-Reply-To: <20170720214101.7449-1-roland@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170629153455.11995-1-srinivas.kandagatla@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jun 29, 2017 at 05:34:55PM +0200, srinivas.kandagatla@linaro.org wrote:
-> From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> 
-> This patch limits TPL size to 2K from default 4K size as a workaround
-> for a HW bug in v0 version of pcie IP. When using default TPL size of 4K
-> the internal buffer gets corrupted due to this HW bug.
-> 
-> This bug was originally noticed during ssh session between APQ8064
-> based board and PC. Network packets got corrupted randomly and
-> terminated the ssh session due to this bug.
-> 
-> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+>-----Original Message-----
+>From: Roland Dreier [mailto:roland@purestorage.com] On Behalf Of Roland
+>Dreier
+>Sent: Thursday, July 20, 2017 2:41 PM
+>To: Bjorn Helgaas <bhelgaas@google.com>
+>Cc: linux-pci@vger.kernel.org; netdev@vger.kernel.org; Tantilov, Emil S
+><emil.s.tantilov@intel.com>
+>Subject: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+>
+>From: Roland Dreier <roland@purestorage.com>
+>
+>Add one more variant of the 82599 plus the device IDs for X540 and X550
+>variants.  Intel has confirmed that none of these devices does peer-to-peer
+>between functions.  The X540 and X550 have added ACS capabilities in their
+>PCI config space, but the ACS control register is hard-wired to 0 for both
+>devices, so we still need the quirk for IOMMU grouping to allow assignment
+>of individual SR-IOV functions.
+>
+>Signed-off-by: Roland Dreier <roland@purestorage.com>
+>---
+> drivers/pci/quirks.c | 21 +++++++++++++++++++++
+> 1 file changed, 21 insertions(+)
 
-Applied to pci/host-qcom for v4.13, thanks!
+Acked-by: Emil Tantilov <emil.s.tantilov@intel.com>
 
-> ---
->  drivers/pci/dwc/pcie-qcom.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 5bf23d432fdb..28ba5192a21d 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -51,6 +51,12 @@
->  #define PCIE20_ELBI_SYS_CTRL			0x04
->  #define PCIE20_ELBI_SYS_CTRL_LT_ENABLE		BIT(0)
->  
-> +#define PCIE20_AXI_MSTR_RESP_COMP_CTRL0		0x818
-> +#define CFG_REMOTE_RD_REQ_BRIDGE_SIZE_2K	0x4
-> +#define CFG_REMOTE_RD_REQ_BRIDGE_SIZE_4K	0x5
-> +#define PCIE20_AXI_MSTR_RESP_COMP_CTRL1		0x81c
-> +#define CFG_BRIDGE_SB_INIT			BIT(0)
-> +
->  #define PCIE20_CAP				0x70
->  
->  #define PERST_DELAY_US				1000
-> @@ -357,6 +363,13 @@ static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
->  	/* wait for clock acquisition */
->  	usleep_range(1000, 1500);
->  
-> +
-> +	/* Set the Max TLP size to 2K, instead of using default of 4K */
-> +	writel(CFG_REMOTE_RD_REQ_BRIDGE_SIZE_2K,
-> +	       pci->dbi_base + PCIE20_AXI_MSTR_RESP_COMP_CTRL0);
-> +	writel(CFG_BRIDGE_SB_INIT,
-> +	       pci->dbi_base + PCIE20_AXI_MSTR_RESP_COMP_CTRL1);
-> +
->  	return 0;
->  
->  err_deassert_ahb:
-> -- 
-> 2.11.0
-> 
+Thanks,
+Emil 
