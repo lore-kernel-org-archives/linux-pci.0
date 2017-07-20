@@ -1,109 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52586 "EHLO mail.kernel.org"
+Received: from mga07.intel.com ([134.134.136.100]:53595 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751244AbdGMLgb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Jul 2017 07:36:31 -0400
-Date: Thu, 13 Jul 2017 06:36:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-usb <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH 0/2] Workaround for uPD72020x USB3 chips
-Message-ID: <20170713113628.GJ4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170710155230.8622-1-marc.zyngier@arm.com>
- <20170713031234.GD4486@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9VcJU2TBQ0AzMT1yHGRQYagRU1MhPmBKJ89HntOxnW9A@mail.gmail.com>
- <544d9c48-9d4f-29f7-1478-afa940b20dd8@arm.com>
+        id S935214AbdGTVuW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 17:50:22 -0400
+Date: Thu, 20 Jul 2017 15:34:21 -0600
+From: Scott Bauer <scott.bauer@intel.com>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
+        david.fugate@intel.com, bhelgaas@google.com
+Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
+Message-ID: <20170720213420.lxllowcwnp24gmxf@sbauer-Z170X-UD5>
+References: <20170720202858.1918-1-scott.bauer@intel.com>
+ <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <544d9c48-9d4f-29f7-1478-afa940b20dd8@arm.com>
+In-Reply-To: <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 13, 2017 at 08:46:45AM +0100, Marc Zyngier wrote:
-> On 13/07/17 07:48, Ard Biesheuvel wrote:
-> > On 13 July 2017 at 04:12, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> On Mon, Jul 10, 2017 at 04:52:28PM +0100, Marc Zyngier wrote:
-> >>> Ard and myself have just spent quite some time lately trying to pin
-> >>> down an issue in the DMA code which was taking the form of a PCIe USB3
-> >>> controller issuing a DMA access at some bizarre address, and being
-> >>> caught red-handed by the IOMMU.
-> >>>
-> >>> After much head scratching and most of a week-end spent on tracing the
-> >>> damn thing, I'm now convinced that the DMA code is fine, the XHCI
-> >>> driver is correct, but that the HW (a Renesas uPD720202 chip) is a
-> >>> nasty piece of work.
-> >>>
-> >>> The issue is as follow:
-> >>>
-> >>> - EFI initializes the controller using physical addresses above the
-> >>>   4GB limit (this is on an arm64 box where the memory starts at
-> >>>   0x80_00000000...).
-> >>>
-> >>> - The kernel takes over, sends a XHCI reset to the controller, and
-> >>>   because we have an IOMMU sitting between the controller and memory,
-> >>>   provides *virtual* addresses. Trying to make things a bit faster for
-> >>>   our controller, it issues IOVAs in the low 4GB range).
-> >>>
-> >>> - Low and behold, the controller is now issuing transactions with a
-> >>>   0x80 prefix in front of our IOVA. Yes, the same prefix that was
-> >>>   programmed during the EFI configuration. IOMMU fault, not happy.
-> >>>
-> >>> If the kernel is hacked to only generate IOVAs that are more than
-> >>> 32bit wide, the HW behaves correctly. The only way I can explain this
-> >>> behaviour is that the HW latches the top 32bit of the ERST (it is
-> >>> always the ERST IOVA that appears in my traces) in some internal
-> >>> register, and that the XHCI reset fails to clear it. Writing zero in
-> >>> the top bits is not enough to clear it either.
-> >>>
-> >>> So far, the only solution we have for this lovely piece of kit is to
-> >>> force a PCI reset at probe time, which puts it right. The patches are
-> >>> pretty ugly, but that's the best I could come up with so far.
-> >>>
-> >>> Tested on a pair of AMD Opteron 1100 boxes with Renesas uPD720201 and
-> >>> uPD720202 controllers.
-> >>>
-> >>> Marc Zyngier (2):
-> >>>   PCI: Implement pci_reset_function_locked
-> >>>   usb: host: pci_quirks: Force hard reset of Renesas uPD72020x USB
-> >>>     controller
-> >>>
-> >>>  drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
-> >>>  drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
-> >>>  drivers/usb/host/pci-quirks.h |  1 +
-> >>>  drivers/usb/host/xhci-pci.c   |  7 +++++++
-> >>>  include/linux/pci.h           |  1 +
-> >>>  5 files changed, 64 insertions(+)
-> >>
-> >> I provisionally applied this to pci/virtualization.  I'd like to have an
-> >> XHCI ack before going further, though.
-> >>
-> >> I assume this only affects boxes where the firmware uses addresses above
-> >> 4GB, i.e., not very many?  So this is v4.14 material?  Or do you think it's
-> >> important for v4.13?
-> >>
+On Tue, Jul 25, 2017 at 08:15:32PM -0600, Jon Derrick wrote:
+> On 07/20/2017 02:28 PM, Scott Bauer wrote:
+> > This patch frees up the IRQs we request on the suspend path,
+> > and reallocates them on the resume path.
 > > 
-> > As I mentioned, it would be nice if this could at least go into v4.11
-> > and later, given that v4.11 contains a patch that switches all PCI
-> > devices to 32-bit addressing only when the IOMMU is involved in DMA,
-> > and this is what triggered the issue on arm64 boards with such a PCI
-> > card and no DRAM below 4 GB.
-> 
-> Agreed. It is likely that the issue will trigger on any 64bit->32bit
-> IOVA transition, not only EFI->kernel, such as a kexec from a 4.10 to a
-> 4.11 kernel.
-> 
-> More importantly, this could have a dramatic effect on a system where
-> both the 32bit and 64bit address ranges are valid. In my case, I was
-> saved by the IOMMU blocking the DMA access, but imagine for a second the
-> device was using PAs... I'm not sure that this is completely
-> hypothetical, nor arm64 specific.
+> > Fixes:
+> > [  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
+> > [  559.966824] Error taking CPU111 down: -34
+> > [  559.966825] Non-boot CPUs are not disabled
+> > [  559.966826] Enabling non-boot CPUs ...
+> > 
+> > Signed-off-by: Scott Bauer <scott.bauer@intel.com>
+> > ---
+> >  drivers/pci/host/vmd.c | 14 ++++++++++++++
+> >  1 file changed, 14 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> > index 6088c3083194..88bf0c754fb2 100644
+> > --- a/drivers/pci/host/vmd.c
+> > +++ b/drivers/pci/host/vmd.c
+> > @@ -755,6 +755,11 @@ static void vmd_remove(struct pci_dev *dev)
+> >  static int vmd_suspend(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> > +	int i;
+> > +
+> > +	for (i = 0; i < vmd->msix_count; i++)
+> > +                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
+> >  
+> >  	pci_save_state(pdev);
+> >  	return 0;
+> > @@ -763,7 +768,16 @@ static int vmd_suspend(struct device *dev)
+> >  static int vmd_resume(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> > +	int err, i;
+> >  
+> > +	for (i = 0; i < vmd->msix_count; i++) {
+> > +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+> > +				       vmd_irq, IRQF_NO_THREAD,
+> The flag here looks redundant to me because the fn calls into
+> request_threaded_irq with no thread_fn. But since it's a bit more
+> verbose, can you change the other devm_request_irq to use IRQF_NO_THREAD?
 
-I did add a v4.11+ stable tag on your behalf, so it will get
-backported to eventually.  But your responses don't exactly answer my
-question about whether you want to start with this in v4.13 or v4.14.  
+I actually yanked the request irq from the other call. It was changed
+to NO_THREAD in April:
+
+(3eefa790c968) PCI: host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
