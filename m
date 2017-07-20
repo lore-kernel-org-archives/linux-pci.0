@@ -1,263 +1,99 @@
-Return-Path: <SRS0=VPKy=6Z=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=VPKy=6Z=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
-        Dongdong Liu
-	<liudongdong3@huawei.com>
-Subject: [PATCH V2] PCI/DPC: Add eDPC support
-Date: Sat, 22 Jul 2017 17:39:59 +0800
-Message-ID: <1500716399-85612-1-git-send-email-liudongdong3@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v3 3/8] phy: qcom-qmp: Fix phy pipe clock name
+Date: Thu, 20 Jul 2017 11:04:35 +0530
+Message-Id: <1500528880-25804-4-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
+References: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This code is to add eDPC support. Get and print the RP PIO error
-information when the trigger condition is RP PIO error.
+Presently, the phy pipe clock's name is assumed to be either
+usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+phy lane's number). However, this will not work if an SoC has
+more than one instance of the phy. Hence, instead of assuming
+the name of the clock, fetch it from the DT.
 
-For more information on eDPC, view the PCI-SIG eDPC ECN here:
-https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
-
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Acked-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
-v1-->v2: Use a stack local variable instead of the allocated memory for
-	 collecting RP PIO information.
-	 Fix the condition of RP PIO error.
-	 rebase on v4.13-rc1
----
- drivers/pci/pcie/pcie-dpc.c   | 160 ++++++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/pci_regs.h |  10 +++
- 2 files changed, 170 insertions(+)
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
+ 1 file changed, 16 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index c39f32e..724c548 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -16,11 +16,55 @@
- #include <linux/pcieport_if.h>
- #include "../pci.h"
- 
-+struct rp_pio_header_log_regs {
-+	u32 dw0;
-+	u32 dw1;
-+	u32 dw2;
-+	u32 dw3;
-+};
-+
-+struct dpc_rp_pio_regs {
-+	u32 status;
-+	u32 mask;
-+	u32 severity;
-+	u32 syserror;
-+	u32 exception;
-+
-+	struct rp_pio_header_log_regs header_log;
-+	u32 impspec_log;
-+	u32 tlp_prefix_log[4];
-+	u32 log_size;
-+	u16 first_error;
-+};
-+
- struct dpc_dev {
- 	struct pcie_device	*dev;
- 	struct work_struct	work;
- 	int			cap_pos;
- 	bool			rp;
-+	u32			rp_pio_status;
-+};
-+
-+static const char * const rp_pio_error_string[] = {
-+	"Configuration Request received UR Completion",	 /* Bit Position 0  */
-+	"Configuration Request received CA Completion",	 /* Bit Position 1  */
-+	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
-+	NULL,
-+	NULL,
-+	NULL,
-+	NULL,
-+	NULL,
-+	"I/O Request received UR Completion",		 /* Bit Position 8  */
-+	"I/O Request received CA Completion",		 /* Bit Position 9  */
-+	"I/O Request Completion Timeout",		 /* Bit Position 10 */
-+	NULL,
-+	NULL,
-+	NULL,
-+	NULL,
-+	NULL,
-+	"Memory Request received UR Completion",	 /* Bit Position 16 */
-+	"Memory Request received CA Completion",	 /* Bit Position 17 */
-+	"Memory Request Completion Timeout",		 /* Bit Position 18 */
- };
- 
- static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
-@@ -79,10 +123,121 @@ static void interrupt_event_handler(struct work_struct *work)
- 	dpc_wait_link_inactive(pdev);
- 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
- 		return;
-+	if (dpc->rp && dpc->rp_pio_status)
-+		pci_write_config_dword(pdev,
-+				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-+				      dpc->rp_pio_status);
-+
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
- }
- 
-+static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
-+					struct rp_pio_header_log_regs *t)
-+{
-+	dev_err(&dev->dev, "TLP Header: %08x %08x %08x %08x\n",
-+		t->dw0, t->dw1, t->dw2, t->dw3);
-+}
-+
-+static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
-+				   struct dpc_rp_pio_regs *rp_pio)
-+{
-+	struct pci_dev *pdev = dpc->dev->port;
-+	int i;
-+	u32 status;
-+
-+	dev_err(&pdev->dev, "rp_pio_status: 0x%08x, rp_pio_mask: 0x%08x\n",
-+			    rp_pio->status, rp_pio->mask);
-+
-+	dev_err(&pdev->dev, "RP PIO severity=0x%08x, syserror=0x%08x, exception=0x%08x\n",
-+		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
-+
-+	status = (rp_pio->status & ~rp_pio->mask);
-+
-+	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
-+		if (!(status & (1 << i)))
-+			continue;
-+
-+		dev_err(&pdev->dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
-+			rp_pio->first_error == i ? " (First)" : "");
-+	}
-+
-+	dpc_rp_pio_print_tlp_header(pdev, &rp_pio->header_log);
-+	if (rp_pio->log_size == 4)
-+		return;
-+	dev_err(&pdev->dev, "RP PIO ImpSpec Log %08x\n", rp_pio->impspec_log);
-+
-+	for (i = 0; i < rp_pio->log_size - 5; i++)
-+		dev_err(&pdev->dev, "TLP Prefix Header: dw%d, %08x\n", i,
-+			rp_pio->tlp_prefix_log[i]);
-+}
-+
-+static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
-+				struct dpc_rp_pio_regs *rp_pio)
-+{
-+	struct pci_dev *pdev = dpc->dev->port;
-+	int i;
-+	u16 cap;
-+	u16 status;
-+
-+	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-+			      &rp_pio->status);
-+	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
-+			      &rp_pio->mask);
-+
-+	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
-+			      &rp_pio->severity);
-+	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
-+			      &rp_pio->syserror);
-+	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
-+			      &rp_pio->exception);
-+
-+	/* Get First Error Pointer */
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-+	rp_pio->first_error = (status & 0x1f00) >> 8;
-+
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
-+	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
-+	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
-+		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
-+			rp_pio->log_size);
-+		return;
-+	}
-+
-+	pci_read_config_dword(pdev,
-+			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
-+			      &rp_pio->header_log.dw0);
-+	pci_read_config_dword(pdev,
-+			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
-+			      &rp_pio->header_log.dw1);
-+	pci_read_config_dword(pdev,
-+			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
-+			      &rp_pio->header_log.dw2);
-+	pci_read_config_dword(pdev,
-+			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
-+			      &rp_pio->header_log.dw3);
-+	if (rp_pio->log_size == 4)
-+		return;
-+
-+	pci_read_config_dword(pdev,
-+			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
-+			      &rp_pio->impspec_log);
-+	for (i = 0; i < rp_pio->log_size - 5; i++)
-+		pci_read_config_dword(pdev,
-+			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
-+			&rp_pio->tlp_prefix_log[i]);
-+}
-+
-+static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
-+{
-+	struct dpc_rp_pio_regs rp_pio_regs;
-+
-+	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
-+	dpc_rp_pio_print_error(dpc, &rp_pio_regs);
-+
-+	dpc->rp_pio_status = rp_pio_regs.status;
-+}
-+
- static irqreturn_t dpc_irq(int irq, void *context)
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 78ca628..97020ec 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+  *    clk  |   +-------+   |                   +-----+
+  *         +---------------+
+  */
+-static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
++static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
  {
- 	struct dpc_dev *dpc = (struct dpc_dev *)context;
-@@ -109,6 +264,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 			 (ext_reason == 0) ? "RP PIO error" :
- 			 (ext_reason == 1) ? "software trigger" :
- 					     "reserved error");
-+		/* show RP PIO error detail information */
-+		if (reason == 3 && ext_reason == 0)
-+			dpc_precess_rp_pio_error(dpc);
-+
- 		schedule_work(&dpc->work);
+-	char name[24];
+ 	struct clk_fixed_rate *fixed;
+ 	struct clk_init_data init = { };
+ 
+-	switch (qmp->cfg->type) {
+-	case PHY_TYPE_USB3:
+-		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+-		break;
+-	case PHY_TYPE_PCIE:
+-		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+-		break;
+-	default:
++	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
++	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
+ 		/* not all phys register pipe clocks, so return success */
+ 		return 0;
  	}
- 	return IRQ_HANDLED;
-@@ -144,6 +303,7 @@ static int dpc_probe(struct pcie_device *dev)
+@@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+ 	if (!fixed)
+ 		return -ENOMEM;
  
- 	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+-	init.name = name;
++	init.name = clk_name;
+ 	init.ops = &clk_fixed_rate_ops;
  
+ 	/* controllers using QMP phys use 125MHz pipe clock interface */
+@@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 
+ 	id = 0;
+ 	for_each_available_child_of_node(dev->of_node, child) {
++		const char *clk_name;
 +
- 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 		/* Create per-lane phy */
+ 		ret = qcom_qmp_phy_create(dev, child, id);
+ 		if (ret) {
+@@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 			return ret;
+ 		}
  
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index c22d3eb..1ce9627 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -967,6 +967,7 @@
- #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
- #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
- #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
-+#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0xF00	/* RP PIO log size */
- #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
- 
- #define PCI_EXP_DPC_CTL			6	/* DPC control */
-@@ -980,6 +981,15 @@
- 
- #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
- 
-+#define PCI_EXP_DPC_RP_PIO_STATUS	 0x0C	/* RP PIO Status */
-+#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO MASK */
-+#define PCI_EXP_DPC_RP_PIO_SEVERITY	 0x14	/* RP PIO Severity */
-+#define PCI_EXP_DPC_RP_PIO_SYSERROR	 0x18	/* RP PIO SysError */
-+#define PCI_EXP_DPC_RP_PIO_EXCEPTION	 0x1C	/* RP PIO Exception */
-+#define PCI_EXP_DPC_RP_PIO_HEADER_LOG	 0x20	/* RP PIO Header Log */
-+#define PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG	 0x30	/* RP PIO ImpSpec Log */
-+#define PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG 0x34	/* RP PIO TLP Prefix Log */
++		ret = of_property_read_string(child, "clock-output-names",
++							&clk_name);
++		if (ret) {
++			dev_err(dev,
++				"failed to get clock-output-names for lane%d phy, %d\n",
++				id, ret);
++			return ret;
++		}
 +
- /* Precision Time Measurement */
- #define PCI_PTM_CAP			0x04	    /* PTM Capability */
- #define  PCI_PTM_CAP_REQ		0x00000001  /* Requester capable */
+ 		/*
+ 		 * Register the pipe clock provided by phy.
+ 		 * See function description to see details of this pipe clock.
+ 		 */
+-		ret = phy_pipe_clk_register(qmp, id);
++		ret = phy_pipe_clk_register(qmp, clk_name);
+ 		if (ret) {
+ 			dev_err(qmp->dev,
+ 				"failed to register pipe clock source\n");
 -- 
-1.9.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
