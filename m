@@ -1,111 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39920 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754284AbdGJUjl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 10 Jul 2017 16:39:41 -0400
-Date: Mon, 10 Jul 2017 15:39:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+Received: from mout.kundenserver.de ([217.72.192.75]:56500 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752811AbdGUUVC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 16:21:02 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org,
+        Grant Likely <grant.likely@linaro.org>,
+        Lucas Stach <l.stach@pengutronix.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] phy-rockchip-pcie: add set_mode callback
-Message-ID: <20170710203937.GA5610@bhelgaas-glaptop.roam.corp.google.com>
-References: <1497601068-181656-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1497601068-181656-1-git-send-email-shawn.lin@rock-chips.com>
+        Magnus Damm <damm@opensource.se>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ben Dooks <ben.dooks@codethink.co.uk>,
+        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        Alan Tull <atull@opensource.altera.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Richard Fitzgerald <rf@opensource.wolfsonmicro.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] of: provide of_n_{addr,size}_cells wrappers for !CONFIG_OF
+Date: Fri, 21 Jul 2017 22:19:58 +0200
+Message-Id: <20170721202012.3360244-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 16, 2017 at 04:17:47PM +0800, Shawn Lin wrote:
-> phy_mode was added for switching USB mode purposely as
-> well as phy_set_mode API. However other types of PHY could
-> also have some miscellaneous setting/modes need to be
-> handled. This patch is gonna support this callback for
-> phy-rockchip-pcie and do some power-saving work there.
+The pci-rcar driver is enabled for compile tests, and this has
+now shown that the driver cannot build without CONFIG_OF,
+following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+interrupt mapping when possible":
 
-> Note that we just stuff in some other values other that the
-> existing phy_mode and convert it in the coressponding driver
-> instead, otherwise we should extend the phy_mode again which
-> it doesn't make sense to add in new driver's specificed value.
-> Overall it looks fine to me as the controller's driver and the
-> phy's driver are paired so that the caller and the consumer should
-> be able to keep the value(mode) in consistent.
+../drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
+../drivers/pci/host/pcie-rcar.c:856:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+  parser->pna = of_n_addr_cells(node);
+  ^
+As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+supposed to build fine, which we can achieve if we make the
+declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+and provide an empty inline function otherwise, as we do for
+a lot of other of interfaces.
 
-s/coressponding/corresponding/
-s/specificed/specified/
-s/in consistent/consistent/
+This lets us build the rcar_pci driver again without CONFIG_OF
+for build testing. All platforms using this driver select OF,
+so this doesn't change anything for the users.
 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
->  drivers/phy/rockchip/phy-rockchip-pcie.c | 22 ++++++++++++++++++++++
->  1 file changed, 22 insertions(+)
-> 
-> diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockchip/phy-rockchip-pcie.c
-> index 6904633..9ffad15 100644
-> --- a/drivers/phy/rockchip/phy-rockchip-pcie.c
-> +++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
-> @@ -255,11 +255,33 @@ static int rockchip_pcie_phy_exit(struct phy *phy)
->  	return 0;
->  }
->  
-> +static int rockchip_pcie_phy_set_mode(struct phy *phy, enum phy_mode mode)
-> +{
-> +	struct rockchip_pcie_phy *rk_phy = phy_get_drvdata(phy);
-> +	u8 map = (u8)mode;
-> +	int i;
-> +
-> +	for (i = 0; i < PHY_MAX_LANE_NUM; i++) {
-> +		if (map & BIT(i))
-> +			continue;
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: devicetree@vger.kernel.org
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Grant Likely <grant.likely@linaro.org>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <damm@opensource.se>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
 
-phy_mode is defined as:
+---
+I originally sent the patch in 2014 when things initially broke
+and then forgot about while it was applied in my randconfig patch
+stack. I sent it again in 2016 without replay.
 
-  enum phy_mode {
-	  PHY_MODE_INVALID,
-	  PHY_MODE_USB_HOST,
-	  PHY_MODE_USB_DEVICE,
-	  PHY_MODE_USB_OTG,
-  };
+It's still broken and I think this is the correct fix.
+---
+ include/linux/of.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-You're using phy_mode as something entirely different -- a bitmap of
-which lanes you want to keep active.  I understand you're trying to
-avoid extending phy_mode again, but I just want to point out that
-there are no other places that subvert phy_mode as you're doing.
-
-It's probably worth a comment here about why we're not using the
-standard enum values.  I see you already have one at the caller.
-
-I'm not the PHY guy, so I'd like Kishon's ack before going down this
-road.
-
-> +
-> +		dev_dbg(&phy->dev, "idling lane %d\n", i);
-> +		regmap_write(rk_phy->reg_base,
-> +			     rk_phy->phy_data->pcie_laneoff,
-> +			     HIWORD_UPDATE(PHY_LANE_IDLE_OFF,
-> +			     PHY_LANE_IDLE_MASK,
-> +			     PHY_LANE_IDLE_A_SHIFT + i));
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static const struct phy_ops ops = {
->  	.init		= rockchip_pcie_phy_init,
->  	.exit		= rockchip_pcie_phy_exit,
->  	.power_on	= rockchip_pcie_phy_power_on,
->  	.power_off	= rockchip_pcie_phy_power_off,
-> +	.set_mode	= rockchip_pcie_phy_set_mode,
->  	.owner		= THIS_MODULE,
->  };
->  
-> -- 
-> 1.9.1
-> 
-> 
+diff --git a/include/linux/of.h b/include/linux/of.h
+index 4a8a70916237..1efdbe53136c 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -735,6 +735,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
+ 	return NULL;
+ }
+ 
++static inline int of_n_addr_cells(struct device_node *np) { return 0; }
++static inline int of_n_size_cells(struct device_node *np) { return 0; }
++
+ static inline int of_property_read_u64(const struct device_node *np,
+ 				       const char *propname, u64 *out_value)
+ {
+-- 
+2.9.0
