@@ -1,71 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:32807 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751276AbdGQHhQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 03:37:16 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 1/7] PCI: rockchip: split out rockchip_pcie_get_phys
-Date: Mon, 17 Jul 2017 15:36:16 +0800
-Message-Id: <1500276982-208439-2-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh+dt@kerenl.org>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH 0/5] PCI: MediaTek: Add support for new generation host
+ controller
+Date: Fri, 21 Jul 2017 10:32:42 +0800
+Message-ID: <cover.1500601172.git.honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We plan to introduce per-lanes PHY, so split out new
-function to make it easy in the future. No functional
-change intended.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+MediaTek's PCIe host controller has two generation HWs, the new
+generation HW has two root ports, it shares most probing flow with the
+legacy controller. But the read/write config space logical is different
+from the lagacy controller.
+This patchset abstract the common probing flow, and add support for the
+new generation controller.
 
- drivers/pci/host/pcie-rockchip.c | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+Ryder Lee (5):
+  PCI: mediatek: Add a structure to abstract the controller generations
+  PCI: mediatek: switch to use platform_get_resource_byname()
+  dt-bindings: PCI: rename and cleanup MediaTek binding text
+  PCI: mediatek: Add new generation controller support
+  dt-bindings: PCI: add support for new generation controller
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 5acf869..6632a51 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -853,6 +853,19 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
- 
-+static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->dev;
-+
-+	rockchip->phy = devm_phy_get(dev, "pcie-phy");
-+	if (IS_ERR(rockchip->phy)) {
-+		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
-+			dev_err(dev, "missing phy\n");
-+		return PTR_ERR(rockchip->phy);
-+	}
-+
-+	return 0;
-+}
- 
- /**
-  * rockchip_pcie_parse_dt - Parse Device Tree
-@@ -883,12 +896,8 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 	if (IS_ERR(rockchip->apb_base))
- 		return PTR_ERR(rockchip->apb_base);
- 
--	rockchip->phy = devm_phy_get(dev, "pcie-phy");
--	if (IS_ERR(rockchip->phy)) {
--		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
--			dev_err(dev, "missing phy\n");
-+	if (rockchip_pcie_get_phys(rockchip))
- 		return PTR_ERR(rockchip->phy);
--	}
- 
- 	rockchip->lanes = 1;
- 	err = of_property_read_u32(node, "num-lanes", &rockchip->lanes);
+ ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 113 +++-
+ drivers/pci/host/Kconfig                           |   5 +-
+ drivers/pci/host/pcie-mediatek.c                   | 578 +++++++++++++++++++--
+ 3 files changed, 629 insertions(+), 67 deletions(-)
+ rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (59%)
+
 -- 
-1.9.1
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
