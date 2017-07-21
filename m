@@ -1,48 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47279 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756414AbdGKSzt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2017 14:55:49 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.21/8.16.0.21) with SMTP id v6BIsErL003176
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2017 14:55:48 -0400
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2bn0mv2hgh-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2017 14:55:48 -0400
-Received: from localhost
-        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-        Tue, 11 Jul 2017 12:55:47 -0600
-Subject: Re: [PATCH 3/3] PCI: hotplug: constify attribute_group structures.
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>, bhelgaas@google.com,
-        paulus@samba.org, mpe@ellerman.id.au, benh@kernel.crashing.org
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org
-References: <1499765324-617-1-git-send-email-arvind.yadav.cs@gmail.com>
- <1499765324-617-2-git-send-email-arvind.yadav.cs@gmail.com>
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Date: Tue, 11 Jul 2017 11:55:40 -0700
-MIME-Version: 1.0
-In-Reply-To: <1499765324-617-2-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Message-Id: <97d8f7b5-7939-6abb-4883-4582a16f374e@linux.vnet.ibm.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:58267 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752091AbdGUVK0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:10:26 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>,
+        Magnus Damm <damm@opensource.se>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ben Dooks <ben.dooks@codethink.co.uk>,
+        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Richard Fitzgerald <rf@opensource.wolfsonmicro.com>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] of: provide of_n_{addr,size}_cells wrappers for !CONFIG_OF
+Date: Fri, 21 Jul 2017 23:09:50 +0200
+Message-Id: <20170721211000.3382004-1-arnd@arndb.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/11/2017 02:28 AM, Arvind Yadav wrote:
-> attribute_groups are not supposed to change at runtime. All functions
-> working with attribute_groups provided by <linux/sysfs.h> work
-> with const attribute_group. So mark the non-const structs as const.
-> 
-> File size before:
->    text	   data	    bss	    dec	    hex	filename
->     418	    160	      8	    586	    24a	drivers/pci/hotplug/rpadlpar_sysfs.o
-> 
-> File size After adding 'const':
->    text	   data	    bss	    dec	    hex	filename
->     482	     96	      8	    586	    232	drivers/pci/hotplug/rpadlpar_sysfs.o
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+The pci-rcar driver is enabled for compile tests, and this has
+shown that the driver cannot build without CONFIG_OF:
 
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
+drivers/pci/host/pcie-rcar.c:1039:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+  parser->pna = of_n_addr_cells(node);
+  ^
+As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+supposed to build fine, which we can achieve if we make the
+declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+and provide an empty inline function otherwise, as we do for
+a lot of other of interfaces.
+
+This lets us build the rcar_pci driver again without CONFIG_OF
+for build testing. All platforms using this driver select OF,
+so this doesn't change anything for the users.
+
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Magnus Damm <damm@opensource.se>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-sh@vger.kernel.org
+Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Frank Rowand <frank.rowand@sony.com>
+Fixes: c25da4778803 ("PCI: rcar: Add Renesas R-Car PCIe driver")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+I originally sent the patch in 2014 when things initially broke
+and then forgot about while it was applied in my randconfig patch
+stack. I sent it again in 2016 without reply.
+
+It's still broken and I think this is the correct fix.
+v2: modify changelog as Geert suggested.
+
+ include/linux/of.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/include/linux/of.h b/include/linux/of.h
+index 4a8a70916237..1efdbe53136c 100644
+--- a/include/linux/of.h
++++ b/include/linux/of.h
+@@ -735,6 +735,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
+ 	return NULL;
+ }
+ 
++static inline int of_n_addr_cells(struct device_node *np) { return 0; }
++static inline int of_n_size_cells(struct device_node *np) { return 0; }
++
+ static inline int of_property_read_u64(const struct device_node *np,
+ 				       const char *propname, u64 *out_value)
+ {
+-- 
+2.9.0
