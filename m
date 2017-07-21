@@ -1,303 +1,357 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:54747 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751004AbdGNWKm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Jul 2017 18:10:42 -0400
-From: =?UTF-8?q?Imre=20Vad=C3=A1sz?= <ivadasz@google.com>
-Date: Fri, 14 Jul 2017 23:05:53 +0200
-Subject: [PATCH] fbsd-device: Use PCIOCGETCONF and PCIOCGETBAR when /dev/pci
- fd is readonly.
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Message-Id: <71397e2da7be0ede@vdsz.de>
-To: unlisted-recipients:; (no To-header on input)
+Received: from smtp.codeaurora.org ([198.145.29.96]:45728 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932099AbdGULhH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 07:37:07 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>,
+        smuthayy <smuthayy@codeaurora.org>
+Subject: [PATCH v4 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+Date: Fri, 21 Jul 2017 17:06:17 +0530
+Message-Id: <1500636977-11934-8-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
+References: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This way we can at least fulfill some of the common requests without root
-privileges. This allows various applications (for example the google chrome
-webbrowser) to successfully probe the list of PCI devices without needing
-read-write access to the /dev/pci device file.
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+Gen 1/2, one lane, two PCIe root complex with support for MSI and
+legacy interrupts, and it conforms to PCI Express Base 2.1
+specification.
 
-Signed-off-by: Imre Vadász <imrevdsz@gmail.com>
+The core init is the similar to the existing SoC, however the
+clocks and reset lines differ.
+
+Signed-off-by: smuthayy <smuthayy@codeaurora.org>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
- lib/fbsd-device.c | 209 +++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 201 insertions(+), 8 deletions(-)
+ drivers/pci/dwc/pcie-qcom.c | 264 +++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 259 insertions(+), 5 deletions(-)
 
-diff --git a/lib/fbsd-device.c b/lib/fbsd-device.c
-index 7cebb0d..78067dc 100644
---- a/lib/fbsd-device.c
-+++ b/lib/fbsd-device.c
-@@ -3,6 +3,7 @@
-  *
-  *	Copyright (c) 1999 Jari Kirma <kirma@cs.hut.fi>
-  *	Updated in 2003 by Samy Al Bahra <samy@kerneled.com>
-+ *	Updated in 2017 by Imre Vadász <imrevdsz@gmail.com>
-  *
-  *	Can be freely distributed and used under the terms of the GNU GPL.
-  */
-@@ -10,6 +11,7 @@
- #include <errno.h>
- #include <fcntl.h>
- #include <stdio.h>
-+#include <stdlib.h>
- #include <string.h>
- #include <unistd.h>
- #include <osreldate.h>
-@@ -54,16 +56,195 @@ static void
- fbsd_init(struct pci_access *a)
- {
-   char *name = pci_get_param(a, "fbsd.path");
-+  int fd;
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 98c74d7..b2ea953 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -37,6 +37,20 @@
+ #include "pcie-designware.h"
  
--  a->fd = open(name, O_RDWR, 0);
--  if (a->fd < 0)
--    a->error("fbsd_init: %s open failed", name);
-+  a->fd = -1;
-+  a->fd_rw = -1;
-+  /*
-+   * When opening /dev/pci as read-write fails, retry with readonly which
-+   * will still allow us to gain some information via the PCIOCGETCONF and
-+   * PCIOCGETBAR IOCTLs, even without generic read access to the PCI config
-+   * space.
-+   */
-+  fd = open(name, O_RDWR, 0);
-+  if (fd < 0)
-+    {
-+      fd = open(name, O_RDONLY, 0);
-+      if (fd < 0)
-+	a->error("fbsd_init: %s open failed", name);
-+      else
-+	{
-+	  a->debug("fbsd_init: Fallback to read-only opened %s", name);
-+	  a->fd = fd;
-+	}
-+    }
-+  else
-+    a->fd_rw = fd;
+ #define PCIE20_PARF_SYS_CTRL			0x00
++#define MST_WAKEUP_EN				BIT(13)
++#define SLV_WAKEUP_EN				BIT(12)
++#define MSTR_ACLK_CGC_DIS			BIT(10)
++#define SLV_ACLK_CGC_DIS			BIT(9)
++#define CORE_CLK_CGC_DIS			BIT(6)
++#define AUX_PWR_DET				BIT(4)
++#define L23_CLK_RMV_DIS				BIT(2)
++#define L1_CLK_RMV_DIS				BIT(1)
++
++#define PCIE20_COMMAND_STATUS			0x04
++#define CMD_BME_VAL				0x4
++#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
++#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
++
+ #define PCIE20_PARF_PHY_CTRL			0x40
+ #define PCIE20_PARF_PHY_REFCLK			0x4C
+ #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+@@ -58,9 +72,22 @@
+ #define CFG_BRIDGE_SB_INIT			BIT(0)
+ 
+ #define PCIE20_CAP				0x70
++#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xC)
++#define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
++#define PCIE_CAP_LINK1_VAL			0x2fd7f
++
++#define PCIE20_PARF_Q2A_FLUSH			0x1AC
++
++#define PCIE20_MISC_CONTROL_1_REG		0x8BC
++#define DBI_RO_WR_EN				1
+ 
+ #define PERST_DELAY_US				1000
+ 
++#define AXI_CLK_RATE				200000000
++
++#define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
++#define SLV_ADDR_SPACE_SZ                       0x10000000
++
+ struct qcom_pcie_resources_2_1_0 {
+ 	struct clk *iface_clk;
+ 	struct clk *core_clk;
+@@ -110,11 +137,21 @@ struct qcom_pcie_resources_2_4_0 {
+ 	struct reset_control *phy_ahb_reset;
+ };
+ 
++struct qcom_pcie_resources_2_3_3 {
++	struct clk *iface;
++	struct clk *axi_m_clk;
++	struct clk *axi_s_clk;
++	struct clk *ahb_clk;
++	struct clk *aux_clk;
++	struct reset_control *rst[7];
++};
++
+ union qcom_pcie_resources {
+ 	struct qcom_pcie_resources_1_0_0 v1_0_0;
+ 	struct qcom_pcie_resources_2_1_0 v2_1_0;
+ 	struct qcom_pcie_resources_2_3_2 v2_3_2;
+ 	struct qcom_pcie_resources_2_4_0 v2_4_0;
++	struct qcom_pcie_resources_2_3_3 v2_3_3;
+ };
+ 
+ struct qcom_pcie;
+@@ -884,6 +921,206 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+ 	return ret;
  }
  
- static void
- fbsd_cleanup(struct pci_access *a)
- {
--  close(a->fd);
-+  if (a->fd >= 0)
-+    {
-+      close(a->fd);
-+      a->fd = -1;
-+    }
-+  if (a->fd_rw >= 0)
-+    {
-+      close(a->fd_rw);
-+      a->fd_rw = -1;
-+    }
++static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
++	struct dw_pcie *pci = pcie->pci;
++	struct device *dev = pci->dev;
++	int i;
++	const char *rst_names[] = {
++					"axi_m", "axi_s", "pipe",
++					"axi_m_sticky", "sticky",
++					"ahb", "sleep",
++				};
++
++	res->iface = devm_clk_get(dev, "iface");
++	if (IS_ERR(res->iface))
++		return PTR_ERR(res->iface);
++
++	res->axi_m_clk = devm_clk_get(dev, "axi_m");
++	if (IS_ERR(res->axi_m_clk))
++		return PTR_ERR(res->axi_m_clk);
++
++	res->axi_s_clk = devm_clk_get(dev, "axi_s");
++	if (IS_ERR(res->axi_s_clk))
++		return PTR_ERR(res->axi_s_clk);
++
++	res->ahb_clk = devm_clk_get(dev, "ahb");
++	if (IS_ERR(res->ahb_clk))
++		return PTR_ERR(res->ahb_clk);
++
++	res->aux_clk = devm_clk_get(dev, "aux");
++	if (IS_ERR(res->aux_clk))
++		return PTR_ERR(res->aux_clk);
++
++	for (i = 0; i < ARRAY_SIZE(rst_names); i++) {
++		res->rst[i] = devm_reset_control_get(dev, rst_names[i]);
++		if (IS_ERR(res->rst[i]))
++			return PTR_ERR(res->rst[i]);
++	}
++
++	return 0;
 +}
 +
-+static void
-+fbsd_scan(struct pci_access *a)
++static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
 +{
-+  struct pci_conf_io conf;
-+  struct pci_conf *matches;
-+  struct pci_dev *t;
-+  uint32_t offset = 0;
-+  unsigned int i;
++	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
 +
-+  matches = calloc(32, sizeof(struct pci_conf));
-+  if (matches == NULL)
-+    {
-+      a->error("calloc: %s", strerror(errno));
-+      return;
-+    }
-+
-+  conf.generation = 0;
-+  do
-+    {
-+      conf.pat_buf_len = 0;
-+      conf.num_patterns = 0;
-+      conf.patterns = NULL;
-+      conf.match_buf_len = 32 * sizeof(struct pci_conf);
-+      conf.num_matches = 32;
-+      conf.matches = matches;
-+      conf.offset = offset;
-+      conf.status = 0;
-+      if (ioctl(a->fd_rw >= 0 ? a->fd_rw : a->fd, PCIOCGETCONF, &conf) < 0)
-+	{
-+	  if (errno == ENODEV)
-+	    break;
-+	  a->error("fbsd_scan: ioctl(PCIOCGETCONF) failed: %s",
-+	      strerror(errno));
-+	}
-+      /* PCI_GETCONF_LIST_CHANGED would require us to start over. */
-+      if (conf.status == PCI_GETCONF_ERROR ||
-+	  conf.status == PCI_GETCONF_LIST_CHANGED)
-+	{
-+	  a->error("fbsd_scan: ioctl(PCIOCGETCONF) failed");
-+	  break;
-+	}
-+      for (i = 0; i < conf.num_matches; i++)
-+        {
-+	  t = pci_alloc_dev(a);
-+	  t->bus = matches[i].pc_sel.pc_bus;
-+	  t->dev = matches[i].pc_sel.pc_dev;
-+	  t->dev = matches[i].pc_sel.pc_dev;
-+	  t->domain = matches[i].pc_sel.pc_domain;
-+	  t->domain_16 = matches[i].pc_sel.pc_domain;
-+	  t->vendor_id = matches[i].pc_vendor;
-+	  t->device_id = matches[i].pc_device;
-+	  t->known_fields = PCI_FILL_IDENT;
-+	  t->hdrtype = matches[i].pc_hdr;
-+	  pci_link_dev(a, t);
-+	}
-+      offset += conf.num_matches;
-+    }
-+  while (conf.status == PCI_GETCONF_MORE_DEVS);
-+
-+  free(matches);
++	clk_disable_unprepare(res->iface);
++	clk_disable_unprepare(res->axi_m_clk);
++	clk_disable_unprepare(res->axi_s_clk);
++	clk_disable_unprepare(res->ahb_clk);
++	clk_disable_unprepare(res->aux_clk);
 +}
 +
-+static int
-+fbsd_fill_info(struct pci_dev *d, int flags)
++static int qcom_pcie_enable_resources_2_3_3(struct qcom_pcie *pcie)
 +{
-+  struct pci_conf_io conf;
-+  struct pci_bar_io bar;
-+  struct pci_match_conf pattern;
-+  struct pci_conf match;
-+  int i;
++	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
++	struct dw_pcie *pci = pcie->pci;
++	struct device *dev = pci->dev;
++	int ret;
 +
-+  if (d->access->fd_rw >= 0)
-+    return pci_generic_fill_info(d, flags);
++	ret = clk_prepare_enable(res->iface);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable core clock\n");
++		return ret;
++	}
 +
-+  /*
-+   * Can only handle PCI_FILL_IDENT, PCI_FILL_CLASS, PCI_FILL_BASES and
-+   * PCI_FILL_SIZES requests with the PCIOCGETCONF and PCIOCGETBAR IOCTLs.
-+   */
++	ret = clk_prepare_enable(res->axi_m_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable core clock\n");
++		goto err_clk_axi_m;
++	}
 +
-+  conf.pat_buf_len = sizeof(struct pci_match_conf);
-+  conf.num_patterns = 1;
-+  conf.patterns = &pattern;
-+  conf.match_buf_len = sizeof(struct pci_conf);
-+  conf.num_matches = 1;
-+  conf.matches = &match;
-+  conf.offset = 0;
-+  conf.generation = 0;
-+  conf.status = 0;
++	ret = clk_set_rate(res->axi_m_clk, AXI_CLK_RATE);
++	if (ret) {
++		dev_err(dev, "MClk rate set failed (%d)\n", ret);
++		goto err_clk_axi_m;
++	}
 +
-+  pattern.pc_sel.pc_domain = d->domain;
-+  pattern.pc_sel.pc_bus = d->bus;
-+  pattern.pc_sel.pc_dev = d->dev;
-+  pattern.pc_sel.pc_func = d->func;
-+  pattern.flags = PCI_GETCONF_MATCH_DOMAIN | PCI_GETCONF_MATCH_BUS |
-+	  PCI_GETCONF_MATCH_DEV | PCI_GETCONF_MATCH_FUNC;
++	ret = clk_prepare_enable(res->axi_s_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable axi slave clock\n");
++		goto err_clk_axi_s;
++	}
 +
-+  if (ioctl(d->access->fd, PCIOCGETCONF, &conf) < 0)
-+    {
-+      if (errno == ENODEV)
-+        return 0;
-+      d->access->error("fbsd_fill_info: ioctl(PCIOCGETCONF) failed: %s", strerror(errno));
-+    }
++	ret = clk_set_rate(res->axi_s_clk, AXI_CLK_RATE);
++	if (ret) {
++		dev_err(dev, "MClk rate set failed (%d)\n", ret);
++		goto err_clk_axi_s;
++	}
 +
-+  if (flags & PCI_FILL_IDENT)
-+    {
-+      d->vendor_id = match.pc_vendor;
-+      d->device_id = match.pc_device;
-+    }
-+  if (flags & PCI_FILL_CLASS)
-+    {
-+      d->device_class = match.pc_class | (match.pc_subclass << 8);
-+    }
-+  if (flags & (PCI_FILL_BASES | PCI_FILL_SIZES))
-+    {
-+      d->rom_base_addr = 0;
-+      d->rom_size = 0;
-+      for (i = 0; i < 6; i++)
-+        {
-+	  bar.pbi_sel.pc_domain = d->domain;
-+	  bar.pbi_sel.pc_bus = d->bus;
-+	  bar.pbi_sel.pc_dev = d->dev;
-+	  bar.pbi_sel.pc_func = d->func;
-+	  bar.pbi_reg = 0x10 + 4*i;
-+	  bar.pbi_enabled = 0;
-+	  bar.pbi_base = 0;
-+	  bar.pbi_length = 0;
-+	  if (ioctl(d->access->fd, PCIOCGETBAR, &bar) < 0)
-+	    {
-+	      if (errno == ENODEV)
-+		return 0;
-+	      if (errno == EINVAL)
-+	        {
-+		  d->base_addr[i] = 0;
-+		  d->size[i] = 0;
++	ret = clk_prepare_enable(res->ahb_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable ahb clock\n");
++		goto err_clk_ahb;
++	}
++
++	ret = clk_prepare_enable(res->aux_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable aux clock\n");
++		goto err_clk_aux;
++	}
++
++	udelay(1);
++
++	return 0;
++
++err_clk_aux:
++	clk_disable_unprepare(res->ahb_clk);
++err_clk_ahb:
++	clk_disable_unprepare(res->axi_s_clk);
++err_clk_axi_s:
++	clk_disable_unprepare(res->axi_m_clk);
++err_clk_axi_m:
++	clk_disable_unprepare(res->iface);
++
++	return ret;
++}
++
++static int qcom_pcie_2_3_3_reset(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
++	int i, ret;
++
++	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
++		ret = reset_control_assert(res->rst[i]);
++		if (ret) {
++			dev_err(pcie->pci->dev,
++				"%s: reset assert failed for %d\n",
++				__func__, i);
++			return ret;
 +		}
-+	      else
-+	        d->access->error("fbsd_fill_info: ioctl(PCIOCGETBAR) failed: %s", strerror(errno));
-+	    }
-+	  else
-+	    {
-+	      d->base_addr[i] = bar.pbi_base;
-+	      d->size[i] = bar.pbi_length;
-+	    }
 +	}
-+    }
 +
-+  return flags & (PCI_FILL_IDENT | PCI_FILL_CLASS | PCI_FILL_BASES |
-+		  PCI_FILL_SIZES);
++	msleep(20);
++
++	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
++		ret = reset_control_deassert(res->rst[i]);
++		if (ret) {
++			dev_err(pcie->pci->dev,
++				"%s: reset deassert failed for %d\n",
++				__func__, i);
++			return ret;
++		}
++	}
++
++	msleep(20);
++
++	return 0;
++}
++
++static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
++{
++	struct dw_pcie *pci = pcie->pci;
++	int ret;
++	u32 val;
++
++	ret = qcom_pcie_2_3_3_reset(pcie);
++	if (ret)
++		return ret;
++
++	qcom_ep_reset_assert(pcie);
++
++	ret = qcom_pcie_enable_resources_2_3_3(pcie);
++	if (ret)
++		return ret;
++
++	writel(SLV_ADDR_SPACE_SZ, pcie->parf +
++					PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
++
++	ret = phy_power_on(pcie->phy);
++	if (ret) {
++		pcie->ops->deinit(pcie);
++		return ret;
++	}
++
++	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
++	val &= ~BIT(0);
++	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
++
++	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
++
++	writel(MST_WAKEUP_EN | SLV_WAKEUP_EN | MSTR_ACLK_CGC_DIS
++		| SLV_ACLK_CGC_DIS | CORE_CLK_CGC_DIS |
++		AUX_PWR_DET | L23_CLK_RMV_DIS | L1_CLK_RMV_DIS,
++		pcie->parf + PCIE20_PARF_SYS_CTRL);
++	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
++
++	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
++	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
++	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
++
++	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
++	val &= ~(BIT(10) | BIT(11));
++	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
++
++	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
++		PCIE20_DEVICE_CONTROL2_STATUS2);
++
++	return 0;
++}
++
+ static int qcom_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
+@@ -985,6 +1222,13 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
++static const struct qcom_pcie_ops ops_2_3_3 = {
++	.get_resources = qcom_pcie_get_resources_2_3_3,
++	.init = qcom_pcie_init_2_3_3,
++	.deinit = qcom_pcie_deinit_2_3_3,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
++};
++
+ static int qcom_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -1070,12 +1314,22 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	return 0;
  }
  
- static int
-@@ -71,6 +252,12 @@ fbsd_read(struct pci_dev *d, int pos, byte *buf, int len)
- {
-   struct pci_io pi;
- 
-+  if (d->access->fd_rw < 0)
-+    {
-+      d->access->warn("fbsd_read: missing permissions");
-+      return 0;
-+    }
++/*
++ * Declare one of_device_id entry
++ * c - Compatible string
++ * d - Associated data
++ * w - SoC wrapper version (ignored)
++ * s - Synopsys core version (ignored)
++ */
++#define QCOM_DECL(c, d, w, s) { .compatible = c, .data = &d }
 +
-   if (!(len == 1 || len == 2 || len == 4))
-     return pci_generic_block_read(d, pos, buf, len);
+ static const struct of_device_id qcom_pcie_match[] = {
+-	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
+-	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
+-	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
+-	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
+-	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
++	QCOM_DECL("qcom,pcie-apq8084", ops_1_0_0, 1.0.0, 4.11a),
++	QCOM_DECL("qcom,pcie-ipq8064", ops_2_1_0, 2.1.0, 4.01a),
++	QCOM_DECL("qcom,pcie-apq8064", ops_2_1_0, 2.1.0, 4.01a),
++	QCOM_DECL("qcom,pcie-msm8996", ops_2_3_2, 2.3.2, 4.21a),
++	QCOM_DECL("qcom,pcie-ipq4019", ops_2_4_0, 2.4.0, 4.20a),
++	QCOM_DECL("qcom,pcie-ipq8074", ops_2_3_3, 2.3.3, 4.30a),
+ 	{ }
+ };
  
-@@ -87,7 +274,7 @@ fbsd_read(struct pci_dev *d, int pos, byte *buf, int len)
-   pi.pi_reg = pos;
-   pi.pi_width = len;
- 
--  if (ioctl(d->access->fd, PCIOCREAD, &pi) < 0)
-+  if (ioctl(d->access->fd_rw, PCIOCREAD, &pi) < 0)
-     {
-       if (errno == ENODEV)
- 	return 0;
-@@ -114,6 +301,12 @@ fbsd_write(struct pci_dev *d, int pos, byte *buf, int len)
- {
-   struct pci_io pi;
- 
-+  if (d->access->fd_rw < 0)
-+    {
-+      d->access->warn("fbsd_write: missing permissions");
-+      return 0;
-+    }
-+
-   if (!(len == 1 || len == 2 || len == 4))
-     return pci_generic_block_write(d, pos, buf, len);
- 
-@@ -143,7 +336,7 @@ fbsd_write(struct pci_dev *d, int pos, byte *buf, int len)
-       break;
-     }
- 
--  if (ioctl(d->access->fd, PCIOCWRITE, &pi) < 0)
-+  if (ioctl(d->access->fd_rw, PCIOCWRITE, &pi) < 0)
-     {
-       if (errno == ENODEV)
- 	return 0;
-@@ -160,8 +353,8 @@ struct pci_methods pm_fbsd_device = {
-   fbsd_detect,
-   fbsd_init,
-   fbsd_cleanup,
--  pci_generic_scan,
--  pci_generic_fill_info,
-+  fbsd_scan,
-+  fbsd_fill_info,
-   fbsd_read,
-   fbsd_write,
-   NULL,                                 /* read_vpd */
 -- 
-2.12.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
