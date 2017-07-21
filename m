@@ -1,46 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:26275 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934727AbdGTX2A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jul 2017 19:28:00 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Scott Bauer <scott.bauer@intel.com>,
-        Jonathan Derrick <jonathan.derrick@intel.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/2] vmd: Assign vector zero to all bridges
-Date: Thu, 20 Jul 2017 19:33:54 -0400
-Message-Id: <1500593634-4558-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1500593634-4558-1-git-send-email-keith.busch@intel.com>
-References: <1500593634-4558-1-git-send-email-keith.busch@intel.com>
+Received: from szxga02-in.huawei.com ([45.249.212.188]:10328 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751709AbdGUHPb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 03:15:31 -0400
+Subject: Re: [PATCH] PCI: hisi: remove unused variable driver
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1500600366-181656-1-git-send-email-shawn.lin@rock-chips.com>
+CC: <linux-pci@vger.kernel.org>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Message-ID: <5971A941.2000804@hisilicon.com>
+Date: Fri, 21 Jul 2017 15:12:01 +0800
+MIME-Version: 1.0
+In-Reply-To: <1500600366-181656-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We don't want slower IRQ handlers impacting faster devices that happen
-to be assigned the same VMD interrupt vector. The driver was trying to
-separate such devices by checking if MSI-x wasn't used, but really we
-just don't want to end devices to share with bridges. Most bridges may
-use MSI currently, so that criteria happened to work, but newer ones may
-use MSI-x, so this patch explicity checks the device type when choosing
-a vector.
+On 2017/7/21 9:26, Shawn Lin wrote:
+> It was never used and also introduce a warning
+> 
+> drivers/pci/dwc/pcie-hisi.c: In function 'hisi_pcie_probe':
+> drivers/pci/dwc/pcie-hisi.c:271:24: warning: variable 'driver' set but
+> not used [-Wunused-but-set-variable]
+> 
+> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/host/vmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Acked-by: Zhou Wang <wangzhou1@hisilicon.com>
 
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 8cddf30..031eef2 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -183,7 +183,7 @@ static struct vmd_irq_list *vmd_next_irq(struct vmd_dev *vmd, struct msi_desc *d
- 	int i, best = 1;
- 	unsigned long flags;
- 
--	if (!desc->msi_attrib.is_msix || vmd->msix_count == 1)
-+	if (pci_is_bridge(msi_desc_to_pci_dev(desc)) || vmd->msix_count == 1)
- 		return &vmd->irqs[0];
- 
- 	raw_spin_lock_irqsave(&list_lock, flags);
--- 
-2.5.5
+Thanks,
+Zhou
+
+> ---
+> 
+>  drivers/pci/dwc/pcie-hisi.c | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index e51acee..6631654 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -268,7 +268,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>  	struct dw_pcie *pci;
+>  	struct hisi_pcie *hisi_pcie;
+>  	struct resource *reg;
+> -	struct device_driver *driver;
+>  	int ret;
+>  
+>  	hisi_pcie = devm_kzalloc(dev, sizeof(*hisi_pcie), GFP_KERNEL);
+> @@ -282,8 +281,6 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>  	pci->dev = dev;
+>  	pci->ops = &dw_pcie_ops;
+>  
+> -	driver = dev->driver;
+> -
+>  	hisi_pcie->pci = pci;
+>  
+>  	hisi_pcie->soc_ops = of_device_get_match_data(dev);
+> 
