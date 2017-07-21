@@ -1,54 +1,31 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0079.outbound.protection.outlook.com ([104.47.1.79]:21184
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751785AbdGGDsV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Jul 2017 23:48:21 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-Subject: RE: [PATCH 1/3] PCI: designware: add accessors for write permission
- of DBI read-only registers
-Date: Fri, 7 Jul 2017 03:48:18 +0000
-Message-ID: <AM5PR0402MB2771B6A74E7DBF156BA066A484AA0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
-In-Reply-To: <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 0/3] PCI / ACPI / PM: Fix propagation of wakeup settings to bridges
+Date: Fri, 21 Jul 2017 14:36:44 +0200
+Message-ID: <3116391.JNS1F4DjTg@aspire.rjw.lan>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGNvbW1lbnRzIQ0KDQo+IC0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvYW8gUGludG8gW21haWx0bzpKb2FvLlBpbnRv
-QHN5bm9wc3lzLmNvbV0NCj4gU2VudDogMjAxN+W5tDfmnIg25pelIDE3OjQ0DQo+IFRvOiBaLnEu
-IEhvdSA8emhpcWlhbmcuaG91QG54cC5jb20+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0K
-PiBKb2FvLlBpbnRvQHN5bm9wc3lzLmNvbQ0KPiBDYzogYmhlbGdhYXNAZ29vZ2xlLmNvbTsgamlu
-Z29vaGFuMUBnbWFpbC5jb20NCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzNdIFBDSTogZGVzaWdu
-d2FyZTogYWRkIGFjY2Vzc29ycyBmb3Igd3JpdGUgcGVybWlzc2lvbg0KPiBvZiBEQkkgcmVhZC1v
-bmx5IHJlZ2lzdGVycw0KPiANCj4gDQo+IEhpIFpoaXFpYW5nLA0KPiANCj4gw4BzIDc6MzMgQU0g
-ZGUgNy82LzIwMTcsIFpoaXFpYW5nIEhvdSBlc2NyZXZldToNCj4gPiBGcm9tOiBIb3UgWmhpcWlh
-bmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+DQo+ID4gVGhlIHJlYWQtb25seSBEQkkgcmVn
-aXN0ZXJzIGNhbiBiZSB3cml0dGVuIG92ZXIgdGhlIERCSSB3aGVuIHNldCB0aGUNCj4gPiAiV3Jp
-dGUgdG8gUk8gUmVnaXN0ZXJzIFVzaW5nIERCSSIgKERCSV9ST19XUl9FTikgZmllbGQgb2YgdGhl
-DQo+ID4gTUlTQ19DT05UUk9MXzFfT0ZGIHJlZ2lzdGVyLg0KPiANCj4gSSB3b3VsZCBzdWdnZXN0
-IHlvdSB0byBhZGQgYSBjb3Zlci1sZXR0ZXIgbmV4dCB0aW1lIHRvIGV4cGxhaW4gdGhlIGdsb2Jh
-bA0KPiBwaWN0dXJlIG9mIHRoZSBwYXRjaC1zZXQuDQoNClRoYW5rcywgSSB3aWxsLg0KDQo+IA0K
-PiBJIHVuZGVyc3RhbmQgeW91ciBuZWVkIGZvciB0aGlzIHBhdGNoLCBidXQgSSBkb24ndCBhZ3Jl
-ZSBvbiB0aGUgYXBwcm9hY2guDQoNCkluIHRoZSBEV0MgY29tbW9uIGNvZGUsIHRoZXJlIGlzIGEg
-ZnVuY3Rpb24gd3JpdGUgYSBEQkkgcmVhZC1vbmx5IHJlZ2lzdGVyICdEZXZpY2UgY2xhc3MgY29k
-ZScsIGFuZCB0aGUgZmlyc3QgMiBwYXRjaGVzIGlzIHRvIGZpeCBpdC4NClRoZSAzcmQgcGF0Y2gg
-aXMgdG8gcmVmYWN0b3IgdGhlIExheWVyc2NhcGUgUENJZSBkcml2ZXIncyBob3N0X2luaXQgZnVu
-Y3Rpb24gYW5kIHJldXNlIHRoZSBuZXcgYWRkZWQgYWNjZXNzb3JzLg0KDQo+IFNvbWV0aW1lcyB0
-aGUgcGVvcGxlIGluIGNoYXJnZSBvZiB0aGUgaGFyZHdhcmUgZGVzaWduIC8gY29uZmlndXJhdGlv
-biwgZm9yZ2V0DQo+IHRvIHNwZWNpZnkgdGhlIGRldmljZSBjbGFzcyBhbmQgdGhhdCBjYW4gYmUg
-cHJvYmxlbWF0aWMgZm9yIHNvbWUgZHJpdmVycywgYW5kDQo+IHNvIHRoZSB0eXBpY2FsIHdvcmth
-cm91bmQgaXMgdG8gc2V0IGl0IGluIHRoZSBkcml2ZXIgdXNpbmcgYSBxdWlyayBmb3IgZXhhbXBs
-ZS4NCj4gDQo+IFlvdSBjYW4gc2VlIHNvbWUgZXhhbXBsZXMgaGVyZToNCj4gaHR0cHM6Ly9naXQu
-a2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvdG9ydmFsZHMvbGludXguZ2l0L3Ry
-ZWUvZHJpdmVycy8NCj4gcGNpL3F1aXJrcy5jDQoNCkkgZG9uJ3Qga25vdyB0aGUgUENJIHF1aXJr
-cywgZG8geW91IG1lYW4gcmVtb3ZlIHRoZSBwY2kgRGV2aWNlIENsYXNzIGZpeCBjb2RlIGZyb20g
-dGhlIERXQyBjb21tb24gY29kZSBhbmQgYWRkIGl0IHRvIHF1aXJrcz8gIA0KDQpUaGFua3MsDQpa
-aGlxaWFuZyANCg==
+Hi,
+
+The device wakeup code in pci-acpi.c currently has a (theoretical) problem that
+it can disable wakeup for a bridge prematurely in some obscure conditions.
+
+This is described in some more detail in the changelog of patch [3/3] and it
+has been there for quite a while, so it's nothing new, but it would be good
+to fix it at last and hence this series.
+
+Patches [1/3] and [2/3] are mostly preparatory, although the former may be
+regarded as a fix by itself and the latter is a cleanup.
+
+Thanks,
+Rafael
+
