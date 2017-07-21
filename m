@@ -1,133 +1,92 @@
-Return-Path: <SRS0=G6Vb=6O=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=G6Vb=6O=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34670 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752048AbdGUVFF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:05:05 -0400
+Subject: Re: [PATCH] of: provide of_n_{addr,size}_cells wrappers for
+ !CONFIG_OF
+To: Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh+dt@kernel.org>
+References: <20170721202012.3360244-1-arnd@arndb.de>
+Cc: devicetree@vger.kernel.org, Grant Likely <grant.likely@linaro.org>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Magnus Damm <damm@opensource.se>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ben Dooks <ben.dooks@codethink.co.uk>,
+        linux-pci@vger.kernel.org, linux-sh@vger.kernel.org,
+        Sakari Ailus <sakari.ailus@linux.intel.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Kieran Bingham <kieran.bingham+renesas@ideasonboard.com>,
+        Alan Tull <atull@opensource.altera.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Richard Fitzgerald <rf@opensource.wolfsonmicro.com>,
+        linux-kernel@vger.kernel.org
+From: Frank Rowand <frowand.list@gmail.com>
+Message-ID: <59726C73.6000000@gmail.com>
+Date: Fri, 21 Jul 2017 14:04:51 -0700
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
- <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com> <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Tue, 11 Jul 2017 13:33:15 -0700
-Message-ID: <CAKgT0UfZ59Tx6D2+8xOqy=NYewJimXqpEamWm9jdDmKEREUXnw@mail.gmail.com>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Casey Leedom <leedom@chelsio.com>
-Cc: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com" <ashok.raj@intel.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>, Michael Werner <werner@chelsio.com>,
-	Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170721202012.3360244-1-arnd@arndb.de>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 5:01 PM, Casey Leedom <leedom@chelsio.com> wrote:
->
-> Hey Alexander,
->
->   Okay, I understand your point regarding the "most likely scenario" being
-> TLPs directed upstream to the Root Complex.  But I'd still like to make sure
-> that we have an agreed upon API/methodology for doing Peer-to-Peer with
-> Relaxed Ordering and no Relaxed Ordering to the Root Complex.  I don't see
-> how the proposed APIs can be used in that fashion.
->
->   Right now the proposed change for cxgb4 is for it to test its own PCIe
-> Capability Device Control[Relaxed Ordering Enable] in order to use that
-> information to program the Chelsio Hardware to emit/not emit upstream TLPs
-> with the Relaxed Ordering Attribute set.  But if we're going to have the
-> mixed mode situation I describe, the PCIe Capability Device Control[Relaxed
-> Ordering Enable] will have to be set which means that we'll be programming
-> the Chelsio Hardware to send upstream TLPs with Relaxed Ordering Enable to
-> the Root Complex which is what we were trying to avoid in the first place ...
->
->   [[ And, as I noted on Friday evening, the currect cxgb4 Driver hardwires
->      the Relaxed Ordering Enable on early dureing device probe, so that
->      would minimally need to be addressed even if we decide that we don't
->      ever want to support mixed mode Relaxed Ordering. ]]
+On 07/21/17 13:19, Arnd Bergmann wrote:
+> The pci-rcar driver is enabled for compile tests, and this has
+> now shown that the driver cannot build without CONFIG_OF,
+> following the inclusion of f8f2fe7355fb "PCI: rcar: Use new OF
+> interrupt mapping when possible":
+> 
+> ../drivers/pci/host/pcie-rcar.c: In function 'pci_dma_range_parser_init':
+> ../drivers/pci/host/pcie-rcar.c:856:2: error: implicit declaration of function 'of_n_addr_cells' [-Werror=implicit-function-declaration]
+>   parser->pna = of_n_addr_cells(node);
+>   ^
+> As pointed out by Ben Dooks and Geert Uytterhoeven, this is actually
+> supposed to build fine, which we can achieve if we make the
+> declaration of of_irq_parse_and_map_pci conditional on CONFIG_OF
+> and provide an empty inline function otherwise, as we do for
+> a lot of other of interfaces.
+> 
+> This lets us build the rcar_pci driver again without CONFIG_OF
+> for build testing. All platforms using this driver select OF,
+> so this doesn't change anything for the users.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Cc: devicetree@vger.kernel.org
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Grant Likely <grant.likely@linaro.org>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Magnus Damm <damm@opensource.se>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Ben Dooks <ben.dooks@codethink.co.uk>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-sh@vger.kernel.org
+> 
+> ---
+> I originally sent the patch in 2014 when things initially broke
+> and then forgot about while it was applied in my randconfig patch
+> stack. I sent it again in 2016 without replay.
+> 
+> It's still broken and I think this is the correct fix.
+> ---
+>  include/linux/of.h | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/include/linux/of.h b/include/linux/of.h
+> index 4a8a70916237..1efdbe53136c 100644
+> --- a/include/linux/of.h
+> +++ b/include/linux/of.h
+> @@ -735,6 +735,9 @@ static inline struct device_node *of_get_cpu_node(int cpu,
+>  	return NULL;
+>  }
+>  
+> +static inline int of_n_addr_cells(struct device_node *np) { return 0; }
+> +static inline int of_n_size_cells(struct device_node *np) { return 0; }
+> +
+>  static inline int of_property_read_u64(const struct device_node *np,
+>  				       const char *propname, u64 *out_value)
+>  {
+> 
 
-So when you say "hardwires the Relaxed Ordering Enable" do you mean it
-cannot be changed by software, or are you saying the firmware is just
-setting the bit? I just want to make sure the change even works.
-
-Really what I was trying to get at is the Relaxed Ordering Enable bit
-doesn't have to stay as 0 if it is cleared due to the root complex not
-supporting it. If you have a device that is smart enough to be able to
-distinguish between different destinations and can change the TLPs
-depending on where they are routed then the driver should feel free to
-re-enable the relaxed ordering bit itself and do whatever it wants.
-The idea though is that in most cases it will probably be enabled by
-default since most firmwares default to that if I am not mistaken. If
-we disable it, then it is up to the drivers to figure out if they need
-to come up with a workaround.
-
->   We need some method of telling the Chelsio Driver that it should/shouldn't
-> use Relaxed Ordering with TLPs directed at the Root Complex.  And the same
-> is true for a Peer PCIe Device.
-
-Well my thought for now is to take this in baby steps. Looking over
-the code I might suggest that Ding just drops patch 3 and just focuses
-on the first two patches for now. Patch 3 doesn't do anything from the
-sounds of it since the Relaxed Ordering Enable being cleared will
-cause the TLPs to already not set the relaxed ordering bit, do I have
-that right?
-
-The main thing Ding cared about is making the ixgbe driver behave more
-like the cxgb4 driver in that he wanted to have us enable relaxed
-ordering by default which right now we were only doing for the SPARC
-platforms. As such we may want to look at changing patch 3 to instead
-strip the code in ixgbe so that it is enabled to use Relaxed Ordering
-by default and then let the configuration space determine if we use it
-or not.
-
->   It may be that we should approach this from the completely opposite
-> direction and instead of having quirks which identify problematic devices,
-> have quirks which identify devices which would benefit from the use of
-> Relaxed Ordering (if the sending device supports that).  That is, assume the
-> using Relaxed Ordering shouldn't be done unless the target device says "I
-> love Relaxed Ordering TLPs" ...  In such a world, an NVMe or a Graphics
-> device might declare love of Relaxed Ordering and the same for a SPARC Root
-> Complex (I think that was your example).
-
-Really I think we are probably better off enabling it by default and
-leaving it up to the configuration space of the end points to sort it
-out. The advantage is that it will let us catch issues with platforms
-that need these kind of quirks sooner since up until now we have been
-avoiding enabling relaxed ordering for most devices on x86 and as we
-get faster and faster buses we are going to need to start fully
-supporting this sooner or later anyway.
-
->   By the way, the sole example of Data Corruption with Relaxed Ordering is
-> the AMD A1100 ARM SoC and AMD appears to have given up on that almost as
-> soon as it was released.  So what we're left with currently is a performance
-> problem on modern Intel CPUs ...  (And hopefully we'll get a Technical
-> Publication on that issue fairly soon.)
->
-> Casey
-
-That's also assuming there aren't any other platforms with issues
-lurking out there. If something like this had been in place before
-some of the modern Intel CPUs were developed perhaps they would have
-caught the relaxed ordering issue soon enough to have resolved it in
-the silicon.
-
-Odds are this sets things up for how we will deal with future issues
-more than current ones. I'm more a fan of just letting the drivers
-configure themselves for relaxed ordering to the root complex by
-default, and then if something comes up where relaxed ordering can't
-be supported on the platform then we do workarounds for things like
-the peer-to-peer performance you mentioned before for the NVMe
-solution.
-
-- Alex
+Reviewed-by: Frank Rowand <frank.rowand@sony.com>
