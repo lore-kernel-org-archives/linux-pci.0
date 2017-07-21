@@ -1,54 +1,34 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39082 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751153AbdGaFkP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:40:15 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v5 1/7] dt-bindings: phy: qmp: Add output-clock-names
-Date: Mon, 31 Jul 2017 11:09:48 +0530
-Message-Id: <1501479594-18285-2-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
-References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+Received: from lhrrgout.huawei.com ([194.213.3.17]:32129 "EHLO
+        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750745AbdGUIyw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 04:54:52 -0400
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+Subject: RE: [PATCH] PCI: hisi: remove unused variable driver
+Date: Fri, 21 Jul 2017 08:54:37 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B6419C@FRAEML521-MBX.china.huawei.com>
+References: <1500600366-181656-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1500600366-181656-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset="gb2312"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The phy outputs a clock that will act as the parent for
-the phy's pipe clock. Add the name of this clock to the
-lane's DT node.
-
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-index e11c563..5d7a51f 100644
---- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-@@ -60,6 +60,8 @@ Required properties for child node:
- 	   one for each entry in clock-names.
-  - clock-names: Must contain following for pcie and usb qmp phys:
- 		 "pipe<lane-number>" for pipe clock specific to each lane.
-+ - clock-output-names: Name of the phy clock that will be the parent for
-+		       the above pipe clock.
- 
-  - resets: a list of phandles and reset controller specifier pairs,
- 	   one for each entry in reset-names.
-@@ -96,6 +98,7 @@ Example:
- 
- 			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
- 			clock-names = "pipe0";
-+			clock-output-names = "pcie_0_pipe_clk_src";
- 			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
- 			reset-names = "lane0";
- 		};
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU2hhd24gTGluIFttYWls
+dG86c2hhd24ubGluQHJvY2stY2hpcHMuY29tXQ0KPiBTZW50OiAyMSBKdWx5IDIwMTcgMDk6MjYN
+Cj4gVG86IEJqb3JuIEhlbGdhYXMNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IFNo
+YXduIExpbjsgR2FicmllbGUgUGFvbG9uaTsgV2FuZ3pob3UgKEIpDQo+IFN1YmplY3Q6IFtQQVRD
+SF0gUENJOiBoaXNpOiByZW1vdmUgdW51c2VkIHZhcmlhYmxlIGRyaXZlcg0KPiANCj4gSXQgd2Fz
+IG5ldmVyIHVzZWQgYW5kIGFsc28gaW50cm9kdWNlIGEgd2FybmluZw0KPiANCj4gZHJpdmVycy9w
+Y2kvZHdjL3BjaWUtaGlzaS5jOiBJbiBmdW5jdGlvbiAnaGlzaV9wY2llX3Byb2JlJzoNCj4gZHJp
+dmVycy9wY2kvZHdjL3BjaWUtaGlzaS5jOjI3MToyNDogd2FybmluZzogdmFyaWFibGUgJ2RyaXZl
+cicgc2V0IGJ1dA0KPiBub3QgdXNlZCBbLVd1bnVzZWQtYnV0LXNldC12YXJpYWJsZV0NCj4gDQo+
+IENjOiBHYWJyaWVsZSBQYW9sb25pIDxnYWJyaWVsZS5wYW9sb25pQGh1YXdlaS5jb20+DQo+IENj
+OiBaaG91IFdhbmcgPHdhbmd6aG91MUBoaXNpbGljb24uY29tPg0KPiBTaWduZWQtb2ZmLWJ5OiBT
+aGF3biBMaW4gPHNoYXduLmxpbkByb2NrLWNoaXBzLmNvbT4NCg0KQWNrZWQtYnk6IEdhYnJpZWxl
+IFBhb2xvbmkgPGdhYnJpZWxlLnBhb2xvbmlAaHVhd2VpLmNvbT4NCg0KVGhhbmtzDQpHYWINCg0K
+Wy4uLl0NCg==
