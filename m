@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Laszlo Ersek <lersek@redhat.com>
-Subject: Re: [PATCH 0/4] Allow non-legacy cards to be vgaarb default
-In-Reply-To: <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
-References: <20170719012839.20124-1-dja@axtens.net>
- <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
-Date: Fri, 21 Jul 2017 09:52:22 +1000
-Message-ID: <87pocusm2x.fsf@linkitivity.dja.id.au>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <matthias.bgg@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+ <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
+Subject: [PATCH 1/5] PCI: mediatek: Add a structure to abstract the controller
+ generations
+Date: Fri, 21 Jul 2017 10:34:45 +0800
+Message-ID: <f98c990c366927b8550d28667b8cdbfc07e6adf0.1500601172.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1500601172.git.honghui.zhang@mediatek.com>
+References: <cover.1500601172.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -17,106 +20,202 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- David Airlie <airlied@linux.ie>, linux-pci <linux-pci@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>,
- "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>, zourongrong@gmail.com,
- daniel.vetter@intel.com, helgass@kernel.org,
- linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ard,
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-> (+ Laszlo)
->
-> On 19 July 2017 at 02:28, Daniel Axtens <dja@axtens.net> wrote:
->> Hi all,
->>
->> Previously I posted a patch that provided a quirk for a hibmc card
->> behind a particular Huawei bridge that allowed it to be marked as the
->> default device in the VGA arbiter.[0] This lead to some discussion.[1]
->> It was broadly suggested that a more generic solution would be better,
->> something in the style of powerpc's fixup_vga() quirk.
->>
->> Here is my suggested solution:
->>
->>  - Create a Kconfig option ARCH_WANT_VGA_ARB_FALLBACK
->>
->>  - if an arch selects that option, install PCI_FIXUP_CLASS_ENABLE
->>    hook. This hook fires when a card is enabled, which will require
->>    that a driver has been bound.
->>
->>  - if there is no default device when the hook fires, and the device
->>    can control memory and I/O, mark it as default.
->>
->> The patches are as follows:
->>
->>  (1) powerpc: simplify and fix VGA default device behaviour
->>
->>      This cleans up some quirks in the powerpc implementation of the
->>      vga_fixup. It should make the behaviour match the original
->>      intention.
->>
->>  (2) vgaarb: allow non-legacy cards to be marked as default
->>
->>      Add the Kconfig option, and create the fixup in vgaarb.c gated
->>      behind the option. Nothing happens at this stage because no arch
->>      has selected the option yet.
->>
->>  (3) powerpc: replace vga_fixup() with generic code
->>
->>      Select the option on powerpc and remove the old code. The only
->>      change is that it moves from being a final fixup to an enable
->>      fixup.
->>
->>  (4) arm64: allow non-legacy VGA devices to be default
->>
->>      Select the option on arm64. This solves my problem with the D05,
->>      but may cause other cards to be marked as default on other
->>      boards. This shouldn't cause any real issues but is worth being
->>      aware of.
->>
->
-> Hi Daniel,
->
-> Given that the whole point of the VGA arbiter is the ability to share
-> the legacy mem+io ranges between different cards, why do we care about
-> the VGA arbiter in the first place on arm64?
->
-> AFAIK, there have been some recent changes in Xorg to address the
-> auto-detection problem. I don't remember the exact details, but I have
-> added Laszlo, who was involved with this at the time.
+Introduce a structure "mtk_pcie_soc" to abstract the differences between
+controller generations, and the .startup() hook is used to encapsulate
+some SoC-dependent related setting. In doing so, the common code which
+will be reused by future chips.
 
-I haven't been able to locate those changes - I remember that the call
-to pci_device_is_boot_vga() in xf86pciBus.c [0] was critical and that is
-still there in the latest git.
+In addition, we change the approaches to waiting Gen2 training by using
+readl_poll_timeout() calls.
 
-Indeed, the reason we care about the vga arbiter at all is because of
-that Xorg dependency on the boot VGA card. pci_device_is_boot_vga()
-reads a sysfs file, and that sysfs file is populated based on the
-vga_default_driver(), so it's very difficult to extricate ourselves from
-the vga arbiter and its concept of the default device.
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 81 +++++++++++++++++++++++-----------------
+ 1 file changed, 47 insertions(+), 34 deletions(-)
 
-We could make this method an 'either/or' rather than a fallback - so
-platforms who didn't care about legacy resources didn't bother with
-those tests, but I'm not sure what benefit that would give and I find it
-harder to be confident of an absence of unexpected consequences.
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 5a9d858..d6ac342 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -16,6 +16,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/delay.h>
++#include <linux/iopoll.h>
+ #include <linux/kernel.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -63,6 +64,18 @@
+ #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
+ #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
+ 
++struct mtk_pcie_port;
++
++/**
++ * struct mtk_pcie_soc - differentiate between host generations
++ * @ops: pointer to configuration access functions
++ * @startup: pointer to controller setting functions
++ */
++struct mtk_pcie_soc {
++	struct pci_ops *ops;
++	int (*startup)(struct mtk_pcie_port *port);
++};
++
+ /**
+  * struct mtk_pcie_port - PCIe port information
+  * @base: IO mapped register base
+@@ -96,6 +109,7 @@ struct mtk_pcie_port {
+  * @busn: bus range
+  * @offset: IO / Memory offset
+  * @ports: pointer to PCIe port information
++ * @soc: pointer to SoC-dependent operations
+  */
+ struct mtk_pcie {
+ 	struct device *dev;
+@@ -111,13 +125,9 @@ struct mtk_pcie {
+ 		resource_size_t io;
+ 	} offset;
+ 	struct list_head ports;
++	const struct mtk_pcie_soc *soc;
+ };
+ 
+-static inline bool mtk_pcie_link_up(struct mtk_pcie_port *port)
+-{
+-	return !!(readl(port->base + PCIE_LINK_STATUS) & PCIE_PORT_LINKUP);
+-}
+-
+ static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+@@ -171,12 +181,30 @@ static struct pci_ops mtk_pcie_ops = {
+ 	.write = pci_generic_config_write,
+ };
+ 
+-static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
++static int mtk_pcie_startup_ports(struct mtk_pcie_port *port)
+ {
+ 	struct mtk_pcie *pcie = port->pcie;
+ 	u32 func = PCI_FUNC(port->index << 3);
+ 	u32 slot = PCI_SLOT(port->index << 3);
+ 	u32 val;
++	int err;
++
++	/* assert port PERST_N */
++	val = readl(pcie->base + PCIE_SYS_CFG);
++	val |= PCIE_PORT_PERST(port->index);
++	writel(val, pcie->base + PCIE_SYS_CFG);
++
++	/* de-assert port PERST_N */
++	val = readl(pcie->base + PCIE_SYS_CFG);
++	val &= ~PCIE_PORT_PERST(port->index);
++	writel(val, pcie->base + PCIE_SYS_CFG);
++
++	/* 100ms timeout value should be enough for Gen1/2 training */
++	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS, val,
++				 !!(val & PCIE_PORT_LINKUP), 20,
++				 100 * USEC_PER_MSEC);
++	if (err)
++		return -ETIMEDOUT;
+ 
+ 	/* enable interrupt */
+ 	val = readl(pcie->base + PCIE_INT_ENABLE);
+@@ -209,30 +237,14 @@ static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
+ 	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
+ 	       pcie->base + PCIE_CFG_ADDR);
+ 	writel(val, pcie->base + PCIE_CFG_DATA);
+-}
+ 
+-static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
+-{
+-	struct mtk_pcie *pcie = port->pcie;
+-	u32 val;
+-
+-	/* assert port PERST_N */
+-	val = readl(pcie->base + PCIE_SYS_CFG);
+-	val |= PCIE_PORT_PERST(port->index);
+-	writel(val, pcie->base + PCIE_SYS_CFG);
+-
+-	/* de-assert port PERST_N */
+-	val = readl(pcie->base + PCIE_SYS_CFG);
+-	val &= ~PCIE_PORT_PERST(port->index);
+-	writel(val, pcie->base + PCIE_SYS_CFG);
+-
+-	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
+-	msleep(100);
++	return 0;
+ }
+ 
+ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ {
+-	struct device *dev = port->pcie->dev;
++	struct mtk_pcie *pcie = port->pcie;
++	struct device *dev = pcie->dev;
+ 	int err;
+ 
+ 	err = clk_prepare_enable(port->sys_ck);
+@@ -250,13 +262,8 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ 		goto err_phy_on;
+ 	}
+ 
+-	mtk_pcie_assert_ports(port);
+-
+-	/* if link up, then setup root port configuration space */
+-	if (mtk_pcie_link_up(port)) {
+-		mtk_pcie_configure_rc(port);
++	if (!pcie->soc->startup(port))
+ 		return;
+-	}
+ 
+ 	dev_info(dev, "Port%d link down\n", port->index);
+ 
+@@ -480,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
+ 
+ 	host->busnr = pcie->busn.start;
+ 	host->dev.parent = pcie->dev;
+-	host->ops = &mtk_pcie_ops;
++	host->ops = pcie->soc->ops;
+ 	host->map_irq = of_irq_parse_and_map_pci;
+ 	host->swizzle_irq = pci_common_swizzle;
+ 
+@@ -513,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	pcie = pci_host_bridge_priv(host);
+ 
+ 	pcie->dev = dev;
++	pcie->soc = of_device_get_match_data(dev);
+ 	platform_set_drvdata(pdev, pcie);
+ 	INIT_LIST_HEAD(&pcie->ports);
+ 
+@@ -537,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static struct mtk_pcie_soc mtk_pcie_soc_v1 = {
++	.ops = &mtk_pcie_ops,
++	.startup = mtk_pcie_startup_ports,
++};
++
+ static const struct of_device_id mtk_pcie_ids[] = {
+-	{ .compatible = "mediatek,mt7623-pcie"},
+-	{ .compatible = "mediatek,mt2701-pcie"},
++	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
++	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
+ 	{},
+ };
+ 
+-- 
+2.6.4
 
-Regards,
-Daniel
-
-[0] https://cgit.freedesktop.org/xorg/xserver/tree/hw/xfree86/common/xf86pciBus.c#n113
-
->
-> -- 
-> Ard.
 
 _______________________________________________
 linux-arm-kernel mailing list
