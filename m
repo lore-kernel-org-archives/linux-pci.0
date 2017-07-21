@@ -1,53 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47326 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751951AbdGaPqk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 11:46:40 -0400
-Date: Mon, 31 Jul 2017 08:46:36 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Sandeep Singh <ssingh1@amd.com>
-Cc: Sandeep Singh <Sandeep.Singh@amd.com>, mathias.nyman@intel.com,
-        bhelgaas@google.com, dheitmueller@kernellabs.com,
-        stern@rowland.harvard.edu, samuel.thibault@ens-lyon.org,
-        lukas@oxygene.sk, linux-usb@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
-        Nehal Shah <Nehal-bakulchandra.Shah@amd.com>
-Subject: Re: [PATCH] usb: xhci: Add quirk for Certain failing HP keyboard on
- reset after resume
-Message-ID: <20170731154636.GA27596@kroah.com>
-References: <1501144509-19357-1-git-send-email-Sandeep.Singh@amd.com>
- <20170730141159.GA21849@kroah.com>
- <060e5b58-07ff-4e2c-9739-d75c3c40c085@amd.com>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:60155 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752811AbdGUVdj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:33:39 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/3] ACPI / PM: Split acpi_device_wakeup()
+Date: Fri, 21 Jul 2017 23:25:44 +0200
+Message-ID: <2556690.5i2IZsUu2g@aspire.rjw.lan>
+In-Reply-To: <CAHp75VciK=2ZQEwHqxxn-HNnc60nTG-002n35=1PLnL=xeor9w@mail.gmail.com>
+References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <2663063.mdkNhtKpS0@aspire.rjw.lan> <CAHp75VciK=2ZQEwHqxxn-HNnc60nTG-002n35=1PLnL=xeor9w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <060e5b58-07ff-4e2c-9739-d75c3c40c085@amd.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-A: Because it messes up the order in which people normally read text.
-Q: Why is top-posting such a bad thing?
-A: Top-posting.
-Q: What is the most annoying thing in e-mail?
-
-A: No.
-Q: Should I include quotations after my reply?
-
-
-http://daringfireball.net/2007/07/on_top
-
-
-On Mon, Jul 31, 2017 at 12:10:08PM +0530, Sandeep Singh wrote:
-> Hi Greg,
+On Saturday, July 22, 2017 12:31:14 AM Andy Shevchenko wrote:
+> On Sat, Jul 22, 2017 at 12:16 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> > On Saturday, July 22, 2017 12:19:51 AM Andy Shevchenko wrote:
+> >> On Fri, Jul 21, 2017 at 11:49 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+> >> > On Friday, July 21, 2017 06:27:39 PM Andy Shevchenko wrote:
 > 
-> Thanks for review. Apart from pci_ids.h, I see only 3 options, add this id as macro in pci_quirks.c
-> or pci_quirks.h or just hardcode it.
+> >> >> I prefer more self-explaining labels, though it's minor here
 > 
-> please suggest what will good option as per your view.
+> ...
+> 
+> >> > But if there's more to it, just please let me know. :-)
+> >>
+> >> "Choose label names which say what the goto does or why the goto exists.  An
+> >> example of a good name could be ``out_free_buffer:`` if the goto frees
+> >> ``buffer``.
+> >> Avoid using GW-BASIC names like ``err1:`` and ``err2:``, as you would have to
+> >> renumber them if you ever add or remove exit paths, and they make correctness
+> >> difficult to verify anyway."
+> >
+> > This is a totally made-up argument in this particular case.
+> >
+> > Both of the functions in question are 1 screen long and you can *see* what
+> > happens in there without even scrolling them.
+> >
+> > Second, the subsequent patch actually *does* add a label to one of the without
+> > renamling the existing one or such.
+> >
+> > "out" pretty much represents the purpose of the goto in both cases and making
+> > the label longer doesn't make it any better.
+> 
+> That's why I put "though it's a minor here".
+> 
+> You can read my first message as "you might consider change label
+> names if you like the idea".
 
-As you only use it in one place, why not just hardcode it there?
+Fair enough.
 
-thanks,
-
-greg k-h
+I clearly don't like it, then. :-)
