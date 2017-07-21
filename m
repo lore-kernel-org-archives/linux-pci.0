@@ -1,71 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19260 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932346AbdGTVqq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jul 2017 17:46:46 -0400
-From: Jon Derrick <jonathan.derrick@intel.com>
-Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
-To: Scott Bauer <scott.bauer@intel.com>, linux-pci@vger.kernel.org
-Cc: keith.busch@intel.com, david.fugate@intel.com, bhelgaas@google.com
-References: <20170720202858.1918-1-scott.bauer@intel.com>
-Message-ID: <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
-Date: Tue, 25 Jul 2017 20:15:32 -0600
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:45736 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751670AbdGUMuI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 08:50:08 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 1/3] PCI / PM: Skip bridges in pci_enable_wake()
+Date: Fri, 21 Jul 2017 14:38:08 +0200
+Message-ID: <1895122.yvmCHzQO3z@aspire.rjw.lan>
+In-Reply-To: <3116391.JNS1F4DjTg@aspire.rjw.lan>
+References: <3116391.JNS1F4DjTg@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170720202858.1918-1-scott.bauer@intel.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/20/2017 02:28 PM, Scott Bauer wrote:
-> This patch frees up the IRQs we request on the suspend path,
-> and reallocates them on the resume path.
-> 
-> Fixes:
-> [  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
-> [  559.966824] Error taking CPU111 down: -34
-> [  559.966825] Non-boot CPUs are not disabled
-> [  559.966826] Enabling non-boot CPUs ...
-> 
-> Signed-off-by: Scott Bauer <scott.bauer@intel.com>
-> ---
->  drivers/pci/host/vmd.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index 6088c3083194..88bf0c754fb2 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -755,6 +755,11 @@ static void vmd_remove(struct pci_dev *dev)
->  static int vmd_suspend(struct device *dev)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-> +	int i;
-> +
-> +	for (i = 0; i < vmd->msix_count; i++)
-> +                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
->  
->  	pci_save_state(pdev);
->  	return 0;
-> @@ -763,7 +768,16 @@ static int vmd_suspend(struct device *dev)
->  static int vmd_resume(struct device *dev)
->  {
->  	struct pci_dev *pdev = to_pci_dev(dev);
-> +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-> +	int err, i;
->  
-> +	for (i = 0; i < vmd->msix_count; i++) {
-> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-> +				       vmd_irq, IRQF_NO_THREAD,
-The flag here looks redundant to me because the fn calls into
-request_threaded_irq with no thread_fn. But since it's a bit more
-verbose, can you change the other devm_request_irq to use IRQF_NO_THREAD?
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-> +				       "vmd", &vmd->irqs[i]);
-> +		if (err)
-> +			return err;
-> +	}
->  	pci_restore_state(pdev);
->  	return 0;
->  }
-> 
+PCI bridges only have a reason to generate wakeup signals on behalf
+of devices below them, so avoid preparing bridges for wakeup directly
+in pci_enable_wake().
+
+Also drop the pci_has_subordinate() check from pci_pm_default_resume()
+as this will be done by pci_enable_wake() itself now.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/pci/pci-driver.c |    4 +---
+ drivers/pci/pci.c        |    7 +++++++
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+Index: linux-pm/drivers/pci/pci.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci.c
++++ linux-pm/drivers/pci/pci.c
+@@ -1909,6 +1909,13 @@ int pci_enable_wake(struct pci_dev *dev,
+ {
+ 	int ret = 0;
+ 
++	/*
++	 * Bridges can only signal wakeup on behalf of subordinate devices,
++	 * but that is set up elsewhere, so skip them.
++	 */
++	if (pci_has_subordinate(dev))
++		return 0;
++
+ 	/* Don't do the same thing twice in a row for one device. */
+ 	if (!!enable == !!dev->wakeup_prepared)
+ 		return 0;
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -642,9 +642,7 @@ static int pci_legacy_resume(struct devi
+ static void pci_pm_default_resume(struct pci_dev *pci_dev)
+ {
+ 	pci_fixup_device(pci_fixup_resume, pci_dev);
+-
+-	if (!pci_has_subordinate(pci_dev))
+-		pci_enable_wake(pci_dev, PCI_D0, false);
++	pci_enable_wake(pci_dev, PCI_D0, false);
+ }
+ 
+ static void pci_pm_default_suspend(struct pci_dev *pci_dev)
