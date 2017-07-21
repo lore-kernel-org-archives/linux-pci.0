@@ -1,206 +1,226 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48838 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdGQMFH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:05:07 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>,
-        smuthayy <smuthayy@codeaurora.org>
-Subject: [PATCH 5/7] phy: qcom-qmp: Add support for IPQ8074
-Date: Mon, 17 Jul 2017 17:34:01 +0530
-Message-Id: <1500293043-1887-6-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59722 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753502AbdGUViT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 17:38:19 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: [PATCH v2 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
+Date: Fri, 21 Jul 2017 23:30:24 +0200
+Message-ID: <4690779.IRjbMOd2yB@aspire.rjw.lan>
+In-Reply-To: <4853865.5aRGCM4CdQ@aspire.rjw.lan>
+References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <4853865.5aRGCM4CdQ@aspire.rjw.lan>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add definitions required to enable QMP phy support for IPQ8074.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Signed-off-by: smuthayy <smuthayy@codeaurora.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+The acpi_pci_propagate_wakeup() routine is there to handle cases in
+which PCI bridges (or PCIe ports) are expected to signal wakeup
+for devices below them, but currently it doesn't do that correctly.
+
+The problem is that acpi_pci_propagate_wakeup() uses
+acpi_pm_set_device_wakeup() for bridges and if that routine is
+called for multiple times to disable wakeup for the same device,
+it will disable it on the first invocation and the next calls
+will have no effect (it works analogously when called to enable
+wakeup, but that is not a problem).
+
+Now, say acpi_pci_propagate_wakeup() has been called for two
+different devices under the same bridge and it has called
+acpi_pm_set_device_wakeup() for that bridge each time.  The
+bridge is now enabled to generate wakeup signals.  Next,
+suppose that one of the devices below it resumes and
+acpi_pci_propagate_wakeup() is called to disable wakeup for that
+device.  It will then call acpi_pm_set_device_wakeup() for the bridge
+and that will effectively disable remote wakeup for all devices under
+it even though some of them may still be suspended and remote wakeup
+may be expected to work for them.
+
+To address this (arguably theoretical) issue, allow
+wakeup.enable_count under struct acpi_device to grow beyond 1 in
+certain situations.  In particular, allow that to happen in
+acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
+for PCI bridges, so that wakeup is actually disabled for the
+bridge when all devices under it resume and not when just one
+of them does that.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp.c | 135 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 135 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 000ad1c..9019f66 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -59,6 +59,7 @@
- #define QSERDES_COM_PLL_RCTRL_MODE1			0x088
- #define QSERDES_COM_PLL_CCTRL_MODE0			0x090
- #define QSERDES_COM_PLL_CCTRL_MODE1			0x094
-+#define QSERDES_COM_BIAS_EN_CTRL_BY_PSM			0x0a8
- #define QSERDES_COM_SYSCLK_EN_SEL			0x0ac
- #define QSERDES_COM_RESETSM_CNTRL			0x0b4
- #define QSERDES_COM_RESTRIM_CTRL			0x0bc
-@@ -143,6 +144,11 @@
- #define QPHY_LOCK_DETECT_CONFIG3			0x88
- #define QPHY_PWRUP_RESET_DLY_TIME_AUXCLK		0xa0
- #define QPHY_LP_WAKEUP_DLY_TIME_AUXCLK			0xa4
-+#define QPHY_PLL_LOCK_CHK_DLY_TIME_AUXCLK_LSB		0x1A8
-+#define QPHY_OSC_DTCT_ACTIONS				0x1AC
-+#define QPHY_RX_SIGDET_LVL				0x1D8
-+#define QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_LSB		0x1DC
-+#define QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_MSB		0x1E0
+-> v2: Rearrange checks in acpi_device_wakeup_enable() to reduce indentation
+          level and possibly save some unnecessary checks for max_count == 1.
+
+---
+ drivers/acpi/device_pm.c |   46 +++++++++++++++++++++++++++++-----------------
+ drivers/pci/pci-acpi.c   |    4 ++--
+ include/acpi/acpi_bus.h  |   14 ++++++++++++--
+ 3 files changed, 43 insertions(+), 21 deletions(-)
+
+Index: linux-pm/drivers/acpi/device_pm.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/device_pm.c
++++ linux-pm/drivers/acpi/device_pm.c
+@@ -682,19 +682,8 @@ static void acpi_pm_notify_work_func(str
  
- /* QPHY_SW_RESET bit */
- #define SW_RESET				BIT(0)
-@@ -224,6 +230,17 @@ enum qphy_reg_layout {
- 	[QPHY_PCS_READY_STATUS]		= 0x174,
- };
+ static DEFINE_MUTEX(acpi_wakeup_lock);
  
-+static const unsigned int ipq8074_pciephy_regs_layout[] = {
-+	[QPHY_COM_SW_RESET]		= 0x800,
-+	[QPHY_COM_POWER_DOWN_CONTROL]	= 0x804,
-+	[QPHY_COM_START_CONTROL]	= 0x808,
-+	[QPHY_COM_PCS_READY_STATUS]	= QPHY_REG_INVAL,
-+	[QPHY_PLL_LOCK_CHK_DLY_TIME]	= 0xa8,
-+	[QPHY_SW_RESET]			= 0x00,
-+	[QPHY_START_CTRL]		= 0x08,
-+	[QPHY_PCS_READY_STATUS]		= 0x174,
-+};
-+
- static const unsigned int usb3phy_regs_layout[] = {
- 	[QPHY_FLL_CNTRL1]		= 0xc0,
- 	[QPHY_FLL_CNTRL2]		= 0xc4,
-@@ -582,6 +599,121 @@ static inline void qphy_clrbits(void __iomem *base, u32 offset, u32 val)
- 	.mask_pcs_ready		= PHYSTATUS,
- };
+-/**
+- * acpi_device_wakeup_enable - Enable wakeup functionality for device.
+- * @adev: ACPI device to enable wakeup functionality for.
+- * @target_state: State the system is transitioning into.
+- *
+- * Enable the GPE associated with @adev so that it can generate wakeup signals
+- * for the device in response to external (remote) events and enable wakeup
+- * power for it.
+- *
+- * Callers must ensure that @adev is a valid ACPI device node before executing
+- * this function.
+- */
+-static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
++static int __acpi_device_wakeup_enable(struct acpi_device *adev,
++				       u32 target_state, int max_count)
+ {
+ 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
+ 	acpi_status status;
+@@ -702,9 +691,12 @@ static int acpi_device_wakeup_enable(str
  
-+static const struct qmp_phy_init_tbl ipq8074_pcie_serdes_tbl[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CLKBUFLR_EN, 0x18),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_ENABLE1, 0x10),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TRIM, 0xf),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP_EN, 0x1),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_MAP, 0x0),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER1, 0x1f),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER2, 0x3f),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CMN_CONFIG, 0x6),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_IVCO, 0xf),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_HSCLK_SEL, 0x0),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SVS_MODE_CLK_SEL, 0x1),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CORE_CLK_EN, 0x20),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CORECLK_DIV, 0xa),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_RESETSM_CNTRL, 0x20),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TIMER, 0xa),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_EN_SEL, 0xa),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_DEC_START_MODE0, 0x82),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START3_MODE0, 0x3),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START2_MODE0, 0x55),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START1_MODE0, 0x55),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP3_MODE0, 0x0),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP2_MODE0, 0xD),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP1_MODE0, 0xD04),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_SELECT, 0x33),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SYS_CLK_CTRL, 0x2),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_BUF_ENABLE, 0x1f),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CP_CTRL_MODE0, 0xb),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_RCTRL_MODE0, 0x16),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_CCTRL_MODE0, 0x28),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN1_MODE0, 0x0),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN0_MODE0, 0x80),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CTRL_BY_PSM, 0x1),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_CTRL, 0xa),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_EN_CENTER, 0x1),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER1, 0x31),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER2, 0x1),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER1, 0x2),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER2, 0x0),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE1, 0x2f),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE2, 0x19),
-+	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_EP_DIV, 0x19),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_CNTRL, 0x7),
-+};
+ 	mutex_lock(&acpi_wakeup_lock);
+ 
+-	if (wakeup->enable_count > 0)
++	if (wakeup->enable_count >= max_count)
+ 		goto out;
+ 
++	if (wakeup->enable_count > 0)
++		goto inc;
 +
-+static const struct qmp_phy_init_tbl ipq8074_pcie_tx_tbl[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_DRVR_EN, 0x45),
-+	QMP_PHY_INIT_CFG(QSERDES_TX_LANE_MODE, 0x6),
-+	QMP_PHY_INIT_CFG(QSERDES_TX_RES_CODE_LANE_OFFSET, 0x2),
-+	QMP_PHY_INIT_CFG(QSERDES_TX_RCV_DETECT_LVL_2, 0x12),
-+};
+ 	error = acpi_enable_wakeup_device_power(adev, target_state);
+ 	if (error)
+ 		goto out;
+@@ -716,6 +708,7 @@ static int acpi_device_wakeup_enable(str
+ 		goto out;
+ 	}
+ 
++inc:
+ 	wakeup->enable_count++;
+ 
+ out:
+@@ -724,6 +717,23 @@ out:
+ }
+ 
+ /**
++ * acpi_device_wakeup_enable - Enable wakeup functionality for device.
++ * @adev: ACPI device to enable wakeup functionality for.
++ * @target_state: State the system is transitioning into.
++ *
++ * Enable the GPE associated with @adev so that it can generate wakeup signals
++ * for the device in response to external (remote) events and enable wakeup
++ * power for it.
++ *
++ * Callers must ensure that @adev is a valid ACPI device node before executing
++ * this function.
++ */
++static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
++{
++	return __acpi_device_wakeup_enable(adev, target_state, 1);
++}
 +
-+static const struct qmp_phy_init_tbl ipq8074_pcie_rx_tbl[] = {
-+	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_ENABLES, 0x1c),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_DEGLITCH_CNTRL, 0x14),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2, 0x1),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL3, 0x0),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL4, 0xdb),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_SATURATION_AND_ENABLE, 0x4b),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN, 0x4),
-+	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN_HALF, 0x4),
-+};
++/**
+  * acpi_device_wakeup_disable - Disable wakeup functionality for device.
+  * @adev: ACPI device to disable wakeup functionality for.
+  *
+@@ -754,8 +764,9 @@ out:
+  * acpi_pm_set_device_wakeup - Enable/disable remote wakeup for given device.
+  * @dev: Device to enable/disable to generate wakeup events.
+  * @enable: Whether to enable or disable the wakeup functionality.
++ * @max_count: Maximum value of the enable reference counter.
+  */
+-int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
++int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
+ {
+ 	struct acpi_device *adev;
+ 	int error;
+@@ -775,13 +786,14 @@ int acpi_pm_set_device_wakeup(struct dev
+ 		return 0;
+ 	}
+ 
+-	error = acpi_device_wakeup_enable(adev, acpi_target_system_state());
++	error = __acpi_device_wakeup_enable(adev, acpi_target_system_state(),
++					    max_count);
+ 	if (!error)
+ 		dev_dbg(dev, "Wakeup enabled by ACPI\n");
+ 
+ 	return error;
+ }
+-EXPORT_SYMBOL(acpi_pm_set_device_wakeup);
++EXPORT_SYMBOL(__acpi_pm_set_device_wakeup);
+ 
+ /**
+  * acpi_dev_pm_low_power - Put ACPI device into a low-power state.
+Index: linux-pm/include/acpi/acpi_bus.h
+===================================================================
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -605,7 +605,7 @@ acpi_status acpi_add_pm_notifier(struct
+ acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
+ bool acpi_pm_device_can_wakeup(struct device *dev);
+ int acpi_pm_device_sleep_state(struct device *, int *, int);
+-int acpi_pm_set_device_wakeup(struct device *dev, bool enable);
++int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count);
+ #else
+ static inline void acpi_pm_wakeup_event(struct device *dev)
+ {
+@@ -632,12 +632,22 @@ static inline int acpi_pm_device_sleep_s
+ 	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3_COLD) ?
+ 		m : ACPI_STATE_D0;
+ }
+-static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
++static inline int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
+ {
+ 	return -ENODEV;
+ }
+ #endif
+ 
++static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
++{
++	return __acpi_pm_set_device_wakeup(dev, enable, 1);
++}
 +
-+static const struct qmp_phy_init_tbl ipq8074_pcie_pcs_tbl[] = {
-+	QMP_PHY_INIT_CFG(QPHY_ENDPOINT_REFCLK_DRIVE, 0x4),
-+	QMP_PHY_INIT_CFG(QPHY_OSC_DTCT_ACTIONS, 0x0),
-+	QMP_PHY_INIT_CFG(QPHY_PWRUP_RESET_DLY_TIME_AUXCLK, 0x40),
-+	QMP_PHY_INIT_CFG(QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_MSB, 0x0),
-+	QMP_PHY_INIT_CFG(QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_LSB, 0x40),
-+	QMP_PHY_INIT_CFG(QPHY_PLL_LOCK_CHK_DLY_TIME_AUXCLK_LSB, 0x0),
-+	QMP_PHY_INIT_CFG(QPHY_LP_WAKEUP_DLY_TIME_AUXCLK, 0x40),
-+	QMP_PHY_INIT_CFG_L(QPHY_PLL_LOCK_CHK_DLY_TIME, 0x73),
-+	QMP_PHY_INIT_CFG(QPHY_RX_SIGDET_LVL, 0x99),
-+	QMP_PHY_INIT_CFG(QPHY_TXDEEMPH_M6DB_V0, 0x15),
-+	QMP_PHY_INIT_CFG(QPHY_TXDEEMPH_M3P5DB_V0, 0xe),
-+	QMP_PHY_INIT_CFG_L(QPHY_SW_RESET, 0x0),
-+	QMP_PHY_INIT_CFG_L(QPHY_START_CTRL, 0x3),
-+};
++static inline int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
++{
++	return __acpi_pm_set_device_wakeup(dev, enable, INT_MAX);
++}
 +
-+/* list of resets */
-+static const char * const ipq8074_pciephy_reset_l[] = {
-+	"phy", "phy_phy",
-+};
-+
-+static const struct qmp_phy_cfg ipq8074_pciephy_cfg = {
-+	.type			= PHY_TYPE_PCIE,
-+	.nlanes			= 1,
-+
-+	.serdes_tbl		= ipq8074_pcie_serdes_tbl,
-+	.serdes_tbl_num		= ARRAY_SIZE(ipq8074_pcie_serdes_tbl),
-+	.tx_tbl			= ipq8074_pcie_tx_tbl,
-+	.tx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_tx_tbl),
-+	.rx_tbl			= ipq8074_pcie_rx_tbl,
-+	.rx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_rx_tbl),
-+	.pcs_tbl		= ipq8074_pcie_pcs_tbl,
-+	.pcs_tbl_num		= ARRAY_SIZE(ipq8074_pcie_pcs_tbl),
-+	.clk_list		= NULL,
-+	.num_clks		= 0,
-+	.reset_list		= ipq8074_pciephy_reset_l,
-+	.num_resets		= ARRAY_SIZE(ipq8074_pciephy_reset_l),
-+	.vreg_list		= NULL,
-+	.num_vregs		= 0,
-+	.regs			= ipq8074_pciephy_regs_layout,
-+
-+	.start_ctrl		= SERDES_START | PCS_START,
-+	.pwrdn_ctrl		= SW_PWRDN | REFCLK_DRV_DSBL,
-+	.mask_pcs_ready		= PHYSTATUS,
-+
-+	.has_phy_com_ctrl	= true,
-+	.has_lane_rst		= false,
-+	.has_pwrdn_delay	= true,
-+	.pwrdn_delay_min	= 995,		/* us */
-+	.pwrdn_delay_max	= 1005,		/* us */
-+};
-+
- static void qcom_qmp_phy_configure(void __iomem *base,
- 				   const unsigned int *regs,
- 				   const struct qmp_phy_init_tbl tbl[],
-@@ -1047,6 +1179,9 @@ int qcom_qmp_phy_create(struct device *dev, struct device_node *np, int id)
- 	}, {
- 		.compatible = "qcom,msm8996-qmp-usb3-phy",
- 		.data = &msm8996_usb3phy_cfg,
-+	}, {
-+		.compatible = "qcom,ipq8074-qmp-pcie-phy",
-+		.data = &ipq8074_pciephy_cfg,
- 	},
- 	{ },
- };
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+ #ifdef CONFIG_ACPI_SLEEP
+ u32 acpi_target_system_state(void);
+ #else
+Index: linux-pm/drivers/pci/pci-acpi.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -573,7 +573,7 @@ static int acpi_pci_propagate_wakeup(str
+ {
+ 	while (bus->parent) {
+ 		if (acpi_pm_device_can_wakeup(&bus->self->dev))
+-			return acpi_pm_set_device_wakeup(&bus->self->dev, enable);
++			return acpi_pm_set_bridge_wakeup(&bus->self->dev, enable);
+ 
+ 		bus = bus->parent;
+ 	}
+@@ -581,7 +581,7 @@ static int acpi_pci_propagate_wakeup(str
+ 	/* We have reached the root bus. */
+ 	if (bus->bridge) {
+ 		if (acpi_pm_device_can_wakeup(bus->bridge))
+-			return acpi_pm_set_device_wakeup(bus->bridge, enable);
++			return acpi_pm_set_bridge_wakeup(bus->bridge, enable);
+ 	}
+ 	return 0;
+ }
