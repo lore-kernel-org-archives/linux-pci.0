@@ -1,69 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53810 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751889AbdGBViW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 2 Jul 2017 17:38:22 -0400
-Date: Sun, 2 Jul 2017 16:38:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Stephen Hemminger <stephen@networkplumber.org>
-Cc: kys@microsoft.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        devel@linuxdriverproject.org,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: Re: [PATCH] hv: fix msi affinity when device requests all possible
- CPU's
-Message-ID: <20170702213819.GF18324@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170628232204.15227-1-sthemmin@microsoft.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
+Date: Fri, 21 Jul 2017 22:44:30 +0200
+Message-ID: <2174120.aKGTTYRMVV@aspire.rjw.lan>
+In-Reply-To: <CAHp75VeQpmf5z1p9an2bvJDkAGeOxFyXz+VWk7OibNt+-9VMDw@mail.gmail.com>
+References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <4853865.5aRGCM4CdQ@aspire.rjw.lan> <CAHp75VeQpmf5z1p9an2bvJDkAGeOxFyXz+VWk7OibNt+-9VMDw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170628232204.15227-1-sthemmin@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jun 28, 2017 at 04:22:04PM -0700, Stephen Hemminger wrote:
-> When Intel 10G (ixgbevf) is passed to a Hyper-V guest with SR-IOV,
-> the driver requests affinity with all possible CPU's (0-239) even
-> those CPU's are not online (and will never be). Because of this the device
-> is unable to correctly get MSI interrupt's setup.
+On Friday, July 21, 2017 06:45:03 PM Andy Shevchenko wrote:
+> On Fri, Jul 21, 2017 at 3:42 PM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
 > 
-> This was caused by the change in 4.12 that converted this affinity
-> into all possible CPU's (0-31) but then host reports
-> an error since this is larger than the number of online cpu's.
+> > The acpi_pci_propagate_wakeup() routine is there to handle cases in
+> > which PCI bridges (or PCIe ports) are expected to signal wakeup
+> > for devices below them, but currently it doesn't do that correctly.
+> >
+> > The problem is that acpi_pci_propagate_wakeup() uses
+> > acpi_pm_set_device_wakeup() for bridges and if that routine is
+> > called for multiple times to disable wakeup for the same device,
+> > it will disable it on the first invocation and the next calls
+> > will have no effect (it works analogously when called to enable
+> > wakeup, but that is not a problem).
+> >
+> > Now, say acpi_pci_propagate_wakeup() has been called for two
+> > different devices under the same bridge and it has called
+> > acpi_pm_set_device_wakeup() for that bridge each time.  The
+> > bridge is now enabled to generate wakeup signals.  Next,
+> > suppose that one of the devices below it resumes and
+> > acpi_pci_propagate_wakeup() is called to disable wakeup for that
+> > device.  It will then call acpi_pm_set_device_wakeup() for the bridge
+> > and that will effectively disable remote wakeup for all devices under
+> > it even though some of them may still be suspended and remote wakeup
+> > may be expected to work for them.
+> >
+> > To address this (arguably theoretical) issue, allow
+> > wakeup.enable_count under struct acpi_device to grow beyond 1 in
+> > certain situations.  In particular, allow that to happen in
+> > acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
+> > for PCI bridges, so that wakeup is actually disabled for the
+> > bridge when all devices under it resume and not when just one
+> > of them does that.
 > 
-> Previously, this worked (up to 4.12-rc1) because only online cpu's
-> would be put in mask passed to the host.
+> > -       if (wakeup->enable_count > 0)
+> > -               goto out;
+> > +       if (wakeup->enable_count > 0) {
+> > +               if (wakeup->enable_count < max_count)
+> > +                       goto inc;
+> > +               else
+> > +                       goto out;
+> > +       }
 > 
-> This patch applies only to 4.12.
-> The driver in linux-next needs a a different fix because of the changes
-> to PCI host protocol version.
+> Wouldn't be simpler
 
-If Linus decides to postpone v4.12 a week, I can ask him to pull this.  But
-I suspect he will release v4.12 today.  In that case, I don't know what to
-do with this other than maybe send it to Greg for a -stable release.
+I'm not really sure what you mean.
 
-> Fixes: 433fcf6b7b31 ("PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >= 32 CPUs")
-> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 84936383e269..3cadfcca3ae9 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -900,10 +900,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
->  	 * processors because Hyper-V only supports 64 in a guest.
->  	 */
->  	affinity = irq_data_get_affinity_mask(data);
-> +	cpumask_and(affinity, affinity, cpu_online_mask);
-> +
->  	if (cpumask_weight(affinity) >= 32) {
->  		int_pkt->int_desc.cpu_mask = CPU_AFFINITY_ALL;
->  	} else {
-> -		for_each_cpu_and(cpu, affinity, cpu_online_mask) {
-> +		for_each_cpu(cpu, affinity) {
->  			int_pkt->int_desc.cpu_mask |=
->  				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
->  		}
-> -- 
-> 2.11.0
-> 
+In general, ->
+
+>     if (wakeup->enable_count >= max_count)
+>       goto out;
+
+-> this is unlikely and ->>
+
+>     if (wakeup->enable_count > 0)
+>       goto inc;
+
+->> this isn't.
+
+Why would checking an unlikely condition before a likely one covering it
+ever be better?
+
+> If max_count can be <= 0,
+
+No, it can't be.
+
+Thanks,
+Rafael
+
