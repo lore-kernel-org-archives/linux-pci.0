@@ -1,450 +1,263 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36597 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751979AbdGYU6C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 16:58:02 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:46 -0600
-Message-Id: <20170725205753.4735-10-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 09/16] switchtec_ntb: initialize hardware for memory windows
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=VPKy=6Z=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=VPKy=6Z=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Dongdong Liu
+	<liudongdong3@huawei.com>
+Subject: [PATCH V2] PCI/DPC: Add eDPC support
+Date: Sat, 22 Jul 2017 17:39:59 +0800
+Message-ID: <1500716399-85612-1-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the code to initialize the memory windows in the hardware.
-This includes setting up the requester ID table, and figuring out
-which bar corresponds to which memory window. (Seeing the switch
-can be configured with any number of bars.)
+This code is to add eDPC support. Get and print the RP PIO error
+information when the trigger condition is RP PIO error.
 
-Also, seeing the device doesn't have hardware for scratchpads or
-determining the link status, we create a shared memory window that has
-these features. A magic number with a version copmonent will be used
-to determine if the otherside's driver is actually up.
+For more information on eDPC, view the PCI-SIG eDPC ECN here:
+https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
 
-The shared memory window also informs the other side of the
-size and count of the local memory windows.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 ---
- drivers/ntb/hw/mscc/switchtec_ntb.c | 355 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 355 insertions(+)
+v1-->v2: Use a stack local variable instead of the allocated memory for
+	 collecting RP PIO information.
+	 Fix the condition of RP PIO error.
+	 rebase on v4.13-rc1
+---
+ drivers/pci/pcie/pcie-dpc.c   | 160 ++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/pci_regs.h |  10 +++
+ 2 files changed, 170 insertions(+)
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 253efba72275..1596757413f5 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -15,37 +15,391 @@
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index c39f32e..724c548 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -16,11 +16,55 @@
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
  
- #include <linux/switchtec.h>
- #include <linux/module.h>
-+#include <linux/delay.h>
-+#include <linux/kthread.h>
- 
- MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
- MODULE_VERSION("0.1");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Microsemi Corporation");
- 
-+static bool use_lut_mws;
-+module_param(use_lut_mws, bool, 0644);
-+MODULE_PARM_DESC(use_lut_mws,
-+		 "Enable the use of the LUT based memory windows");
-+
-+#ifndef ioread64
-+#ifdef readq
-+#define ioread64 readq
-+#else
-+#define ioread64 _ioread64
-+static inline u64 _ioread64(void __iomem *mmio)
-+{
-+	u64 low, high;
-+
-+	low = ioread32(mmio);
-+	high = ioread32(mmio + sizeof(u32));
-+	return low | (high << 32);
-+}
-+#endif
-+#endif
-+
-+#ifndef iowrite64
-+#ifdef writeq
-+#define iowrite64 writeq
-+#else
-+#define iowrite64 _iowrite64
-+static inline void _iowrite64(u64 val, void __iomem *mmio)
-+{
-+	iowrite32(val, mmio);
-+	iowrite32(val >> 32, mmio + sizeof(u32));
-+}
-+#endif
-+#endif
-+
-+#define SWITCHTEC_NTB_MAGIC 0x45CC0001
-+#define MAX_MWS     128
-+
-+struct shared_mw {
-+	u32 magic;
-+	u32 partition_id;
-+	u64 mw_sizes[MAX_MWS];
++struct rp_pio_header_log_regs {
++	u32 dw0;
++	u32 dw1;
++	u32 dw2;
++	u32 dw3;
 +};
 +
-+#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-+#define LUT_SIZE SZ_64K
++struct dpc_rp_pio_regs {
++	u32 status;
++	u32 mask;
++	u32 severity;
++	u32 syserror;
++	u32 exception;
 +
- struct switchtec_ntb {
- 	struct switchtec_dev *stdev;
++	struct rp_pio_header_log_regs header_log;
++	u32 impspec_log;
++	u32 tlp_prefix_log[4];
++	u32 log_size;
++	u16 first_error;
++};
 +
-+	int self_partition;
-+	int peer_partition;
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+ 	int			cap_pos;
+ 	bool			rp;
++	u32			rp_pio_status;
++};
 +
-+	struct ntb_info_regs __iomem *mmio_ntb;
-+	struct ntb_ctrl_regs __iomem *mmio_ctrl;
-+	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
-+	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
-+	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
-+	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
-+
-+	struct shared_mw *self_shared;
-+	struct shared_mw __iomem *peer_shared;
-+	dma_addr_t self_shared_dma;
-+
-+	int nr_direct_mw;
-+	int nr_lut_mw;
-+	int direct_mw_to_bar[MAX_DIRECT_MW];
-+
-+	int peer_nr_direct_mw;
-+	int peer_nr_lut_mw;
-+	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
++static const char * const rp_pio_error_string[] = {
++	"Configuration Request received UR Completion",	 /* Bit Position 0  */
++	"Configuration Request received CA Completion",	 /* Bit Position 1  */
++	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	"I/O Request received UR Completion",		 /* Bit Position 8  */
++	"I/O Request received CA Completion",		 /* Bit Position 9  */
++	"I/O Request Completion Timeout",		 /* Bit Position 10 */
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	"Memory Request received UR Completion",	 /* Bit Position 16 */
++	"Memory Request received CA Completion",	 /* Bit Position 17 */
++	"Memory Request Completion Timeout",		 /* Bit Position 18 */
  };
  
-+static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
-+				 struct ntb_ctrl_regs __iomem *ctl,
-+				 u32 op, int wait_status)
-+{
-+	static const char * const op_text[] = {
-+		[NTB_CTRL_PART_OP_LOCK] = "lock",
-+		[NTB_CTRL_PART_OP_CFG] = "configure",
-+		[NTB_CTRL_PART_OP_RESET] = "reset",
-+	};
-+
-+	int i;
-+	u32 ps;
-+	int status;
-+
-+	switch (op) {
-+	case NTB_CTRL_PART_OP_LOCK:
-+		status = NTB_CTRL_PART_STATUS_LOCKING;
-+		break;
-+	case NTB_CTRL_PART_OP_CFG:
-+		status = NTB_CTRL_PART_STATUS_CONFIGURING;
-+		break;
-+	case NTB_CTRL_PART_OP_RESET:
-+		status = NTB_CTRL_PART_STATUS_RESETTING;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	iowrite32(op, &ctl->partition_op);
-+
-+	for (i = 0; i < 1000; i++) {
-+		if (msleep_interruptible(50) != 0) {
-+			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
-+			return -EINTR;
-+		}
-+
-+		ps = ioread32(&ctl->partition_status) & 0xFFFF;
-+
-+		if (ps != status)
-+			break;
-+	}
-+
-+	if (ps == wait_status)
-+		return 0;
-+
-+	if (ps == status) {
-+		dev_err(&sndev->stdev->dev,
-+			"Timed out while peforming %s (%d). (%08x)",
-+			op_text[op], op,
-+			ioread32(&ctl->partition_status));
-+
-+		return -ETIMEDOUT;
-+	}
-+
-+	return -EIO;
-+}
-+
-+static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
-+{
-+	u64 part_map;
-+
-+	sndev->self_partition = sndev->stdev->partition;
-+
-+	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-+	part_map = ioread64(&sndev->mmio_ntb->ep_map);
-+	part_map &= ~(1 << sndev->self_partition);
-+	sndev->peer_partition = ffs(part_map) - 1;
-+
-+	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
-+		sndev->self_partition, sndev->stdev->partition_count,
-+		part_map);
-+
-+	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
-+		SWITCHTEC_NTB_REG_CTRL_OFFSET;
-+	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
-+		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
-+
-+	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
-+	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
-+	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
-+}
-+
-+static int map_bars(int *map, struct ntb_ctrl_regs __iomem *ctrl)
-+{
-+	int i;
-+	int cnt = 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(ctrl->bar_entry); i++) {
-+		u32 r = ioread32(&ctrl->bar_entry[i].ctl);
-+
-+		if (r & NTB_CTRL_BAR_VALID)
-+			map[cnt++] = i;
-+	}
-+
-+	return cnt;
-+}
-+
-+static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
-+{
-+	sndev->nr_direct_mw = map_bars(sndev->direct_mw_to_bar,
-+				       sndev->mmio_self_ctrl);
-+
-+	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
-+	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
-+
-+	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
-+		sndev->nr_direct_mw, sndev->nr_lut_mw);
-+
-+	sndev->peer_nr_direct_mw = map_bars(sndev->peer_direct_mw_to_bar,
-+					    sndev->mmio_peer_ctrl);
-+
-+	sndev->peer_nr_lut_mw =
-+		ioread16(&sndev->mmio_peer_ctrl->lut_table_entries);
-+	sndev->peer_nr_lut_mw = rounddown_pow_of_two(sndev->peer_nr_lut_mw);
-+
-+	dev_dbg(&sndev->stdev->dev, "Peer MWs: %d direct, %d lut",
-+		sndev->peer_nr_direct_mw, sndev->peer_nr_lut_mw);
-+
-+}
-+
-+static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
-+{
-+	int rc = 0;
-+	u16 req_id = ioread16(&sndev->mmio_ntb->requester_id);
-+	u32 error;
-+
-+	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
-+		dev_err(&sndev->stdev->dev,
-+			"Not enough requester IDs available.");
-+		return -EFAULT;
-+	}
-+
-+	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-+				   NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		return rc;
-+
-+	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
-+		  &sndev->mmio_self_ctrl->partition_ctrl);
-+
-+	// Root Complex Requester ID
-+	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
-+		  &sndev->mmio_self_ctrl->req_id_table[0]);
-+
-+	// Host Bridge Requester ID
-+	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
-+		  &sndev->mmio_self_ctrl->req_id_table[1]);
-+
-+	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-+				   NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+
-+	if (rc == -EIO) {
-+		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
-+		dev_err(&sndev->stdev->dev,
-+			"Error setting up the requester ID table: %08x",
-+			error);
-+	}
-+
-+	return rc;
-+}
-+
-+static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
-+{
-+	int i;
-+
-+	memset(sndev->self_shared, 0, LUT_SIZE);
-+	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
-+	sndev->self_shared->partition_id = sndev->stdev->partition;
-+
-+	for (i = 0; i < sndev->nr_direct_mw; i++) {
-+		int bar = sndev->direct_mw_to_bar[i];
-+		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
-+
-+		if (i == 0)
-+			sz = min_t(resource_size_t, sz,
-+				   LUT_SIZE * sndev->nr_lut_mw);
-+
-+		sndev->self_shared->mw_sizes[i] = sz;
-+	}
-+
-+	for (i = 0; i < sndev->nr_lut_mw; i++) {
-+		int idx = sndev->nr_direct_mw + i;
-+
-+		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
-+	}
-+}
-+
-+static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
-+{
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+	int bar = sndev->direct_mw_to_bar[0];
-+	u32 ctl_val;
-+	int rc;
-+
-+	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
-+						 LUT_SIZE,
-+						 &sndev->self_shared_dma,
-+						 GFP_KERNEL);
-+	if (!sndev->self_shared) {
-+		dev_err(&sndev->stdev->dev,
-+			"unable to allocate memory for shared mw");
-+		return -ENOMEM;
-+	}
-+
-+	switchtec_ntb_init_shared(sndev);
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		goto unalloc_and_exit;
-+
-+	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
-+	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
-+	ctl_val &= 0xFF;
-+	ctl_val |= ilog2(LUT_SIZE) << 8;
-+	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
-+	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
-+
-+	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
-+		   sndev->self_shared_dma),
-+		  &ctl->lut_entry[0]);
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+	if (rc) {
-+		u32 bar_error, lut_error;
-+
-+		bar_error = ioread32(&ctl->bar_error);
-+		lut_error = ioread32(&ctl->lut_error);
-+		dev_err(&sndev->stdev->dev,
-+			"Error setting up shared MW: %08x / %08x",
-+			bar_error, lut_error);
-+		goto unalloc_and_exit;
-+	}
-+
-+	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
-+	if (!sndev->peer_shared) {
-+		rc = -ENOMEM;
-+		goto unalloc_and_exit;
-+	}
-+
-+	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
-+	return 0;
-+
-+unalloc_and_exit:
-+	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-+			  sndev->self_shared, sndev->self_shared_dma);
-+
-+	return rc;
-+}
-+
-+static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
-+{
-+	if (sndev->peer_shared)
-+		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
-+
-+	if (sndev->self_shared)
-+		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-+				  sndev->self_shared,
-+				  sndev->self_shared_dma);
-+}
-+
- static int switchtec_ntb_add(struct device *dev,
- 			     struct class_interface *class_intf)
- {
- 	struct switchtec_dev *stdev = to_stdev(dev);
- 	struct switchtec_ntb *sndev;
-+	int rc;
- 
- 	stdev->sndev = NULL;
- 
- 	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
- 		return -ENODEV;
- 
-+	if (stdev->partition_count != 2)
-+		dev_warn(dev, "ntb driver only supports 2 partitions");
-+
- 	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
- 	if (!sndev)
- 		return -ENOMEM;
- 
- 	sndev->stdev = stdev;
- 
-+	switchtec_ntb_init_sndev(sndev);
-+	switchtec_ntb_init_mw(sndev);
-+
-+	rc = switchtec_ntb_init_req_id_table(sndev);
-+	if (rc)
-+		goto free_and_exit;
-+
-+	rc = switchtec_ntb_init_shared_mw(sndev);
-+	if (rc)
-+		goto free_and_exit;
-+
- 	stdev->sndev = sndev;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
-+
-+free_and_exit:
-+	kfree(sndev);
-+	dev_err(dev, "failed to register ntb device: %d", rc);
-+	return rc;
- }
- 
- void switchtec_ntb_remove(struct device *dev,
-@@ -58,6 +412,7 @@ void switchtec_ntb_remove(struct device *dev,
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+@@ -79,10 +123,121 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	dpc_wait_link_inactive(pdev);
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
  		return;
- 
- 	stdev->sndev = NULL;
-+	switchtec_ntb_deinit_shared_mw(sndev);
- 	kfree(sndev);
- 	dev_info(dev, "ntb device unregistered");
++	if (dpc->rp && dpc->rp_pio_status)
++		pci_write_config_dword(pdev,
++				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++				      dpc->rp_pio_status);
++
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
  }
+ 
++static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
++					struct rp_pio_header_log_regs *t)
++{
++	dev_err(&dev->dev, "TLP Header: %08x %08x %08x %08x\n",
++		t->dw0, t->dw1, t->dw2, t->dw3);
++}
++
++static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
++				   struct dpc_rp_pio_regs *rp_pio)
++{
++	struct pci_dev *pdev = dpc->dev->port;
++	int i;
++	u32 status;
++
++	dev_err(&pdev->dev, "rp_pio_status: 0x%08x, rp_pio_mask: 0x%08x\n",
++			    rp_pio->status, rp_pio->mask);
++
++	dev_err(&pdev->dev, "RP PIO severity=0x%08x, syserror=0x%08x, exception=0x%08x\n",
++		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
++
++	status = (rp_pio->status & ~rp_pio->mask);
++
++	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
++		if (!(status & (1 << i)))
++			continue;
++
++		dev_err(&pdev->dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
++			rp_pio->first_error == i ? " (First)" : "");
++	}
++
++	dpc_rp_pio_print_tlp_header(pdev, &rp_pio->header_log);
++	if (rp_pio->log_size == 4)
++		return;
++	dev_err(&pdev->dev, "RP PIO ImpSpec Log %08x\n", rp_pio->impspec_log);
++
++	for (i = 0; i < rp_pio->log_size - 5; i++)
++		dev_err(&pdev->dev, "TLP Prefix Header: dw%d, %08x\n", i,
++			rp_pio->tlp_prefix_log[i]);
++}
++
++static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
++				struct dpc_rp_pio_regs *rp_pio)
++{
++	struct pci_dev *pdev = dpc->dev->port;
++	int i;
++	u16 cap;
++	u16 status;
++
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++			      &rp_pio->status);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
++			      &rp_pio->mask);
++
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
++			      &rp_pio->severity);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
++			      &rp_pio->syserror);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
++			      &rp_pio->exception);
++
++	/* Get First Error Pointer */
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	rp_pio->first_error = (status & 0x1f00) >> 8;
++
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
++	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
++	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
++		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
++			rp_pio->log_size);
++		return;
++	}
++
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
++			      &rp_pio->header_log.dw0);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
++			      &rp_pio->header_log.dw1);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
++			      &rp_pio->header_log.dw2);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
++			      &rp_pio->header_log.dw3);
++	if (rp_pio->log_size == 4)
++		return;
++
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
++			      &rp_pio->impspec_log);
++	for (i = 0; i < rp_pio->log_size - 5; i++)
++		pci_read_config_dword(pdev,
++			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
++			&rp_pio->tlp_prefix_log[i]);
++}
++
++static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
++{
++	struct dpc_rp_pio_regs rp_pio_regs;
++
++	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
++	dpc_rp_pio_print_error(dpc, &rp_pio_regs);
++
++	dpc->rp_pio_status = rp_pio_regs.status;
++}
++
+ static irqreturn_t dpc_irq(int irq, void *context)
+ {
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+@@ -109,6 +264,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 			 (ext_reason == 0) ? "RP PIO error" :
+ 			 (ext_reason == 1) ? "software trigger" :
+ 					     "reserved error");
++		/* show RP PIO error detail information */
++		if (reason == 3 && ext_reason == 0)
++			dpc_precess_rp_pio_error(dpc);
++
+ 		schedule_work(&dpc->work);
+ 	}
+ 	return IRQ_HANDLED;
+@@ -144,6 +303,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 
+ 	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+ 
++
+ 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index c22d3eb..1ce9627 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -967,6 +967,7 @@
+ #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+ #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+ #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
++#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0xF00	/* RP PIO log size */
+ #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+ 
+ #define PCI_EXP_DPC_CTL			6	/* DPC control */
+@@ -980,6 +981,15 @@
+ 
+ #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
+ 
++#define PCI_EXP_DPC_RP_PIO_STATUS	 0x0C	/* RP PIO Status */
++#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO MASK */
++#define PCI_EXP_DPC_RP_PIO_SEVERITY	 0x14	/* RP PIO Severity */
++#define PCI_EXP_DPC_RP_PIO_SYSERROR	 0x18	/* RP PIO SysError */
++#define PCI_EXP_DPC_RP_PIO_EXCEPTION	 0x1C	/* RP PIO Exception */
++#define PCI_EXP_DPC_RP_PIO_HEADER_LOG	 0x20	/* RP PIO Header Log */
++#define PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG	 0x30	/* RP PIO ImpSpec Log */
++#define PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG 0x34	/* RP PIO TLP Prefix Log */
++
+ /* Precision Time Measurement */
+ #define PCI_PTM_CAP			0x04	    /* PTM Capability */
+ #define  PCI_PTM_CAP_REQ		0x00000001  /* Requester capable */
 -- 
-2.11.0
+1.9.1
