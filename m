@@ -1,114 +1,91 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48996 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdGQMFP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:05:15 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH 6/7] dt-bindings: pci: qcom: Add support for IPQ8074
-Date: Mon, 17 Jul 2017 17:34:02 +0530
-Message-Id: <1500293043-1887-7-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
-References: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34796 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751922AbdGVCF3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 22:05:29 -0400
+Subject: Re: Support SVM without PASID
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
+        kevin.tian@intel.com, jacob.jun.pan@intel.com
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+Date: Sat, 22 Jul 2017 07:35:31 +0530
+MIME-Version: 1.0
+In-Reply-To: <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
-lane, two PCIe root complex with support for MSI and legacy interrupts, and
-it conforms to PCI Express Base 2.1 specification.
+On 7/12/2017 10:18 PM, Jean-Philippe Brucker wrote:
+> On 12/07/17 17:27, valmiki wrote:
+>> On 7/11/2017 4:26 PM, Jean-Philippe Brucker wrote:
+>>> Hi Valmiki,
+>>>
+>>> On 09/07/17 04:15, valmiki wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> In SMMUv3 architecture document i see "PASIDs are optional,
+>>>>>> configurable, and of a size determined by the minimum
+>>>>>> of the endpoint".
+>>>>>>
+>>>>>> So if PASID's are optional and not supported by PCIe end point, how SVM
+>>>>>> can be achieved ?
+>>>>>
+>>>>> It cannot be inferred from that statement that PASID support is not
+>>>>> required for SVM.  AIUI, SVM is a software feature enabled by numerous
+>>>>> "optional" hardware features, including PASID.  Features that are
+>>>>> optional per the hardware specification may be required for specific
+>>>>> software features.  Thanks,
+>>>>>
+>>>> Thanks for the information Alex. Suppose if an End point doesn't support
+>>>> PASID, is it still possible to achieve SVM ?
+>>>> Are there any such features in SMMUv3 with which we can achieve it ?
+>>>
+>>> Not really, we don't plan to share the non-PASID context with a process.
+>>>
+>>> In theory you could achieve something resembling SVM by assigning the
+>>> entire endpoint to userspace using VFIO, then use ATS+PRI capabilities
+>>> with a bind ioctl. If your device can do SR-IOV, then you can bind one
+>>> process per virtual function.
+>>>
+>>> Unless we end up seeing lots of endpoints that implement PRI but not
+>>> PASID, I don't plan to add this to VFIO or SMMUv3.
+>>>
+>>> For a PCIe endpoint, the requirements for SVM are ATS, PRI and PASID
+>>> enabled. In addition, the SMMU should support DVM (broadcast TLB
+>>> maintenance) and must be compatible with the MMU (page sizes, output
+>>> address size, ASID bits...)
+>>>
+>> Thanks Jean.
+>> In SMMU document it was quoted as follows
+>> "When STE.S1DSS==0b10, a transaction without a SubstreamID is accepted and
+>> uses the CD of Substream 0. Under this configuration, transactions that
+>> arrive with SubstreamID 0 are aborted and an event recorded."
+>>
+>> Is this mode supported in your previous series of SMMUv3 patches ?
+>> If it is supported is it achieved through VFIO ?
+>
+> Yes, STE.S1DSS==0b10 is the only supported mode with my patches. And in
+> VFIO, the non-PASID context (CD 0) is managed with
+> VFIO_IOMMU_MAP/UNMAP_DMA ioctls, mirroring the current behavior for
+> devices that don't support PASID. All other CDs, with PASID > 0, are
+> managed via the new BIND ioctl.
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- .../devicetree/bindings/pci/qcom,pcie.txt          | 67 ++++++++++++++++++++++
- 1 file changed, 67 insertions(+)
+Thanks Jean, this helps a lot.
+So i digged through your patches and i understood that using BIND ioctls 
+satge-1 translations are setup in SMMU for an application.
+If we use VFIO_IOMMU_MAP/UNMAP_DMA ioctls they are setting up stage-2 
+translations in SMMU.
+So without PASID support we can only work with stage-2 translations ?
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 9d418b7..643bcc2 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -9,6 +9,7 @@
- 			- "qcom,pcie-apq8084" for apq8084
- 			- "qcom,pcie-msm8996" for msm8996 or apq8096
- 			- "qcom,pcie-ipq4019" for ipq4019
-+			- "qcom,pcie-ipq8074" for ipq8074
- 
- - reg:
- 	Usage: required
-@@ -261,3 +262,69 @@
- 		pinctrl-0 = <&pcie0_pins_default>;
- 		pinctrl-names = "default";
- 	};
-+
-+* Example for ipq8074
-+	pcie0: pci@20000000 {
-+		compatible = "qcom,pcie-ipq8074";
-+		reg =  <0x20000000 0xf1d
-+			0x20000F20 0xa8
-+			0x80000 0x2000
-+			0x20100000 0x1000>;
-+		reg-names = "dbi", "elbi", "parf", "config";
-+		device_type = "pci";
-+		linux,pci-domain = <0>;
-+		bus-range = <0x00 0xff>;
-+		num-lanes = <1>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+
-+		phys = <&pciephy_0>;
-+		phy-names = "pciephy";
-+
-+		ranges = <0x81000000 0 0x20200000 0x20200000
-+			  0 0x00100000   /* downstream I/O */
-+			  0x82000000 0 0x20300000 0x20300000
-+			  0 0x00d00000>; /* non-prefetchable memory */
-+
-+		interrupts = <0 52 0>;
-+		interrupt-names = "msi";
-+		#interrupt-cells = <1>;
-+		interrupt-map-mask = <0 0 0 0x7>;
-+		interrupt-map = <0 0 0 1 &intc 0 75
-+				 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+				<0 0 0 2 &intc 0 78
-+				 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+				<0 0 0 3 &intc 0 79
-+				 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+				<0 0 0 4 &intc 0 83
-+				 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+
-+		clocks =	<&gcc GCC_SYS_NOC_PCIE0_AXI_CLK>,
-+				<&gcc GCC_PCIE0_AXI_M_CLK>,
-+				<&gcc GCC_PCIE0_AXI_S_CLK>,
-+				<&gcc GCC_PCIE0_AHB_CLK>,
-+				<&gcc GCC_PCIE0_AUX_CLK>;
-+		clock-names =	"sys_noc",
-+				"axi_m",
-+				"axi_s",
-+				"ahb",
-+				"aux";
-+
-+		resets = <&gcc GCC_PCIE0_PIPE_ARES>,
-+			 <&gcc GCC_PCIE0_SLEEP_ARES>,
-+			 <&gcc GCC_PCIE0_CORE_STICKY_ARES>,
-+			 <&gcc GCC_PCIE0_AXI_MASTER_ARES>,
-+			 <&gcc GCC_PCIE0_AXI_SLAVE_ARES>,
-+			 <&gcc GCC_PCIE0_AHB_ARES>,
-+			 <&gcc GCC_PCIE0_AXI_MASTER_STICKY_ARES>;
-+		reset-names = "pipe",
-+			      "sleep",
-+			      "sticky",
-+			      "axi_m",
-+			      "axi_s",
-+			      "ahb",
-+			      "axi_m_sticky";
-+
-+		perst-gpio = <&tlmm 58 1>;
-+		status = "disabled";
-+	};
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+Regards,
+valmiki
