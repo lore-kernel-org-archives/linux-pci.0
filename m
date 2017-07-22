@@ -1,88 +1,51 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:43041 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753059AbdGNDxj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:53:39 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH 6/6] dt-bindings: PCI: rockchip: convert to use per-lane PHY model
-Date: Fri, 14 Jul 2017 11:52:46 +0800
-Message-Id: <1500004366-241633-5-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
- <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=02Xb=6Z=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=02Xb=6Z=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: Sinan Kaya <okaya@codeaurora.org>, <leedom@chelsio.com>,
+        <ashok.raj@intel.com>, <bhelgaas@google.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+ <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+ <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+ <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+Date: Sat, 22 Jul 2017 12:19:38 +0800
+MIME-Version: 1.0
+In-Reply-To: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Deprecate legacy PHY model and encourage to use per-lane PHY
-model.
+Hi Sinan, Bjorn:
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+On 2017/7/14 21:54, Sinan Kaya wrote:
+> On 7/13/2017 9:26 PM, Ding Tianhong wrote:
+>> There is no code to enable the PCIe Relaxed Ordering bit in the configuration space,
+>> it is only be enable by default according to the PCIe Standard Specification, what we
+>> do is to distinguish the RC problematic platform and clear the Relaxed Ordering bit
+>> to tell the PCIe EP don't send any TLPs with Relaxed Ordering Attributes to the Root
+>> Complex.
+> 
+> Maybe, you should change the patch commit as 
+> "Disable PCIe Relaxed Ordering if not supported"...
 
----
+I agree that to use the new commit title as your suggested, thanks. :)
 
- .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+@Bjorn do you want me to spawn a new patchset with the new commit title
+and the Reviewed-by from Casey on the patch 3, or maybe you could pick this
+up and modify it own ? thanks.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 1453a73..78d4469 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -19,8 +19,6 @@ Required properties:
- 	- "pm"
- - msi-map: Maps a Requester ID to an MSI controller and associated
- 	msi-specifier data. See ./pci-msi.txt
--- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
--- phy-names:  MUST be "pcie-phy".
- - interrupts: Three interrupt entries must be specified.
- - interrupt-names: Must include the following names
- 	- "sys"
-@@ -42,6 +40,18 @@ Required properties:
- 	interrupt source. The value must be 1.
- - interrupt-map-mask and interrupt-map: standard PCI properties
- 
-+Required properties for legacy PHY model (deprecated):
-+- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
-+- phy-names:  MUST be "pcie-phy".
-+
-+Required properties for per-lane PHY model:
-+- phys: Must contain an phandle to a PHY for each entry in phy-names.
-+- phy-names: Must include an entry for each active lane. Note that the number
-+  of entries does not have to (though usually will) be equal to the specified
-+  number of lanes in the num-lanes property. Entries are of the form
-+  "pcie-phy-N": where N ranges from 0 to the value specified of (num-lanes - 1).
-+  (see example below)
-+
- Optional Property:
- - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
- 	using 24MHz OSC for RC's PHY.
-@@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
- 		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
- 	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
- 		      "pm", "pclk", "aclk";
-+	/* deprecated legacy PHY model */
- 	phys = <&pcie_phy>;
- 	phy-names = "pcie-phy";
- 	pinctrl-names = "default";
-@@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
- 		#interrupt-cells = <1>;
- 	};
- };
-+
-+pcie0: pcie@f8000000 {
-+	...
-+
-+	/* preferred per-lane PHY model */
-+	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
-+	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
-+
-+	...
-+};
--- 
-1.9.1
+Ding
+
+> 
