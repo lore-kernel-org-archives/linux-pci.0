@@ -1,66 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:18791 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751243AbdGLKAw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Jul 2017 06:00:52 -0400
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, pjones@redhat.com,
-        linux-fbdev@vger.kernel.org, linux-efi@vger.kernel.org,
-        matt@codeblueprint.co.uk, lorenzo.pieralisi@arm.com
-Subject: Re: [PATCH v2] drivers/fbdev: efifb: allow BAR to be moved instead
- of claiming it
-Date: Wed, 12 Jul 2017 12:00:46 +0200
-Message-id: <1886933.1k4ytioEMD@amdc3058>
-In-reply-to: <20170710211305.6475-1-ard.biesheuvel@linaro.org>
-MIME-version: 1.0
-Content-type: text/plain; charset="us-ascii"
-References: <CGME20170710211327epcas1p4443f6f9df236e76fd4afd91dccf45cd0@epcas1p4.samsung.com>
-        <20170710211305.6475-1-ard.biesheuvel@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Daniel Axtens <dja@axtens.net>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH 0/4] Allow non-legacy cards to be vgaarb default
+In-Reply-To: <CAKv+Gu-O7cyJSgDrqSNi6F_n9eBnFEgz==aqowMqhy+81YK=CQ@mail.gmail.com>
+References: <20170719012839.20124-1-dja@axtens.net>
+ <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
+ <87pocusm2x.fsf@linkitivity.dja.id.au>
+ <CAKv+Gu-O7cyJSgDrqSNi6F_n9eBnFEgz==aqowMqhy+81YK=CQ@mail.gmail.com>
+Date: Mon, 24 Jul 2017 09:15:02 +1000
+Message-ID: <87r2x6vj7t.fsf@linkitivity.dja.id.au>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Airlie <airlied@linux.ie>, linux-pci <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Zou Rongrong <zourongrong@gmail.com>, daniel.vetter@intel.com,
+ Laszlo Ersek <lersek@redhat.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, July 10, 2017 10:13:05 PM Ard Biesheuvel wrote:
-> On UEFI systems, the firmware may expose a Graphics Output Protocol (GOP)
-> instance to which the efifb driver attempts to attach in order to provide
-> a minimal, unaccelerated framebuffer. The GOP protocol itself is not very
-> sophisticated, and only describes the offset and size of the framebuffer
-> in memory, and the pixel format.
-> 
-> If the GOP framebuffer is provided by a PCI device, it will have been
-> configured and enabled by the UEFI firmware, and the GOP protocol will
-> simply point into a live BAR region. However, the GOP protocol itself does
-> not describe this relation, and so we have to take care not to reconfigure
-> the BAR without taking efifb's dependency on it into account.
-> 
-> Commit 55d728a40d36 ("efi/fb: Avoid reconfiguration of BAR that covers
-> the framebuffer") attempted to do so by claiming the BAR resource early
-> on, which prevents the PCI resource allocation routines from changing it.
-> However, it turns out that this only works if the PCI device is not
-> behind any bridges, since the bridge resources need to be claimed first.
-> 
-> So instead, allow the BAR to be moved, but make the efifb driver deal
-> with that gracefully. So record the resource that covers the BAR early
-> on, and if it turns out to have moved by the time we probe the efifb
-> driver, update the framebuffer address accordingly.
-> 
-> While this is less likely to occur on x86, given that the firmware's
-> PCI resource allocation is more likely to be preserved, this is a
-> worthwhile sanity check to have in place, and so let's remove the
+Hi Ard,
 
-It still cuts the patch description early..
+> But the fact remains that we are going about this the wrong way.
+> Whether a graphics card decodes legacy VGA ranges or not has *nothing*
+> to do with whether or not it is in fact the primary device on a
+> non-x86 system, and so I still think the VGA arbiter should be omitted
+> entirely for such platforms, and Xorg should be fixed instead.
 
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+OK, I see where you're coming from. I've been trying to keep my changes
+small as I don't want to end up on the hook for the almost limitless
+range of problems that changing this sort of code can have, but I do
+take your point that it's a bit of an ugly hack of a solution.
 
->From fbdev's side:
+Say we were to change Xorg instead. What would correct Xorg behaviour
+look like? Xorg would need to honour the boot_vga file if it existed so
+as not to break x86, etc. So your proposed Xorg - if it couldn't find a
+default card that way, and if there was no helpful config file info,
+would arbitrarily pick a card that has an Xorg driver? In other words,
+much like the proposed kernel approach but at a different level of the
+stack?
 
-Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Are there other graphical applications we care about (other than Xorg)
+that would need to be patched? I'm happy to do the Xorg patch, but I
+don't know if anything other than Xorg keys off the boot_vga file.
 
-> ---
-> v2: - use pr_info() not pr_warn() for non-error condition
+I'm not fundamentally opposed to this approach if the Xorg community is
+happy with it, the kernel community is happy with it, and no-one expects
+me to provide patches to any other user-space applications that depend
+on boot_vga.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Regards,
+Daniel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
