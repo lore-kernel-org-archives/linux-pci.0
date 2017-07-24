@@ -1,54 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
- "'Jisheng Zhang'" <jszhang@marvell.com>, <bhelgaas@google.com>
-References: <20170713103527.1642-1-jszhang@marvell.com>
- <1df044ef-1daf-0b60-da30-a6a45215f275@synopsys.com>
-In-Reply-To: <1df044ef-1daf-0b60-da30-a6a45215f275@synopsys.com>
-Subject: Re: [PATCH] PCI: dwc: designware: test PCIE_ATU_ENABLE bit to check
- enabled or not
-Date: Mon, 17 Jul 2017 15:32:43 -0400
-Message-ID: <000b01d2ff33$76d4fad0$647ef070$@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f174.google.com ([209.85.128.174]:34447 "EHLO
+        mail-wr0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755307AbdGXRd2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 13:33:28 -0400
+Received: by mail-wr0-f174.google.com with SMTP id 12so109274636wrb.1
+        for <linux-pci@vger.kernel.org>; Mon, 24 Jul 2017 10:33:27 -0700 (PDT)
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170723200636.3fa7f351@w520.home>
+References: <1500511611-2019-1-git-send-email-fkan@apm.com>
+ <20170720162255.36e015f1@ul30vt.home> <CAL85gmBB=U_4jkChKwfZGPQR0zeoZ4=hg7e6HMnu-DS0u1-Wsg@mail.gmail.com>
+ <20170723200636.3fa7f351@w520.home>
+From: Feng Kan <fkan@apm.com>
+Date: Mon, 24 Jul 2017 10:33:25 -0700
+Message-ID: <CAL85gmDZtLPqc3bmGA0s00Jb=180FfN4vvibdROyrJ05JYjcOg@mail.gmail.com>
+Subject: Re: [PATCH V2] pci: quirk: Apply APM ACS quirk to XGene devices
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gTW9uZGF5LCBKdWx5IDE3LCAyMDE3IDU6MjggQU0sIEpvYW8gUGludG8gd3JvdGU6Cj4gCj4g
-SGksCj4gCj4gw4BzIDExOjM1IEFNIGRlIDcvMTMvMjAxNywgSmlzaGVuZyBaaGFuZyBlc2NyZXZl
-dToKPiA+IFRoZSBBVFUgQ1RSTDIgcmVnaXN0ZXIgaXMgMzIgYml0LCBiZXNpZGVzIHRoZSBlbmFi
-bGUgYml0LCBvdGhlciBiaXRzCj4gPiBtYXkgYWxzbyBiZSBzZXQuIFRvIGNoZWNrIHdoZXRoZXIg
-dGhlIEFUVSBpcyBlbmFibGVkIG9yIG5vdCwgd2Ugc2hvdWxkCj4gPiB0ZXN0IHRoZSBlbmFibGUg
-aXQuCgpUbyBKaXNoZW5nIFpoYW5nLAoKdHlwbyBzL2l0L2JpdAoKInRlc3QgdGhlIGVuYWJsZSBp
-dC4iICAtLS0+ICJ0ZXN0IHRoZSBlbmFibGUgYml0LiIKCgpQbGVhc2UgZml4IHRoaXMgdHlwbywg
-YW5kIHNlbmQgaXQgYWdhaW4uClR5cGUgaXMgY29uZnVzaW5nLgoKCkJlc3QgcmVnYXJkcywKSmlu
-Z29vIEhhbgoKCj4gPgo+ID4gU2lnbmVkLW9mZi1ieTogSmlzaGVuZyBaaGFuZyA8anN6aGFuZ0Bt
-YXJ2ZWxsLmNvbT4KPiA+IC0tLQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUu
-YyB8IDIgKy0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVsZXRpb24o
-LSkKPiA+Cj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5j
-IGIvZHJpdmVycy9wY2kvZHdjL3BjaWUtCj4gZGVzaWdud2FyZS5jCj4gPiBpbmRleCAwZTAzYWYy
-NzkyNTkuLjZiZjBiNDA5MDUwYSAxMDA2NDQKPiA+IC0tLSBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ll
-LWRlc2lnbndhcmUuYwo+ID4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5j
-Cj4gPiBAQCAtMTc3LDcgKzE3Nyw3IEBAIHZvaWQgZHdfcGNpZV9wcm9nX291dGJvdW5kX2F0dShz
-dHJ1Y3QgZHdfcGNpZSAqcGNpLAo+IGludCBpbmRleCwgaW50IHR5cGUsCj4gPiAgCSAqLwo+ID4g
-IAlmb3IgKHJldHJpZXMgPSAwOyByZXRyaWVzIDwgTElOS19XQUlUX01BWF9JQVRVX1JFVFJJRVM7
-IHJldHJpZXMrKykKPiB7Cj4gPiAgCQl2YWwgPSBkd19wY2llX3JlYWRsX2RiaShwY2ksIFBDSUVf
-QVRVX0NSMik7Cj4gPiAtCQlpZiAodmFsID09IFBDSUVfQVRVX0VOQUJMRSkKPiA+ICsJCWlmICh2
-YWwgJiBQQ0lFX0FUVV9FTkFCTEUpCj4gPiAgCQkJcmV0dXJuOwo+ID4KPiA+ICAJCXVzbGVlcF9y
-YW5nZShMSU5LX1dBSVRfSUFUVV9NSU4sIExJTktfV0FJVF9JQVRVX01BWCk7Cj4gPgo+IE1ha2Ug
-c2Vuc2UsIHR1cm4gaXQgbW9yZSBhY2N1cmF0ZS4gVGhhbmtzIQo+IAo+IEFja2VkLWJ5OiBKb2Fv
-IFBpbnRvIDxqcGludG9Ac3lub3BzeXMuY29tPgoKCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4
-LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9y
-Zy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Sun, Jul 23, 2017 at 7:06 PM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Fri, 21 Jul 2017 13:20:18 -0700
+> Feng Kan <fkan@apm.com> wrote:
+>
+>> On Thu, Jul 20, 2017 at 3:22 PM, Alex Williamson
+>> <alex.williamson@redhat.com> wrote:
+>> > On Wed, 19 Jul 2017 17:46:51 -0700
+>> > Feng Kan <fkan@apm.com> wrote:
+>> >
+>> >> The APM X-Gene PCIe root port does not support ACS at this point.
+>> >> However, the hw provides isolation and source validation through
+>> >> the SMMU. Turn on ACS but disable all the peer to peer features.
+>> >>
+>> >> Signed-off-by: Feng Kan <fkan@apm.com>
+>> >> ---
+>> >>  drivers/pci/quirks.c | 15 +++++++++++++++
+>> >>  1 file changed, 15 insertions(+)
+>> >>
+>> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> >> index 085fb78..0f8f1cd 100644
+>> >> --- a/drivers/pci/quirks.c
+>> >> +++ b/drivers/pci/quirks.c
+>> >> @@ -4120,6 +4120,19 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+>> >>       return acs_flags ? 0 : 1;
+>> >>  }
+>> >>
+>> >> +static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+>> >> +{
+>> >> +     /*
+>> >> +      * XGene root matching this quirk do not allow peer-to-peer
+>> >> +      * transactions with others, allowing masking out these bits as if they
+>> >> +      * were unimplemented in the ACS capability.
+>> >> +      */
+>> >> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+>> >> +                    PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+>> >> +
+>> >> +     return acs_flags ? 0 : 1;
+>> >> +}
+>> >> +
+>> >>  /*
+>> >>   * Many Intel PCH root ports do provide ACS-like features to disable peer
+>> >>   * transactions and validate bus numbers in requests, but do not provide an
+>> >> @@ -4368,6 +4381,8 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
+>> >>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+>> >>       /* Cavium ThunderX */
+>> >>       { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+>> >> +     /* APM XGene */
+>> >> +     { PCI_VENDOR_ID_AMCC, 0xE004, pci_quirk_xgene_acs },
+>> >>       { 0 }
+>> >>  };
+>> >>
+>> >
+>> > Sorry, I'm not yet convinced there's an equivalent of SV, if a device
+>> > spoofs a different bdf and it reaches the smmu, what prevents that from
+>> > simply referencing the context for that alternate bdf?
+>> Perhaps I am not understanding the question correctly. The bdf forms a
+>> stream id which is used to provide an context. Since there is no actual
+>> context created by an alternate bdf, the transaction would be rejected
+>> by the SMMU.
+>
+> Unless that context does exist.  Take for example a basic topology:
+>
+> -[0000:00]-+-00.0
+>            +-01.0-[01]----00.0
+>            +-02.0-[02]----00.0
+>
+> Assume 00:01.0 and 00:02.0 are root ports and 01:00.0 and 02:00.0 are
+> their respective downstream endpoint.  A single iommu would typically
+> handle both of these endpoints using the requester ID, aka stream ID, to
+> reference the appropriate context.  Source validation at the root port
+> makes sure that any forwarded transaction has a requester ID that falls
+> between the secondary and subordinate bus number range of the root
+> port.  For instance, if device 01:00.0 was able to generate a
+> transaction with a requester ID of 02:00.0, source validation at the
+> root port would generate an ACS violation.  If the root port does not
+> support source validation, the transaction might successfully reference
+> the iommu context for the other endpoint.  Therefore I don't understand
+> what property of the SMMU is able to prevent this spoofing technique if
+> the root port provides no protection on its own.  Thanks,
+Yes, you are right. I left out some details to our implementation. Our
+implementation
+of the stream ID is not just the BDF. The stream ID also contains a
+port ID at the
+upper bits to indicate the difference between the PCIe ports. The scenario you
+explained up above should not happen.
+>
+> Alex
