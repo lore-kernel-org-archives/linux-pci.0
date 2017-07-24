@@ -1,80 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:1415 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750896AbdGEP47 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Jul 2017 11:56:59 -0400
-Date: Wed, 5 Jul 2017 12:03:35 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Wei Zhang <wzhang@fb.com>, linux-block@vger.kernel.org,
-        kernel-team@fb.com, linux-nvme@lits.infradead.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] nvme: remove pci device if no longer present
-Message-ID: <20170705160335.GA22200@localhost.localdomain>
-References: <20170630235604.880695-1-wzhang@fb.com>
- <20170702153151.GA12387@infradead.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:38149 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753400AbdGXRTR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 13:19:17 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170702153151.GA12387@infradead.org>
+In-Reply-To: <20170724104505.74c67861@w520.home>
+References: <20170720214101.7449-1-roland@kernel.org> <20170720161554.45ce1673@ul30vt.home>
+ <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com> <20170724104505.74c67861@w520.home>
+From: Roland Dreier <roland.dreier@gmail.com>
+Date: Mon, 24 Jul 2017 10:18:56 -0700
+Message-ID: <CAG4TOxNufQHj0nNwzw_yDMQfp+cAQuiQgEJg6KNX2ebiJDUuUw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 02, 2017 at 08:31:51AM -0700, Christoph Hellwig wrote:
-> Please CC the linux-nvme list on any nvme issues.  Also this
-> code is getting a little too fancy for living in nvme, I think we
-> need to move it into the PCI core, ensure we properly take drv->lock
-> to synchronize it, and check for dev->drv instead of the private data
-> which is a guestimate.
+> I think that the device implementing ACS and not implementing certain
+> features that are "must be implemented if..." is a positive indication
+> that the device does not have that behavior and therefore the ability
+> to control that behavior is unnecessary.  pci_acs_flags_enabled() is
+> coded with this intention:
+>
+> static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+> {
+>         int pos;
+>         u16 cap, ctrl;
+>
+>         pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+>         if (!pos)
+>                 return false;
+>
+>         /*
+>          * Except for egress control, capabilities are either required
+>          * or only required if controllable.  Features missing from the
+>          * capability field can therefore be assumed as hard-wired enabled.
+>          */
+>         pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
+>         acs_flags &= (cap | PCI_ACS_EC);
+>
+> <Remove any requested ACS flags which are not implemented, except EC>
+>
+>         pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+>         return (ctrl & acs_flags) == acs_flags;
+>
+> <Compare what remains>
 
-I agree this sort of thing needs to go in the PCI layer to as common
-solution for all devices. The NVMe driver shouldn't be responsible for bus
-enumeration events. When we did that before, races with pciehp were a
-problem.
+I'm not sure it makes sense to look for the EC bit in the control register if
+the capability bit says it is not supported.  In fact I think it would
+violate the PCI spec to set the bit in the control register if it is zero in the
+capability register - the spec says:
 
-Also, we don't have a once-per-second health check event that would have
-been needed to even catch this event in the first place. To get here now,
-you'll have to issue an nvme reset or wait 60 seconds after sending an
-admin or IO command.
- 
-> On Fri, Jun 30, 2017 at 04:56:04PM -0700, Wei Zhang wrote:
-> > This patch removes the PCI device from the kernel's topology tree
-> > if the device is no longer present.
-> > 
-> > Commit ddf097ec1d44c9648c4738d7cf2819411b44253a (NVMe: Unbind driver on
-> > failure) left the PCI device in the kernel's topology upon device failure.
-> > However, this does not work well for the slot power off/on test cases.
-> > After a slot power off, we need to manually remove the PCI device
-> > before triggering the rescan, in order for the SSD to be rediscovered.
-> > 
-> > Fixes: ddf097ec1d44c9648c4738d7cf2819411b44253a
-> > Signed-off-by: Wei Zhang <wzhang@fb.com>
-> > Reviewed-by: Jens Axboe <axboe@fb.com>
-> > ---
-> >  drivers/nvme/host/pci.c | 15 +++++++++++++--
-> >  1 file changed, 13 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-> > index 32a98e2..094b22f 100644
-> > --- a/drivers/nvme/host/pci.c
-> > +++ b/drivers/nvme/host/pci.c
-> > @@ -2174,8 +2174,19 @@ static void nvme_remove_dead_ctrl_work(struct work_struct *work)
-> >  	struct pci_dev *pdev = to_pci_dev(dev->dev);
-> >  
-> >  	nvme_kill_queues(&dev->ctrl);
-> > -	if (pci_get_drvdata(pdev))
-> > -		device_release_driver(&pdev->dev);
-> > +
-> > +	/*
-> > +	 * Remove the PCI device from the topology tree if the device is no longer
-> > +	 * present.  Without removing, slot power off/on test cannot re-discover
-> > +	 * the SSD.
-> > +	 */
-> > +	if (pci_get_drvdata(pdev)) {
-> > +		if (!pci_device_is_present(pdev)) {
-> > +			pci_stop_and_remove_bus_device_locked(pdev);
-> > +		} else {
-> > +			device_release_driver(&pdev->dev);
-> > +		}
-> > +	}
-> >  	nvme_put_ctrl(&dev->ctrl);
-> >  }
+  Default value of this bit is 0b. Must be hardwired to 0b if the ACS P2P
+  Egress Control functionality is not implemented.
+
+I don't understand the reasoning behind forcing the EC bit in commit
+83db7e0bdb70.
+
+I think the only reason this works is that nowhere in the kernel uses
+this function to check PCI_ACS_EC.
+
+> At least that's my interpretation and how I've indicated to folks at
+> Intel how things should work for a device that does not support p2p.
+> Of course this all hinges on having an ACS capability.  Without an ACS
+> capability we must assume any sort of p2p is possible unless we have a
+> quirk to tell us otherwise.  With ACS, the absence of capabilities is a
+> positive indication that those forms of p2p are not possible (depending
+> on the spec wording for that capability).  If the code doesn't behave
+> that way, let's fix it. Thanks,
+
+Thanks - I'm looking more closely at what goes wrong with X550, since
+from reading the code it looks like it should work, but people have observed
+that it doesn't on our system.  However the issue might be elsewhere.
+
+However I'll send a patch removing that "| PCI_ACS_EC" from the check if
+you agree - maybe I'm misunderstanding the logic but I don't see how it
+could work if it ever became relevant.
+
+ - R.
