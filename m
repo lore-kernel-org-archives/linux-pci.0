@@ -1,353 +1,197 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>,
-        smuthayy <smuthayy@codeaurora.org>
-Subject: [PATCH v3 8/8] PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-Date: Thu, 20 Jul 2017 11:04:40 +0530
-Message-Id: <1500528880-25804-9-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
-References: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 24 Jul 2017 15:26:52 -0500
+From: Rob Herring <robh@kernel.org>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH 5/5] dt-bindings: PCI: add support for new generation
+ controller
+Message-ID: <20170724202652.4ofxdafajnhgm7wg@rob-hp-laptop>
+References: <cover.1500601172.git.honghui.zhang@mediatek.com>
+ <3b449a88bd2f57ee005674d0161192ee01167e5a.1500601172.git.honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+In-Reply-To: <3b449a88bd2f57ee005674d0161192ee01167e5a.1500601172.git.honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ robh@kerenl.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
+ bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
-Gen 1/2, one lane, two PCIe root complex with support for MSI and
-legacy interrupts, and it conforms to PCI Express Base 2.1
-specification.
+On Fri, Jul 21, 2017 at 10:34:49AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Ryder Lee <ryder.lee@mediatek.com>
+> 
+> Add support for MediaTek new generation controller and update related
+> properities.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  .../devicetree/bindings/pci/mediatek-pcie.txt      | 84 ++++++++++++++++++++--
+>  1 file changed, 79 insertions(+), 5 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> index 294f4a3..a1f3767 100644
+> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> @@ -4,17 +4,27 @@ Required properties:
+>  - compatible: Should contain one of the following string:
+>  	"mediatek,mt7623-pcie"
+>  	"mediatek,mt2701-pcie"
+> +	"mediatek,generic-pcie-v2"
 
-The core init is the similar to the existing SoC, however the
-clocks and reset lines differ.
+No, please use SoC specific compatible strings.
 
-Signed-off-by: smuthayy <smuthayy@codeaurora.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- drivers/pci/dwc/pcie-qcom.c | 264 +++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 259 insertions(+), 5 deletions(-)
+>  - device_type: Must be "pci"
+> -- reg: Base addresses and lengths of the PCIe controller.
+> +- reg: Base addresses and lengths of the PICe subsys and root ports.
+> +- reg-names: Names of the above areas to use during resource look-up.
+>  - #address-cells: Address representation for root ports (must be 3)
+>  - #size-cells: Size representation for root ports (must be 2)
+>  - clocks: Must contain an entry for each entry in clock-names.
+>    See ../clocks/clock-bindings.txt for details.
+>  - clock-names: Must include the following entries:
+>    - free_ck :for reference clock of PCIe subsys
+> -  - sys_ck0 :for clock of Port0
+> -  - sys_ck1 :for clock of Port1
+> -  - sys_ck2 :for clock of Port2
+> +  - sys_ckN :transaction layer and data link layer clock
+> +  The "sys_ck" might be divided into the following parts in some v2 chips:
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 98c74d7..b2ea953 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -37,6 +37,20 @@
- #include "pcie-designware.h"
- 
- #define PCIE20_PARF_SYS_CTRL			0x00
-+#define MST_WAKEUP_EN				BIT(13)
-+#define SLV_WAKEUP_EN				BIT(12)
-+#define MSTR_ACLK_CGC_DIS			BIT(10)
-+#define SLV_ACLK_CGC_DIS			BIT(9)
-+#define CORE_CLK_CGC_DIS			BIT(6)
-+#define AUX_PWR_DET				BIT(4)
-+#define L23_CLK_RMV_DIS				BIT(2)
-+#define L1_CLK_RMV_DIS				BIT(1)
-+
-+#define PCIE20_COMMAND_STATUS			0x04
-+#define CMD_BME_VAL				0x4
-+#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
-+#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
-+
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PCIE20_PARF_PHY_REFCLK			0x4C
- #define PCIE20_PARF_DBI_BASE_ADDR		0x168
-@@ -58,9 +72,22 @@
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
- #define PCIE20_CAP				0x70
-+#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xC)
-+#define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
-+#define PCIE_CAP_LINK1_VAL			0x2fd7f
-+
-+#define PCIE20_PARF_Q2A_FLUSH			0x1AC
-+
-+#define PCIE20_MISC_CONTROL_1_REG		0x8BC
-+#define DBI_RO_WR_EN				1
- 
- #define PERST_DELAY_US				1000
- 
-+#define AXI_CLK_RATE				200000000
-+
-+#define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
-+#define SLV_ADDR_SPACE_SZ                       0x10000000
-+
- struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
- 	struct clk *core_clk;
-@@ -110,11 +137,21 @@ struct qcom_pcie_resources_2_4_0 {
- 	struct reset_control *phy_ahb_reset;
- };
- 
-+struct qcom_pcie_resources_2_3_3 {
-+	struct clk *iface;
-+	struct clk *axi_m_clk;
-+	struct clk *axi_s_clk;
-+	struct clk *ahb_clk;
-+	struct clk *aux_clk;
-+	struct reset_control *rst[7];
-+};
-+
- union qcom_pcie_resources {
- 	struct qcom_pcie_resources_1_0_0 v1_0_0;
- 	struct qcom_pcie_resources_2_1_0 v2_1_0;
- 	struct qcom_pcie_resources_2_3_2 v2_3_2;
- 	struct qcom_pcie_resources_2_4_0 v2_4_0;
-+	struct qcom_pcie_resources_2_3_3 v2_3_3;
- };
- 
- struct qcom_pcie;
-@@ -884,6 +921,206 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
- 	return ret;
- }
- 
-+static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int i;
-+	const char *rst_names[] = {
-+					"axi_m", "axi_s", "pipe",
-+					"axi_m_sticky", "sticky",
-+					"ahb", "sleep",
-+				};
-+
-+	res->iface = devm_clk_get(dev, "iface");
-+	if (IS_ERR(res->iface))
-+		return PTR_ERR(res->iface);
-+
-+	res->axi_m_clk = devm_clk_get(dev, "axi_m");
-+	if (IS_ERR(res->axi_m_clk))
-+		return PTR_ERR(res->axi_m_clk);
-+
-+	res->axi_s_clk = devm_clk_get(dev, "axi_s");
-+	if (IS_ERR(res->axi_s_clk))
-+		return PTR_ERR(res->axi_s_clk);
-+
-+	res->ahb_clk = devm_clk_get(dev, "ahb");
-+	if (IS_ERR(res->ahb_clk))
-+		return PTR_ERR(res->ahb_clk);
-+
-+	res->aux_clk = devm_clk_get(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	for (i = 0; i < ARRAY_SIZE(rst_names); i++) {
-+		res->rst[i] = devm_reset_control_get(dev, rst_names[i]);
-+		if (IS_ERR(res->rst[i]))
-+			return PTR_ERR(res->rst[i]);
-+	}
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+
-+	clk_disable_unprepare(res->iface);
-+	clk_disable_unprepare(res->axi_m_clk);
-+	clk_disable_unprepare(res->axi_s_clk);
-+	clk_disable_unprepare(res->ahb_clk);
-+	clk_disable_unprepare(res->aux_clk);
-+}
-+
-+static int qcom_pcie_enable_resources_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int ret;
-+
-+	ret = clk_prepare_enable(res->iface);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		return ret;
-+	}
-+
-+	ret = clk_prepare_enable(res->axi_m_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_axi_m;
-+	}
-+
-+	ret = clk_set_rate(res->axi_m_clk, AXI_CLK_RATE);
-+	if (ret) {
-+		dev_err(dev, "MClk rate set failed (%d)\n", ret);
-+		goto err_clk_axi_m;
-+	}
-+
-+	ret = clk_prepare_enable(res->axi_s_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable axi slave clock\n");
-+		goto err_clk_axi_s;
-+	}
-+
-+	ret = clk_set_rate(res->axi_s_clk, AXI_CLK_RATE);
-+	if (ret) {
-+		dev_err(dev, "MClk rate set failed (%d)\n", ret);
-+		goto err_clk_axi_s;
-+	}
-+
-+	ret = clk_prepare_enable(res->ahb_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable ahb clock\n");
-+		goto err_clk_ahb;
-+	}
-+
-+	ret = clk_prepare_enable(res->aux_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable aux clock\n");
-+		goto err_clk_aux;
-+	}
-+
-+	udelay(1);
-+
-+	return 0;
-+
-+err_clk_aux:
-+	clk_disable_unprepare(res->ahb_clk);
-+err_clk_ahb:
-+	clk_disable_unprepare(res->axi_s_clk);
-+err_clk_axi_s:
-+	clk_disable_unprepare(res->axi_m_clk);
-+err_clk_axi_m:
-+	clk_disable_unprepare(res->iface);
-+
-+	return ret;
-+}
-+
-+static int qcom_pcie_2_3_3_reset(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	int i, ret;
-+
-+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
-+		ret = reset_control_assert(res->rst[i]);
-+		if (ret) {
-+			dev_err(pcie->pci->dev,
-+				"%s: reset assert failed for %d\n",
-+				__func__, i);
-+			return ret;
-+		}
-+	}
-+
-+	msleep(20);
-+
-+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
-+		ret = reset_control_deassert(res->rst[i]);
-+		if (ret) {
-+			dev_err(pcie->pci->dev,
-+				"%s: reset deassert failed for %d\n",
-+				__func__, i);
-+			return ret;
-+		}
-+	}
-+
-+	msleep(20);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct dw_pcie *pci = pcie->pci;
-+	int ret;
-+	u32 val;
-+
-+	ret = qcom_pcie_2_3_3_reset(pcie);
-+	if (ret)
-+		return ret;
-+
-+	qcom_ep_reset_assert(pcie);
-+
-+	ret = qcom_pcie_enable_resources_2_3_3(pcie);
-+	if (ret)
-+		return ret;
-+
-+	writel(SLV_ADDR_SPACE_SZ, pcie->parf +
-+					PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
-+
-+	ret = phy_power_on(pcie->phy);
-+	if (ret) {
-+		pcie->ops->deinit(pcie);
-+		return ret;
-+	}
-+
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+
-+	writel(MST_WAKEUP_EN | SLV_WAKEUP_EN | MSTR_ACLK_CGC_DIS
-+		| SLV_ACLK_CGC_DIS | CORE_CLK_CGC_DIS |
-+		AUX_PWR_DET | L23_CLK_RMV_DIS | L1_CLK_RMV_DIS,
-+		pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
-+
-+	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
-+	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
-+	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
-+
-+	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+	val &= ~(BIT(10) | BIT(11));
-+	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+
-+	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
-+		PCIE20_DEVICE_CONTROL2_STATUS2);
-+
-+	return 0;
-+}
-+
- static int qcom_pcie_link_up(struct dw_pcie *pci)
- {
- 	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
-@@ -985,6 +1222,13 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- };
- 
-+static const struct qcom_pcie_ops ops_2_3_3 = {
-+	.get_resources = qcom_pcie_get_resources_2_3_3,
-+	.init = qcom_pcie_init_2_3_3,
-+	.deinit = qcom_pcie_deinit_2_3_3,
-+	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
-+};
-+
- static int qcom_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -1070,12 +1314,22 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	return 0;
- }
- 
-+/*
-+ * Declare one of_device_id entry
-+ * c - Compatible string
-+ * d - Associated data
-+ * w - SoC wrapper version (ignored)
-+ * s - Synopsys core version (ignored)
-+ */
-+#define QCOM_DECL(c, d, w, s) { .compatible = c, .data = &d }
-+
- static const struct of_device_id qcom_pcie_match[] = {
--	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
--	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
--	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
--	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
-+	QCOM_DECL("qcom,pcie-apq8084", ops_1_0_0, 1.0.0, 4.11a),
-+	QCOM_DECL("qcom,pcie-ipq8064", ops_2_1_0, 2.1.0, 4.01a),
-+	QCOM_DECL("qcom,pcie-apq8064", ops_2_1_0, 2.1.0, 4.01a),
-+	QCOM_DECL("qcom,pcie-msm8996", ops_2_3_2, 2.3.2, 4.21a),
-+	QCOM_DECL("qcom,pcie-ipq4019", ops_2_4_0, 2.4.0, 4.20a),
-+	QCOM_DECL("qcom,pcie-ipq8074", ops_2_3_3, 2.3.3, 4.30a),
- 	{ }
- };
- 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Please be specific about what clocks apply to which compatible. Each 
+valid combination of clocks should correspond to at least one 
+compatible.
+
+> +    - ahb_ckN :AHB slave interface operating clock for CSR access and RC
+> +	       initiated MMIO access
+> +    - axi_ckN :application layer MMIO channel operating clock
+> +    - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
+> +	       pcie_mac_ck/pcie_pipe_ck is turned off
+> +    - obff_ckN :OBFF functional block operating clock
+> +    - pipe_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
+> +		pcie_mac_ck/pcie_pipe_ck is turned off
+> +  where N starting from 0 to the maximum number of root ports.
+>  - phys: List of PHY specifiers (used by generic PHY framework).
+>  - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+>    number of PHYs as specified in *phys* property.
+> @@ -33,6 +43,9 @@ Required properties for MT7623/MT2701:
+>  - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
+>    number of root ports.
+>  
+> +Required properties for mediatek generic-pcie-v2:
+> +-interrupts: A list of interrupt outputs of the controller.
+> +
+
+How mnay interrupts? Not sure why you moved this in the previous patch 
+if all versions have some interrupts.
+
+>  In addition, the device tree node must have sub-nodes describing each
+>  PCIe port interface, having the following mandatory properties:
+>  
+> @@ -50,7 +63,7 @@ Required properties:
+>    property is sufficient.
+>  - num-lanes: Number of lanes to use for this port.
+>  
+> -Examples:
+> +Examples for mt7623:
+>  
+>  	hifsys: syscon@1a000000 {
+>  		compatible = "mediatek,mt7623-hifsys",
+> @@ -68,6 +81,7 @@ Examples:
+>  		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
+>  		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
+>  		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
+> +		reg-names = "subsys", "port0", "port1", "port2";
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		#interrupt-cells = <1>;
+> @@ -127,3 +141,63 @@ Examples:
+>  			num-lanes = <1>;
+>  		};
+>  	};
+> +
+> +Examples for mt2712:
+> +	pcie: pcie@0x11700000 {
+
+Drop the '0x'.
+
+> +		compatible = "mediatek,generic-pcie-v2";
+> +		device_type = "pci";
+> +		reg = <0 0x11700000 0 0x1000>,
+> +		      <0 0x112FF000 0 0x1000>;
+> +		reg-names = "port0", "port1";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
+> +			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&pericfg CLK_PERI_PCIE0>,
+> +			 <&pericfg CLK_PERI_PCIE1>,
+> +			 <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
+> +			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>;
+> +		clock-names = "sys_ck0", "sys_ck1", "ahb0", "ahb1";
+> +		bus-range = <0x00 0xff>;
+> +		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
+> +
+> +		pcie0: pcie@0,0 {
+> +			device_type = "pci";
+> +			reg = <0x0000 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
+> +					<0 0 0 2 &pcie_intc0 1>,
+> +					<0 0 0 3 &pcie_intc0 2>,
+> +					<0 0 0 4 &pcie_intc0 3>;
+> +			pcie_intc0: interrupt-controller {
+> +				interrupt-controller;
+> +				#address-cells = <0>;
+> +				#interrupt-cells = <1>;
+> +			};
+> +		};
+> +
+> +		pcie1: pcie@1,0 {
+> +			device_type = "pci";
+> +			reg = <0x0800 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+> +					<0 0 0 2 &pcie_intc1 1>,
+> +					<0 0 0 3 &pcie_intc1 2>,
+> +					<0 0 0 4 &pcie_intc1 3>;
+> +			pcie_intc1: interrupt-controller {
+> +				interrupt-controller;
+> +				#address-cells = <0>;
+> +				#interrupt-cells = <1>;
+> +			};
+> +		};
+> +	};
+> -- 
+> 2.6.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
