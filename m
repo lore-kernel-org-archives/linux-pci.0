@@ -1,56 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36113 "EHLO ale.deltatee.com"
+Received: from mx1.redhat.com ([209.132.183.28]:35900 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751499AbdGRQE0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Jul 2017 12:04:26 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 18 Jul 2017 10:04:09 -0600
-Message-Id: <20170718160409.6493-17-logang@deltatee.com>
-In-Reply-To: <20170718160409.6493-1-logang@deltatee.com>
-References: <20170718160409.6493-1-logang@deltatee.com>
-Subject: [PATCH v2 16/16] switchtec_ntb: update switchtec documentation with notes for NTB
+        id S1754238AbdGXTCB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Jul 2017 15:02:01 -0400
+Date: Mon, 24 Jul 2017 13:01:59 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Roland Dreier <roland.dreier@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>
+Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+Message-ID: <20170724130159.309379e8@w520.home>
+In-Reply-To: <CAG4TOxNufQHj0nNwzw_yDMQfp+cAQuiQgEJg6KNX2ebiJDUuUw@mail.gmail.com>
+References: <20170720214101.7449-1-roland@kernel.org>
+        <20170720161554.45ce1673@ul30vt.home>
+        <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com>
+        <20170724104505.74c67861@w520.home>
+        <CAG4TOxNufQHj0nNwzw_yDMQfp+cAQuiQgEJg6KNX2ebiJDUuUw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The switchtec_ntb driver has a couple requirements on the switchec's
-hardware configuration so we add these notes to the documentation.
+On Mon, 24 Jul 2017 10:18:56 -0700
+Roland Dreier <roland.dreier@gmail.com> wrote:
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- Documentation/switchtec.txt | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+> > I think that the device implementing ACS and not implementing certain
+> > features that are "must be implemented if..." is a positive indication
+> > that the device does not have that behavior and therefore the ability
+> > to control that behavior is unnecessary.  pci_acs_flags_enabled() is
+> > coded with this intention:
+> >
+> > static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+> > {
+> >         int pos;
+> >         u16 cap, ctrl;
+> >
+> >         pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+> >         if (!pos)
+> >                 return false;
+> >
+> >         /*
+> >          * Except for egress control, capabilities are either required
+> >          * or only required if controllable.  Features missing from the
+> >          * capability field can therefore be assumed as hard-wired enabled.
+> >          */
+> >         pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
+> >         acs_flags &= (cap | PCI_ACS_EC);
+> >
+> > <Remove any requested ACS flags which are not implemented, except EC>
+> >
+> >         pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+> >         return (ctrl & acs_flags) == acs_flags;
+> >
+> > <Compare what remains>  
+> 
+> I'm not sure it makes sense to look for the EC bit in the control register if
+> the capability bit says it is not supported.  In fact I think it would
+> violate the PCI spec to set the bit in the control register if it is zero in the
+> capability register - the spec says:
+> 
+>   Default value of this bit is 0b. Must be hardwired to 0b if the ACS P2P
+>   Egress Control functionality is not implemented.
+> 
+> I don't understand the reasoning behind forcing the EC bit in commit
+> 83db7e0bdb70.
+> 
+> I think the only reason this works is that nowhere in the kernel uses
+> this function to check PCI_ACS_EC.
 
-diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
-index a0a9c7b3d4d5..978a346e1fb3 100644
---- a/Documentation/switchtec.txt
-+++ b/Documentation/switchtec.txt
-@@ -78,3 +78,15 @@ The following IOCTLs are also supported by the device:
-   between PCI Function Framework number (used by the event system)
-   and Switchtec Logic Port ID and Partition number (which is more
-   user friendly).
-+
-+
-+Non-Transparent Bridge (NTB) Driver
-+===================================
-+
-+An NTB driver is provided for the switchtec hardware in switchec_ntb.
-+Currently, it only supports switches configured with exactly 2
-+partitions. It also requires the following configuration settings:
-+
-+* Both partitions must be able to access each other's GAS spaces.
-+  Thus, the bits in the GAS Access Vector under Management Settings
-+  must be set to support this.
--- 
-2.11.0
+Is there a misunderstanding of the code flow here?  We're never setting
+EC.  In the first code block we're just masking out requested
+capabilities where unimplemented capabilities is the same as
+implemented + enabled.  We're not adding EC to the request, we're
+just not removing it based on the implemented capabilities because we
+don't interpret it the same way.  Thus if someone wants to test a
+device for EC, it really needs to implement EC, we cannot assume it
+based on lack of support for EC in the ACS capability.  As you point
+out, nobody really cares about EC yet though.
+
+> > At least that's my interpretation and how I've indicated to folks at
+> > Intel how things should work for a device that does not support p2p.
+> > Of course this all hinges on having an ACS capability.  Without an ACS
+> > capability we must assume any sort of p2p is possible unless we have a
+> > quirk to tell us otherwise.  With ACS, the absence of capabilities is a
+> > positive indication that those forms of p2p are not possible (depending
+> > on the spec wording for that capability).  If the code doesn't behave
+> > that way, let's fix it. Thanks,  
+> 
+> Thanks - I'm looking more closely at what goes wrong with X550, since
+> from reading the code it looks like it should work, but people have observed
+> that it doesn't on our system.  However the issue might be elsewhere.
+> 
+> However I'll send a patch removing that "| PCI_ACS_EC" from the check if
+> you agree - maybe I'm misunderstanding the logic but I don't see how it
+> could work if it ever became relevant.
+
+I don't yet see anything wrong with the EC handling, but please explain
+further if I'm just being dense.  Thanks,
+
+Alex
