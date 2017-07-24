@@ -1,42 +1,44 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:34591 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751402AbdGRONA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 10:13:00 -0400
-Received: by mail-lf0-f68.google.com with SMTP id p11so1952110lfd.1
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 07:12:59 -0700 (PDT)
-From: Aleksandr Bezzubikov <zuban32s@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, marcel@redhat.com,
-        Aleksandr Bezzubikov <zuban32s@gmail.com>
-Subject: [PATCH] pci: shpchp: set the bridge busmaster if MSI are enabled
-Date: Tue, 18 Jul 2017 17:12:25 +0300
-Message-Id: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:37003 "EHLO
+        bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbdGXAju (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 23 Jul 2017 20:39:50 -0400
+From: Guenter Roeck <linux@roeck-us.net>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Michal Simek <michal.simek@xilinx.com>,
+        =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Paul Burton <paul.burton@imgtec.com>,
+        James Hogan <james.hogan@imgtec.com>
+Subject: [PATCH] PCI: xilinx: Remove platform/architecture restrictions
+Date: Sun, 23 Jul 2017 17:39:37 -0700
+Message-Id: <1500856777-23383-1-git-send-email-linux@roeck-us.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-An MSI-based SHPC built in PCI bridges can configure hotplugged devices
-only if they notify the bridge with MSI.
-But they can't trigger interrupt without the bridge being busmaster,
-that's why it should be enabled.
+The MIPS Boston board configuration tries to enable CONFIG_PCIE_XILINX.
+That doesn't work since PCIE_XILINX depends on ARCH_ZYNQ || MICROBLAZE.
+Remove that restriction.
 
-Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
+Cc: Paul Burton <paul.burton@imgtec.com>
+Cc: James Hogan <james.hogan@imgtec.com>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
 ---
- drivers/pci/hotplug/shpchp_hpc.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/host/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-index de0ea47..e5824c7 100644
---- a/drivers/pci/hotplug/shpchp_hpc.c
-+++ b/drivers/pci/hotplug/shpchp_hpc.c
-@@ -1062,6 +1062,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
- 		if (rc) {
- 			ctrl_info(ctrl, "Can't get msi for the hotplug controller\n");
- 			ctrl_info(ctrl, "Use INTx for the hotplug controller\n");
-+		} else {
-+			pci_set_master(pdev);
- 		}
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 89d61c2cbfaa..ed905a5401c3 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -71,7 +71,6 @@ config PCI_HOST_GENERIC
  
- 		rc = request_irq(ctrl->pci_dev->irq, shpc_isr, IRQF_SHARED,
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ || MICROBLAZE
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
 -- 
 2.7.4
