@@ -1,114 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 054/102] PCI: rockchip: explicitly request exclusive reset
- control
-To: Philipp Zabel <p.zabel@pengutronix.de>
-References: <20170719152646.25903-1-p.zabel@pengutronix.de>
- <20170719152646.25903-55-p.zabel@pengutronix.de>
-Cc: linux-kernel@vger.kernel.org, shawn.lin@rock-chips.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <f4a8b573-7a5f-ff8a-65c3-f6b907e6a10a@rock-chips.com>
-Date: Sat, 22 Jul 2017 21:12:27 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59150 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755455AbdGXQpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Jul 2017 12:45:08 -0400
+Date: Mon, 24 Jul 2017 10:45:05 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Roland Dreier <roland.dreier@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        Emil Tantilov <emil.s.tantilov@intel.com>
+Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+Message-ID: <20170724104505.74c67861@w520.home>
+In-Reply-To: <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com>
+References: <20170720214101.7449-1-roland@kernel.org>
+        <20170720161554.45ce1673@ul30vt.home>
+        <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170719152646.25903-55-p.zabel@pengutronix.de>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Philipp,
+On Thu, 20 Jul 2017 15:53:04 -0700
+Roland Dreier <roland.dreier@gmail.com> wrote:
 
-On 2017/7/19 23:25, Philipp Zabel wrote:
-> Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
-> reset lines") started to transition the reset control request API calls
-> to explicitly state whether the driver needs exclusive or shared reset
-> control behavior. Convert all drivers requesting exclusive resets to the
-> explicit API call so the temporary transition helpers can be removed.
->
-> No functional changes.
->
-> Cc: Shawn Lin <shawn.lin@rock-chips.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Heiko Stuebner <heiko@sntech.de>
-> Cc: linux-pci@vger.kernel.org
-> Cc: linux-rockchip@lists.infradead.org
-> Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
-> ---
->  drivers/pci/host/pcie-rockchip.c | 15 ++++++++-------
+> On Thu, Jul 20, 2017 at 3:15 PM, Alex Williamson
+> <alex.williamson@redhat.com> wrote:
+> 
+> > Most of the ACS capabilities are worded as "Must be implemented by
+> > devices that implement ..."  Shouldn't a hard-wired ACS capability
+> > sufficiently describe that, or is there something wrong with how
+> > they're hard wired?  
+> 
+> Interesting question.  I just looked at what the PCI spec says about
+> the various bits for ACS functions in multi-function devices.  Many of
+> the functions are "must not be implemented."  Of the ones that are
+> "must be implemented if..." the key is that the if is for devices that
+> support peer-to-peer traffic.
+> 
+> I think the Intel NICs are compliant with the spec - they don't
+> support any ACS mechanisms for controlling peer-to-peer traffic, but
+> they also don't implement peer-to-peer traffic.  This means that the
+> PCI standard way of knowing that it is safe to assign individual
+> functions does not prove it is safe - but with device-specific
+> knowledge we do know it is safe.  Hence a quirk to give that
+> device-specific information to the kernel.
 
-As mentioned in the thread of conversion for phy-rockchip-pcie,
-I would prefer add your patches after the reconstruction work got
-merged.
+I think that the device implementing ACS and not implementing certain
+features that are "must be implemented if..." is a positive indication
+that the device does not have that behavior and therefore the ability
+to control that behavior is unnecessary.  pci_acs_flags_enabled() is
+coded with this intention:
 
+static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+{
+        int pos;
+        u16 cap, ctrl;
 
->  1 file changed, 8 insertions(+), 7 deletions(-)
->
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 7bb9870f6d8ce..e50d6f5a81f4b 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -903,49 +903,50 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->  	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
->  		rockchip->link_gen = 2;
->
-> -	rockchip->core_rst = devm_reset_control_get(dev, "core");
-> +	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
->  	if (IS_ERR(rockchip->core_rst)) {
->  		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing core reset property in node\n");
->  		return PTR_ERR(rockchip->core_rst);
->  	}
->
-> -	rockchip->mgmt_rst = devm_reset_control_get(dev, "mgmt");
-> +	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
->  	if (IS_ERR(rockchip->mgmt_rst)) {
->  		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing mgmt reset property in node\n");
->  		return PTR_ERR(rockchip->mgmt_rst);
->  	}
->
-> -	rockchip->mgmt_sticky_rst = devm_reset_control_get(dev, "mgmt-sticky");
-> +	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
-> +								     "mgmt-sticky");
->  	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
->  		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing mgmt-sticky reset property in node\n");
->  		return PTR_ERR(rockchip->mgmt_sticky_rst);
->  	}
->
-> -	rockchip->pipe_rst = devm_reset_control_get(dev, "pipe");
-> +	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
->  	if (IS_ERR(rockchip->pipe_rst)) {
->  		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing pipe reset property in node\n");
->  		return PTR_ERR(rockchip->pipe_rst);
->  	}
->
-> -	rockchip->pm_rst = devm_reset_control_get(dev, "pm");
-> +	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
->  	if (IS_ERR(rockchip->pm_rst)) {
->  		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing pm reset property in node\n");
->  		return PTR_ERR(rockchip->pm_rst);
->  	}
->
-> -	rockchip->pclk_rst = devm_reset_control_get(dev, "pclk");
-> +	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
->  	if (IS_ERR(rockchip->pclk_rst)) {
->  		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing pclk reset property in node\n");
->  		return PTR_ERR(rockchip->pclk_rst);
->  	}
->
-> -	rockchip->aclk_rst = devm_reset_control_get(dev, "aclk");
-> +	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
->  	if (IS_ERR(rockchip->aclk_rst)) {
->  		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
->  			dev_err(dev, "missing aclk reset property in node\n");
->
+        pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
+        if (!pos)
+                return false;
 
+        /*
+         * Except for egress control, capabilities are either required
+         * or only required if controllable.  Features missing from the
+         * capability field can therefore be assumed as hard-wired enabled.
+         */
+        pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
+        acs_flags &= (cap | PCI_ACS_EC);
 
--- 
-Best Regards
-Shawn Lin
+<Remove any requested ACS flags which are not implemented, except EC>
+
+        pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
+        return (ctrl & acs_flags) == acs_flags;
+
+<Compare what remains>
+}
+
+For example, from the spec (rev 3.1a 6.12.1.2):
+
+  ACS P2P Request Redirect: must be implemented by Functions that
+  support peer-to-peer traffic with other Functions.
+
+<Therefore if this capability within ACS is not implemented, p2p is not
+supported.>
+
+  When ACS P2P Request Redirect is enabled in a multi-Function device,
+  peer-to-peer Requests (between Functions of the device) must be
+  redirected Upstream towards the RC.
+
+<If p2p is not supported, there's no need to control this, the behavior
+is the same is if p2p were supported and this control bit is enabled>
+
+At least that's my interpretation and how I've indicated to folks at
+Intel how things should work for a device that does not support p2p.
+Of course this all hinges on having an ACS capability.  Without an ACS
+capability we must assume any sort of p2p is possible unless we have a
+quirk to tell us otherwise.  With ACS, the absence of capabilities is a
+positive indication that those forms of p2p are not possible (depending
+on the spec wording for that capability).  If the code doesn't behave
+that way, let's fix it. Thanks,
+
+Alex
