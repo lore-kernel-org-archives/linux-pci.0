@@ -1,72 +1,128 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f44.google.com ([209.85.214.44]:34979 "EHLO
-        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932219AbdGKFUf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2017 01:20:35 -0400
-Received: by mail-it0-f44.google.com with SMTP id v202so53340974itb.0
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jul 2017 22:20:35 -0700 (PDT)
-Received: from mail-it0-f51.google.com (mail-it0-f51.google.com. [209.85.214.51])
-        by smtp.gmail.com with ESMTPSA id 136sm4142936iti.3.2017.07.10.22.20.33
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 10 Jul 2017 22:20:34 -0700 (PDT)
-Received: by mail-it0-f51.google.com with SMTP id v202so14303542itb.1
-        for <linux-pci@vger.kernel.org>; Mon, 10 Jul 2017 22:20:33 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Daniel Axtens <dja@axtens.net>
+To: Laszlo Ersek <lersek@redhat.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH 0/4] Allow non-legacy cards to be vgaarb default
+In-Reply-To: <a61222c6-e548-1e3b-f6f7-63952b90ac13@redhat.com>
+References: <20170719012839.20124-1-dja@axtens.net>
+ <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
+ <87pocusm2x.fsf@linkitivity.dja.id.au>
+ <CAKv+Gu-O7cyJSgDrqSNi6F_n9eBnFEgz==aqowMqhy+81YK=CQ@mail.gmail.com>
+ <87r2x6vj7t.fsf@linkitivity.dja.id.au>
+ <a61222c6-e548-1e3b-f6f7-63952b90ac13@redhat.com>
+Date: Wed, 26 Jul 2017 08:20:18 +1000
+Message-ID: <87lgncupjx.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
-In-Reply-To: <cea27b15-2c2d-a4a9-76f8-f4798c152101@ti.com>
-References: <1497601068-181656-1-git-send-email-shawn.lin@rock-chips.com> <cea27b15-2c2d-a4a9-76f8-f4798c152101@ti.com>
-From: Brian Norris <briannorris@chromium.org>
-Date: Mon, 10 Jul 2017 22:20:32 -0700
-Message-ID: <CA+ASDXOpPdk+mrVQxrDmhsL-SUNSnQ_CqGXuW-Vrh_D7Gh8jxA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] phy-rockchip-pcie: add set_mode callback
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Heiko Stuebner <heiko@sntech.de>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Airlie <airlied@linux.ie>, linux-pci <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Zou Rongrong <zourongrong@gmail.com>, daniel.vetter@intel.com,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Kishon,
+Hi Laszlo,
 
-On Mon, Jul 10, 2017 at 9:45 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> On Friday 16 June 2017 01:47 PM, Shawn Lin wrote:
-> > phy_mode was added for switching USB mode purposely as
-> > well as phy_set_mode API. However other types of PHY could
-> > also have some miscellaneous setting/modes need to be
-> > handled. This patch is gonna support this callback for
-> > phy-rockchip-pcie and do some power-saving work there.
-> > Note that we just stuff in some other values other that the
-> > existing phy_mode and convert it in the coressponding driver
-> > instead, otherwise we should extend the phy_mode again which
-> > it doesn't make sense to add in new driver's specificed value.
-> > Overall it looks fine to me as the controller's driver and the
-> > phy's driver are paired so that the caller and the consumer should
-> > be able to keep the value(mode) in consistent.
+Thanks for your input!
+
+>> Are there other graphical applications we care about (other than Xorg)
+>> that would need to be patched? I'm happy to do the Xorg patch, but I
+>> don't know if anything other than Xorg keys off the boot_vga file.
+>> 
+>> I'm not fundamentally opposed to this approach if the Xorg community is
+>> happy with it, the kernel community is happy with it, and no-one expects
+>> me to provide patches to any other user-space applications that depend
+>> on boot_vga.
 >
-> I really don't prefer using an API other that what it is intended for. We have
-> to come up with a better way for handling this.
+> Ard both identified the Xorg commit that I would have, and CC'd Hans
+> which I would have recommended as well.
 >
-> IIUC this patch sets unused lanes in idle mode? If yes, then can't we model
-> each lane as a separate phy, so that we can power-on/power-off each lane
-> independently.
+> I assume the symptom is that now there's a class of platform GPU devices
+> that is neither PCI nor legacy VGA, so neither the kernel's boot_vga
+> logic matches it, nor Xorg's commit in question.
+>
+> I agree that it should be possible to add more logic to Xorg to detect
+> this kind device as primary. However, I share Daniel's worry that it
+> wouldn't cover all user space apps -- I see "Wayland this, Wayland that"
+> on reddit every week.
+>
+> Having practically zero background in gfx development (either kernel or
+> Xorg), I think the problem is that vga_default_device() /
+> vga_set_default_device(), which -- apparently -- "boot_vga" is based
+> upon, come from "drivers/gpu/vga/vgaarb.c". Namely, the concept of
+> "primary / boot display device" is tied to the VGA arbiter, plus only a
+> PCI device can currently be marked as primary/boot display device.
 
-I suggested the same to Shawn previously. I'm interested in seeing his response.
+You're right, the issue is that the primary/boot device is tied to the
+VGA arbiter.
 
-But personally I'm still not sure if that's the most accurate way to
-describe this PHY, except for the fact that inevitably, most device
-tree bindings get molded to match the related kernel APIs, rather than
-the other way around. What if instead, we added an enum mode entry
-that represents "finished link training", at which point the PHY would
-then know it can power down the unused lanes (that's assuming the PHY
-can figure that part out)?
+>
+> Can these concepts be split from each other? (I can fully imagine that
+> this would result in a userspace visible interface change (or addition),
+> so that e.g. "/sys/devices/**/boot_gpu" would have to be consulted by
+> display servers.)
 
-Or if we did re-model this PHY, how are we supposed to handle backward
-compatibility? Can the same PHY driver support 2 different of_xlate
-methods? I guess we'd have to provide an implementation that sets the
-driver up to behave completely differently based on the number of
-#phy-cells?
+Yes, they can be split or a way of marking the default vga device that
+doesn't depend on the arbiter can be added.
 
-Brian
+(But there is some question about what it actually means to be a boot
+vga card - it's better defined on an x86 system, but on a ppc or arm64
+system we're reduced to guessing based on the first driver loaded.)
+
+> (Sorry if I'm totally wrong.)
+>
+> ... Hm, reading the thread starter at
+> <https://www.mail-archive.com/linuxppc-dev@lists.ozlabs.org/msg120851.html>,
+> and the references within... It looks like this work is motivated by
+> hardware that is supposed to be PCI, but actually breaks the specs. Is
+> that correct? If so, then I don't think I can suggest anything useful.
+> Specs exist so that hardware vendors and software authors follow them.
+> If hardware does not conform, then software should either refuse to work
+> with it, or handle it with quirks, on a case-by-case basis. I guess this
+> means that I don't agree with the
+>
+>   broad[] suggest[ion] that a more generic solution would be better
+>
+> which seems to disqualify me from the discussion, as it must have been
+> suggested by people with incomparably more experience than what I have :)
+
+Originally this was brought to the fore through a PCI bridge that wasn't
+spec compliant, and originally I proposed a simple quirk: [0]. However,
+that highlighted the related issue that platforms that don't use legacy
+resources still go through the VGA arbiter process which is built around
+legacy resource arbitration. Changing that behaviour also fixes the
+issue with the non-spec-compliant bridge because the new model doesn't
+rely upon the particular part of the spec that the bridge violates.
+
+I'm not fussy about how we solve this problem, so long as we solve this
+problem somehow.
+
+Regards,
+Daniel
+
+[0]: https://patchwork.ozlabs.org/patch/787003/
+
+>
+> Thanks
+> Laszlo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
