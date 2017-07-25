@@ -1,118 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45248 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753336AbdGULgr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Jul 2017 07:36:47 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v4 3/7] phy: qcom-qmp: Fix phy pipe clock name
-Date: Fri, 21 Jul 2017 17:06:13 +0530
-Message-Id: <1500636977-11934-4-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
-References: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:53 -0600
+Message-Id: <20170725205753.4735-17-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 16/16] switchtec_ntb: update switchtec documentation with notes for NTB
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Presently, the phy pipe clock's name is assumed to be either
-usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
-phy lane's number). However, this will not work if an SoC has
-more than one instance of the phy. Hence, instead of assuming
-the name of the clock, fetch it from the DT.
+The switchtec_ntb driver has a couple requirements on the switchec's
+hardware configuration so we add these notes to the documentation.
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp.c | 45 +++++++++++++++++++++++--------------
- 1 file changed, 28 insertions(+), 17 deletions(-)
+ Documentation/switchtec.txt | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 78ca628..b046866 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
-  *    clk  |   +-------+   |                   +-----+
-  *         +---------------+
-  */
--static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
-+static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
- {
--	char name[24];
- 	struct clk_fixed_rate *fixed;
- 	struct clk_init_data init = { };
- 
--	switch (qmp->cfg->type) {
--	case PHY_TYPE_USB3:
--		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
--		break;
--	case PHY_TYPE_PCIE:
--		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
--		break;
--	default:
-+	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
-+	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
- 		/* not all phys register pipe clocks, so return success */
- 		return 0;
- 	}
-@@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
- 	if (!fixed)
- 		return -ENOMEM;
- 
--	init.name = name;
-+	init.name = clk_name;
- 	init.ops = &clk_fixed_rate_ops;
- 
- 	/* controllers using QMP phys use 125MHz pipe clock interface */
-@@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
- 
- 	id = 0;
- 	for_each_available_child_of_node(dev->of_node, child) {
-+		const char *clk_name;
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
+index a0a9c7b3d4d5..f788264921ff 100644
+--- a/Documentation/switchtec.txt
++++ b/Documentation/switchtec.txt
+@@ -78,3 +78,15 @@ The following IOCTLs are also supported by the device:
+   between PCI Function Framework number (used by the event system)
+   and Switchtec Logic Port ID and Partition number (which is more
+   user friendly).
 +
- 		/* Create per-lane phy */
- 		ret = qcom_qmp_phy_create(dev, child, id);
- 		if (ret) {
-@@ -1119,15 +1114,31 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
- 		}
- 
- 		/*
--		 * Register the pipe clock provided by phy.
--		 * See function description to see details of this pipe clock.
-+		 * This property is mandatory only for PCIe/USB phys.
-+		 * For other phy types don't return failure.
- 		 */
--		ret = phy_pipe_clk_register(qmp, id);
--		if (ret) {
--			dev_err(qmp->dev,
--				"failed to register pipe clock source\n");
-+		ret = of_property_read_string(child, "clock-output-names",
-+							&clk_name);
-+		if (ret && (qmp->cfg->type == PHY_TYPE_PCIE ||
-+			    qmp->cfg->type == PHY_TYPE_USB3)) {
-+			dev_err(dev,
-+				"failed to get clock-output-names for lane%d phy, %d\n",
-+				id, ret);
- 			return ret;
- 		}
 +
-+		if (!ret) {
-+			/*
-+			 * Register the pipe clock provided by phy. See function
-+			 * description to see details of this pipe clock.
-+			 */
-+			ret = phy_pipe_clk_register(qmp, clk_name);
-+			if (ret) {
-+				dev_err(qmp->dev,
-+					"failed to register pipe clock source\n");
-+				return ret;
-+			}
-+		}
- 		id++;
- 	}
- 
++Non-Transparent Bridge (NTB) Driver
++===================================
++
++An NTB driver is provided for the switchtec hardware in switchtec_ntb.
++Currently, it only supports switches configured with exactly 2
++partitions. It also requires the following configuration settings:
++
++* Both partitions must be able to access each other's GAS spaces.
++  Thus, the bits in the GAS Access Vector under Management Settings
++  must be set to support this.
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
