@@ -1,83 +1,152 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:38149 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753400AbdGXRTR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 13:19:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170724104505.74c67861@w520.home>
-References: <20170720214101.7449-1-roland@kernel.org> <20170720161554.45ce1673@ul30vt.home>
- <CAG4TOxOrF9aLyujrwNmSsxPBWBPTaLx2yXkOJ88gxCj0QUGDow@mail.gmail.com> <20170724104505.74c67861@w520.home>
-From: Roland Dreier <roland.dreier@gmail.com>
-Date: Mon, 24 Jul 2017 10:18:56 -0700
-Message-ID: <CAG4TOxNufQHj0nNwzw_yDMQfp+cAQuiQgEJg6KNX2ebiJDUuUw@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Received: from ale.deltatee.com ([207.54.116.67]:36634 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752445AbdGYU6G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jul 2017 16:58:06 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:51 -0600
+Message-Id: <20170725205753.4735-15-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> I think that the device implementing ACS and not implementing certain
-> features that are "must be implemented if..." is a positive indication
-> that the device does not have that behavior and therefore the ability
-> to control that behavior is unnecessary.  pci_acs_flags_enabled() is
-> coded with this intention:
->
-> static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
-> {
->         int pos;
->         u16 cap, ctrl;
->
->         pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ACS);
->         if (!pos)
->                 return false;
->
->         /*
->          * Except for egress control, capabilities are either required
->          * or only required if controllable.  Features missing from the
->          * capability field can therefore be assumed as hard-wired enabled.
->          */
->         pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
->         acs_flags &= (cap | PCI_ACS_EC);
->
-> <Remove any requested ACS flags which are not implemented, except EC>
->
->         pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
->         return (ctrl & acs_flags) == acs_flags;
->
-> <Compare what remains>
+Seeing there is no dedicated hardware for this, we simply add
+these as entries in the shared memory window. Thus, we could support
+any number of them but 128 seems like enough, for now.
 
-I'm not sure it makes sense to look for the EC bit in the control register if
-the capability bit says it is not supported.  In fact I think it would
-violate the PCI spec to set the bit in the control register if it is zero in the
-capability register - the spec says:
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 2 deletions(-)
 
-  Default value of this bit is 0b. Must be hardwired to 0b if the ACS P2P
-  Egress Control functionality is not implemented.
-
-I don't understand the reasoning behind forcing the EC bit in commit
-83db7e0bdb70.
-
-I think the only reason this works is that nowhere in the kernel uses
-this function to check PCI_ACS_EC.
-
-> At least that's my interpretation and how I've indicated to folks at
-> Intel how things should work for a device that does not support p2p.
-> Of course this all hinges on having an ACS capability.  Without an ACS
-> capability we must assume any sort of p2p is possible unless we have a
-> quirk to tell us otherwise.  With ACS, the absence of capabilities is a
-> positive indication that those forms of p2p are not possible (depending
-> on the spec wording for that capability).  If the code doesn't behave
-> that way, let's fix it. Thanks,
-
-Thanks - I'm looking more closely at what goes wrong with X550, since
-from reading the code it looks like it should work, but people have observed
-that it doesn't on our system.  However the issue might be elsewhere.
-
-However I'll send a patch removing that "| PCI_ACS_EC" from the check if
-you agree - maybe I'm misunderstanding the logic but I don't see how it
-could work if it ever became relevant.
-
- - R.
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index 3037ca730998..ca403ad2f7ac 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -67,6 +67,7 @@ struct shared_mw {
+ 	u32 link_sta;
+ 	u32 partition_id;
+ 	u64 mw_sizes[MAX_MWS];
++	u32 spad[128];
+ };
+ 
+ #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
+@@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ 
+ static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return ARRAY_SIZE(sndev->self_shared->spad);
+ }
+ 
+ static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return 0;
++
++	if (!sndev->self_shared)
++		return 0;
++
++	return sndev->self_shared->spad[idx];
+ }
+ 
+ static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->self_shared)
++		return -EIO;
++
++	sndev->self_shared->spad[idx] = val;
++
+ 	return 0;
+ }
+ 
++static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
++					int sidx)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return 0;
++
++	if (!sndev->peer_shared)
++		return 0;
++
++	return ioread32(&sndev->peer_shared->spad[sidx]);
++}
++
+ static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
+ 					 int sidx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->peer_shared)
++		return -EIO;
++
++	iowrite32(val, &sndev->peer_shared->spad[sidx]);
++
++	return 0;
++}
++
++static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
++					int sidx, phys_addr_t *spad_addr)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
++		(unsigned long)sndev->stdev->mmio;
++
++	if (spad_addr)
++		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
++
+ 	return 0;
+ }
+ 
+@@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+ 	.spad_write		= switchtec_ntb_spad_write,
++	.peer_spad_read		= switchtec_ntb_peer_spad_read,
+ 	.peer_spad_write	= switchtec_ntb_peer_spad_write,
++	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
+ };
+ 
+ static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+-- 
+2.11.0
