@@ -1,103 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50606 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753271AbdGSIoU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:44:20 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v2 3/8] phy: qcom-qmp: Fix phy pipe clock name
-Date: Wed, 19 Jul 2017 14:13:34 +0530
-Message-Id: <1500453819-5223-4-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
-References: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:60602 "EHLO
+        bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756873AbdGYBOx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Jul 2017 21:14:53 -0400
+Subject: Re: [PATCH] PCI: xilinx: Remove platform/architecture restrictions
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Michal Simek <michal.simek@xilinx.com>,
+        =?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+        James Hogan <james.hogan@imgtec.com>
+References: <1500856777-23383-1-git-send-email-linux@roeck-us.net>
+ <3882569.bb2rKKAOIY@np-p-burton>
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <5da467c2-7494-bbb5-1007-6990f04877be@roeck-us.net>
+Date: Mon, 24 Jul 2017 18:14:50 -0700
+MIME-Version: 1.0
+In-Reply-To: <3882569.bb2rKKAOIY@np-p-burton>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Presently, the phy pipe clock's name is assumed to be either
-usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
-phy lane's number). However, this will not work if an SoC has
-more than one instance of the phy. Hence, instead of assuming
-the name of the clock, fetch it from the DT.
+On 07/24/2017 03:49 AM, Paul Burton wrote:
+> Hi Guenter & all,
+> 
+> On Monday, 24 July 2017 01:39:37 BST Guenter Roeck wrote:
+>> The MIPS Boston board configuration tries to enable CONFIG_PCIE_XILINX.
+>> That doesn't work since PCIE_XILINX depends on ARCH_ZYNQ || MICROBLAZE.
+>> Remove that restriction.
+> 
+> I'd prefer that this patch does not go in standalone. The intent for the MIPS
+> Boston board is that this driver is enabled for MIPS by this patch:
+> 
+> https://patchwork.kernel.org/patch/9794361/
+> 
+> But not until after earlier patches in that series fix issues with the driver:
+> 
+> https://patchwork.kernel.org/patch/9794355/
+> https://patchwork.kernel.org/patch/9794357/
+> https://patchwork.kernel.org/patch/9794359/
+> 
+> That has been held up by disagreement about whether the driver should be using
+> 0-3 or 1-4 for hardware IRQ numbers, sadly, despite the driver already being
+> in tree & clearly broken, and my series not changing which the driver uses...
+> 
+> In any case, I don't really mind if people would rather remove the
+> architecture restrictions than just add MIPS, but I'd prefer this doesn't go
+> in until the rest of my series since without at least patch 1 of my seres this
+> will lead to various WARN()s on Boston boards.
+> 
 
-Acked-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+Not with qemu, at least not yet.
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 78ca628..97020ec 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
-  *    clk  |   +-------+   |                   +-----+
-  *         +---------------+
-  */
--static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
-+static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
- {
--	char name[24];
- 	struct clk_fixed_rate *fixed;
- 	struct clk_init_data init = { };
- 
--	switch (qmp->cfg->type) {
--	case PHY_TYPE_USB3:
--		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
--		break;
--	case PHY_TYPE_PCIE:
--		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
--		break;
--	default:
-+	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
-+	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
- 		/* not all phys register pipe clocks, so return success */
- 		return 0;
- 	}
-@@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
- 	if (!fixed)
- 		return -ENOMEM;
- 
--	init.name = name;
-+	init.name = clk_name;
- 	init.ops = &clk_fixed_rate_ops;
- 
- 	/* controllers using QMP phys use 125MHz pipe clock interface */
-@@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
- 
- 	id = 0;
- 	for_each_available_child_of_node(dev->of_node, child) {
-+		const char *clk_name;
-+
- 		/* Create per-lane phy */
- 		ret = qcom_qmp_phy_create(dev, child, id);
- 		if (ret) {
-@@ -1118,11 +1113,20 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
- 			return ret;
- 		}
- 
-+		ret = of_property_read_string(child, "clock-output-names",
-+							&clk_name);
-+		if (ret) {
-+			dev_err(dev,
-+				"failed to get clock-output-names for lane%d phy, %d\n",
-+				id, ret);
-+			return ret;
-+		}
-+
- 		/*
- 		 * Register the pipe clock provided by phy.
- 		 * See function description to see details of this pipe clock.
- 		 */
--		ret = phy_pipe_clk_register(qmp, id);
-+		ret = phy_pipe_clk_register(qmp, clk_name);
- 		if (ret) {
- 			dev_err(qmp->dev,
- 				"failed to register pipe clock source\n");
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+from the exchange, it doesn't look like that is going to be resolved anytime
+soon.
+
+Ok, I'll hold back with adding mips/boston to my qemu tests. Too bad.
+Hope this is going to be resolved before qemu and/or platform support
+for boston falls apart.
+
+Makes me wonder - is there a way to add initrd support for the platform ?
+
+Guenter
+
+> Thanks,
+>      Paul
+> 
+>>
+>> Cc: Paul Burton <paul.burton@imgtec.com>
+>> Cc: James Hogan <james.hogan@imgtec.com>
+>> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+>> ---
+>>   drivers/pci/host/Kconfig | 1 -
+>>   1 file changed, 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+>> index 89d61c2cbfaa..ed905a5401c3 100644
+>> --- a/drivers/pci/host/Kconfig
+>> +++ b/drivers/pci/host/Kconfig
+>> @@ -71,7 +71,6 @@ config PCI_HOST_GENERIC
+>>
+>>   config PCIE_XILINX
+>>   	bool "Xilinx AXI PCIe host bridge support"
+>> -	depends on ARCH_ZYNQ || MICROBLAZE
+>>   	help
+>>   	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+>>   	  Host Bridge driver.
+> 
