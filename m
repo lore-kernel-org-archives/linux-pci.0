@@ -1,333 +1,136 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>,
-        smuthayy <smuthayy@codeaurora.org>
-Subject: [PATCH v5 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-Date: Mon, 31 Jul 2017 11:09:54 +0530
-Message-Id: <1501479594-18285-8-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
-References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:40 -0600
+Message-Id: <20170725205753.4735-4-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 03/16] switchtec: add NTB hardware register definitions
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
-Gen 1/2, one lane, two PCIe root complex with support for MSI and
-legacy interrupts, and it conforms to PCI Express Base 2.1
-specification.
+There are two additional regions: ctrl and dbmsg. The first is
+for generic NTB control and memory windows. The second is for doorbells
+and message registers. This patch also adds a number of related
+constants for using these registers.
 
-The core init is the similar to the existing SoC, however the
-clocks and reset lines differ.
-
-Signed-off-by: smuthayy <smuthayy@codeaurora.org>
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- drivers/pci/dwc/pcie-qcom.c | 245 ++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 245 insertions(+)
+ include/linux/switchtec.h | 84 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 6525f2f..b2ea953 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -37,6 +37,20 @@
- #include "pcie-designware.h"
- 
- #define PCIE20_PARF_SYS_CTRL			0x00
-+#define MST_WAKEUP_EN				BIT(13)
-+#define SLV_WAKEUP_EN				BIT(12)
-+#define MSTR_ACLK_CGC_DIS			BIT(10)
-+#define SLV_ACLK_CGC_DIS			BIT(9)
-+#define CORE_CLK_CGC_DIS			BIT(6)
-+#define AUX_PWR_DET				BIT(4)
-+#define L23_CLK_RMV_DIS				BIT(2)
-+#define L1_CLK_RMV_DIS				BIT(1)
-+
-+#define PCIE20_COMMAND_STATUS			0x04
-+#define CMD_BME_VAL				0x4
-+#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
-+#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
-+
- #define PCIE20_PARF_PHY_CTRL			0x40
- #define PCIE20_PARF_PHY_REFCLK			0x4C
- #define PCIE20_PARF_DBI_BASE_ADDR		0x168
-@@ -58,9 +72,22 @@
- #define CFG_BRIDGE_SB_INIT			BIT(0)
- 
- #define PCIE20_CAP				0x70
-+#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xC)
-+#define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
-+#define PCIE_CAP_LINK1_VAL			0x2fd7f
-+
-+#define PCIE20_PARF_Q2A_FLUSH			0x1AC
-+
-+#define PCIE20_MISC_CONTROL_1_REG		0x8BC
-+#define DBI_RO_WR_EN				1
- 
- #define PERST_DELAY_US				1000
- 
-+#define AXI_CLK_RATE				200000000
-+
-+#define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
-+#define SLV_ADDR_SPACE_SZ                       0x10000000
-+
- struct qcom_pcie_resources_2_1_0 {
- 	struct clk *iface_clk;
- 	struct clk *core_clk;
-@@ -110,11 +137,21 @@ struct qcom_pcie_resources_2_4_0 {
- 	struct reset_control *phy_ahb_reset;
+diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
+index 18e388101855..9c2be7631257 100644
+--- a/include/linux/switchtec.h
++++ b/include/linux/switchtec.h
+@@ -156,6 +156,12 @@ struct flash_info_regs {
+ 	struct partition_info vendor[8];
  };
  
-+struct qcom_pcie_resources_2_3_3 {
-+	struct clk *iface;
-+	struct clk *axi_m_clk;
-+	struct clk *axi_s_clk;
-+	struct clk *ahb_clk;
-+	struct clk *aux_clk;
-+	struct reset_control *rst[7];
++enum {
++	SWITCHTEC_NTB_REG_INFO_OFFSET   = 0x0000,
++	SWITCHTEC_NTB_REG_CTRL_OFFSET   = 0x4000,
++	SWITCHTEC_NTB_REG_DBMSG_OFFSET  = 0x64000,
 +};
 +
- union qcom_pcie_resources {
- 	struct qcom_pcie_resources_1_0_0 v1_0_0;
- 	struct qcom_pcie_resources_2_1_0 v2_1_0;
- 	struct qcom_pcie_resources_2_3_2 v2_3_2;
- 	struct qcom_pcie_resources_2_4_0 v2_4_0;
-+	struct qcom_pcie_resources_2_3_3 v2_3_3;
- };
+ struct ntb_info_regs {
+ 	u8  partition_count;
+ 	u8  partition_id;
+@@ -191,6 +197,84 @@ struct part_cfg_regs {
+ } __packed;
  
- struct qcom_pcie;
-@@ -884,6 +921,206 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
- 	return ret;
- }
- 
-+static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int i;
-+	const char *rst_names[] = {
-+					"axi_m", "axi_s", "pipe",
-+					"axi_m_sticky", "sticky",
-+					"ahb", "sleep",
-+				};
+ enum {
++	NTB_CTRL_PART_OP_LOCK = 0x1,
++	NTB_CTRL_PART_OP_CFG = 0x2,
++	NTB_CTRL_PART_OP_RESET = 0x3,
 +
-+	res->iface = devm_clk_get(dev, "iface");
-+	if (IS_ERR(res->iface))
-+		return PTR_ERR(res->iface);
++	NTB_CTRL_PART_STATUS_NORMAL = 0x1,
++	NTB_CTRL_PART_STATUS_LOCKED = 0x2,
++	NTB_CTRL_PART_STATUS_LOCKING = 0x3,
++	NTB_CTRL_PART_STATUS_CONFIGURING = 0x4,
++	NTB_CTRL_PART_STATUS_RESETTING = 0x5,
 +
-+	res->axi_m_clk = devm_clk_get(dev, "axi_m");
-+	if (IS_ERR(res->axi_m_clk))
-+		return PTR_ERR(res->axi_m_clk);
++	NTB_CTRL_BAR_VALID = 1 << 0,
++	NTB_CTRL_BAR_DIR_WIN_EN = 1 << 4,
++	NTB_CTRL_BAR_LUT_WIN_EN = 1 << 5,
 +
-+	res->axi_s_clk = devm_clk_get(dev, "axi_s");
-+	if (IS_ERR(res->axi_s_clk))
-+		return PTR_ERR(res->axi_s_clk);
++	NTB_CTRL_REQ_ID_EN = 1 << 0,
 +
-+	res->ahb_clk = devm_clk_get(dev, "ahb");
-+	if (IS_ERR(res->ahb_clk))
-+		return PTR_ERR(res->ahb_clk);
++	NTB_CTRL_LUT_EN = 1 << 0,
 +
-+	res->aux_clk = devm_clk_get(dev, "aux");
-+	if (IS_ERR(res->aux_clk))
-+		return PTR_ERR(res->aux_clk);
-+
-+	for (i = 0; i < ARRAY_SIZE(rst_names); i++) {
-+		res->rst[i] = devm_reset_control_get(dev, rst_names[i]);
-+		if (IS_ERR(res->rst[i]))
-+			return PTR_ERR(res->rst[i]);
-+	}
-+
-+	return 0;
-+}
-+
-+static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+
-+	clk_disable_unprepare(res->iface);
-+	clk_disable_unprepare(res->axi_m_clk);
-+	clk_disable_unprepare(res->axi_s_clk);
-+	clk_disable_unprepare(res->ahb_clk);
-+	clk_disable_unprepare(res->aux_clk);
-+}
-+
-+static int qcom_pcie_enable_resources_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	struct dw_pcie *pci = pcie->pci;
-+	struct device *dev = pci->dev;
-+	int ret;
-+
-+	ret = clk_prepare_enable(res->iface);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		return ret;
-+	}
-+
-+	ret = clk_prepare_enable(res->axi_m_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable core clock\n");
-+		goto err_clk_axi_m;
-+	}
-+
-+	ret = clk_set_rate(res->axi_m_clk, AXI_CLK_RATE);
-+	if (ret) {
-+		dev_err(dev, "MClk rate set failed (%d)\n", ret);
-+		goto err_clk_axi_m;
-+	}
-+
-+	ret = clk_prepare_enable(res->axi_s_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable axi slave clock\n");
-+		goto err_clk_axi_s;
-+	}
-+
-+	ret = clk_set_rate(res->axi_s_clk, AXI_CLK_RATE);
-+	if (ret) {
-+		dev_err(dev, "MClk rate set failed (%d)\n", ret);
-+		goto err_clk_axi_s;
-+	}
-+
-+	ret = clk_prepare_enable(res->ahb_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable ahb clock\n");
-+		goto err_clk_ahb;
-+	}
-+
-+	ret = clk_prepare_enable(res->aux_clk);
-+	if (ret) {
-+		dev_err(dev, "cannot prepare/enable aux clock\n");
-+		goto err_clk_aux;
-+	}
-+
-+	udelay(1);
-+
-+	return 0;
-+
-+err_clk_aux:
-+	clk_disable_unprepare(res->ahb_clk);
-+err_clk_ahb:
-+	clk_disable_unprepare(res->axi_s_clk);
-+err_clk_axi_s:
-+	clk_disable_unprepare(res->axi_m_clk);
-+err_clk_axi_m:
-+	clk_disable_unprepare(res->iface);
-+
-+	return ret;
-+}
-+
-+static int qcom_pcie_2_3_3_reset(struct qcom_pcie *pcie)
-+{
-+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
-+	int i, ret;
-+
-+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
-+		ret = reset_control_assert(res->rst[i]);
-+		if (ret) {
-+			dev_err(pcie->pci->dev,
-+				"%s: reset assert failed for %d\n",
-+				__func__, i);
-+			return ret;
-+		}
-+	}
-+
-+	msleep(20);
-+
-+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
-+		ret = reset_control_deassert(res->rst[i]);
-+		if (ret) {
-+			dev_err(pcie->pci->dev,
-+				"%s: reset deassert failed for %d\n",
-+				__func__, i);
-+			return ret;
-+		}
-+	}
-+
-+	msleep(20);
-+
-+	return 0;
-+}
-+
-+static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
-+{
-+	struct dw_pcie *pci = pcie->pci;
-+	int ret;
-+	u32 val;
-+
-+	ret = qcom_pcie_2_3_3_reset(pcie);
-+	if (ret)
-+		return ret;
-+
-+	qcom_ep_reset_assert(pcie);
-+
-+	ret = qcom_pcie_enable_resources_2_3_3(pcie);
-+	if (ret)
-+		return ret;
-+
-+	writel(SLV_ADDR_SPACE_SZ, pcie->parf +
-+					PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
-+
-+	ret = phy_power_on(pcie->phy);
-+	if (ret) {
-+		pcie->ops->deinit(pcie);
-+		return ret;
-+	}
-+
-+	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-+	val &= ~BIT(0);
-+	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-+
-+	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-+
-+	writel(MST_WAKEUP_EN | SLV_WAKEUP_EN | MSTR_ACLK_CGC_DIS
-+		| SLV_ACLK_CGC_DIS | CORE_CLK_CGC_DIS |
-+		AUX_PWR_DET | L23_CLK_RMV_DIS | L1_CLK_RMV_DIS,
-+		pcie->parf + PCIE20_PARF_SYS_CTRL);
-+	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
-+
-+	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
-+	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
-+	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
-+
-+	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+	val &= ~(BIT(10) | BIT(11));
-+	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
-+
-+	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
-+		PCIE20_DEVICE_CONTROL2_STATUS2);
-+
-+	return 0;
-+}
-+
- static int qcom_pcie_link_up(struct dw_pcie *pci)
- {
- 	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
-@@ -985,6 +1222,13 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- };
- 
-+static const struct qcom_pcie_ops ops_2_3_3 = {
-+	.get_resources = qcom_pcie_get_resources_2_3_3,
-+	.init = qcom_pcie_init_2_3_3,
-+	.deinit = qcom_pcie_deinit_2_3_3,
-+	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
++	NTB_PART_CTRL_ID_PROT_DIS = 1 << 0,
 +};
 +
- static int qcom_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -1085,6 +1329,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	QCOM_DECL("qcom,pcie-apq8064", ops_2_1_0, 2.1.0, 4.01a),
- 	QCOM_DECL("qcom,pcie-msm8996", ops_2_3_2, 2.3.2, 4.21a),
- 	QCOM_DECL("qcom,pcie-ipq4019", ops_2_4_0, 2.4.0, 4.20a),
-+	QCOM_DECL("qcom,pcie-ipq8074", ops_2_3_3, 2.3.3, 4.30a),
- 	{ }
- };
- 
++struct ntb_ctrl_regs {
++	u32 partition_status;
++	u32 partition_op;
++	u32 partition_ctrl;
++	u32 bar_setup;
++	u32 bar_error;
++	u16 lut_table_entries;
++	u16 lut_table_offset;
++	u32 lut_error;
++	u16 req_id_table_size;
++	u16 req_id_table_offset;
++	u32 req_id_error;
++	u32 reserved1[7];
++	struct {
++		u32 ctl;
++		u32 win_size;
++		u64 xlate_addr;
++	} bar_entry[6];
++	u32 reserved2[216];
++	u32 req_id_table[256];
++	u32 reserved3[512];
++	u64 lut_entry[512];
++} __packed;
++
++#define NTB_DBMSG_IMSG_STATUS BIT_ULL(32)
++#define NTB_DBMSG_IMSG_MASK   BIT_ULL(40)
++
++struct ntb_dbmsg_regs {
++	u32 reserved1[1024];
++	u64 odb;
++	u64 odb_mask;
++	u64 idb;
++	u64 idb_mask;
++	u8  idb_vec_map[64];
++	u32 msg_map;
++	u32 reserved2;
++	struct {
++		u32 msg;
++		u32 status;
++	} omsg[4];
++
++	struct {
++		u32 msg;
++		u8  status;
++		u8  mask;
++		u8  src;
++		u8  reserved;
++	} imsg[4];
++
++	u8 reserved3[3928];
++	u8 msix_table[1024];
++	u8 reserved4[3072];
++	u8 pba[24];
++	u8 reserved5[4072];
++} __packed;
++
++enum {
+ 	SWITCHTEC_PART_CFG_EVENT_RESET = 1 << 0,
+ 	SWITCHTEC_PART_CFG_EVENT_MRPC_CMP = 1 << 1,
+ 	SWITCHTEC_PART_CFG_EVENT_MRPC_ASYNC_CMP = 1 << 2,
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
