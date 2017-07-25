@@ -1,65 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 4 Jul 2017 15:24:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH v9 0/3] Tango PCIe controller support
-Message-ID: <20170704202412.GK13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:42341 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750980AbdGYMpc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jul 2017 08:45:32 -0400
+Date: Tue, 25 Jul 2017 15:45:27 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 2/3] ACPI / PM: Split acpi_device_wakeup()
+Message-ID: <20170725124527.GR2369@lahna.fi.intel.com>
+References: <3116391.JNS1F4DjTg@aspire.rjw.lan>
+ <3408475.MC8krXn0zk@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: DT <devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3408475.MC8krXn0zk@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 20, 2017 at 10:12:57AM +0200, Marc Gonzalez wrote:
-> Marc Z pointed out that posting partial series is not ideal.
-> Collect last-minute fixups into a single patch series.
+On Fri, Jul 21, 2017 at 02:40:49PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> - Bump series to v9 to avoid any ambiguity
-> - Add Rob's Ack on patch 1
+> To prepare for a subsequent change and make the code somewhat easier
+> to follow, do the following in the ACPI device wakeup handling code:
 > 
-> Marc Gonzalez (3):
->   PCI: Add DT binding for tango PCIe controller
->   PCI: Add tango PCIe host bridge support
->   PCI: Add tango MSI controller support
+>  * Replace wakeup.flags.enabled under struct acpi_device with
+>    wakeup.enable_count as that will be necessary going forward.
 > 
->  .../devicetree/bindings/pci/tango-pcie.txt         |  29 ++
->  drivers/pci/host/Kconfig                           |   8 +
->  drivers/pci/host/Makefile                          |   1 +
->  drivers/pci/host/pcie-tango.c                      | 390 +++++++++++++++++++++
->  include/linux/pci_ids.h                            |   2 +
->  5 files changed, 430 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
->  create mode 100644 drivers/pci/host/pcie-tango.c
+>    For now, wakeup.enable_count is not allowed to grow beyond 1,
+>    so the current behavior is retained.
+> 
+>  * Split acpi_device_wakeup() into acpi_device_wakeup_enable()
+>    and acpi_device_wakeup_disable() and modify the callers of
+>    it accordingly.
+> 
+>  * Introduce a new acpi_wakeup_lock mutex to protect the wakeup
+>    enabling/disabling code from races in case it is executed
+>    more than once in parallel for the same device (which may
+>    happen for bridges theoretically).
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I made the trivial changes I mentioned, added a dependency on
-CONFIG_BROKEN (for the config/MMIO muxing issue), and put these on
-pci/host-tango.  I can't build or test this, so I probably broke
-something in the process.  I think the combination of the boot-time
-warning, the taint, and CONFIG_BROKEN is a reasonable amount of
-warning that a user should expect issues.
-
-Can you take a look and see if it works for you?
-
-https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-tango
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
