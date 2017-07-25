@@ -1,73 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39138 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933924AbdGTFfV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Jul 2017 01:35:21 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v3 4/8] phy: qcom-qmp: Handle unavailable registers
-Date: Thu, 20 Jul 2017 11:04:36 +0530
-Message-Id: <1500528880-25804-5-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
-References: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36653 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751612AbdGYU6H (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jul 2017 16:58:07 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:44 -0600
+Message-Id: <20170725205753.4735-8-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 07/16] ntb: add check and comment for link up to mw_count() and mw_get_align()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In some implementations of the QMP phy, some registers might not
-be present. Provide a way identify such registers and not access
-those registers.
+Adds a comment and a check to ntb_mw_get_align() so that it always fails
+if the function is called before the link is up.
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+Also adds a comment to ntb_mw_count() to note that it may return 0 if
+it is called before the link is up.
+
+This is to prevent accidental mis-use in clients that are testing
+on hardware that this doesn't matter for.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp.c | 23 ++++++++++++++---------
- 1 file changed, 14 insertions(+), 9 deletions(-)
+ include/linux/ntb.h | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
-index 97020ec..000ad1c 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
-@@ -187,6 +187,8 @@ struct qmp_phy_init_tbl {
- 		.in_layout = 1,		\
- 	}
- 
-+#define QPHY_REG_INVAL		0xffffffffu
+diff --git a/include/linux/ntb.h b/include/linux/ntb.h
+index 609e232c00da..47f2966cfd7f 100644
+--- a/include/linux/ntb.h
++++ b/include/linux/ntb.h
+@@ -730,7 +730,8 @@ static inline int ntb_link_disable(struct ntb_dev *ntb)
+  * Hardware and topology may support a different number of memory windows.
+  * Moreover different peer devices can support different number of memory
+  * windows. Simply speaking this method returns the number of possible inbound
+- * memory windows to share with specified peer device.
++ * memory windows to share with specified peer device. Note: this may return
++ * zero if the link is not up yet.
+  *
+  * Return: the number of memory windows.
+  */
+@@ -751,7 +752,7 @@ static inline int ntb_mw_count(struct ntb_dev *ntb, int pidx)
+  * Get the alignments of an inbound memory window with specified index.
+  * NULL may be given for any output parameter if the value is not needed.
+  * The alignment and size parameters may be used for allocation of proper
+- * shared memory.
++ * shared memory. Note: this must only be called when the link is up.
+  *
+  * Return: Zero on success, otherwise a negative error number.
+  */
+@@ -760,6 +761,9 @@ static inline int ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int widx,
+ 				   resource_size_t *size_align,
+ 				   resource_size_t *size_max)
+ {
++	if (!(ntb_link_is_up(ntb, NULL, NULL) & (1 << pidx)))
++		return -ENOTCONN;
 +
- /* set of registers with offsets different per-PHY */
- enum qphy_reg_layout {
- 	/* Common block control registers */
-@@ -676,15 +678,18 @@ static int qcom_qmp_phy_com_init(struct qcom_qmp *qmp)
- 		qphy_setbits(serdes, cfg->regs[QPHY_COM_START_CONTROL],
- 			     SERDES_START | PCS_START);
- 
--		status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
--		mask = cfg->mask_com_pcs_ready;
--
--		ret = readl_poll_timeout(status, val, (val & mask), 10,
--					 PHY_INIT_COMPLETE_TIMEOUT);
--		if (ret) {
--			dev_err(qmp->dev,
--				"phy common block init timed-out\n");
--			goto err_com_init;
-+		if (cfg->regs[QPHY_COM_PCS_READY_STATUS] != QPHY_REG_INVAL) {
-+			status = serdes + cfg->regs[QPHY_COM_PCS_READY_STATUS];
-+			mask = cfg->mask_com_pcs_ready;
-+
-+			ret = readl_poll_timeout(status, val, (val & mask), 10,
-+						 PHY_INIT_COMPLETE_TIMEOUT);
-+			if (ret) {
-+				dev_err(qmp->dev,
-+					"%s: phy common block init timed-out\n",
-+					__func__);
-+				goto err_com_init;
-+			}
- 		}
- 	}
- 
+ 	return ntb->ops->mw_get_align(ntb, pidx, widx, addr_align, size_align,
+ 				      size_max);
+ }
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
