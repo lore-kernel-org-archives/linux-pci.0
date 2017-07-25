@@ -1,87 +1,141 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52328 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751978AbdGaW6Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 31 Jul 2017 18:58:24 -0400
-Date: Mon, 31 Jul 2017 17:58:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: Guenter Roeck <linux@roeck-us.net>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Michal Simek <michal.simek@xilinx.com>,
-        =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
-        James Hogan <james.hogan@imgtec.com>
-Subject: Re: [PATCH] PCI: xilinx: Remove platform/architecture restrictions
-Message-ID: <20170731225822.GB19800@bhelgaas-glaptop.roam.corp.google.com>
-References: <1500856777-23383-1-git-send-email-linux@roeck-us.net>
- <3882569.bb2rKKAOIY@np-p-burton>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34485 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750893AbdGYGJs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Jul 2017 02:09:48 -0400
+Received: by mail-io0-f195.google.com with SMTP id m88so3912467iod.1
+        for <linux-pci@vger.kernel.org>; Mon, 24 Jul 2017 23:09:48 -0700 (PDT)
+Subject: Re: [PATCH kernel v4 4/6] iommu: Set PCI_BUS_FLAGS_MSI_REMAP on iommu
+ driver initialization
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>
+Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+        Jike Song <jike.song@intel.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+References: <20170630052436.15212-1-aik@ozlabs.ru>
+ <20170630052436.15212-5-aik@ozlabs.ru>
+ <CAErSpo4pAZfDx5p_S9Z8jR_ctH=ZrkgG6aNaNmPaN2H77dgEgQ@mail.gmail.com>
+ <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
+Message-ID: <5d35506e-4c37-7922-c398-d62955ddb1e2@ozlabs.ru>
+Date: Tue, 25 Jul 2017 16:09:39 +1000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3882569.bb2rKKAOIY@np-p-burton>
+In-Reply-To: <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
+Content-Type: text/plain; charset=koi8-r
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 24, 2017 at 11:49:22AM +0100, Paul Burton wrote:
-> Hi Guenter & all,
+On 19/07/17 20:02, Alexey Kardashevskiy wrote:
+> On 11/07/17 05:23, Bjorn Helgaas wrote:
+>> [+cc Joerg, iommu]
+>>
+>> On Fri, Jun 30, 2017 at 12:24 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
+>>> From: Yongji Xie <elohimes@gmail.com>
+>>>
+>>> Some iommu drivers would be initialized after PCI device
+>>> enumeration. So PCI_BUS_FLAGS_MSI_REMAP would not be set
+>>> when probing PCI devices although IOMMU enables capability
+>>> of IRQ remapping. This patch tests this capability and
+>>> set the flag when iommu driver is initialized.
+>>>
+>>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>>> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+>>> ---
+>>>  drivers/iommu/iommu.c | 8 ++++++++
+>>>  drivers/pci/probe.c   | 1 +
+>>>  2 files changed, 9 insertions(+)
+>>>
+>>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>>> index cf7ca7e70777..0b5881ddca09 100644
+>>> --- a/drivers/iommu/iommu.c
+>>> +++ b/drivers/iommu/iommu.c
+>>> @@ -1063,6 +1063,14 @@ static int add_iommu_group(struct device *dev, void *data)
+>>>         const struct iommu_ops *ops = cb->ops;
+>>>         int ret;
+>>>
+>>> +       /*
+>>> +        * Set PCI_BUS_FLAGS_MSI_REMAP for all PCI buses when IOMMU
+>>> +        * have capability of IRQ remapping.
+>>> +        */
+>>> +       if (dev_is_pci(dev) && ops->capable &&
+>>> +                       ops->capable(IOMMU_CAP_INTR_REMAP))
+>>> +               to_pci_dev(dev)->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
+>>
+>> This isn't my area, but this addition is really ugly.  It doesn't look
+>> anything like the rest of the code in add_iommu_group(), so it just
+>> feels like a wart.
 > 
-> On Monday, 24 July 2017 01:39:37 BST Guenter Roeck wrote:
-> > The MIPS Boston board configuration tries to enable CONFIG_PCIE_XILINX.
-> > That doesn't work since PCIE_XILINX depends on ARCH_ZYNQ || MICROBLAZE.
-> > Remove that restriction.
 > 
-> I'd prefer that this patch does not go in standalone. The intent for the MIPS 
-> Boston board is that this driver is enabled for MIPS by this patch:
+> It does look like a wart, however it did not cause immediate rejection
+> after first couple of revisions of this before I took it over...
 > 
-> https://patchwork.kernel.org/patch/9794361/
+> So. Here is the problem - deliver an MSIX isolation flag from IOMMU to
+> VFIO-PCI driver. The options are:
 > 
-> But not until after earlier patches in that series fix issues with the driver:
+> 1. PCI_BUS_FLAGS_MSI_REMAP on a PCI bus - MSIX isolation is not really a
+> PCI bus property and it is "like a wart".
 > 
-> https://patchwork.kernel.org/patch/9794355/
-> https://patchwork.kernel.org/patch/9794357/
-> https://patchwork.kernel.org/patch/9794359/
+> 2. Introduce "flags" in iommu_group and define IOMMU_GROUP_MSIX_ISOLATED
+> and set it when an IOMMU group is created; VFIO-PCI has ways to get to the
+> group and read the flag.
 > 
-> That has been held up by disagreement about whether the driver should be using 
-> 0-3 or 1-4 for hardware IRQ numbers, sadly, despite the driver already being 
-> in tree & clearly broken, and my series not changing which the driver uses...
+> 3. Create IOMMU_DOMAIN_UNMANAGED IOMMU domains for PPC64/powernv IOMMU
+> groups and only define capable() hook to report IOMMU_CAP_INTR_REMAP;
+> others already use these IOMMU domains. VFIO-PCI's mmap() hook could then
+> check the capability via iommu_capable(bus). The problems is as Robin said:
+> "iommu_capable() is a fundamentally broken and unworkable interface
+> anyway"; however it is still not clear to me why it is unworkable in this
+> particular case of isolation checking.
+> 
+> I am missing knowledge about ARM, is there a good overview of these MSIX
+> domains vs. IOMMU on ARM (as MSIX remapping seems not to be an IOMMU property)?
+> 
+> 
+> Which one to pick? Thanks.
 
-It's true that your v5 series only changes xilinx from using hwirq 0-3
-to 0-4 (with 0 being unused in both cases, and the addition of 4
-fixing the "INTD doesn't work" bug).
 
-However, I *would* like to see this issue cleaned up consistently
-across all our drivers.  I mooted a couple ideas in [1], but nobody
-seemed interested.  If I merged your series as-is, there would be even
-less interest.
 
-[1] http://lkml.kernel.org/r/20170712221455.GJ14614@bhelgaas-glaptop.roam.corp.google.com
+Anyone, please?
 
-> In any case, I don't really mind if people would rather remove the 
-> architecture restrictions than just add MIPS, but I'd prefer this doesn't go 
-> in until the rest of my series since without at least patch 1 of my seres this 
-> will lead to various WARN()s on Boston boards.
+
+
 > 
-> Thanks,
->     Paul
 > 
-> > 
-> > Cc: Paul Burton <paul.burton@imgtec.com>
-> > Cc: James Hogan <james.hogan@imgtec.com>
-> > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
-> > ---
-> >  drivers/pci/host/Kconfig | 1 -
-> >  1 file changed, 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> > index 89d61c2cbfaa..ed905a5401c3 100644
-> > --- a/drivers/pci/host/Kconfig
-> > +++ b/drivers/pci/host/Kconfig
-> > @@ -71,7 +71,6 @@ config PCI_HOST_GENERIC
-> > 
-> >  config PCIE_XILINX
-> >  	bool "Xilinx AXI PCIe host bridge support"
-> > -	depends on ARCH_ZYNQ || MICROBLAZE
-> >  	help
-> >  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
-> >  	  Host Bridge driver.
 > 
+>>
+>>>         if (!ops->add_device)
+>>>                 return 0;
+>>>
+>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>> index f2393b7d7ebf..14aac9df3d17 100644
+>>> --- a/drivers/pci/probe.c
+>>> +++ b/drivers/pci/probe.c
+>>> @@ -17,6 +17,7 @@
+>>>  #include <linux/acpi.h>
+>>>  #include <linux/irqdomain.h>
+>>>  #include <linux/pm_runtime.h>
+>>> +#include <linux/iommu.h>
+>>
+>> This obviously belongs in another patch, as the compile error showed.
+>>
+>>>  #include "pci.h"
+>>>
+>>>  #define CARDBUS_LATENCY_TIMER  176     /* secondary latency timer */
+>>> --
+>>> 2.11.0
+>>>
+> 
+> 
+
+
+-- 
+Alexey
