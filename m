@@ -1,246 +1,304 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:57489 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751959AbdHABEZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 21:04:25 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Linux ACPI <linux-acpi@vger.kernel.org>
-Cc: Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: [PATCH v3 3/3] ACPI / PCI / PM: Rework acpi_pci_propagate_wakeup()
-Date: Tue, 01 Aug 2017 02:56:18 +0200
-Message-ID: <1916183.UEozbhaQct@aspire.rjw.lan>
-In-Reply-To: <4690779.IRjbMOd2yB@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan> <4853865.5aRGCM4CdQ@aspire.rjw.lan> <4690779.IRjbMOd2yB@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:52 -0600
+Message-Id: <20170725205753.4735-16-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 15/16] switchtec_ntb: add memory window support
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+The Switchtec hardware has two types of memory windows: LUTs and Direct.
+The first area in each BAR is for LUT windows and the remaining area is
+for the direct region. The total number of LUT entries is set by a
+configuration setting in hardware and they all must be the same
+size. (This is fixed by switchtec_ntb to be 64K.)
 
-The acpi_pci_propagate_wakeup() routine is there to handle cases in
-which PCI bridges (or PCIe ports) are expected to signal wakeup
-for devices below them, but currently it doesn't do that correctly.
+switchtec_ntb enables the LUTs only for the first BAR and enables the
+highest power of two possible. Seeing the LUTs are at the beginning of
+the BAR, the direct memory window's alignment is affected. Therefore,
+the maximum direct memory window size can not be greater than the number
+of LUTs times 64K. The direct window in other BARs will not have this
+restriction as the LUTs will not be enabled there. LUTs will only be
+exposed through the NTB API if the use_lut_mw parameter is set.
 
-The problem is that acpi_pci_propagate_wakeup() uses
-acpi_pm_set_device_wakeup() for bridges and if that routine is
-called for multiple times to disable wakeup for the same device,
-it will disable it on the first invocation and the next calls
-will have no effect (it works analogously when called to enable
-wakeup, but that is not a problem).
+Seeing the Switchtec hardware, by default, configures BARs to be 4G a
+module parameter is given to limit the size of the advertised memory
+windows. Higher layers tend to allocate the maximum BAR size and this
+has a tendency to fail when they try to allocate 4GB of contiguous
+memory.
 
-Now, say acpi_pci_propagate_wakeup() has been called for two
-different devices under the same bridge and it has called
-acpi_pm_set_device_wakeup() for that bridge each time.  The
-bridge is now enabled to generate wakeup signals.  Next,
-suppose that one of the devices below it resumes and
-acpi_pci_propagate_wakeup() is called to disable wakeup for that
-device.  It will then call acpi_pm_set_device_wakeup() for the bridge
-and that will effectively disable remote wakeup for all devices under
-it even though some of them may still be suspended and remote wakeup
-may be expected to work for them.
-
-To address this (arguably theoretical) issue, allow
-wakeup.enable_count under struct acpi_device to grow beyond 1 in
-certain situations.  In particular, allow that to happen in
-acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
-for PCI bridges, so that wakeup is actually disabled for the
-bridge when all devices under it resume and not when just one
-of them does that.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 213 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 210 insertions(+), 3 deletions(-)
 
-v2 -> v3: Follow the Bjorn's suggestion to un-inline acpi_pm_set_device_wakeup()
-  and acpi_pm_set_bridge_wakeup() to avoid exporting __acpi_pm_set_device_wakeup()
-  whose max_count argument is too much of an internal detail to be documented
-  for use in non-core code clearly enough.
-
-I've retained the tags, because the changes are minor and don't affect the
-behavior, but if (some of all) the tags are not applicabe any more, please let
-me know. :-)
-
----
- drivers/acpi/device_pm.c |   72 ++++++++++++++++++++++++++++++++---------------
- drivers/pci/pci-acpi.c   |    4 +-
- include/acpi/acpi_bus.h  |    5 +++
- 3 files changed, 57 insertions(+), 24 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -684,19 +684,8 @@ static void acpi_pm_notify_work_func(str
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index ca403ad2f7ac..c96b723b5621 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -25,6 +25,11 @@ MODULE_VERSION("0.1");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Microsemi Corporation");
  
- static DEFINE_MUTEX(acpi_wakeup_lock);
- 
--/**
-- * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-- * @adev: ACPI device to enable wakeup functionality for.
-- * @target_state: State the system is transitioning into.
-- *
-- * Enable the GPE associated with @adev so that it can generate wakeup signals
-- * for the device in response to external (remote) events and enable wakeup
-- * power for it.
-- *
-- * Callers must ensure that @adev is a valid ACPI device node before executing
-- * this function.
-- */
--static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
-+static int __acpi_device_wakeup_enable(struct acpi_device *adev,
-+				       u32 target_state, int max_count)
- {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
- 	acpi_status status;
-@@ -704,9 +693,12 @@ static int acpi_device_wakeup_enable(str
- 
- 	mutex_lock(&acpi_wakeup_lock);
- 
--	if (wakeup->enable_count > 0)
-+	if (wakeup->enable_count >= max_count)
- 		goto out;
- 
-+	if (wakeup->enable_count > 0)
-+		goto inc;
++static ulong max_mw_size = SZ_2M;
++module_param(max_mw_size, ulong, 0644);
++MODULE_PARM_DESC(max_mw_size,
++	"Max memory window size reported to the upper layer");
 +
- 	error = acpi_enable_wakeup_device_power(adev, target_state);
- 	if (error)
- 		goto out;
-@@ -718,6 +710,7 @@ static int acpi_device_wakeup_enable(str
- 		goto out;
- 	}
+ static bool use_lut_mws;
+ module_param(use_lut_mws, bool, 0644);
+ MODULE_PARM_DESC(use_lut_mws,
+@@ -190,7 +195,27 @@ static int switchtec_ntb_send_msg(struct switchtec_ntb *sndev, int idx,
  
-+inc:
- 	wakeup->enable_count++;
- 
- out:
-@@ -726,6 +719,23 @@ out:
- }
- 
- /**
-+ * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-+ * @adev: ACPI device to enable wakeup functionality for.
-+ * @target_state: State the system is transitioning into.
-+ *
-+ * Enable the GPE associated with @adev so that it can generate wakeup signals
-+ * for the device in response to external (remote) events and enable wakeup
-+ * power for it.
-+ *
-+ * Callers must ensure that @adev is a valid ACPI device node before executing
-+ * this function.
-+ */
-+static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
-+{
-+	return __acpi_device_wakeup_enable(adev, target_state, 1);
+ static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	int nr_direct_mw = sndev->peer_nr_direct_mw;
++	int nr_lut_mw = sndev->peer_nr_lut_mw - 1;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (!use_lut_mws)
++		nr_lut_mw = 0;
++
++	return nr_direct_mw + nr_lut_mw;
 +}
 +
-+/**
-  * acpi_device_wakeup_disable - Disable wakeup functionality for device.
-  * @adev: ACPI device to disable wakeup functionality for.
-  *
-@@ -752,12 +762,8 @@ out:
- 	mutex_unlock(&acpi_wakeup_lock);
- }
- 
--/**
-- * acpi_pm_set_device_wakeup - Enable/disable remote wakeup for given device.
-- * @dev: Device to enable/disable to generate wakeup events.
-- * @enable: Whether to enable or disable the wakeup functionality.
-- */
--int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
-+static int __acpi_pm_set_device_wakeup(struct device *dev, bool enable,
-+				       int max_count)
- {
- 	struct acpi_device *adev;
- 	int error;
-@@ -777,13 +783,35 @@ int acpi_pm_set_device_wakeup(struct dev
- 		return 0;
- 	}
- 
--	error = acpi_device_wakeup_enable(adev, acpi_target_system_state());
-+	error = __acpi_device_wakeup_enable(adev, acpi_target_system_state(),
-+					    max_count);
- 	if (!error)
- 		dev_dbg(dev, "Wakeup enabled by ACPI\n");
- 
- 	return error;
- }
--EXPORT_SYMBOL(acpi_pm_set_device_wakeup);
++static int lut_index(struct switchtec_ntb *sndev, int mw_idx)
++{
++	return mw_idx - sndev->nr_direct_mw + 1;
++}
 +
-+/**
-+ * acpi_pm_set_device_wakeup - Enable/disable remote wakeup for given device.
-+ * @dev: Device to enable/disable to generate wakeup events.
-+ * @enable: Whether to enable or disable the wakeup functionality.
-+ */
-+int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
++static int peer_lut_index(struct switchtec_ntb *sndev, int mw_idx)
 +{
-+	return __acpi_pm_set_device_wakeup(dev, enable, 1);
-+}
-+EXPORT_SYMBOL_GPL(acpi_pm_set_device_wakeup);
-+
-+/**
-+ * acpi_pm_set_bridge_wakeup - Enable/disable remote wakeup for given bridge.
-+ * @dev: Bridge device to enable/disable to generate wakeup events.
-+ * @enable: Whether to enable or disable the wakeup functionality.
-+ */
-+int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
-+{
-+	return __acpi_pm_set_device_wakeup(dev, enable, INT_MAX);
-+}
-+EXPORT_SYMBOL_GPL(acpi_pm_set_bridge_wakeup);
- 
- /**
-  * acpi_dev_pm_low_power - Put ACPI device into a low-power state.
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -626,6 +626,7 @@ acpi_status acpi_remove_pm_notifier(stru
- bool acpi_pm_device_can_wakeup(struct device *dev);
- int acpi_pm_device_sleep_state(struct device *, int *, int);
- int acpi_pm_set_device_wakeup(struct device *dev, bool enable);
-+int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable);
- #else
- static inline void acpi_pm_wakeup_event(struct device *dev)
- {
-@@ -656,6 +657,10 @@ static inline int acpi_pm_set_device_wak
- {
- 	return -ENODEV;
++	return mw_idx - sndev->peer_nr_direct_mw + 1;
  }
-+static inline int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
-+{
-+	return -ENODEV;
-+}
- #endif
  
- #ifdef CONFIG_ACPI_SLEEP
-Index: linux-pm/drivers/pci/pci-acpi.c
-===================================================================
---- linux-pm.orig/drivers/pci/pci-acpi.c
-+++ linux-pm/drivers/pci/pci-acpi.c
-@@ -573,7 +573,7 @@ static int acpi_pci_propagate_wakeup(str
+ static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
+@@ -198,17 +223,192 @@ static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
+ 				      resource_size_t *size_align,
+ 				      resource_size_t *size_max)
  {
- 	while (bus->parent) {
- 		if (acpi_pm_device_can_wakeup(&bus->self->dev))
--			return acpi_pm_set_device_wakeup(&bus->self->dev, enable);
-+			return acpi_pm_set_bridge_wakeup(&bus->self->dev, enable);
- 
- 		bus = bus->parent;
- 	}
-@@ -581,7 +581,7 @@ static int acpi_pci_propagate_wakeup(str
- 	/* We have reached the root bus. */
- 	if (bus->bridge) {
- 		if (acpi_pm_device_can_wakeup(bus->bridge))
--			return acpi_pm_set_device_wakeup(bus->bridge, enable);
-+			return acpi_pm_set_bridge_wakeup(bus->bridge, enable);
- 	}
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	int lut;
++	resource_size_t size;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	lut = widx >= sndev->peer_nr_direct_mw;
++	size = ioread64(&sndev->peer_shared->mw_sizes[widx]);
++
++	if (size == 0)
++		return -EINVAL;
++
++	if (addr_align)
++		*addr_align = lut ? size : SZ_4K;
++
++	if (size_align)
++		*size_align = lut ? size : SZ_4K;
++
++	if (size_max)
++		*size_max = size;
++
  	return 0;
  }
+ 
++static void switchtec_ntb_mw_clr_direct(struct switchtec_ntb *sndev, int idx)
++{
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++	int bar = sndev->peer_direct_mw_to_bar[idx];
++	u32 ctl_val;
++
++	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
++	ctl_val &= ~NTB_CTRL_BAR_DIR_WIN_EN;
++	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
++	iowrite32(0, &ctl->bar_entry[bar].win_size);
++	iowrite64(sndev->self_partition, &ctl->bar_entry[bar].xlate_addr);
++}
++
++static void switchtec_ntb_mw_clr_lut(struct switchtec_ntb *sndev, int idx)
++{
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++
++	iowrite64(0, &ctl->lut_entry[peer_lut_index(sndev, idx)]);
++}
++
++static void switchtec_ntb_mw_set_direct(struct switchtec_ntb *sndev, int idx,
++					dma_addr_t addr, resource_size_t size)
++{
++	int xlate_pos = ilog2(size);
++	int bar = sndev->peer_direct_mw_to_bar[idx];
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++	u32 ctl_val;
++
++	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
++	ctl_val |= NTB_CTRL_BAR_DIR_WIN_EN;
++
++	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
++	iowrite32(xlate_pos | size, &ctl->bar_entry[bar].win_size);
++	iowrite64(sndev->self_partition | addr,
++		  &ctl->bar_entry[bar].xlate_addr);
++}
++
++static void switchtec_ntb_mw_set_lut(struct switchtec_ntb *sndev, int idx,
++				     dma_addr_t addr, resource_size_t size)
++{
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++
++	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) | addr),
++		  &ctl->lut_entry[peer_lut_index(sndev, idx)]);
++}
++
+ static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
+ 				      dma_addr_t addr, resource_size_t size)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++	int xlate_pos = ilog2(size);
++	int nr_direct_mw = sndev->peer_nr_direct_mw;
++	int rc;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	dev_dbg(&sndev->stdev->dev, "MW %d: part %d addr %pad size %pap",
++		widx, pidx, &addr, &size);
++
++	if (widx >= switchtec_ntb_mw_count(ntb, pidx))
++		return -EINVAL;
++
++	if (xlate_pos < 12)
++		return -EINVAL;
++
++	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
++				   NTB_CTRL_PART_STATUS_LOCKED);
++	if (rc)
++		return rc;
++
++	if (addr == 0 || size == 0) {
++		if (widx < nr_direct_mw)
++			switchtec_ntb_mw_clr_direct(sndev, widx);
++		else
++			switchtec_ntb_mw_clr_lut(sndev, widx);
++	} else {
++		if (widx < nr_direct_mw)
++			switchtec_ntb_mw_set_direct(sndev, widx, addr, size);
++		else
++			switchtec_ntb_mw_set_lut(sndev, widx, addr, size);
++	}
++
++	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
++				   NTB_CTRL_PART_STATUS_NORMAL);
++
++	if (rc == -EIO) {
++		dev_err(&sndev->stdev->dev,
++			"Hardware reported an error configuring mw %d: %08x",
++			widx, ioread32(&ctl->bar_error));
++
++		if (widx < nr_direct_mw)
++			switchtec_ntb_mw_clr_direct(sndev, widx);
++		else
++			switchtec_ntb_mw_clr_lut(sndev, widx);
++
++		switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
++				      NTB_CTRL_PART_STATUS_NORMAL);
++	}
++
++	return rc;
+ }
+ 
+ static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return sndev->nr_direct_mw + (use_lut_mws ? sndev->nr_lut_mw - 1 : 0);
++}
++
++static int switchtec_ntb_direct_get_addr(struct switchtec_ntb *sndev,
++					 int idx, phys_addr_t *base,
++					 resource_size_t *size)
++{
++	int bar = sndev->direct_mw_to_bar[idx];
++	size_t offset = 0;
++
++	if (bar < 0)
++		return -EINVAL;
++
++	if (idx == 0) {
++		/*
++		 * This is the direct BAR shared with the LUTs
++		 * which means the actual window will be offset
++		 * by the size of all the LUT entries.
++		 */
++
++		offset = LUT_SIZE * sndev->nr_lut_mw;
++	}
++
++	if (base)
++		*base = pci_resource_start(sndev->ntb.pdev, bar) + offset;
++
++	if (size) {
++		*size = pci_resource_len(sndev->ntb.pdev, bar) - offset;
++		if (offset && *size > offset)
++			*size = offset;
++
++		if (*size > max_mw_size)
++			*size = max_mw_size;
++	}
++
++	return 0;
++}
++
++static int switchtec_ntb_lut_get_addr(struct switchtec_ntb *sndev,
++				      int idx, phys_addr_t *base,
++				      resource_size_t *size)
++{
++	int bar = sndev->direct_mw_to_bar[0];
++	int offset;
++
++	offset = LUT_SIZE * lut_index(sndev, idx);
++
++	if (base)
++		*base = pci_resource_start(sndev->ntb.pdev, bar) + offset;
++
++	if (size)
++		*size = LUT_SIZE;
++
+ 	return 0;
+ }
+ 
+@@ -216,7 +416,14 @@ static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
+ 					  phys_addr_t *base,
+ 					  resource_size_t *size)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < sndev->nr_direct_mw)
++		return switchtec_ntb_direct_get_addr(sndev, idx, base, size);
++	else if (idx < switchtec_ntb_peer_mw_count(ntb))
++		return switchtec_ntb_lut_get_addr(sndev, idx, base, size);
++	else
++		return -EINVAL;
+ }
+ 
+ static void switchtec_ntb_part_link_speed(struct switchtec_ntb *sndev,
+-- 
+2.11.0
