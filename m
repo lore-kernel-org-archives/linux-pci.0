@@ -1,111 +1,246 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1] x86/platform/intel-mid: Make IRQ allocation a bit more flexible
-Date: Mon, 24 Jul 2017 20:34:02 +0300
-Message-Id: <20170724173402.12939-1-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36738 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752849AbdGYU6N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jul 2017 16:58:13 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:49 -0600
+Message-Id: <20170725205753.4735-13-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 12/16] switchtec_ntb: add link management
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In the future we would use dynamic allocation for IRQ which brings
-non-1:1 mapping for IOAPIC domain. Thus, we need to respect return value
-of mp_map_gsi_to_irq() and assign it back to the device structure.
+switchtec_ntb checks for a link by looking at the shared memory
+window. If the magic number is correct and the otherside indicates
+their link is enabled then we take the link to be up.
 
-Besides that we need to read GSI from interrupt pin register to avoid
-cases when some drivers will try to initialize PCI device twice in a row
-which will call pcibios_enable_irq() twice as well.
+Whenever we change our local link status we send a msg to the
+otherside to check whether it's up and change their status.
 
-	serial 0000:00:04.1: Mapped GSI28 to IRQ5
-	serial 0000:00:04.2: Mapped GSI29 to IRQ5
-	serial 0000:00:04.3: Mapped GSI54 to IRQ5
-	8250_mid 0000:00:04.1: Mapped GSI28 to IRQ5
-	8250_mid 0000:00:04.2: Mapped GSI29 to IRQ6
-	8250_mid 0000:00:04.3: Mapped GSI54 to IRQ7
+The current status is maintained in a flag so ntb_is_link_up
+can return quickly.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+We utilize Switchtec's link status notifier to also check link changes
+when the switch notices a port changes state.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 ---
- arch/x86/pci/intel_mid_pci.c                                 | 12 ++++++++++--
- arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c |  6 +++---
- 2 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/ntb/hw/mscc/switchtec_ntb.c | 130 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 129 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid_pci.c
-index 5a18aedcb341..b901ece278dd 100644
---- a/arch/x86/pci/intel_mid_pci.c
-+++ b/arch/x86/pci/intel_mid_pci.c
-@@ -215,16 +215,23 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	struct irq_alloc_info info;
- 	int polarity;
- 	int ret;
-+	u8 gsi;
+diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+index f87c0eef59ef..34d69fa8612d 100644
+--- a/drivers/ntb/hw/mscc/switchtec_ntb.c
++++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+@@ -64,6 +64,7 @@ static inline void _iowrite64(u64 val, void __iomem *mmio)
  
- 	if (dev->irq_managed && dev->irq > 0)
- 		return 0;
- 
-+	ret = pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &gsi);
-+	if (ret < 0) {
-+		dev_warn(&dev->dev, "Failed to read interrupt line: %d\n", ret);
-+		return ret;
-+	}
+ struct shared_mw {
+ 	u32 magic;
++	u32 link_sta;
+ 	u32 partition_id;
+ 	u64 mw_sizes[MAX_MWS];
+ };
+@@ -104,8 +105,17 @@ struct switchtec_ntb {
+ 	int peer_nr_direct_mw;
+ 	int peer_nr_lut_mw;
+ 	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
 +
- 	switch (intel_mid_identify_cpu()) {
- 	case INTEL_MID_CPU_CHIP_TANGIER:
- 		polarity = IOAPIC_POL_HIGH;
++	bool link_is_up;
++	enum ntb_speed link_speed;
++	enum ntb_width link_width;
+ };
  
- 		/* Special treatment for IRQ0 */
--		if (dev->irq == 0) {
-+		if (gsi == 0) {
- 			/*
- 			 * Skip HS UART common registers device since it has
- 			 * IRQ0 assigned and not used by the kernel.
-@@ -253,10 +260,11 @@ static int intel_mid_pci_irq_enable(struct pci_dev *dev)
- 	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped to
- 	 * IOAPIC RTE entries, so we just enable RTE for the device.
- 	 */
--	ret = mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info);
-+	ret = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
- 	if (ret < 0)
- 		return ret;
++static struct switchtec_ntb *ntb_sndev(struct ntb_dev *ntb)
++{
++	return container_of(ntb, struct switchtec_ntb, ntb);
++}
++
+ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
+ 				 struct ntb_ctrl_regs __iomem *ctl,
+ 				 u32 op, int wait_status)
+@@ -163,6 +173,17 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
+ 	return -EIO;
+ }
  
-+	dev->irq = ret;
- 	dev->irq_managed = 1;
- 
- 	return 0;
-diff --git a/arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c b/arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c
-index 9e304e2ea4f5..4f5fa65a1011 100644
---- a/arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c
-+++ b/arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c
-@@ -30,13 +30,13 @@ static int tangier_probe(struct platform_device *pdev)
++static int switchtec_ntb_send_msg(struct switchtec_ntb *sndev, int idx,
++				  u32 val)
++{
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->mmio_self_dbmsg->omsg))
++		return -EINVAL;
++
++	iowrite32(val, &sndev->mmio_self_dbmsg->omsg[idx].msg);
++
++	return 0;
++}
++
+ static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
  {
- 	struct irq_alloc_info info;
- 	struct intel_mid_wdt_pdata *pdata = pdev->dev.platform_data;
--	int gsi, irq;
-+	int gsi = TANGIER_EXT_TIMER0_MSI;
-+	int irq;
- 
- 	if (!pdata)
- 		return -EINVAL;
- 
- 	/* IOAPIC builds identity mapping between GSI and IRQ on MID */
--	gsi = pdata->irq;
- 	ioapic_set_alloc_attr(&info, cpu_to_node(0), 1, 0);
- 	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
- 	if (irq < 0) {
-@@ -44,11 +44,11 @@ static int tangier_probe(struct platform_device *pdev)
- 		return irq;
- 	}
- 
-+	pdata->irq = irq;
+ 	return 0;
+@@ -194,22 +215,124 @@ static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
  	return 0;
  }
  
- static struct intel_mid_wdt_pdata tangier_pdata = {
--	.irq = TANGIER_EXT_TIMER0_MSI,
- 	.probe = tangier_probe,
- };
++static void switchtec_ntb_part_link_speed(struct switchtec_ntb *sndev,
++					  int partition,
++					  enum ntb_speed *speed,
++					  enum ntb_width *width)
++{
++	struct switchtec_dev *stdev = sndev->stdev;
++
++	u32 pff = ioread32(&stdev->mmio_part_cfg[partition].vep_pff_inst_id);
++	u32 linksta = ioread32(&stdev->mmio_pff_csr[pff].pci_cap_region[13]);
++
++	if (speed)
++		*speed = (linksta >> 16) & 0xF;
++
++	if (width)
++		*width = (linksta >> 20) & 0x3F;
++}
++
++static void switchtec_ntb_set_link_speed(struct switchtec_ntb *sndev)
++{
++	enum ntb_speed self_speed, peer_speed;
++	enum ntb_width self_width, peer_width;
++
++	if (!sndev->link_is_up) {
++		sndev->link_speed = NTB_SPEED_NONE;
++		sndev->link_width = NTB_WIDTH_NONE;
++		return;
++	}
++
++	switchtec_ntb_part_link_speed(sndev, sndev->self_partition,
++				      &self_speed, &self_width);
++	switchtec_ntb_part_link_speed(sndev, sndev->peer_partition,
++				      &peer_speed, &peer_width);
++
++	sndev->link_speed = min(self_speed, peer_speed);
++	sndev->link_width = min(self_width, peer_width);
++}
++
++enum {
++	LINK_MESSAGE = 0,
++	MSG_LINK_UP = 1,
++	MSG_LINK_DOWN = 2,
++	MSG_CHECK_LINK = 3,
++};
++
++static void switchtec_ntb_check_link(struct switchtec_ntb *sndev)
++{
++	int link_sta;
++	int old = sndev->link_is_up;
++
++	link_sta = sndev->self_shared->link_sta;
++	if (link_sta) {
++		u64 peer = ioread64(&sndev->peer_shared->magic);
++
++		if ((peer & 0xFFFFFFFF) == SWITCHTEC_NTB_MAGIC)
++			link_sta = peer >> 32;
++		else
++			link_sta = 0;
++	}
++
++	sndev->link_is_up = link_sta;
++	switchtec_ntb_set_link_speed(sndev);
++
++	if (link_sta != old) {
++		switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_CHECK_LINK);
++		ntb_link_event(&sndev->ntb);
++		dev_info(&sndev->stdev->dev, "ntb link %s",
++			 link_sta ? "up" : "down");
++	}
++}
++
++static void switchtec_ntb_link_notification(struct switchtec_dev *stdev)
++{
++	struct switchtec_ntb *sndev = stdev->sndev;
++
++	switchtec_ntb_check_link(sndev);
++}
++
+ static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
+ 				    enum ntb_speed *speed,
+ 				    enum ntb_width *width)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (speed)
++		*speed = sndev->link_speed;
++	if (width)
++		*width = sndev->link_width;
++
++	return sndev->link_is_up;
+ }
  
+ static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
+ 				     enum ntb_speed max_speed,
+ 				     enum ntb_width max_width)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	dev_dbg(&sndev->stdev->dev, "enabling link");
++
++	sndev->self_shared->link_sta = 1;
++	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
++
++	switchtec_ntb_check_link(sndev);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	dev_dbg(&sndev->stdev->dev, "disabling link");
++
++	sndev->self_shared->link_sta = 0;
++	switchtec_ntb_send_msg(sndev, LINK_MESSAGE, MSG_LINK_UP);
++
++	switchtec_ntb_check_link(sndev);
++
+ 	return 0;
+ }
+ 
+@@ -572,6 +695,9 @@ static irqreturn_t switchtec_ntb_message_isr(int irq, void *dev)
+ 			dev_dbg(&sndev->stdev->dev, "message: %d %08x\n", i,
+ 				(u32)msg);
+ 			iowrite8(1, &sndev->mmio_self_dbmsg->imsg[i].status);
++
++			if (i == LINK_MESSAGE)
++				switchtec_ntb_check_link(sndev);
+ 		}
+ 	}
+ 
+@@ -674,6 +800,7 @@ static int switchtec_ntb_add(struct device *dev,
+ 		goto deinit_and_exit;
+ 
+ 	stdev->sndev = sndev;
++	stdev->link_notifier = switchtec_ntb_link_notification;
+ 	dev_info(dev, "NTB device registered");
+ 
+ 	return 0;
+@@ -697,6 +824,7 @@ void switchtec_ntb_remove(struct device *dev,
+ 	if (!sndev)
+ 		return;
+ 
++	stdev->link_notifier = NULL;
+ 	stdev->sndev = NULL;
+ 	ntb_unregister_device(&sndev->ntb);
+ 	switchtec_ntb_deinit_db_msg_irq(sndev);
 -- 
-2.13.2
+2.11.0
