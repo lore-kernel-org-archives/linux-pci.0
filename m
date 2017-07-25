@@ -1,66 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V2] PCI: Do not enable extended tags on pre-dated (v1.x)
- systems
-To: wim.ten.have@oracle.com
-References: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <7d6e99b9-bdef-845a-a542-2c47f429eb12@codeaurora.org>
-Date: Fri, 7 Jul 2017 11:01:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <1499439193-16628-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:36607 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751528AbdGYU6D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Jul 2017 16:58:03 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Tue, 25 Jul 2017 14:57:42 -0600
+Message-Id: <20170725205753.4735-6-logang@deltatee.com>
+In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+Subject: [PATCH v3 05/16] ntb: ntb_test: ensure the link is up before trying to configure the mws
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Wim,
+After the link tests, there is a race on one side of the test for
+the link coming up. It's possible, in some cases, for the test script
+to write to the 'peer_trans' files before the link has come up.
 
-On 7/7/2017 10:53 AM, Sinan Kaya wrote:
-> According to extended tags ECN document, all PCIe receivers are expected
-> to support extended tags support. It should be safe to enable extended
-> tags on endpoints without checking compatibility.
-> 
-> This assumption seems to be working fine except for the legacy systems.
-> The ECN has been written against PCIE spec version 2.0. Therefore, we need
-> to exclude all version 1.0 devices from this change as there is HW out
-> there that can't handle extended tags.
-> 
-> Note that the default value of Extended Tags Enable bit is implementation
-> specific. Therefore, we are clearing the bit by default when incompatible
-> HW is found without assuming that value is zero.
-> 
-> Reported-by: Wim ten Have <wim.ten.have@oracle.com>
-> Link: https://pcisig.com/sites/default/files/specification_documents/ECN_Extended_Tag_Enable_Default_05Sept2008_final.pdf
-> Link: https://bugzilla.redhat.com/show_bug.cgi?id=1467674
-> Fixes: 60db3a4d8cc9 ("PCI: Enable PCIe Extended Tags if supported")
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
+To fix this, we simply use the link event file to ensure both sides
+see the link as up before continuning.
 
-Can you also give this a spin? I don't have a system with v1 PCIe bridges.
-I only tested v2 and later code path.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ tools/testing/selftests/ntb/ntb_test.sh | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-I tried to address Jike Song concerns on this version and removed your tested-by
-since the code changed.
-
-Sinan
-
+diff --git a/tools/testing/selftests/ntb/ntb_test.sh b/tools/testing/selftests/ntb/ntb_test.sh
+index 1c12b5855e4f..5fc7ad359e21 100755
+--- a/tools/testing/selftests/ntb/ntb_test.sh
++++ b/tools/testing/selftests/ntb/ntb_test.sh
+@@ -333,6 +333,10 @@ function ntb_tool_tests()
+ 	link_test $LOCAL_TOOL $REMOTE_TOOL
+ 	link_test $REMOTE_TOOL $LOCAL_TOOL
+ 
++	#Ensure the link is up on both sides before continuing
++	write_file Y $LOCAL_TOOL/link_event
++	write_file Y $REMOTE_TOOL/link_event
++
+ 	for PEER_TRANS in $(ls $LOCAL_TOOL/peer_trans*); do
+ 		PT=$(basename $PEER_TRANS)
+ 		write_file $MW_SIZE $LOCAL_TOOL/$PT
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
