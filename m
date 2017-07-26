@@ -1,102 +1,206 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1500428173.3350.2.camel@kernel.crashing.org>
-Subject: Re: [PATCH 1/4] powerpc: simplify and fix VGA default device behaviour
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Daniel Axtens <dja@axtens.net>, linux-pci@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Date: Wed, 19 Jul 2017 11:36:13 +1000
-In-Reply-To: <20170719012839.20124-2-dja@axtens.net>
-References: <20170719012839.20124-1-dja@axtens.net>
- <20170719012839.20124-2-dja@axtens.net>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: gabriele.paoloni@huawei.com, airlied@linux.ie, catalin.marinas@arm.com,
- will.deacon@arm.com, z.liuxinliang@hisilicon.com,
- Brian King <brking@linux.vnet.ibm.com>, alex.williamson@redhat.com,
- zourongrong@gmail.com, daniel.vetter@intel.com, helgass@kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45274 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750867AbdGZPbn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jul 2017 11:31:43 -0400
+Subject: Re: [PATCH v4 4/7] phy: qcom-qmp: Add support for IPQ8074
+To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
+        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+References: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
+ <1500636977-11934-5-git-send-email-varada@codeaurora.org>
+Cc: smuthayy <smuthayy@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Message-ID: <785581e8-84c9-9f7d-d545-46e567efc5c9@codeaurora.org>
+Date: Wed, 26 Jul 2017 21:01:36 +0530
+MIME-Version: 1.0
+In-Reply-To: <1500636977-11934-5-git-send-email-varada@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-07-19 at 11:28 +1000, Daniel Axtens wrote:
-> Some powerpc devices provide a PCI display that isn't picked up by
-> the VGA arbiter, presumably because it doesn't support the PCI
-> legacy VGA ranges.
-> 
-> Commit c2e1d84523ad ("powerpc: Set default VGA device") introduced
-> an arch quirk to mark these devices as default to fix X autoconfig.
-> 
-> The commit message stated that the patch:
-> 
->     Ensures a default VGA is always set if a graphics adapter is present,
->     even if firmware did not initialize it. If more than one graphics
->     adapter is present, ensure the one initialized by firmware is set
->     as the default VGA device.
-> 
-> The patch used the following test to decide whether or not to mark
-> a device as default:
-> 
->   pci_read_config_word(pdev, PCI_COMMAND, &cmd);
->   if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
->           vga_set_default_device(pdev);
-> 
-> This doesn't seem like it works quite as intended. Because of the
-> logical OR, the default device will be set in 2 cases:
-> 
->  1) if there is no default device
-> OR
->  2) if this device has normal memory/IO decoding turned on
-> 
-> This will work as intended if there is only one device, but if
-> there are multiple devices, we may override the device the VGA
-> arbiter picked.
-> 
-> Instead, set a device as default if there is no default device AND
-> this device decodes.
-> 
-> This will not change behaviour on single-headed systems.
 
-Ack.
 
-> Cc: Brian King <brking@linux.vnet.ibm.com>
-> Signed-off-by: Daniel Axtens <dja@axtens.net>
-> 
+On 07/21/2017 05:06 PM, Varadarajan Narayanan wrote:
+> Add definitions required to enable QMP phy support for IPQ8074.
+>
+> Signed-off-by: smuthayy <smuthayy@codeaurora.org>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 > ---
-> 
-> Tested in TCG (the card provided by qemu doesn't automatically
-> register with vgaarb, so the relevant code path has been tested)
-> but I would appreciate any tests on real hardware.
-> ---
->  arch/powerpc/kernel/pci-common.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index 341a7469cab8..c95fdda3a2dc 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
->  {
->  	u16 cmd;
->  
-> +	if (vga_default_device())
-> +		return;
+>   drivers/phy/qualcomm/phy-qcom-qmp.c | 124 ++++++++++++++++++++++++++++++++++++
+>   1 file changed, 124 insertions(+)
+>
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> index b046866..ec277fd 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> @@ -59,6 +59,7 @@
+>   #define QSERDES_COM_PLL_RCTRL_MODE1			0x088
+>   #define QSERDES_COM_PLL_CCTRL_MODE0			0x090
+>   #define QSERDES_COM_PLL_CCTRL_MODE1			0x094
+> +#define QSERDES_COM_BIAS_EN_CTRL_BY_PSM			0x0a8
+>   #define QSERDES_COM_SYSCLK_EN_SEL			0x0ac
+>   #define QSERDES_COM_RESETSM_CNTRL			0x0b4
+>   #define QSERDES_COM_RESTRIM_CTRL			0x0bc
+> @@ -143,6 +144,11 @@
+>   #define QPHY_LOCK_DETECT_CONFIG3			0x88
+>   #define QPHY_PWRUP_RESET_DLY_TIME_AUXCLK		0xa0
+>   #define QPHY_LP_WAKEUP_DLY_TIME_AUXCLK			0xa4
+> +#define QPHY_PLL_LOCK_CHK_DLY_TIME_AUXCLK_LSB		0x1A8
+> +#define QPHY_OSC_DTCT_ACTIONS				0x1AC
+> +#define QPHY_RX_SIGDET_LVL				0x1D8
+> +#define QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_LSB		0x1DC
+> +#define QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_MSB		0x1E0
+>   
+>   /* QPHY_SW_RESET bit */
+>   #define SW_RESET				BIT(0)
+> @@ -580,6 +586,121 @@ static inline void qphy_clrbits(void __iomem *base, u32 offset, u32 val)
+>   	.mask_pcs_ready		= PHYSTATUS,
+>   };
+>   
+> +static const struct qmp_phy_init_tbl ipq8074_pcie_serdes_tbl[] = {
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CLKBUFLR_EN, 0x18),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_ENABLE1, 0x10),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TRIM, 0xf),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP_EN, 0x1),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_MAP, 0x0),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER1, 0x1f),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_TIMER2, 0x3f),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CMN_CONFIG, 0x6),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_IVCO, 0xf),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_HSCLK_SEL, 0x0),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SVS_MODE_CLK_SEL, 0x1),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CORE_CLK_EN, 0x20),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CORECLK_DIV, 0xa),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_RESETSM_CNTRL, 0x20),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_BG_TIMER, 0xa),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_EN_SEL, 0xa),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_DEC_START_MODE0, 0x82),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START3_MODE0, 0x3),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START2_MODE0, 0x55),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_DIV_FRAC_START1_MODE0, 0x55),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP3_MODE0, 0x0),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP2_MODE0, 0xD),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_LOCK_CMP1_MODE0, 0xD04),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_SELECT, 0x33),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SYS_CLK_CTRL, 0x2),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SYSCLK_BUF_ENABLE, 0x1f),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CP_CTRL_MODE0, 0xb),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_RCTRL_MODE0, 0x16),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_PLL_CCTRL_MODE0, 0x28),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN1_MODE0, 0x0),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_INTEGLOOP_GAIN0_MODE0, 0x80),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_BIAS_EN_CTRL_BY_PSM, 0x1),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_VCO_TUNE_CTRL, 0xa),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_EN_CENTER, 0x1),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER1, 0x31),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_PER2, 0x1),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER1, 0x2),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_ADJ_PER2, 0x0),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE1, 0x2f),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_SSC_STEP_SIZE2, 0x19),
+> +	QMP_PHY_INIT_CFG(QSERDES_COM_CLK_EP_DIV, 0x19),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_CNTRL, 0x7),
+> +};
 > +
->  	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-> -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
-> +	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
->  		vga_set_default_device(pdev);
->  
->  }
+> +static const struct qmp_phy_init_tbl ipq8074_pcie_tx_tbl[] = {
+> +	QMP_PHY_INIT_CFG(QSERDES_TX_HIGHZ_TRANSCEIVEREN_BIAS_DRVR_EN, 0x45),
+> +	QMP_PHY_INIT_CFG(QSERDES_TX_LANE_MODE, 0x6),
+> +	QMP_PHY_INIT_CFG(QSERDES_TX_RES_CODE_LANE_OFFSET, 0x2),
+> +	QMP_PHY_INIT_CFG(QSERDES_TX_RCV_DETECT_LVL_2, 0x12),
+> +};
+> +
+> +static const struct qmp_phy_init_tbl ipq8074_pcie_rx_tbl[] = {
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_ENABLES, 0x1c),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_SIGDET_DEGLITCH_CNTRL, 0x14),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL2, 0x1),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL3, 0x0),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_RX_EQU_ADAPTOR_CNTRL4, 0xdb),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_SATURATION_AND_ENABLE, 0x4b),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN, 0x4),
+> +	QMP_PHY_INIT_CFG(QSERDES_RX_UCDR_SO_GAIN_HALF, 0x4),
+> +};
+> +
+> +static const struct qmp_phy_init_tbl ipq8074_pcie_pcs_tbl[] = {
+> +	QMP_PHY_INIT_CFG(QPHY_ENDPOINT_REFCLK_DRIVE, 0x4),
+> +	QMP_PHY_INIT_CFG(QPHY_OSC_DTCT_ACTIONS, 0x0),
+> +	QMP_PHY_INIT_CFG(QPHY_PWRUP_RESET_DLY_TIME_AUXCLK, 0x40),
+> +	QMP_PHY_INIT_CFG(QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_MSB, 0x0),
+> +	QMP_PHY_INIT_CFG(QPHY_L1SS_WAKEUP_DLY_TIME_AUXCLK_LSB, 0x40),
+> +	QMP_PHY_INIT_CFG(QPHY_PLL_LOCK_CHK_DLY_TIME_AUXCLK_LSB, 0x0),
+> +	QMP_PHY_INIT_CFG(QPHY_LP_WAKEUP_DLY_TIME_AUXCLK, 0x40),
+> +	QMP_PHY_INIT_CFG_L(QPHY_PLL_LOCK_CHK_DLY_TIME, 0x73),
+> +	QMP_PHY_INIT_CFG(QPHY_RX_SIGDET_LVL, 0x99),
+> +	QMP_PHY_INIT_CFG(QPHY_TXDEEMPH_M6DB_V0, 0x15),
+> +	QMP_PHY_INIT_CFG(QPHY_TXDEEMPH_M3P5DB_V0, 0xe),
+> +	QMP_PHY_INIT_CFG_L(QPHY_SW_RESET, 0x0),
+> +	QMP_PHY_INIT_CFG_L(QPHY_START_CTRL, 0x3),
+> +};
+> +
+> +/* list of resets */
+> +static const char * const ipq8074_pciephy_reset_l[] = {
+> +	"phy", "phy_phy",
+> +};
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Just a nit in this patch.
+Can you arrange these data inline to how they are currently in the driver?
+So please place the init tables along with other tables, and the reset and
+other driver data also along side other such definitions.
+Thanks
+
+
+Regards
+vivek
+
+> +
+> +static const struct qmp_phy_cfg ipq8074_pciephy_cfg = {
+> +	.type			= PHY_TYPE_PCIE,
+> +	.nlanes			= 1,
+> +
+> +	.serdes_tbl		= ipq8074_pcie_serdes_tbl,
+> +	.serdes_tbl_num		= ARRAY_SIZE(ipq8074_pcie_serdes_tbl),
+> +	.tx_tbl			= ipq8074_pcie_tx_tbl,
+> +	.tx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_tx_tbl),
+> +	.rx_tbl			= ipq8074_pcie_rx_tbl,
+> +	.rx_tbl_num		= ARRAY_SIZE(ipq8074_pcie_rx_tbl),
+> +	.pcs_tbl		= ipq8074_pcie_pcs_tbl,
+> +	.pcs_tbl_num		= ARRAY_SIZE(ipq8074_pcie_pcs_tbl),
+> +	.clk_list		= NULL,
+> +	.num_clks		= 0,
+> +	.reset_list		= ipq8074_pciephy_reset_l,
+> +	.num_resets		= ARRAY_SIZE(ipq8074_pciephy_reset_l),
+> +	.vreg_list		= NULL,
+> +	.num_vregs		= 0,
+> +	.regs			= pciephy_regs_layout,
+> +
+> +	.start_ctrl		= SERDES_START | PCS_START,
+> +	.pwrdn_ctrl		= SW_PWRDN | REFCLK_DRV_DSBL,
+> +	.mask_pcs_ready		= PHYSTATUS,
+> +
+> +	.has_phy_com_ctrl	= false,
+> +	.has_lane_rst		= false,
+> +	.has_pwrdn_delay	= true,
+> +	.pwrdn_delay_min	= 995,		/* us */
+> +	.pwrdn_delay_max	= 1005,		/* us */
+> +};
+> +
+>   static void qcom_qmp_phy_configure(void __iomem *base,
+>   				   const unsigned int *regs,
+>   				   const struct qmp_phy_init_tbl tbl[],
+> @@ -1042,6 +1163,9 @@ int qcom_qmp_phy_create(struct device *dev, struct device_node *np, int id)
+>   	}, {
+>   		.compatible = "qcom,msm8996-qmp-usb3-phy",
+>   		.data = &msm8996_usb3phy_cfg,
+> +	}, {
+> +		.compatible = "qcom,ipq8074-qmp-pcie-phy",
+> +		.data = &ipq8074_pciephy_cfg,
+>   	},
+>   	{ },
+>   };
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
