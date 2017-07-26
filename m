@@ -1,291 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35181 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751704AbdGaXhU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:37:20 -0400
-Received: by mail-pf0-f173.google.com with SMTP id t86so372894pfe.2
-        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:37:20 -0700 (PDT)
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        corbet@lwn.net
-Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH net-next 3/4] netvsc: remove bonding setup script
-Date: Mon, 31 Jul 2017 16:37:11 -0700
-Message-Id: <20170731233712.12087-4-sthemmin@microsoft.com>
-In-Reply-To: <20170731233712.12087-1-sthemmin@microsoft.com>
-References: <20170731233712.12087-1-sthemmin@microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
+ counters
+To: Greg KH <gregkh@linuxfoundation.org>, Borislav Petkov <bp@alien8.de>
+References: <faa339c4-b087-d970-1099-3d6cf8186545@arm.com>
+ <20170726131058.GA8665@hc> <131179fe-42e7-f286-5bd4-801f4c93d5f9@arm.com>
+ <20170726145522.GC28875@nazgul.tnic> <20170726151314.GA10696@hc>
+ <20170726153502.GE28875@nazgul.tnic> <20170726154515.GA11453@hc>
+ <20170726155548.GF28875@nazgul.tnic> <20170726161949.GB15426@kroah.com>
+ <20170726163049.GG28875@nazgul.tnic> <20170726173353.GB21705@kroah.com>
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
+Date: Wed, 26 Jul 2017 13:02:38 -0700
+MIME-Version: 1.0
+In-Reply-To: <20170726173353.GB21705@kroah.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jan Glauber <jan.glauber@caviumnetworks.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No longer needed, now all managed by transparent VF logic.
+On 07/26/2017 10:33 AM, Greg KH wrote:
+> On Wed, Jul 26, 2017 at 06:30:49PM +0200, Borislav Petkov wrote:
+>> On Wed, Jul 26, 2017 at 09:19:49AM -0700, Greg KH wrote:
+>>> On Wed, Jul 26, 2017 at 05:55:48PM +0200, Borislav Petkov wrote:
+>>>> On Wed, Jul 26, 2017 at 05:45:15PM +0200, Jan Glauber wrote:
+>>>>> The PMU/EDAC devices are all PCI devices do I need the 'struct pci_dev *'.
+>>>>> I'm not aware of other ways to access these devices. Please enlighten
+>>>>> me if I'm missing something.
+>>>>
+>>>> Me enlighten you on Cavium hardware?! You're funny.
+>>>>
+>>>> So I don't know whether the PCI hotplug code can run more than one
+>>>> function upon PCI ID detection. Probably Greg will say, write a
+>>>> multiplexer wrapper. :-)
+>>>
+>>> -ENOCONTEXT....
+>>>
+>>> Anyway, pci questions are best asked on the linux-pci@vger list.  And
+>>> yes, all PCI devices end up with a 'struct pci_dev *' automatically.
+>>
+>> Simple: so they have a PCI ID of a memory contoller and want to hotplug
+>> two drivers for it. And those two drivers should remain independent from
+>> each other.
+> 
+> Hahahahaha, no.  That's crazy, you were right in guessing what my answer
+> was going to be :)
+> 
 
-Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
----
- tools/hv/bondvf.sh | 255 -----------------------------------------------------
- 1 file changed, 255 deletions(-)
- delete mode 100755 tools/hv/bondvf.sh
 
-diff --git a/tools/hv/bondvf.sh b/tools/hv/bondvf.sh
-deleted file mode 100755
-index 80f102860cf8..000000000000
---- a/tools/hv/bondvf.sh
-+++ /dev/null
-@@ -1,255 +0,0 @@
--#!/bin/bash
--
--# This example script creates bonding network devices based on synthetic NIC
--# (the virtual network adapter usually provided by Hyper-V) and the matching
--# VF NIC (SRIOV virtual function). So the synthetic NIC and VF NIC can
--# function as one network device, and fail over to the synthetic NIC if VF is
--# down.
--#
--# Usage:
--# - After configured vSwitch and vNIC with SRIOV, start Linux virtual
--#   machine (VM)
--# - Run this scripts on the VM. It will create configuration files in
--#   distro specific directory.
--# - Reboot the VM, so that the bonding config are enabled.
--#
--# The config files are DHCP by default. You may edit them if you need to change
--# to Static IP or change other settings.
--#
--
--sysdir=/sys/class/net
--netvsc_cls={f8615163-df3e-46c5-913f-f2d2f965ed0e}
--bondcnt=0
--
--# Detect Distro
--if [ -f /etc/redhat-release ];
--then
--	cfgdir=/etc/sysconfig/network-scripts
--	distro=redhat
--elif grep -q 'Ubuntu' /etc/issue
--then
--	cfgdir=/etc/network
--	distro=ubuntu
--elif grep -q 'SUSE' /etc/issue
--then
--	cfgdir=/etc/sysconfig/network
--	distro=suse
--else
--	echo "Unsupported Distro"
--	exit 1
--fi
--
--echo Detected Distro: $distro, or compatible
--
--# Get a list of ethernet names
--list_eth=(`cd $sysdir && ls -d */ | cut -d/ -f1 | grep -v bond`)
--eth_cnt=${#list_eth[@]}
--
--echo List of net devices:
--
--# Get the MAC addresses
--for (( i=0; i < $eth_cnt; i++ ))
--do
--	list_mac[$i]=`cat $sysdir/${list_eth[$i]}/address`
--	echo ${list_eth[$i]}, ${list_mac[$i]}
--done
--
--# Find NIC with matching MAC
--for (( i=0; i < $eth_cnt-1; i++ ))
--do
--	for (( j=i+1; j < $eth_cnt; j++ ))
--	do
--		if [ "${list_mac[$i]}" = "${list_mac[$j]}" ]
--		then
--			list_match[$i]=${list_eth[$j]}
--			break
--		fi
--	done
--done
--
--function create_eth_cfg_redhat {
--	local fn=$cfgdir/ifcfg-$1
--
--	rm -f $fn
--	echo DEVICE=$1 >>$fn
--	echo TYPE=Ethernet >>$fn
--	echo BOOTPROTO=none >>$fn
--	echo UUID=`uuidgen` >>$fn
--	echo ONBOOT=yes >>$fn
--	echo PEERDNS=yes >>$fn
--	echo IPV6INIT=yes >>$fn
--	echo MASTER=$2 >>$fn
--	echo SLAVE=yes >>$fn
--}
--
--function create_eth_cfg_pri_redhat {
--	create_eth_cfg_redhat $1 $2
--}
--
--function create_bond_cfg_redhat {
--	local fn=$cfgdir/ifcfg-$1
--
--	rm -f $fn
--	echo DEVICE=$1 >>$fn
--	echo TYPE=Bond >>$fn
--	echo BOOTPROTO=dhcp >>$fn
--	echo UUID=`uuidgen` >>$fn
--	echo ONBOOT=yes >>$fn
--	echo PEERDNS=yes >>$fn
--	echo IPV6INIT=yes >>$fn
--	echo BONDING_MASTER=yes >>$fn
--	echo BONDING_OPTS=\"mode=active-backup miimon=100 primary=$2\" >>$fn
--}
--
--function del_eth_cfg_ubuntu {
--	local mainfn=$cfgdir/interfaces
--	local fnlist=( $mainfn )
--
--	local dirlist=(`awk '/^[ \t]*source/{print $2}' $mainfn`)
--
--	local i
--	for i in "${dirlist[@]}"
--	do
--		fnlist+=(`ls $i 2>/dev/null`)
--	done
--
--	local tmpfl=$(mktemp)
--
--	local nic_start='^[ \t]*(auto|iface|mapping|allow-.*)[ \t]+'$1
--	local nic_end='^[ \t]*(auto|iface|mapping|allow-.*|source)'
--
--	local fn
--	for fn in "${fnlist[@]}"
--	do
--		awk "/$nic_end/{x=0} x{next} /$nic_start/{x=1;next} 1" \
--			$fn >$tmpfl
--
--		cp $tmpfl $fn
--	done
--
--	rm $tmpfl
--}
--
--function create_eth_cfg_ubuntu {
--	local fn=$cfgdir/interfaces
--
--	del_eth_cfg_ubuntu $1
--	echo $'\n'auto $1 >>$fn
--	echo iface $1 inet manual >>$fn
--	echo bond-master $2 >>$fn
--}
--
--function create_eth_cfg_pri_ubuntu {
--	local fn=$cfgdir/interfaces
--
--	del_eth_cfg_ubuntu $1
--	echo $'\n'allow-hotplug $1 >>$fn
--	echo iface $1 inet manual >>$fn
--	echo bond-master $2 >>$fn
--	echo bond-primary $1 >>$fn
--}
--
--function create_bond_cfg_ubuntu {
--	local fn=$cfgdir/interfaces
--
--	del_eth_cfg_ubuntu $1
--
--	echo $'\n'auto $1 >>$fn
--	echo iface $1 inet dhcp >>$fn
--	echo bond-mode active-backup >>$fn
--	echo bond-miimon 100 >>$fn
--	echo bond-slaves none >>$fn
--}
--
--function create_eth_cfg_suse {
--        local fn=$cfgdir/ifcfg-$1
--
--        rm -f $fn
--	echo BOOTPROTO=none >>$fn
--	echo STARTMODE=auto >>$fn
--}
--
--function create_eth_cfg_pri_suse {
--	local fn=$cfgdir/ifcfg-$1
--
--	rm -f $fn
--	echo BOOTPROTO=none >>$fn
--	echo STARTMODE=hotplug >>$fn
--}
--
--function create_bond_cfg_suse {
--	local fn=$cfgdir/ifcfg-$1
--
--	rm -f $fn
--	echo BOOTPROTO=dhcp >>$fn
--	echo STARTMODE=auto >>$fn
--	echo BONDING_MASTER=yes >>$fn
--	echo BONDING_SLAVE_0=$2 >>$fn
--	echo BONDING_SLAVE_1=$3 >>$fn
--	echo BONDING_MODULE_OPTS=\'mode=active-backup miimon=100 primary=$2\' >>$fn
--}
--
--function create_bond {
--	local bondname=bond$bondcnt
--	local primary
--	local secondary
--
--	local class_id1=`cat $sysdir/$1/device/class_id 2>/dev/null`
--	local class_id2=`cat $sysdir/$2/device/class_id 2>/dev/null`
--
--	if [ "$class_id1" = "$netvsc_cls" ]
--	then
--		primary=$2
--		secondary=$1
--	elif [ "$class_id2" = "$netvsc_cls" ]
--	then
--		primary=$1
--		secondary=$2
--	else
--		return 0
--	fi
--
--	echo $'\nBond name:' $bondname
--
--	if [ $distro == ubuntu ]
--	then
--		local mainfn=$cfgdir/interfaces
--		local s="^[ \t]*(auto|iface|mapping|allow-.*)[ \t]+${bondname}"
--
--		grep -E "$s" $mainfn
--		if [ $? -eq 0 ]
--		then
--			echo "WARNING: ${bondname} has been configured already"
--			return
--		fi
--	elif [ $distro == redhat ] || [ $distro == suse ]
--	then
--		local fn=$cfgdir/ifcfg-$bondname
--		if [ -f $fn ]
--		then
--			echo "WARNING: ${bondname} has been configured already"
--			return
--		fi
--	else
--		echo "Unsupported Distro: ${distro}"
--		return
--	fi
--
--	echo configuring $primary
--	create_eth_cfg_pri_$distro $primary $bondname
--
--	echo configuring $secondary
--	create_eth_cfg_$distro $secondary $bondname
--
--	echo creating: $bondname with primary slave: $primary
--	create_bond_cfg_$distro $bondname $primary $secondary
--}
--
--for (( i=0; i < $eth_cnt-1; i++ ))
--do
--        if [ -n "${list_match[$i]}" ]
--        then
--		create_bond ${list_eth[$i]} ${list_match[$i]}
--		let bondcnt=bondcnt+1
--        fi
--done
--- 
-2.11.0
+Just to be clear about the situation, the device is a memory controller. 
+  It has two main behaviors we are interested in:
+
+A) Error Detection And Correction (EDAC).  This should be connected to 
+the kernel's EDAC subsystem.  An existing driver 
+(drivers/edac/thunderx_edac.c) does exactly this.
+
+B) Performance Counters for actions taken in the corresponding memory. 
+This should be connected to the kernel's perf framework as an uncore-PMU 
+(the subject of this patch set).
+
+It is a single PCI device.  What should the driver architecture look 
+like to connect it to two different kernel subsystems?
+
+Thanks,
+David Daney
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
