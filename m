@@ -1,48 +1,43 @@
-Return-Path: <SRS0=Ig+T=6O=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=Ig+T=6O=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:11869 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965735AbdGTWHX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Jul 2017 18:07:23 -0400
+Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
+To: Scott Bauer <scott.bauer@intel.com>
+Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
+        david.fugate@intel.com, bhelgaas@google.com
+References: <20170720202858.1918-1-scott.bauer@intel.com>
+ <cfc64209-82cb-432b-8ca1-c02c50d34d68@intel.com>
+ <20170720213420.lxllowcwnp24gmxf@sbauer-Z170X-UD5>
+From: Jon Derrick <jonathan.derrick@intel.com>
+Message-ID: <a8fa0b4a-a918-6c98-169c-2b9c35bd8cdb@intel.com>
+Date: Tue, 25 Jul 2017 20:36:10 -0600
 MIME-Version: 1.0
-In-Reply-To: <201707112000.h3N0wEJq%fengguang.wu@intel.com>
-References: <1499698794-1718-5-git-send-email-deathsimple@vodafone.de> <201707112000.h3N0wEJq%fengguang.wu@intel.com>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 11 Jul 2017 20:50:18 +0300
-Message-ID: <CAHp75VdaO+-AyMObfS_p3+y+6RR1Qa6_o783mjhsZBAYzC3wyg@mail.gmail.com>
-Subject: Re: [PATCH v8 4/6] x86/PCI: Enable a 64bit BAR on AMD Family 15h
- (Models 30h-3fh) Processors v4
-To: kbuild test robot <lkp@intel.com>
-Cc: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>,
-	kbuild-all@01.org, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
-	Platform Driver <platform-driver-x86@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20170720213420.lxllowcwnp24gmxf@sbauer-Z170X-UD5>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 11, 2017 at 3:07 PM, kbuild test robot <lkp@intel.com> wrote:
+On 07/20/2017 03:34 PM, Scott Bauer wrote:
+[snip]
+>>> +	for (i = 0; i < vmd->msix_count; i++) {
+>>> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+>>> +				       vmd_irq, IRQF_NO_THREAD,
+>> The flag here looks redundant to me because the fn calls into
+>> request_threaded_irq with no thread_fn. But since it's a bit more
+>> verbose, can you change the other devm_request_irq to use IRQF_NO_THREAD?
+> 
+> I actually yanked the request irq from the other call. It was changed
+> to NO_THREAD in April:
+> 
+> (3eefa790c968) PCI: host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
+> 
 
->         make ARCH=i386
+Ah so it was. Sorry was looking at v4.12
 
-Yeah, either this code shouldn't have been built on 32-bit arch at
-all, or be portable.
 
->    arch/x86/pci/fixup.c: In function 'pci_amd_enable_64bit_bar':
->>> arch/x86/pci/fixup.c:674:15: warning: large integer implicitly truncated to unsigned type [-Woverflow]
->      res->start = 0x100000000ull;
->                   ^~~~~~~~~~~~~~
->    arch/x86/pci/fixup.c:675:13: warning: large integer implicitly truncated to unsigned type [-Woverflow]
->      res->end = 0xfd00000000ull - 1;
->                 ^~~~~~~~~~~~~~~
->>> arch/x86/pci/fixup.c:686:22: warning: right shift count >= width of type [-Wshift-count-overflow]
-
-I suppose explicit casting will help.
-
->      high = ((res->start >> 40) & AMD_141b_MMIO_HIGH_MMIOBASE_MASK) |
->                          ^~
->    arch/x86/pci/fixup.c:687:21: warning: right shift count >= width of type [-Wshift-count-overflow]
->       ((((res->end + 1) >> 40) << AMD_141b_MMIO_HIGH_MMIOLIMIT_SHIFT)
->                         ^~
-
-These can be done via upper_32_bits() + shift.
-
--- 
-With Best Regards,
-Andy Shevchenko
+I think we'll need to do more than free the irq handlers because if an
+interrupt occurs after that, I think it'll get kicked to handle_bad_irq.
+I think we just need to add pci_disable_device after save and
+pcim_enable_device after restore.
