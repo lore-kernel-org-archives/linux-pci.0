@@ -1,266 +1,129 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PCI <linux-pci@vger.kernel.org>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/3] ACPI / PM: Split acpi_device_wakeup()
-Date: Fri, 21 Jul 2017 14:40:49 +0200
-Message-ID: <3408475.MC8krXn0zk@aspire.rjw.lan>
-In-Reply-To: <3116391.JNS1F4DjTg@aspire.rjw.lan>
-References: <3116391.JNS1F4DjTg@aspire.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 3/7] phy: qcom-qmp: Fix phy pipe clock name
+To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
+        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+References: <1500636977-11934-1-git-send-email-varada@codeaurora.org>
+ <1500636977-11934-4-git-send-email-varada@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Message-ID: <c23942fd-68ba-69db-db05-b2ebef6b6a01@codeaurora.org>
+Date: Wed, 26 Jul 2017 20:59:07 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1500636977-11934-4-git-send-email-varada@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-To prepare for a subsequent change and make the code somewhat easier
-to follow, do the following in the ACPI device wakeup handling code:
 
- * Replace wakeup.flags.enabled under struct acpi_device with
-   wakeup.enable_count as that will be necessary going forward.
+On 07/21/2017 05:06 PM, Varadarajan Narayanan wrote:
+> Presently, the phy pipe clock's name is assumed to be either
+> usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+> phy lane's number). However, this will not work if an SoC has
+> more than one instance of the phy. Hence, instead of assuming
+> the name of the clock, fetch it from the DT.
+>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
+>   drivers/phy/qualcomm/phy-qcom-qmp.c | 45 +++++++++++++++++++++++--------------
+>   1 file changed, 28 insertions(+), 17 deletions(-)
+>
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> index 78ca628..b046866 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> @@ -925,20 +925,13 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+>    *    clk  |   +-------+   |                   +-----+
+>    *         +---------------+
+>    */
+> -static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+> +static int phy_pipe_clk_register(struct qcom_qmp *qmp, const char *clk_name)
+>   {
+> -	char name[24];
+>   	struct clk_fixed_rate *fixed;
+>   	struct clk_init_data init = { };
+>   
+> -	switch (qmp->cfg->type) {
+> -	case PHY_TYPE_USB3:
+> -		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+> -		break;
+> -	case PHY_TYPE_PCIE:
+> -		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+> -		break;
+> -	default:
+> +	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
+> +	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
+>   		/* not all phys register pipe clocks, so return success */
+>   		return 0;
+>   	}
+> @@ -947,7 +940,7 @@ static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+>   	if (!fixed)
+>   		return -ENOMEM;
+>   
+> -	init.name = name;
+> +	init.name = clk_name;
+>   	init.ops = &clk_fixed_rate_ops;
+>   
+>   	/* controllers using QMP phys use 125MHz pipe clock interface */
+> @@ -1110,6 +1103,8 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>   
+>   	id = 0;
+>   	for_each_available_child_of_node(dev->of_node, child) {
+> +		const char *clk_name;
+> +
+>   		/* Create per-lane phy */
+>   		ret = qcom_qmp_phy_create(dev, child, id);
+>   		if (ret) {
+> @@ -1119,15 +1114,31 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>   		}
+>   
+>   		/*
+> -		 * Register the pipe clock provided by phy.
+> -		 * See function description to see details of this pipe clock.
+> +		 * This property is mandatory only for PCIe/USB phys.
+> +		 * For other phy types don't return failure.
+>   		 */
+> -		ret = phy_pipe_clk_register(qmp, id);
+> -		if (ret) {
+> -			dev_err(qmp->dev,
+> -				"failed to register pipe clock source\n");
+> +		ret = of_property_read_string(child, "clock-output-names",
+> +							&clk_name);
+> +		if (ret && (qmp->cfg->type == PHY_TYPE_PCIE ||
+> +			    qmp->cfg->type == PHY_TYPE_USB3)) {
 
-   For now, wakeup.enable_count is not allowed to grow beyond 1,
-   so the current behavior is retained.
+Let's not check the phy type twice. Once here and once again in the
+phy_pipe_clk_register().
+May be we can move this property read in phy_pipe_clk_registe() itself.
+That way you can avoid passing the clk_name also. WDUT?
 
- * Split acpi_device_wakeup() into acpi_device_wakeup_enable()
-   and acpi_device_wakeup_disable() and modify the callers of
-   it accordingly.
+Regards
+Vivek
+> +			dev_err(dev,
+> +				"failed to get clock-output-names for lane%d phy, %d\n",
+> +				id, ret);
+>   			return ret;
+>   		}
+> +
+> +		if (!ret) {
+> +			/*
+> +			 * Register the pipe clock provided by phy. See function
+> +			 * description to see details of this pipe clock.
+> +			 */
+> +			ret = phy_pipe_clk_register(qmp, clk_name);
+> +			if (ret) {
+> +				dev_err(qmp->dev,
+> +					"failed to register pipe clock source\n");
+> +				return ret;
+> +			}
+> +		}
+>   		id++;
+>   	}
+>   
 
- * Introduce a new acpi_wakeup_lock mutex to protect the wakeup
-   enabling/disabling code from races in case it is executed
-   more than once in parallel for the same device (which may
-   happen for bridges theoretically).
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |  121 ++++++++++++++++++++++++++++++-----------------
- include/acpi/acpi_bus.h  |    2 
- 2 files changed, 80 insertions(+), 43 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -680,47 +680,74 @@ static void acpi_pm_notify_work_func(str
- 	}
- }
- 
-+static DEFINE_MUTEX(acpi_wakeup_lock);
-+
- /**
-- * acpi_device_wakeup - Enable/disable wakeup functionality for device.
-- * @adev: ACPI device to enable/disable wakeup functionality for.
-+ * acpi_device_wakeup_enable - Enable wakeup functionality for device.
-+ * @adev: ACPI device to enable wakeup functionality for.
-  * @target_state: State the system is transitioning into.
-- * @enable: Whether to enable or disable the wakeup functionality.
-  *
-- * Enable/disable the GPE associated with @adev so that it can generate
-- * wakeup signals for the device in response to external (remote) events and
-- * enable/disable device wakeup power.
-+ * Enable the GPE associated with @adev so that it can generate wakeup signals
-+ * for the device in response to external (remote) events and enable wakeup
-+ * power for it.
-  *
-  * Callers must ensure that @adev is a valid ACPI device node before executing
-  * this function.
-  */
--static int acpi_device_wakeup(struct acpi_device *adev, u32 target_state,
--			      bool enable)
-+static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
- {
- 	struct acpi_device_wakeup *wakeup = &adev->wakeup;
-+	acpi_status status;
-+	int error = 0;
- 
--	if (enable) {
--		acpi_status res;
--		int error;
-+	mutex_lock(&acpi_wakeup_lock);
- 
--		if (adev->wakeup.flags.enabled)
--			return 0;
-+	if (wakeup->enable_count > 0)
-+		goto out;
- 
--		error = acpi_enable_wakeup_device_power(adev, target_state);
--		if (error)
--			return error;
-+	error = acpi_enable_wakeup_device_power(adev, target_state);
-+	if (error)
-+		goto out;
- 
--		res = acpi_enable_gpe(wakeup->gpe_device, wakeup->gpe_number);
--		if (ACPI_FAILURE(res)) {
--			acpi_disable_wakeup_device_power(adev);
--			return -EIO;
--		}
--		adev->wakeup.flags.enabled = 1;
--	} else if (adev->wakeup.flags.enabled) {
--		acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
-+	status = acpi_enable_gpe(wakeup->gpe_device, wakeup->gpe_number);
-+	if (ACPI_FAILURE(status)) {
- 		acpi_disable_wakeup_device_power(adev);
--		adev->wakeup.flags.enabled = 0;
-+		error = -EIO;
-+		goto out;
- 	}
--	return 0;
-+
-+	wakeup->enable_count++;
-+
-+out:
-+	mutex_unlock(&acpi_wakeup_lock);
-+	return error;
-+}
-+
-+/**
-+ * acpi_device_wakeup_disable - Disable wakeup functionality for device.
-+ * @adev: ACPI device to disable wakeup functionality for.
-+ *
-+ * Disable the GPE associated with @adev and disable wakeup power for it.
-+ *
-+ * Callers must ensure that @adev is a valid ACPI device node before executing
-+ * this function.
-+ */
-+static void acpi_device_wakeup_disable(struct acpi_device *adev)
-+{
-+	struct acpi_device_wakeup *wakeup = &adev->wakeup;
-+
-+	mutex_lock(&acpi_wakeup_lock);
-+
-+	if (!wakeup->enable_count)
-+		goto out;
-+
-+	acpi_disable_gpe(wakeup->gpe_device, wakeup->gpe_number);
-+	acpi_disable_wakeup_device_power(adev);
-+
-+	wakeup->enable_count--;
-+
-+out:
-+	mutex_unlock(&acpi_wakeup_lock);
- }
- 
- /**
-@@ -742,9 +769,15 @@ int acpi_pm_set_device_wakeup(struct dev
- 	if (!acpi_device_can_wakeup(adev))
- 		return -EINVAL;
- 
--	error = acpi_device_wakeup(adev, acpi_target_system_state(), enable);
-+	if (!enable) {
-+		acpi_device_wakeup_disable(adev);
-+		dev_dbg(dev, "Wakeup disabled by ACPI\n");
-+		return 0;
-+	}
-+
-+	error = acpi_device_wakeup_enable(adev, acpi_target_system_state());
- 	if (!error)
--		dev_dbg(dev, "Wakeup %s by ACPI\n", enable ? "enabled" : "disabled");
-+		dev_dbg(dev, "Wakeup enabled by ACPI\n");
- 
- 	return error;
- }
-@@ -798,13 +831,15 @@ int acpi_dev_runtime_suspend(struct devi
- 
- 	remote_wakeup = dev_pm_qos_flags(dev, PM_QOS_FLAG_REMOTE_WAKEUP) >
- 				PM_QOS_FLAGS_NONE;
--	error = acpi_device_wakeup(adev, ACPI_STATE_S0, remote_wakeup);
--	if (remote_wakeup && error)
--		return -EAGAIN;
-+	if (remote_wakeup) {
-+		error = acpi_device_wakeup_enable(adev, ACPI_STATE_S0);
-+		if (error)
-+			return -EAGAIN;
-+	}
- 
- 	error = acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
--	if (error)
--		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
-+	if (error && remote_wakeup)
-+		acpi_device_wakeup_disable(adev);
- 
- 	return error;
- }
-@@ -827,7 +862,7 @@ int acpi_dev_runtime_resume(struct devic
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	acpi_device_wakeup(adev, ACPI_STATE_S0, false);
-+	acpi_device_wakeup_disable(adev);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_runtime_resume);
-@@ -882,13 +917,15 @@ int acpi_dev_suspend_late(struct device
- 
- 	target_state = acpi_target_system_state();
- 	wakeup = device_may_wakeup(dev) && acpi_device_can_wakeup(adev);
--	error = acpi_device_wakeup(adev, target_state, wakeup);
--	if (wakeup && error)
--		return error;
-+	if (wakeup) {
-+		error = acpi_device_wakeup_enable(adev, target_state);
-+		if (error)
-+			return error;
-+	}
- 
- 	error = acpi_dev_pm_low_power(dev, adev, target_state);
--	if (error)
--		acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
-+	if (error && wakeup)
-+		acpi_device_wakeup_disable(adev);
- 
- 	return error;
- }
-@@ -911,7 +948,7 @@ int acpi_dev_resume_early(struct device
- 		return 0;
- 
- 	error = acpi_dev_pm_full_power(adev);
--	acpi_device_wakeup(adev, ACPI_STATE_UNKNOWN, false);
-+	acpi_device_wakeup_disable(adev);
- 	return error;
- }
- EXPORT_SYMBOL_GPL(acpi_dev_resume_early);
-@@ -1054,7 +1091,7 @@ static void acpi_dev_pm_detach(struct de
- 			 */
- 			dev_pm_qos_hide_latency_limit(dev);
- 			dev_pm_qos_hide_flags(dev);
--			acpi_device_wakeup(adev, ACPI_STATE_S0, false);
-+			acpi_device_wakeup_disable(adev);
- 			acpi_dev_pm_low_power(dev, adev, ACPI_STATE_S0);
- 		}
- 	}
-@@ -1098,7 +1135,7 @@ int acpi_dev_pm_attach(struct device *de
- 	dev_pm_domain_set(dev, &acpi_general_pm_domain);
- 	if (power_on) {
- 		acpi_dev_pm_full_power(adev);
--		acpi_device_wakeup(adev, ACPI_STATE_S0, false);
-+		acpi_device_wakeup_disable(adev);
- 	}
- 
- 	dev->pm_domain->detach = acpi_dev_pm_detach;
-Index: linux-pm/include/acpi/acpi_bus.h
-===================================================================
---- linux-pm.orig/include/acpi/acpi_bus.h
-+++ linux-pm/include/acpi/acpi_bus.h
-@@ -316,7 +316,6 @@ struct acpi_device_perf {
- struct acpi_device_wakeup_flags {
- 	u8 valid:1;		/* Can successfully enable wakeup? */
- 	u8 notifier_present:1;  /* Wake-up notify handler has been installed */
--	u8 enabled:1;		/* Enabled for wakeup */
- };
- 
- struct acpi_device_wakeup_context {
-@@ -333,6 +332,7 @@ struct acpi_device_wakeup {
- 	struct acpi_device_wakeup_context context;
- 	struct wakeup_source *ws;
- 	int prepare_count;
-+	int enable_count;
- };
- 
- struct acpi_device_physical_node {
-
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
