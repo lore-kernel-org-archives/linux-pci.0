@@ -1,59 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 27 Jul 2017 11:08:56 +0200
-From: Jan Glauber <jan.glauber@caviumnetworks.com>
-To: Borislav Petkov <bp@alien8.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([5.9.137.197]:48468 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750883AbdGZQba (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Jul 2017 12:31:30 -0400
+Date: Wed, 26 Jul 2017 18:30:49 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Jan Glauber <jan.glauber@caviumnetworks.com>,
+        Suzuki K Poulose <Suzuki.Poulose@arm.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        linux-arm-kernel@lists.infradead.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
 Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
  counters
-Message-ID: <20170727090856.GB15784@hc>
-References: <20170726153502.GE28875@nazgul.tnic> <20170726154515.GA11453@hc>
+Message-ID: <20170726163049.GG28875@nazgul.tnic>
+References: <20170726111946.GA6273@hc>
+ <faa339c4-b087-d970-1099-3d6cf8186545@arm.com>
+ <20170726131058.GA8665@hc>
+ <131179fe-42e7-f286-5bd4-801f4c93d5f9@arm.com>
+ <20170726145522.GC28875@nazgul.tnic>
+ <20170726151314.GA10696@hc>
+ <20170726153502.GE28875@nazgul.tnic>
+ <20170726154515.GA11453@hc>
  <20170726155548.GF28875@nazgul.tnic>
  <20170726161949.GB15426@kroah.com>
- <20170726163049.GG28875@nazgul.tnic>
- <20170726173353.GB21705@kroah.com>
- <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
- <20170726200802.GA17722@kroah.com>
- <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
- <20170727051157.GA4525@nazgul.tnic>
 MIME-Version: 1.0
-In-Reply-To: <20170727051157.GA4525@nazgul.tnic>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Suzuki K Poulose <Suzuki.Poulose@arm.com>,
- Greg KH <gregkh@linuxfoundation.org>, Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- David Daney <ddaney.cavm@gmail.com>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170726161949.GB15426@kroah.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 27, 2017 at 07:11:57AM +0200, Borislav Petkov wrote:
-> On Wed, Jul 26, 2017 at 02:02:42PM -0700, David Daney wrote:
-> > Also, if a given configuration disables CONFIG_EDAC there is some hackery
-> > needed to get the perf portion of the driver included.
+On Wed, Jul 26, 2017 at 09:19:49AM -0700, Greg KH wrote:
+> On Wed, Jul 26, 2017 at 05:55:48PM +0200, Borislav Petkov wrote:
+> > On Wed, Jul 26, 2017 at 05:45:15PM +0200, Jan Glauber wrote:
+> > > The PMU/EDAC devices are all PCI devices do I need the 'struct pci_dev *'.
+> > > I'm not aware of other ways to access these devices. Please enlighten
+> > > me if I'm missing something.
+> > 
+> > Me enlighten you on Cavium hardware?! You're funny.
+> > 
+> > So I don't know whether the PCI hotplug code can run more than one
+> > function upon PCI ID detection. Probably Greg will say, write a
+> > multiplexer wrapper. :-)
 > 
-> Yes, and we don't do performance counters in EDAC.
+> -ENOCONTEXT....
 > 
-> So you could add a small memory controller driver which does the
-> arbitration or fix the firmware.
+> Anyway, pci questions are best asked on the linux-pci@vger list.  And
+> yes, all PCI devices end up with a 'struct pci_dev *' automatically.
 
-OK. As fixing the firmware will take quite some time I'll go for the memory
-controller driver that starts EDAC / PMU depending on their CONFIG_.
+Simple: so they have a PCI ID of a memory contoller and want to hotplug
+two drivers for it. And those two drivers should remain independent from
+each other.
 
-What would be the proper location for the multiplexer?
-drivers/soc/cavium or drivers/misc?
+Thanks.
 
---Jan
+-- 
+Regards/Gruss,
+    Boris.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ECO tip #101: Trim your mails when you reply.
+--
