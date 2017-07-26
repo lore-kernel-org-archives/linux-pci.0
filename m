@@ -1,70 +1,65 @@
-Return-Path: <SRS0=tpkN=6Q=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=tpkN=6Q=intel.com=keith.busch@kernel.org>
-Date: Thu, 13 Jul 2017 12:29:16 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	timur@codeaurora.org, alex.williamson@redhat.com,
-	vikrams@codeaurora.org, Lorenzo.Pieralisi@arm.com,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V4] PCI: handle CRS returned by device after FLR
-Message-ID: <20170713162915.GA14716@localhost.localdomain>
-References: <1499375234-23928-1-git-send-email-okaya@codeaurora.org>
- <20170713121758.GL4486@bhelgaas-glaptop.roam.corp.google.com>
- <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
+Return-Path: <SRS0=0Gog=65=chelsio.com=leedom@kernel.org>
+Return-Path: <SRS0=0Gog=65=chelsio.com=leedom@kernel.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Alex Williamson <alex.williamson@redhat.com>, Ding Tianhong
+	<dingtianhong@huawei.com>
+CC: Sinan Kaya <okaya@codeaurora.org>, "ashok.raj@intel.com"
+	<ashok.raj@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>, Michael Werner
+	<werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
+	<will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
+	<davem@davemloft.net>, "alexander.duyck@gmail.com"
+	<alexander.duyck@gmail.com>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Date: Wed, 26 Jul 2017 18:26:38 +0000
+Message-ID: <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+	<1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+	<e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+	<0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+	<67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+	<5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>,<20170724090516.2e0f0d2a@w520.home>
+In-Reply-To: <20170724090516.2e0f0d2a@w520.home>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <0bcc0b00-1ad3-6866-32ab-15da8ea1821e@codeaurora.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 13, 2017 at 11:44:12AM -0400, Sinan Kaya wrote:
-> On 7/13/2017 8:17 AM, Bjorn Helgaas wrote:
-> >> he spec is calling to wait up to 1 seconds if the device is sending CRS.
-> >> The NVMe device seems to be requiring more. Relax this up to 60 seconds.
-> > Can you add a pointer to the "1 second" requirement in the spec here?
-> > We use 60 seconds in pci_scan_device() and acpiphp_add_context().  Is
-> > there a basis in the spec for the 60 second timeout?
-> 
-> This does not specify a hard limit above on how long SW need to wait. 
-> 
-> "6.6.2 Function Level Reset
-> After an FLR has been initiated by writing a 1b to the Initiate Function Level Reset bit, 
-> the Function must complete the FLR within 100 ms.
-> 
-> While a Function is required to complete the FLR operation within the time limit described above,
-> the subsequent Function-specific initialization sequence may require additional time. 
-> If additional time is required, the Function must return a Configuration Request Retry Status (CRS) 
-> Completion Status when a Configuration Request is received 15 after the time limit above. 
-> After the Function responds to a Configuration Request with a Completion status other than CRS, 
-> it is not permitted to return CRS until it is reset again."
-> 
-> However, another indirect reference here tells us it is capped by 1 second below.
-> 
-> "6.23. Readiness Notifications (RN)
-> Readiness Notifications (RN) is intended to reduce the time software needs to
-> wait before issuing Configuration Requests to a Device or Function following DRS
-> Events or FRS Events. RN includes both the Device Readiness Status (DRS) and
-> Function Readiness Status (FRS) mechanisms. These mechanisms provide a direct
-> indication of Configuration-Readiness (see 5 Terms and Acronyms entry for “Configuration-Ready”). 
-> 
-> When used, DRS and FRS allow an improved behavior over the CRS mechanism, and eliminate
-> its associated periodic polling time of up to 1 second following a reset."
+  By the way Ding, two issues:
 
-That wording is just confusing. It looks to me the 1 second polling is
-to be used following a reset if CRS is not implemented.
+ 1. Did we ever get any acknowledgement from either Intel or AMD
+    on this patch?  I know that we can't ensure that, but it sure would
+    be nice since the PCI Quirks that we're putting in affect their
+    products.
 
-  https://pcisig.com/sites/default/files/specification_documents/ECN_RN_29_Aug_2013.pdf
+ 2. I just realized that there's still a small hole in the patch with
+    respect to PCIe SR-IOV Virtual Functions.  When the PCI Quirk
+    notices a problematic PCIe Device and marks it to note that
+    it's not "happy" receiving Transaction Layer Packets with the
+    Relaxed Ordering Attribute set, it's my understanding that your
+    current patch iterates down the PCIe Fabric and turns off the
+    PCIe Capability Device Control[Relaxed Ordering Enable].
+    But this scan may miss any SR-IOV VFs because they
+    probably won't be instantiated at that time.  And, at a later
+    time, when they are instantiated, they could well have their
+    Relaxed Ordering Enable set.
 
-"
-  Through the mechanisms defined by this ECR, we can avoid the long,
-  architected, fixed delays following various forms of reset before
-  software is permitted to perform its first Configuration Request. These
-  delays are very large:
+    I think that the patch will need to be extended to modify
+    drivers/pci.c/iov.c:sriov_enable() to explicitly turn off
+    Relaxed Ordering Enable if the Root Complex is marked
+    for no RO TLPs.
 
-  1 second if Configuration Retry Status (CRS) is not used
-"
-
-It goes on to say CRS is usually much lower, but doesn't specify an
-upper bound either.
+Casey=
