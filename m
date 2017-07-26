@@ -1,155 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36673 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752708AbdGYU6J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 16:58:09 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:41 -0600
-Message-Id: <20170725205753.4735-5-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 04/16] switchtec: add link event notifier callback
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 26 Jul 2017 10:33:53 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Borislav Petkov <bp@alien8.de>
+Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
+ counters
+Message-ID: <20170726173353.GB21705@kroah.com>
+References: <faa339c4-b087-d970-1099-3d6cf8186545@arm.com>
+ <20170726131058.GA8665@hc>
+ <131179fe-42e7-f286-5bd4-801f4c93d5f9@arm.com>
+ <20170726145522.GC28875@nazgul.tnic> <20170726151314.GA10696@hc>
+ <20170726153502.GE28875@nazgul.tnic> <20170726154515.GA11453@hc>
+ <20170726155548.GF28875@nazgul.tnic>
+ <20170726161949.GB15426@kroah.com>
+ <20170726163049.GG28875@nazgul.tnic>
+MIME-Version: 1.0
+In-Reply-To: <20170726163049.GG28875@nazgul.tnic>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jan Glauber <jan.glauber@caviumnetworks.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In order for the Switchtec NTB code to handle link change events we
-create a notifier callback in the switchtec code which gets called
-whenever an appropriate event interrupt occurs.
+On Wed, Jul 26, 2017 at 06:30:49PM +0200, Borislav Petkov wrote:
+> On Wed, Jul 26, 2017 at 09:19:49AM -0700, Greg KH wrote:
+> > On Wed, Jul 26, 2017 at 05:55:48PM +0200, Borislav Petkov wrote:
+> > > On Wed, Jul 26, 2017 at 05:45:15PM +0200, Jan Glauber wrote:
+> > > > The PMU/EDAC devices are all PCI devices do I need the 'struct pci_dev *'.
+> > > > I'm not aware of other ways to access these devices. Please enlighten
+> > > > me if I'm missing something.
+> > > 
+> > > Me enlighten you on Cavium hardware?! You're funny.
+> > > 
+> > > So I don't know whether the PCI hotplug code can run more than one
+> > > function upon PCI ID detection. Probably Greg will say, write a
+> > > multiplexer wrapper. :-)
+> > 
+> > -ENOCONTEXT....
+> > 
+> > Anyway, pci questions are best asked on the linux-pci@vger list.  And
+> > yes, all PCI devices end up with a 'struct pci_dev *' automatically.
+> 
+> Simple: so they have a PCI ID of a memory contoller and want to hotplug
+> two drivers for it. And those two drivers should remain independent from
+> each other.
 
-In order to preserve userspace's ability to follow these events,
-we compare the event count with a stored copy from last time we
-checked.
+Hahahahaha, no.  That's crazy, you were right in guessing what my answer
+was going to be :)
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/switch/switchtec.c | 51 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/switchtec.h      |  4 ++++
- 2 files changed, 55 insertions(+)
+greg k-h
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 39c9218d733f..807569e62bee 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -978,6 +978,49 @@ static const struct file_operations switchtec_fops = {
- 	.compat_ioctl = switchtec_dev_ioctl,
- };
- 
-+static void link_event_work(struct work_struct *work)
-+{
-+	struct switchtec_dev *stdev;
-+
-+	stdev = container_of(work, struct switchtec_dev, link_event_work);
-+
-+	if (stdev->link_notifier)
-+		stdev->link_notifier(stdev);
-+}
-+
-+static void check_link_state_events(struct switchtec_dev *stdev)
-+{
-+	int idx;
-+	u32 reg;
-+	int count;
-+	int occurred = 0;
-+
-+	for (idx = 0; idx < stdev->pff_csr_count; idx++) {
-+		reg = ioread32(&stdev->mmio_pff_csr[idx].link_state_hdr);
-+		dev_dbg(&stdev->dev, "link_state: %d->%08x\n", idx, reg);
-+		count = (reg >> 5) & 0xFF;
-+
-+		if (count != stdev->link_event_count[idx]) {
-+			occurred = 1;
-+			stdev->link_event_count[idx] = count;
-+		}
-+	}
-+
-+	if (occurred)
-+		schedule_work(&stdev->link_event_work);
-+}
-+
-+static void enable_link_state_events(struct switchtec_dev *stdev)
-+{
-+	int idx;
-+
-+	for (idx = 0; idx < stdev->pff_csr_count; idx++) {
-+		iowrite32(SWITCHTEC_EVENT_CLEAR |
-+			  SWITCHTEC_EVENT_EN_IRQ,
-+			  &stdev->mmio_pff_csr[idx].link_state_hdr);
-+	}
-+}
-+
- static void stdev_release(struct device *dev)
- {
- 	struct switchtec_dev *stdev = to_stdev(dev);
-@@ -1030,6 +1073,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 	stdev->mrpc_busy = 0;
- 	INIT_WORK(&stdev->mrpc_work, mrpc_event_work);
- 	INIT_DELAYED_WORK(&stdev->mrpc_timeout, mrpc_timeout_work);
-+	INIT_WORK(&stdev->link_event_work, link_event_work);
- 	init_waitqueue_head(&stdev->event_wq);
- 	atomic_set(&stdev->event_cnt, 0);
- 
-@@ -1073,6 +1117,9 @@ static int mask_event(struct switchtec_dev *stdev, int eid, int idx)
- 	if (!(hdr & SWITCHTEC_EVENT_OCCURRED && hdr & SWITCHTEC_EVENT_EN_IRQ))
- 		return 0;
- 
-+	if (eid == SWITCHTEC_IOCTL_EVENT_LINK_STATE)
-+		return 0;
-+
- 	dev_dbg(&stdev->dev, "%s: %d %d %x\n", __func__, eid, idx, hdr);
- 	hdr &= ~(SWITCHTEC_EVENT_EN_IRQ | SWITCHTEC_EVENT_OCCURRED);
- 	iowrite32(hdr, hdr_reg);
-@@ -1092,6 +1139,7 @@ static int mask_all_events(struct switchtec_dev *stdev, int eid)
- 		for (idx = 0; idx < stdev->pff_csr_count; idx++) {
- 			if (!stdev->pff_local[idx])
- 				continue;
-+
- 			count += mask_event(stdev, eid, idx);
- 		}
- 	} else {
-@@ -1116,6 +1164,8 @@ static irqreturn_t switchtec_event_isr(int irq, void *dev)
- 		iowrite32(reg, &stdev->mmio_part_cfg->mrpc_comp_hdr);
- 	}
- 
-+	check_link_state_events(stdev);
-+
- 	for (eid = 0; eid < SWITCHTEC_IOCTL_MAX_EVENTS; eid++)
- 		event_count += mask_all_events(stdev, eid);
- 
-@@ -1242,6 +1292,7 @@ static int switchtec_pci_probe(struct pci_dev *pdev,
- 	iowrite32(SWITCHTEC_EVENT_CLEAR |
- 		  SWITCHTEC_EVENT_EN_IRQ,
- 		  &stdev->mmio_part_cfg->mrpc_comp_hdr);
-+	enable_link_state_events(stdev);
- 
- 	rc = cdev_device_add(&stdev->cdev, &stdev->dev);
- 	if (rc)
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 9c2be7631257..d8159944f013 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -353,6 +353,10 @@ struct switchtec_dev {
- 
- 	wait_queue_head_t event_wq;
- 	atomic_t event_cnt;
-+
-+	struct work_struct link_event_work;
-+	void (*link_notifier)(struct switchtec_dev *stdev);
-+	u8 link_event_count[SWITCHTEC_MAX_PFF_CSR];
- };
- 
- static inline struct switchtec_dev *to_stdev(struct device *dev)
--- 
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
