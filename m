@@ -1,65 +1,81 @@
-Return-Path: <SRS0=0Gog=65=chelsio.com=leedom@kernel.org>
-Return-Path: <SRS0=0Gog=65=chelsio.com=leedom@kernel.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Alex Williamson <alex.williamson@redhat.com>, Ding Tianhong
-	<dingtianhong@huawei.com>
-CC: Sinan Kaya <okaya@codeaurora.org>, "ashok.raj@intel.com"
-	<ashok.raj@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>, Michael Werner
-	<werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
-	<l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
-	<will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
-	<davem@davemloft.net>, "alexander.duyck@gmail.com"
-	<alexander.duyck@gmail.com>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-Date: Wed, 26 Jul 2017 18:26:38 +0000
-Message-ID: <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
-	<1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
-	<e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
-	<0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
-	<67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
-	<5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>,<20170724090516.2e0f0d2a@w520.home>
-In-Reply-To: <20170724090516.2e0f0d2a@w520.home>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:57170 "EHLO theia.8bytes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751367AbdGZJu4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 26 Jul 2017 05:50:56 -0400
+Date: Wed, 26 Jul 2017 11:50:53 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Alexey Kardashevskiy <aik@ozlabs.ru>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        David Gibson <david@gibson.dropbear.id.au>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
+        "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+        Jike Song <jike.song@intel.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH kernel v4 4/6] iommu: Set PCI_BUS_FLAGS_MSI_REMAP on
+ iommu driver initialization
+Message-ID: <20170726095053.GG15833@8bytes.org>
+References: <20170630052436.15212-1-aik@ozlabs.ru>
+ <20170630052436.15212-5-aik@ozlabs.ru>
+ <CAErSpo4pAZfDx5p_S9Z8jR_ctH=ZrkgG6aNaNmPaN2H77dgEgQ@mail.gmail.com>
+ <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b444851a-3240-f98f-04b9-0223649ea856@ozlabs.ru>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  By the way Ding, two issues:
+On Wed, Jul 19, 2017 at 08:02:04PM +1000, Alexey Kardashevskiy wrote:
+> On 11/07/17 05:23, Bjorn Helgaas wrote:
+> >> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> >> index cf7ca7e70777..0b5881ddca09 100644
+> >> --- a/drivers/iommu/iommu.c
+> >> +++ b/drivers/iommu/iommu.c
+> >> @@ -1063,6 +1063,14 @@ static int add_iommu_group(struct device *dev, void *data)
+> >>         const struct iommu_ops *ops = cb->ops;
+> >>         int ret;
+> >>
+> >> +       /*
+> >> +        * Set PCI_BUS_FLAGS_MSI_REMAP for all PCI buses when IOMMU
+> >> +        * have capability of IRQ remapping.
+> >> +        */
+> >> +       if (dev_is_pci(dev) && ops->capable &&
+> >> +                       ops->capable(IOMMU_CAP_INTR_REMAP))
+> >> +               to_pci_dev(dev)->bus->bus_flags |= PCI_BUS_FLAGS_MSI_REMAP;
 
- 1. Did we ever get any acknowledgement from either Intel or AMD
-    on this patch?  I know that we can't ensure that, but it sure would
-    be nice since the PCI Quirks that we're putting in affect their
-    products.
+We avoid bus-specific hacks in generic iommu code. This has to be done
+in bus-specific iommu-group setup code.
 
- 2. I just realized that there's still a small hole in the patch with
-    respect to PCIe SR-IOV Virtual Functions.  When the PCI Quirk
-    notices a problematic PCIe Device and marks it to note that
-    it's not "happy" receiving Transaction Layer Packets with the
-    Relaxed Ordering Attribute set, it's my understanding that your
-    current patch iterates down the PCIe Fabric and turns off the
-    PCIe Capability Device Control[Relaxed Ordering Enable].
-    But this scan may miss any SR-IOV VFs because they
-    probably won't be instantiated at that time.  And, at a later
-    time, when they are instantiated, they could well have their
-    Relaxed Ordering Enable set.
+> 1. PCI_BUS_FLAGS_MSI_REMAP on a PCI bus - MSIX isolation is not really a
+> PCI bus property and it is "like a wart".
 
-    I think that the patch will need to be extended to modify
-    drivers/pci.c/iov.c:sriov_enable() to explicitly turn off
-    Relaxed Ordering Enable if the Root Complex is marked
-    for no RO TLPs.
+This one is at least debatable. It could be a property of the bus.
 
-Casey=
+> 2. Introduce "flags" in iommu_group and define IOMMU_GROUP_MSIX_ISOLATED
+> and set it when an IOMMU group is created; VFIO-PCI has ways to get to the
+> group and read the flag.
+
+That's the best option I see here.
+
+> 3. Create IOMMU_DOMAIN_UNMANAGED IOMMU domains for PPC64/powernv IOMMU
+> groups and only define capable() hook to report IOMMU_CAP_INTR_REMAP;
+> others already use these IOMMU domains. VFIO-PCI's mmap() hook could then
+> check the capability via iommu_capable(bus). The problems is as Robin said:
+> "iommu_capable() is a fundamentally broken and unworkable interface
+> anyway"; however it is still not clear to me why it is unworkable in this
+> particular case of isolation checking.
+
+That one is wrong, IRQ remapping is not a property of a domain. A domain
+is an abstraction for a device address space. Attaching IRQ information
+there is just wrong.
+
+
+
+	Joerg
