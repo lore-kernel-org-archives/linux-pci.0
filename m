@@ -1,66 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:37380 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751754AbdGSH2F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:28:05 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH v4 7/7] dt-bindings: phy: convert to use per-lane Rockchip PCIe PHY
-Date: Wed, 19 Jul 2017 15:27:38 +0800
-Message-Id: <1500449258-101663-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
- <1500449258-101663-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=0Gog=65=chelsio.com=leedom@kernel.org>
+Return-Path: <SRS0=0Gog=65=chelsio.com=leedom@kernel.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+CC: Netdev <netdev@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "David.Laight@aculab.com"
+	<David.Laight@aculab.com>, "ashok.raj@intel.com" <ashok.raj@intel.com>, "Alex
+ Williamson" <alex.williamson@redhat.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "Suravee.Suthikulpanit@amd.com"
+	<Suravee.Suthikulpanit@amd.com>, "catalin.marinas@arm.com"
+	<catalin.marinas@arm.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "will.deacon@arm.com" <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>, "robin.murphy@arm.com"
+	<robin.murphy@arm.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>,
+	Ganesh GR <ganeshgr@chelsio.com>, "asit.k.mallick@intel.com"
+	<asit.k.mallick@intel.com>, "jeffrey.t.kirsher@intel.com"
+	<jeffrey.t.kirsher@intel.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>, Michael Werner
+	<werner@chelsio.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>, Ding Tianhong
+	<dingtianhong@huawei.com>, "linuxarm@huawei.com" <linuxarm@huawei.com>,
+	"amira@mellanox.com" <amira@mellanox.com>, "Bob.Shaw@amd.com"
+	<Bob.Shaw@amd.com>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Date: Wed, 26 Jul 2017 19:05:49 +0000
+Message-ID: <MWHPR12MB16007782C422082A92F4765DC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+ <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+ <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+ <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com>
+ <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>,<CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
+In-Reply-To: <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch deprecate the legacy PCIe PHY and encourage user
-to use per-lane PHY mode by setting #phy-cells to 1.
+| From: Alexander Duyck <alexander.duyck@gmail.com>
+| Sent: Wednesday, July 26, 2017 11:44 AM
+|=20
+| On Jul 26, 2017 11:26 AM, "Casey Leedom" <leedom@chelsio.com> wrote:
+| |
+| | =A0 =A0 I think that the patch will need to be extended to modify
+| | =A0 =A0 drivers/pci.c/iov.c:sriov_enable() to explicitly turn off
+| | =A0 =A0 Relaxed Ordering Enable if the Root Complex is marked
+| =A0 =A0 for no RO TLPs.
+|=20
+| I'm not sure that would be an issue. Wouldn't most VFs inherit the PF's s=
+ettings?
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
+Ah yes, you're right.  This is covered in section 3.5.4 of the Single Root =
+I/O
+Virtualization and Sharing Specification, Revision 1.0 (September 11, 2007)=
+,
+governing the PCIe Capability Device Control register.  It states that the =
+VF
+version of that register shall follow the setting of the corresponding PF.
 
-Changes in v4: None
-Changes in v3:
-- rename the commit tile
+So we should enhance the cxgb4vf/sge.c:t4vf_sge_alloc_rxq() in the same
+way we did for the cxgb4 driver, but that's not critical since the Relaxed
+Ordering Enable supersedes the internal chip's desire to use the Relaxed
+Ordering Attribute.
 
-Changes in v2: None
+Ding, send me a note if you'd like me to work that up for you.
 
- Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+| Also I thought most of the VF configuration space is read only.
 
-diff --git a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-index 0f6222a..b496042 100644
---- a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-@@ -3,7 +3,6 @@ Rockchip PCIE PHY
- 
- Required properties:
-  - compatible: rockchip,rk3399-pcie-phy
-- - #phy-cells: must be 0
-  - clocks: Must contain an entry in clock-names.
- 	See ../clocks/clock-bindings.txt for details.
-  - clock-names: Must be "refclk"
-@@ -11,6 +10,12 @@ Required properties:
- 	See ../reset/reset.txt for details.
-  - reset-names: Must be "phy"
- 
-+Required properties for legacy PHY mode (deprecated):
-+ - #phy-cells: must be 0
-+
-+Required properties for per-lane PHY mode (preferred):
-+ - #phy-cells: must be 1
-+
- Example:
- 
- grf: syscon@ff770000 {
--- 
-1.9.1
+Yes, but not all of it.  And when a VF is exported to a Virtual Machine,
+then the Hypervisor captures and interprets all accesses to the VF's
+PCIe Configuration Space from the VM.
+
+Thanks again for reminding me of the subtle aspect of the SR_IOV
+specification that I forgot.
+
+Casey=
