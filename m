@@ -1,132 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:49127 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752751AbdGSH0C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 03:26:02 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH v4 4/7] PCI: rockchip: idle the inactive PHY(s)
-Date: Wed, 19 Jul 2017 15:22:56 +0800
-Message-Id: <1500448979-93067-5-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500448979-93067-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:36288
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750965AbdG0Igg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Jul 2017 04:36:36 -0400
+From: Sandeep Singh <Sandeep.Singh@amd.com>
+To: gregkh@linuxfoundation.org, mathias.nyman@intel.com,
+        bhelgaas@google.com, dheitmueller@kernellabs.com,
+        stern@rowland.harvard.edu, samuel.thibault@ens-lyon.org,
+        lukas@oxygene.sk
+Cc: linux-usb@vger.kernel.org, linux-pci@vger.kernel.org,
+        Sandeep Singh <sandeep.singh@amd.com>,
+        Sandeep Singh <Sandeep.Singh@amd.com>,
+        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+        Nehal Shah <Nehal-bakulchandra.Shah@amd.com>
+Subject: [PATCH] usb: xhci: Add quirk for Certain failing HP keyboard on reset after resume
+Date: Thu, 27 Jul 2017 14:05:09 +0530
+Message-Id: <1501144509-19357-1-git-send-email-Sandeep.Singh@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check the status of all lanes and idle the inactive one(s).
+From: Sandeep Singh <sandeep.singh@amd.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
-Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Certain HP keyboards would keep inputting a character automatically which
+is the wake-up key after S3 resume
+
+On some AMD platforms USB host fails to respond (by holding resume-K) to
+USB device (an HP keyboard) resume request within 1ms (TURSM) and ensures
+that resume is signaled for at least 20 ms (TDRSMDN), which is defined in
+USB 2.0 spec. The result is that the keyboard is out of function.
+
+In SNPS USB design, the host responds to the resume request only after
+system gets back to S0 and the host gets to functional after the internal
+HW restore operation that is more than 1 second after the initial resume
+request from the USB device.
+
+As a workaround for specific keyboard ID(HP Keyboards), applying port reset
+after resume when the keyboard is plugged in.
+
+Signed-off-by: Sandeep Singh <Sandeep.Singh@amd.com>
+Signed-off-by: Shyam Sundar S K <Shyam-sundar.S-k@amd.com>
+cc: Nehal Shah <Nehal-bakulchandra.Shah@amd.com>
 ---
+ drivers/usb/core/quirks.c     |  1 +
+ drivers/usb/host/pci-quirks.c | 17 ++++++++++++-----
+ include/linux/pci_ids.h       |  1 +
+ 3 files changed, 14 insertions(+), 5 deletions(-)
 
-Changes in v4:
-- return u8 for rockchip_pcie_lane_map
-
-Changes in v3:
-- use cached lanes_map to avoid powering off inactive
-  lanes twice
-
-Changes in v2: None
-
- drivers/pci/host/pcie-rockchip.c | 37 +++++++++++++++++++++++++++++++++++--
- 1 file changed, 35 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f510349..a8c51b0 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -15,6 +15,7 @@
-  * (at your option) any later version.
-  */
+diff --git a/drivers/usb/core/quirks.c b/drivers/usb/core/quirks.c
+index 3116edf..2e9cde0 100644
+--- a/drivers/usb/core/quirks.c
++++ b/drivers/usb/core/quirks.c
+@@ -249,6 +249,7 @@ static const struct usb_device_id usb_amd_resume_quirk_list[] = {
+ 	{ USB_DEVICE(0x093a, 0x2500), .driver_info = USB_QUIRK_RESET_RESUME },
+ 	{ USB_DEVICE(0x093a, 0x2510), .driver_info = USB_QUIRK_RESET_RESUME },
+ 	{ USB_DEVICE(0x093a, 0x2521), .driver_info = USB_QUIRK_RESET_RESUME },
++	{ USB_DEVICE(0x03f0, 0x2b4a), .driver_info = USB_QUIRK_RESET_RESUME },
  
-+#include <linux/bitrev.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
-@@ -112,6 +113,9 @@
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
- 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
-+#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
-+#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
-+#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -229,6 +233,7 @@ struct rockchip_pcie {
- 	struct	regulator *vpcie0v9; /* 0.9V power supply */
- 	struct	gpio_desc *ep_gpio;
- 	u32	lanes;
-+	u8      lanes_map;
- 	u8	root_bus_nr;
- 	int	link_gen;
- 	struct	device *dev;
-@@ -301,6 +306,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 	return 1;
- }
+ 	/* Logitech Optical Mouse M90/M100 */
+ 	{ USB_DEVICE(0x046d, 0xc05a), .driver_info = USB_QUIRK_RESET_RESUME },
+diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+index c8989c6..292d684 100644
+--- a/drivers/usb/host/pci-quirks.c
++++ b/drivers/usb/host/pci-quirks.c
+@@ -98,6 +98,7 @@ enum amd_chipset_gen {
+ 	AMD_CHIPSET_HUDSON2,
+ 	AMD_CHIPSET_BOLTON,
+ 	AMD_CHIPSET_YANGTZE,
++	AMD_CHIPSET_TAISHAN,
+ 	AMD_CHIPSET_UNKNOWN,
+ };
  
-+static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
-+{
-+	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-+	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
+@@ -143,6 +144,11 @@ static int amd_chipset_sb_type_init(struct amd_chipset_info *pinfo)
+ 			pinfo->sb_type.gen = AMD_CHIPSET_SB800;
+ 	} else {
+ 		pinfo->smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
++				PCI_DEVICE_ID_AMD_TAISHAN, NULL);
++		if (pinfo->smbus_dev)
++			pinfo->sb_type.gen = AMD_CHIPSET_TAISHAN;
 +
-+	/* The link may be using a reverse-indexed mapping. */
-+	if (val & PCIE_CORE_LANE_MAP_REVERSE)
-+		map = bitrev8(map) >> 4;
-+
-+	return map;
-+}
-+
- static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 *val)
++		pinfo->smbus_dev = pci_get_device(PCI_VENDOR_ID_AMD,
+ 				PCI_DEVICE_ID_AMD_HUDSON2_SMBUS, NULL);
+ 
+ 		if (!pinfo->smbus_dev) {
+@@ -260,11 +266,12 @@ int usb_hcd_amd_remote_wakeup_quirk(struct pci_dev *pdev)
  {
-@@ -697,6 +714,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
-+	if (!rockchip->legacy_phy) {
-+		/*  power off unused lane(s) */
-+		rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
-+		for (i = 0; i < MAX_LANE_NUM; i++) {
-+			if (rockchip->lanes_map & BIT(i))
-+				continue;
-+
-+			dev_dbg(dev, "idling lane %d\n", i);
-+			phy_power_off(rockchip->phys[i]);
-+		}
+ 	/* Make sure amd chipset type has already been initialized */
+ 	usb_amd_find_chipset_info();
+-	if (amd_chipset.sb_type.gen != AMD_CHIPSET_YANGTZE)
+-		return 0;
+-
+-	dev_dbg(&pdev->dev, "QUIRK: Enable AMD remote wakeup fix\n");
+-	return 1;
++	if (amd_chipset.sb_type.gen == AMD_CHIPSET_YANGTZE ||
++	    AMD_CHIPSET_TAISHAN) {
++		dev_dbg(&pdev->dev, "QUIRK: Enable AMD remote wakeup fix\n");
++		return 1;
 +	}
-+
- 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
- 			    PCIE_CORE_CONFIG_VENDOR);
- 	rockchip_pcie_write(rockchip,
-@@ -1329,7 +1358,9 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- 	}
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(usb_hcd_amd_remote_wakeup_quirk);
  
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
--		phy_power_off(rockchip->phys[i]);
-+		/* inactive lane is already powered off */
-+		if (rockchip->lanes_map & BIT(i))
-+			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
- 	}
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c71e532..d3f2296 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -583,6 +583,7 @@
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
+ #define PCI_DEVICE_ID_AMD_KERNCZ_SMBUS  0x790b
++#define PCI_DEVICE_ID_AMD_TAISHAN	0x145c
  
-@@ -1575,7 +1606,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	irq_domain_remove(rockchip->irq_domain);
- 
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
--		phy_power_off(rockchip->phys[i]);
-+		/* inactive lane is already powered off */
-+		if (rockchip->lanes_map & BIT(i))
-+			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
- 	}
- 
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
 -- 
-1.9.1
+2.7.4
