@@ -1,169 +1,248 @@
-Return-Path: <SRS0=4j9z=6G=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=4j9z=6G=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Mon, 3 Jul 2017 11:26:19 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Simon Horman <horms@verge.net.au>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: [RFT PATCH v2 29/42] ARM: PCI: Remove pci_fixup_irqs() call for
- bios32 host controllers
-Message-ID: <20170703102619.GE19119@red-moon>
-References: <20170608141342.2018-1-lorenzo.pieralisi@arm.com>
- <20170608141342.2018-30-lorenzo.pieralisi@arm.com>
- <20170701140629.GC8977@red-moon>
- <20170702211950.GD18324@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1501126095.20860.8.camel@mtksdaap41>
+Subject: Re: [PATCH v2 1/5] PCI: mediatek: Add a structure to abstract the
+ controller generations
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>
+Date: Thu, 27 Jul 2017 11:28:15 +0800
+In-Reply-To: <1501125595.20860.3.camel@mtksdaap41>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+ <948f9bd0881402d13e6913ad425e7dff50f3fcfc.1501122135.git.honghui.zhang@mediatek.com>
+ <1501125595.20860.3.camel@mtksdaap41>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170702211950.GD18324@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
+ robh+dt@kernel.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
+ yt.shen@mediatek.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ xinping.qian@mediatek.com, robh@kerenl.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 02, 2017 at 04:19:50PM -0500, Bjorn Helgaas wrote:
-> On Sat, Jul 01, 2017 at 03:06:30PM +0100, Lorenzo Pieralisi wrote:
-> > Hi Bjorn,
+On Thu, 2017-07-27 at 11:19 +0800, Honghui Zhang wrote:
+> On Thu, 2017-07-27 at 10:58 +0800, honghui.zhang@mediatek.com wrote:
+> > From: Ryder Lee <ryder.lee@mediatek.com>
 > > 
-> > On Thu, Jun 08, 2017 at 03:13:29PM +0100, Lorenzo Pieralisi wrote:
-> > > Legacy PCI host controllers (ie host controllers that set-up the PCI bus
-> > > through the ARM pci_common_init() API) are currently relying on
-> > > pci_fixup_irqs() to assign legacy PCI irqs to devices. This is not ideal
-> > > in that pci_fixup_irqs() assign IRQs for all PCI devices present in a
-> > > given system some of which may well be enabled by the time
-> > > pci_fixup_irqs() is called (ie a system with multiple host controllers).
-> > > With the introduction of struct pci_host_bridge.(*map_irq) pointer it is
-> > > possible to assign IRQs for all devices originating from a PCI host
-> > > bridge at probe time; this is implemented through pci_assign_irq() that
-> > > relies on the struct pci_host_bridge.map_irq pointer to map IRQ for a
-> > > given device.
-> > > 
-> > > The benefits this brings are twofold:
-> > > 
-> > > - the IRQ for a device is assigned once at probe time
-> > > - the IRQ assignment works also for hotplugged devices
-> > > 
-> > > Remove pci_fixup_irqs() call from bios32 code and rely on
-> > > pci_assign_irq() to carry out the IRQ mapping at device probe
-> > > time.
-> > > 
-> > > The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are
-> > > set-up in the struct pci_host_bridge created in the bios32
-> > > pcibios_init_hw() function and mach-* code paths (for PCI mach
-> > > implementations that require a specific struct hw_pci.(*scan) function
-> > > callback).
-> > > 
-> > > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > > Cc: Jason Cooper <jason@lakedaemon.net>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: Russell King <linux@armlinux.org.uk>
-> > > Cc: Andrew Lunn <andrew@lunn.ch>
-> > > ---
-> > >  arch/arm/kernel/bios32.c    |  4 ++--
-> > >  arch/arm/mach-dove/pcie.c   | 18 ++++++++++--------
-> > >  arch/arm/mach-iop13xx/pci.c |  2 ++
-> > >  arch/arm/mach-orion5x/pci.c | 28 +++++++++++++++-------------
-> > >  4 files changed, 29 insertions(+), 23 deletions(-)
+> > Introduce a structure "mtk_pcie_soc" to abstract the differences between
+> > controller generations, and the .startup() hook is used to encapsulate
+> > some SoC-dependent related setting. In doing so, the common code which
+> > will be reused by future chips.
 > > 
-> > As I mentioned to you, this patch is incomplete and needs an upgrade
-> > (ie I misread how Orion and the gazillions board file that go with
-> > it to map irqs - apologies but it is very hard to untangle).
+> > In addition, we change the approaches to waiting Gen2 training by using
+> > readl_poll_timeout() calls.
 > > 
-> > I am inlining below an incremental patch to be folded in commit:
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> > ---
+> >  drivers/pci/host/pcie-mediatek.c | 81 +++++++++++++++++++++++-----------------
+> >  1 file changed, 47 insertions(+), 34 deletions(-)
 > > 
-> > feaec00e757a ("ARM/PCI: Remove pci_fixup_irqs() call for bios32 host
-> > controllers")
-> > 
-> > in your pci/irq-fixups branch, or if you prefer I can send you the
-> > resulting squashed-in patch to replace this one, as you prefer.
+> > diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+> > index 5a9d858..7f952a4 100644
+> > --- a/drivers/pci/host/pcie-mediatek.c
+> > +++ b/drivers/pci/host/pcie-mediatek.c
+> > @@ -16,6 +16,7 @@
+> >  
 > 
-> Thanks, I folded this into pci/irq-fixups.  The resulting patch is
-> merely this:
-
-Yes that's what I expected, we remove pci_fixup_irqs() and add the
-hooks into the host bridge structure that should cover all host
-bridges initialized via pci_common_init_dev().
-
-Thanks !
-Lorenzo
-
-> commit 16508469c0f3198a63923aaec08efa1c63f5fbcc
-> Author: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Date:   Wed Jun 28 15:14:04 2017 -0500
+> Sorry about the disturb, I send the wrong patch for this one.
+> I will resend the right version for this last patch.
 > 
->     ARM/PCI: Remove pci_fixup_irqs() call for bios32 host controllers
->     
->     Legacy PCI host controllers (ie host controllers that set-up the PCI bus
->     through the ARM pci_common_init() API) are currently relying on
->     pci_fixup_irqs() to assign legacy PCI irqs to devices.  This is not ideal
->     in that pci_fixup_irqs() assigns IRQs for all PCI devices present in a given
->     system some of which may well be enabled by the time pci_fixup_irqs() is
->     called (ie a system with multiple host controllers).  With the introduction
->     of struct pci_host_bridge.(*map_irq) pointer it is possible to assign IRQs
->     for all devices originating from a PCI host bridge at probe time; this is
->     implemented through pci_assign_irq() that relies on the struct
->     pci_host_bridge.map_irq pointer to map IRQ for a given device.
->     
->     The benefits this brings are twofold:
->     
->       - the IRQ for a device is assigned once at probe time
->       - the IRQ assignment works also for hotplugged devices
->     
->     Remove pci_fixup_irqs() call from bios32 code and rely on pci_assign_irq()
->     to carry out the IRQ mapping at device probe time.
->     
->     The map_irq() and swizzle_irq() struct pci_host_bridge callbacks are set-up
->     in the struct pci_host_bridge created in the bios32 pcibios_init_hw()
->     function and mach-* code paths (for PCI mach implementations that require a
->     specific struct hw_pci.(*scan) function callback).
->     
->     Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->     [bhelgaas: folded in fixes from Lorenzo:
->     http://lkml.kernel.org/r/20170701140629.GC8977@red-moon]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Cc: Jason Cooper <jason@lakedaemon.net>
->     Cc: Russell King <linux@armlinux.org.uk>
->     Cc: Andrew Lunn <andrew@lunn.ch>
+
+Sorry, I reply to the wrong patch mail.
+I meant to re-send the patch:
+[PATCH v2 5/5] dt-bindings: PCI: add support for new generation
+controller, not this one.
+
+This one is the right patch.
+
+tahnks.
+
+> thanks.
+> >  #include <linux/clk.h>
+> >  #include <linux/delay.h>
+> > +#include <linux/iopoll.h>
+> >  #include <linux/kernel.h>
+> >  #include <linux/of_address.h>
+> >  #include <linux/of_pci.h>
+> > @@ -63,6 +64,18 @@
+> >  #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
+> >  #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
+> >  
+> > +struct mtk_pcie_port;
+> > +
+> > +/**
+> > + * struct mtk_pcie_soc - differentiate between host generations
+> > + * @ops: pointer to configuration access functions
+> > + * @startup: pointer to controller setting functions
+> > + */
+> > +struct mtk_pcie_soc {
+> > +	struct pci_ops *ops;
+> > +	int (*startup)(struct mtk_pcie_port *port);
+> > +};
+> > +
+> >  /**
+> >   * struct mtk_pcie_port - PCIe port information
+> >   * @base: IO mapped register base
+> > @@ -96,6 +109,7 @@ struct mtk_pcie_port {
+> >   * @busn: bus range
+> >   * @offset: IO / Memory offset
+> >   * @ports: pointer to PCIe port information
+> > + * @soc: pointer to SoC-dependent operations
+> >   */
+> >  struct mtk_pcie {
+> >  	struct device *dev;
+> > @@ -111,13 +125,9 @@ struct mtk_pcie {
+> >  		resource_size_t io;
+> >  	} offset;
+> >  	struct list_head ports;
+> > +	const struct mtk_pcie_soc *soc;
+> >  };
+> >  
+> > -static inline bool mtk_pcie_link_up(struct mtk_pcie_port *port)
+> > -{
+> > -	return !!(readl(port->base + PCIE_LINK_STATUS) & PCIE_PORT_LINKUP);
+> > -}
+> > -
+> >  static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+> >  {
+> >  	struct device *dev = pcie->dev;
+> > @@ -171,12 +181,30 @@ static struct pci_ops mtk_pcie_ops = {
+> >  	.write = pci_generic_config_write,
+> >  };
+> >  
+> > -static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
+> > +static int mtk_pcie_startup_ports(struct mtk_pcie_port *port)
+> >  {
+> >  	struct mtk_pcie *pcie = port->pcie;
+> >  	u32 func = PCI_FUNC(port->index << 3);
+> >  	u32 slot = PCI_SLOT(port->index << 3);
+> >  	u32 val;
+> > +	int err;
+> > +
+> > +	/* assert port PERST_N */
+> > +	val = readl(pcie->base + PCIE_SYS_CFG);
+> > +	val |= PCIE_PORT_PERST(port->index);
+> > +	writel(val, pcie->base + PCIE_SYS_CFG);
+> > +
+> > +	/* de-assert port PERST_N */
+> > +	val = readl(pcie->base + PCIE_SYS_CFG);
+> > +	val &= ~PCIE_PORT_PERST(port->index);
+> > +	writel(val, pcie->base + PCIE_SYS_CFG);
+> > +
+> > +	/* 100ms timeout value should be enough for Gen1/2 training */
+> > +	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS, val,
+> > +				 !!(val & PCIE_PORT_LINKUP), 20,
+> > +				 100 * USEC_PER_MSEC);
+> > +	if (err)
+> > +		return -ETIMEDOUT;
+> >  
+> >  	/* enable interrupt */
+> >  	val = readl(pcie->base + PCIE_INT_ENABLE);
+> > @@ -209,30 +237,14 @@ static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
+> >  	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
+> >  	       pcie->base + PCIE_CFG_ADDR);
+> >  	writel(val, pcie->base + PCIE_CFG_DATA);
+> > -}
+> >  
+> > -static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
+> > -{
+> > -	struct mtk_pcie *pcie = port->pcie;
+> > -	u32 val;
+> > -
+> > -	/* assert port PERST_N */
+> > -	val = readl(pcie->base + PCIE_SYS_CFG);
+> > -	val |= PCIE_PORT_PERST(port->index);
+> > -	writel(val, pcie->base + PCIE_SYS_CFG);
+> > -
+> > -	/* de-assert port PERST_N */
+> > -	val = readl(pcie->base + PCIE_SYS_CFG);
+> > -	val &= ~PCIE_PORT_PERST(port->index);
+> > -	writel(val, pcie->base + PCIE_SYS_CFG);
+> > -
+> > -	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
+> > -	msleep(100);
+> > +	return 0;
+> >  }
+> >  
+> >  static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+> >  {
+> > -	struct device *dev = port->pcie->dev;
+> > +	struct mtk_pcie *pcie = port->pcie;
+> > +	struct device *dev = pcie->dev;
+> >  	int err;
+> >  
+> >  	err = clk_prepare_enable(port->sys_ck);
+> > @@ -250,13 +262,8 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+> >  		goto err_phy_on;
+> >  	}
+> >  
+> > -	mtk_pcie_assert_ports(port);
+> > -
+> > -	/* if link up, then setup root port configuration space */
+> > -	if (mtk_pcie_link_up(port)) {
+> > -		mtk_pcie_configure_rc(port);
+> > +	if (!pcie->soc->startup(port))
+> >  		return;
+> > -	}
+> >  
+> >  	dev_info(dev, "Port%d link down\n", port->index);
+> >  
+> > @@ -480,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
+> >  
+> >  	host->busnr = pcie->busn.start;
+> >  	host->dev.parent = pcie->dev;
+> > -	host->ops = &mtk_pcie_ops;
+> > +	host->ops = pcie->soc->ops;
+> >  	host->map_irq = of_irq_parse_and_map_pci;
+> >  	host->swizzle_irq = pci_common_swizzle;
+> >  
+> > @@ -513,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	pcie = pci_host_bridge_priv(host);
+> >  
+> >  	pcie->dev = dev;
+> > +	pcie->soc = of_device_get_match_data(dev);
+> >  	platform_set_drvdata(pdev, pcie);
+> >  	INIT_LIST_HEAD(&pcie->ports);
+> >  
+> > @@ -537,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+> >  	return err;
+> >  }
+> >  
+> > +static struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+> > +	.ops = &mtk_pcie_ops,
+> > +	.startup = mtk_pcie_startup_ports,
+> > +};
+> > +
+> >  static const struct of_device_id mtk_pcie_ids[] = {
+> > -	{ .compatible = "mediatek,mt7623-pcie"},
+> > -	{ .compatible = "mediatek,mt2701-pcie"},
+> > +	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
+> > +	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+> >  	{},
+> >  };
+> >  
 > 
-> diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-> index 4c7621ac389c..56dc1a3a33b4 100644
-> --- a/arch/arm/kernel/bios32.c
-> +++ b/arch/arm/kernel/bios32.c
-> @@ -484,6 +484,9 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->  				break;
->  			}
->  
-> +			bridge->map_irq = pcibios_map_irq;
-> +			bridge->swizzle_irq = pcibios_swizzle;
-> +
->  			if (hw->scan)
->  				ret = hw->scan(nr, bridge);
->  			else {
-> @@ -530,8 +533,6 @@ void pci_common_init_dev(struct device *parent, struct hw_pci *hw)
->  	if (hw->postinit)
->  		hw->postinit();
->  
-> -	pci_fixup_irqs(pcibios_swizzle, pcibios_map_irq);
-> -
->  	list_for_each_entry(sys, &head, node) {
->  		struct pci_bus *bus = sys->bus;
->  
+> 
+> 
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
