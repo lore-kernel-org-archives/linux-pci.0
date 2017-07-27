@@ -1,95 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:35792 "EHLO
-        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751461AbdGQVDr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 17:03:47 -0400
-Received: by mail-pf0-f172.google.com with SMTP id e199so742840pfh.2
-        for <linux-pci@vger.kernel.org>; Mon, 17 Jul 2017 14:03:47 -0700 (PDT)
-Date: Mon, 17 Jul 2017 14:03:44 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] phy-rockchip-pcie: add set_mode callback
-Message-ID: <20170717210342.GA115703@google.com>
-References: <1497601068-181656-1-git-send-email-shawn.lin@rock-chips.com>
- <cea27b15-2c2d-a4a9-76f8-f4798c152101@ti.com>
- <CA+ASDXOpPdk+mrVQxrDmhsL-SUNSnQ_CqGXuW-Vrh_D7Gh8jxA@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Ding Tianhong <dingtianhong@huawei.com>, Alexander Duyck
+ <alexander.duyck@gmail.com>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Date: Thu, 27 Jul 2017 17:44:48 +0000
+Message-ID: <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+ <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+ <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+ <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com>
+ <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
+ <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
+ <MWHPR12MB16007782C422082A92F4765DC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>,
+ <2feff1a5-25b7-eb6c-7628-7c2257c56e95@huawei.com>
+In-Reply-To: <2feff1a5-25b7-eb6c-7628-7c2257c56e95@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+ASDXOpPdk+mrVQxrDmhsL-SUNSnQ_CqGXuW-Vrh_D7Gh8jxA@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>, Sinan Kaya <okaya@codeaurora.org>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>, Alex
+ Williamson <alex.williamson@redhat.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Michael Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "amira@mellanox.com" <amira@mellanox.com>, Netdev <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 10, 2017 at 10:20:32PM -0700, Brian Norris wrote:
-> Hi Kishon,
+| From: Ding Tianhong <dingtianhong@huawei.com>
+| Sent: Wednesday, July 26, 2017 6:01 PM
+|
+| On 2017/7/27 3:05, Casey Leedom wrote:
+| >
+| > Ding, send me a note if you'd like me to work that [cxgb4vf patch] up
+| > for you.
+|
+| Ok, you could send the change log and I could put it in the v8 version
+| together, will you base on the patch 3/3 or build a independence patch?
 
-Hi again Kishon,
+Which ever you'd prefer.  It would basically mirror the same exact code that
+you've got for cxgb4.  I.e. testing the setting of the VF's PCIe Capability
+Device Control[Relaxed Ordering Enable], setting a new flag in
+adpater->flags, testing that flag in cxgb4vf/sge.c:t4vf_sge_alloc_rxq().
+But since the VF's PF will already have disabled the PF's Relaxed Ordering
+Enable, the VF will also have it's Relaxed Ordering Enable disabled and any
+effort by the internal chip to send TLPs with the Relaxed Ordering Attribute
+will be gated by the PCIe logic.  So it's not critical that this be in the
+first patch.  Your call.  Let me know if you'd like me to send that to you.
 
-I didn't get a response from you, but Shawn is continuing to send
-several versions of a patchset implementing one of these suggestions.
-I'd like to ping back here, in the hopes of getting an answer.
 
-> On Mon, Jul 10, 2017 at 9:45 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> > On Friday 16 June 2017 01:47 PM, Shawn Lin wrote:
-> > > phy_mode was added for switching USB mode purposely as
-> > > well as phy_set_mode API. However other types of PHY could
-> > > also have some miscellaneous setting/modes need to be
-> > > handled. This patch is gonna support this callback for
-> > > phy-rockchip-pcie and do some power-saving work there.
-> > > Note that we just stuff in some other values other that the
-> > > existing phy_mode and convert it in the coressponding driver
-> > > instead, otherwise we should extend the phy_mode again which
-> > > it doesn't make sense to add in new driver's specificed value.
-> > > Overall it looks fine to me as the controller's driver and the
-> > > phy's driver are paired so that the caller and the consumer should
-> > > be able to keep the value(mode) in consistent.
-> >
-> > I really don't prefer using an API other that what it is intended for. We have
-> > to come up with a better way for handling this.
-> >
-> > IIUC this patch sets unused lanes in idle mode? If yes, then can't we model
-> > each lane as a separate phy, so that we can power-on/power-off each lane
-> > independently.
-> 
-> I suggested the same to Shawn previously. I'm interested in seeing his response.
+| From: Ding Tianhong <dingtianhong@huawei.com>
+| Sent: Wednesday, July 26, 2017 6:08 PM
+|
+| On 2017/7/27 2:26, Casey Leedom wrote:
+| >
+| >  1. Did we ever get any acknowledgement from either Intel or AMD
+| >     on this patch?  I know that we can't ensure that, but it sure would
+| >     be nice since the PCI Quirks that we're putting in affect their
+| >     products.
+|
+| Still no Intel and AMD guys has ack this, this is what I am worried about,
+| should I ping some man again ?
 
-Judging by Shawn's subsequent patches, I guess he saw no problem with
-this. I'm still not so sure.
+By amusing coincidence, Patrik Cramer (now Cc'ed) from Intel sent me a note
+yesterday with a link to the official Intel performance tuning documentation
+which covers this issue:
 
-> But personally I'm still not sure if that's the most accurate way to
-> describe this PHY, except for the fact that inevitably, most device
-> tree bindings get molded to match the related kernel APIs, rather than
-> the other way around. What if instead, we added an enum mode entry
-> that represents "finished link training", at which point the PHY would
-> then know it can power down the unused lanes (that's assuming the PHY
-> can figure that part out)?
+https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-architectures-optimization-manual.pdf
 
-Can I get an answer here? Is it possible that we extend the PHY API with
-either a new 'phy_mode', or with some other PCIe-specific extension? As
-I said above, it doesn't actually seem like a natural description of the
-hardware to say that there are 4 PHYs here, instead of just 1. And then
-it puts more burden on the provider/consumer drivers to do a lot of
-weird accounting, just so that this single piece of hardware can fit the
-current limited set of APIs.
+In section 3.9.1 we have:
 
-This is not the first time that some concept isn't so easy to fit into
-the existing framework. I think it would be prudent to consider ways to
-better extend the API to support modes specific to device classes.
-You've already done that for some USB pieces, and I think it would make
-sense to extend this to PCIe. For instance, we could have the PHY export
-things like "number of PCIe lanes", and support callbacks for "disable
-unused lanes".
+    3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
+          and Toward MMIO Regions (P2P)
 
-> Or if we did re-model this PHY, how are we supposed to handle backward
-> compatibility? Can the same PHY driver support 2 different of_xlate
-> methods? I guess we'd have to provide an implementation that sets the
-> driver up to behave completely differently based on the number of
-> #phy-cells?
+    In order to maximize performance for PCIe devices in the processors
+    listed in Table 3-6 below, the soft- ware should determine whether the
+    accesses are toward coherent memory (system memory) or toward MMIO
+    regions (P2P access to other devices). If the access is toward MMIO
+    region, then software can command HW to set the RO bit in the TLP
+    header, as this would allow hardware to achieve maximum throughput for
+    these types of accesses. For accesses toward coherent memory, software
+    can command HW to clear the RO bit in the TLP header (no RO), as this
+    would allow hardware to achieve maximum throughput for these types of
+    accesses.
 
-I guess Shawn was able to work out some of this. But all the extra
-state-tracking and reference counting appears to be hard to get right...
+    Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
+               PCIe Performance
 
-Brian
+    Processor                            CPU RP Device IDs
+
+    Intel Xeon processors based on       6F01H-6F0EH
+    Broadwell microarchitecture
+
+    Intel Xeon processors based on       2F01H-2F0EH
+    Haswell microarchitecture
+
+Unfortunately that's a pretty thin section.  But it does expand the set of
+Intel Root Complexes for which our Linux PCI Quirk will need to cover.  So
+you should add those to the next (and hopefully final) spin of your patch.
+And, it also verifies the need to handle the use of Relaxed Ordering more
+subtlely than simply turning it off since the NVMe peer-to-peer example I
+keep bringing up would fall into the "need to use Relaxed Ordering" case ...
+
+It would have been nice to know why this is happening and if any future
+processor would fix this.  After all, Relaxed Ordering, is just supposed to
+be a hint.  At worst, a receiving device could just ignore the attribute
+entirely.  Obviously someone made an effort to implement it but ... it
+didn't go the way they wanted.
+
+And, it also would have been nice to know if there was any hidden register
+in these Intel Root Complexes which can completely turn off the effort to
+pay attention to the Relaxed Ordering Attribute.  We've spend an enormous
+amount of effort on this issue here on the Linux PCI email list struggling
+mightily to come up with a way to determine when it's
+safe/recommended/not-recommended/unsafe to use Relaxed Ordering when
+directing TLPs towards the Root Complex.  And some architectures require RO
+for decent performance so we can't just "turn it off" unilatterally.
+
+Casey
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
