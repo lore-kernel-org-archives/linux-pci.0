@@ -1,246 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:50920 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753182AbdGNDxD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Jul 2017 23:53:03 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH 2/6] PCI: rockchip: introduce per-lanes PHYs support
-Date: Fri, 14 Jul 2017 11:52:42 +0800
-Message-Id: <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mailgw02.mediatek.com ([210.61.82.184]:38601 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751452AbdG0C6t (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Jul 2017 22:58:49 -0400
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v2 2/5] PCI: mediatek: switch to use platform_get_resource_byname()
+Date: Thu, 27 Jul 2017 10:58:36 +0800
+Message-ID: <5c671476c51655bc1bbc7bec5ac332c21974d80e.1501122135.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1501122135.git.honghui.zhang@mediatek.com>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We distinguish the legacy PHY with the newer per-lane
-PHYs by adding legacy_phy flag and consolidate all
-the phy operations into a single function to simply the
-code. Note that the legacy phy is still the first option
-to be searched in order not to break the backward compatibility
-of DT blob, althoug we use devm_phy_optional_get instead which
-seams to violate the original statement of pcie-rockchip's DT
-document.
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+This is a transitional patch. We currently use platfarm_get_resource() for
+retrieving the IOMEM resources, but there might be some chips don't have
+subsys/shared registers part, which depends on platform design, and these
+will be introduced in further patches.
+
+Switch this function to use the platform_get_resource_byname() so that the
+binding can be agnostic of the resource order.
+
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
 ---
+ drivers/pci/host/pcie-mediatek.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
- drivers/pci/host/pcie-rockchip.c | 138 +++++++++++++++++++++++++++++++--------
- 1 file changed, 112 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 6632a51..a3dc7bd 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -47,6 +47,7 @@
- #define HIWORD_UPDATE_BIT(val)		HIWORD_UPDATE(val, val)
- 
- #define ENCODE_LANES(x)			((((x) >> 1) & 3) << 4)
-+#define MAX_LANE_NUM			4
- 
- #define PCIE_CLIENT_BASE		0x0
- #define PCIE_CLIENT_CONFIG		(PCIE_CLIENT_BASE + 0x00)
-@@ -210,7 +211,9 @@
- struct rockchip_pcie {
- 	void	__iomem *reg_base;		/* DT axi-base */
- 	void	__iomem *apb_base;		/* DT apb-base */
-+	bool	legacy_phy;
- 	struct	phy *phy;
-+	struct  phy **phys;
- 	struct	reset_control *core_rst;
- 	struct	reset_control *mgmt_rst;
- 	struct	reset_control *mgmt_sticky_rst;
-@@ -242,6 +245,15 @@ struct rockchip_pcie {
- 	phys_addr_t mem_bus_addr;
- };
- 
-+enum phy_ops_type {
-+	PHY_INIT,
-+	PHY_PWR_ON,
-+	PHY_PWR_OFF,
-+	PHY_EXIT,
-+};
-+
-+const char *ops_name[] = {"init", "power on", "power off", "exit"};
-+
- static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
- {
- 	return readl(rockchip->apb_base + reg);
-@@ -507,6 +519,98 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
- }
- 
-+static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
-+{
-+	struct device *dev = rockchip->dev;
-+	struct phy *phy;
-+	char *name;
-+	u32 i;
-+
-+	rockchip->phy = devm_phy_optional_get(dev, "pcie-phy");
-+	if (IS_ERR(rockchip->phy)) {
-+		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
-+			dev_err(dev, "missing phy\n");
-+		return PTR_ERR(rockchip->phy);
-+	} else if (!rockchip->phy) {
-+		rockchip->legacy_phy = false;
-+	} else {
-+		rockchip->legacy_phy = true;
-+		return 0;
-+	}
-+
-+	/* per-lane PHYs */
-+	rockchip->phys = devm_kcalloc(dev, sizeof(phy), MAX_LANE_NUM,
-+				      GFP_KERNEL);
-+	if (!rockchip->phys)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		name = kasprintf(GFP_KERNEL, "%s-%u", "pcie-phy", i);
-+		if (!name)
-+			return -ENOMEM;
-+
-+		phy = devm_of_phy_get(rockchip->dev,
-+				      rockchip->dev->of_node, name);
-+		kfree(name);
-+
-+		if (IS_ERR(phy) && PTR_ERR(phy) == -ENODEV) {
-+			phy = NULL;
-+		} else if (IS_ERR(phy)) {
-+			dev_err(dev, "failed to get per-lane PHY#%u: %ld\n", i,
-+				PTR_ERR(phy));
-+			return PTR_ERR(phy);
-+		}
-+
-+		rockchip->phys[i] = phy;
-+	}
-+
-+	return 0;
-+}
-+
-+static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
-+					 enum phy_ops_type type)
-+{
-+	int i, phy_num, err;
-+	struct device *dev = rockchip->dev;
-+	struct phy *phy;
-+
-+	phy_num = rockchip->legacy_phy ? 1 : MAX_LANE_NUM;
-+
-+	for (i = 0; i < phy_num; i++) {
-+		phy = rockchip->legacy_phy ? rockchip->phy :
-+					     rockchip->phys[i];
-+		switch (type) {
-+		case PHY_INIT:
-+			err = phy_init(phy);
-+			break;
-+		case PHY_PWR_ON:
-+			err = phy_power_on(phy);
-+			break;
-+		case PHY_PWR_OFF:
-+			err = phy_power_off(phy);
-+			break;
-+		case PHY_EXIT:
-+			err = phy_exit(phy);
-+			break;
-+		default:
-+			dev_err(dev, "unsupported phy_ops_type\n");
-+			return -EOPNOTSUPP;
-+		}
-+
-+		if (err < 0) {
-+			if (rockchip->legacy_phy)
-+				dev_err(dev, "fail to %s legacy PHY, err %d\n",
-+					ops_name[type], err);
-+			else
-+				dev_err(dev, "fail to %s per-lane PHY#%u, err %d\n",
-+					ops_name[type], i, err);
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- /**
-  * rockchip_pcie_init_port - Initialize hardware
-  * @rockchip: PCIe port information
-@@ -537,11 +641,9 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 7f952a4..f8e2f68 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -295,7 +295,8 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
  		return err;
  	}
  
--	err = phy_init(rockchip->phy);
--	if (err < 0) {
--		dev_err(dev, "fail to init phy, err %d\n", err);
-+	err = rockchip_pcie_manipulate_phys(rockchip, PHY_INIT);
-+	if (err < 0)
- 		return err;
--	}
+-	regs = platform_get_resource(pdev, IORESOURCE_MEM, index + 1);
++	snprintf(name, sizeof(name), "port%d", index);
++	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
+ 	port->base = devm_ioremap_resource(dev, regs);
+ 	if (IS_ERR(port->base)) {
+ 		dev_err(dev, "failed to map port%d base\n", index);
+@@ -336,12 +337,14 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ 	struct resource *regs;
+ 	int err;
  
- 	err = reset_control_assert(rockchip->core_rst);
- 	if (err) {
-@@ -602,11 +704,9 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			    PCIE_CLIENT_MODE_RC,
- 			    PCIE_CLIENT_CONFIG);
- 
--	err = phy_power_on(rockchip->phy);
--	if (err) {
--		dev_err(dev, "fail to power on phy, err %d\n", err);
-+	err = rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_ON);
-+	if (err)
- 		return err;
--	}
- 
- 	/*
- 	 * Please don't reorder the deassert sequence of the following
-@@ -853,20 +953,6 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
- 
--static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
--{
--	struct device *dev = rockchip->dev;
--
--	rockchip->phy = devm_phy_get(dev, "pcie-phy");
--	if (IS_ERR(rockchip->phy)) {
--		if (PTR_ERR(rockchip->phy) != -EPROBE_DEFER)
--			dev_err(dev, "missing phy\n");
--		return PTR_ERR(rockchip->phy);
--	}
--
--	return 0;
--}
--
- /**
-  * rockchip_pcie_parse_dt - Parse Device Tree
-  * @rockchip: PCIe port information
-@@ -1295,8 +1381,8 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- 		return ret;
+-	/* get shared registers */
+-	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	pcie->base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(pcie->base)) {
+-		dev_err(dev, "failed to map shared register\n");
+-		return PTR_ERR(pcie->base);
++	/* get shared registers, which are optional */
++	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subsys");
++	if (regs) {
++		pcie->base = devm_ioremap_resource(dev, regs);
++		if (IS_ERR(pcie->base)) {
++			dev_err(dev, "failed to map shared register\n");
++			return PTR_ERR(pcie->base);
++		}
  	}
  
--	phy_power_off(rockchip->phy);
--	phy_exit(rockchip->phy);
-+	rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_OFF);
-+	rockchip_pcie_manipulate_phys(rockchip, PHY_EXIT);
- 
- 	clk_disable_unprepare(rockchip->clk_pcie_pm);
- 	clk_disable_unprepare(rockchip->hclk_pcie);
-@@ -1538,8 +1624,8 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	pci_unmap_iospace(rockchip->io);
- 	irq_domain_remove(rockchip->irq_domain);
- 
--	phy_power_off(rockchip->phy);
--	phy_exit(rockchip->phy);
-+	rockchip_pcie_manipulate_phys(rockchip, PHY_PWR_OFF);
-+	rockchip_pcie_manipulate_phys(rockchip, PHY_EXIT);
- 
- 	clk_disable_unprepare(rockchip->clk_pcie_pm);
- 	clk_disable_unprepare(rockchip->hclk_pcie);
+ 	pcie->free_ck = devm_clk_get(dev, "free_ck");
 -- 
-1.9.1
+2.6.4
