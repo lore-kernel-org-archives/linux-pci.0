@@ -1,67 +1,66 @@
-Return-Path: <SRS0=LhAB=6G=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=LhAB=6G=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Mon, 3 Jul 2017 19:11:28 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-	Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-Message-ID: <20170703181128.GD4902@n2100.armlinux.org.uk>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=J3Ls=66=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=J3Ls=66=intel.com=ashok.raj@kernel.org>
+Date: Thu, 27 Jul 2017 11:42:51 -0700
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Ding Tianhong <dingtianhong@huawei.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>,
+	Netdev <netdev@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	Michael Werner <werner@chelsio.com>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"linuxarm@huawei.com" <linuxarm@huawei.com>,
+	"amira@mellanox.com" <amira@mellanox.com>,
+	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, ashok.raj@intel.com
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Message-ID: <20170727184251.GA205508@otc-nc-03>
+References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com>
+ <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
+ <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
+ <MWHPR12MB16007782C422082A92F4765DC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <2feff1a5-25b7-eb6c-7628-7c2257c56e95@huawei.com>
+ <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
-> The problem is serializing vs. memory accesses, since they don't use
-> any wrappers.  However, they are ioremapped(), so it's at least
-> conceivable that another solution would be to use VM to trap those
-> accesses.  I'm not a VM person, so I don't know whether that's
-> feasible in Linux.
+Hi Casey
 
-Bjorn,
+> | Still no Intel and AMD guys has ack this, this is what I am worried about,
+> | should I ping some man again ?
 
-You're forgetting that MMIO (iow, memory returned by ioremap()) must
-be accessed through the appropriate accessors, and must not be
-directly dereferenced in C.  (We do have buggy drivers that do that
-but they are buggy, and in many cases are getting attention to fix
-that.)
 
-However, adding a spinlock into them is really not nice, because it
-adds extra overhead that's only necessary for rare cases like Sigma
-Designs - especially when you consider that these accessors are used
-for all MMIO accesses, not just PCI.  It would effectively mean that
-we end up serialising all MMIO accesses throughout the kernel when
-Sigma Designs SoCs are enabled, destroying some of the SMP benefit.
+I can ack the patch set for Intel specific changes. Now that the doc is made
+public :-).
 
-I don't think we can sanely use the MMU to trap those accesses either,
-that would mean sending IPIs to tell other CPUs to do something, and
-waiting for them to respond - which can deadlock if we're already in
-an IRQ-protected region (iirc, config accesses are made with IRQs
-off.)
+Can you/Ding resend the patch series, i do have the most recent v7, some
+of the commit message wasn't easy to ready. Seems like this patch has
+gotten bigger than originally intended, but seems to be for the overall
+good :-).
 
-I don't think there's an easy solution to this problem - and I'm not
-sure that stop_machine() can be made to work in this path (which
-needs a process context).  I have a suspicion that the Sigma Designs
-PCI implementation is just soo insane that it's never going to work
-reliably in a multi-SoC kernel without introducing severe performance
-issues for everyone else.
+Sorry for staying silent up until now.
 
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Cheers,
+Ashok
