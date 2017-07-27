@@ -1,101 +1,269 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:33434 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751265AbdGQHiB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 03:38:01 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH 4/7] PCI: rockchip: idle the inactive PHY(s)
-Date: Mon, 17 Jul 2017 15:36:19 +0800
-Message-Id: <1500276982-208439-5-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500276982-208439-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1501126281.20860.11.camel@mtksdaap41>
+Subject: Re: [PATCH v2 5/5] dt-bindings: PCI: add support for new generation
+ controller
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>
+Date: Thu, 27 Jul 2017 11:31:21 +0800
+In-Reply-To: <06c9b3439431221794fc9f723fef52ff59be7ec6.1501122135.git.honghui.zhang@mediatek.com>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+ <06c9b3439431221794fc9f723fef52ff59be7ec6.1501122135.git.honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, robh+dt@kernel.org, yt.shen@mediatek.com,
+ robh@kerenl.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
+ matthias.bgg@gmail.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Check the status of all lanes and idle the inactive one(s).
+On Thu, 2017-07-27 at 10:58 +0800, honghui.zhang@mediatek.com wrote:
+> From: Ryder Lee <ryder.lee@mediatek.com>
+> 
+> Add support for MediaTek new generation controller and update related
+> properities.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+> ---
+>  .../devicetree/bindings/pci/mediatek-pcie.txt      | 168 ++++++++++++++++++++-
+>  1 file changed, 161 insertions(+), 7 deletions(-)
+> 
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Sorry about the disturb, I send the wrong local version  of this patch.
+[PATCH v2 5/5] dt-bindings: PCI: add support for new generation
+ controller
 
- drivers/pci/host/pcie-rockchip.c | 31 ++++++++++++++++++++++++++++++-
- 1 file changed, 30 insertions(+), 1 deletion(-)
+The right version for this patch have been re-send.
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f755df5..fa30ffb 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -15,6 +15,7 @@
-  * (at your option) any later version.
-  */
- 
-+#include <linux/bitrev.h>
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
-@@ -112,6 +113,9 @@
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT	16
- #define   PCIE_CORE_TXCREDIT_CFG1_MUI_ENCODE(x) \
- 		(((x) >> 3) << PCIE_CORE_TXCREDIT_CFG1_MUI_SHIFT)
-+#define PCIE_CORE_LANE_MAP             (PCIE_CORE_CTRL_MGMT_BASE + 0x200)
-+#define   PCIE_CORE_LANE_MAP_MASK              0x0000000f
-+#define   PCIE_CORE_LANE_MAP_REVERSE           BIT(16)
- #define PCIE_CORE_INT_STATUS		(PCIE_CORE_CTRL_MGMT_BASE + 0x20c)
- #define   PCIE_CORE_INT_PRFPE			BIT(0)
- #define   PCIE_CORE_INT_CRFPE			BIT(1)
-@@ -311,6 +315,18 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 	return 1;
- }
- 
-+static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
-+{
-+	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-+	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
-+
-+	/* The link may be using a reverse-indexed mapping. */
-+	if (val & PCIE_CORE_LANE_MAP_REVERSE)
-+		map = bitrev8(map) >> 4;
-+
-+	return map;
-+}
-+
- static int rockchip_pcie_rd_own_conf(struct rockchip_pcie *rockchip,
- 				     int where, int size, u32 *val)
- {
-@@ -624,7 +640,8 @@ static int rockchip_pcie_manipulate_phys(struct rockchip_pcie *rockchip,
- static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- {
- 	struct device *dev = rockchip->dev;
--	int err;
-+	int err, i;
-+	u8 lane_map;
- 	u32 status;
- 
- 	gpiod_set_value(rockchip->ep_gpio, 0);
-@@ -797,6 +814,18 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
-+	if (!rockchip->legacy_phy) {
-+		/*  power off unused lane(s) */
-+		lane_map = rockchip_pcie_lane_map(rockchip);
-+		for (i = 0; i < MAX_LANE_NUM; i++) {
-+			if (lane_map & BIT(i))
-+				continue;
-+
-+			dev_dbg(dev, "idling lane %d\n", i);
-+			phy_power_off(rockchip->phys[i]);
-+		}
-+	}
-+
- 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
- 			    PCIE_CORE_CONFIG_VENDOR);
- 	rockchip_pcie_write(rockchip,
--- 
-1.9.1
+thanks.
+
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> index a968f25..179329b 100644
+> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> @@ -3,18 +3,31 @@ MediaTek Gen2 PCIe controller
+>  Required properties:
+>  - compatible: Should contain one of the following string:
+>  	"mediatek,mt2701-pcie"
+> +	"mediatek,mt2712-pcie"
+> +	"mediatek,mt7622-pcie"
+>  	"mediatek,mt7623-pcie"
+>  - device_type: Must be "pci"
+> -- reg: Base addresses and lengths of the PCIe controller.
+> +- reg: Base addresses and lengths of the PICe subsys and root ports.
+> +- reg-names: Names of the above areas to use during resource look-up.
+>  - #address-cells: Address representation for root ports (must be 3)
+>  - #size-cells: Size representation for root ports (must be 2)
+>  - clocks: Must contain an entry for each entry in clock-names.
+>    See ../clocks/clock-bindings.txt for details.
+> -- clock-names: Must include the following entries:
+> -  - free_ck :for reference clock of PCIe subsys
+> -  - sys_ck0 :for clock of Port0
+> -  - sys_ck1 :for clock of Port1
+> -  - sys_ck2 :for clock of Port2
+> +- clock-names:
+> +  Mandatory entries:
+> +   - sys_ckN :transaction layer and data link layer clock
+> +  Required entries for MT2701/MT7623:
+> +   - free_ck :for reference clock of PCIe subsys
+> +  Required entries for MT2712/MT7622:
+> +   - ahb_ckN :AHB slave interface operating clock for CSR access and RC
+> +	      initiated MMIO access
+> +  Required entries for MT7622:
+> +   - axi_ckN :application layer MMIO channel operating clock
+> +   - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
+> +	      pcie_mac_ck/pcie_pipe_ck is turned off
+> +   - obff_ckN :OBFF functional block operating clock
+> +   - pipe_ckN :LTSSM and phy/mac layer operating clock
+> +  where N starting from 0 to the maximum number of root ports.
+>  - phys: List of PHY specifiers (used by generic PHY framework).
+>  - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+>    number of PHYs as specified in *phys* property.
+> @@ -33,6 +46,10 @@ Required properties for MT7623/MT2701:
+>  - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
+>    number of root ports.
+>  
+> +Required properties for MT2712/MT7622:
+> +-interrupts: A list of interrupt outputs of the controller, must have one
+> +	     entry for each PCIe port
+> +
+>  In addition, the device tree node must have sub-nodes describing each
+>  PCIe port interface, having the following mandatory properties:
+>  
+> @@ -50,7 +67,7 @@ Required properties:
+>    property is sufficient.
+>  - num-lanes: Number of lanes to use for this port.
+>  
+> -Examples:
+> +Examples for MT7623:
+>  
+>  	hifsys: syscon@1a000000 {
+>  		compatible = "mediatek,mt7623-hifsys",
+> @@ -68,6 +85,7 @@ Examples:
+>  		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
+>  		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
+>  		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
+> +		reg-names = "subsys", "port0", "port1", "port2";
+>  		#address-cells = <3>;
+>  		#size-cells = <2>;
+>  		#interrupt-cells = <1>;
+> @@ -127,3 +145,139 @@ Examples:
+>  			num-lanes = <1>;
+>  		};
+>  	};
+> +
+> +Examples for MT2712:
+> +	pcie: pcie@11700000 {
+> +		compatible = "mediatek,generic-pcie-v2";
+> +		device_type = "pci";
+> +		reg = <0 0x11700000 0 0x1000>,
+> +		      <0 0x112ff000 0 0x1000>;
+> +		reg-names = "port0", "port1";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
+> +			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&pericfg CLK_PERI_PCIE0>,
+> +			 <&pericfg CLK_PERI_PCIE1>,
+> +			 <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
+> +			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>;
+> +		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1";
+> +		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
+> +		phy-names = "pcie-phy0", "pcie-phy1";
+> +		bus-range = <0x00 0xff>;
+> +		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
+> +
+> +		pcie0: pcie@0,0 {
+> +			device_type = "pci";
+> +			reg = <0x0000 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
+> +					<0 0 0 2 &pcie_intc0 1>,
+> +					<0 0 0 3 &pcie_intc0 2>,
+> +					<0 0 0 4 &pcie_intc0 3>;
+> +			pcie_intc0: interrupt-controller {
+> +				interrupt-controller;
+> +				#address-cells = <0>;
+> +				#interrupt-cells = <1>;
+> +			};
+> +		};
+> +
+> +		pcie1: pcie@1,0 {
+> +			device_type = "pci";
+> +			reg = <0x0800 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+> +					<0 0 0 2 &pcie_intc1 1>,
+> +					<0 0 0 3 &pcie_intc1 2>,
+> +					<0 0 0 4 &pcie_intc1 3>;
+> +			pcie_intc1: interrupt-controller {
+> +				interrupt-controller;
+> +				#address-cells = <0>;
+> +				#interrupt-cells = <1>;
+> +			};
+> +		};
+> +	};
+> +
+> +Examples for MT7622:
+> +	pcie: pcie@1a140000 {
+> +		compatible = "mediatek,generic-pcie-v2";
+> +		device_type = "pci";
+> +		reg = <0 0x1a140000 0 0x1000>,
+> +		      <0 0x1a143000 0 0x1000>,
+> +		      <0 0x1a145000 0 0x1000>;
+> +		reg-names = "subsys", "port0", "port1";
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
+> +		clocks = <&pciesys CLK_PCIE_P0_MAC_EN>,
+> +			 <&pciesys CLK_PCIE_P1_MAC_EN>,
+> +			 <&pciesys CLK_PCIE_P0_AHB_EN>,
+> +			 <&pciesys CLK_PCIE_P1_AHB_EN>,
+> +			 <&pciesys CLK_PCIE_P0_AUX_EN>,
+> +			 <&pciesys CLK_PCIE_P1_AUX_EN>,
+> +			 <&pciesys CLK_PCIE_P0_AXI_EN>,
+> +			 <&pciesys CLK_PCIE_P1_AXI_EN>,
+> +			 <&pciesys CLK_PCIE_P0_OBFF_EN>,
+> +			 <&pciesys CLK_PCIE_P1_OBFF_EN>,
+> +			 <&pciesys CLK_PCIE_P0_PIPE_EN>,
+> +			 <&pciesys CLK_PCIE_P1_PIPE_EN>;
+> +		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1",
+> +			      "aux_ck0", "aux_ck1", "axi_ck0", "axi_ck1",
+> +			      "obff_ck0", "obff_ck1", "pipe_ck0", "pipe_ck1";
+> +		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
+> +		phy-names = "pcie-phy0", "pcie-phy1";
+> +		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
+> +		bus-range = <0x00 0xff>;
+> +		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
+> +
+> +		pcie0: pcie@0,0 {
+> +			device_type = "pci";
+> +			reg = <0x0000 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
+> +					<0 0 0 2 &pcie_intc0 1>,
+> +					<0 0 0 3 &pcie_intc0 2>,
+> +					<0 0 0 4 &pcie_intc0 3>;
+> +			pcie_intc0: interrupt-controller {
+> +				interrupt-controller;
+> +				#address-cells = <0>;
+> +				#interrupt-cells = <1>;
+> +			};
+> +		};
+> +
+> +		pcie1: pcie@1,0 {
+> +			device_type = "pci";
+> +			reg = <0x0800 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +			interrupt-map-mask = <0 0 0 7>;
+> +			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
+> +					<0 0 0 2 &pcie_intc1 1>,
+> +					<0 0 0 3 &pcie_intc1 2>,
+> +					<0 0 0 4 &pcie_intc1 3>;
+> +			pcie_intc1: interrupt-controller {
+> +				interrupt-controller;
+> +				#address-cells = <0>;
+> +				#interrupt-cells = <1>;
+> +			};
+> +		};
+> +	};
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
