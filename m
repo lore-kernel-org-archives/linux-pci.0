@@ -1,62 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:43320 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752023AbdGKKxZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Jul 2017 06:53:25 -0400
-Subject: Re: Support SVM without PASID
-To: valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
-        kevin.tian@intel.com, jacob.jun.pan@intel.com
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
-Date: Tue, 11 Jul 2017 11:56:16 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+ <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+ <ryder.lee@mediatek.com>
+Subject: [PATCH v2 3/5] dt-bindings: PCI: rename and cleanup MediaTek binding
+ text
+Date: Thu, 27 Jul 2017 10:58:37 +0800
+Message-ID: <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1501122135.git.honghui.zhang@mediatek.com>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Valmiki,
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-On 09/07/17 04:15, valmiki wrote:
->>> Hi,
->>>
->>> In SMMUv3 architecture document i see "PASIDs are optional,
->>> configurable, and of a size determined by the minimum
->>> of the endpoint".
->>>
->>> So if PASID's are optional and not supported by PCIe end point, how SVM
->>> can be achieved ?
->>
->> It cannot be inferred from that statement that PASID support is not
->> required for SVM.  AIUI, SVM is a software feature enabled by numerous
->> "optional" hardware features, including PASID.  Features that are
->> optional per the hardware specification may be required for specific
->> software features.  Thanks,
->>
-> Thanks for the information Alex. Suppose if an End point doesn't support
-> PASID, is it still possible to achieve SVM ?
-> Are there any such features in SMMUv3 with which we can achieve it ?
+In order to accommodate other SoC generations, this patch updates filename
+to make it more generic, regroups specific properties by SoCs, and removes
+redundant descriptions.
 
-Not really, we don't plan to share the non-PASID context with a process.
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 29 +++++++++++-----------
+ 1 file changed, 14 insertions(+), 15 deletions(-)
+ rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (91%)
 
-In theory you could achieve something resembling SVM by assigning the
-entire endpoint to userspace using VFIO, then use ATS+PRI capabilities
-with a bind ioctl. If your device can do SR-IOV, then you can bind one
-process per virtual function.
+diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+similarity index 91%
+rename from Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+rename to Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+index fe80dda..a968f25 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+@@ -1,18 +1,13 @@
+-MediaTek Gen2 PCIe controller which is available on MT7623 series SoCs
+-
+-PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
+-ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
++MediaTek Gen2 PCIe controller
+ 
+ Required properties:
+-- compatible: Should contain "mediatek,mt7623-pcie".
++- compatible: Should contain one of the following string:
++	"mediatek,mt2701-pcie"
++	"mediatek,mt7623-pcie"
+ - device_type: Must be "pci"
+ - reg: Base addresses and lengths of the PCIe controller.
+ - #address-cells: Address representation for root ports (must be 3)
+ - #size-cells: Size representation for root ports (must be 2)
+-- #interrupt-cells: Size representation for interrupts (must be 1)
+-- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+-  Please refer to the standard PCI bus binding document for a more detailed
+-  explanation.
+ - clocks: Must contain an entry for each entry in clock-names.
+   See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+@@ -20,12 +15,6 @@ Required properties:
+   - sys_ck0 :for clock of Port0
+   - sys_ck1 :for clock of Port1
+   - sys_ck2 :for clock of Port2
+-- resets: Must contain an entry for each entry in reset-names.
+-  See ../reset/reset.txt for details.
+-- reset-names: Must include the following entries:
+-  - pcie-rst0 :port0 reset
+-  - pcie-rst1 :port1 reset
+-  - pcie-rst2 :port2 reset
+ - phys: List of PHY specifiers (used by generic PHY framework).
+ - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+   number of PHYs as specified in *phys* property.
+@@ -34,6 +23,16 @@ Required properties:
+ - bus-range: Range of bus numbers associated with this controller.
+ - ranges: Ranges for the PCI memory and I/O regions.
+ 
++Required properties for MT7623/MT2701:
++- #interrupt-cells: Size representation for interrupts (must be 1)
++- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++- resets: Must contain an entry for each entry in reset-names.
++  See ../reset/reset.txt for details.
++- reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
++  number of root ports.
++
+ In addition, the device tree node must have sub-nodes describing each
+ PCIe port interface, having the following mandatory properties:
+ 
+-- 
+2.6.4
 
-Unless we end up seeing lots of endpoints that implement PRI but not
-PASID, I don't plan to add this to VFIO or SMMUv3.
 
-For a PCIe endpoint, the requirements for SVM are ATS, PRI and PASID
-enabled. In addition, the SMMU should support DVM (broadcast TLB
-maintenance) and must be compatible with the MMU (page sizes, output
-address size, ASID bits...)
-
-Thanks,
-Jean
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
