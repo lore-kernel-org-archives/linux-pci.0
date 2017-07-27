@@ -1,54 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 3 Jul 2017 07:55:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH v11 0/3]add PCIe driver for Kirin PCIe
-Message-ID: <20170703125520.GA13824@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
- <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
- <20170703104727.GB1573@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([5.9.137.197]:57254 "EHLO mail.skyhub.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751413AbdG0NPx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 27 Jul 2017 09:15:53 -0400
+Date: Thu, 27 Jul 2017 15:15:15 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Jan Glauber <jan.glauber@caviumnetworks.com>,
+        Greg KH <gregkh@linuxfoundation.org>
+Cc: David Daney <ddaney.cavm@gmail.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Suzuki K Poulose <Suzuki.Poulose@arm.com>,
+        linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
+ counters
+Message-ID: <20170727131515.GC28548@nazgul.tnic>
+References: <20170726154515.GA11453@hc>
+ <20170726155548.GF28875@nazgul.tnic>
+ <20170726161949.GB15426@kroah.com>
+ <20170726163049.GG28875@nazgul.tnic>
+ <20170726173353.GB21705@kroah.com>
+ <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
+ <20170726200802.GA17722@kroah.com>
+ <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
+ <20170727051157.GA4525@nazgul.tnic>
+ <20170727090856.GB15784@hc>
 MIME-Version: 1.0
-In-Reply-To: <20170703104727.GB1573@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- guodong.xu@linaro.org, linux-pci@vger.kernel.org, suzhuangluan@hisilicon.com,
- linux-kernel@vger.kernel.org, robh+dt@kernel.org,
- Xiaowei Song <songxiaowei@hisilicon.com>, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170727090856.GB15784@hc>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 03, 2017 at 11:47:27AM +0100, Will Deacon wrote:
-> On Sun, Jul 02, 2017 at 06:36:57PM -0500, Bjorn Helgaas wrote:
-> > [+cc Catalin, Will, linux-arm-kernel]
-> > 
-> > Applied patches 2 & 3 to pci/host-kirin for v4.13.
-> > 
-> > I would like a MAINTAINERS update, too.  If you send me that, I'll
-> > squash it into the driver patch.
-> > 
-> > Catalin, Will, how do you want to handle the
-> > arch/arm64/configs/defconfig change (patch 3)?  It's currently on my
-> > branch, but I'm happy to drop it if another route is better.
+On Thu, Jul 27, 2017 at 11:08:56AM +0200, Jan Glauber wrote:
+> OK. As fixing the firmware will take quite some time I'll go for the memory
+> controller driver that starts EDAC / PMU depending on their CONFIG_.
 > 
-> defconfig updates usually go through arm-soc, via the relevant platform
-> maintainer, so it would be best to follow that route here too otherwise
-> you'll probably see conflicts in -next.
+> What would be the proper location for the multiplexer?
+> drivers/soc/cavium or drivers/misc?
 
-OK, dropped the defconfig change and updated my -next branch.
+Uff, no idea. Greg? You're the special drivers guy. :-)
 
-I'm still looking for a MAINTAINERS update.
+-- 
+Regards/Gruss,
+    Boris.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ECO tip #101: Trim your mails when you reply.
+--
