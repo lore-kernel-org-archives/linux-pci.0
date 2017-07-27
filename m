@@ -1,65 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:5567 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934949AbdGTUo5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Jul 2017 16:44:57 -0400
-From: Scott Bauer <scott.bauer@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: keith.busch@intel.com, jonathan.derrick@intel.com,
-        david.fugate@intel.com, bhelgaas@google.com,
-        Scott Bauer <scott.bauer@intel.com>
-Subject: [PATCH] PCI: vmd: Free up IRQs on suspend path
-Date: Thu, 20 Jul 2017 14:28:58 -0600
-Message-Id: <20170720202858.1918-1-scott.bauer@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=XC36=66=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=XC36=66=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: Casey Leedom <leedom@chelsio.com>,
+        Alex Williamson
+	<alex.williamson@redhat.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+ <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+ <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+ <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+CC: Sinan Kaya <okaya@codeaurora.org>,
+        "ashok.raj@intel.com"
+	<ashok.raj@intel.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        Michael Werner
+	<werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
+        "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+        "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+        "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+        "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>,
+        "amira@mellanox.com" <amira@mellanox.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "David.Laight@aculab.com" <David.Laight@aculab.com>,
+        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "davem@davemloft.net"
+	<davem@davemloft.net>,
+        "alexander.duyck@gmail.com"
+	<alexander.duyck@gmail.com>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "linuxarm@huawei.com" <linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
+Date: Thu, 27 Jul 2017 09:08:20 +0800
+MIME-Version: 1.0
+In-Reply-To: <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch frees up the IRQs we request on the suspend path,
-and reallocates them on the resume path.
 
-Fixes:
-[  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
-[  559.966824] Error taking CPU111 down: -34
-[  559.966825] Non-boot CPUs are not disabled
-[  559.966826] Enabling non-boot CPUs ...
 
-Signed-off-by: Scott Bauer <scott.bauer@intel.com>
----
- drivers/pci/host/vmd.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+On 2017/7/27 2:26, Casey Leedom wrote:
+>   By the way Ding, two issues:
+> 
+>  1. Did we ever get any acknowledgement from either Intel or AMD
+>     on this patch?  I know that we can't ensure that, but it sure would
+>     be nice since the PCI Quirks that we're putting in affect their
+>     products.
+> 
 
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 6088c3083194..88bf0c754fb2 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -755,6 +755,11 @@ static void vmd_remove(struct pci_dev *dev)
- static int vmd_suspend(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-+	int i;
-+
-+	for (i = 0; i < vmd->msix_count; i++)
-+                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
- 
- 	pci_save_state(pdev);
- 	return 0;
-@@ -763,7 +768,16 @@ static int vmd_suspend(struct device *dev)
- static int vmd_resume(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-+	int err, i;
- 
-+	for (i = 0; i < vmd->msix_count; i++) {
-+		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-+				       vmd_irq, IRQF_NO_THREAD,
-+				       "vmd", &vmd->irqs[i]);
-+		if (err)
-+			return err;
-+	}
- 	pci_restore_state(pdev);
- 	return 0;
- }
--- 
-2.11.0
+Still no Intel and AMD guys has ack this, this is what I am worried about, should I
+ping some man again ?
+
+Thanks
+Ding
+> 
+> Casey
+> .
+> 
