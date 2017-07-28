@@ -1,169 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:35712 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752368AbdGEDJt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Jul 2017 23:09:49 -0400
-Received: by mail-wm0-f44.google.com with SMTP id w126so209290508wme.0
-        for <linux-pci@vger.kernel.org>; Tue, 04 Jul 2017 20:09:38 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v4 1/2] PCI: iproc: Retry request when CRS returned from EP
-Date: Wed,  5 Jul 2017 08:38:58 +0530
-Message-Id: <1499224139-10746-2-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
-References: <1499224139-10746-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: "Raj, Ashok" <ashok.raj@intel.com>, Casey Leedom <leedom@chelsio.com>
+References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com>
+ <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
+ <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
+ <MWHPR12MB16007782C422082A92F4765DC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <2feff1a5-25b7-eb6c-7628-7c2257c56e95@huawei.com>
+ <MWHPR12MB1600556FFDCE3EC810D97591C8BE0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20170727184251.GA205508@otc-nc-03>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <3e8a1756-86ca-0fa0-7119-b0bdfe806e8e@huawei.com>
+Date: Fri, 28 Jul 2017 10:57:55 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170727184251.GA205508@otc-nc-03>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>,
+ Alexander Duyck <alexander.duyck@gmail.com>, Sinan Kaya <okaya@codeaurora.org>,
+ "amira@mellanox.com" <amira@mellanox.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Michael Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Netdev <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For Configuration Requests only, following reset it is possible for a
-device to terminate the request but indicate that it is temporarily unable
-to process the Request, but will be able to process the Request in the
-future – in this case, the Configuration Request Retry Status 100 (CRS)
-Completion Status is used.
 
-As per PCI spec, CRS Software Visibility only affects config read of the
-Vendor ID, for config write or any other config read the Root must
-automatically re-issue configuration request again as a new request.
-Iproc based PCIe RC (hw) does not retry request on its own.
 
-As a result of the fact, PCIe RC driver (sw) should take care of CRS.
-This patch fixes the problem, and attempts to read config space again in
-case of PCIe code forwarding the CRS back to CPU.
-It implements iproc_pcie_config_read which gets called for Stingray,
-Otherwise it falls back to PCI generic APIs.
+On 2017/7/28 2:42, Raj, Ashok wrote:
+> Hi Casey
+> 
+>> | Still no Intel and AMD guys has ack this, this is what I am worried about,
+>> | should I ping some man again ?
+> 
+> 
+> I can ack the patch set for Intel specific changes. Now that the doc is made
+> public :-).
+> 
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+Good, Thanks. :)
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 0f39bd2..b0abcd7 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -68,6 +68,9 @@
- #define APB_ERR_EN_SHIFT             0
- #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
- 
-+#define CFG_RETRY_STATUS             0xffff0001
-+#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
-+
- /* derive the enum index of the outbound/inbound mapping registers */
- #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
- 
-@@ -448,6 +451,55 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
- 	}
- }
- 
-+static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-+{
-+	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
-+	unsigned int ret;
-+
-+	/*
-+	 * As per PCI spec, CRS Software Visibility only
-+	 * affects config read of the Vendor ID.
-+	 * For config write or any other config read the Root must
-+	 * automatically re-issue configuration request again as a
-+	 * new request. Iproc based PCIe RC (hw) does not retry
-+	 * request on its own, so handle it here.
-+	 */
-+	do {
-+		ret = readl(cfg_data_p);
-+		if (ret == CFG_RETRY_STATUS)
-+			udelay(1);
-+		else
-+			return PCIBIOS_SUCCESSFUL;
-+	} while (timeout--);
-+
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
-+					       unsigned int busno,
-+					       unsigned int slot,
-+					       unsigned int fn,
-+					       int where)
-+{
-+	u16 offset;
-+	u32 val;
-+
-+	/* EP device access */
-+	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
-+		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
-+		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
-+		(where & CFG_ADDR_REG_NUM_MASK) |
-+		(1 & CFG_ADDR_CFG_TYPE_MASK);
-+
-+	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
-+	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
-+
-+	if (iproc_pcie_reg_is_invalid(offset))
-+		return NULL;
-+
-+	return (pcie->base + offset);
-+}
-+
- /**
-  * Note access to the configuration registers are protected at the higher layer
-  * by 'pci_lock' in drivers/pci/access.c
-@@ -499,13 +551,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
- 		return (pcie->base + offset);
- }
- 
-+static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-+				    int where, int size, u32 *val)
-+{
-+	struct iproc_pcie *pcie = iproc_data(bus);
-+	unsigned int slot = PCI_SLOT(devfn);
-+	unsigned int fn = PCI_FUNC(devfn);
-+	unsigned int busno = bus->number;
-+	void __iomem *cfg_data_p;
-+	int ret;
-+
-+	/* root complex access. */
-+	if (busno == 0)
-+		return pci_generic_config_read32(bus, devfn, where, size, val);
-+
-+	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
-+
-+	if (!cfg_data_p)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	ret = iproc_pcie_cfg_retry(cfg_data_p);
-+	if (ret)
-+		return ret;
-+
-+	*val = readl(cfg_data_p);
-+
-+	if (size <= 2)
-+		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
- 				    int where, int size, u32 *val)
- {
- 	int ret;
-+	struct iproc_pcie *pcie = iproc_data(bus);
- 
- 	iproc_pcie_apb_err_disable(bus, true);
--	ret = pci_generic_config_read32(bus, devfn, where, size, val);
-+	if (pcie->type == IPROC_PCIE_PAXB_V2)
-+		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
-+	else
-+		ret = pci_generic_config_read32(bus, devfn, where, size, val);
- 	iproc_pcie_apb_err_disable(bus, false);
- 
- 	return ret;
--- 
-1.9.1
+> Can you/Ding resend the patch series, i do have the most recent v7, some
+> of the commit message wasn't easy to ready. Seems like this patch has
+> gotten bigger than originally intended, but seems to be for the overall
+> good :-).
+> 
+
+OK, I will send v8 patch set and which will update the patch title and add
+Casey's new modification for his vf driver, thanks.
+
+Ding
+
+> Sorry for staying silent up until now.
+> 
+> Cheers,
+> Ashok
+> 
+> .
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
