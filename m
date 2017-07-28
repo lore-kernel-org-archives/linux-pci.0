@@ -1,46 +1,45 @@
-Return-Path: <SRS0=N2pi=6Q=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=N2pi=6Q=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v6 0/3] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Casey Leedom <leedom@chelsio.com>,
-        Alexander Duyck
-	<alexander.duyck@gmail.com>
-References: <1498133721-21152-1-git-send-email-dingtianhong@huawei.com>
- <MWHPR12MB160087E9E0B17F7A17609714C8AA0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <MWHPR12MB160006024D920ED58126048AC8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0Uc5KSJTj4A=9pSudiJ28AW0krc7FZpdW4upwY+FgpeArA@mail.gmail.com>
- <MWHPR12MB1600AECAE619EAA97E6B15D5C8AB0@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UdqoRR8XLG1o3ygUZTqEBQ4dgNaneZ-n1OSNC1AiswO_g@mail.gmail.com>
- <MWHPR12MB16008EFFC5F2792880F7E80BC8A90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <16d18af6-f578-ef8a-a52e-46ec975e59e0@huawei.com>
- <MWHPR12MB160080C62945A101FF0718DEC8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
-CC: "ashok.raj@intel.com" <ashok.raj@intel.com>,
-        "helgaas@kernel.org"
-	<helgaas@kernel.org>,
-        Michael Werner <werner@chelsio.com>, Ganesh GR
-	<ganeshgr@chelsio.com>,
-        "asit.k.mallick@intel.com"
-	<asit.k.mallick@intel.com>,
-        "patrick.j.cramer@intel.com"
-	<patrick.j.cramer@intel.com>,
-        "Suravee.Suthikulpanit@amd.com"
-	<Suravee.Suthikulpanit@amd.com>,
+Return-Path: <SRS0=Kl3l=67=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=Kl3l=67=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+To: Alexander Duyck <alexander.duyck@gmail.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
+ <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+ <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+ <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
+ <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
+CC: Casey Leedom <leedom@chelsio.com>,
+        Alex Williamson
+	<alex.williamson@redhat.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        "ashok.raj@intel.com" <ashok.raj@intel.com>,
+        "bhelgaas@google.com"
+	<bhelgaas@google.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "Michael
+ Werner" <werner@chelsio.com>,
+        Ganesh GR <ganeshgr@chelsio.com>,
+        "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+        "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+        "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
         "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-        "l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-        "amira@mellanox.com"
-	<amira@mellanox.com>,
-        "gabriele.paoloni@huawei.com"
-	<gabriele.paoloni@huawei.com>,
-        "David.Laight@aculab.com"
-	<David.Laight@aculab.com>,
-        "jeffrey.t.kirsher@intel.com"
-	<jeffrey.t.kirsher@intel.com>,
-        "catalin.marinas@arm.com"
-	<catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>,
+        "amira@mellanox.com" <amira@mellanox.com>,
+        "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+        "David.Laight@aculab.com" <David.Laight@aculab.com>,
+        "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com"
+	<will.deacon@arm.com>,
         "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "robin.murphy@arm.com"
-	<robin.murphy@arm.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "davem@davemloft.net"
+	<davem@davemloft.net>,
         "linux-arm-kernel@lists.infradead.org"
 	<linux-arm-kernel@lists.infradead.org>,
         "netdev@vger.kernel.org"
@@ -48,47 +47,52 @@ CC: "ashok.raj@intel.com" <ashok.raj@intel.com>,
         "linux-pci@vger.kernel.org"
 	<linux-pci@vger.kernel.org>,
         "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
+	<linux-kernel@vger.kernel.org>,
+        "linuxarm@huawei.com" <linuxarm@huawei.com>
 From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <3aed2e2d-025d-b35c-46fa-bced87789037@huawei.com>
-Date: Thu, 13 Jul 2017 09:18:48 +0800
+Message-ID: <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
+Date: Fri, 28 Jul 2017 11:00:49 +0800
 MIME-Version: 1.0
-In-Reply-To: <MWHPR12MB160080C62945A101FF0718DEC8AC0@MWHPR12MB1600.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 2017/7/13 8:52, Casey Leedom wrote:
->   Sorry again for the delay.  This time at least partially caused by a Chelsio-internal Customer Support request to simply disable Relaxed Ordering entirely due to the performance issues with our 100Gb/s product and relatively recent Intel Root Complexes.  Our Customer Support people are tired of asking customers to try turning off Relaxed Ordering. (sigh)
+On 2017/7/28 1:49, Alexander Duyck wrote:
+> On Wed, Jul 26, 2017 at 6:08 PM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+>>
+>>
+>> On 2017/7/27 2:26, Casey Leedom wrote:
+>>>   By the way Ding, two issues:
+>>>
+>>>  1. Did we ever get any acknowledgement from either Intel or AMD
+>>>     on this patch?  I know that we can't ensure that, but it sure would
+>>>     be nice since the PCI Quirks that we're putting in affect their
+>>>     products.
+>>>
+>>
+>> Still no Intel and AMD guys has ack this, this is what I am worried about, should I
+>> ping some man again ?
+>>
+>> Thanks
+>> Ding
 > 
->   So, first off, I've mentioned a couple of times that the current cxgb4 driver hardwired the PCIe Capability Device Control[Relaxed Ordering Enable] on.  Here's the code which does it:
 > 
->     drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c:4657:
+> I probably wouldn't worry about it too much. If anything all this
+> patch is doing is disabling relaxed ordering on the platforms we know
+> have issues based on what Casey originally had. If nothing else we can
+> follow up once the patches are in the kernel and if somebody has an
+> issue then.
 > 
->     static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
->     {
->         pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
->     }
+> You can include my acked-by, but it is mostly related to how this
+> interacts with NICs, and not so much about the PCI chipsets
+> themselves.
+> 
+> Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> 
 
-we should remove it.
+Thanks, Alex. :)
 
-> 
-> This is called from the PCI Probe() routine init_one() later in that file.  I just wanted to make sure people knew about this.  Obviously given our current very difficult thread, this would either need to be diked out or changed or a completely different mechanism put in place.
-> 
->   Second, just to make sure everyone's on the same page, the above simply allows the device to send TLPs with the Relaxed Ordering Attribute.  It doesn't cause TLPs to suddenly all be sent with RO set.  The use of Relaxed Ordering is selective.  For instance, in our hardware we can configure the RX Path to use RO on Ingress Packet Data delivery to Free List Buffers, but not use RO for delivery of messages noting newly delivered Ingress Packet Data.  Doing this allows the destination PCIe target to [potentially] optimize the DMA Writes to it based on local conditions (memory controller channel availability, etc.), but ensure that the message noting newly delivered Ingress Packet Data isn't processed till all of the preceding TLPs with RO set containing Ingress Packet Data have been processed.  (This by the way is the essence of the AMD A1100 ARM SoC bug: its Root Complex isn't obeying that PCIe ordering rule.)
-> 
->   Third, as noted above, I'm getting a lot of pressure to get this addressed sooner than later, so I think that we should go with something fairly simple along the lines that you guys are proposing and I'll stop whining about the problem of needing to handle Peer-to-Peer with Relaxed Ordering while not using it for deliveries to the Root Complex.  We can just wait for that kettle of fish to explode on us and deal with the mess then.  (Hhmmm, the mixed metaphor landed in an entirely different place than I originally intended ... :-))
-> 
-
-Ok, we could fix them when we trigger this, I think it is not a big problem.
-
->   If we try to stick as closely to Ding's latest patch set as possible, then we can probably just add the diff to remove the enable_pcie_relaxed_ordering() code in cxgb4_main.c.
-> 
-
-If no other more suggestion, I will send a new version and remove the enable_pcie_relaxed_ordering(), thanks.  :)
-
-Ding
-> Casey
 > .
 > 
