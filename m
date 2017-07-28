@@ -1,42 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55960 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752030AbdGETHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Jul 2017 15:07:16 -0400
-Date: Wed, 5 Jul 2017 21:07:14 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: chris hyser <chris.hyser@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-        Alan Adamson <alan.adamson@oracle.com>, keith.busch@intel.com,
-        axboe@fb.com, linux-nvme@lists.infradead.org, sagi@grimberg.me,
-        linux-pci@vger.kernel.org, Mark Nelson <markn@au1.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        iommu@lists.linux-foundation.org
-Subject: Re: DMA_ATTR_WEAK_ORDERING defintion, was Re: [PATCH] nvme: set
-        DMA_ATTR_WEAK_ORDERING attribute on dma buffers
-Message-ID: <20170705190714.GA7107@lst.de>
-References: <1497645290-31041-1-git-send-email-alan.adamson@oracle.com> <20170617115703.GA13002@lst.de> <6a32f30b-433a-9857-164f-1717405a6082@oracle.com> <20170624073539.GE14580@lst.de> <f485b21a-0cf7-d2f0-c957-03d234447561@oracle.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 28 Jul 2017 09:23:16 +0200
+From: Borislav Petkov <bp@alien8.de>
+To: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
+ counters
+Message-ID: <20170728072316.GE1884@nazgul.tnic>
+References: <20170726155548.GF28875@nazgul.tnic>
+ <20170726161949.GB15426@kroah.com>
+ <20170726163049.GG28875@nazgul.tnic>
+ <20170726173353.GB21705@kroah.com>
+ <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
+ <20170726200802.GA17722@kroah.com>
+ <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
+ <20170727022907.GC1398@kroah.com>
+ <4f58aeab-7b8d-50dc-5497-6ac42536e0c0@gmail.com>
+ <20170728011130.GC19160@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <f485b21a-0cf7-d2f0-c957-03d234447561@oracle.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170728011130.GC19160@kroah.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
+ Will Deacon <will.deacon@arm.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jan Glauber <jan.glauber@caviumnetworks.com>,
+ David Daney <ddaney.cavm@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jun 27, 2017 at 04:46:31PM -0400, chris hyser wrote:
-> I put this in for SPARC. In our case the host bridge/RC itself follows very 
-> strict ordering unless the relaxed order bit is set in the TLP. This works 
-> great for devices that actually allow the driver to enable it. We however 
-> also have to support an infiniband card that does not support enabling this 
-> in the HW and thus in the TLP but is actually fine with relaxed order for 
-> the data buffers (ie the streaming I/O vs the coherent control buffers). In 
-> fact w/o relaxed order the performance is absolutely atrocious ... w/ 
-> exceeds x86. This flag enables the driver to signal to us when we map the 
-> buffer in the IOMMU to enable the relaxed order attribute for our HW.
+On Thu, Jul 27, 2017 at 06:11:30PM -0700, Greg KH wrote:
+> Oh well, fix it in the kernel, that's what it's there for :)
 
-We'll really need to start writing down our semantics.  As I said
-given how our streaming dma mappings (dma_map_single/page/sg) are
-defined I can't think of any way how relaxed vs strict ordering would
-matter for them, so just enabling it by default seems like the right
-thing in this case, instead of having to patch every PCIe driver people
-might ever use on sparc to work around your bridge.
+Duude, don't put crazy ideas in people's heads!
+
+:-)))
+
+-- 
+Regards/Gruss,
+    Boris.
+
+ECO tip #101: Trim your mails when you reply.
+--
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
