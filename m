@@ -1,132 +1,125 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:34870 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755597AbdGKIgQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Jul 2017 04:36:16 -0400
-Received: by mail-it0-f66.google.com with SMTP id v193so2014158itc.2
-        for <linux-pci@vger.kernel.org>; Tue, 11 Jul 2017 01:36:16 -0700 (PDT)
-Subject: Re: [PATCH kernel v4 1/6] PCI: Add a new PCI_BUS_FLAGS_MSI_REMAP flag
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        David Gibson <david@gibson.dropbear.id.au>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Yongji Xie <elohimes@gmail.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <20170630052436.15212-1-aik@ozlabs.ru>
- <20170630052436.15212-2-aik@ozlabs.ru>
- <CAErSpo6uBEMP_z0EorrKJTXy3SzOz99VqBYP7Cphutz38rEsmA@mail.gmail.com>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <0b3bc5ee-e00f-fdb1-49d7-97f4a90751f8@ozlabs.ru>
-Date: Tue, 11 Jul 2017 18:36:08 +1000
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6uBEMP_z0EorrKJTXy3SzOz99VqBYP7Cphutz38rEsmA@mail.gmail.com>
-Content-Type: text/plain; charset=koi8-r
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55236 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752530AbdGaQg2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:36:28 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Matthew Minter <matt@masarand.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Rich Felker <dalias@libc.org>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: [RFT PATCH 7/9] unicore32/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
+Date: Mon, 31 Jul 2017 17:37:55 +0100
+Message-Id: <20170731163757.22629-8-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/07/17 05:20, Bjorn Helgaas wrote:
-> [+cc linux-pci]
-> 
-> On Fri, Jun 30, 2017 at 12:24 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
->> From: Yongji Xie <elohimes@gmail.com>
->>
->> We introduce a new pci_bus_flags, PCI_BUS_FLAGS_MSI_REMAP
->> which indicates interrupts of all devices on the bus are
->> managed by the hardware enabling IRQ remapping (intel naming).
->> When the capability is enabled, a given PCI device can only
->> shoot the MSIs assigned for it. In other words, the hardware
->> can protect system from invalid MSIs of the device by checking
->> the target address and data when there is something wrong
->> with MSI part in device or device driver.
-> 
-> This needs a reference to the spec that describes how this MSI protection works.
+The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+in a system; those PCI devices possibly belong to different PCI bus
+trees (and possibly rooted at different host bridges) and may well be
+enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
+is called when probing a given host bridge driver.
 
+Furthermore, current kernel code relying on pci_fixup_irqs() to assign
+legacy PCI IRQs to devices does not work at all for hotplugged devices
+in that the code carrying out the IRQ fixup is called at host bridge
+driver probe time, which just cannot take into account devices
+hotplugged after system has booted.
 
-How much detail is needed here? For example, what to add to the below?
+The introduction of map/swizzle functions hook in struct pci_host_bridge
+allows to define per-bridge map/swizzle functions, that can be used at
+device probe time in PCI core code to allocate IRQs for a given device
+(through pci_assign_irq()).
 
-===
-On Intel VT-d [1], there is an Interrupt Remapping Table, one entry per
-interrupt, has a source-id (i.e. BDFN) of allowed device.
+Convert PCI host bridge initialization code to the
+pci_scan_root_bus_bridge() API (that allows to pass a struct
+pci_host_bridge with initialized map/swizzle pointers) and remove the
+pci_fixup_irqs() call from arch code.
 
-On AMD IOMMU [2], there is a Device Table, each entry is indexed by
-DevideID which is BDFN.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Guan Xuetao <gxt@mprc.pku.edu.cn>
+---
+ arch/unicore32/kernel/pci.c | 35 +++++++++++++++++++++++++++++++----
+ 1 file changed, 31 insertions(+), 4 deletions(-)
 
-On IBM POWERPC (POWER8) [3], PCI host bridge maintains BFDN-to-PE
-translation (PE stands for "partitionable endpoint"), and PE index is used
-to look at Interrupt Vector Table (IVT) to identify the interrupt server.
-Actually this is not remapping, rather filtering but it still works for the
-purpose of this flag.
-
-[1] 9.10 Interrupt Remapping Table Entry (IRTE) for Remapped Interrupts
-https://www.intel.com/content/dam/www/public/us/en/documents/product-specifications/vt-directed-io-spec.pdf
-
-[2] "2.2 Data Structures" and "2.2.5 Interrupt Remapping Tables"
-https://support.amd.com/TechDocs/48882_IOMMU.pdf
-
-[3] 3.2.4. MSI Design
-http://openpowerfoundation.org/wp-content/uploads/resources/IODA2Spec/IODA2WGSpec-1.0.0-20160217.pdf
-===
-
-And I did not comment about ARM, should I?
-
-If anyone could check the correctness of the above, that would be great
-(thanks in advance :) )
-
-
->> The new flag will be set by when the kernel decides that it is safe to
->> do so.
-> 
-> We also need some clue about how the kernel makes this decision.  That
-> clue probably doesn't belong in *this* patch, but I didn't see it
-> anywhere.
-
-There are 3 sources:
-
-1. IOMMU driver advertises MSI remapping capability, done by [3/6] and
-[4/6], they could make a single patch but I believe they are separated as
-they are touching different maintainership areas;
-
-2. MSI controller advertises MSI remapping capability, this is from ARM and
-their MSI domains, I am not really familiar with this.
-
-3. Platform code can just know that it is capable of filtering, like PPC64
-powernv for IODA2/IODA3 PHB types.
-
-Could be more, probably.
-
-
-And thanks for the review.
-
-> 
->> With this flag enabled, we can easily know whether it's safe
->> to expose MSI-X tables of PCI BARs to userspace. Some usespace
->> drivers such as VFIO may benefit from this.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
->> ---
->>  include/linux/pci.h | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 8039f9f0ca05..2c6dbb3dd0da 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -200,6 +200,7 @@ enum pci_bus_flags {
->>         PCI_BUS_FLAGS_NO_MSI    = (__force pci_bus_flags_t) 1,
->>         PCI_BUS_FLAGS_NO_MMRBC  = (__force pci_bus_flags_t) 2,
->>         PCI_BUS_FLAGS_NO_AERSID = (__force pci_bus_flags_t) 4,
->> +       PCI_BUS_FLAGS_MSI_REMAP = (__force pci_bus_flags_t) 8,
->>  };
->>
->>  /* These values come from the PCI Express Spec */
->> --
->> 2.11.0
->>
-
-
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 1053bca..9f26840 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -101,7 +101,7 @@ void pci_puv3_preinit(void)
+ 	writel(readl(PCIBRI_CMD) | PCIBRI_CMD_IO | PCIBRI_CMD_MEM, PCIBRI_CMD);
+ }
+ 
+-static int __init pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
++static int pci_puv3_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+ 	if (dev->bus->number == 0) {
+ #ifdef CONFIG_ARCH_FPGA /* 4 pci slots */
+@@ -252,19 +252,46 @@ void pcibios_fixup_bus(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pcibios_fixup_bus);
+ 
++static struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
+ static int __init pci_common_init(void)
+ {
+ 	struct pci_bus *puv3_bus;
++	struct pci_host_bridge *bridge;
++	int ret;
++
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return -ENOMEM;
+ 
+ 	pci_puv3_preinit();
+ 
+-	puv3_bus = pci_scan_bus(0, &pci_puv3_ops, NULL);
++	pci_add_resource(&bridge->windows, &ioport_resource);
++	pci_add_resource(&bridge->windows, &iomem_resource);
++	pci_add_resource(&bridge->windows, &busn_resource);
++	bridge->sysdata = NULL;
++	bridge->busnr = 0;
++	bridge->ops = &pci_puv3_ops;
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pci_puv3_map_irq;
++
++	/* Scan our single hose.  */
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret) {
++		pci_free_host_bridge(bridge);
++		return;
++	}
++
++	puv3_bus = bridge->bus;
+ 
+ 	if (!puv3_bus)
+ 		panic("PCI: unable to scan bus!");
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pci_puv3_map_irq);
+-
+ 	pci_bus_size_bridges(puv3_bus);
+ 	pci_bus_assign_resources(puv3_bus);
+ 	pci_bus_add_devices(puv3_bus);
 -- 
-Alexey
+2.10.0
