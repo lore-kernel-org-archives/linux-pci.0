@@ -1,61 +1,42 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:43146 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755432AbdGKKgd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Jul 2017 06:36:33 -0400
-Date: Tue, 11 Jul 2017 11:38:11 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: fix wrong check of
- pci_scan_root_bus_bridge
-Message-ID: <20170711103811.GA30681@red-moon>
-References: <1499768108-48891-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:36590 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751017AbdGaU1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 16:27:04 -0400
+Date: Mon, 31 Jul 2017 15:27:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 12/16] switchtec_ntb: add link management
+Message-ID: <20170731202700.GE9303@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-13-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499768108-48891-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <20170725205753.4735-13-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 11, 2017 at 06:15:08PM +0800, Shawn Lin wrote:
-> It's wrong to check the return value of pci_scan_root_bus_bridge
-> here by using (!err) as 0 means it successfully scans the root
-> bridge. So the probe process will be terminated mistakenly.
+On Tue, Jul 25, 2017 at 02:57:49PM -0600, Logan Gunthorpe wrote:
+> switchtec_ntb checks for a link by looking at the shared memory
+> window. If the magic number is correct and the otherside indicates
+> their link is enabled then we take the link to be up.
 > 
-> Fixes: ae13cb9b ("PCI: rockchip: Convert PCI scan API to ...")
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
+> Whenever we change our local link status we send a msg to the
+> otherside to check whether it's up and change their status.
+
+s/otherside/other side/ (twice)
+
+> The current status is maintained in a flag so ntb_is_link_up
+> can return quickly.
 > 
->  drivers/pci/host/pcie-rockchip.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-
-Apologies, it is obviously a typo - before the check was
-
-if (!bus)
-
-which was prone to this mistake, I checked all other host bridges and
-they should be ok.
-
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 5acf869..7bb9870 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -1483,7 +1483,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  	bridge->swizzle_irq = pci_common_swizzle;
->  
->  	err = pci_scan_root_bus_bridge(bridge);
-> -	if (!err)
-> +	if (err < 0)
->  		goto err_free_res;
->  
->  	bus = bridge->bus;
-> -- 
-> 1.9.1
-> 
-> 
+> We utilize Switchtec's link status notifier to also check link changes
+> when the switch notices a port changes state.
