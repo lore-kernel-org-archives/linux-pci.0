@@ -1,115 +1,113 @@
-Return-Path: <SRS0=gi0B=6R=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=gi0B=6R=redhat.com=alex.williamson@kernel.org>
-Date: Fri, 14 Jul 2017 08:43:18 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas
- <helgaas@kernel.org>, Daniel Axtens <dja@axtens.net>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Liuxinliang
- (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Rongrong Zou
- <zourongrong@gmail.com>, Catalin Marinas <catalin.marinas@arm.com>, Will
- Deacon <will.deacon@arm.com>, "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, David Airlie <airlied@linux.ie>,
- Daniel Vetter <daniel.vetter@intel.com>
-Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
- HiSilicon bridge
-Message-ID: <20170714084318.6042e8ad@w520.home>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B399B4@FRAEML521-MBX.china.huawei.com>
-References: <20170712050811.3620-1-dja@axtens.net>
-	<20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
-	<EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
-	<20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
-	<20170713151146.53e9644c@w520.home>
-	<1499980882.2865.65.camel@kernel.crashing.org>
-	<EE11001F9E5DDD47B7634E2F8A612F2E40B399B4@FRAEML521-MBX.china.huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60840 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750977AbdGaGea (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 02:34:30 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v6 0/7] Add support for IPQ8074 PCIe phy and controller
+Date: Mon, 31 Jul 2017 12:04:10 +0530
+Message-Id: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 14 Jul 2017 12:26:05 +0000
-Gabriele Paoloni <gabriele.paoloni@huawei.com> wrote:
+v6:
+  Added 'Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>' and fixed
+  white space issues as mentioned by Vivek.
+	phy: qcom-qmp: Fix phy pipe clock name
+	dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
 
-> Hi Ben, Alex
->=20
-> > -----Original Message-----
-> > From: Benjamin Herrenschmidt [mailto:benh@kernel.crashing.org]
-> > Sent: 13 July 2017 22:21
-> > To: Alex Williamson; Bjorn Helgaas
-> > Cc: Gabriele Paoloni; Daniel Axtens; linux-pci@vger.kernel.org;
-> > Liuxinliang (Matthew Liu); Rongrong Zou; Catalin Marinas; Will Deacon;
-> > linux-arm-kernel@lists.infradead.org; David Airlie; Daniel Vetter
-> > Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a
-> > misbehaving HiSilicon bridge
-> >=20
-> > On Thu, 2017-07-13 at 15:11 -0600, Alex Williamson wrote: =20
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
-> > > > > -=C2=A0=C2=A0=C2=A0if (vga_default =3D=3D NULL &&
-> > > > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ((vgadev->owns & VGA_RSRC_L=
-EGACY_MASK) =3D=3D =20
-> > VGA_RSRC_LEGACY_MASK)) { =20
-> > > > > +=C2=A0=C2=A0=C2=A0if (vga_default =3D=3D NULL) {
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0vgaarb_info(&pdev->dev, "setting as boot VGA =20
-> > device\n"); =20
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0vga_set_default_device(pdev);
-> > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0} =20
-> > >
-> > >
-> > > "Legacy" is the breadcrumb we use to try to pick the same device for
-> > > default VGA as the system firmware used as the boot VGA.=C2=A0 There =
-can =20
-> > be =20
-> > > multiple VGA devices in the system, the change above would simply =20
-> > make =20
-> > > the first discovered device be the default VGA.=C2=A0 That would brea=
-k =20
-> > many, =20
-> > > many systems.=C2=A0 If legacy VGA ranges mean nothing on ARM64, then =
-=20
-> > follow =20
-> > > the powerpc lead and make an arch quirk that simply selects the first
-> > > enabled VGA device as the default.=C2=A0 VGA routing is part of the P=
-CI =20
-> > spec =20
-> > > though, so the default of selecting the device with routing enabled
-> > > makes sense.=C2=A0 Thanks, =20
-> >=20
-> > "Legacy" there iirc also means that it has decoding enabled at boot. If
-> > you pick the first one you may pick a device that doesn't and hasn't
-> > been initialized by any driver (good old BIOS-initialized text mode). =
-=20
->=20
-> Right so effectively if there is a legacy dev we should pick that up;
-> however what about the following code:
->=20
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index 92f1452..ab3ad9a 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -1424,6 +1424,14 @@ static int __init vga_arb_device_init(void)
-> =20
->  	list_for_each_entry(vgadev, &vga_list, list) {
->  		struct device *dev =3D &vgadev->pdev->dev;
-> +
-> +		/* if no legacy device has been set as default VGA
-> +		 * device, just pick up the first one in the list */
-> +		if (vga_default =3D=3D NULL) {
-> +			vgaarb_info(dev, "setting as boot VGA device\n");
-> +			vga_set_default_device(vgadev->pdev);
-> +		}
-> +
->  #if defined(CONFIG_X86) || defined(CONFIG_IA64)
->  		/*
->  		 * Override vga_arbiter_add_pci_device()'s I/O based detection=20
->=20
-> Above after we have filled the list of VGA devices by iterating over all
-> PCI devices we check if no legacy one has been set as default VGA device
-> yet: therefore we set the first VGA device in the list as default one...
->=20
-> Do you think it would work?
+v5:
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+        Renamed phy_phy clock as common clock
 
-I'd suggest at least looking for an enabled device as fixup_vga() does,
-perhaps that would even be enough to remove that arch quirk.  Thanks,
+  phy: qcom-qmp: Fix phy pipe clock name
+        Moved the DT get into the registering function
 
-Alex
+  phy: qcom-qmp: Add support for IPQ8074
+        Place the IPQ8074 related structs similar to existing SoC.
+        Renamed phy_phy clock as common clock
+v4:
+  phy: qcom-qmp: Fix phy pipe clock name
+	Based on Vivek's comments, return failure only for
+	PCI/USB type of phys.
+	Removed Ack.
+
+  phy: qcom-qmp: Handle unavailable registers
+	Removed this patch.
+	Incorrectly used a block of code that is not applicable
+	to IPQ8074, hence had to avoid an "unavailable" register.
+	Since that is addressed using 'has_phy_com_ctrl' this
+	patch is not needed.
+
+  phy: qcom-qmp: Add support for IPQ8074
+	Set 'has_phy_com_ctrl' to false
+	Remove ipq8074_pciephy_regs_layout
+
+v3:
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incoporate Stan's feedback:-
+	 - Add SoC Wrapper and Synopsys Core IP versions
+
+v2:
+  dt-bindings: phy: qmp: Add output-clock-names
+	Added Rob H's Ack
+
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  phy: qcom-qmp: Fix phy pipe clock name
+	Added Vivek's Ack
+
+  phy: qcom-qmp: Handle unavailable registers
+	No changes
+
+  phy: qcom-qmp: Add support for IPQ8074
+	No changes
+
+  PCI: dwc: qcom: Use block IP version for operations
+	Added new patch to use block IP version instead of v1, v2...
+
+  dt-bindings: pci: qcom: Add support for IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incorporated Bjorn's feedback:-
+	 - Removed reset names, helper function to assert/deassert, helper
+	   function to R/M/W register.
+	 - Renamed sys_noc clock as iface clock
+	 - Added deinit if phy power on fails
+
+v1:
+Add definitions required to enable QMP phy support for IPQ8074.
+
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+Gen 1/2, one lane, two PCIe root complex with support for MSI and
+legacy interrupts, and it conforms to PCI Express Base 2.1
+specification.
+
+Varadarajan Narayanan (7):
+  dt-bindings: phy: qmp: Add output-clock-names
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+  phy: qcom-qmp: Fix phy pipe clock name
+  phy: qcom-qmp: Add support for IPQ8074
+  PCI: dwc: qcom: Use block IP version for operations
+  dt-bindings: pci: qcom: Add support for IPQ8074
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
+ .../devicetree/bindings/phy/qcom-qmp-phy.txt       |  11 +
+ drivers/pci/dwc/pcie-qcom.c                        | 378 +++++++++++++++++----
+ drivers/phy/qualcomm/phy-qcom-qmp.c                | 147 +++++++-
+ 4 files changed, 485 insertions(+), 74 deletions(-)
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
