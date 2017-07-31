@@ -1,49 +1,50 @@
-Return-Path: <SRS0=lPwk=6I=hisilicon.com=songxiaowei@kernel.org>
-Return-Path: <SRS0=lPwk=6I=hisilicon.com=songxiaowei@kernel.org>
-From: songxiaowei <songxiaowei@hisilicon.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
-        "bhelgaas@google.com"
-	<bhelgaas@google.com>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] MAINTAINERS:add maintainer for kirin pcie
-Date: Wed, 5 Jul 2017 01:00:57 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54118F33F@DGGEMA505-MBS.china.huawei.com>
-References: <20170704021516.96575-1-songxiaowei@hisilicon.com>
- <20170704162538.GJ13824@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170704162538.GJ13824@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:35065 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751612AbdGaXkl (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:40:41 -0400
+Received: by mail-pg0-f45.google.com with SMTP id v189so399817pgd.2
+        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:40:41 -0700 (PDT)
+Date: Mon, 31 Jul 2017 16:40:38 -0700
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        corbet@lwn.net
+Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH net-next 4/4] pci-hyperv: do not sleep in
+ compose_msi_msg
+Message-ID: <20170731164038.49bc878a@xeon-e3>
+In-Reply-To: <20170731233712.12087-5-sthemmin@microsoft.com>
+References: <20170731233712.12087-1-sthemmin@microsoft.com>
+        <20170731233712.12087-5-sthemmin@microsoft.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhhbmsgeW91IHNvIG11Y2ghDQoNCi0tLS0t08q8/tStvP4tLS0tLQ0Kt6K8/sjLOiBCam9ybiBI
-ZWxnYWFzIFttYWlsdG86aGVsZ2Fhc0BrZXJuZWwub3JnXSANCreiy83KsbzkOiAyMDE3xOo31MI1
-yNUgMDoyNg0KytW8/sjLOiBzb25neGlhb3dlaQ0Ks63LzTogZ3VvZG9uZy54dUBsaW5hcm8ub3Jn
-OyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBTdXpodWFuZ2x1YW47IGxpbnV4LXBjaUB2Z2VyLmtlcm5l
-bC5vcmc7IGRldmljZXRyZWVAdmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJu
-ZWwub3JnDQrW98ziOiBSZTogW1BBVENIXSBNQUlOVEFJTkVSUzphZGQgbWFpbnRhaW5lciBmb3Ig
-a2lyaW4gcGNpZQ0KDQpPbiBUdWUsIEp1bCAwNCwgMjAxNyBhdCAxMDoxNToxNkFNICswODAwLCBY
-aWFvd2VpIFNvbmcgd3JvdGU6DQo+IEtpcmluIFBDSWUgRHJpdmVyIGRvZXMgbm90IGhhdmUgYSBt
-YWludGFpbmVyIGF0IHByZXNlbnQsDQo+IA0KPiBBZGQgbWFpbnRhaW5lcnMgZm9yIGtpcmluIHBj
-aWUgZHJpdmVyIGFuZCBEb2MsIHRoZSB0d28gZmVsbG93aW5nIGZpbGVzLg0KPiBEb2N1bWVudGF0
-aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3BjaWUta2lyaW4udHh0DQo+IGRyaXZlcnMvcGNp
-L2R3Yy9wY2llLWtpcmluLmMNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFhpYW93ZWkgU29uZyA8c29u
-Z3hpYW93ZWlAaGlzaWxpY29uLmNvbT4NCj4gQ2M6IEd1b2RvbmcgWHUgPGd1b2RvbmcueHVAbGlu
-YXJvLm9yZz4NCg0KQXBwbGllZCB0byBwY2kvaG9zdC1raXJpbiBmb3IgdjQuMTMsIHRoYW5rcyEN
-Cg0KPiAtLS0NCj4gIE1BSU5UQUlORVJTIHwgOCArKysrKysrKw0KPiAgMSBmaWxlIGNoYW5nZWQs
-IDggaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL01BSU5UQUlORVJTIGIvTUFJTlRB
-SU5FUlMgaW5kZXggDQo+IDVlZTMxMjVmODM0MS4uYzY0ZmY3OTU4N2M4IDEwMDY0NA0KPiAtLS0g
-YS9NQUlOVEFJTkVSUw0KPiArKysgYi9NQUlOVEFJTkVSUw0KPiBAQCAtOTg1MSw2ICs5ODUxLDE0
-IEBAIFM6CU1haW50YWluZWQNCj4gIEY6CURvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5n
-cy9wY2kvaGlzaWxpY29uLXBjaWUudHh0DQo+ICBGOglkcml2ZXJzL3BjaS9kd2MvcGNpZS1oaXNp
-LmMNCj4gIA0KPiArUENJRSBEUklWRVIgRk9SIEtpcmluDQo+ICtNOglYaWFvd2VpIFNvbmcgPHNv
-bmd4aWFvd2VpQGhpc2lsaWNvbi5jb20+DQo+ICtNOglCaW5naHVpIFdhbmcgPHdhbmdiaW5naHVp
-QGhpc2lsaWNvbi5jb20+DQo+ICtMOglsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnDQo+ICtTOglN
-YWludGFpbmVkDQo+ICtGOglEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3Bj
-aWUta2lyaW4udHh0DQo+ICtGOglkcml2ZXJzL3BjaS9kd2MvcGNpZS1raXJpbi5jDQo+ICsNCj4g
-IFBDSUUgRFJJVkVSIEZPUiBST0NLQ0hJUA0KPiAgTToJU2hhd24gTGluIDxzaGF3bi5saW5Acm9j
-ay1jaGlwcy5jb20+DQo+ICBNOglXZW5ydWkgTGkgPHdlbnJ1aS5saUByb2NrLWNoaXBzLmNvbT4N
-Cj4gLS0NCj4gMi4xMS5HSVQNCj4gDQo=
+On Mon, 31 Jul 2017 16:37:12 -0700
+Stephen Hemminger <stephen@networkplumber.org> wrote:
+
+> The setup of MSI with Hyper-V host was sleeping with locks held.
+> This error is reported when doing SR-IOV hotplug with kernel built with lockdep.
+> 
+>     BUG: sleeping function called from invalid context at kernel/sched/completion.c:93
+>     in_atomic(): 1, irqs_disabled(): 1, pid: 1405, name: ip
+>     3 locks held by ip/1405:
+>    #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff976b10bb>] rtnetlink_rcv+0x1b/0x40
+>    #1:  (&desc->request_mutex){+.+...}, at: [<ffffffff970ddd33>] __setup_irq+0xb3/0x720
+>    #2:  (&irq_desc_lock_class){-.-...}, at: [<ffffffff970ddd65>] __setup_irq+0xe5/0x720
+>    irq event stamp: 3476
+>    hardirqs last  enabled at (3475): [<ffffffff971b3005>] get_page_from_freelist+0x225/0xc90
+>    hardirqs last disabled at (3476): [<ffffffff978024e7>] _raw_spin_lock_irqsave+0x27/0x90
+>    softirqs last  enabled at (2446): [<ffffffffc05ef0b0>] ixgbevf_configure+0x380/0x7c0 [ixgbevf]
+>    softirqs last disabled at (2444): [<ffffffffc05ef08d>] ixgbevf_configure+0x35d/0x7c0 [ixgbevf]
+> 
+> The workaround is to poll for host response instead of blocking on
+> completion.
+> 
+> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+
+This patch is not directly network related. It needs to go through PCI.
+
+I will resend the series.
