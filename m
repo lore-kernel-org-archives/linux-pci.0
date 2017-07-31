@@ -1,162 +1,115 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh+dt@kerenl.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH 5/5] dt-bindings: PCI: add support for new generation controller
-Date: Fri, 21 Jul 2017 10:32:47 +0800
-Message-ID: <3b449a88bd2f57ee005674d0161192ee01167e5a.1500601172.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1500601172.git.honghui.zhang@mediatek.com>
-References: <cover.1500601172.git.honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:55172 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751978AbdGaQgW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:36:22 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Matthew Minter <matt@masarand.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Rich Felker <dalias@libc.org>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: [RFT PATCH 5/9] MIPS/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
+Date: Mon, 31 Jul 2017 17:37:53 +0100
+Message-Id: <20170731163757.22629-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+in a system; those PCI devices possibly belong to different PCI bus
+trees (and possibly rooted at different host bridges) and may well be
+enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
+is called when probing a given host bridge driver.
 
-Add support for MediaTek new generation controller and update related
-properities.
+Furthermore, current kernel code relying on pci_fixup_irqs() to assign
+legacy PCI IRQs to devices does not work at all for hotplugged devices
+in that the code carrying out the IRQ fixup is called at host bridge
+driver probe time, which just cannot take into account devices
+hotplugged after system has booted.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+The introduction of map/swizzle functions hook in struct pci_host_bridge
+allows to define per-bridge map/swizzle functions, that can be used at
+device probe time in PCI core code to allocate IRQs for a given device
+(through pci_assign_irq()).
+
+Convert PCI host bridge initialization code to the
+pci_scan_root_bus_bridge() API (that allows to pass a struct
+pci_host_bridge with initialized map/swizzle pointers) and remove the
+pci_fixup_irqs() call from arch code.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: Paul Burton <paul.burton@imgtec.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- .../devicetree/bindings/pci/mediatek-pcie.txt      | 84 ++++++++++++++++++++--
- 1 file changed, 79 insertions(+), 5 deletions(-)
+ arch/mips/pci/pci-legacy.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 294f4a3..a1f3767 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -4,17 +4,27 @@ Required properties:
- - compatible: Should contain one of the following string:
- 	"mediatek,mt7623-pcie"
- 	"mediatek,mt2701-pcie"
-+	"mediatek,generic-pcie-v2"
- - device_type: Must be "pci"
--- reg: Base addresses and lengths of the PCIe controller.
-+- reg: Base addresses and lengths of the PICe subsys and root ports.
-+- reg-names: Names of the above areas to use during resource look-up.
- - #address-cells: Address representation for root ports (must be 3)
- - #size-cells: Size representation for root ports (must be 2)
- - clocks: Must contain an entry for each entry in clock-names.
-   See ../clocks/clock-bindings.txt for details.
- - clock-names: Must include the following entries:
-   - free_ck :for reference clock of PCIe subsys
--  - sys_ck0 :for clock of Port0
--  - sys_ck1 :for clock of Port1
--  - sys_ck2 :for clock of Port2
-+  - sys_ckN :transaction layer and data link layer clock
-+  The "sys_ck" might be divided into the following parts in some v2 chips:
-+    - ahb_ckN :AHB slave interface operating clock for CSR access and RC
-+	       initiated MMIO access
-+    - axi_ckN :application layer MMIO channel operating clock
-+    - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-+	       pcie_mac_ck/pcie_pipe_ck is turned off
-+    - obff_ckN :OBFF functional block operating clock
-+    - pipe_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-+		pcie_mac_ck/pcie_pipe_ck is turned off
-+  where N starting from 0 to the maximum number of root ports.
- - phys: List of PHY specifiers (used by generic PHY framework).
- - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-   number of PHYs as specified in *phys* property.
-@@ -33,6 +43,9 @@ Required properties for MT7623/MT2701:
- - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
-   number of root ports.
- 
-+Required properties for mediatek generic-pcie-v2:
-+-interrupts: A list of interrupt outputs of the controller.
+diff --git a/arch/mips/pci/pci-legacy.c b/arch/mips/pci/pci-legacy.c
+index 71d62f8..fc77260 100644
+--- a/arch/mips/pci/pci-legacy.c
++++ b/arch/mips/pci/pci-legacy.c
+@@ -78,6 +78,12 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ 	static int need_domain_info;
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *bus;
++	struct pci_host_bridge *bridge;
++	int ret;
 +
- In addition, the device tree node must have sub-nodes describing each
- PCIe port interface, having the following mandatory properties:
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return;
  
-@@ -50,7 +63,7 @@ Required properties:
-   property is sufficient.
- - num-lanes: Number of lanes to use for this port.
+ 	if (hose->get_busno && pci_has_flag(PCI_PROBE_ONLY))
+ 		next_busno = (*hose->get_busno)();
+@@ -87,14 +93,20 @@ static void pcibios_scanbus(struct pci_controller *hose)
+ 	pci_add_resource_offset(&resources,
+ 				hose->io_resource, hose->io_offset);
+ 	pci_add_resource(&resources, hose->busn_resource);
+-	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+-				&resources);
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
++	list_splice_init(&resources, &bridge->windows);
++	bridge->dev.parent = NULL;
++	bridge->sysdata = hose;
++	bridge->busnr = next_busno;
++	bridge->ops = hose->pci_ops;
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pcibios_map_irq;
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret) {
++		pci_free_host_bridge(bridge);
+ 		return;
+ 	}
  
--Examples:
-+Examples for mt7623:
+-	hose->bus = bus;
++	hose->bus = bus = bridge->bus;
  
- 	hifsys: syscon@1a000000 {
- 		compatible = "mediatek,mt7623-hifsys",
-@@ -68,6 +81,7 @@ Examples:
- 		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
- 		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
- 		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
-+		reg-names = "subsys", "port0", "port1", "port2";
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		#interrupt-cells = <1>;
-@@ -127,3 +141,63 @@ Examples:
- 			num-lanes = <1>;
- 		};
- 	};
-+
-+Examples for mt2712:
-+	pcie: pcie@0x11700000 {
-+		compatible = "mediatek,generic-pcie-v2";
-+		device_type = "pci";
-+		reg = <0 0x11700000 0 0x1000>,
-+		      <0 0x112FF000 0 0x1000>;
-+		reg-names = "port0", "port1";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&pericfg CLK_PERI_PCIE0>,
-+			 <&pericfg CLK_PERI_PCIE1>,
-+			 <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
-+			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>;
-+		clock-names = "sys_ck0", "sys_ck1", "ahb0", "ahb1";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-+
-+		pcie0: pcie@0,0 {
-+			device_type = "pci";
-+			reg = <0x0000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+					<0 0 0 2 &pcie_intc0 1>,
-+					<0 0 0 3 &pcie_intc0 2>,
-+					<0 0 0 4 &pcie_intc0 3>;
-+			pcie_intc0: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+
-+		pcie1: pcie@1,0 {
-+			device_type = "pci";
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+					<0 0 0 2 &pcie_intc1 1>,
-+					<0 0 0 3 &pcie_intc1 2>,
-+					<0 0 0 4 &pcie_intc1 3>;
-+			pcie_intc1: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+	};
+ 	need_domain_info = need_domain_info || pci_domain_nr(bus);
+ 	set_pci_need_domain_info(hose, need_domain_info);
+@@ -224,8 +236,6 @@ static int __init pcibios_init(void)
+ 	list_for_each_entry(hose, &controllers, list)
+ 		pcibios_scanbus(hose);
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pcibios_map_irq);
+-
+ 	pci_initialized = 1;
+ 
+ 	return 0;
 -- 
-2.6.4
+2.10.0
