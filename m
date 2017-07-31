@@ -1,101 +1,140 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:33618 "EHLO
-        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751470AbdGRUdj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Jul 2017 16:33:39 -0400
-Received: by mail-pg0-f54.google.com with SMTP id k14so18691629pgr.0
-        for <linux-pci@vger.kernel.org>; Tue, 18 Jul 2017 13:33:38 -0700 (PDT)
-Date: Tue, 18 Jul 2017 13:33:36 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org
-Subject: Re: [RFC PATCH v3 2/7] PCI: rockchip: introduce per-lanes PHYs
- support
-Message-ID: <20170718203335.GC116895@google.com>
-References: <1500364623-97041-1-git-send-email-shawn.lin@rock-chips.com>
- <1500364623-97041-3-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500364623-97041-3-git-send-email-shawn.lin@rock-chips.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:55082 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752281AbdGaQgN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:36:13 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Matthew Minter <matt@masarand.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: [RFT PATCH 2/9] sh/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
+Date: Mon, 31 Jul 2017 17:37:50 +0100
+Message-Id: <20170731163757.22629-3-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+in a system; those PCI devices possibly belong to different PCI bus
+trees (and possibly rooted at different host bridges) and may well be
+enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
+is called when probing a given host bridge driver.
 
-On Tue, Jul 18, 2017 at 03:56:58PM +0800, Shawn Lin wrote:
-> We distinguish the legacy PHY with the newer per-lane
-> PHYs by adding legacy_phy flag. Note that the legacy phy
-> is still the first option to be searched in order not to
-> break the backward compatibility of DTB.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> Tested-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v3:
-> - kill rockchip_pcie_manipulate_phys and related stuff
-> - use phys array
-> - improve the commit msg
-> 
-> Changes in v2: None
-> 
->  drivers/pci/host/pcie-rockchip.c | 100 +++++++++++++++++++++++++++------------
->  1 file changed, 69 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 6632a51..4cc6aec 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
+Furthermore, current kernel code relying on pci_fixup_irqs() to assign
+legacy PCI IRQs to devices does not work at all for hotplugged devices
+in that the code carrying out the IRQ fixup is called at host bridge
+driver probe time, which just cannot take into account devices
+hotplugged after system has booted.
 
-...
+The introduction of map/swizzle functions hook in struct pci_host_bridge
+allows to define per-bridge map/swizzle functions, that can be used at
+device probe time in PCI core code to allocate IRQs for a given device
+(through pci_assign_irq()).
 
-> @@ -537,10 +579,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		return err;
->  	}
->  
-> -	err = phy_init(rockchip->phy);
-> -	if (err < 0) {
-> -		dev_err(dev, "fail to init phy, err %d\n", err);
-> -		return err;
-> +	for (i = 0; i < MAX_LANE_NUM; i++) {
-> +		err = phy_init(rockchip->phys[i]);
-> +		if (err) {
-> +			dev_err(dev, "init phy err %d\n", err);
+Convert PCI host bridge initialization code to the
+pci_scan_root_bus_bridge() API (that allows to pass a struct
+pci_host_bridge with initialized map/swizzle pointers) and remove the
+pci_fixup_irqs() call from arch code.
 
-Include the PHY index in the error message?
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Rich Felker <dalias@libc.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
+---
+ arch/sh/drivers/pci/pci.c | 41 +++++++++++++++++++++++++----------------
+ 1 file changed, 25 insertions(+), 16 deletions(-)
 
-> +			return err;
-> +		}
->  	}
->  
->  	err = reset_control_assert(rockchip->core_rst);
-> @@ -602,10 +646,12 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  			    PCIE_CLIENT_MODE_RC,
->  			    PCIE_CLIENT_CONFIG);
->  
-> -	err = phy_power_on(rockchip->phy);
-> -	if (err) {
-> -		dev_err(dev, "fail to power on phy, err %d\n", err);
-> -		return err;
-> +	for (i = 0; i < MAX_LANE_NUM; i++) {
-> +		err = phy_power_on(rockchip->phys[i]);
-> +		if (err) {
-> +			dev_err(dev, "power on phy err %d\n", err);
-
-Same?
-
-> +			return err;
-> +		}
->  	}
->  
->  	/*
-
-...
-
-Brian
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index c99ee28..357278c 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -39,8 +39,12 @@ static void pcibios_scanbus(struct pci_channel *hose)
+ 	LIST_HEAD(resources);
+ 	struct resource *res;
+ 	resource_size_t offset;
+-	int i;
+-	struct pci_bus *bus;
++	int i, ret;
++	struct pci_host_bridge *bridge;
++
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return;
+ 
+ 	for (i = 0; i < hose->nr_resources; i++) {
+ 		res = hose->resources + i;
+@@ -52,19 +56,26 @@ static void pcibios_scanbus(struct pci_channel *hose)
+ 		pci_add_resource_offset(&resources, res, offset);
+ 	}
+ 
+-	bus = pci_scan_root_bus(NULL, next_busno, hose->pci_ops, hose,
+-				&resources);
+-	hose->bus = bus;
++	list_splice_init(&resources, &bridge->windows);
++	bridge->dev.parent = NULL;
++	bridge->sysdata = hose;
++	bridge->busnr = next_busno;
++	bridge->ops = hose->pci_ops;
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = pcibios_map_platform_irq;
++
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret) {
++		pci_free_host_bridge(bridge);
++		return;
++	}
++
++	hose->bus = bridge->bus;
+ 
+ 	need_domain_info = need_domain_info || hose->index;
+ 	hose->need_domain_info = need_domain_info;
+ 
+-	if (!bus) {
+-		pci_free_resource_list(&resources);
+-		return;
+-	}
+-
+-	next_busno = bus->busn_res.end + 1;
++	next_busno = hose->bus->busn_res.end + 1;
+ 	/* Don't allow 8-bit bus number overflow inside the hose -
+ 	   reserve some space for bridges. */
+ 	if (next_busno > 224) {
+@@ -72,9 +83,9 @@ static void pcibios_scanbus(struct pci_channel *hose)
+ 		need_domain_info = 1;
+ 	}
+ 
+-	pci_bus_size_bridges(bus);
+-	pci_bus_assign_resources(bus);
+-	pci_bus_add_devices(bus);
++	pci_bus_size_bridges(hose->bus);
++	pci_bus_assign_resources(hose->bus);
++	pci_bus_add_devices(hose->bus);
+ }
+ 
+ /*
+@@ -144,8 +155,6 @@ static int __init pcibios_init(void)
+ 	for (hose = hose_head; hose; hose = hose->next)
+ 		pcibios_scanbus(hose);
+ 
+-	pci_fixup_irqs(pci_common_swizzle, pcibios_map_platform_irq);
+-
+ 	dma_debug_add_bus(&pci_bus_type);
+ 
+ 	pci_initialized = 1;
+-- 
+2.10.0
