@@ -1,43 +1,113 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48020 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751280AbdGQMEa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Jul 2017 08:04:30 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH 0/7] Add support for IPQ8074 PCIe phy and controller
-Date: Mon, 17 Jul 2017 17:33:56 +0530
-Message-Id: <1500293043-1887-1-git-send-email-varada@codeaurora.org>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:36508 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751776AbdGaXhT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:37:19 -0400
+Received: by mail-pf0-f182.google.com with SMTP id z129so350762pfb.3
+        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:37:19 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        corbet@lwn.net
+Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH net-next 2/4] netvsc: add documentation
+Date: Mon, 31 Jul 2017 16:37:10 -0700
+Message-Id: <20170731233712.12087-3-sthemmin@microsoft.com>
+In-Reply-To: <20170731233712.12087-1-sthemmin@microsoft.com>
+References: <20170731233712.12087-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add definitions required to enable QMP phy support for IPQ8074.
+Add some background documentation on netvsc device options
+and limitations.
 
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
-Gen 1/2, one lane, two PCIe root complex with support for MSI and
-legacy interrupts, and it conforms to PCI Express Base 2.1
-specification.
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ Documentation/networking/netvsc.txt | 63 +++++++++++++++++++++++++++++++++++++
+ MAINTAINERS                         |  1 +
+ 2 files changed, 64 insertions(+)
+ create mode 100644 Documentation/networking/netvsc.txt
 
-Varadarajan Narayanan (7):
-  dt-bindings: phy: qmp: Add output-clock-names
-  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-  phy: qcom-qmp: Fix phy pipe clock name
-  phy: qcom-qmp: Handle unavailable registers
-  phy: qcom-qmp: Add support for IPQ8074
-  dt-bindings: pci: qcom: Add support for IPQ8074
-  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-
- .../devicetree/bindings/pci/qcom,pcie.txt          |  67 ++++++
- .../devicetree/bindings/phy/qcom-qmp-phy.txt       |  31 +++
- drivers/pci/dwc/pcie-qcom.c                        | 259 +++++++++++++++++++++
- drivers/phy/qualcomm/phy-qcom-qmp.c                | 186 +++++++++++++--
- 4 files changed, 522 insertions(+), 21 deletions(-)
-
+diff --git a/Documentation/networking/netvsc.txt b/Documentation/networking/netvsc.txt
+new file mode 100644
+index 000000000000..4ddb4e4b0426
+--- /dev/null
++++ b/Documentation/networking/netvsc.txt
+@@ -0,0 +1,63 @@
++Hyper-V network driver
++======================
++
++Compatibility
++=============
++
++This driver is compatible with Windows Server 2012 R2, 2016 and
++Windows 10.
++
++Features
++========
++
++  Checksum offload
++  ----------------
++  The netvsc driver supports checksum offload as long as the
++  Hyper-V host version does. Windows Server 2016 and Azure
++  support checksum offload for TCP and UDP for both IPv4 and
++  IPv6. Windows Server 2012 only supports checksum offload for TCP.
++
++  Receive Side Scaling
++  --------------------
++  Hyper-V supports receive side scaling. For TCP, packets are
++  distributed among available queues based on IP address and port
++  number. Current versions of Hyper-V host, only distribute UDP
++  packets based on the IP source and destination address.
++  The port number is not used as part of the hash value for UDP.
++  Fragmented IP packets are not distributed between queues;
++  all fragmented packets arrive on the first channel.
++
++  Generic Receive Offload, aka GRO
++  --------------------------------
++  The driver supports GRO and it is enabled by default. GRO coalesces
++  like packets and significantly reduces CPU usage under heavy Rx
++  load.
++
++  SR-IOV support
++  --------------
++  Hyper-V supports SR-IOV as a hardware acceleration option. If SR-IOV
++  is enabled in both the vSwitch and the guest configuration, then the
++  Virtual Function (VF) device is passed to the guest as a PCI
++  device. In this case, both a synthetic (netvsc) and VF device are
++  visible in the guest OS and both NIC's have the same MAC address.
++
++  The VF is enslaved by netvsc device.  The netvsc driver will transparently
++  switch the data path to the VF when it is available and up.
++  Network state (addresses, firewall, etc) should be applied only to the
++  netvsc device; the slave device should not be accessed directly in
++  most cases.  The exceptions are if some special queue discipline or
++  flow direction is desired, these should be applied directly to the
++  VF slave device.
++
++  Receive Buffer
++  --------------
++  Packets are received into a receive area which is created when device
++  is probed. The receive area is broken into MTU sized chunks and each may
++  contain one or more packets. The number of receive sections may be changed
++  via ethtool Rx ring parameters.
++
++  There is a similar send buffer which is used to aggregate packets for sending.
++  The send area is broken into chunks of 6144 bytes, each of section may
++  contain one or more packets. The send buffer is an optimization, the driver
++  will use slower method to handle very large packets or if the send buffer
++  area is exhausted.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 297e610c9163..d30c17df1deb 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6294,6 +6294,7 @@ M:	Haiyang Zhang <haiyangz@microsoft.com>
+ M:	Stephen Hemminger <sthemmin@microsoft.com>
+ L:	devel@linuxdriverproject.org
+ S:	Maintained
++F:	Documentation/networking/netvsc.txt
+ F:	arch/x86/include/asm/mshyperv.h
+ F:	arch/x86/include/uapi/asm/hyperv.h
+ F:	arch/x86/kernel/cpu/mshyperv.c
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
