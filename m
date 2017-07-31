@@ -1,56 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 28 Jul 2017 09:23:16 +0200
-From: Borislav Petkov <bp@alien8.de>
-To: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
- counters
-Message-ID: <20170728072316.GE1884@nazgul.tnic>
-References: <20170726155548.GF28875@nazgul.tnic>
- <20170726161949.GB15426@kroah.com>
- <20170726163049.GG28875@nazgul.tnic>
- <20170726173353.GB21705@kroah.com>
- <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
- <20170726200802.GA17722@kroah.com>
- <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
- <20170727022907.GC1398@kroah.com>
- <4f58aeab-7b8d-50dc-5497-6ac42536e0c0@gmail.com>
- <20170728011130.GC19160@kroah.com>
-MIME-Version: 1.0
-In-Reply-To: <20170728011130.GC19160@kroah.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jan Glauber <jan.glauber@caviumnetworks.com>,
- David Daney <ddaney.cavm@gmail.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:55276 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751978AbdGaQgc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:36:32 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Matthew Minter <matt@masarand.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Rich Felker <dalias@libc.org>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>
+Subject: [RFT PATCH 8/9] sparc/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
+Date: Mon, 31 Jul 2017 17:37:56 +0100
+Message-Id: <20170731163757.22629-9-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 27, 2017 at 06:11:30PM -0700, Greg KH wrote:
-> Oh well, fix it in the kernel, that's what it's there for :)
+The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+in a system; those PCI devices possibly belong to different PCI bus
+trees (and possibly rooted at different host bridges) and may well be
+enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
+is called when probing a given host bridge driver.
 
-Duude, don't put crazy ideas in people's heads!
+Furthermore, current kernel code relying on pci_fixup_irqs() to assign
+legacy PCI IRQs to devices does not work at all for hotplugged devices
+in that the code carrying out the IRQ fixup is called at host bridge
+driver probe time, which just cannot take into account devices
+hotplugged after system has booted.
 
-:-)))
+The introduction of map/swizzle functions hook in struct pci_host_bridge
+allows to define per-bridge map/swizzle functions, that can be used at
+device probe time in PCI core code to allocate IRQs for a given device
+(through pci_assign_irq()).
 
+Convert PCI host bridge initialization code to the
+pci_scan_root_bus_bridge() API (that allows to pass a struct
+pci_host_bridge with initialized map/swizzle pointers) and remove the
+pci_fixup_irqs() call from arch code.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "David S. Miller" <davem@davemloft.net>
+---
+ arch/sparc/kernel/leon_pci.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/arch/sparc/kernel/leon_pci.c b/arch/sparc/kernel/leon_pci.c
+index 4371f72..7b5c707 100644
+--- a/arch/sparc/kernel/leon_pci.c
++++ b/arch/sparc/kernel/leon_pci.c
+@@ -25,6 +25,12 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
+ {
+ 	LIST_HEAD(resources);
+ 	struct pci_bus *root_bus;
++	struct pci_host_bridge *bridge;
++	int ret;
++
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return;
+ 
+ 	pci_add_resource_offset(&resources, &info->io_space,
+ 				info->io_space.start - 0x1000);
+@@ -32,15 +38,21 @@ void leon_pci_init(struct platform_device *ofdev, struct leon_pci_info *info)
+ 	info->busn.flags = IORESOURCE_BUS;
+ 	pci_add_resource(&resources, &info->busn);
+ 
+-	root_bus = pci_scan_root_bus(&ofdev->dev, 0, info->ops, info,
+-				     &resources);
+-	if (!root_bus) {
+-		pci_free_resource_list(&resources);
++	list_splice_init(&resources, &bridge->windows);
++	bridge->dev.parent = &ofdev->dev;
++	bridge->sysdata = info;
++	bridge->busnr = 0;
++	bridge->ops = info->ops;
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = info->map_irq;
++
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret) {
++		pci_free_host_bridge(bridge);
+ 		return;
+ 	}
+ 
+-	/* Setup IRQs of all devices using custom routines */
+-	pci_fixup_irqs(pci_common_swizzle, info->map_irq);
++	root_bus = bridge->bus;
+ 
+ 	/* Assign devices with resources */
+ 	pci_assign_unassigned_resources();
 -- 
-Regards/Gruss,
-    Boris.
-
-ECO tip #101: Trim your mails when you reply.
---
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.10.0
