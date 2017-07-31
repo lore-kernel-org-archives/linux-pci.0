@@ -1,91 +1,87 @@
-Return-Path: <SRS0=4Z93=6H=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=4Z93=6H=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Tue, 4 Jul 2017 19:17:37 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
-	Mark Rutland <mark.rutland@arm.com>, Mason <slash.tmp@free.fr>,
-	Marc Zyngier <marc.zyngier@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-Message-ID: <20170704181737.GF4902@n2100.armlinux.org.uk>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
- <b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
- <20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
- <79382219-c730-da78-3e5f-5abf3173d7ac@sigmadesigns.com>
- <20170703134031.GG13824@bhelgaas-glaptop.roam.corp.google.com>
- <20170703181128.GD4902@n2100.armlinux.org.uk>
- <20170704151502.GH13824@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52328 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751978AbdGaW6Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 18:58:24 -0400
+Date: Mon, 31 Jul 2017 17:58:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: Guenter Roeck <linux@roeck-us.net>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Michal Simek <michal.simek@xilinx.com>,
+        =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+        James Hogan <james.hogan@imgtec.com>
+Subject: Re: [PATCH] PCI: xilinx: Remove platform/architecture restrictions
+Message-ID: <20170731225822.GB19800@bhelgaas-glaptop.roam.corp.google.com>
+References: <1500856777-23383-1-git-send-email-linux@roeck-us.net>
+ <3882569.bb2rKKAOIY@np-p-burton>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170704151502.GH13824@bhelgaas-glaptop.roam.corp.google.com>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <3882569.bb2rKKAOIY@np-p-burton>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 04, 2017 at 10:15:02AM -0500, Bjorn Helgaas wrote:
-> On Mon, Jul 03, 2017 at 07:11:28PM +0100, Russell King - ARM Linux wrote:
-> > On Mon, Jul 03, 2017 at 08:40:31AM -0500, Bjorn Helgaas wrote:
-> > > The problem is serializing vs. memory accesses, since they don't use
-> > > any wrappers.  However, they are ioremapped(), so it's at least
-> > > conceivable that another solution would be to use VM to trap those
-> > > accesses.  I'm not a VM person, so I don't know whether that's
-> > > feasible in Linux.
-> > 
-> > Bjorn,
-> > 
-> > You're forgetting that MMIO (iow, memory returned by ioremap()) must
-> > be accessed through the appropriate accessors, and must not be
-> > directly dereferenced in C.  (We do have buggy drivers that do that
-> > but they are buggy, and in many cases are getting attention to fix
-> > that.)
+On Mon, Jul 24, 2017 at 11:49:22AM +0100, Paul Burton wrote:
+> Hi Guenter & all,
 > 
-> Oh, you're right, thank you!  I guess you're referring to readb()
-> and friends.  I haven't found an actual prohibition on directly
-> dereferencing addresses returned from ioremap(), but
-> Documentation/driver-api/device-io.rst is clear that they're
-> suitable for passing to readb(), etc.
+> On Monday, 24 July 2017 01:39:37 BST Guenter Roeck wrote:
+> > The MIPS Boston board configuration tries to enable CONFIG_PCIE_XILINX.
+> > That doesn't work since PCIE_XILINX depends on ARCH_ZYNQ || MICROBLAZE.
+> > Remove that restriction.
+> 
+> I'd prefer that this patch does not go in standalone. The intent for the MIPS 
+> Boston board is that this driver is enabled for MIPS by this patch:
+> 
+> https://patchwork.kernel.org/patch/9794361/
+> 
+> But not until after earlier patches in that series fix issues with the driver:
+> 
+> https://patchwork.kernel.org/patch/9794355/
+> https://patchwork.kernel.org/patch/9794357/
+> https://patchwork.kernel.org/patch/9794359/
+> 
+> That has been held up by disagreement about whether the driver should be using 
+> 0-3 or 1-4 for hardware IRQ numbers, sadly, despite the driver already being 
+> in tree & clearly broken, and my series not changing which the driver uses...
 
-There was a strong suggestion years ago that what is returned from
-ioremap() is a cookie that must not be dereferenced by drivers, and
-that there was a suggestion that having ioremap() return the virtual
-address with an offset (which read*() and friends would undo) would
-be a good idea.  However, even back then, we had some cases where
-drivers would directly dereference the pointer.  We have sparse today
-which helps point these places out (provided drivers stay away from
-__force, but unfortunately, I think we've ended up with people who
-think that silencing sparse warnings with __force is more preferable
-than leaving them there to point out where things are actually wrong.)
+It's true that your v5 series only changes xilinx from using hwirq 0-3
+to 0-4 (with 0 being unused in both cases, and the addition of 4
+fixing the "INTD doesn't work" bug).
 
-So, imho, unfortunately sparse has lost its usefulness in this regard.
+However, I *would* like to see this issue cleaned up consistently
+across all our drivers.  I mooted a couple ideas in [1], but nobody
+seemed interested.  If I merged your series as-is, there would be even
+less interest.
 
-> I recently told someone else my mistaken idea that ioremap() must
-> return a valid virtual address.  I wish I remembered who it was, so I
-> could correct that.  Documentation/DMA-API-HOWTO.txt also suggests
-> that ioremap() returns a virtual address -- I think I wrote that, and
-> maybe that virtual address reference should be tweaked a bit.
+[1] http://lkml.kernel.org/r/20170712221455.GJ14614@bhelgaas-glaptop.roam.corp.google.com
 
-For most implementations, ioremap() does indeed return a virtual address,
-but that was never how the API was defined in the first place - it was
-always referred to as returning a cookie.
-
-> Another wrinkle is that the pci_mmap_resource() interface is exposed
-> via sysfs and allows direct userspace mmap of PCI MMIO resources.  In
-> that case, there is no accessor available.  I wonder if we need some
-> way to disable this mmap when readb() is non-trivial.
-
-Hmm, no comment, except that while the PCI MMIO space is available to
-userspace, and userspace is capable of running that thread on any CPU,
-PCI MMIO space can't be switched to config space.
-
-That's another nail in this coffin...
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+> In any case, I don't really mind if people would rather remove the 
+> architecture restrictions than just add MIPS, but I'd prefer this doesn't go 
+> in until the rest of my series since without at least patch 1 of my seres this 
+> will lead to various WARN()s on Boston boards.
+> 
+> Thanks,
+>     Paul
+> 
+> > 
+> > Cc: Paul Burton <paul.burton@imgtec.com>
+> > Cc: James Hogan <james.hogan@imgtec.com>
+> > Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> > ---
+> >  drivers/pci/host/Kconfig | 1 -
+> >  1 file changed, 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> > index 89d61c2cbfaa..ed905a5401c3 100644
+> > --- a/drivers/pci/host/Kconfig
+> > +++ b/drivers/pci/host/Kconfig
+> > @@ -71,7 +71,6 @@ config PCI_HOST_GENERIC
+> > 
+> >  config PCIE_XILINX
+> >  	bool "Xilinx AXI PCIe host bridge support"
+> > -	depends on ARCH_ZYNQ || MICROBLAZE
+> >  	help
+> >  	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+> >  	  Host Bridge driver.
+> 
