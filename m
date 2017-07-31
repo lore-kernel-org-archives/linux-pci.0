@@ -1,68 +1,117 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:48199 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753094AbdGSJ62 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 05:58:28 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 7/7] dt-bindings: phy: convert to use per-lane Rockchip PCIe PHY
-Date: Wed, 19 Jul 2017 17:57:58 +0800
-Message-Id: <1500458278-203082-3-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1500458278-203082-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1500458118-139042-1-git-send-email-shawn.lin@rock-chips.com>
- <1500458278-203082-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46220 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbdGaFzk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:55:40 -0400
+Subject: Re: [PATCH v5 3/7] phy: qcom-qmp: Fix phy pipe clock name
+To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
+        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+ <1501479594-18285-4-git-send-email-varada@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Message-ID: <9e2bf426-8489-a5a7-2d92-d3909349fde3@codeaurora.org>
+Date: Mon, 31 Jul 2017 11:25:33 +0530
+MIME-Version: 1.0
+In-Reply-To: <1501479594-18285-4-git-send-email-varada@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch deprecate the legacy PCIe PHY and encourage user
-to use per-lane PHY mode by setting #phy-cells to 1.
+Hi,
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Brian Norris <briannorris@chromium.org>
----
+On 07/31/2017 11:09 AM, Varadarajan Narayanan wrote:
+> Presently, the phy pipe clock's name is assumed to be either
+> usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+> phy lane's number). However, this will not work if an SoC has
+> more than one instance of the phy. Hence, instead of assuming
+> the name of the clock, fetch it from the DT.
+>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
+>   drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++--------------
+>   1 file changed, 14 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> index 78ca628..464049c 100644
+> --- a/drivers/phy/qualcomm/phy-qcom-qmp.c
+> +++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+> @@ -925,29 +925,28 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+>    *    clk  |   +-------+   |                   +-----+
+>    *         +---------------+
+>    */
+> -static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
+> +static int phy_pipe_clk_register(struct qcom_qmp *qmp, struct device_node *np)
+>   {
+> -	char name[24];
+>   	struct clk_fixed_rate *fixed;
+>   	struct clk_init_data init = { };
+> +	int ret;
+>   
+> -	switch (qmp->cfg->type) {
+> -	case PHY_TYPE_USB3:
+> -		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+> -		break;
+> -	case PHY_TYPE_PCIE:
+> -		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+> -		break;
+> -	default:
+> +	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
+> +	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
+>   		/* not all phys register pipe clocks, so return success */
+>   		return 0;
+>   	}
+>   
+> +	ret = of_property_read_string(np, "clock-output-names", &init.name);
+> +	if (ret) {
+> +		dev_err(qmp->dev, "%s: No clock-output-names\n", np->name);
+> +		return ret;
+> +	}
+> +
+>   	fixed = devm_kzalloc(qmp->dev, sizeof(*fixed), GFP_KERNEL);
+>   	if (!fixed)
+>   		return -ENOMEM;
+>   
+> -	init.name = name;
+>   	init.ops = &clk_fixed_rate_ops;
+>   
+>   	/* controllers using QMP phys use 125MHz pipe clock interface */
+> @@ -1110,6 +1109,7 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>   
+>   	id = 0;
+>   	for_each_available_child_of_node(dev->of_node, child) {
+> +
+Minor nits - this extra line not needed.
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3:
-- rename the commit tile
+>   		/* Create per-lane phy */
+>   		ret = qcom_qmp_phy_create(dev, child, id);
+>   		if (ret) {
+> @@ -1119,10 +1119,10 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+>   		}
+>   
+>   		/*
+> -		 * Register the pipe clock provided by phy.
+> -		 * See function description to see details of this pipe clock.
+> +		 * Register the pipe clock provided by phy. See function
+> +		 * description to see details of this pipe clock.
 
-Changes in v2: None
+Is there some whitespace fixed here? Otherwise unnecessary hunk.
 
- Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+With these minor nits fixed,
 
-diff --git a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-index 0f6222a..b496042 100644
---- a/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-+++ b/Documentation/devicetree/bindings/phy/rockchip-pcie-phy.txt
-@@ -3,7 +3,6 @@ Rockchip PCIE PHY
- 
- Required properties:
-  - compatible: rockchip,rk3399-pcie-phy
-- - #phy-cells: must be 0
-  - clocks: Must contain an entry in clock-names.
- 	See ../clocks/clock-bindings.txt for details.
-  - clock-names: Must be "refclk"
-@@ -11,6 +10,12 @@ Required properties:
- 	See ../reset/reset.txt for details.
-  - reset-names: Must be "phy"
- 
-+Required properties for legacy PHY mode (deprecated):
-+ - #phy-cells: must be 0
-+
-+Required properties for per-lane PHY mode (preferred):
-+ - #phy-cells: must be 1
-+
- Example:
- 
- grf: syscon@ff770000 {
+Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+
+>   		 */
+> -		ret = phy_pipe_clk_register(qmp, id);
+> +		ret = phy_pipe_clk_register(qmp, child);
+>   		if (ret) {
+>   			dev_err(qmp->dev,
+>   				"failed to register pipe clock source\n");
+
 -- 
-1.9.1
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
