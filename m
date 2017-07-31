@@ -1,220 +1,80 @@
-Return-Path: <SRS0=oPzr=6Q=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=oPzr=6Q=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH] PCI/DPC: Add eDPC support
-To: <helgaas@kernel.org>
-References: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <efdad754-9ff3-d668-314a-39d9309a7a08@huawei.com>
-Date: Thu, 13 Jul 2017 20:36:32 +0800
-MIME-Version: 1.0
-In-Reply-To: <1498295066-87895-1-git-send-email-liudongdong3@huawei.com>
-Content-Type: text/plain; charset="gbk"; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39796 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751690AbdGaFki (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:40:38 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v5 6/7] dt-bindings: pci: qcom: Add support for IPQ8074
+Date: Mon, 31 Jul 2017 11:09:53 +0530
+Message-Id: <1501479594-18285-7-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
+lane, two PCIe root complex with support for MSI and legacy interrupts, and
+it conforms to PCI Express Base 2.1 specification.
 
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-ÔÚ 2017/6/24 17:04, Dongdong Liu Ð´µÀ:
-> This code is to add eDPC support. Get and print the RP PIO error
-> information when the trigger condition is RP PIO error.
->
-> For more information on eDPC, view the PCI-SIG eDPC ECN here:
-> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
->
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> ---
->  drivers/pci/pcie/pcie-dpc.c   | 161 ++++++++++++++++++++++++++++++++++++++++++
->  include/uapi/linux/pci_regs.h |  10 +++
->  2 files changed, 171 insertions(+)
->
-> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-> index 77d2ca9..00fdf87 100644
-> --- a/drivers/pci/pcie/pcie-dpc.c
-> +++ b/drivers/pci/pcie/pcie-dpc.c
-> @@ -16,11 +16,55 @@
->  #include <linux/pcieport_if.h>
->  #include "../pci.h"
->
-> +struct rp_pio_header_log_regs {
-> +	u32 dw0;
-> +	u32 dw1;
-> +	u32 dw2;
-> +	u32 dw3;
-> +};
-> +
-> +struct dpc_rp_pio_regs {
-> +	u32 status;
-> +	u32 mask;
-> +	u32 severity;
-> +	u32 syserror;
-> +	u32 exception;
-> +
-> +	struct rp_pio_header_log_regs header_log;
-> +	u32 impspec_log;
-> +	u32 tlp_prefix_log[4];
-> +	u32 log_size;
-> +	u16 first_error;
-> +};
-> +
->  struct dpc_dev {
->  	struct pcie_device	*dev;
->  	struct work_struct	work;
->  	int			cap_pos;
->  	bool			rp;
-> +	struct dpc_rp_pio_regs	*rp_pio;
-> +};
-> +
-> +static const char * const rp_pio_error_string[] = {
-> +	"Configuration Request received UR Completion",	 /* Bit Position 0  */
-> +	"Configuration Request received CA Completion",	 /* Bit Position 1  */
-> +	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
-> +	NULL,
-> +	NULL,
-> +	NULL,
-> +	NULL,
-> +	NULL,
-> +	"I/O Request received UR Completion",		 /* Bit Position 8  */
-> +	"I/O Request received CA Completion",		 /* Bit Position 9  */
-> +	"I/O Request Completion Timeout",		 /* Bit Position 10 */
-> +	NULL,
-> +	NULL,
-> +	NULL,
-> +	NULL,
-> +	NULL,
-> +	"Memory Request received UR Completion",	 /* Bit Position 16 */
-> +	"Memory Request received CA Completion",	 /* Bit Position 17 */
-> +	"Memory Request Completion Timeout",		 /* Bit Position 18 */
->  };
->
->  static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
-> @@ -79,10 +123,117 @@ static void interrupt_event_handler(struct work_struct *work)
->  	dpc_wait_link_inactive(pdev);
->  	if (dpc->rp && dpc_wait_rp_inactive(dpc))
->  		return;
-> +	if (dpc->rp && dpc->rp_pio->status)
-> +		pci_write_config_dword(pdev,
-> +				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-> +				      dpc->rp_pio->status);
-> +
->  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
->  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
->  }
->
-> +static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
-> +			       struct rp_pio_header_log_regs *t)
-> +{
-> +	dev_err(&dev->dev, "TLP Header: %08x %08x %08x %08x\n",
-> +		t->dw0, t->dw1, t->dw2, t->dw3);
-> +}
-> +
-> +static void dpc_rp_pio_print_error(struct dpc_dev *dpc)
-> +{
-> +	struct pci_dev *pdev = dpc->dev->port;
-> +	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
-> +	int i;
-> +	u32 status;
-> +
-> +	dev_err(&pdev->dev, "rp_pio_status: 0x%08x, rp_pio_mask: 0x%08x\n",
-> +			    rp_pio->status, rp_pio->mask);
-> +
-> +	dev_err(&pdev->dev, "RP PIO severity=0x%08x, syserror=0x%08x, exception=0x%08x\n",
-> +		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
-> +
-> +	status = (rp_pio->status & ~rp_pio->mask);
-> +
-> +	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
-> +		if (!(status & (1 << i)))
-> +			continue;
-> +
-> +		dev_err(&pdev->dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
-> +			rp_pio->first_error == i ? " (First)" : "");
-> +	}
-> +
-> +	dpc_rp_pio_print_tlp_header(pdev, &rp_pio->header_log);
-> +	if (rp_pio->log_size == 4)
-> +		return;
-> +	dev_err(&pdev->dev, "RP PIO ImpSpec Log %08x\n", rp_pio->impspec_log);
-> +
-> +	for (i = 0; i < rp_pio->log_size - 5; i++)
-> +		dev_err(&pdev->dev, "TLP Prefix Header: dw%d, %08x\n", i,
-> +			rp_pio->tlp_prefix_log[i]);
-> +}
-> +
-> +static void dpc_rp_pio_get_info(struct dpc_dev *dpc)
-> +{
-> +	struct pci_dev *pdev = dpc->dev->port;
-> +	struct dpc_rp_pio_regs *rp_pio = dpc->rp_pio;
-> +	int i;
-> +	u16 cap;
-> +	u16 status;
-> +
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
-> +			      &rp_pio->status);
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
-> +			      &rp_pio->mask);
-> +
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
-> +			      &rp_pio->severity);
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
-> +			      &rp_pio->syserror);
-> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
-> +			      &rp_pio->exception);
-> +
-> +	/* Get First Error Pointer */
-> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-> +	rp_pio->first_error = (status & 0x1f00) >> 8;
-> +
-> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
-> +	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
-> +	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
-> +		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
-> +			rp_pio->log_size);
-> +		return;
-> +	}
-> +
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
-> +			      &rp_pio->header_log.dw0);
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
-> +			      &rp_pio->header_log.dw1);
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
-> +			      &rp_pio->header_log.dw2);
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
-> +			      &rp_pio->header_log.dw3);
-> +	if (rp_pio->log_size == 4)
-> +		return;
-> +
-> +	pci_read_config_dword(pdev,
-> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
-> +			      &rp_pio->impspec_log);
-> +	for (i = 0; i < rp_pio->log_size - 5; i++)
-> +		pci_read_config_dword(pdev,
-> +			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
-> +			&rp_pio->tlp_prefix_log[i]);
-> +}
-> +
-> +static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
-> +{
-> +	dpc_rp_pio_get_info(dpc);
-> +	dpc_rp_pio_print_error(dpc);
-> +}
-> +
->  static irqreturn_t dpc_irq(int irq, void *context)
->  {
->  	struct dpc_dev *dpc = (struct dpc_dev *)context;
-> @@ -109,6 +260,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
->  			 (ext_reason == 0) ? "RP PIO error" :
->  			 (ext_reason == 1) ? "software trigger" :
->  					     "reserved error");
-> +		/* show RP PIO error detail information */
-> +		if (ext_reason == 0)
-This condition is not right, will fix in PATCH v2,
-change to
-if (reason == 3 && ext_reason == 0)
-
-Thanks
-Dongdong
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 9d418b7..b3e36ef 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -9,6 +9,7 @@
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 			- "qcom,pcie-ipq4019" for ipq4019
++			- "qcom,pcie-ipq8074" for ipq8074
+ 
+ - reg:
+ 	Usage: required
+@@ -105,6 +106,16 @@
+ 			- "bus_master"	Master AXI clock
+ 			- "bus_slave"	Slave AXI clock
+ 
++- clock-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "iface"	PCIe to SysNOC BIU clock
++			- "axi_m"	AXI Master clock
++			- "axi_s"	AXI Slave clock
++			- "ahb"		AHB clock
++			- "aux"		Auxiliary clock
++
+ - resets:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+@@ -144,6 +155,18 @@
+ 			- "ahb"			AHB reset
+ 			- "phy_ahb"		PHY AHB reset
+ 
++- reset-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "pipe"		PIPE reset
++			- "sleep"		Sleep reset
++			- "sticky"		Core Sticky reset
++			- "axi_m"		AXI Master reset
++			- "axi_s"		AXI Slave reset
++			- "ahb"			AHB Reset
++			- "axi_m_sticky"	AXI Master Sticky reset
++
+ - power-domains:
+ 	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
