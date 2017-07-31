@@ -1,103 +1,100 @@
-Return-Path: <SRS0=PCTw=6H=marvell.com=jszhang@kernel.org>
-Return-Path: <SRS0=PCTw=6H=marvell.com=jszhang@kernel.org>
-Date: Tue, 4 Jul 2017 15:16:33 +0800
-From: Jisheng Zhang <jszhang@marvell.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>, Mason <slash.tmp@free.fr>,
-        "Marc
- Zyngier" <marc.zyngier@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-        Ard Biesheuvel
-	<ard.biesheuvel@linaro.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Jingoo
- Han" <jingoohan1@gmail.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Linux ARM
-	<linux-arm-kernel@lists.infradead.org>,
-        Marc Gonzalez
-	<marc_gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH v9 2/3] PCI: Add tango PCIe host bridge support
-Message-ID: <20170704151633.0a7701b7@xhacker>
-In-Reply-To: <20170704145840.69e53f58@xhacker>
-References: <987fac41-80dc-f1d0-ec0b-91ae57b91bfd@sigmadesigns.com>
-	<b32f9e1c-fdde-3064-f935-c817cf707534@sigmadesigns.com>
-	<20170702231811.GJ18324@bhelgaas-glaptop.roam.corp.google.com>
-	<CAKv+Gu_zAXTNYoWt+nMj_8tdDA8bcs86vepPJL1=zHfed2n-DA@mail.gmail.com>
-	<20170703132704.GF13824@bhelgaas-glaptop.roam.corp.google.com>
-	<20170704145840.69e53f58@xhacker>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39256 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751438AbdGaFkU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:40:20 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v5 3/7] phy: qcom-qmp: Fix phy pipe clock name
+Date: Mon, 31 Jul 2017 11:09:50 +0530
+Message-Id: <1501479594-18285-4-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 4 Jul 2017 14:58:40 +0800 Jisheng Zhang wrote:
+Presently, the phy pipe clock's name is assumed to be either
+usb3_phy_pipe_clk_src or pcie_XX_pipe_clk_src (where XX is the
+phy lane's number). However, this will not work if an SoC has
+more than one instance of the phy. Hence, instead of assuming
+the name of the clock, fetch it from the DT.
 
-> On Mon, 3 Jul 2017 08:27:04 -0500 wrote:
-> 
-> > [+cc Jingoo, Joao]
-> > 
-> > On Mon, Jul 03, 2017 at 10:35:50AM +0100, Ard Biesheuvel wrote:  
-> > > On 3 July 2017 at 00:18, Bjorn Helgaas <helgaas@kernel.org> wrote:    
-> > > > On Tue, Jun 20, 2017 at 10:17:40AM +0200, Marc Gonzalez wrote:    
-> > > >> This driver is required to work around several hardware bugs
-> > > >> in the PCIe controller.
-> > > >>
-> > > >> NB: Revision 1 does not support legacy interrupts, or IO space.    
-> > > >
-> > > > I had to apply these manually because of conflicts in Kconfig and
-> > > > Makefile.  What are these based on?  Easiest for me is if you base
-> > > > them on the current -rc1 tag.
-> > > >    
-> > > >> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> > > >> ---
-> > > >>  drivers/pci/host/Kconfig      |   8 +++
-> > > >>  drivers/pci/host/Makefile     |   1 +
-> > > >>  drivers/pci/host/pcie-tango.c | 164 ++++++++++++++++++++++++++++++++++++++++++
-> > > >>  include/linux/pci_ids.h       |   2 +
-> > > >>  4 files changed, 175 insertions(+)
-> > > >>  create mode 100644 drivers/pci/host/pcie-tango.c
-> > > >>    
-> > > [..]    
-> > > >> +     /*
-> > > >> +      * QUIRK #2
-> > > >> +      * Unfortunately, config and mem spaces are muxed.
-> > > >> +      * Linux does not support such a setting, since drivers are free
-> > > >> +      * to access mem space directly, at any time.
-> > > >> +      * Therefore, we can only PRAY that config and mem space accesses
-> > > >> +      * NEVER occur concurrently.
-> > > >> +      */
-> > > >> +     writel_relaxed(1, pcie->mux);
-> > > >> +     ret = pci_generic_config_read(bus, devfn, where, size, val);
-> > > >> +     writel_relaxed(0, pcie->mux);    
-> > > >
-> > > > I'm very hesitant about this.  When people stress this, we're going to
-> > > > get reports of data corruption.  Even with the disclaimer below, I
-> > > > don't feel good about this.  Adding the driver is an implicit claim
-> > > > that we support the device, but we know it can't be made reliable.    
-> > > 
-> > > I noticed that the Synopsys driver suffers from a similar issue: in
-> > > dw_pcie_rd_other_conf(), it happily reprograms the outbound I/O window
-> > > to perform a config space access, and switches it back to I/O space
-> > > afterwards (unless it has more than 2 viewports, in which case it uses
-> > > dedicated windows for I/O space and config space)    
-> > 
-> > That doesn't sound good.  Jingoo, Joao?  I remember some discussion
-> > about this, but not the details.
-> > 
-> > I/O accesses use wrappers (inb(), etc), so there's at least the
-> > possibility of a mutex to serialize them with respect to config
-> > accesses.
-> >   
-> 
-> IIRC, for 2 viewports, we don't need to worry about the config space
-> access, because config space access is serialized by pci_lock; We
-> do have race between config space and io space. But the accessing config
-> space and io space at the same time is rare. And the PCIe EPs which
-> has io space are rare too, supporting these EPs are not the potential
-> target of those platforms with 2 viewports.
-> 
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ drivers/phy/qualcomm/phy-qcom-qmp.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-PS: I think most platforms choose 2 pcie designware viewports just because
-it's the default setting. And I have send a feature request to ASIC people
-to increase the viewports to 3 for future marvell berlin SoCs.
+diff --git a/drivers/phy/qualcomm/phy-qcom-qmp.c b/drivers/phy/qualcomm/phy-qcom-qmp.c
+index 78ca628..464049c 100644
+--- a/drivers/phy/qualcomm/phy-qcom-qmp.c
++++ b/drivers/phy/qualcomm/phy-qcom-qmp.c
+@@ -925,29 +925,28 @@ static int qcom_qmp_phy_clk_init(struct device *dev)
+  *    clk  |   +-------+   |                   +-----+
+  *         +---------------+
+  */
+-static int phy_pipe_clk_register(struct qcom_qmp *qmp, int id)
++static int phy_pipe_clk_register(struct qcom_qmp *qmp, struct device_node *np)
+ {
+-	char name[24];
+ 	struct clk_fixed_rate *fixed;
+ 	struct clk_init_data init = { };
++	int ret;
+ 
+-	switch (qmp->cfg->type) {
+-	case PHY_TYPE_USB3:
+-		snprintf(name, sizeof(name), "usb3_phy_pipe_clk_src");
+-		break;
+-	case PHY_TYPE_PCIE:
+-		snprintf(name, sizeof(name), "pcie_%d_pipe_clk_src", id);
+-		break;
+-	default:
++	if ((qmp->cfg->type != PHY_TYPE_USB3) &&
++	    (qmp->cfg->type != PHY_TYPE_PCIE)) {
+ 		/* not all phys register pipe clocks, so return success */
+ 		return 0;
+ 	}
+ 
++	ret = of_property_read_string(np, "clock-output-names", &init.name);
++	if (ret) {
++		dev_err(qmp->dev, "%s: No clock-output-names\n", np->name);
++		return ret;
++	}
++
+ 	fixed = devm_kzalloc(qmp->dev, sizeof(*fixed), GFP_KERNEL);
+ 	if (!fixed)
+ 		return -ENOMEM;
+ 
+-	init.name = name;
+ 	init.ops = &clk_fixed_rate_ops;
+ 
+ 	/* controllers using QMP phys use 125MHz pipe clock interface */
+@@ -1110,6 +1109,7 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 
+ 	id = 0;
+ 	for_each_available_child_of_node(dev->of_node, child) {
++
+ 		/* Create per-lane phy */
+ 		ret = qcom_qmp_phy_create(dev, child, id);
+ 		if (ret) {
+@@ -1119,10 +1119,10 @@ static int qcom_qmp_phy_probe(struct platform_device *pdev)
+ 		}
+ 
+ 		/*
+-		 * Register the pipe clock provided by phy.
+-		 * See function description to see details of this pipe clock.
++		 * Register the pipe clock provided by phy. See function
++		 * description to see details of this pipe clock.
+ 		 */
+-		ret = phy_pipe_clk_register(qmp, id);
++		ret = phy_pipe_clk_register(qmp, child);
+ 		if (ret) {
+ 			dev_err(qmp->dev,
+ 				"failed to register pipe clock source\n");
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
