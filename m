@@ -1,132 +1,127 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:39111 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751248AbdGQDZt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Jul 2017 23:25:49 -0400
-Cc: shawn.lin@rock-chips.com, Rob Herring <robh@kernel.org>,
-        Heiko Stuebner <heiko@sntech.de>, devicetree@vger.kernel.org,
-        linux-pci@vger.kernel.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        linux-rockchip@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [RFC PATCH 6/6] dt-bindings: PCI: rockchip: convert to use
- per-lane PHY model
-To: Brian Norris <briannorris@chromium.org>
-References: <1500004101-240296-1-git-send-email-shawn.lin@rock-chips.com>
- <1500004366-241633-1-git-send-email-shawn.lin@rock-chips.com>
- <1500004366-241633-5-git-send-email-shawn.lin@rock-chips.com>
- <20170714204711.GA13174@google.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <0a68e036-3f5b-3195-ffc3-4edf4466dfd7@rock-chips.com>
-Date: Mon, 17 Jul 2017 11:25:38 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170714204711.GA13174@google.com>
-Content-Type: text/plain; charset=gbk; format=flowed
+Received: from foss.arm.com ([217.140.101.70]:55142 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751978AbdGaQgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 12:36:19 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Matthew Minter <matt@masarand.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Rich Felker <dalias@libc.org>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Richard Henderson <rth@twiddle.net>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: [RFT PATCH 4/9] m68k/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping hooks
+Date: Mon, 31 Jul 2017 17:37:52 +0100
+Message-Id: <20170731163757.22629-5-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brian,
+The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+in a system; those PCI devices possibly belong to different PCI bus
+trees (and possibly rooted at different host bridges) and may well be
+enabled (ie probed and bound to a driver) by the time pci_fixup_irqs()
+is called when probing a given host bridge driver.
 
-On 2017/7/15 4:47, Brian Norris wrote:
-> Hi Shawn,
-> 
-> On Fri, Jul 14, 2017 at 11:52:46AM +0800, Shawn Lin wrote:
->> Deprecate legacy PHY model and encourage to use per-lane PHY
->> model.
->>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->>
->> ---
->>
->>   .../devicetree/bindings/pci/rockchip-pcie.txt      | 25 ++++++++++++++++++++--
->>   1 file changed, 23 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> index 1453a73..78d4469 100644
->> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> @@ -19,8 +19,6 @@ Required properties:
->>   	- "pm"
->>   - msi-map: Maps a Requester ID to an MSI controller and associated
->>   	msi-specifier data. See ./pci-msi.txt
->> -- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
->> -- phy-names:  MUST be "pcie-phy".
->>   - interrupts: Three interrupt entries must be specified.
->>   - interrupt-names: Must include the following names
->>   	- "sys"
->> @@ -42,6 +40,18 @@ Required properties:
->>   	interrupt source. The value must be 1.
->>   - interrupt-map-mask and interrupt-map: standard PCI properties
->>   
->> +Required properties for legacy PHY model (deprecated):
->> +- phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
->> +- phy-names:  MUST be "pcie-phy".
->> +
->> +Required properties for per-lane PHY model:
->> +- phys: Must contain an phandle to a PHY for each entry in phy-names.
->> +- phy-names: Must include an entry for each active lane. Note that the number
->> +  of entries does not have to (though usually will) be equal to the specified
->> +  number of lanes in the num-lanes property. Entries are of the form
->> +  "pcie-phy-N": where N ranges from 0 to the value specified of (num-lanes - 1).
->> +  (see example below)
-> 
-> So (for the non-legacy case) are you requiring listing all 4 PHY lanes,
-> or not? 
+Furthermore, current kernel code relying on pci_fixup_irqs() to assign
+legacy PCI IRQs to devices does not work at all for hotplugged devices
+in that the code carrying out the IRQ fixup is called at host bridge
+driver probe time, which just cannot take into account devices
+hotplugged after system has booted.
 
-I intended to do that however that makes the code more complex and I
-didn't see any gains here. So I would say "list 4 of them here is
-mandatory".
+The introduction of map/swizzle functions hook in struct pci_host_bridge
+allows to define per-bridge map/swizzle functions, that can be used at
+device probe time in PCI core code to allocate IRQs for a given device
+(through pci_assign_irq()).
 
-Will update this Doc to reflect the fact.
+Convert PCI host bridge initialization code to the
+pci_scan_root_bus_bridge() API (that allows to pass a struct
+pci_host_bridge with initialized map/swizzle pointers) and remove the
+pci_fixup_irqs() call from arch code.
 
-Thanks.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ arch/m68k/coldfire/pci.c | 36 ++++++++++++++++++++++++++++++++----
+ 1 file changed, 32 insertions(+), 4 deletions(-)
 
-If you aren't, then you need to make the PHY driver handle the
-> case were lanes {X..3} were never "powered on", but we want them idled.
-> IIUC, your current (broken) implementation is trying (incorrectly) to
-> only idle a lane once it has been powered on and then back off. But that
-> won't ever happen if we only request (for example) PHY lane 0.
-> 
-> It's also misleading that it's possible to specify only some subset of
-> the PHY lanes, but the driver might still try to use them al
-> 
-> Brian
-> 
->> +
->>   Optional Property:
->>   - aspm-no-l0s: RC won't support ASPM L0s. This property is needed if
->>   	using 24MHz OSC for RC's PHY.
->> @@ -95,6 +105,7 @@ pcie0: pcie@f8000000 {
->>   		 <&cru SRST_PCIE_PM>, <&cru SRST_P_PCIE>, <&cru SRST_A_PCIE>;
->>   	reset-names = "core", "mgmt", "mgmt-sticky", "pipe",
->>   		      "pm", "pclk", "aclk";
->> +	/* deprecated legacy PHY model */
->>   	phys = <&pcie_phy>;
->>   	phy-names = "pcie-phy";
->>   	pinctrl-names = "default";
->> @@ -111,3 +122,13 @@ pcie0: pcie@f8000000 {
->>   		#interrupt-cells = <1>;
->>   	};
->>   };
->> +
->> +pcie0: pcie@f8000000 {
->> +	...
->> +
->> +	/* preferred per-lane PHY model */
->> +	phys = <&pcie_phy 0>, <&pcie_phy 1>, <&pcie_phy 2>, <&pcie_phy 3>;
->> +	phy-names = "pcie-phy-0", "pcie-phy-1", "pcie-phy-2", "pcie-phy-3";
->> +
->> +	...
->> +};
->> -- 
->> 1.9.1
->>
->>
-> 
-> _______________________________________________
-> Linux-rockchip mailing list
-> Linux-rockchip@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-rockchip
-> 
-> 
-> 
+diff --git a/arch/m68k/coldfire/pci.c b/arch/m68k/coldfire/pci.c
+index 6a640be..3097fa2 100644
+--- a/arch/m68k/coldfire/pci.c
++++ b/arch/m68k/coldfire/pci.c
+@@ -243,6 +243,13 @@ static struct resource mcf_pci_io = {
+ 	.flags	= IORESOURCE_IO,
+ };
+ 
++static struct resource busn_resource = {
++	.name	= "PCI busn",
++	.start	= 0,
++	.end	= 255,
++	.flags	= IORESOURCE_BUS,
++};
++
+ /*
+  * Interrupt mapping and setting.
+  */
+@@ -258,6 +265,13 @@ static int mcf_pci_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+ 
+ static int __init mcf_pci_init(void)
+ {
++	struct pci_host_bridge *bridge;
++	int ret;
++
++	bridge = pci_alloc_host_bridge(0);
++	if (!bridge)
++		return -ENOMEM;
++
+ 	pr_info("ColdFire: PCI bus initialization...\n");
+ 
+ 	/* Reset the external PCI bus */
+@@ -312,14 +326,28 @@ static int __init mcf_pci_init(void)
+ 	set_current_state(TASK_UNINTERRUPTIBLE);
+ 	schedule_timeout(msecs_to_jiffies(200));
+ 
+-	rootbus = pci_scan_bus(0, &mcf_pci_ops, NULL);
+-	if (!rootbus)
+-		return -ENODEV;
++
++	pci_add_resource(&bridge->windows, &ioport_resource);
++	pci_add_resource(&bridge->windows, &iomem_resource);
++	pci_add_resource(&bridge->windows, &busn_resource);
++	bridge->dev.parent = NULL;
++	bridge->sysdata = NULL;
++	bridge->busnr = 0;
++	bridge->ops = &mcf_pci_ops;
++	bridge->swizzle_irq = pci_common_swizzle;
++	bridge->map_irq = mcf_pci_map_irq;
++
++	ret = pci_scan_root_bus_bridge(bridge);
++	if (ret) {
++		pci_free_host_bridge(bridge);
++		return ret;
++	}
++
++	rootbus = bridge->bus;
+ 
+ 	rootbus->resource[0] = &mcf_pci_io;
+ 	rootbus->resource[1] = &mcf_pci_mem;
+ 
+-	pci_fixup_irqs(pci_common_swizzle, mcf_pci_map_irq);
+ 	pci_bus_size_bridges(rootbus);
+ 	pci_bus_assign_resources(rootbus);
+ 	pci_bus_add_devices(rootbus);
+-- 
+2.10.0
