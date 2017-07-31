@@ -1,255 +1,347 @@
-Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=31GW=6N=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org
-Subject: [PATCH v8 3/6] PCI: add functionality for resizing resources v7
-Date: Mon, 10 Jul 2017 16:59:51 +0200
-Message-Id: <1499698794-1718-4-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
-References: <1499698794-1718-1-git-send-email-deathsimple@vodafone.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:39622 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751681AbdGaFkc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:40:32 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v5 5/7] PCI: dwc: qcom: Use block IP version for operations
+Date: Mon, 31 Jul 2017 11:09:52 +0530
+Message-Id: <1501479594-18285-6-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+Presently, when support for a new SoC is added, the driver ops
+structures and functions are versioned with plain 1, 2, 3 etc.
+Instead use the block IP version number.
 
-This allows device drivers to request resizing their BARs.
-
-The function only tries to reprogram the windows of the bridge directly above
-the requesting device and only the BAR of the same type (usually mem, 64bit,
-prefetchable). This is done to make sure not to disturb other drivers by
-changing the BARs of their devices.
-
-Drivers should use the following sequence to resize their BARs:
-1. Disable memory decoding of your device using the PCI cfg dword.
-2. Use pci_release_resource() to release all BARs which can move during the
-   resize. Including the one you want to resize.
-3. Call pci_resize_resource() for each BAR you want to resize.
-4. Call pci_assign_unassigned_bus_resources() to reassign new locations
-   for all BARs which are not resized, but could move.
-5. If everything worked as expected enable memory decoding in your device again
-   using the PCI cfg dword.
-
-v2: rebase on changes in rbar support
-v3: style cleanups, fail if memory decoding is enabled or resources
-    still allocated, resize all unused bridge BARs,
-    drop calling pci_reenable_device
-v4: print resources before releasing them, style cleanups,
-    use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
-v5: use next pointer to simplify loop
-v6: move reassigning resources on error to driver side
-v7: Document in the commit message how to use the new function.
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
- drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-res.c | 58 +++++++++++++++++++++++++++++
- include/linux/pci.h     |  3 ++
- 3 files changed, 159 insertions(+)
+ drivers/pci/dwc/pcie-qcom.c | 133 +++++++++++++++++++++++---------------------
+ 1 file changed, 71 insertions(+), 62 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 37450d9..03af25b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1908,6 +1908,104 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index d15657d..6525f2f 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -61,7 +61,7 @@
  
-+int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
-+{
-+	struct pci_dev_resource *dev_res;
-+	struct pci_dev *next;
-+	LIST_HEAD(saved);
-+	LIST_HEAD(added);
-+	LIST_HEAD(failed);
-+	unsigned int i;
-+	int ret;
-+
-+	/* Walk to the root hub, releasing bridge BARs when possible */
-+	next = bridge;
-+	do {
-+		bridge = next;
-+		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
-+		     i++) {
-+			struct resource *res = &bridge->resource[i];
-+
-+			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
-+				continue;
-+
-+			/* Ignore BARs which are still in use */
-+			if (res->child)
-+				continue;
-+
-+			ret = add_to_list(&saved, bridge, res, 0, 0);
-+			if (ret)
-+				goto cleanup;
-+
-+			dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
-+				 i, res);
-+
-+			if (res->parent)
-+				release_resource(res);
-+			res->start = 0;
-+			res->end = 0;
-+			break;
-+		}
-+		if (i == PCI_BRIDGE_RESOURCE_END)
-+			break;
-+
-+		next = bridge->bus ? bridge->bus->self : NULL;
-+	} while (next);
-+
-+	if (list_empty(&saved))
-+		return -ENOENT;
-+
-+	__pci_bus_size_bridges(bridge->subordinate, &added);
-+	__pci_bridge_assign_resources(bridge, &added, &failed);
-+	BUG_ON(!list_empty(&added));
-+
-+	if (!list_empty(&failed)) {
-+		ret = -ENOSPC;
-+		goto cleanup;
-+	}
-+
-+	list_for_each_entry(dev_res, &saved, list) {
-+		/* Skip the bridge we just assigned resources for. */
-+		if (bridge == dev_res->dev)
-+			continue;
-+
-+		bridge = dev_res->dev;
-+		pci_setup_bridge(bridge->subordinate);
-+	}
-+
-+	free_list(&saved);
-+	return 0;
-+
-+cleanup:
-+	/* restore size and flags */
-+	list_for_each_entry(dev_res, &failed, list) {
-+		struct resource *res = dev_res->res;
-+
-+		res->start = dev_res->start;
-+		res->end = dev_res->end;
-+		res->flags = dev_res->flags;
-+	}
-+	free_list(&failed);
-+
-+	/* Revert to the old configuration */
-+	list_for_each_entry(dev_res, &saved, list) {
-+		struct resource *res = dev_res->res;
-+
-+		bridge = dev_res->dev;
-+		i = res - bridge->resource;
-+
-+		res->start = dev_res->start;
-+		res->end = dev_res->end;
-+		res->flags = dev_res->flags;
-+
-+		pci_claim_resource(bridge, i);
-+		pci_setup_bridge(bridge->subordinate);
-+	}
-+	free_list(&saved);
-+
-+	return ret;
-+}
-+
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ #define PERST_DELAY_US				1000
+ 
+-struct qcom_pcie_resources_v0 {
++struct qcom_pcie_resources_2_1_0 {
+ 	struct clk *iface_clk;
+ 	struct clk *core_clk;
+ 	struct clk *phy_clk;
+@@ -75,7 +75,7 @@ struct qcom_pcie_resources_v0 {
+ 	struct regulator *vdda_refclk;
+ };
+ 
+-struct qcom_pcie_resources_v1 {
++struct qcom_pcie_resources_1_0_0 {
+ 	struct clk *iface;
+ 	struct clk *aux;
+ 	struct clk *master_bus;
+@@ -84,7 +84,7 @@ struct qcom_pcie_resources_v1 {
+ 	struct regulator *vdda;
+ };
+ 
+-struct qcom_pcie_resources_v2 {
++struct qcom_pcie_resources_2_3_2 {
+ 	struct clk *aux_clk;
+ 	struct clk *master_clk;
+ 	struct clk *slave_clk;
+@@ -92,7 +92,7 @@ struct qcom_pcie_resources_v2 {
+ 	struct clk *pipe_clk;
+ };
+ 
+-struct qcom_pcie_resources_v3 {
++struct qcom_pcie_resources_2_4_0 {
+ 	struct clk *aux_clk;
+ 	struct clk *master_clk;
+ 	struct clk *slave_clk;
+@@ -111,10 +111,10 @@ struct qcom_pcie_resources_v3 {
+ };
+ 
+ union qcom_pcie_resources {
+-	struct qcom_pcie_resources_v0 v0;
+-	struct qcom_pcie_resources_v1 v1;
+-	struct qcom_pcie_resources_v2 v2;
+-	struct qcom_pcie_resources_v3 v3;
++	struct qcom_pcie_resources_1_0_0 v1_0_0;
++	struct qcom_pcie_resources_2_1_0 v2_1_0;
++	struct qcom_pcie_resources_2_3_2 v2_3_2;
++	struct qcom_pcie_resources_2_4_0 v2_4_0;
+ };
+ 
+ struct qcom_pcie;
+@@ -172,7 +172,7 @@ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+ 	return dw_pcie_wait_for_link(pci);
+ }
+ 
+-static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
++static void qcom_pcie_2_1_0_ltssm_enable(struct qcom_pcie *pcie)
  {
- 	struct pci_dev *dev;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 85774b7..1d558e1 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -383,6 +383,64 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	u32 val;
+ 
+@@ -182,9 +182,9 @@ static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+ 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+ }
+ 
+-static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -232,9 +232,9 @@ static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->phy_reset);
+ }
+ 
+-static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 
+ 	reset_control_assert(res->pci_reset);
+ 	reset_control_assert(res->axi_reset);
+@@ -249,9 +249,9 @@ static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
+ 	regulator_disable(res->vdda_refclk);
+ }
+ 
+-static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -367,9 +367,9 @@ static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -397,9 +397,9 @@ static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->core);
+ }
+ 
+-static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 
+ 	reset_control_assert(res->core);
+ 	clk_disable_unprepare(res->slave_bus);
+@@ -409,9 +409,9 @@ static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
+ 	regulator_disable(res->vdda);
+ }
+ 
+-static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
++static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
+@@ -477,7 +477,7 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
++static void qcom_pcie_2_3_2_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+ 
+@@ -487,9 +487,9 @@ static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
+ 	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
+ }
+ 
+-static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -513,9 +513,9 @@ static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->pipe_clk);
+ }
+ 
+-static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 
+ 	clk_disable_unprepare(res->pipe_clk);
+ 	clk_disable_unprepare(res->slave_clk);
+@@ -524,9 +524,9 @@ static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->aux_clk);
+ }
+ 
+-static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -589,9 +589,9 @@ static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
+@@ -605,9 +605,9 @@ static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
  	return 0;
  }
  
-+void pci_release_resource(struct pci_dev *dev, int resno)
-+{
-+	struct resource *res = dev->resource + resno;
-+
-+	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
-+	release_resource(res);
-+	res->end = resource_size(res) - 1;
-+	res->start = 0;
-+	res->flags |= IORESOURCE_UNSET;
-+}
-+EXPORT_SYMBOL(pci_release_resource);
-+
-+int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-+{
-+	struct resource *res = dev->resource + resno;
-+	int old, ret;
-+	u32 sizes;
-+	u16 cmd;
-+
-+	/* Make sure the resource isn't assigned before resizing it. */
-+	if (!(res->flags & IORESOURCE_UNSET))
-+		return -EBUSY;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	if (cmd & PCI_COMMAND_MEMORY)
-+		return -EBUSY;
-+
-+	sizes = pci_rbar_get_possible_sizes(dev, resno);
-+	if (!sizes)
-+		return -ENOTSUPP;
-+
-+	if (!(sizes & BIT(size)))
-+		return -EINVAL;
-+
-+	old = pci_rbar_get_current_size(dev, resno);
-+	if (old < 0)
-+		return old;
-+
-+	ret = pci_rbar_set_size(dev, resno, size);
-+	if (ret)
-+		return ret;
-+
-+	res->end = res->start + pci_rbar_size_to_bytes(size) - 1;
-+
-+	/* Check if the new config works by trying to assign everything. */
-+	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
-+	if (ret)
-+		goto error_resize;
-+
-+	return 0;
-+
-+error_resize:
-+	pci_rbar_set_size(dev, resno, old);
-+	res->end = res->start + pci_rbar_size_to_bytes(old) - 1;
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_resize_resource);
-+
- int pci_enable_resources(struct pci_dev *dev, int mask)
+-static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_4_0(struct qcom_pcie *pcie)
  {
- 	u16 cmd, old_cmd;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4869e66..7e486e3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1080,6 +1080,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
-+void pci_release_resource(struct pci_dev *dev, int resno);
-+int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
- bool pci_device_is_present(struct pci_dev *pdev);
- void pci_ignore_hotplug(struct pci_dev *dev);
-@@ -1158,6 +1160,7 @@ void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
- void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
-+int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
- void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -674,9 +674,9 @@ static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 
+ 	reset_control_assert(res->axi_m_reset);
+ 	reset_control_assert(res->axi_s_reset);
+@@ -692,9 +692,9 @@ static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->slave_clk);
+ }
+ 
+-static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -952,37 +952,37 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	.rd_own_conf = qcom_pcie_rd_own_conf,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v0 = {
+-	.get_resources = qcom_pcie_get_resources_v0,
+-	.init = qcom_pcie_init_v0,
+-	.deinit = qcom_pcie_deinit_v0,
+-	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++static const struct qcom_pcie_ops ops_2_1_0 = {
++	.get_resources = qcom_pcie_get_resources_2_1_0,
++	.init = qcom_pcie_init_2_1_0,
++	.deinit = qcom_pcie_deinit_2_1_0,
++	.ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v1 = {
+-	.get_resources = qcom_pcie_get_resources_v1,
+-	.init = qcom_pcie_init_v1,
+-	.deinit = qcom_pcie_deinit_v1,
+-	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++static const struct qcom_pcie_ops ops_1_0_0 = {
++	.get_resources = qcom_pcie_get_resources_1_0_0,
++	.init = qcom_pcie_init_1_0_0,
++	.deinit = qcom_pcie_deinit_1_0_0,
++	.ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v2 = {
+-	.get_resources = qcom_pcie_get_resources_v2,
+-	.init = qcom_pcie_init_v2,
+-	.post_init = qcom_pcie_post_init_v2,
+-	.deinit = qcom_pcie_deinit_v2,
+-	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++static const struct qcom_pcie_ops ops_2_3_2 = {
++	.get_resources = qcom_pcie_get_resources_2_3_2,
++	.init = qcom_pcie_init_2_3_2,
++	.post_init = qcom_pcie_post_init_2_3_2,
++	.deinit = qcom_pcie_deinit_2_3_2,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.link_up = qcom_pcie_link_up,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v3 = {
+-	.get_resources = qcom_pcie_get_resources_v3,
+-	.init = qcom_pcie_init_v3,
+-	.deinit = qcom_pcie_deinit_v3,
+-	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++static const struct qcom_pcie_ops ops_2_4_0 = {
++	.get_resources = qcom_pcie_get_resources_2_4_0,
++	.init = qcom_pcie_init_2_4_0,
++	.deinit = qcom_pcie_deinit_2_4_0,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
+ static int qcom_pcie_probe(struct platform_device *pdev)
+@@ -1070,12 +1070,21 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
++/*
++ * Declare one of_device_id entry
++ * c - Compatible string
++ * d - Associated data
++ * w - SoC wrapper version (ignored)
++ * s - Synopsys core version (ignored)
++ */
++#define QCOM_DECL(c, d, w, s) { .compatible = c, .data = &d }
++
+ static const struct of_device_id qcom_pcie_match[] = {
+-	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
+-	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+-	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
+-	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
+-	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_v3 },
++	QCOM_DECL("qcom,pcie-apq8084", ops_1_0_0, 1.0.0, 4.11a),
++	QCOM_DECL("qcom,pcie-ipq8064", ops_2_1_0, 2.1.0, 4.01a),
++	QCOM_DECL("qcom,pcie-apq8064", ops_2_1_0, 2.1.0, 4.01a),
++	QCOM_DECL("qcom,pcie-msm8996", ops_2_3_2, 2.3.2, 4.21a),
++	QCOM_DECL("qcom,pcie-ipq4019", ops_2_4_0, 2.4.0, 4.20a),
+ 	{ }
+ };
+ 
 -- 
-2.7.4
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
