@@ -1,160 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:47267 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751696AbdGEK5z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Jul 2017 06:57:55 -0400
-Subject: Re: [PATCH v2 0/9] add new irq api to pcie-designware
-To: Murali Karicheri <m-karicheri2@ti.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <marc.zyngier@arm.com>
-CC: <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <l.stach@pengutronix.de>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <svarbanov@mm-sol.com>,
-        <linux-pci@vger.kernel.org>
-References: <cover.1496677911.git.jpinto@synopsys.com>
- <593F0533.4010106@ti.com> <b479290b-7c6d-19c3-8853-416dc7d65dc6@synopsys.com>
- <5949445C.3010706@ti.com> <7e6c5468-43ff-2757-bb31-e1c7d7886198@synopsys.com>
- <594955BC.3010703@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <45e93a6e-122a-398f-d547-dd3ebf88aeae@synopsys.com>
-Date: Wed, 5 Jul 2017 11:57:48 +0100
+Received: from mail.kernel.org ([198.145.29.99]:35492 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751773AbdGaUQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 16:16:59 -0400
+Date: Mon, 31 Jul 2017 15:16:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Jon Mason <jdmason@kudzu.us>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 06/16] ntb: ensure ntb_mw_get_align() is only called
+ when the link is up
+Message-ID: <20170731201650.GB9303@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-7-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <594955BC.3010703@ti.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170725205753.4735-7-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 6:05 PM de 6/20/2017, Murali Karicheri escreveu:
-> On 06/20/2017 12:28 PM, Joao Pinto wrote:
->> Às 4:50 PM de 6/20/2017, Murali Karicheri escreveu:
->>> On 06/19/2017 12:31 PM, Joao Pinto wrote:
->>>>
->>>> Hi Murali,
->>>>
->>>> Às 10:18 PM de 6/12/2017, Murali Karicheri escreveu:
->>>>> Joao,
->>>>>
->>>>> On 06/05/2017 12:19 PM, Joao Pinto wrote:
->>>>>> This patch series adds the new interrupt api to pcie-designware
->>>>>> make it possible to use features like MSIX.
->>>>>>
->>>>>> The work consisted of adapting the pcie-designware-host and each SoC
->>>>>> specific driver.
->>>>>>
->>>>>> The patch set was made against the Bjorn' next branch.
->>>>>>
->>>>>> Joao Pinto (9):
->>>>>>   pci: adding new irq api to pci-designware
->>>>>>   pci: exynos SoC driver adapted to new irq API
->>>>>>   pci: imx6 SoC driver adapted to new irq API
->>>>>>   pci: artpec6 SoC driver adapted to new irq API
->>>>>>   pci: generic PCIe DW driver adapted to new irq API
->>>>>>   pci: qcom SoC driver adapted to new irq API
->>>>>>   pci: keystone SoC driver adapted to new irq API
->>>>>>   pci: removing old irq api from pcie-designware
->>>>>>   pci: remove limitation of the number of the available IRQs
->>>>>>
->>>>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
->>>>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
->>>>>>  drivers/pci/dwc/pci-keystone-dw.c      |  96 +-------
->>>>>>  drivers/pci/dwc/pci-keystone.c         |   1 +
->>>>>>  drivers/pci/dwc/pci-keystone.h         |   4 +-
->>>>>>  drivers/pci/dwc/pci-layerscape.c       |   4 +-
->>>>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
->>>>>>  drivers/pci/dwc/pcie-designware-host.c | 395 +++++++++++++++++++--------------
->>>>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
->>>>>>  drivers/pci/dwc/pcie-designware.h      |  30 ++-
->>>>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
->>>>>>  11 files changed, 255 insertions(+), 359 deletions(-)
->>>>>>
->>>>>
->>>>> I gave this a try today and it failed. Logs at
->>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__pastebin.ubuntu.com_24843963_&d=DwIC-g&c=DPL6_X_6JkXFx7AXWqB0tg&r=s2fO0hii0OGNOv9qQy_HRXy-xAJUD1NNoEcc3io_kx0&m=FR_WRctJN74GGjjHco1VUqNfINiGA7lGruObX4bplAY&s=8QYJU-SCW5JEmMwLUqbOEBJA5hio9vIyeNyotVRos4Q&e= 
->>>>>
->>>>> The first part of the log is with your patch series.
->>>>> The second part is before applying the patch. You will see
->>>>> that there is qc timeout log that shows the issue
->>>>>
->>>>> [   12.791852] ata2.00: qc timeout (cmd 0xec)
->>>>> [   12.795947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>> [   12.802061] ata2: limiting SATA link speed to 3.0 Gbps
->>>>> [   13.301853] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>> [   23.511852] ata2.00: qc timeout (cmd 0xec)
->>>>> [   23.515947] ata2.00: failed to IDENTIFY (I/O error, err_mask=0x4)
->>>>> [   24.021850] ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
->>>>>
->>>>> Is there any DT change I need to make for this? I didn't have a
->>>>> chance to review your patch w.r.t Keystone. But I see you have change
->>>>> the MSI IRq handling.
->>>>>
->>>>
->>>> There is no need to change your DT. I think I will need to debug this issue
->>>> further. Could you please advice a board containing this SoC?
->>>>
->>> I think I may be able to work with you on this. Keystone has different 
->>> register set for MSI IRQ. It is in application space. Also there are
->>> 8 interrupts to ARM GIC that multiplexes the 32 MSI interrupts. So
->>> please review the original code vs the changed one w.r.t to this. I haven't
->>> had a chance to review the code as I am in the middle of a release.
->>> But will be able to spend some time after two weeks. Meanwhile please
->>> spend some time reviewing the code and exchange email to identify
->>> the issue. I can add specific debug prints for you as well and provide
->>> you the log for analysis.
->>
->> Ok, I agree! Thanks!
->>
->>>
-> Look at this logic in the patch where a potential issue exists for Keystone.
-> 
-> +static void dw_pci_setup_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> +{
-> +       struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
-> +       struct pcie_port *pp = &pci->pp;
-> +       u64 msi_target;
-> +
-> +       if (pp->ops->get_msi_addr)
-> +               msi_target = pp->ops->get_msi_addr(pp);
-> +       else
-> +               msi_target = virt_to_phys((void *)pp->msi_data);
-> +
-> +       msg->address_lo = lower_32_bits(msi_target);
-> +       msg->address_hi = upper_32_bits(msi_target);
-> +
-> +       if (pp->ops->get_msi_data)
-> +               msg->data = pp->ops->get_msi_data(pp, data->hwirq);
-> +       else
-> +               msg->data = data->hwirq;
-> +
-> +       dev_dbg(pci->dev, "msi#%d address_hi %#x address_lo %#x\n",
-> +               (int)data->hwirq, msg->address_hi, msg->address_lo);
-> +}
-> 
-> Keystone has 8 hw irqs, 4 multiplexed over each since the register
-> set is different than other DWC cores. So will not work for Keystone,
-> right?
+On Tue, Jul 25, 2017 at 02:57:43PM -0600, Logan Gunthorpe wrote:
+> With Switchtec hardware it's impossible to get the alignment parameters
+> for a peer's memory window until the peer's driver has configured it's
 
-Well, that can be challenging, since it is a very particular operation.
-Maybe we should implement a _pci_setup_msi_msg in the keystone driver and
-overide this one if necessary. What do you think?
+s/it's/its/
 
-Thanks.
+> windows. Strictly speaking, the link doesn't have to be up for this,
+> but the link being up is the only way the client can tell that
+> the otherside has been configured.
 
+s/otherside/other side/
+
+> This patch converts ntb_transport and ntb_perf to use this function after
+> the link goes up. This simplifies these clients slightly because they
+> no longer have to store the alignment parameters. It also tweaks
+> ntb_tool so that peer_mw_trans will print zero if it is run before
+> the link goes up.
 > 
-> Murali
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> ---
+>  drivers/ntb/ntb_transport.c | 20 ++++++++++----------
+>  drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
+>  drivers/ntb/test/ntb_tool.c |  6 +++---
+>  3 files changed, 22 insertions(+), 22 deletions(-)
 > 
->>> Let me know.
->>>
->>> Murali
->>>> Thanks.
->>>>
->>>>
->>>>
->>>>
->>>
->>>
->>
-> 
+> diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
+> index b29558ddfe95..7ed745aaa213 100644
+> --- a/drivers/ntb/ntb_transport.c
+> +++ b/drivers/ntb/ntb_transport.c
+> @@ -191,8 +191,6 @@ struct ntb_transport_qp {
+>  struct ntb_transport_mw {
+>  	phys_addr_t phys_addr;
+>  	resource_size_t phys_size;
+> -	resource_size_t xlat_align;
+> -	resource_size_t xlat_align_size;
+>  	void __iomem *vbase;
+>  	size_t xlat_size;
+>  	size_t buff_size;
+> @@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+>  	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
+>  	struct pci_dev *pdev = nt->ndev->pdev;
+>  	size_t xlat_size, buff_size;
+> +	resource_size_t xlat_align;
+> +	resource_size_t xlat_align_size;
+>  	int rc;
+>  
+>  	if (!size)
+>  		return -EINVAL;
+>  
+> -	xlat_size = round_up(size, mw->xlat_align_size);
+> -	buff_size = round_up(size, mw->xlat_align);
+> +	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
+> +			      &xlat_align_size, NULL);
+> +	if (rc)
+> +		return rc;
+> +
+> +	xlat_size = round_up(size, xlat_align_size);
+> +	buff_size = round_up(size, xlat_align);
+>  
+>  	/* No need to re-setup */
+>  	if (mw->xlat_size == xlat_size)
+> @@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
+>  	 * is a requirement of the hardware. It is recommended to setup CMA
+>  	 * for BAR sizes equal or greater than 4MB.
+>  	 */
+> -	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
+> +	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
+>  		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
+>  			&mw->dma_addr);
+>  		ntb_free_mw(nt, num_mw);
+> @@ -1106,11 +1111,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
+>  	for (i = 0; i < mw_count; i++) {
+>  		mw = &nt->mw_vec[i];
+>  
+> -		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
+> -				      &mw->xlat_align_size, NULL);
+> -		if (rc)
+> -			goto err1;
+> -
+>  		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
+>  					  &mw->phys_size);
+>  		if (rc)
+> diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
+> index 759f772fa00c..427112cf101a 100644
+> --- a/drivers/ntb/test/ntb_perf.c
+> +++ b/drivers/ntb/test/ntb_perf.c
+> @@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
+>  struct perf_mw {
+>  	phys_addr_t	phys_addr;
+>  	resource_size_t	phys_size;
+> -	resource_size_t	xlat_align;
+> -	resource_size_t	xlat_align_size;
+>  	void __iomem	*vbase;
+>  	size_t		xlat_size;
+>  	size_t		buf_size;
+> @@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
+>  {
+>  	struct perf_mw *mw = &perf->mw;
+>  	size_t xlat_size, buf_size;
+> +	resource_size_t	xlat_align;
+> +	resource_size_t	xlat_align_size;
+>  	int rc;
+>  
+>  	if (!size)
+>  		return -EINVAL;
+>  
+> -	xlat_size = round_up(size, mw->xlat_align_size);
+> -	buf_size = round_up(size, mw->xlat_align);
+> +	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
+> +			      &xlat_align_size, NULL);
+> +	if (rc)
+> +		return rc;
+> +
+> +	xlat_size = round_up(size, xlat_align_size);
+> +	buf_size = round_up(size, xlat_align);
+>  
+>  	if (mw->xlat_size == xlat_size)
+>  		return 0;
+> @@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
+>  
+>  	mw = &perf->mw;
+>  
+> -	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
+> -			      &mw->xlat_align_size, NULL);
+> -	if (rc)
+> -		return rc;
+> -
+>  	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
+>  	if (rc)
+>  		return rc;
+> diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
+> index a69815c45ce6..91526a986caa 100644
+> --- a/drivers/ntb/test/ntb_tool.c
+> +++ b/drivers/ntb/test/ntb_tool.c
+> @@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
+>  
+>  	phys_addr_t base;
+>  	resource_size_t mw_size;
+> -	resource_size_t align_addr;
+> -	resource_size_t align_size;
+> -	resource_size_t max_size;
+> +	resource_size_t align_addr = 0;
+> +	resource_size_t align_size = 0;
+> +	resource_size_t max_size = 0;
+>  
+>  	buf_size = min_t(size_t, size, 512);
+>  
+> -- 
+> 2.11.0
 > 
