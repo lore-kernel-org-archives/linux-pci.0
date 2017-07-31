@@ -1,77 +1,122 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v3 0/8] Add support for IPQ8074 PCIe phy and controller
-Date: Thu, 20 Jul 2017 11:04:32 +0530
-Message-Id: <1500528880-25804-1-git-send-email-varada@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:33442 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751537AbdGaXhQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:37:16 -0400
+Received: by mail-pg0-f48.google.com with SMTP id c14so444985pgn.0
+        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:37:16 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        corbet@lwn.net
+Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH net-next 0/4] netvsc: transparent SR-IOV VF support
+Date: Mon, 31 Jul 2017 16:37:08 -0700
+Message-Id: <20170731233712.12087-1-sthemmin@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v3:
-  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-	Incoporate Stan's feedback:-
-	 - Add SoC Wrapper and Synopsys Core IP versions
+This patch set changes how SR-IOV Virtual Function devices are managed
+in the Hyper-V network driver. It was part of earlier bundle, but
+is now updated.
 
-v2:
-  dt-bindings: phy: qmp: Add output-clock-names
-	Added Rob H's Ack
+Background
+In Hyper-V SR-IOV can be enabled (and disabled) by changing guest settings
+on host. When SR-IOV is enabled a matching PCI device is hot plugged and
+visible on guest. The VF device is an add-on to an existing netvsc
+device, and has the same MAC address.
 
-  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-	Removed example
-	Added IPQ8074 specific details
+How is this different?
 
-  phy: qcom-qmp: Fix phy pipe clock name
-	Added Vivek's Ack
+The original support of VF relied on using bonding driver in active
+standby mode to handle the VF device.
 
-  phy: qcom-qmp: Handle unavailable registers
-	No changes
+With the new netvsc VF logic, the Linux hyper-V network
+virtual driver will directly manage the link to SR-IOV VF device.
+When VF device is detected (hot plug) it is automatically made a
+slave device of the netvsc device. The VF device state reflects
+the state of the netvsc device; i.e. if netvsc is set down, then
+VF is set down. If netvsc is set up, then VF is brought up.
+ 
+Packet flow is independent of VF status; all packets are sent and
+received as if they were associated with the netvsc device. If VF is
+removed or link is down then the synthetic VMBUS path is used.
+ 
+What was wrong with using bonding script?
 
-  phy: qcom-qmp: Add support for IPQ8074
-	No changes
+A lot of work went into getting the bonding script to work on all
+distributions, but it was a major struggle. Linux network devices
+can be configured many, many ways and there is no one solution from
+userspace to make it all work. What is really hard is when
+configuration is attached to synthetic device during boot (eth0) and
+then the same addresses and firewall rules needs to also work later if
+doing bonding. The new code gets around all of this.
+ 
+How does VF work during initialization?
 
-  PCI: dwc: qcom: Use block IP version for operations
-	Added new patch to use block IP version instead of v1, v2...
+Since all packets are sent and received through the logical netvsc
+device, initialization is much easier. Just configure the regular
+netvsc Ethernet device; when/if SR-IOV is enabled it just
+works. Provisioning and cloud init only need to worry about setting up
+netvsc device (eth0). If SR-IOV is enabled (even as a later step), the
+address and rules stay the same.
+ 
+What devices show up?
 
-  dt-bindings: pci: qcom: Add support for IPQ8074
-	Removed example
-	Added IPQ8074 specific details
+Both netvsc and PCI devices are visible in the system. The netvsc
+device is active and named in usual manner (eth0). The PCI device is
+visible to Linux and gets renamed by udev to a persistent name
+(enP2p3s0). The PCI device name is now irrelevant now.
 
-  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-	Incorporated Bjorn's feedback:-
-	 - Removed reset names, helper function to assert/deassert, helper
-	   function to R/M/W register.
-	 - Renamed sys_noc clock as iface clock
-	 - Added deinit if phy power on fails
+The logic also sets the PCI VF device SLAVE flag on the network
+device so network tools can see the relationship if they are smart
+enough to understand how layered devices work.
+ 
+This is a lot like how I see Windows working.
+The VF device is visible in Device Manager, but is not configured.
+ 
+Is there any performance impact?
+There is no visible change in performance. The bonding
+and netvsc driver both have equivalent steps.
+ 
+Is it compatible with old bonding script?
 
-v1:
-Add definitions required to enable QMP phy support for IPQ8074.
+It turns out that if you use the old bonding script, then everything
+still works but in a sub-optimum manner. What happens is that bonding
+is unable to steal the VF from the netvsc device so it creates a one
+legged bond.  Packet flow then is:
+	bond0 <--> eth0 <- -> VF (enP2p3s0).
+In other words, if you get it wrong it still works, just
+awkward and slower.
+ 
+What if I add address or firewall rule onto the VF?
 
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
-Gen 1/2, one lane, two PCIe root complex with support for MSI and
-legacy interrupts, and it conforms to PCI Express Base 2.1
-specification.
+Same problems occur with now as already occur with bonding, bridging,
+teaming on Linux if user incorrectly does configuration onto
+an underlying slave device. It will sort of work, packets will come in
+and out but the Linux kernel gets confused and things like ARP don’t
+work right.  There is no way to block manipulation of the slave
+device, and I am sure someone will find some special use case where
+they want it.
 
-Varadarajan Narayanan (8):
-  dt-bindings: phy: qmp: Add output-clock-names
-  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-  phy: qcom-qmp: Fix phy pipe clock name
-  phy: qcom-qmp: Handle unavailable registers
-  phy: qcom-qmp: Add support for IPQ8074
-  PCI: dwc: qcom: Use block IP version for operations
-  dt-bindings: pci: qcom: Add support for IPQ8074
-  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
 
- .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
- .../devicetree/bindings/phy/qcom-qmp-phy.txt       |  11 +
- drivers/pci/dwc/pcie-qcom.c                        | 378 +++++++++++++++++----
- drivers/phy/qualcomm/phy-qcom-qmp.c                | 186 ++++++++--
- 4 files changed, 515 insertions(+), 83 deletions(-)
+Stephen Hemminger (4):
+  netvsc: transparent VF management
+  netvsc: add documentation
+  netvsc: remove bonding setup script
+  pci-hyperv: do not sleep in compose_msi_msg
+
+ Documentation/networking/netvsc.txt |  63 ++++++
+ MAINTAINERS                         |   1 +
+ drivers/net/hyperv/hyperv_net.h     |  12 ++
+ drivers/net/hyperv/netvsc_drv.c     | 419 ++++++++++++++++++++++++++++--------
+ drivers/pci/host/pci-hyperv.c       |   8 +-
+ tools/hv/bondvf.sh                  | 255 ----------------------
+ 6 files changed, 413 insertions(+), 345 deletions(-)
+ create mode 100644 Documentation/networking/netvsc.txt
+ delete mode 100755 tools/hv/bondvf.sh
 
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
