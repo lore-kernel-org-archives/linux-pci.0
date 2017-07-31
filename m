@@ -1,79 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Jul 2017 06:29:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Subject: Re: [PATCH v4] PCI: Support hibmc VGA cards behind a misbehaving
- HiSilicon bridge
-Message-ID: <20170713112938.GI4486@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170712050811.3620-1-dja@axtens.net>
- <20170712200430.GI14614@bhelgaas-glaptop.roam.corp.google.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41530 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750916AbdGaFuM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:50:12 -0400
+Subject: Re: [PATCH v5 2/7] dt-bindings: phy: qmp: Add support for QMP phy in
+ IPQ8074
+To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, svarbanov@mm-sol.com,
+        kishon@ti.com, sboyd@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+References: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+ <1501479594-18285-3-git-send-email-varada@codeaurora.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Message-ID: <55f7f87f-0302-c4a5-af9b-280c6c473943@codeaurora.org>
+Date: Mon, 31 Jul 2017 11:20:05 +0530
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B35F02@FRAEML521-MBX.china.huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- David Airlie <airlied@linux.ie>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>,
- "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Rongrong Zou <zourongrong@gmail.com>, Daniel Vetter <daniel.vetter@intel.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Daniel Axtens <dja@axtens.net>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1501479594-18285-3-git-send-email-varada@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Ben, David, Daniel, Alex]
 
-On Thu, Jul 13, 2017 at 10:29:25AM +0000, Gabriele Paoloni wrote:
-> Hi Bjorn, Daniel
-> 
-> [...]
-> 
-> > 
-> > Is this quirk useful on any arch other than arm64?  Per
-> > drivers/pci/dwc/Kconfig, CONFIG_PCI_HISI depends on CONFIG_ARM64.
-> > 
-> > Would it make sense to put this quirk in arch/arm64/kernel/pci.c?
-> 
-> Indeed our host controller depends on ARM64 so maybe it would make
-> sense to move the quirk arch/arm64/kernel/pci.c; however regardless
-> why is it strictly required for a VGA device to be legacy one in order
-> to make it the default boot device?
-> i.e. couldn't we have:
-> 
-> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
-> index 0f5b2dd..a6b606c 100644
-> --- a/drivers/gpu/vga/vgaarb.c
-> +++ b/drivers/gpu/vga/vgaarb.c
-> @@ -667,8 +667,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
->  	/* Deal with VGA default device. Use first enabled one
->  	 * by default if arch doesn't have it's own hook
->  	 */
-> -	if (vga_default == NULL &&
-> -	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
-> +	if (vga_default == NULL) {
->  		vgaarb_info(&pdev->dev, "setting as boot VGA device\n");
->  		vga_set_default_device(pdev);
->  	}
 
-I don't know enough about the VGA arbiter to answer this.  This test was
-part of the initial implementation: deb2d2ecd43d ("PCI/GPU: implement VGA
-arbitration on Linux") by Ben.
+On 07/31/2017 11:09 AM, Varadarajan Narayanan wrote:
+> IPQ8074 uses QMP phy controller that provides support to PCIe and
+> USB. Adding dt binding information for the same.
+>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
 
-Bjorn
+Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>   Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 8 ++++++++
+>   1 file changed, 8 insertions(+)
+>
+> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> index 5d7a51f..802af1b 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> @@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
+>   
+>   Required properties:
+>    - compatible: compatible list, contains:
+> +	       "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
+>   	       "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
+>   	       "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
+>   
+> @@ -38,6 +39,8 @@ Required properties:
+>   		 "phy", "common", "cfg".
+>   		For "qcom,msm8996-qmp-usb3-phy" must contain
+>   		 "phy", "common".
+> +		For "qcom,ipq8074-qmp-pcie-phy" must contain:
+> +		 "phy", "common".
+>   
+>    - vdda-phy-supply: Phandle to a regulator supply to PHY core block.
+>    - vdda-pll-supply: Phandle to 1.8V regulator supply to PHY refclk pll block.
+> @@ -63,6 +66,11 @@ Required properties for child node:
+>    - clock-output-names: Name of the phy clock that will be the parent for
+>   		       the above pipe clock.
+>   
+> +	For "qcom,ipq8074-qmp-pcie-phy":
+> +		- "pcie20_phy0_pipe_clk"	Pipe Clock parent
+> +			(or)
+> +		  "pcie20_phy1_pipe_clk"
+> +
+>    - resets: a list of phandles and reset controller specifier pairs,
+>   	   one for each entry in reset-names.
+>    - reset-names: Must contain following for pcie qmp phys:
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
