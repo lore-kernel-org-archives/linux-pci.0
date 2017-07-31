@@ -1,62 +1,107 @@
-Return-Path: <SRS0=r8rO=6P=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=r8rO=6P=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linuxarm
-	<linuxarm@huawei.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [QUESTION] AER report_error_detected() called for all the devices
- on the same bus as the AER reporter EP
-Date: Wed, 12 Jul 2017 08:36:05 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40B30831@FRAEML521-MBX.china.huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38796 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750986AbdGaFkH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 01:40:07 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v5 0/7] Add support for IPQ8074 PCIe phy and controller
+Date: Mon, 31 Jul 2017 11:09:47 +0530
+Message-Id: <1501479594-18285-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn and all
+v5:
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+        Renamed phy_phy clock as common clock
 
-I was looking into the AER error handling code. We have an SoC where we
-have integrated PCIe controllers on the same bus. e.g.
+  phy: qcom-qmp: Fix phy pipe clock name
+        Moved the DT get into the registering function
 
-RC---bus0---|-SAS ctrl
-            |
-            |-SATA ctrl
-            |
-            |- ...
+  phy: qcom-qmp: Add support for IPQ8074
+        Place the IPQ8074 related structs similar to existing SoC.
+        Renamed phy_phy clock as common clock
+v4:
+  phy: qcom-qmp: Fix phy pipe clock name
+	Based on Vivek's comments, return failure only for
+	PCI/USB type of phys.
+	Removed Ack.
 
-Now Looking into broadcast_error_message() we can see that if the AER is
-reported by an EP the code walks over all the devices connected to the
-bus of its upstream port calling in turn the callback function for each
-device.
+  phy: qcom-qmp: Handle unavailable registers
+	Removed this patch.
+	Incorrectly used a block of code that is not applicable
+	to IPQ8074, hence had to avoid an "unavailable" register.
+	Since that is addressed using 'has_phy_com_ctrl' this
+	patch is not needed.
 
-[...]
-	} else {
-		/*
-		 * If the error is reported by an end point, we think this
-		 * error is related to the upstream link of the end point.
-		 */
-		pci_walk_bus(dev->bus, cb, &result_data);
-	}
-[...]
+  phy: qcom-qmp: Add support for IPQ8074
+	Set 'has_phy_com_ctrl' to false
+	Remove ipq8074_pciephy_regs_layout
 
-With respect to the example above if SAS is the source of the AER and for
-instance it reports a non FATAL error the report_error_detected() callback
-will be called also for the SATA device. If the SATA driver does not
-implement dev->driver->err_handler->error_detected() report_error_detected(=
-)
-will return PCI_ERS_RESULT_NO_AER_DRIVER and both SAS and SATA will be left
-in error state unrecovered.
+v3:
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incoporate Stan's feedback:-
+	 - Add SoC Wrapper and Synopsys Core IP versions
 
-Now from my understanding if we have a FATAL error it is correct to walk
-over the upstream bus, as we do now; in fact in this case the PCIe link
-itself is compromised, however for non FATAL errors my understanding is
-that we should only walk over the other functions of a multi-funciton
-device (i.e. walk over the bus till dev->multifunction =3D=3D 1).
+v2:
+  dt-bindings: phy: qmp: Add output-clock-names
+	Added Rob H's Ack
 
-Thoughts?
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+	Removed example
+	Added IPQ8074 specific details
 
-Thanks
-Gab
+  phy: qcom-qmp: Fix phy pipe clock name
+	Added Vivek's Ack
+
+  phy: qcom-qmp: Handle unavailable registers
+	No changes
+
+  phy: qcom-qmp: Add support for IPQ8074
+	No changes
+
+  PCI: dwc: qcom: Use block IP version for operations
+	Added new patch to use block IP version instead of v1, v2...
+
+  dt-bindings: pci: qcom: Add support for IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incorporated Bjorn's feedback:-
+	 - Removed reset names, helper function to assert/deassert, helper
+	   function to R/M/W register.
+	 - Renamed sys_noc clock as iface clock
+	 - Added deinit if phy power on fails
+
+v1:
+Add definitions required to enable QMP phy support for IPQ8074.
+
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+Gen 1/2, one lane, two PCIe root complex with support for MSI and
+legacy interrupts, and it conforms to PCI Express Base 2.1
+specification.
+
+Varadarajan Narayanan (7):
+  dt-bindings: phy: qmp: Add output-clock-names
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+  phy: qcom-qmp: Fix phy pipe clock name
+  phy: qcom-qmp: Add support for IPQ8074
+  PCI: dwc: qcom: Use block IP version for operations
+  dt-bindings: pci: qcom: Add support for IPQ8074
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
+ .../devicetree/bindings/phy/qcom-qmp-phy.txt       |  11 +
+ drivers/pci/dwc/pcie-qcom.c                        | 378 +++++++++++++++++----
+ drivers/phy/qualcomm/phy-qcom-qmp.c                | 152 ++++++++-
+ 4 files changed, 488 insertions(+), 76 deletions(-)
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
