@@ -1,127 +1,263 @@
-Return-Path: <SRS0=oQWR=65=gmail.com=alexander.duyck@kernel.org>
-Return-Path: <SRS0=oQWR=65=gmail.com=alexander.duyck@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45210 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751017AbdGaWAA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 18:00:00 -0400
+Date: Mon, 31 Jul 2017 16:59:57 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        Linux PM <linux-pm@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v2 3/3] ACPI / PCI / PM: Rework
+ acpi_pci_propagate_wakeup()
+Message-ID: <20170731215957.GG9303@bhelgaas-glaptop.roam.corp.google.com>
+References: <3116391.JNS1F4DjTg@aspire.rjw.lan>
+ <4853865.5aRGCM4CdQ@aspire.rjw.lan>
+ <4690779.IRjbMOd2yB@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
-References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
- <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
- <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org> <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
- <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org> <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home> <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <CAKgT0UeAad6WArvrE71MFJywDs1wOnCF-iJRnbNLrL+knqhXeA@mail.gmail.com> <CAKgT0Uf5hdXUXja_jUB6_kBg6pyX8zXuOMOGzCVNgeBFMUsWqQ@mail.gmail.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Wed, 26 Jul 2017 11:44:56 -0700
-Message-ID: <CAKgT0Udn2vh6NaqZyiF69nXVnz2sT=e0ZgiDjWznhGZz-Gk+qQ@mail.gmail.com>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-To: Casey Leedom <leedom@chelsio.com>
-Cc: Netdev <netdev@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>, "ashok.raj@intel.com" <ashok.raj@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "will.deacon@arm.com" <will.deacon@arm.com>,
-	Sinan Kaya <okaya@codeaurora.org>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>,
-	Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>, Michael Werner <werner@chelsio.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>, Ding Tianhong <dingtianhong@huawei.com>,
-	"linuxarm@huawei.com" <linuxarm@huawei.com>, "amira@mellanox.com" <amira@mellanox.com>,
-	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>
-Content-Type: multipart/alternative; boundary="001a11475bdc2afec105553cd8ab"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4690779.IRjbMOd2yB@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---001a11475bdc2afec105553cd8ab
-Content-Type: text/plain; charset="UTF-8"
+On Fri, Jul 21, 2017 at 11:30:24PM +0200, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The acpi_pci_propagate_wakeup() routine is there to handle cases in
+> which PCI bridges (or PCIe ports) are expected to signal wakeup
+> for devices below them, but currently it doesn't do that correctly.
+> 
+> The problem is that acpi_pci_propagate_wakeup() uses
+> acpi_pm_set_device_wakeup() for bridges and if that routine is
+> called for multiple times to disable wakeup for the same device,
+> it will disable it on the first invocation and the next calls
+> will have no effect (it works analogously when called to enable
+> wakeup, but that is not a problem).
+> 
+> Now, say acpi_pci_propagate_wakeup() has been called for two
+> different devices under the same bridge and it has called
+> acpi_pm_set_device_wakeup() for that bridge each time.  The
+> bridge is now enabled to generate wakeup signals.  Next,
+> suppose that one of the devices below it resumes and
+> acpi_pci_propagate_wakeup() is called to disable wakeup for that
+> device.  It will then call acpi_pm_set_device_wakeup() for the bridge
+> and that will effectively disable remote wakeup for all devices under
+> it even though some of them may still be suspended and remote wakeup
+> may be expected to work for them.
+> 
+> To address this (arguably theoretical) issue, allow
+> wakeup.enable_count under struct acpi_device to grow beyond 1 in
+> certain situations.  In particular, allow that to happen in
+> acpi_pci_propagate_wakeup() when wakeup is enabled or disabled
+> for PCI bridges, so that wakeup is actually disabled for the
+> bridge when all devices under it resume and not when just one
+> of them does that.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Jul 26, 2017 11:26 AM, "Casey Leedom" <leedom@chelsio.com> wrote:
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-  By the way Ding, two issues:
+But see questions below, stemming from my ignorance of ACPI PM.  I
+don't want to start a discussion and delay this.  If my questions
+don't suggest any useful changes, please ignore them.
 
- 1. Did we ever get any acknowledgement from either Intel or AMD
-    on this patch?  I know that we can't ensure that, but it sure would
-    be nice since the PCI Quirks that we're putting in affect their
-    products.
+> ---
+> 
+> -> v2: Rearrange checks in acpi_device_wakeup_enable() to reduce indentation
+>           level and possibly save some unnecessary checks for max_count == 1.
+> 
+> ---
+>  drivers/acpi/device_pm.c |   46 +++++++++++++++++++++++++++++-----------------
+>  drivers/pci/pci-acpi.c   |    4 ++--
+>  include/acpi/acpi_bus.h  |   14 ++++++++++++--
+>  3 files changed, 43 insertions(+), 21 deletions(-)
+> 
+> Index: linux-pm/drivers/acpi/device_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/device_pm.c
+> +++ linux-pm/drivers/acpi/device_pm.c
+> @@ -682,19 +682,8 @@ static void acpi_pm_notify_work_func(str
+>  
+>  static DEFINE_MUTEX(acpi_wakeup_lock);
+>  
+> -/**
+> - * acpi_device_wakeup_enable - Enable wakeup functionality for device.
+> - * @adev: ACPI device to enable wakeup functionality for.
+> - * @target_state: State the system is transitioning into.
+> - *
+> - * Enable the GPE associated with @adev so that it can generate wakeup signals
+> - * for the device in response to external (remote) events and enable wakeup
+> - * power for it.
+> - *
+> - * Callers must ensure that @adev is a valid ACPI device node before executing
+> - * this function.
+> - */
+> -static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
+> +static int __acpi_device_wakeup_enable(struct acpi_device *adev,
+> +				       u32 target_state, int max_count)
 
- 2. I just realized that there's still a small hole in the patch with
-    respect to PCIe SR-IOV Virtual Functions.  When the PCI Quirk
-    notices a problematic PCIe Device and marks it to note that
-    it's not "happy" receiving Transaction Layer Packets with the
-    Relaxed Ordering Attribute set, it's my understanding that your
-    current patch iterates down the PCIe Fabric and turns off the
-    PCIe Capability Device Control[Relaxed Ordering Enable].
-    But this scan may miss any SR-IOV VFs because they
-    probably won't be instantiated at that time.  And, at a later
-    time, when they are instantiated, they could well have their
-    Relaxed Ordering Enable set.
+It looks like @max_count is always either 1 or INT_MAX, so it's
+effectively a boolean.  Is there a way to interpret @max_count in
+terms of the PCI topology?  It's obviously related to
+wakeup->enable_count; does wakeup->enable_count basically mean "the
+number of subordinate devices that are enabled to generate wakeups"?
 
-    I think that the patch will need to be extended to modify
-    drivers/pci.c/iov.c:sriov_enable() to explicitly turn off
-    Relaxed Ordering Enable if the Root Complex is marked
-    for no RO TLPs.
+__acpi_pm_set_device_wakeup() is exported; maybe only to make the
+inlined callers in acpi_bus.h work?  It might be worth un-inlining
+them to avoid having to export __acpi_pm_set_device_wakeup().  I'm
+just thinking that exporting it makes it visible everywhere, and
+@max_count seems like an internal detail that's hard to document for
+use by non-core code.
 
-Casey
+I guess you still have to export both acpi_pm_set_device_wakeup()
+(currently already exported) and acpi_pm_set_bridge_wakeup()
+(this patch effectively exports it by implementing it as an inline
+function).
 
+It'd be nice if we could distinguish the device case from the bridge
+case inside acpi_pm_set_device_wakeup() so we wouldn't have to rely on
+the caller using the correct one.  But I assume you already considered
+that and found it impractical.
 
-I'm not sure that would be an issue. Wouldn't most VFs inherit the PF's
-settings?
-
-Also I thought most of the VF configuration space is read only.
-
-- Alex
-
---001a11475bdc2afec105553cd8ab
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-<div dir=3D"auto"><div><br><div class=3D"gmail_extra"><br><div class=3D"gma=
-il_quote">On Jul 26, 2017 11:26 AM, &quot;Casey Leedom&quot; &lt;<a href=3D=
-"mailto:leedom@chelsio.com">leedom@chelsio.com</a>&gt; wrote:<br type=3D"at=
-tribution"><blockquote class=3D"quote" style=3D"margin:0 0 0 .8ex;border-le=
-ft:1px #ccc solid;padding-left:1ex">=C2=A0 By the way Ding, two issues:<br>
-<br>
-=C2=A01. Did we ever get any acknowledgement from either Intel or AMD<br>
-=C2=A0 =C2=A0 on this patch?=C2=A0 I know that we can&#39;t ensure that, bu=
-t it sure would<br>
-=C2=A0 =C2=A0 be nice since the PCI Quirks that we&#39;re putting in affect=
- their<br>
-=C2=A0 =C2=A0 products.<br>
-<br>
-=C2=A02. I just realized that there&#39;s still a small hole in the patch w=
-ith<br>
-=C2=A0 =C2=A0 respect to PCIe SR-IOV Virtual Functions.=C2=A0 When the PCI =
-Quirk<br>
-=C2=A0 =C2=A0 notices a problematic PCIe Device and marks it to note that<b=
-r>
-=C2=A0 =C2=A0 it&#39;s not &quot;happy&quot; receiving Transaction Layer Pa=
-ckets with the<br>
-=C2=A0 =C2=A0 Relaxed Ordering Attribute set, it&#39;s my understanding tha=
-t your<br>
-=C2=A0 =C2=A0 current patch iterates down the PCIe Fabric and turns off the=
-<br>
-=C2=A0 =C2=A0 PCIe Capability Device Control[Relaxed Ordering Enable].<br>
-=C2=A0 =C2=A0 But this scan may miss any SR-IOV VFs because they<br>
-=C2=A0 =C2=A0 probably won&#39;t be instantiated at that time.=C2=A0 And, a=
-t a later<br>
-=C2=A0 =C2=A0 time, when they are instantiated, they could well have their<=
-br>
-=C2=A0 =C2=A0 Relaxed Ordering Enable set.<br>
-<br>
-=C2=A0 =C2=A0 I think that the patch will need to be extended to modify<br>
-=C2=A0 =C2=A0 drivers/pci.c/iov.c:sriov_<wbr>enable() to explicitly turn of=
-f<br>
-=C2=A0 =C2=A0 Relaxed Ordering Enable if the Root Complex is marked<br>
-=C2=A0 =C2=A0 for no RO TLPs.<br>
-<font color=3D"#888888"><br>
-Casey</font></blockquote></div><br></div></div><div class=3D"gmail_extra" d=
-ir=3D"auto">I&#39;m not sure that would be an issue. Wouldn&#39;t most VFs =
-inherit the PF&#39;s settings?</div><div class=3D"gmail_extra" dir=3D"auto"=
-><br></div><div class=3D"gmail_extra" dir=3D"auto">Also I thought most of t=
-he VF configuration space is read only.</div><div class=3D"gmail_extra" dir=
-=3D"auto"><br></div><div class=3D"gmail_extra" dir=3D"auto">- Alex</div></d=
-iv>
-
---001a11475bdc2afec105553cd8ab--
+>  {
+>  	struct acpi_device_wakeup *wakeup = &adev->wakeup;
+>  	acpi_status status;
+> @@ -702,9 +691,12 @@ static int acpi_device_wakeup_enable(str
+>  
+>  	mutex_lock(&acpi_wakeup_lock);
+>  
+> -	if (wakeup->enable_count > 0)
+> +	if (wakeup->enable_count >= max_count)
+>  		goto out;
+>  
+> +	if (wakeup->enable_count > 0)
+> +		goto inc;
+> +
+>  	error = acpi_enable_wakeup_device_power(adev, target_state);
+>  	if (error)
+>  		goto out;
+> @@ -716,6 +708,7 @@ static int acpi_device_wakeup_enable(str
+>  		goto out;
+>  	}
+>  
+> +inc:
+>  	wakeup->enable_count++;
+>  
+>  out:
+> @@ -724,6 +717,23 @@ out:
+>  }
+>  
+>  /**
+> + * acpi_device_wakeup_enable - Enable wakeup functionality for device.
+> + * @adev: ACPI device to enable wakeup functionality for.
+> + * @target_state: State the system is transitioning into.
+> + *
+> + * Enable the GPE associated with @adev so that it can generate wakeup signals
+> + * for the device in response to external (remote) events and enable wakeup
+> + * power for it.
+> + *
+> + * Callers must ensure that @adev is a valid ACPI device node before executing
+> + * this function.
+> + */
+> +static int acpi_device_wakeup_enable(struct acpi_device *adev, u32 target_state)
+> +{
+> +	return __acpi_device_wakeup_enable(adev, target_state, 1);
+> +}
+> +
+> +/**
+>   * acpi_device_wakeup_disable - Disable wakeup functionality for device.
+>   * @adev: ACPI device to disable wakeup functionality for.
+>   *
+> @@ -754,8 +764,9 @@ out:
+>   * acpi_pm_set_device_wakeup - Enable/disable remote wakeup for given device.
+>   * @dev: Device to enable/disable to generate wakeup events.
+>   * @enable: Whether to enable or disable the wakeup functionality.
+> + * @max_count: Maximum value of the enable reference counter.
+>   */
+> -int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
+> +int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
+>  {
+>  	struct acpi_device *adev;
+>  	int error;
+> @@ -775,13 +786,14 @@ int acpi_pm_set_device_wakeup(struct dev
+>  		return 0;
+>  	}
+>  
+> -	error = acpi_device_wakeup_enable(adev, acpi_target_system_state());
+> +	error = __acpi_device_wakeup_enable(adev, acpi_target_system_state(),
+> +					    max_count);
+>  	if (!error)
+>  		dev_dbg(dev, "Wakeup enabled by ACPI\n");
+>  
+>  	return error;
+>  }
+> -EXPORT_SYMBOL(acpi_pm_set_device_wakeup);
+> +EXPORT_SYMBOL(__acpi_pm_set_device_wakeup);
+>  
+>  /**
+>   * acpi_dev_pm_low_power - Put ACPI device into a low-power state.
+> Index: linux-pm/include/acpi/acpi_bus.h
+> ===================================================================
+> --- linux-pm.orig/include/acpi/acpi_bus.h
+> +++ linux-pm/include/acpi/acpi_bus.h
+> @@ -605,7 +605,7 @@ acpi_status acpi_add_pm_notifier(struct
+>  acpi_status acpi_remove_pm_notifier(struct acpi_device *adev);
+>  bool acpi_pm_device_can_wakeup(struct device *dev);
+>  int acpi_pm_device_sleep_state(struct device *, int *, int);
+> -int acpi_pm_set_device_wakeup(struct device *dev, bool enable);
+> +int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count);
+>  #else
+>  static inline void acpi_pm_wakeup_event(struct device *dev)
+>  {
+> @@ -632,12 +632,22 @@ static inline int acpi_pm_device_sleep_s
+>  	return (m >= ACPI_STATE_D0 && m <= ACPI_STATE_D3_COLD) ?
+>  		m : ACPI_STATE_D0;
+>  }
+> -static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
+> +static inline int __acpi_pm_set_device_wakeup(struct device *dev, bool enable, int max_count)
+>  {
+>  	return -ENODEV;
+>  }
+>  #endif
+>  
+> +static inline int acpi_pm_set_device_wakeup(struct device *dev, bool enable)
+> +{
+> +	return __acpi_pm_set_device_wakeup(dev, enable, 1);
+> +}
+> +
+> +static inline int acpi_pm_set_bridge_wakeup(struct device *dev, bool enable)
+> +{
+> +	return __acpi_pm_set_device_wakeup(dev, enable, INT_MAX);
+> +}
+> +
+>  #ifdef CONFIG_ACPI_SLEEP
+>  u32 acpi_target_system_state(void);
+>  #else
+> Index: linux-pm/drivers/pci/pci-acpi.c
+> ===================================================================
+> --- linux-pm.orig/drivers/pci/pci-acpi.c
+> +++ linux-pm/drivers/pci/pci-acpi.c
+> @@ -573,7 +573,7 @@ static int acpi_pci_propagate_wakeup(str
+>  {
+>  	while (bus->parent) {
+>  		if (acpi_pm_device_can_wakeup(&bus->self->dev))
+> -			return acpi_pm_set_device_wakeup(&bus->self->dev, enable);
+> +			return acpi_pm_set_bridge_wakeup(&bus->self->dev, enable);
+>  
+>  		bus = bus->parent;
+>  	}
+> @@ -581,7 +581,7 @@ static int acpi_pci_propagate_wakeup(str
+>  	/* We have reached the root bus. */
+>  	if (bus->bridge) {
+>  		if (acpi_pm_device_can_wakeup(bus->bridge))
+> -			return acpi_pm_set_device_wakeup(bus->bridge, enable);
+> +			return acpi_pm_set_bridge_wakeup(bus->bridge, enable);
+>  	}
+>  	return 0;
+>  }
+> 
