@@ -1,58 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48058 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751364AbdGAN0n (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Jul 2017 09:26:43 -0400
-Date: Sat, 1 Jul 2017 08:26:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Cc: linux-pci@vger.kernel.org, mj@ucw.cz, rajatja@google.com,
-        briannorris@chromium.org
-Subject: Re: [PCIUTILS PATCH v2] lspci: Fix wrong read size for RootSta
-Message-ID: <20170701132640.GA18324@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498817340-24918-1-git-send-email-jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1498817340-24918-1-git-send-email-jeffy.chen@rock-chips.com>
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:36732 "EHLO
+        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751929AbdGaIo5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 04:44:57 -0400
+Received: by mail-lf0-f54.google.com with SMTP id o85so51431204lff.3
+        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 01:44:56 -0700 (PDT)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, devicetree@vger.kernel.org
+Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH 1/2] PCI: v3: Update the device tree bindings
+Date: Mon, 31 Jul 2017 10:44:51 +0200
+Message-Id: <20170731084451.19736-1-linus.walleij@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jun 30, 2017 at 06:09:00PM +0800, Jeffy Chen wrote:
-> We are reading wrong size(word) for this cap, since:
-> 
-> RootSta has:
-> PCI_EXP_RTSTA_PME_STATUS  0x00010000 /* PME Status */
-> PCI_EXP_RTSTA_PME_PENDING 0x00020000 /* PME is Pending */
-> 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
+and predates the more formal format we have adopted for the bindings.
+Update them a bit so it is easier to read, and add the Integrator AP-
+specific compatible so we can detect that we are running on that specific
+platform.
 
-Looks good to me.  Root Status is indeed a 32-bit register, per
-PCIe r3.1, sec 7.8.14.
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ .../devicetree/bindings/pci/v3-v360epc-pci.txt        | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-Reviewed-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
-> 
-> Changes in v2:
-> Sorry, DevCtl2/LnkCtl2 are correct, remove wrong modifies for them...
-> 
->  ls-caps.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/ls-caps.c b/ls-caps.c
-> index 0ca46fb..d4aebc8 100644
-> --- a/ls-caps.c
-> +++ b/ls-caps.c
-> @@ -879,7 +879,7 @@ static void cap_express_root(struct device *d, int where)
->    printf("\t\tRootCap: CRSVisible%c\n",
->  	FLAG(w, PCI_EXP_RTCAP_CRSVIS));
->  
-> -  w = get_conf_word(d, where + PCI_EXP_RTSTA);
-> +  w = get_conf_long(d, where + PCI_EXP_RTSTA);
->    printf("\t\tRootSta: PME ReqID %04x, PMEStatus%c PMEPending%c\n",
->  	w & PCI_EXP_RTSTA_PME_REQID,
->  	FLAG(w, PCI_EXP_RTSTA_PME_STATUS),
-> -- 
-> 2.1.4
-> 
-> 
+diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+index 30b364e504ba..bcc5fe2a74cb 100644
+--- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
++++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+@@ -2,14 +2,15 @@ V3 Semiconductor V360 EPC PCI bridge
+ 
+ This bridge is found in the ARM Integrator/AP (Application Platform)
+ 
+-Integrator-specific notes:
+-
+-- syscon: should contain a link to the syscon device node (since
+-  on the Integrator, some registers in the syscon are required to
+-  operate the V3).
+-
+-V360 EPC specific notes:
+-
+-- reg: should contain the base address of the V3 adapter.
++Required properties:
++- compatible: should be one of:
++  "v3,v360epc-pci"
++  "arm,integrator-ap-pci", "v3,v360epc-pci"
++- reg: should contain the base address of the V3 host bridge.
+ - interrupts: should contain a reference to the V3 error interrupt
+   as routed on the system.
++
++Integrator-specific required properties:
++- syscon: should contain a link to the syscon device node, since
++  on the Integrator, some registers in the syscon are required to
++  operate the V3 host bridge.
+-- 
+2.9.4
