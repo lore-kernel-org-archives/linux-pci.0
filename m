@@ -1,76 +1,291 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50140 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752788AbdGSIn6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Jul 2017 04:43:58 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v2 0/8] Add support for IPQ8074 PCIe phy and controller
-Date: Wed, 19 Jul 2017 14:13:31 +0530
-Message-Id: <1500453819-5223-1-git-send-email-varada@codeaurora.org>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35181 "EHLO
+        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751704AbdGaXhU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 19:37:20 -0400
+Received: by mail-pf0-f173.google.com with SMTP id t86so372894pfe.2
+        for <linux-pci@vger.kernel.org>; Mon, 31 Jul 2017 16:37:20 -0700 (PDT)
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        corbet@lwn.net
+Cc: devel@linuxdriverproject.org, linux-doc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH net-next 3/4] netvsc: remove bonding setup script
+Date: Mon, 31 Jul 2017 16:37:11 -0700
+Message-Id: <20170731233712.12087-4-sthemmin@microsoft.com>
+In-Reply-To: <20170731233712.12087-1-sthemmin@microsoft.com>
+References: <20170731233712.12087-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-v2:
-  dt-bindings: phy: qmp: Add output-clock-names
-	Added Rob H's Ack
+No longer needed, now all managed by transparent VF logic.
 
-  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-	Removed example
-	Added IPQ8074 specific details
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+---
+ tools/hv/bondvf.sh | 255 -----------------------------------------------------
+ 1 file changed, 255 deletions(-)
+ delete mode 100755 tools/hv/bondvf.sh
 
-  phy: qcom-qmp: Fix phy pipe clock name
-	Added Vivek's Ack
-
-  phy: qcom-qmp: Handle unavailable registers
-	No changes
-
-  phy: qcom-qmp: Add support for IPQ8074
-	No changes
-
-  PCI: dwc: qcom: Use block IP version for operations
-	Added new patch to use block IP version instead of v1, v2...
-
-  dt-bindings: pci: qcom: Add support for IPQ8074
-	Removed example
-	Added IPQ8074 specific details
-
-  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-	Incorporated Bjorn's feedback:-
-	 - Removed reset names, helper function to assert/deassert, helper
-	   function to R/M/W register.
-	 - Renamed sys_noc clock as iface clock
-	 - Added deinit if phy power on fails
-
-v1:
-Add definitions required to enable QMP phy support for IPQ8074.
-
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
-Gen 1/2, one lane, two PCIe root complex with support for MSI and
-legacy interrupts, and it conforms to PCI Express Base 2.1
-specification.
-
-Varadarajan Narayanan (8):
-  dt-bindings: phy: qmp: Add output-clock-names
-  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-  phy: qcom-qmp: Fix phy pipe clock name
-  phy: qcom-qmp: Handle unavailable registers
-  phy: qcom-qmp: Add support for IPQ8074
-  PCI: dwc: qcom: Use block IP version for operations
-  dt-bindings: pci: qcom: Add support for IPQ8074
-  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-
- .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
- .../devicetree/bindings/phy/qcom-qmp-phy.txt       |  11 +
- drivers/pci/dwc/pcie-qcom.c                        | 369 +++++++++++++++++----
- drivers/phy/qualcomm/phy-qcom-qmp.c                | 186 +++++++++--
- 4 files changed, 506 insertions(+), 83 deletions(-)
-
+diff --git a/tools/hv/bondvf.sh b/tools/hv/bondvf.sh
+deleted file mode 100755
+index 80f102860cf8..000000000000
+--- a/tools/hv/bondvf.sh
++++ /dev/null
+@@ -1,255 +0,0 @@
+-#!/bin/bash
+-
+-# This example script creates bonding network devices based on synthetic NIC
+-# (the virtual network adapter usually provided by Hyper-V) and the matching
+-# VF NIC (SRIOV virtual function). So the synthetic NIC and VF NIC can
+-# function as one network device, and fail over to the synthetic NIC if VF is
+-# down.
+-#
+-# Usage:
+-# - After configured vSwitch and vNIC with SRIOV, start Linux virtual
+-#   machine (VM)
+-# - Run this scripts on the VM. It will create configuration files in
+-#   distro specific directory.
+-# - Reboot the VM, so that the bonding config are enabled.
+-#
+-# The config files are DHCP by default. You may edit them if you need to change
+-# to Static IP or change other settings.
+-#
+-
+-sysdir=/sys/class/net
+-netvsc_cls={f8615163-df3e-46c5-913f-f2d2f965ed0e}
+-bondcnt=0
+-
+-# Detect Distro
+-if [ -f /etc/redhat-release ];
+-then
+-	cfgdir=/etc/sysconfig/network-scripts
+-	distro=redhat
+-elif grep -q 'Ubuntu' /etc/issue
+-then
+-	cfgdir=/etc/network
+-	distro=ubuntu
+-elif grep -q 'SUSE' /etc/issue
+-then
+-	cfgdir=/etc/sysconfig/network
+-	distro=suse
+-else
+-	echo "Unsupported Distro"
+-	exit 1
+-fi
+-
+-echo Detected Distro: $distro, or compatible
+-
+-# Get a list of ethernet names
+-list_eth=(`cd $sysdir && ls -d */ | cut -d/ -f1 | grep -v bond`)
+-eth_cnt=${#list_eth[@]}
+-
+-echo List of net devices:
+-
+-# Get the MAC addresses
+-for (( i=0; i < $eth_cnt; i++ ))
+-do
+-	list_mac[$i]=`cat $sysdir/${list_eth[$i]}/address`
+-	echo ${list_eth[$i]}, ${list_mac[$i]}
+-done
+-
+-# Find NIC with matching MAC
+-for (( i=0; i < $eth_cnt-1; i++ ))
+-do
+-	for (( j=i+1; j < $eth_cnt; j++ ))
+-	do
+-		if [ "${list_mac[$i]}" = "${list_mac[$j]}" ]
+-		then
+-			list_match[$i]=${list_eth[$j]}
+-			break
+-		fi
+-	done
+-done
+-
+-function create_eth_cfg_redhat {
+-	local fn=$cfgdir/ifcfg-$1
+-
+-	rm -f $fn
+-	echo DEVICE=$1 >>$fn
+-	echo TYPE=Ethernet >>$fn
+-	echo BOOTPROTO=none >>$fn
+-	echo UUID=`uuidgen` >>$fn
+-	echo ONBOOT=yes >>$fn
+-	echo PEERDNS=yes >>$fn
+-	echo IPV6INIT=yes >>$fn
+-	echo MASTER=$2 >>$fn
+-	echo SLAVE=yes >>$fn
+-}
+-
+-function create_eth_cfg_pri_redhat {
+-	create_eth_cfg_redhat $1 $2
+-}
+-
+-function create_bond_cfg_redhat {
+-	local fn=$cfgdir/ifcfg-$1
+-
+-	rm -f $fn
+-	echo DEVICE=$1 >>$fn
+-	echo TYPE=Bond >>$fn
+-	echo BOOTPROTO=dhcp >>$fn
+-	echo UUID=`uuidgen` >>$fn
+-	echo ONBOOT=yes >>$fn
+-	echo PEERDNS=yes >>$fn
+-	echo IPV6INIT=yes >>$fn
+-	echo BONDING_MASTER=yes >>$fn
+-	echo BONDING_OPTS=\"mode=active-backup miimon=100 primary=$2\" >>$fn
+-}
+-
+-function del_eth_cfg_ubuntu {
+-	local mainfn=$cfgdir/interfaces
+-	local fnlist=( $mainfn )
+-
+-	local dirlist=(`awk '/^[ \t]*source/{print $2}' $mainfn`)
+-
+-	local i
+-	for i in "${dirlist[@]}"
+-	do
+-		fnlist+=(`ls $i 2>/dev/null`)
+-	done
+-
+-	local tmpfl=$(mktemp)
+-
+-	local nic_start='^[ \t]*(auto|iface|mapping|allow-.*)[ \t]+'$1
+-	local nic_end='^[ \t]*(auto|iface|mapping|allow-.*|source)'
+-
+-	local fn
+-	for fn in "${fnlist[@]}"
+-	do
+-		awk "/$nic_end/{x=0} x{next} /$nic_start/{x=1;next} 1" \
+-			$fn >$tmpfl
+-
+-		cp $tmpfl $fn
+-	done
+-
+-	rm $tmpfl
+-}
+-
+-function create_eth_cfg_ubuntu {
+-	local fn=$cfgdir/interfaces
+-
+-	del_eth_cfg_ubuntu $1
+-	echo $'\n'auto $1 >>$fn
+-	echo iface $1 inet manual >>$fn
+-	echo bond-master $2 >>$fn
+-}
+-
+-function create_eth_cfg_pri_ubuntu {
+-	local fn=$cfgdir/interfaces
+-
+-	del_eth_cfg_ubuntu $1
+-	echo $'\n'allow-hotplug $1 >>$fn
+-	echo iface $1 inet manual >>$fn
+-	echo bond-master $2 >>$fn
+-	echo bond-primary $1 >>$fn
+-}
+-
+-function create_bond_cfg_ubuntu {
+-	local fn=$cfgdir/interfaces
+-
+-	del_eth_cfg_ubuntu $1
+-
+-	echo $'\n'auto $1 >>$fn
+-	echo iface $1 inet dhcp >>$fn
+-	echo bond-mode active-backup >>$fn
+-	echo bond-miimon 100 >>$fn
+-	echo bond-slaves none >>$fn
+-}
+-
+-function create_eth_cfg_suse {
+-        local fn=$cfgdir/ifcfg-$1
+-
+-        rm -f $fn
+-	echo BOOTPROTO=none >>$fn
+-	echo STARTMODE=auto >>$fn
+-}
+-
+-function create_eth_cfg_pri_suse {
+-	local fn=$cfgdir/ifcfg-$1
+-
+-	rm -f $fn
+-	echo BOOTPROTO=none >>$fn
+-	echo STARTMODE=hotplug >>$fn
+-}
+-
+-function create_bond_cfg_suse {
+-	local fn=$cfgdir/ifcfg-$1
+-
+-	rm -f $fn
+-	echo BOOTPROTO=dhcp >>$fn
+-	echo STARTMODE=auto >>$fn
+-	echo BONDING_MASTER=yes >>$fn
+-	echo BONDING_SLAVE_0=$2 >>$fn
+-	echo BONDING_SLAVE_1=$3 >>$fn
+-	echo BONDING_MODULE_OPTS=\'mode=active-backup miimon=100 primary=$2\' >>$fn
+-}
+-
+-function create_bond {
+-	local bondname=bond$bondcnt
+-	local primary
+-	local secondary
+-
+-	local class_id1=`cat $sysdir/$1/device/class_id 2>/dev/null`
+-	local class_id2=`cat $sysdir/$2/device/class_id 2>/dev/null`
+-
+-	if [ "$class_id1" = "$netvsc_cls" ]
+-	then
+-		primary=$2
+-		secondary=$1
+-	elif [ "$class_id2" = "$netvsc_cls" ]
+-	then
+-		primary=$1
+-		secondary=$2
+-	else
+-		return 0
+-	fi
+-
+-	echo $'\nBond name:' $bondname
+-
+-	if [ $distro == ubuntu ]
+-	then
+-		local mainfn=$cfgdir/interfaces
+-		local s="^[ \t]*(auto|iface|mapping|allow-.*)[ \t]+${bondname}"
+-
+-		grep -E "$s" $mainfn
+-		if [ $? -eq 0 ]
+-		then
+-			echo "WARNING: ${bondname} has been configured already"
+-			return
+-		fi
+-	elif [ $distro == redhat ] || [ $distro == suse ]
+-	then
+-		local fn=$cfgdir/ifcfg-$bondname
+-		if [ -f $fn ]
+-		then
+-			echo "WARNING: ${bondname} has been configured already"
+-			return
+-		fi
+-	else
+-		echo "Unsupported Distro: ${distro}"
+-		return
+-	fi
+-
+-	echo configuring $primary
+-	create_eth_cfg_pri_$distro $primary $bondname
+-
+-	echo configuring $secondary
+-	create_eth_cfg_$distro $secondary $bondname
+-
+-	echo creating: $bondname with primary slave: $primary
+-	create_bond_cfg_$distro $bondname $primary $secondary
+-}
+-
+-for (( i=0; i < $eth_cnt-1; i++ ))
+-do
+-        if [ -n "${list_match[$i]}" ]
+-        then
+-		create_bond ${list_eth[$i]} ${list_match[$i]}
+-		let bondcnt=bondcnt+1
+-        fi
+-done
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.11.0
