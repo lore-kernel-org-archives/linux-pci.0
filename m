@@ -1,185 +1,54 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:45178 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753538AbdGSPWP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Jul 2017 11:22:15 -0400
-From: "Latif, Faisal" <faisal.latif@intel.com>
-To: Greg KH <gregkh@linuxfoundation.org>,
-        Doug Ledford <dledford@redhat.com>,
-        "Hefty, Sean" <sean.hefty@intel.com>,
-        Hal Rosenstock <hal.rosenstock@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: PCI/IB: add support for pci driver attribute groups
-Date: Wed, 19 Jul 2017 15:22:11 +0000
-Message-ID: <1EEBC91386407A4A8D1EBE1DD5AA5212818DE784@FMSMSX114.amr.corp.intel.com>
-References: <20170719130106.GE17776@kroah.com>
-In-Reply-To: <20170719130106.GE17776@kroah.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:60942 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbdGaGee (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 02:34:34 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v6 1/7] dt-bindings: phy: qmp: Add output-clock-names
+Date: Mon, 31 Jul 2017 12:04:11 +0530
+Message-Id: <1501482857-14100-2-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
+References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Thanks!
-Faisal
+The phy outputs a clock that will act as the parent for
+the phy's pipe clock. Add the name of this clock to the
+lane's DT node.
 
->-----Original Message-----
->From: Greg KH [mailto:gregkh@linuxfoundation.org]
->Sent: Wednesday, July 19, 2017 8:01 AM
->To: Latif, Faisal <faisal.latif@intel.com>; Doug Ledford
-><dledford@redhat.com>; Hefty, Sean <sean.hefty@intel.com>; Hal Rosenstock
-><hal.rosenstock@gmail.com>; Bjorn Helgaas <bhelgaas@google.com>
->Cc: linux-rdma@vger.kernel.org; linux-pci@vger.kernel.org; linux-
->kernel@vger.kernel.org
->Subject: PCI/IB: add support for pci driver attribute groups
->
->From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
->Some drivers (specifically the nes IB driver), want to create a lot of sysfs driver
->attributes.  Instead of open-coding the creation and removal of these files (and
->getting it wrong btw), it's a better idea to let the driver core handle all of this
->logic for us.
->
->So add a new field to the pci driver structure, **groups, that allows pci drivers
->to specify an attribute group list it wishes to have created when it is registered
->with the driver core.
->
->Big bonus is now the driver doesn't race with userspace when the sysfs files are
->created vs. when the kobject is announced, so any script/tool that actually
->wanted to use these files will not have to poll waiting for them to show up.
->
->Cc: Faisal Latif <faisal.latif@intel.com>
->Cc: Doug Ledford <dledford@redhat.com>
->Cc: Sean Hefty <sean.hefty@intel.com>
->Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
->Cc: Bjorn Helgaas <bhelgaas@google.com>
->Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
->
->---
-> drivers/infiniband/hw/nes/nes.c |   69 +++++++++++++---------------------------
-> drivers/pci/pci-driver.c        |    1
-> include/linux/pci.h             |    1
-> 3 files changed, 26 insertions(+), 45 deletions(-)
->
->--- a/drivers/infiniband/hw/nes/nes.c
->+++ b/drivers/infiniband/hw/nes/nes.c
->@@ -808,13 +808,6 @@ static void nes_remove(struct pci_dev *p  }
->
->
->-static struct pci_driver nes_pci_driver = {
->-	.name = DRV_NAME,
->-	.id_table = nes_pci_table,
->-	.probe = nes_probe,
->-	.remove = nes_remove,
->-};
->-
-> static ssize_t adapter_show(struct device_driver *ddp, char *buf)  {
-> 	unsigned int  devfn = 0xffffffff;
->@@ -1156,35 +1149,29 @@ static DRIVER_ATTR_RW(idx_addr);  static
->DRIVER_ATTR_RW(idx_data);  static DRIVER_ATTR_RW(wqm_quanta);
->
->-static int nes_create_driver_sysfs(struct pci_driver *drv) -{
->-	int error;
->-	error  = driver_create_file(&drv->driver, &driver_attr_adapter);
->-	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_cmd);
->-	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_data);
->-	error |= driver_create_file(&drv->driver, &driver_attr_flash_cmd);
->-	error |= driver_create_file(&drv->driver, &driver_attr_flash_data);
->-	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_addr);
->-	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_data);
->-	error |= driver_create_file(&drv->driver, &driver_attr_idx_addr);
->-	error |= driver_create_file(&drv->driver, &driver_attr_idx_data);
->-	error |= driver_create_file(&drv->driver, &driver_attr_wqm_quanta);
->-	return error;
->-}
->-
->-static void nes_remove_driver_sysfs(struct pci_driver *drv) -{
->-	driver_remove_file(&drv->driver, &driver_attr_adapter);
->-	driver_remove_file(&drv->driver, &driver_attr_eeprom_cmd);
->-	driver_remove_file(&drv->driver, &driver_attr_eeprom_data);
->-	driver_remove_file(&drv->driver, &driver_attr_flash_cmd);
->-	driver_remove_file(&drv->driver, &driver_attr_flash_data);
->-	driver_remove_file(&drv->driver, &driver_attr_nonidx_addr);
->-	driver_remove_file(&drv->driver, &driver_attr_nonidx_data);
->-	driver_remove_file(&drv->driver, &driver_attr_idx_addr);
->-	driver_remove_file(&drv->driver, &driver_attr_idx_data);
->-	driver_remove_file(&drv->driver, &driver_attr_wqm_quanta);
->-}
->+static struct attribute *nes_attrs[] = {
->+	&driver_attr_adapter,
->+	&driver_attr_eeprom_cmd,
->+	&driver_attr_eeprom_data,
->+	&driver_attr_flash_cmd,
->+	&driver_attr_flash_data,
->+	&driver_attr_nonidx_addr,
->+	&driver_attr_nonidx_data,
->+	&driver_attr_idx_addr,
->+	&driver_attr_idx_data,
->+	&driver_attr_wqm_quanta,
->+	NULL,
->+};
->+ATTRIBUTE_GROUPS(nes);
->+
->+static struct pci_driver nes_pci_driver = {
->+	.name = DRV_NAME,
->+	.id_table = nes_pci_table,
->+	.probe = nes_probe,
->+	.remove = nes_remove,
->+	.groups = nes_groups,
->+};
->+
->
-> /**
->  * nes_init_module - module initialization entry point @@ -1192,20 +1179,13
->@@ static void nes_remove_driver_sysfs(stru  static int __init
->nes_init_module(void)  {
-> 	int retval;
->-	int retval1;
->
-> 	retval = nes_cm_start();
-> 	if (retval) {
-> 		printk(KERN_ERR PFX "Unable to start NetEffect iWARP
->CM.\n");
-> 		return retval;
-> 	}
->-	retval = pci_register_driver(&nes_pci_driver);
->-	if (retval >= 0) {
->-		retval1 = nes_create_driver_sysfs(&nes_pci_driver);
->-		if (retval1 < 0)
->-			printk(KERN_ERR PFX "Unable to create NetEffect sys
->files.\n");
->-	}
->-	return retval;
->+	return pci_register_driver(&nes_pci_driver);
-> }
->
->
->@@ -1215,7 +1195,6 @@ static int __init nes_init_module(void)  static void
->__exit nes_exit_module(void)  {
-> 	nes_cm_stop();
->-	nes_remove_driver_sysfs(&nes_pci_driver);
->
-> 	pci_unregister_driver(&nes_pci_driver);
-> }
->--- a/drivers/pci/pci-driver.c
->+++ b/drivers/pci/pci-driver.c
->@@ -1307,6 +1307,7 @@ int __pci_register_driver(struct pci_dri
-> 	drv->driver.bus = &pci_bus_type;
-> 	drv->driver.owner = owner;
-> 	drv->driver.mod_name = mod_name;
->+	drv->driver.groups = drv->groups;
->
-> 	spin_lock_init(&drv->dynids.lock);
-> 	INIT_LIST_HEAD(&drv->dynids.list);
->--- a/include/linux/pci.h
->+++ b/include/linux/pci.h
->@@ -729,6 +729,7 @@ struct pci_driver {
-> 	void (*shutdown) (struct pci_dev *dev);
-> 	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
-> 	const struct pci_error_handlers *err_handler;
->+	const struct attribute_group **groups;
-> 	struct device_driver	driver;
-> 	struct pci_dynids dynids;
-> };
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+index e11c563..5d7a51f 100644
+--- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
++++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+@@ -60,6 +60,8 @@ Required properties for child node:
+ 	   one for each entry in clock-names.
+  - clock-names: Must contain following for pcie and usb qmp phys:
+ 		 "pipe<lane-number>" for pipe clock specific to each lane.
++ - clock-output-names: Name of the phy clock that will be the parent for
++		       the above pipe clock.
+ 
+  - resets: a list of phandles and reset controller specifier pairs,
+ 	   one for each entry in reset-names.
+@@ -96,6 +98,7 @@ Example:
+ 
+ 			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+ 			clock-names = "pipe0";
++			clock-output-names = "pcie_0_pipe_clk_src";
+ 			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
+ 			reset-names = "lane0";
+ 		};
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
