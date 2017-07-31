@@ -1,197 +1,159 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 24 Jul 2017 15:26:52 -0500
-From: Rob Herring <robh@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH 5/5] dt-bindings: PCI: add support for new generation
- controller
-Message-ID: <20170724202652.4ofxdafajnhgm7wg@rob-hp-laptop>
-References: <cover.1500601172.git.honghui.zhang@mediatek.com>
- <3b449a88bd2f57ee005674d0161192ee01167e5a.1500601172.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:53694 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751339AbdGaXFi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 31 Jul 2017 19:05:38 -0400
+Date: Mon, 31 Jul 2017 18:05:35 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: bhelgaas@google.com, marc.zyngier@arm.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        David Daney <david.daney@cavium.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] PCI/MSI: Improve MSI alias detection
+Message-ID: <20170731230535.GC19800@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170531175230.16529-2-robin.murphy@arm.com>
+ <20170619215214.GB554@bhelgaas-glaptop.roam.corp.google.com>
+ <a9f7292e-1bce-fd38-b146-b530dfce38d1@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <3b449a88bd2f57ee005674d0161192ee01167e5a.1500601172.git.honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
- robh@kerenl.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
- bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <a9f7292e-1bce-fd38-b146-b530dfce38d1@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Jul 21, 2017 at 10:34:49AM +0800, honghui.zhang@mediatek.com wrote:
-> From: Ryder Lee <ryder.lee@mediatek.com>
+Hi Robin,
+
+Can you post a new patch with the updates below, e.g., the fact that
+MSI writes don't use phantom RIDs, the set_msi_sid() reference, a
+comment about why it's safe for get_msi_id_cb() to ignore all but the
+last alias, etc?
+
+These are subtle things that other readers will likely wonder about
+(and other platforms may trip over) so I'd like to leave a few
+breadcrumbs in the changelog and code comments to help them out.
+
+On Tue, Jun 20, 2017 at 12:03:25PM +0100, Robin Murphy wrote:
+> On 19/06/17 22:52, Bjorn Helgaas wrote:
+> > [+cc David, Alex]
+> > 
+> > On Wed, May 31, 2017 at 06:52:28PM +0100, Robin Murphy wrote:
+> >> Currently, we consider all DMA aliases when calculating MSI requester
+> >> IDs. This turns out to be the wrong thing to do in the face of pure DMA
+> >> quirks like those of Marvell SATA cards, where we can end up configuring
+> >> the MSI doorbell to expect the phantom function alias, such that it then
+> >> goes on to happily ignore actual MSI writes coming from the card on the
+> >> real RID.
+> > 
+> > I guess you're making the assumption that DMA might use phantom
+> > function aliases (aliases on the same bus as the actual device), but
+> > MSI writes will not?
 > 
-> Add support for MediaTek new generation controller and update related
-> properities.
+> Indeed - that's certainly the case for the Marvell 88SE9128 that I have
+> here (and it was a report involving a similar Marvell SATA card that
+> first brought this to our attention). I appreciate that there's not
+> necessarily a general right answer, but the generic MSI infrastructure
+> is rather built around the notion of a device having a single ID, so
+> this is really a case of picking the most likely compromise to cover the
+> greatest number of cases.
 > 
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-> ---
->  .../devicetree/bindings/pci/mediatek-pcie.txt      | 84 ++++++++++++++++++++--
->  1 file changed, 79 insertions(+), 5 deletions(-)
+> >> Improve the alias walk to only account for the topological aliases that
+> >> matter, based on the logic from the Intel IRQ remapping code.
+> > 
+> > Can you include a specific function reference here?  It sounds like
+> > it'd be useful to compare this with the Intel IRQ remapping code.
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> index 294f4a3..a1f3767 100644
-> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> @@ -4,17 +4,27 @@ Required properties:
->  - compatible: Should contain one of the following string:
->  	"mediatek,mt7623-pcie"
->  	"mediatek,mt2701-pcie"
-> +	"mediatek,generic-pcie-v2"
-
-No, please use SoC specific compatible strings.
-
->  - device_type: Must be "pci"
-> -- reg: Base addresses and lengths of the PCIe controller.
-> +- reg: Base addresses and lengths of the PICe subsys and root ports.
-> +- reg-names: Names of the above areas to use during resource look-up.
->  - #address-cells: Address representation for root ports (must be 3)
->  - #size-cells: Size representation for root ports (must be 2)
->  - clocks: Must contain an entry for each entry in clock-names.
->    See ../clocks/clock-bindings.txt for details.
->  - clock-names: Must include the following entries:
->    - free_ck :for reference clock of PCIe subsys
-> -  - sys_ck0 :for clock of Port0
-> -  - sys_ck1 :for clock of Port1
-> -  - sys_ck2 :for clock of Port2
-> +  - sys_ckN :transaction layer and data link layer clock
-> +  The "sys_ck" might be divided into the following parts in some v2 chips:
-
-Please be specific about what clocks apply to which compatible. Each 
-valid combination of clocks should correspond to at least one 
-compatible.
-
-> +    - ahb_ckN :AHB slave interface operating clock for CSR access and RC
-> +	       initiated MMIO access
-> +    - axi_ckN :application layer MMIO channel operating clock
-> +    - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-> +	       pcie_mac_ck/pcie_pipe_ck is turned off
-> +    - obff_ckN :OBFF functional block operating clock
-> +    - pipe_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-> +		pcie_mac_ck/pcie_pipe_ck is turned off
-> +  where N starting from 0 to the maximum number of root ports.
->  - phys: List of PHY specifiers (used by generic PHY framework).
->  - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
->    number of PHYs as specified in *phys* property.
-> @@ -33,6 +43,9 @@ Required properties for MT7623/MT2701:
->  - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
->    number of root ports.
->  
-> +Required properties for mediatek generic-pcie-v2:
-> +-interrupts: A list of interrupt outputs of the controller.
-> +
-
-How mnay interrupts? Not sure why you moved this in the previous patch 
-if all versions have some interrupts.
-
->  In addition, the device tree node must have sub-nodes describing each
->  PCIe port interface, having the following mandatory properties:
->  
-> @@ -50,7 +63,7 @@ Required properties:
->    property is sufficient.
->  - num-lanes: Number of lanes to use for this port.
->  
-> -Examples:
-> +Examples for mt7623:
->  
->  	hifsys: syscon@1a000000 {
->  		compatible = "mediatek,mt7623-hifsys",
-> @@ -68,6 +81,7 @@ Examples:
->  		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
->  		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
->  		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
-> +		reg-names = "subsys", "port0", "port1", "port2";
->  		#address-cells = <3>;
->  		#size-cells = <2>;
->  		#interrupt-cells = <1>;
-> @@ -127,3 +141,63 @@ Examples:
->  			num-lanes = <1>;
->  		};
->  	};
-> +
-> +Examples for mt2712:
-> +	pcie: pcie@0x11700000 {
-
-Drop the '0x'.
-
-> +		compatible = "mediatek,generic-pcie-v2";
-> +		device_type = "pci";
-> +		reg = <0 0x11700000 0 0x1000>,
-> +		      <0 0x112FF000 0 0x1000>;
-> +		reg-names = "port0", "port1";
-> +		#address-cells = <3>;
-> +		#size-cells = <2>;
-> +		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-> +			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-> +		clocks = <&pericfg CLK_PERI_PCIE0>,
-> +			 <&pericfg CLK_PERI_PCIE1>,
-> +			 <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
-> +			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>;
-> +		clock-names = "sys_ck0", "sys_ck1", "ahb0", "ahb1";
-> +		bus-range = <0x00 0xff>;
-> +		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-> +
-> +		pcie0: pcie@0,0 {
-> +			device_type = "pci";
-> +			reg = <0x0000 0 0 0 0>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			#interrupt-cells = <1>;
-> +			ranges;
-> +			num-lanes = <1>;
-> +			interrupt-map-mask = <0 0 0 7>;
-> +			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-> +					<0 0 0 2 &pcie_intc0 1>,
-> +					<0 0 0 3 &pcie_intc0 2>,
-> +					<0 0 0 4 &pcie_intc0 3>;
-> +			pcie_intc0: interrupt-controller {
-> +				interrupt-controller;
-> +				#address-cells = <0>;
-> +				#interrupt-cells = <1>;
-> +			};
-> +		};
-> +
-> +		pcie1: pcie@1,0 {
-> +			device_type = "pci";
-> +			reg = <0x0800 0 0 0 0>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +			#interrupt-cells = <1>;
-> +			ranges;
-> +			num-lanes = <1>;
-> +			interrupt-map-mask = <0 0 0 7>;
-> +			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-> +					<0 0 0 2 &pcie_intc1 1>,
-> +					<0 0 0 3 &pcie_intc1 2>,
-> +					<0 0 0 4 &pcie_intc1 3>;
-> +			pcie_intc1: interrupt-controller {
-> +				interrupt-controller;
-> +				#address-cells = <0>;
-> +				#interrupt-cells = <1>;
-> +			};
-> +		};
-> +	};
-> -- 
-> 2.6.4
+> set_msi_sid() in drivers/iommu/intel_irq_remapping.c - one small
+> difference from VT-d is that here we don't have an equivalent of the
+> "verify bus" option, only of considering the full ID.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+> >> ---
+> >>  drivers/pci/msi.c | 18 +++++++++++++-----
+> >>  1 file changed, 13 insertions(+), 5 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> >> index ba44fdfda66b..7b34c434970e 100644
+> >> --- a/drivers/pci/msi.c
+> >> +++ b/drivers/pci/msi.c
+> >> @@ -1468,13 +1468,21 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+> >>  }
+> >>  EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+> >>  
+> >> +/*
+> >> + * If the alias device/RID is on a different bus, it's a topological alias
+> >> + * we should care about; otherwise, it's a DMA quirk and we don't.
+> >> + */
+> >>  static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+> >>  {
+> >>  	u32 *pa = data;
+> >> +	u8 bus = PCI_BUS_NUM(*pa);
+> >> +
+> >> +	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
+> >> +		*pa = alias;
+> >>  
+> >> -	*pa = alias;
+> > 
+> > Aliases can arise both because of device defects, e.g., the phantom
+> > function quirks, and because of bridges, e.g., all the stuff in
+> > pci_for_each_dma_alias().
+> > 
+> > Why is it that the users of get_msi_id_cb() can get away with
+> > collapsing any of these bridge aliases into the last one that
+> > pci_for_each_dma_alias() finds?  I guess this is another question
+> > about exactly why DMA and MSI are different here.
+> 
+> As before, it's mostly just a case of trying to pick the least-worst
+> option to fit the constraints of the generic MSI layer (assuming a
+> bridge in the PCI->PCIe direction that is always going to introduce an
+> alias) - based on the assumption that the VT-d code has presumably
+> worked well enough in practice doing a similar thing - even if that
+> doesn't quite seem to match my reading of the bridge spec (AFAICS it may
+> be true for reads, but writes are somewhat murkier).
+> 
+> From the DMA angle[1], we do have the ability to simply consider every
+> alias for translation at the IOMMU, since the IOMMU layer already has
+> provisions for devices having multiple IDs. Indeed in the Marvell case
+> it is certainly necessary to consider both the real and phantom
+> functions so that both DMA and MSIs even get through in the first place.
+> 
+> Robin.
+> 
+> [1]:https://www.mail-archive.com/iommu@lists.linux-foundation.org/msg17979.html
+> 
+> >>  	return 0;
+> >>  }
+> >> +
+> >>  /**
+> >>   * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+> >>   * @domain:	The interrupt domain
+> >> @@ -1488,7 +1496,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+> >>  u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+> >>  {
+> >>  	struct device_node *of_node;
+> >> -	u32 rid = 0;
+> >> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+> >>  
+> >>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+> >>  
+> >> @@ -1504,14 +1512,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+> >>   * @pdev:	The PCI device
+> >>   *
+> >>   * Use the firmware data to find a device-specific MSI domain
+> >> - * (i.e. not one that is ste as a default).
+> >> + * (i.e. not one that is set as a default).
+> >>   *
+> >> - * Returns: The coresponding MSI domain or NULL if none has been found.
+> >> + * Returns: The corresponding MSI domain or NULL if none has been found.
+> >>   */
+> >>  struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+> >>  {
+> >>  	struct irq_domain *dom;
+> >> -	u32 rid = 0;
+> >> +	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+> >>  
+> >>  	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+> >>  	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
+> >> -- 
+> >> 2.12.2.dirty
+> >>
+> 
