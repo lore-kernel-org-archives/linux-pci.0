@@ -1,191 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36717 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752767AbdGYU6M (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Jul 2017 16:58:12 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Tue, 25 Jul 2017 14:57:50 -0600
-Message-Id: <20170725205753.4735-14-logang@deltatee.com>
-In-Reply-To: <20170725205753.4735-1-logang@deltatee.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
-Subject: [PATCH v3 13/16] switchtec_ntb: implement doorbell registers
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47326 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751951AbdGaPqk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 31 Jul 2017 11:46:40 -0400
+Date: Mon, 31 Jul 2017 08:46:36 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Sandeep Singh <ssingh1@amd.com>
+Cc: Sandeep Singh <Sandeep.Singh@amd.com>, mathias.nyman@intel.com,
+        bhelgaas@google.com, dheitmueller@kernellabs.com,
+        stern@rowland.harvard.edu, samuel.thibault@ens-lyon.org,
+        lukas@oxygene.sk, linux-usb@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,
+        Nehal Shah <Nehal-bakulchandra.Shah@amd.com>
+Subject: Re: [PATCH] usb: xhci: Add quirk for Certain failing HP keyboard on
+ reset after resume
+Message-ID: <20170731154636.GA27596@kroah.com>
+References: <1501144509-19357-1-git-send-email-Sandeep.Singh@amd.com>
+ <20170730141159.GA21849@kroah.com>
+ <060e5b58-07ff-4e2c-9739-d75c3c40c085@amd.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <060e5b58-07ff-4e2c-9739-d75c3c40c085@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pretty straightforward implementation of doorbell registers.
-The shift and mask were setup in an earlier patch and this just hooks
-up the appropriate portion of the IDB register as the local doorbells
-and the opposite portion of ODB as the peer doorbells. The DB mask is
-protected by a spinlock to avoid concurrent read-modify-write accesses.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
----
- drivers/ntb/hw/mscc/switchtec_ntb.c | 89 +++++++++++++++++++++++++++++++++++--
- 1 file changed, 85 insertions(+), 4 deletions(-)
+A: Because it messes up the order in which people normally read text.
+Q: Why is top-posting such a bad thing?
+A: Top-posting.
+Q: What is the most annoying thing in e-mail?
 
-diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-index 34d69fa8612d..3037ca730998 100644
---- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-+++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-@@ -98,6 +98,9 @@ struct switchtec_ntb {
- 	int db_shift;
- 	int db_peer_shift;
- 
-+	/* synchronize rmw access of db_mask and hw reg */
-+	spinlock_t db_mask_lock;
-+
- 	int nr_direct_mw;
- 	int nr_lut_mw;
- 	int direct_mw_to_bar[MAX_DIRECT_MW];
-@@ -338,41 +341,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
- 
- static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return sndev->db_valid_mask;
- }
- 
- static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
- {
--	return 0;
-+	return 1;
- }
- 
- static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
- {
--	return 0;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (db_vector < 0 || db_vector > 1)
-+		return 0;
-+
-+	return sndev->db_valid_mask;
- }
- 
- static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
- {
--	return 0;
-+	u64 ret;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
-+
-+	return ret & sndev->db_valid_mask;
- }
- 
- static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
- {
-+	unsigned long irqflags;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (db_bits & ~sndev->db_valid_mask)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
-+	{
-+		sndev->db_mask |= db_bits << sndev->db_shift;
-+		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
-+	}
-+	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
- {
-+	unsigned long irqflags;
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	if (db_bits & ~sndev->db_valid_mask)
-+		return -EINVAL;
-+
-+	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
-+	{
-+		sndev->db_mask &= ~(db_bits << sndev->db_shift);
-+		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
-+	}
-+	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
-+
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
-+}
-+
-+static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
-+				      phys_addr_t *db_addr,
-+				      resource_size_t *db_size)
-+{
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+	unsigned long offset;
-+
-+	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
-+		(unsigned long)sndev->stdev->mmio;
-+
-+	offset += sndev->db_shift / 8;
-+
-+	if (db_addr)
-+		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
-+	if (db_size)
-+		*db_size = sizeof(u32);
-+
- 	return 0;
- }
- 
- static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
- {
-+	struct switchtec_ntb *sndev = ntb_sndev(ntb);
-+
-+	iowrite64(db_bits << sndev->db_peer_shift,
-+		  &sndev->mmio_self_dbmsg->odb);
-+
- 	return 0;
- }
- 
-@@ -413,6 +490,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
- 	.db_clear		= switchtec_ntb_db_clear,
- 	.db_set_mask		= switchtec_ntb_db_set_mask,
- 	.db_clear_mask		= switchtec_ntb_db_clear_mask,
-+	.db_read_mask		= switchtec_ntb_db_read_mask,
-+	.peer_db_addr		= switchtec_ntb_peer_db_addr,
- 	.peer_db_set		= switchtec_ntb_peer_db_set,
- 	.spad_count		= switchtec_ntb_spad_count,
- 	.spad_read		= switchtec_ntb_spad_read,
-@@ -680,6 +759,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
- 
- 	dev_dbg(&sndev->stdev->dev, "doorbell\n");
- 
-+	ntb_db_event(&sndev->ntb, 0);
-+
- 	return IRQ_HANDLED;
- }
- 
--- 
-2.11.0
+A: No.
+Q: Should I include quotations after my reply?
+
+
+http://daringfireball.net/2007/07/on_top
+
+
+On Mon, Jul 31, 2017 at 12:10:08PM +0530, Sandeep Singh wrote:
+> Hi Greg,
+> 
+> Thanks for review. Apart from pci_ids.h, I see only 3 options, add this id as macro in pci_quirks.c
+> or pci_quirks.h or just hardcode it.
+> 
+> please suggest what will good option as per your view.
+
+As you only use it in one place, why not just hardcode it there?
+
+thanks,
+
+greg k-h
