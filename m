@@ -1,40 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:38195 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751984AbdHCRKI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 13:10:08 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: bhelgaas@google.com, scott@spiteful.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 3/5] PCI: hotplug: bmphp_ebda: constify pci_device_id.
-Date: Thu,  3 Aug 2017 22:39:14 +0530
-Message-Id: <1501780156-24708-4-git-send-email-arvind.yadav.cs@gmail.com>
-In-Reply-To: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
+Received: from ale.deltatee.com ([207.54.116.67]:34179 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752103AbdHAW1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Aug 2017 18:27:04 -0400
+To: Jon Mason <jdmason@kudzu.us>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-15-logang@deltatee.com> <20170801191050.GJ4186@kudzu.us>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <dda576ad-d3ca-814b-f0cf-478cbb61adf2@deltatee.com>
+Date: Tue, 1 Aug 2017 16:26:57 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170801191050.GJ4186@kudzu.us>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/pci/hotplug/ibmphp_ebda.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/ibmphp_ebda.c b/drivers/pci/hotplug/ibmphp_ebda.c
-index 43e345a..a6a4dac 100644
---- a/drivers/pci/hotplug/ibmphp_ebda.c
-+++ b/drivers/pci/hotplug/ibmphp_ebda.c
-@@ -1153,7 +1153,7 @@ void ibmphp_free_ebda_pci_rsrc_queue(void)
- 	}
- }
- 
--static struct pci_device_id id_table[] = {
-+static const struct pci_device_id id_table[] = {
- 	{
- 		.vendor		= PCI_VENDOR_ID_IBM,
- 		.device		= HPC_DEVICE_ID,
--- 
-2.7.4
+On 01/08/17 01:10 PM, Jon Mason wrote:
+> It would probaly be better if I remarked about the SPADs in the actual
+> patch about the SPADS :)
+> 
+> The whole point of using the SPADs in the NTB driver was to workaround
+> the problems establishing a connection between the two sides of the
+> NTB and where everything lives.  So, using a MW to get around the
+> SPADs is sort of backwards (and slightly funny).  I realize you are
+> trying to use the existing transport with minimal changes to enable
+> your hardware, and thus this makes logical sense to you.  However, if
+> the SPADs are not really needed, then we should either remove them
+> from the transport (or use them for something else).
+>
+> Per my comment in the other patch, I'm amenable to take this series
+> as-is, assuming you are willing to address this design issue in the
+> near future.  Thoughts?
+
+Yes, I agree. I'd be willing to help but it seems the clients are
+written the way they are for the other drivers, so it's their needs
+(which I'm not fully aware of) that have to be considered.
+
+I've also made all the other changes you sent as well as the file rename
+Dave requested. Once I see the bug fix patch you were going to pull hit
+ntb-next I'll rebase, test and resubmit.
+
+Thanks,
+
+Logan
