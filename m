@@ -1,42 +1,66 @@
-Return-Path: <SRS0=+xF7=7Z=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=+xF7=7Z=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V12 4/5] PCI: Handle CRS ("device not ready") returned by
- device after FLR
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
- <1503464171-6471-4-git-send-email-okaya@codeaurora.org>
- <20170823213838.GG8498@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <0ef4c01d-75bc-17dc-8926-2f9647cfeec8@codeaurora.org>
-Date: Wed, 23 Aug 2017 17:51:19 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:37759 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752218AbdHASQY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 14:16:24 -0400
+Received: by mail-qt0-f176.google.com with SMTP id 16so13958088qtz.4
+        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 11:16:23 -0700 (PDT)
+Date: Tue, 1 Aug 2017 14:16:20 -0400
+From: Jon Mason <jdmason@kudzu.us>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 05/16] ntb: ntb_test: ensure the link is up before
+ trying to configure the mws
+Message-ID: <20170801181620.GF4186@kudzu.us>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-6-logang@deltatee.com>
+ <20170801180731.GC4186@kudzu.us>
+ <46065aa6-0fe8-59d5-63dc-3beb66b69154@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <20170823213838.GG8498@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <46065aa6-0fe8-59d5-63dc-3beb66b69154@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/23/2017 5:38 PM, Bjorn Helgaas wrote:
-> If we increase the timeout, is there still value in adding the
-> pci_bus_wait_crs() stuff?  I'm not sure there is.
+On Tue, Aug 01, 2017 at 12:09:18PM -0600, Logan Gunthorpe wrote:
+> 
+> On 01/08/17 12:07 PM, Jon Mason wrote:
+> > On Tue, Jul 25, 2017 at 02:57:42PM -0600, Logan Gunthorpe wrote:
+> >> After the link tests, there is a race on one side of the test for
+> >> the link coming up. It's possible, in some cases, for the test script
+> >> to write to the 'peer_trans' files before the link has come up.
+> >>
+> >> To fix this, we simply use the link event file to ensure both sides
+> >> see the link as up before continuning.
+> >>
+> >> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> > 
+> > This looks like a bug fix.  Assuming this is the case, I can pull it
+> > out, add a "Fixes" line, and add it to my bug fixes branch.  Is this
+> > the case?
+> 
+> Sure, yup, if you'd like to do that I'm fine with it. Technically, I
+> don't think the bug can be triggered until the patches later in the
+> series are applied.
 
-I agree increasing the timeout is more than enough for FLR case. 
+Given how trivial it is, I think closing the loop here on this would
+be a good thing (and one less patch for your v4).
 
-However, I was considering the wait and pending functions as a utility
-that I can reuse towards fixing CRS in other conditions like secondary
-bus reset and potentially PM.
-
-I'm planning to have a CRS session in the Linux Plumbers Conference 
-to talk about CRS use cases. 
-
-I was going to follow up this series with secondary bus reset next once
-this goes in. 
-
-I'm unable to test PM. I can't promise how I fix/test it.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> 
+> Thanks,
+> 
+> Logan
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/46065aa6-0fe8-59d5-63dc-3beb66b69154%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
