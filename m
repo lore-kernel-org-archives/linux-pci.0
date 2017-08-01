@@ -1,72 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60460 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753126AbdHJQyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Aug 2017 12:54:36 -0400
-Subject: [PATCH] PCI: Fix and amend express capability sizes
-From: Alex Williamson <alex.williamson@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, eric.auger@redhat.com,
-        linux-kernel@vger.kernel.org
-Date: Thu, 10 Aug 2017 10:54:31 -0600
-Message-ID: <20170810165403.2968.49940.stgit@gimli.home>
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:33267 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751746AbdHARNC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 13:13:02 -0400
+Received: by mail-wr0-f180.google.com with SMTP id v105so9456002wrb.0
+        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 10:13:02 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com>
+References: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Tue, 1 Aug 2017 12:12:39 -0500
+Message-ID: <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
+Subject: Re: MSI-X support with Synopsys DesignWare IP core driver
+To: vidya sagar <sagar.tv@gmail.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI_CAP_EXP_ENDPOINT_SIZEOF_V1 defines the size of the PCIe express
-capability structure for v1 devices with link, but we also have a need
-in the vfio code for sizing the capability for devices without link,
-such as root complex endpoints.  Create a separate define for this
-ending the structure before the link fields.
+This was a multi-part message with HTML, which I think causes the
+mailing list to automatically drop it.  Please post this as plain text
+with a changelog and signed-off-by and copy the DesignWare maintainers
+(Jingoo and Joao, cc'd).
 
-Additionally, this reveals that PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 is
-currently incorrect, ending the capability length before the v2 link
-fields.  Rename this to specify an RC endpoint (no link) capability
-length and move PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 to include the link
-fields as we have for the v1 version.
-
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
----
- include/uapi/linux/pci_regs.h |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index c22d3ebaca20..7439821214d1 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -513,6 +513,7 @@
- #define  PCI_EXP_DEVSTA_URD	0x0008	/* Unsupported Request Detected */
- #define  PCI_EXP_DEVSTA_AUXPD	0x0010	/* AUX Power Detected */
- #define  PCI_EXP_DEVSTA_TRPND	0x0020	/* Transactions Pending */
-+#define PCI_CAP_EXP_RC_ENDPOINT_SIZEOF_V1	12	/* v1 endpoints without link end here */
- #define PCI_EXP_LNKCAP		12	/* Link Capabilities */
- #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
- #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
-@@ -556,7 +557,7 @@
- #define  PCI_EXP_LNKSTA_DLLLA	0x2000	/* Data Link Layer Link Active */
- #define  PCI_EXP_LNKSTA_LBMS	0x4000	/* Link Bandwidth Management Status */
- #define  PCI_EXP_LNKSTA_LABS	0x8000	/* Link Autonomous Bandwidth Status */
--#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V1	20	/* v1 endpoints end here */
-+#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V1	20	/* v1 endpoints with link end here */
- #define PCI_EXP_SLTCAP		20	/* Slot Capabilities */
- #define  PCI_EXP_SLTCAP_ABP	0x00000001 /* Attention Button Present */
- #define  PCI_EXP_SLTCAP_PCP	0x00000002 /* Power Controller Present */
-@@ -639,7 +640,7 @@
- #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
- #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
- #define PCI_EXP_DEVSTA2		42	/* Device Status 2 */
--#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
-+#define PCI_CAP_EXP_RC ENDPOINT_SIZEOF_V2	44	/* v2 endpoints without link end here */
- #define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
- #define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
- #define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5.0GT/s */
-@@ -647,6 +648,7 @@
- #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
- #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
- #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
-+#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	52	/* v2 endpoints with link end here */
- #define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
- #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
- #define PCI_EXP_SLTSTA2		58	/* Slot Status 2 */
+On Tue, Aug 1, 2017 at 12:28 AM, vidya sagar <sagar.tv@gmail.com> wrote:
+> Hi,
+> As you might be knowing it already, in the current pcie-designware.c , there
+> is no support for MSI-X
+> Although there is no native support from Synopsys IP as well to have 2048
+> interrupts, we can at least have basic support to get MSI-X also allocated
+> (along with MSI) as many as possible in the system at that point. Of course,
+> all these interrupts will have the same address to which downstream devices
+> need to initiate mem-write transactions. Though it doesn't leverage one of
+> the advantages of having MSI-X over MSI, it at least avoids drivers falling
+> back to legacy interrupts when the card doesn't support MSI. Some of the
+> Intel NVMe cards are examples here. Legacy interrupt being a shared
+> interrupt, it unnecessarily triggers all other shared ISRs to be called
+> whenever there is a legacy interrupt.
+>
+> I have the following patch which enables MSI-X support also. Would like to
+> have your comments on this.
+>
+>
+> diff --git a/drivers/pci/host/pcie-designware.c
+> b/drivers/pci/host/pcie-designware.c
+> index af8f6e9..9086253 100644
+> --- a/drivers/pci/host/pcie-designware.c
+> +++ b/drivers/pci/host/pcie-designware.c
+> @@ -406,9 +406,6 @@ static int dw_msi_setup_irq(struct msi_controller *chip,
+> struct pci_dev *pdev,
+>      int irq, pos;
+>      struct pcie_port *pp = pdev->bus->sysdata;
+>
+> -    if (desc->msi_attrib.is_msix)
+> -        return -EINVAL;
+> -
+>      irq = assign_irq(1, desc, &pos);
+>      if (irq < 0)
+>          return irq;
+> @@ -426,9 +423,16 @@ static int dw_msi_setup_irqs(struct msi_controller
+> *chip, struct pci_dev *pdev,
+>      struct msi_desc *desc;
+>      struct pcie_port *pp = pdev->bus->sysdata;
+>
+> -    /* MSI-X interrupts are not supported */
+> -    if (type == PCI_CAP_ID_MSIX)
+> -        return -EINVAL;
+> +    if (type == PCI_CAP_ID_MSIX) {
+> +        for_each_pci_msi_entry(desc, pdev) {
+> +            irq = arch_setup_msi_irq(pdev, desc);
+> +            if (irq < 0)
+> +                return irq;
+> +            if (irq > 0)
+> +                return -ENOSPC;
+> +        }
+> +        return 0;
+> +    }
+>
+>      WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+>      desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+>
