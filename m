@@ -1,138 +1,112 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 8 Aug 2017 22:25:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ding Tianhong <dingtianhong@huawei.com>
-Subject: Re: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
-Message-ID: <20170809032503.GB7191@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
- <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
- <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:35624 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751632AbdHAIY3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Aug 2017 04:24:29 -0400
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: Support SVM without PASID
+To: valmiki <valmikibow@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
+        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
+        kevin.tian@intel.com, jacob.jun.pan@intel.com
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+Message-ID: <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+Date: Tue, 1 Aug 2017 09:26:14 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
- alexander.duyck@gmail.com, ashok.raj@intel.com, jeffrey.t.kirsher@intel.com,
- linux-pci@vger.kernel.org, ganeshgr@chelsio.com, Bob.Shaw@amd.com,
- leedom@chelsio.com, patrick.j.cramer@intel.com, bhelgaas@google.com,
- werner@chelsio.com, linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
- Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, davem@davemloft.net,
- l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 08, 2017 at 09:22:39PM -0500, Bjorn Helgaas wrote:
-> On Sat, Aug 05, 2017 at 03:15:11PM +0800, Ding Tianhong wrote:
-> > When bit4 is set in the PCIe Device Control register, it indicates
-> > whether the device is permitted to use relaxed ordering.
-> > On some platforms using relaxed ordering can have performance issues or
-> > due to erratum can cause data-corruption. In such cases devices must avoid
-> > using relaxed ordering.
-> > 
-> > This patch checks if there is any node in the hierarchy that indicates that
-> > using relaxed ordering is not safe. 
-...
+Hi Valmiki,
 
-> > +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
+Sorry for the delay, I was away last week.
+
+On 22/07/17 03:05, valmiki wrote:
+> On 7/12/2017 10:18 PM, Jean-Philippe Brucker wrote:
+>> On 12/07/17 17:27, valmiki wrote:
+>>> On 7/11/2017 4:26 PM, Jean-Philippe Brucker wrote:
+>>>> Hi Valmiki,
+>>>>
+>>>> On 09/07/17 04:15, valmiki wrote:
+>>>>>>> Hi,
+>>>>>>>
+>>>>>>> In SMMUv3 architecture document i see "PASIDs are optional,
+>>>>>>> configurable, and of a size determined by the minimum
+>>>>>>> of the endpoint".
+>>>>>>>
+>>>>>>> So if PASID's are optional and not supported by PCIe end point, how
+>>>>>>> SVM
+>>>>>>> can be achieved ?
+>>>>>>
+>>>>>> It cannot be inferred from that statement that PASID support is not
+>>>>>> required for SVM.  AIUI, SVM is a software feature enabled by numerous
+>>>>>> "optional" hardware features, including PASID.  Features that are
+>>>>>> optional per the hardware specification may be required for specific
+>>>>>> software features.  Thanks,
+>>>>>>
+>>>>> Thanks for the information Alex. Suppose if an End point doesn't support
+>>>>> PASID, is it still possible to achieve SVM ?
+>>>>> Are there any such features in SMMUv3 with which we can achieve it ?
+>>>>
+>>>> Not really, we don't plan to share the non-PASID context with a process.
+>>>>
+>>>> In theory you could achieve something resembling SVM by assigning the
+>>>> entire endpoint to userspace using VFIO, then use ATS+PRI capabilities
+>>>> with a bind ioctl. If your device can do SR-IOV, then you can bind one
+>>>> process per virtual function.
+>>>>
+>>>> Unless we end up seeing lots of endpoints that implement PRI but not
+>>>> PASID, I don't plan to add this to VFIO or SMMUv3.
+>>>>
+>>>> For a PCIe endpoint, the requirements for SVM are ATS, PRI and PASID
+>>>> enabled. In addition, the SMMU should support DVM (broadcast TLB
+>>>> maintenance) and must be compatible with the MMU (page sizes, output
+>>>> address size, ASID bits...)
+>>>>
+>>> Thanks Jean.
+>>> In SMMU document it was quoted as follows
+>>> "When STE.S1DSS==0b10, a transaction without a SubstreamID is accepted and
+>>> uses the CD of Substream 0. Under this configuration, transactions that
+>>> arrive with SubstreamID 0 are aborted and an event recorded."
+>>>
+>>> Is this mode supported in your previous series of SMMUv3 patches ?
+>>> If it is supported is it achieved through VFIO ?
+>>
+>> Yes, STE.S1DSS==0b10 is the only supported mode with my patches. And in
+>> VFIO, the non-PASID context (CD 0) is managed with
+>> VFIO_IOMMU_MAP/UNMAP_DMA ioctls, mirroring the current behavior for
+>> devices that don't support PASID. All other CDs, with PASID > 0, are
+>> managed via the new BIND ioctl.
 > 
-> This is misnamed.  This doesn't tell us anything about whether the
-> device *supports* relaxed ordering.  It only tells us whether the
-> device is *permitted* to use it.
-> 
-> When a device initiates a transaction, the hardware should set the RO
-> bit in the TLP with logic something like this:
-> 
->   RO = <this Function supports relaxed ordering> &&
->        <this transaction doesn't require strong write ordering> &&
->        <PCI_EXP_DEVCTL_RELAX_EN is set>
-> 
-> The issue you're fixing is that some Completers don't handle RO
-> correctly.  The determining factor is not the Requester, but the
-> Completer (for this series, a Root Port).  So I think this should be
-> something like:
-> 
->   int pcie_relaxed_ordering_broken(struct pci_dev *completer)
->   {
->     if (!completer)
->       return 0;
-> 
->     return completer->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
->   }
-> 
-> and the caller should do something like this:
-> 
->  if (pcie_relaxed_ordering_broken(pci_find_pcie_root_port(pdev)))
->    adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-> 
-> That way it's obvious where the issue is, and it's obvious that the
-> answer might be different for peer-to-peer transactions than it is for
-> transactions to the root port, i.e., to coherent memory.
+> Thanks Jean, this helps a lot.
+> So i digged through your patches and i understood that using BIND ioctls
+> satge-1 translations are setup in SMMU for an application.
+> If we use VFIO_IOMMU_MAP/UNMAP_DMA ioctls they are setting up stage-2
+> translations in SMMU.
+> So without PASID support we can only work with stage-2 translations ?
 
-After looking at the driver, I wonder if it would be simpler like
-this:
+It depends what type you use when registering the IOMMU with VFIO_SET_IOMMU:
 
-  int pcie_relaxed_ordering_enabled(struct pci_dev *dev)
-  {
-    u16 ctl;
+* If the type is VFIO_TYPE1v2_IOMMU, then VFIO_IOMMU_MAP/UNMAP_DMA
+  affects the stage-1 non-PASID context (already the case in mainline).
+  In addition, with my patch the BIND ioctl will affect stage-1 PASID
+  contexts, and bind process page directories to the device (host SVM).
 
-    pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
-    return ctl & PCI_EXP_DEVCTL_RELAX_EN;
-  }
-  EXPORT_SYMBOL(pcie_relaxed_ordering_enabled);
+* If the type is VFIO_TYPE1_NESTING_IOMMU, then VFIO_IOMMU_MAP/UNMAP_DMA
+  will affect stage-2 mappings (already in mainline).
+  With my SMMU patch series, the BIND ioctl is not supported in this mode.
+  But in the future, BIND would allow to manage stage-1 as well:
+  - bind a process page directory (host SVM with added stage-2), or
+  - bind a guest page directory (viommu), or
+  - bind the full stage-1 context table (viommu).
 
-  static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-  {
-    struct pci_dev *root;
-
-    if (dev->is_virtfn)
-      return;  /* PCI_EXP_DEVCTL_RELAX_EN is RsvdP in VFs */
-
-    if (!pcie_relaxed_ordering_enabled(dev))
-      return;
-
-    /*
-     * For now, we only deal with Relaxed Ordering issues with Root
-     * Ports.  Peer-to-peer DMA is another can of worms.
-     */
-    root = pci_find_pcie_root_port(dev);
-    if (!root)
-      return;
-
-    if (root->relaxed_ordering_broken)
-      pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-                                 PCI_EXP_DEVCTL_RELAX_EN);
-  }
-
-This doesn't check every intervening switch, but I don't think we know
-about any issues except with root ports.
-
-And the driver could do:
-
-  if (!pcie_relaxed_ordering_enabled(pdev))
-    adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-
-The driver code wouldn't show anything about coherent memory vs.
-peer-to-peer, but we really don't have a clue about how to handle that
-yet anyway.
-
-I guess this is back to exactly what you proposed, except that I
-changed the name of pcie_relaxed_ordering_supported() to
-pcie_relaxed_ordering_enabled(), which I think is slightly more
-specific from the device's point of view.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Jean
