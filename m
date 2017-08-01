@@ -1,189 +1,487 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36698 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932374AbdHYVSk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Aug 2017 17:18:40 -0400
-Date: Fri, 25 Aug 2017 16:18:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v5 06/10] PCI: rockchip: fix missing phy manipulation for
- legacy phy
-Message-ID: <20170825211832.GA8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
- <1503471777-73999-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:37138 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751877AbdHASzJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 14:55:09 -0400
+Received: by mail-qt0-f195.google.com with SMTP id d10so2472821qtb.4
+        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 11:55:09 -0700 (PDT)
+Date: Tue, 1 Aug 2017 14:55:06 -0400
+From: Jon Mason <jdmason@kudzu.us>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 09/16] switchtec_ntb: initialize hardware for memory
+ windows
+Message-ID: <20170801185505.GH4186@kudzu.us>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-10-logang@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503471777-73999-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <20170725205753.4735-10-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 23, 2017 at 03:02:57PM +0800, Shawn Lin wrote:
-> For instance, if a EP connect to lane3 and work under lagecy
-> phy mode, so struct phy phys[0..2] are all NULL. In this case,
-> rockchip->lanes_map & BIT(i) will tell the driver that lane0 is
-> already inactive, but what we want actually is to power off
-> the phys[0] for legacy phy mode. Fix this by add checking of
-> rockchip->legacy_phy for rockchip_pcie_deinit_phys.
+On Tue, Jul 25, 2017 at 02:57:46PM -0600, Logan Gunthorpe wrote:
+> Add the code to initialize the memory windows in the hardware.
+> This includes setting up the requester ID table, and figuring out
+> which bar corresponds to which memory window. (Seeing the switch
+> can be configured with any number of bars.)
+> 
+> Also, seeing the device doesn't have hardware for scratchpads or
+> determining the link status, we create a shared memory window that has
+> these features. A magic number with a version copmonent will be used
+> to determine if the otherside's driver is actually up.
 
-This changelog is not quite correct.  If "rockchip->legacy_phy", then
-rockchip->phys[0] is a valid PHY, but phys[1..3] are NULL (not 0..2).
+Using shared memory for SPADS is kind of hacky.  We should probably
+rework the transport to not need SPADs.  I'm fine with this being done
+after this series, assuming you are willing to do so.
 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+More comments below
+
+> 
+> The shared memory window also informs the other side of the
+> size and count of the local memory windows.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
 > ---
+>  drivers/ntb/hw/mscc/switchtec_ntb.c | 355 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 355 insertions(+)
 > 
-> Changes in v5: None
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  drivers/pci/host/pcie-rockchip.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 9cd51e0..933e3e9 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -759,7 +759,7 @@ static void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
+> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> index 253efba72275..1596757413f5 100644
+> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
+> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> @@ -15,37 +15,391 @@
 >  
->  	for (i = 0; i < MAX_LANE_NUM; i++) {
->  		/* inactive lane is already powered off */
-> -		if (rockchip->lanes_map & BIT(i))
-> +		if (rockchip->legacy_phy || rockchip->lanes_map & BIT(i))
->  			phy_power_off(rockchip->phys[i]);
->  		phy_exit(rockchip->phys[i]);
->  	}
+>  #include <linux/switchtec.h>
+>  #include <linux/module.h>
+> +#include <linux/delay.h>
+> +#include <linux/kthread.h>
+>  
+>  MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
+>  MODULE_VERSION("0.1");
+>  MODULE_LICENSE("GPL");
+>  MODULE_AUTHOR("Microsemi Corporation");
+>  
+> +static bool use_lut_mws;
+> +module_param(use_lut_mws, bool, 0644);
+> +MODULE_PARM_DESC(use_lut_mws,
+> +		 "Enable the use of the LUT based memory windows");
+> +
+> +#ifndef ioread64
+> +#ifdef readq
+> +#define ioread64 readq
+> +#else
+> +#define ioread64 _ioread64
+> +static inline u64 _ioread64(void __iomem *mmio)
+> +{
+> +	u64 low, high;
+> +
+> +	low = ioread32(mmio);
+> +	high = ioread32(mmio + sizeof(u32));
+> +	return low | (high << 32);
+> +}
+> +#endif
+> +#endif
+> +
+> +#ifndef iowrite64
+> +#ifdef writeq
+> +#define iowrite64 writeq
+> +#else
+> +#define iowrite64 _iowrite64
+> +static inline void _iowrite64(u64 val, void __iomem *mmio)
+> +{
+> +	iowrite32(val, mmio);
+> +	iowrite32(val >> 32, mmio + sizeof(u32));
+> +}
+> +#endif
+> +#endif
+> +
+> +#define SWITCHTEC_NTB_MAGIC 0x45CC0001
+> +#define MAX_MWS     128
+> +
+> +struct shared_mw {
+> +	u32 magic;
+> +	u32 partition_id;
+> +	u64 mw_sizes[MAX_MWS];
+> +};
+> +
+> +#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
+> +#define LUT_SIZE SZ_64K
+> +
+>  struct switchtec_ntb {
+>  	struct switchtec_dev *stdev;
+> +
+> +	int self_partition;
+> +	int peer_partition;
+> +
+> +	struct ntb_info_regs __iomem *mmio_ntb;
+> +	struct ntb_ctrl_regs __iomem *mmio_ctrl;
+> +	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
+> +	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
+> +	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
+> +	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
+> +
+> +	struct shared_mw *self_shared;
+> +	struct shared_mw __iomem *peer_shared;
+> +	dma_addr_t self_shared_dma;
+> +
+> +	int nr_direct_mw;
+> +	int nr_lut_mw;
+> +	int direct_mw_to_bar[MAX_DIRECT_MW];
+> +
+> +	int peer_nr_direct_mw;
+> +	int peer_nr_lut_mw;
+> +	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
+>  };
+>  
+> +static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
+> +				 struct ntb_ctrl_regs __iomem *ctl,
+> +				 u32 op, int wait_status)
+> +{
+> +	static const char * const op_text[] = {
+> +		[NTB_CTRL_PART_OP_LOCK] = "lock",
+> +		[NTB_CTRL_PART_OP_CFG] = "configure",
+> +		[NTB_CTRL_PART_OP_RESET] = "reset",
+> +	};
+> +
+> +	int i;
+> +	u32 ps;
+> +	int status;
+> +
+> +	switch (op) {
+> +	case NTB_CTRL_PART_OP_LOCK:
+> +		status = NTB_CTRL_PART_STATUS_LOCKING;
+> +		break;
+> +	case NTB_CTRL_PART_OP_CFG:
+> +		status = NTB_CTRL_PART_STATUS_CONFIGURING;
+> +		break;
+> +	case NTB_CTRL_PART_OP_RESET:
+> +		status = NTB_CTRL_PART_STATUS_RESETTING;
+> +		break;
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +
+> +	iowrite32(op, &ctl->partition_op);
+> +
+> +	for (i = 0; i < 1000; i++) {
+> +		if (msleep_interruptible(50) != 0) {
+> +			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
+> +			return -EINTR;
+> +		}
+> +
+> +		ps = ioread32(&ctl->partition_status) & 0xFFFF;
+> +
+> +		if (ps != status)
+> +			break;
+> +	}
+> +
+> +	if (ps == wait_status)
+> +		return 0;
+> +
+> +	if (ps == status) {
+> +		dev_err(&sndev->stdev->dev,
+> +			"Timed out while peforming %s (%d). (%08x)",
+> +			op_text[op], op,
+> +			ioread32(&ctl->partition_status));
+> +
+> +		return -ETIMEDOUT;
+> +	}
+> +
+> +	return -EIO;
+> +}
+> +
+> +static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+> +{
+> +	u64 part_map;
+> +
+> +	sndev->self_partition = sndev->stdev->partition;
+> +
+> +	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
+> +	part_map = ioread64(&sndev->mmio_ntb->ep_map);
+> +	part_map &= ~(1 << sndev->self_partition);
+> +	sndev->peer_partition = ffs(part_map) - 1;
+> +
+> +	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
+> +		sndev->self_partition, sndev->stdev->partition_count,
+> +		part_map);
+> +
+> +	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
+> +		SWITCHTEC_NTB_REG_CTRL_OFFSET;
+> +	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
+> +		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
+> +
+> +	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
+> +	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
+> +	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
+> +}
+> +
+> +static int map_bars(int *map, struct ntb_ctrl_regs __iomem *ctrl)
+> +{
+> +	int i;
+> +	int cnt = 0;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(ctrl->bar_entry); i++) {
+> +		u32 r = ioread32(&ctrl->bar_entry[i].ctl);
+> +
+> +		if (r & NTB_CTRL_BAR_VALID)
+> +			map[cnt++] = i;
+> +	}
+> +
+> +	return cnt;
+> +}
+> +
+> +static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
+> +{
+> +	sndev->nr_direct_mw = map_bars(sndev->direct_mw_to_bar,
+> +				       sndev->mmio_self_ctrl);
+> +
+> +	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
+> +	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
+> +
+> +	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
+> +		sndev->nr_direct_mw, sndev->nr_lut_mw);
+> +
+> +	sndev->peer_nr_direct_mw = map_bars(sndev->peer_direct_mw_to_bar,
+> +					    sndev->mmio_peer_ctrl);
+> +
+> +	sndev->peer_nr_lut_mw =
+> +		ioread16(&sndev->mmio_peer_ctrl->lut_table_entries);
+> +	sndev->peer_nr_lut_mw = rounddown_pow_of_two(sndev->peer_nr_lut_mw);
+> +
+> +	dev_dbg(&sndev->stdev->dev, "Peer MWs: %d direct, %d lut",
+> +		sndev->peer_nr_direct_mw, sndev->peer_nr_lut_mw);
+> +
+> +}
+> +
+> +static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
+> +{
+> +	int rc = 0;
+> +	u16 req_id = ioread16(&sndev->mmio_ntb->requester_id);
 
-I think this is harder to understand than necessary.  If we're using
-legacy_phy, the pointer is in phys[0].  If we always set
-rockchip->lanes_map, even in the legacy_phy case (where it would show
-that only phys[0] is valid), this patch won't even be necessary.
+Nit, please don't do function calls in the variable declaration.  If
+this doesn't violate Linux coding style, then it should :)
 
-I'd propose the following patches, which could be squashed into the
-existing series on pci/host-rockchip.  The first is purely cosmetic,
-as is some of the second.
+> +	u32 error;
+> +
+> +	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
+> +		dev_err(&sndev->stdev->dev,
+> +			"Not enough requester IDs available.");
+> +		return -EFAULT;
+> +	}
+> +
+> +	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
+> +				   NTB_CTRL_PART_OP_LOCK,
+> +				   NTB_CTRL_PART_STATUS_LOCKED);
+> +	if (rc)
+> +		return rc;
+> +
+> +	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
+> +		  &sndev->mmio_self_ctrl->partition_ctrl);
+> +
+> +	// Root Complex Requester ID
 
-The important part is this:
+Please use standard /**/ comments (same for below)
 
-   static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
-   {
-  -       u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-  -       u8 map = val & PCIE_CORE_LANE_MAP_MASK;
-  +       u32 val;
-  +       u8 map;
-  +
-  +       if (rockchip->legacy_phy)
-  +               return BIT(0);
+> +	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
 
+0? A comment here on 0 might be needed.
 
+> +		  &sndev->mmio_self_ctrl->req_id_table[0]);
+> +
+> +	// Host Bridge Requester ID
+> +	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
+> +		  &sndev->mmio_self_ctrl->req_id_table[1]);
+> +
+> +	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
+> +				   NTB_CTRL_PART_OP_CFG,
+> +				   NTB_CTRL_PART_STATUS_NORMAL);
+> +
 
-commit d3d39c577edf63b9441d1a7614808e02721dd2b6
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Aug 25 16:00:25 2017 -0500
+nit, remove this new line
 
-    Possibly squash into "PCI: rockchip: Add per-lane PHY support"
+> +	if (rc == -EIO) {
+> +		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
+> +		dev_err(&sndev->stdev->dev,
+> +			"Error setting up the requester ID table: %08x",
+> +			error);
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
+> +{
+> +	int i;
+> +
+> +	memset(sndev->self_shared, 0, LUT_SIZE);
+> +	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
+> +	sndev->self_shared->partition_id = sndev->stdev->partition;
+> +
+> +	for (i = 0; i < sndev->nr_direct_mw; i++) {
+> +		int bar = sndev->direct_mw_to_bar[i];
+> +		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
+> +
+> +		if (i == 0)
+> +			sz = min_t(resource_size_t, sz,
+> +				   LUT_SIZE * sndev->nr_lut_mw);
+> +
+> +		sndev->self_shared->mw_sizes[i] = sz;
+> +	}
+> +
+> +	for (i = 0; i < sndev->nr_lut_mw; i++) {
+> +		int idx = sndev->nr_direct_mw + i;
+> +
+> +		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
+> +	}
+> +}
+> +
+> +static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
+> +{
+> +	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
+> +	int bar = sndev->direct_mw_to_bar[0];
+> +	u32 ctl_val;
+> +	int rc;
+> +
+> +	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
+> +						 LUT_SIZE,
+> +						 &sndev->self_shared_dma,
+> +						 GFP_KERNEL);
+> +	if (!sndev->self_shared) {
+> +		dev_err(&sndev->stdev->dev,
+> +			"unable to allocate memory for shared mw");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	switchtec_ntb_init_shared(sndev);
+> +
+> +	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
+> +				   NTB_CTRL_PART_STATUS_LOCKED);
+> +	if (rc)
+> +		goto unalloc_and_exit;
+> +
+> +	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
+> +	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
+> +	ctl_val &= 0xFF;
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index f8b88004e20f..5ccbdbfa97d0 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -867,24 +867,25 @@ static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
- 	char *name;
- 	u32 i;
- 
--	rockchip->phys[0] = devm_phy_get(dev, "pcie-phy");
--	if (IS_ERR(rockchip->phys[0])) {
--		if (PTR_ERR(rockchip->phys[0]) == -EPROBE_DEFER)
--			return PTR_ERR(rockchip->phys[0]);
--		dev_dbg(dev, "missing legacy phy; search for per-lane PHY\n");
--	} else {
-+	phy = devm_phy_get(dev, "pcie-phy");
-+	if (!IS_ERR(phy)) {
- 		rockchip->legacy_phy = true;
-+		rockchip->phys[0] = phy;
- 		dev_warn(dev, "legacy phy model is deprecated!\n");
- 		return 0;
- 	}
- 
-+	if (PTR_ERR(phy) == -EPROBE_DEFER)
-+		return PTR_ERR(phy);
-+
-+	dev_dbg(dev, "missing legacy phy; search for per-lane PHY\n");
-+
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
- 		name = kasprintf(GFP_KERNEL, "pcie-phy-%u", i);
- 		if (!name)
- 			return -ENOMEM;
- 
--		phy = devm_of_phy_get(rockchip->dev,
--				      rockchip->dev->of_node, name);
-+		phy = devm_of_phy_get(dev, dev->of_node, name);
- 		kfree(name);
- 
- 		if (IS_ERR(phy)) {
-commit 6f8bcdfe4568809437e93e2d54e68b2cba3b4ac4
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Fri Aug 25 15:39:10 2017 -0500
+This seems odd ordering.  Don't you want to clear the unnecessary bits
+before adding new ones?  If so, maybe flip the 2 lines above.
 
-    Possibly squash into "PCI: rockchip: Idle inactive PHY(s)"
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 60069acd9f86..29ebfc971896 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -309,8 +309,14 @@ static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
- 
- static u8 rockchip_pcie_lane_map(struct rockchip_pcie *rockchip)
- {
--	u32 val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
--	u8 map = val & PCIE_CORE_LANE_MAP_MASK;
-+	u32 val;
-+	u8 map;
-+
-+	if (rockchip->legacy_phy)
-+		return BIT(0);
-+
-+	val = rockchip_pcie_read(rockchip, PCIE_CORE_LANE_MAP);
-+	map = val & PCIE_CORE_LANE_MAP_MASK;
- 
- 	/* The link may be using a reverse-indexed mapping. */
- 	if (val & PCIE_CORE_LANE_MAP_REVERSE)
-@@ -715,13 +721,10 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 			  PCIE_CORE_PL_CONF_LANE_SHIFT);
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
--	if (!rockchip->legacy_phy) {
--		/*  power off unused lane(s) */
--		rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
--		for (i = 0; i < MAX_LANE_NUM; i++) {
--			if (rockchip->lanes_map & BIT(i))
--				continue;
--
-+	/* Power off unused lane(s) */
-+	rockchip->lanes_map = rockchip_pcie_lane_map(rockchip);
-+	for (i = 0; i < MAX_LANE_NUM; i++) {
-+		if (!(rockchip->lanes_map & BIT(i))) {
- 			dev_dbg(dev, "idling lane %d\n", i);
- 			phy_power_off(rockchip->phys[i]);
- 		}
-@@ -1378,7 +1381,7 @@ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
- 	}
- 
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
--		/* inactive lane is already powered off */
-+		/* inactive lanes are already powered off */
- 		if (rockchip->lanes_map & BIT(i))
- 			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
-@@ -1628,7 +1631,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	irq_domain_remove(rockchip->irq_domain);
- 
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
--		/* inactive lane is already powered off */
-+		/* inactive lanes are already powered off */
- 		if (rockchip->lanes_map & BIT(i))
- 			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
+> +	ctl_val |= ilog2(LUT_SIZE) << 8;
+> +	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
+> +	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
+> +
+> +	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
+> +		   sndev->self_shared_dma),
+> +		  &ctl->lut_entry[0]);
+> +
+> +	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
+> +				   NTB_CTRL_PART_STATUS_NORMAL);
+> +	if (rc) {
+> +		u32 bar_error, lut_error;
+> +
+> +		bar_error = ioread32(&ctl->bar_error);
+> +		lut_error = ioread32(&ctl->lut_error);
+> +		dev_err(&sndev->stdev->dev,
+> +			"Error setting up shared MW: %08x / %08x",
+> +			bar_error, lut_error);
+> +		goto unalloc_and_exit;
+> +	}
+> +
+> +	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
+> +	if (!sndev->peer_shared) {
+> +		rc = -ENOMEM;
+> +		goto unalloc_and_exit;
+> +	}
+> +
+> +	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
+> +	return 0;
+> +
+> +unalloc_and_exit:
+> +	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
+> +			  sndev->self_shared, sndev->self_shared_dma);
+> +
+> +	return rc;
+> +}
+> +
+> +static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
+> +{
+> +	if (sndev->peer_shared)
+> +		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
+> +
+> +	if (sndev->self_shared)
+> +		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
+> +				  sndev->self_shared,
+> +				  sndev->self_shared_dma);
+> +}
+> +
+>  static int switchtec_ntb_add(struct device *dev,
+>  			     struct class_interface *class_intf)
+>  {
+>  	struct switchtec_dev *stdev = to_stdev(dev);
+>  	struct switchtec_ntb *sndev;
+> +	int rc;
+>  
+>  	stdev->sndev = NULL;
+>  
+>  	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
+>  		return -ENODEV;
+>  
+> +	if (stdev->partition_count != 2)
+> +		dev_warn(dev, "ntb driver only supports 2 partitions");
+> +
+>  	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
+>  	if (!sndev)
+>  		return -ENOMEM;
+>  
+>  	sndev->stdev = stdev;
+>  
+> +	switchtec_ntb_init_sndev(sndev);
+> +	switchtec_ntb_init_mw(sndev);
+> +
+> +	rc = switchtec_ntb_init_req_id_table(sndev);
+> +	if (rc)
+> +		goto free_and_exit;
+> +
+> +	rc = switchtec_ntb_init_shared_mw(sndev);
+> +	if (rc)
+> +		goto free_and_exit;
+> +
+>  	stdev->sndev = sndev;
+>  	dev_info(dev, "NTB device registered");
+>  
+>  	return 0;
+> +
+> +free_and_exit:
+> +	kfree(sndev);
+> +	dev_err(dev, "failed to register ntb device: %d", rc);
+> +	return rc;
+>  }
+>  
+>  void switchtec_ntb_remove(struct device *dev,
+> @@ -58,6 +412,7 @@ void switchtec_ntb_remove(struct device *dev,
+>  		return;
+>  
+>  	stdev->sndev = NULL;
+> +	switchtec_ntb_deinit_shared_mw(sndev);
+>  	kfree(sndev);
+>  	dev_info(dev, "ntb device unregistered");
+>  }
+> -- 
+> 2.11.0
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/20170725205753.4735-10-logang%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
