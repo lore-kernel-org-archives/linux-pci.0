@@ -1,51 +1,99 @@
-Return-Path: <SRS0=K1PJ=72=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=K1PJ=72=linaro.org=ard.biesheuvel@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <CAPM=9tzhzGEY_-FhGNECQ8QkxPtXxhojwPeVQT43Rcgf6X0Lww@mail.gmail.com>
-References: <20170817113028.16853-1-dja@axtens.net> <20170817113028.16853-2-dja@axtens.net>
- <20170821105300.GB23287@e107981-lin.cambridge.arm.com> <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu-FCkV9Dv=yn_CNC9orj8Roiabb75jX34w3mMziWVZaeA@mail.gmail.com>
- <20170823135734.GB8498@bhelgaas-glaptop.roam.corp.google.com> <CAPM=9tzhzGEY_-FhGNECQ8QkxPtXxhojwPeVQT43Rcgf6X0Lww@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 24 Aug 2017 10:38:14 +0100
-Message-ID: <CAKv+Gu8mfPtQ+vWgzP4adtVB+DByS4snF+FQ7k-UDV+=bxHSsg@mail.gmail.com>
-Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
-To: Dave Airlie <airlied@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>, Will Deacon <will.deacon@arm.com>,
-	dri-devel <dri-devel@lists.freedesktop.org>, linux-pci <linux-pci@vger.kernel.org>,
-	"Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Zou Rongrong <zourongrong@gmail.com>, "Vetter, Daniel" <daniel.vetter@intel.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Daniel Axtens <dja@axtens.net>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <SRS0=CN2C=7D=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=CN2C=7D=arm.com=robin.murphy@kernel.org>
+From: Robin Murphy <robin.murphy@arm.com>
+To: helgaas@kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	marc.zyngier@arm.com,
+	david.daney@cavium.com,
+	alex.williamson@redhat.com
+Subject: [PATCH v2] PCI/MSI: Improve MSI alias detection
+Date: Tue,  1 Aug 2017 18:59:08 +0100
+Message-Id: <63f5b8eef3c6d903bf97ca7fea0daa2e832be02f.1501610322.git.robin.murphy@arm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24 August 2017 at 01:57, Dave Airlie <airlied@gmail.com> wrote:
->> Yeah, maybe it's time to disconnect the "default display device" idea
->> from the VGA arbiter.  I have no idea what (if any) dependencies X has
->> on the legacy VGA resources.  I assume X works fine on power, where it
->> sounds like those resources are rarely or never available.
->
-> The question on non-x86 archs, is what is the correct device to default to.
->
-> On x86 we use the legacy VGA resources as a pointer, as this is the device
-> the BIOS appeared on at boot so hopefully should be one you can see stuff on.
->
-> On non-x86 I've no idea how to decide if there are multiple devices, maybe the
-> firmware needs to tag something for the kernel if there are. Otherwise
-> you'd just
-> be picking something in probe order.
->
-> I think the idea of these patches is to separate default display
-> device from the arbiter.
->
-> X uses the arbiter on x86 if required (it's horrible, and it's rare we
-> have to nowadays),
-> but for finding the default device it justs uses the sysfs boot_vga flag.
->
+Currently, we handle all DMA aliases equally when calculating MSI
+requester IDs for the generic infrastructure. This turns out to be the
+wrong thing to do in the face of pure DMA quirks like those of Marvell
+SATA cards, where in the usual case the last thing seen in the alias
+walk is the DMA phantom function: we end up configuring the MSI
+doorbell to expect that alias, then find we have no interrupts since
+the MSI writes still come from the 'real' RID, thus get filtered out
+and ignored.
 
-Part of the problem is that X refuses to start if there is only one
-display device to begin with in case it hasn't taken ownership of the
-VGA legacy resources.
+Improve the alias walk to only account for the topological aliases that
+matter, based on the logic from the Intel IRQ remapping code.
+
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+---
+
+v2: Properly document the rationale.
+
+ drivers/pci/msi.c | 27 ++++++++++++++++++++++-----
+ 1 file changed, 22 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 253d92409bb3..2f0dd02d78b7 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1458,13 +1458,30 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
+ }
+ EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
+ 
++/*
++ * Users of the generic MSI infrastructure expect a device to have a single ID,
++ * so with DMA aliases we have to pick the least-worst compromise. Devices with
++ * DMA phantom functions tend to still emit MSIs from the real function number,
++ * so we ignore those and only consider topological aliases where either the
++ * alias device or RID appears on a different bus number. We also make the
++ * reasonable assumption that bridges are walked in an upstream direction (so
++ * the last one seen wins), and the much braver assumption that the most likely
++ * case is that of PCI->PCIe so we should always use the alias RID. This echoes
++ * the logic from intel_irq_remapping's set_msi_sid(), which presumably works
++ * well enough in practice; in the face of the horrible PCIe<->PCI-X conditions
++ * for taking ownership all we can really do is close our eyes and hope...
++ */
+ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	u32 *pa = data;
++	u8 bus = PCI_BUS_NUM(*pa);
++
++	if (pdev->bus->number != bus || PCI_BUS_NUM(alias) != bus)
++		*pa = alias;
+ 
+-	*pa = alias;
+ 	return 0;
+ }
++
+ /**
+  * pci_msi_domain_get_msi_rid - Get the MSI requester id (RID)
+  * @domain:	The interrupt domain
+@@ -1478,7 +1495,7 @@ static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+ {
+ 	struct device_node *of_node;
+-	u32 rid = 0;
++	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+ 
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 
+@@ -1494,14 +1511,14 @@ u32 pci_msi_domain_get_msi_rid(struct irq_domain *domain, struct pci_dev *pdev)
+  * @pdev:	The PCI device
+  *
+  * Use the firmware data to find a device-specific MSI domain
+- * (i.e. not one that is ste as a default).
++ * (i.e. not one that is set as a default).
+  *
+- * Returns: The coresponding MSI domain or NULL if none has been found.
++ * Returns: The corresponding MSI domain or NULL if none has been found.
+  */
+ struct irq_domain *pci_msi_get_device_domain(struct pci_dev *pdev)
+ {
+ 	struct irq_domain *dom;
+-	u32 rid = 0;
++	u32 rid = PCI_DEVID(pdev->bus->number, pdev->devfn);
+ 
+ 	pci_for_each_dma_alias(pdev, get_msi_id_cb, &rid);
+ 	dom = of_msi_map_get_device_domain(&pdev->dev, rid);
+-- 
+2.12.2.dirty
