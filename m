@@ -1,149 +1,178 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
- <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
- <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
- <ryder.lee@mediatek.com>
-Subject: [PATCH v3 1/6] PCI: mediatek: Using readl_poll_timeout to wait Gen2
- training
-Date: Fri, 4 Aug 2017 20:06:37 +0800
-Message-ID: <0bc1c2217c420277b3eec038d6e7a579e709737a.1501846816.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1501846816.git.honghui.zhang@mediatek.com>
-References: <cover.1501846816.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34214 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751912AbdHATKy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 15:10:54 -0400
+Received: by mail-qt0-f196.google.com with SMTP id i19so2536820qte.1
+        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 12:10:54 -0700 (PDT)
+Date: Tue, 1 Aug 2017 15:10:51 -0400
+From: Jon Mason <jdmason@kudzu.us>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
+Message-ID: <20170801191050.GJ4186@kudzu.us>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-15-logang@deltatee.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170725205753.4735-15-logang@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+On Tue, Jul 25, 2017 at 02:57:51PM -0600, Logan Gunthorpe wrote:
+> Seeing there is no dedicated hardware for this, we simply add
+> these as entries in the shared memory window. Thus, we could support
+> any number of them but 128 seems like enough, for now.
 
-Wait Gen2 training by using readl_poll_timeout() calls, and simplify
-the hardware assert logical by merge it into the new interface
-mtk_pcie_startup_ports.
+It would probaly be better if I remarked about the SPADs in the actual
+patch about the SPADS :)
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
----
- drivers/pci/host/pcie-mediatek.c | 52 +++++++++++++++++-----------------------
- 1 file changed, 22 insertions(+), 30 deletions(-)
+The whole point of using the SPADs in the NTB driver was to workaround
+the problems establishing a connection between the two sides of the
+NTB and where everything lives.  So, using a MW to get around the
+SPADs is sort of backwards (and slightly funny).  I realize you are
+trying to use the existing transport with minimal changes to enable
+your hardware, and thus this makes logical sense to you.  However, if
+the SPADs are not really needed, then we should either remove them
+from the transport (or use them for something else).
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 9c9f89b..0d46cda 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -16,6 +16,7 @@
- 
- #include <linux/clk.h>
- #include <linux/delay.h>
-+#include <linux/iopoll.h>
- #include <linux/kernel.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -113,11 +114,6 @@ struct mtk_pcie {
- 	struct list_head ports;
- };
- 
--static inline bool mtk_pcie_link_up(struct mtk_pcie_port *port)
--{
--	return !!(readl(port->base + PCIE_LINK_STATUS) & PCIE_PORT_LINKUP);
--}
--
- static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
-@@ -171,12 +167,30 @@ static struct pci_ops mtk_pcie_ops = {
- 	.write = pci_generic_config_write,
- };
- 
--static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
-+static int mtk_pcie_startup_ports(struct mtk_pcie_port *port)
- {
- 	struct mtk_pcie *pcie = port->pcie;
- 	u32 func = PCI_FUNC(port->index << 3);
- 	u32 slot = PCI_SLOT(port->index << 3);
- 	u32 val;
-+	int err;
-+
-+	/* assert port PERST_N */
-+	val = readl(pcie->base + PCIE_SYS_CFG);
-+	val |= PCIE_PORT_PERST(port->index);
-+	writel(val, pcie->base + PCIE_SYS_CFG);
-+
-+	/* de-assert port PERST_N */
-+	val = readl(pcie->base + PCIE_SYS_CFG);
-+	val &= ~PCIE_PORT_PERST(port->index);
-+	writel(val, pcie->base + PCIE_SYS_CFG);
-+
-+	/* 100ms timeout value should be enough for Gen1/2 training */
-+	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS, val,
-+				 !!(val & PCIE_PORT_LINKUP), 20,
-+				 100 * USEC_PER_MSEC);
-+	if (err)
-+		return -ETIMEDOUT;
- 
- 	/* enable interrupt */
- 	val = readl(pcie->base + PCIE_INT_ENABLE);
-@@ -209,25 +223,8 @@ static void mtk_pcie_configure_rc(struct mtk_pcie_port *port)
- 	writel(PCIE_CONF_ADDR(PCIE_FTS_NUM, func, slot, 0),
- 	       pcie->base + PCIE_CFG_ADDR);
- 	writel(val, pcie->base + PCIE_CFG_DATA);
--}
- 
--static void mtk_pcie_assert_ports(struct mtk_pcie_port *port)
--{
--	struct mtk_pcie *pcie = port->pcie;
--	u32 val;
--
--	/* assert port PERST_N */
--	val = readl(pcie->base + PCIE_SYS_CFG);
--	val |= PCIE_PORT_PERST(port->index);
--	writel(val, pcie->base + PCIE_SYS_CFG);
--
--	/* de-assert port PERST_N */
--	val = readl(pcie->base + PCIE_SYS_CFG);
--	val &= ~PCIE_PORT_PERST(port->index);
--	writel(val, pcie->base + PCIE_SYS_CFG);
--
--	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
--	msleep(100);
-+	return 0;
- }
- 
- static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
-@@ -250,13 +247,8 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
- 		goto err_phy_on;
- 	}
- 
--	mtk_pcie_assert_ports(port);
--
--	/* if link up, then setup root port configuration space */
--	if (mtk_pcie_link_up(port)) {
--		mtk_pcie_configure_rc(port);
-+	if (!mtk_pcie_startup_ports(port))
- 		return;
--	}
- 
- 	dev_info(dev, "Port%d link down\n", port->index);
- 
--- 
-2.6.4
+Per my comment in the other patch, I'm amenable to take this series
+as-is, assuming you are willing to address this design issue in the
+near future.  Thoughts?
 
+Thanks,
+Jon
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> ---
+>  drivers/ntb/hw/mscc/switchtec_ntb.c | 75 ++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 73 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> index 3037ca730998..ca403ad2f7ac 100644
+> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
+> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> @@ -67,6 +67,7 @@ struct shared_mw {
+>  	u32 link_sta;
+>  	u32 partition_id;
+>  	u64 mw_sizes[MAX_MWS];
+> +	u32 spad[128];
+>  };
+>  
+>  #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
+> @@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+>  
+>  static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
+>  {
+> -	return 0;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	return ARRAY_SIZE(sndev->self_shared->spad);
+>  }
+>  
+>  static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
+>  {
+> -	return 0;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
+> +		return 0;
+> +
+> +	if (!sndev->self_shared)
+> +		return 0;
+> +
+> +	return sndev->self_shared->spad[idx];
+>  }
+>  
+>  static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
+>  {
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
+> +		return -EINVAL;
+> +
+> +	if (!sndev->self_shared)
+> +		return -EIO;
+> +
+> +	sndev->self_shared->spad[idx] = val;
+> +
+>  	return 0;
+>  }
+>  
+> +static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
+> +					int sidx)
+> +{
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (pidx != NTB_DEF_PEER_IDX)
+> +		return -EINVAL;
+> +
+> +	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
+> +		return 0;
+> +
+> +	if (!sndev->peer_shared)
+> +		return 0;
+> +
+> +	return ioread32(&sndev->peer_shared->spad[sidx]);
+> +}
+> +
+>  static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
+>  					 int sidx, u32 val)
+>  {
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (pidx != NTB_DEF_PEER_IDX)
+> +		return -EINVAL;
+> +
+> +	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
+> +		return -EINVAL;
+> +
+> +	if (!sndev->peer_shared)
+> +		return -EIO;
+> +
+> +	iowrite32(val, &sndev->peer_shared->spad[sidx]);
+> +
+> +	return 0;
+> +}
+> +
+> +static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
+> +					int sidx, phys_addr_t *spad_addr)
+> +{
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +	unsigned long offset;
+> +
+> +	if (pidx != NTB_DEF_PEER_IDX)
+> +		return -EINVAL;
+> +
+> +	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
+> +		(unsigned long)sndev->stdev->mmio;
+> +
+> +	if (spad_addr)
+> +		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
+> +
+>  	return 0;
+>  }
+>  
+> @@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+>  	.spad_count		= switchtec_ntb_spad_count,
+>  	.spad_read		= switchtec_ntb_spad_read,
+>  	.spad_write		= switchtec_ntb_spad_write,
+> +	.peer_spad_read		= switchtec_ntb_peer_spad_read,
+>  	.peer_spad_write	= switchtec_ntb_peer_spad_write,
+> +	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
+>  };
+>  
+>  static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+> -- 
+> 2.11.0
+> 
