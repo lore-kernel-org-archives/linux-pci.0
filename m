@@ -1,187 +1,62 @@
-Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 15 Aug 2017 12:43:16 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
- it from DT
-Message-ID: <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
-References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
- <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
- <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:35640 "EHLO
+        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751968AbdHAS2P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 14:28:15 -0400
+Received: by mail-qt0-f173.google.com with SMTP id p3so14111005qtg.2
+        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 11:28:15 -0700 (PDT)
+Date: Tue, 1 Aug 2017 14:28:12 -0400
+From: Jon Mason <jdmason@kudzu.us>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 06/16] ntb: ensure ntb_mw_get_align() is only called
+ when the link is up
+Message-ID: <20170801182812.GG4186@kudzu.us>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-7-logang@deltatee.com>
+ <20170801181452.GE4186@kudzu.us>
+ <c4235dc9-90d0-1e68-7c73-c2a5bec83712@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
+In-Reply-To: <c4235dc9-90d0-1e68-7c73-c2a5bec83712@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 03:01:48PM +0800, Shawn Lin wrote:
-> Hi Bjorn,
+On Tue, Aug 01, 2017 at 12:17:47PM -0600, Logan Gunthorpe wrote:
+> Hey,
 > 
-> On 2017/8/12 5:17, Bjorn Helgaas wrote:
-> >[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
-> >
-> >On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
-> >>If not getting domain number from DT, the domain number will
-> >>keep increasing once doing unbind/bind RC drivers. This could
-> >>introduce pointless tree view of lspci as shows below:
-> >>
-> >>-+-[0001:00]---00.0-[01]----00.0
-> >>   \-[0000:00]-
-> >>
-> >>The more test we do, the lengthier it would be. The more serious
-> >>issue is that if attaching two hierarchies for two different domains
-> >>belonging to two root bridges, so when doing unbind/bind test for one
-> >>of them and keep the other, then the domain number would finally
-> >>overflow and make the two hierarchies of devices share the some domain
-> >>number but actually they shouldn't. So it looks like we need to invent
-> >>a new indexing ID mechanism to manage domain number. This patch
-> >>introduces idr to achieve our purpose.
-> >>
-> >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> >
-> >The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
-> >obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
-> >Lorenzo's excellent work, the time is ripe for moving the domain
-> >number from arch-specific places into struct pci_host_bridge.
-> >
-> >I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
-> >CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
-> >enable some simplification of of_pci_bus_find_domain_nr() as well,
-> >which in turn, might make *this* patch simpler.
-> >
-> >This isn't that big a patch to begin with, so I could apply it as-is
-> >and we could do more domain cleanup later.  It's just that it's
-> >intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
-> >opportunity to make this story more readable if those are out of the
-> >way.  Any thoughts?
+> On 01/08/17 12:14 PM, Jon Mason wrote:
+> > This also looks like a bug fix.  However, given that it is a little more
+> > invasive and no one reporting any problems with it, I'm less apt to
+> > pull it into the bug-fixes branch without anyone compilaining of a
+> > bug (lest I break something in -stable).
 > 
-> That sounds good to me that aftering add IDA domain, we could start
-> considering moving domain number from arch-specific places into the
-> bridge code and may be could also finally remove the macro
-> CONFIG_PCI_DOMAIN* both?
+> Yes, 6 and 7 change a semantic of that function. I wouldn't call them
+> bug fixes. But you can't pull 7 without pulling 6, as 7 would break
+> everything unless the change in 6 occurs.
 
-I need to see how this can be implemented (another hook in
-pci_host_bridge ?) but I suspect we can't get away with arch
-specific bits - or maybe you are referring to having one single
-place where the domain is _assigned_ using an arch specific hook
-(in pci_host_bridge) ? I have to have a look into this, certainly
-this patch should be considered because that atomic counter deserved
-more thought, yes.
+Okay, then I'll hold off on 7 then.  It wasn't clear to me, based on
+the patch descriptions, that this was fallout from the previous patch.
+Thanks for clearing this up for me.
 
 Thanks,
-Lorenzo
+Jon
 
-> >>Changes in v5:
-> >>- fix Bjorn's comments for v3 as actually I didn't address his comments
-> >>   for v3 when posted my v4.
-> >>   v3: https://patchwork.kernel.org/patch/9742003/
-> >>   For ACPI case, we never use DT or IDA to get domain numbers and
-> >>   acpi_pci_bus_find_domain_nr would return the proper value we need
-> >>   whether _SEG exist or not. For DT or IDA, we hope bridges use one of
-> >>   them consistently, and this is actually what the pre-existing code
-> >>   did. So I remove ida_domain now since it complicated the logic of the
-> >>   code and we could just make use_dt_domains global instead to slightly
-> >>   achieve our purpose.
-> >>
-> >>Changes in v4:
-> >>- make domain_nr depends on CONFIG_PCI_DOMAINS instead of
-> >>CONFIG_PCI_DOMAINS_GENERIC.
-> >>
-> >>Changes in v3:
-> >>- make ida_domain a system-wide property and check it in the code to
-> >>combine with use_dt_domains. Also update the comment there.
-> >>
-> >>Changes in v2:
-> >>- add a remove wrapper
-> >>- rename use_dt_domains to ida_domain and set this bit
-> >>in pci_get_new_domain_nr and test it in the remove wrapper.
-> >>
-> >>  drivers/pci/pci.c    | 13 ++++++++++---
-> >>  drivers/pci/remove.c |  2 ++
-> >>  include/linux/pci.h  |  7 +++++--
-> >>  3 files changed, 17 insertions(+), 5 deletions(-)
-> >>
-> >>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >>index b58a6b3..9953eaf 100644
-> >>--- a/drivers/pci/pci.c
-> >>+++ b/drivers/pci/pci.c
-> >>@@ -11,6 +11,7 @@
-> >>  #include <linux/kernel.h>
-> >>  #include <linux/delay.h>
-> >>  #include <linux/dmi.h>
-> >>+#include <linux/idr.h>
-> >>  #include <linux/init.h>
-> >>  #include <linux/of.h>
-> >>  #include <linux/of_pci.h>
-> >>@@ -5305,17 +5306,23 @@ static void pci_no_domains(void)
-> >>  }
-> >>  #ifdef CONFIG_PCI_DOMAINS
-> >>-static atomic_t __domain_nr = ATOMIC_INIT(-1);
-> >>+static DEFINE_IDA(__domain_nr);
-> >>  int pci_get_new_domain_nr(void)
-> >>  {
-> >>-	return atomic_inc_return(&__domain_nr);
-> >>+	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
-> >>+}
-> >>+
-> >>+static int use_dt_domains = -1;
-> >>+void pci_put_domain_nr(struct pci_bus *bus)
-> >>+{
-> >>+	if (acpi_disabled && use_dt_domains != 1)
-> >>+		ida_simple_remove(&__domain_nr, bus->domain_nr);
-> >>  }
-> >>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> >>  static int of_pci_bus_find_domain_nr(struct device *parent)
-> >>  {
-> >>-	static int use_dt_domains = -1;
-> >>  	int domain = -1;
-> >>  	if (parent)
-> >>diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> >>index 73a03d3..01dd1b4 100644
-> >>--- a/drivers/pci/remove.c
-> >>+++ b/drivers/pci/remove.c
-> >>@@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
-> >>  	list_for_each_entry_safe(child, tmp,
-> >>  				 &bus->devices, bus_list)
-> >>  		pci_remove_bus_device(child);
-> >>+
-> >>+	pci_put_domain_nr(bus);
-> >>  	pci_remove_bus(bus);
-> >>  	host_bridge->bus = NULL;
-> >>diff --git a/include/linux/pci.h b/include/linux/pci.h
-> >>index 18cc70a..d6be9596 100644
-> >>--- a/include/linux/pci.h
-> >>+++ b/include/linux/pci.h
-> >>@@ -523,7 +523,7 @@ struct pci_bus {
-> >>  	unsigned char	primary;	/* number of primary bridge */
-> >>  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
-> >>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
-> >>-#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> >>+#ifdef CONFIG_PCI_DOMAINS
-> >>  	int		domain_nr;
-> >>  #endif
-> >>@@ -1466,11 +1466,14 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
-> >>  #ifdef CONFIG_PCI_DOMAINS
-> >>  extern int pci_domains_supported;
-> >>  int pci_get_new_domain_nr(void);
-> >>+void pci_put_domain_nr(struct pci_bus *bus);
-> >>  #else
-> >>  enum { pci_domains_supported = 0 };
-> >>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
-> >>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
-> >>-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-> >>+static inline int pci_get_new_domain_nr(void)
-> >>+{ return -ENOSYS; }
-> >>+static inline void pci_put_domain_nr(struct pci_bus *bus) { }
-> >>  #endif /* CONFIG_PCI_DOMAINS */
-> >>  /*
-> >>-- 
-> >>1.9.1
-> >>
-> >>
-> >
-> >
-> >
 > 
+> Thanks,
+> 
+> Logan
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/c4235dc9-90d0-1e68-7c73-c2a5bec83712%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
