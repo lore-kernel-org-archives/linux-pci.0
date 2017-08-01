@@ -1,111 +1,180 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:34548 "EHLO
-        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751186AbdHBTGt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2017 15:06:49 -0400
-Received: by mail-qt0-f196.google.com with SMTP id i19so5528041qte.1
-        for <linux-pci@vger.kernel.org>; Wed, 02 Aug 2017 12:06:48 -0700 (PDT)
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'vidya sagar'" <sagar.tv@gmail.com>
-Cc: "'Lucas Stach'" <l.stach@pengutronix.de>,
-        "'Pratyush Anand'" <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>,
-        "'Joao Pinto'" <Joao.Pinto@synopsys.com>
-References: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com> <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
-In-Reply-To: <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
-Subject: Re: MSI-X support with Synopsys DesignWare IP core driver
-Date: Wed, 2 Aug 2017 15:06:45 -0400
-Message-ID: <000401d30bc2$7cfdb8c0$76f92a40$@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 1 Aug 2017 16:40:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Faisal Latif <faisal.latif@intel.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Sean Hefty <sean.hefty@intel.com>,
+        Hal Rosenstock <hal.rosenstock@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: PCI/IB: add support for pci driver attribute groups
+Message-ID: <20170801214046.GB26498@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170719130106.GE17776@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170719130106.GE17776@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 1, 2017 1:13 PM, Bjorn Helgaas wrote:
+On Wed, Jul 19, 2017 at 03:01:06PM +0200, Greg KH wrote:
+> From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 > 
-> This was a multi-part message with HTML, which I think causes the
-> mailing list to automatically drop it.  Please post this as plain text
-> with a changelog and signed-off-by and copy the DesignWare maintainers
-> (Jingoo and Joao, cc'd).
+> Some drivers (specifically the nes IB driver), want to create a lot of
+> sysfs driver attributes.  Instead of open-coding the creation and
+> removal of these files (and getting it wrong btw), it's a better idea to
+> let the driver core handle all of this logic for us.
 > 
-> On Tue, Aug 1, 2017 at 12:28 AM, vidya sagar <sagar.tv@gmail.com> wrote:
-> > Hi,
-> > As you might be knowing it already, in the current pcie-designware.c ,
-> there
-> > is no support for MSI-X
-> > Although there is no native support from Synopsys IP as well to have
-> 2048
-> > interrupts, we can at least have basic support to get MSI-X also
-> allocated
-> > (along with MSI) as many as possible in the system at that point. Of
-> course,
-> > all these interrupts will have the same address to which downstream
-> devices
-> > need to initiate mem-write transactions. Though it doesn't leverage one
-> of
-> > the advantages of having MSI-X over MSI, it at least avoids drivers
-> falling
-> > back to legacy interrupts when the card doesn't support MSI. Some of the
-> > Intel NVMe cards are examples here. Legacy interrupt being a shared
-> > interrupt, it unnecessarily triggers all other shared ISRs to be called
-> > whenever there is a legacy interrupt.
-> >
-> > I have the following patch which enables MSI-X support also. Would like
-> to
-> > have your comments on this.
+> So add a new field to the pci driver structure, **groups, that allows
+> pci drivers to specify an attribute group list it wishes to have created
+> when it is registered with the driver core.
+> 
+> Big bonus is now the driver doesn't race with userspace when the sysfs
+> files are created vs. when the kobject is announced, so any script/tool
+> that actually wanted to use these files will not have to poll waiting
+> for them to show up.
+> 
+> Cc: Faisal Latif <faisal.latif@intel.com>
+> Cc: Doug Ledford <dledford@redhat.com>
+> Cc: Sean Hefty <sean.hefty@intel.com>
+> Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Hi all,
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-As far as I know, in order to support MSI-X with Synopsys IP, additional
-controller is required. For example, GICv2m can be used to do so.
+If you want me to take this let me know; otherwise I'll assume Doug will
+merge it.
 
-In addition, I think that some HACK patches can be used to support some
-MSI-X only PCI cards. In this case, we cannot take advantage of MSI-X really.
-Nevertheless, I am not sure that the following patch is safe.
-
-Best regards,
-Jingoo Han
-
-> >
-> >
-> > diff --git a/drivers/pci/host/pcie-designware.c
-> > b/drivers/pci/host/pcie-designware.c
-> > index af8f6e9..9086253 100644
-> > --- a/drivers/pci/host/pcie-designware.c
-> > +++ b/drivers/pci/host/pcie-designware.c
-> > @@ -406,9 +406,6 @@ static int dw_msi_setup_irq(struct msi_controller
-> *chip,
-> > struct pci_dev *pdev,
-> >      int irq, pos;
-> >      struct pcie_port *pp = pdev->bus->sysdata;
-> >
-> > -    if (desc->msi_attrib.is_msix)
-> > -        return -EINVAL;
-> > -
-> >      irq = assign_irq(1, desc, &pos);
-> >      if (irq < 0)
-> >          return irq;
-> > @@ -426,9 +423,16 @@ static int dw_msi_setup_irqs(struct msi_controller
-> > *chip, struct pci_dev *pdev,
-> >      struct msi_desc *desc;
-> >      struct pcie_port *pp = pdev->bus->sysdata;
-> >
-> > -    /* MSI-X interrupts are not supported */
-> > -    if (type == PCI_CAP_ID_MSIX)
-> > -        return -EINVAL;
-> > +    if (type == PCI_CAP_ID_MSIX) {
-> > +        for_each_pci_msi_entry(desc, pdev) {
-> > +            irq = arch_setup_msi_irq(pdev, desc);
-> > +            if (irq < 0)
-> > +                return irq;
-> > +            if (irq > 0)
-> > +                return -ENOSPC;
-> > +        }
-> > +        return 0;
-> > +    }
-> >
-> >      WARN_ON(!list_is_singular(&pdev->dev.msi_list));
-> >      desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
-> >
+> ---
+>  drivers/infiniband/hw/nes/nes.c |   69 +++++++++++++---------------------------
+>  drivers/pci/pci-driver.c        |    1 
+>  include/linux/pci.h             |    1 
+>  3 files changed, 26 insertions(+), 45 deletions(-)
+> 
+> --- a/drivers/infiniband/hw/nes/nes.c
+> +++ b/drivers/infiniband/hw/nes/nes.c
+> @@ -808,13 +808,6 @@ static void nes_remove(struct pci_dev *p
+>  }
+>  
+>  
+> -static struct pci_driver nes_pci_driver = {
+> -	.name = DRV_NAME,
+> -	.id_table = nes_pci_table,
+> -	.probe = nes_probe,
+> -	.remove = nes_remove,
+> -};
+> -
+>  static ssize_t adapter_show(struct device_driver *ddp, char *buf)
+>  {
+>  	unsigned int  devfn = 0xffffffff;
+> @@ -1156,35 +1149,29 @@ static DRIVER_ATTR_RW(idx_addr);
+>  static DRIVER_ATTR_RW(idx_data);
+>  static DRIVER_ATTR_RW(wqm_quanta);
+>  
+> -static int nes_create_driver_sysfs(struct pci_driver *drv)
+> -{
+> -	int error;
+> -	error  = driver_create_file(&drv->driver, &driver_attr_adapter);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_cmd);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_eeprom_data);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_flash_cmd);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_flash_data);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_addr);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_nonidx_data);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_idx_addr);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_idx_data);
+> -	error |= driver_create_file(&drv->driver, &driver_attr_wqm_quanta);
+> -	return error;
+> -}
+> -
+> -static void nes_remove_driver_sysfs(struct pci_driver *drv)
+> -{
+> -	driver_remove_file(&drv->driver, &driver_attr_adapter);
+> -	driver_remove_file(&drv->driver, &driver_attr_eeprom_cmd);
+> -	driver_remove_file(&drv->driver, &driver_attr_eeprom_data);
+> -	driver_remove_file(&drv->driver, &driver_attr_flash_cmd);
+> -	driver_remove_file(&drv->driver, &driver_attr_flash_data);
+> -	driver_remove_file(&drv->driver, &driver_attr_nonidx_addr);
+> -	driver_remove_file(&drv->driver, &driver_attr_nonidx_data);
+> -	driver_remove_file(&drv->driver, &driver_attr_idx_addr);
+> -	driver_remove_file(&drv->driver, &driver_attr_idx_data);
+> -	driver_remove_file(&drv->driver, &driver_attr_wqm_quanta);
+> -}
+> +static struct attribute *nes_attrs[] = {
+> +	&driver_attr_adapter,
+> +	&driver_attr_eeprom_cmd,
+> +	&driver_attr_eeprom_data,
+> +	&driver_attr_flash_cmd,
+> +	&driver_attr_flash_data,
+> +	&driver_attr_nonidx_addr,
+> +	&driver_attr_nonidx_data,
+> +	&driver_attr_idx_addr,
+> +	&driver_attr_idx_data,
+> +	&driver_attr_wqm_quanta,
+> +	NULL,
+> +};
+> +ATTRIBUTE_GROUPS(nes);
+> +
+> +static struct pci_driver nes_pci_driver = {
+> +	.name = DRV_NAME,
+> +	.id_table = nes_pci_table,
+> +	.probe = nes_probe,
+> +	.remove = nes_remove,
+> +	.groups = nes_groups,
+> +};
+> +
+>  
+>  /**
+>   * nes_init_module - module initialization entry point
+> @@ -1192,20 +1179,13 @@ static void nes_remove_driver_sysfs(stru
+>  static int __init nes_init_module(void)
+>  {
+>  	int retval;
+> -	int retval1;
+>  
+>  	retval = nes_cm_start();
+>  	if (retval) {
+>  		printk(KERN_ERR PFX "Unable to start NetEffect iWARP CM.\n");
+>  		return retval;
+>  	}
+> -	retval = pci_register_driver(&nes_pci_driver);
+> -	if (retval >= 0) {
+> -		retval1 = nes_create_driver_sysfs(&nes_pci_driver);
+> -		if (retval1 < 0)
+> -			printk(KERN_ERR PFX "Unable to create NetEffect sys files.\n");
+> -	}
+> -	return retval;
+> +	return pci_register_driver(&nes_pci_driver);
+>  }
+>  
+>  
+> @@ -1215,7 +1195,6 @@ static int __init nes_init_module(void)
+>  static void __exit nes_exit_module(void)
+>  {
+>  	nes_cm_stop();
+> -	nes_remove_driver_sysfs(&nes_pci_driver);
+>  
+>  	pci_unregister_driver(&nes_pci_driver);
+>  }
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -1307,6 +1307,7 @@ int __pci_register_driver(struct pci_dri
+>  	drv->driver.bus = &pci_bus_type;
+>  	drv->driver.owner = owner;
+>  	drv->driver.mod_name = mod_name;
+> +	drv->driver.groups = drv->groups;
+>  
+>  	spin_lock_init(&drv->dynids.lock);
+>  	INIT_LIST_HEAD(&drv->dynids.list);
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -729,6 +729,7 @@ struct pci_driver {
+>  	void (*shutdown) (struct pci_dev *dev);
+>  	int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
+>  	const struct pci_error_handlers *err_handler;
+> +	const struct attribute_group **groups;
+>  	struct device_driver	driver;
+>  	struct pci_dynids dynids;
+>  };
