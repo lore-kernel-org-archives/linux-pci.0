@@ -1,64 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0040.outbound.protection.outlook.com ([104.47.34.40]:31472
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751200AbdHCIk1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 04:40:27 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv2 3/6] PCI: layerscape: use accessors to enable/disable DBI RO registers' write permission
-Date: Thu, 3 Aug 2017 16:23:37 +0800
-Message-ID: <1501748620-42866-4-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Cc: Keith Busch <keith.busch@intel.com>, <stable@vger.kernel.org>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>
+Subject: [PATCH] pciehp: Fix infinite interupt handler loop
+Date: Tue,  1 Aug 2017 03:11:52 -0400
+Message-Id: <1501571512-8362-1-git-send-email-keith.busch@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+We've encountered a particular platform that under some circumstances
+always has the power fault detected status raised. The pciehp irq handler
+would loop forever because it thinks it is handling new events when in
+fact the power fault is not new. This patch fixes that by masking off
+the power fault status from new events if the driver hasn't seen the
+power fault clear from the previous handling attempt.
 
-Use the accessors instead accessing the DBI read-only write enable
-register directly. And the STRFMR1 is not read-only register, so move it
-out from the write-enable bracket.
+Fixes: fad214b0aa72 ("PCI: pciehp: Process all hotplug events before looking for new ones")
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Cc: <stable@vger.kernel.org> # 4.9+
+Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
-V2:
- - New patch split from patch v1 3/3.
+Resending due to send-email setup error; this patch may appear twice
+for some.
 
- drivers/pci/dwc/pci-layerscape.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/hotplug/pciehp_hpc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index fd86128..09056a6 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -33,7 +33,6 @@
- 
- /* PEX Internal Configuration Registers */
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
--#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
- 
- struct ls_pcie_drvdata {
- 	u32 lut_offset;
-@@ -155,11 +154,12 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
- 
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	ls_pcie_fix_class(pcie);
- 	ls_pcie_clear_multifunction(pcie);
-+	dw_pcie_dbi_ro_wr_dis(pci);
-+
- 	ls_pcie_drop_msg_tlp(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- }
- 
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 026830a..8ecbc13 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -583,7 +583,9 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+ 	 * Slot Status contains plain status bits as well as event
+ 	 * notification bits; right now we only want the event bits.
+ 	 */
+-	events = status & (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
++	events = status & (PCI_EXP_SLTSTA_ABP |
++			  (ctrl->power_fault_detected ?
++				0 : PCI_EXP_SLTSTA_PFD) |
+ 			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
+ 			   PCI_EXP_SLTSTA_DLLSC);
+ 	if (!events)
 -- 
-2.1.0.27.g96db324
+2.5.5
