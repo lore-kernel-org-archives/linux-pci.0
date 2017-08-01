@@ -1,99 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46866 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:33256 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751129AbdHOMXd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Aug 2017 08:23:33 -0400
-Date: Tue, 15 Aug 2017 07:23:30 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
- it from DT
-Message-ID: <20170815122330.GA16904@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
- <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
- <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
- <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
+        id S1752019AbdHASJY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 1 Aug 2017 14:09:24 -0400
+To: Jon Mason <jdmason@kudzu.us>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-6-logang@deltatee.com> <20170801180731.GC4186@kudzu.us>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <46065aa6-0fe8-59d5-63dc-3beb66b69154@deltatee.com>
+Date: Tue, 1 Aug 2017 12:09:18 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
+In-Reply-To: <20170801180731.GC4186@kudzu.us>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [PATCH v3 05/16] ntb: ntb_test: ensure the link is up before
+ trying to configure the mws
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 12:43:16PM +0100, Lorenzo Pieralisi wrote:
-> On Tue, Aug 15, 2017 at 03:01:48PM +0800, Shawn Lin wrote:
-> > Hi Bjorn,
-> > 
-> > On 2017/8/12 5:17, Bjorn Helgaas wrote:
-> > >[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
-> > >
-> > >On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
-> > >>If not getting domain number from DT, the domain number will
-> > >>keep increasing once doing unbind/bind RC drivers. This could
-> > >>introduce pointless tree view of lspci as shows below:
-> > >>
-> > >>-+-[0001:00]---00.0-[01]----00.0
-> > >>   \-[0000:00]-
-> > >>
-> > >>The more test we do, the lengthier it would be. The more serious
-> > >>issue is that if attaching two hierarchies for two different domains
-> > >>belonging to two root bridges, so when doing unbind/bind test for one
-> > >>of them and keep the other, then the domain number would finally
-> > >>overflow and make the two hierarchies of devices share the some domain
-> > >>number but actually they shouldn't. So it looks like we need to invent
-> > >>a new indexing ID mechanism to manage domain number. This patch
-> > >>introduces idr to achieve our purpose.
-> > >>
-> > >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > >
-> > >The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
-> > >obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
-> > >Lorenzo's excellent work, the time is ripe for moving the domain
-> > >number from arch-specific places into struct pci_host_bridge.
-> > >
-> > >I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
-> > >CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
-> > >enable some simplification of of_pci_bus_find_domain_nr() as well,
-> > >which in turn, might make *this* patch simpler.
-> > >
-> > >This isn't that big a patch to begin with, so I could apply it as-is
-> > >and we could do more domain cleanup later.  It's just that it's
-> > >intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
-> > >opportunity to make this story more readable if those are out of the
-> > >way.  Any thoughts?
-> > 
-> > That sounds good to me that aftering add IDA domain, we could start
-> > considering moving domain number from arch-specific places into the
-> > bridge code and may be could also finally remove the macro
-> > CONFIG_PCI_DOMAIN* both?
+
+On 01/08/17 12:07 PM, Jon Mason wrote:
+> On Tue, Jul 25, 2017 at 02:57:42PM -0600, Logan Gunthorpe wrote:
+>> After the link tests, there is a race on one side of the test for
+>> the link coming up. It's possible, in some cases, for the test script
+>> to write to the 'peer_trans' files before the link has come up.
+>>
+>> To fix this, we simply use the link event file to ensure both sides
+>> see the link as up before continuning.
+>>
+>> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 > 
-> I need to see how this can be implemented (another hook in
-> pci_host_bridge ?) but I suspect we can't get away with arch
-> specific bits - or maybe you are referring to having one single
-> place where the domain is _assigned_ using an arch specific hook
-> (in pci_host_bridge) ? I have to have a look into this, certainly
-> this patch should be considered because that atomic counter deserved
-> more thought, yes.
+> This looks like a bug fix.  Assuming this is the case, I can pull it
+> out, add a "Fixes" line, and add it to my bug fixes branch.  Is this
+> the case?
 
-What I was hoping (and I haven't thought this all through) was that we
-could: 
+Sure, yup, if you'd like to do that I'm fine with it. Technically, I
+don't think the bug can be triggered until the patches later in the
+series are applied.
 
-  - add "domain" to struct pci_host_bridge
+Thanks,
 
-  - have callers of pci_scan_root_bus_bridge() assign bridge->domain
-    alongside their existing bridge->busnr, bridge->ops, etc.
-    assignments.  This would pull a little of the messiness of
-    pci_bus_find_domain_nr() into the bridge drivers, but they would
-    know a priori whether to use ACPI or DT, so we wouldn't need quite
-    as much guesswork.
-
-  - replace the pci_bus_find_domain_nr() call in
-    pci_register_host_bridge() with "bus->domain_nr = bridge->domain"
-
-  - replace the arch-specific pci_domain_nr() implementations with a
-    generic one
-
-  - add IDA alloc to the DT domain number alloc path
-
-Bjorn
+Logan
