@@ -1,128 +1,206 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([45.249.212.189]:10400 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751143AbdHEHSR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 03:18:17 -0400
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>,
-        <robin.murphy@arm.com>, <davem@davemloft.net>,
-        <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v9 0/4] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Sat, 5 Aug 2017 15:15:09 +0800
-Message-ID: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:36842 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751877AbdHAS76 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 14:59:58 -0400
+Received: by mail-qk0-f196.google.com with SMTP id d136so2471459qkg.3
+        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 11:59:58 -0700 (PDT)
+Date: Tue, 1 Aug 2017 14:59:55 -0400
+From: Jon Mason <jdmason@kudzu.us>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: Re: [PATCH v3 13/16] switchtec_ntb: implement doorbell registers
+Message-ID: <20170801185954.GI4186@kudzu.us>
+References: <20170725205753.4735-1-logang@deltatee.com>
+ <20170725205753.4735-14-logang@deltatee.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170725205753.4735-14-logang@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
+On Tue, Jul 25, 2017 at 02:57:50PM -0600, Logan Gunthorpe wrote:
+> Pretty straightforward implementation of doorbell registers.
+> The shift and mask were setup in an earlier patch and this just hooks
+> up the appropriate portion of the IDB register as the local doorbells
+> and the opposite portion of ODB as the peer doorbells. The DB mask is
+> protected by a spinlock to avoid concurrent read-modify-write accesses.
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Reviewed-by: Stephen Bates <sbates@raithlin.com>
+> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+> ---
+>  drivers/ntb/hw/mscc/switchtec_ntb.c | 89 +++++++++++++++++++++++++++++++++++--
+>  1 file changed, 85 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> index 34d69fa8612d..3037ca730998 100644
+> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
+> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
+> @@ -98,6 +98,9 @@ struct switchtec_ntb {
+>  	int db_shift;
+>  	int db_peer_shift;
+>  
+> +	/* synchronize rmw access of db_mask and hw reg */
+> +	spinlock_t db_mask_lock;
+> +
+>  	int nr_direct_mw;
+>  	int nr_lut_mw;
+>  	int direct_mw_to_bar[MAX_DIRECT_MW];
+> @@ -338,41 +341,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+>  
+>  static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
+>  {
+> -	return 0;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	return sndev->db_valid_mask;
+>  }
+>  
+>  static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
+>  {
+> -	return 0;
+> +	return 1;
+>  }
+>  
+>  static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
+>  {
+> -	return 0;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (db_vector < 0 || db_vector > 1)
+> +		return 0;
+> +
+> +	return sndev->db_valid_mask;
+>  }
+>  
+>  static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
+>  {
+> -	return 0;
+> +	u64 ret;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
+> +
+> +	return ret & sndev->db_valid_mask;
+>  }
+>  
+>  static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
+>  {
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
+> +
+>  	return 0;
+>  }
+>  
+>  static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
+>  {
+> +	unsigned long irqflags;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (db_bits & ~sndev->db_valid_mask)
+> +		return -EINVAL;
+> +
+> +	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
+> +	{
+> +		sndev->db_mask |= db_bits << sndev->db_shift;
+> +		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
+> +	}
 
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
+unnecessary braces.  Same for below
 
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
-
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
-
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.
-
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
-    according John's suggestion, and modify the description, use the true/false
-    as the return value.
-
-    We shouldn't enable relaxed ordering attribute by the setting in the root
-    complex configuration space for PCIe device, so fix it for cxgb4.
-
-    Fix some format issues.
-
-v5: Removed the unnecessary code for some function which only return the bool
-    value, and add the check for VF device.
-
-    Make this patch set base on 4.12-rc5.
-
-v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
-
-v7: The cxgb4 drivers will enable the PCIe Capability Device Control[Relaxed
-    Ordering Enable] in PCI Probe() routine, this will break our current
-    solution for some platform which has problematic when enable the relaxed
-    ordering attribute. According to the latest recommendations, remove the
-    enable_pcie_relaxed_ordering(), although it could not cover the Peer-to-Peer
-    scene, but we agree to leave this problem until we really trigger it.
-
-    Make this patch set base on 4.12 release version.
-
-v8: Change the second patch title and description to make it more reasonable,
-    add the acked-by from Alex and Ashok.
-
-    Add a new patch to enable the Relaxed Ordering Attribute for cxgb4vf driver.
-
-    Make this patch set base on 4.13-rc2.
-
-v9: The document (https://software.intel.com/sites/default/files/managed/9e/
-    bc/64-ia-32-architectures-optimization-manual.pdf) indicate that the Xeon
-    processors based on Broadwell/Haswell microarchitecture has the problem
-    with Relaxed Ordering Attribute enabled, so add the whole list Device ID
-    from Intel to the patch.
-
-Casey Leedom (3):
-  PCI: Add new PCIe Fabric End Node flag,
-    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-  net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (1):
-  PCI: Disable PCIe Relaxed Ordering if unsupported
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    | 23 +++++++++----
- drivers/net/ethernet/chelsio/cxgb4/sge.c           |  5 +--
- drivers/net/ethernet/chelsio/cxgb4vf/adapter.h     |  1 +
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    | 18 ++++++++++
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |  3 ++
- drivers/pci/pci.c                                  | 29 +++++++++++++++++
- drivers/pci/probe.c                                | 37 +++++++++++++++++++++
- drivers/pci/quirks.c                               | 88 ++++++++++++++++++++++
- include/linux/pci.h                                |  4 +++
- 10 files changed, 151 insertions(+), 8 deletions(-)
-
--- 
-1.8.3.1
+> +	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
+> +
+>  	return 0;
+>  }
+>  
+>  static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
+>  {
+> +	unsigned long irqflags;
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	if (db_bits & ~sndev->db_valid_mask)
+> +		return -EINVAL;
+> +
+> +	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
+> +	{
+> +		sndev->db_mask &= ~(db_bits << sndev->db_shift);
+> +		iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
+> +	}
+> +	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
+> +
+> +	return 0;
+> +}
+> +
+> +static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
+> +{
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
+> +}
+> +
+> +static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
+> +				      phys_addr_t *db_addr,
+> +				      resource_size_t *db_size)
+> +{
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +	unsigned long offset;
+> +
+> +	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
+> +		(unsigned long)sndev->stdev->mmio;
+> +
+> +	offset += sndev->db_shift / 8;
+> +
+> +	if (db_addr)
+> +		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
+> +	if (db_size)
+> +		*db_size = sizeof(u32);
+> +
+>  	return 0;
+>  }
+>  
+>  static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+>  {
+> +	struct switchtec_ntb *sndev = ntb_sndev(ntb);
+> +
+> +	iowrite64(db_bits << sndev->db_peer_shift,
+> +		  &sndev->mmio_self_dbmsg->odb);
+> +
+>  	return 0;
+>  }
+>  
+> @@ -413,6 +490,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+>  	.db_clear		= switchtec_ntb_db_clear,
+>  	.db_set_mask		= switchtec_ntb_db_set_mask,
+>  	.db_clear_mask		= switchtec_ntb_db_clear_mask,
+> +	.db_read_mask		= switchtec_ntb_db_read_mask,
+> +	.peer_db_addr		= switchtec_ntb_peer_db_addr,
+>  	.peer_db_set		= switchtec_ntb_peer_db_set,
+>  	.spad_count		= switchtec_ntb_spad_count,
+>  	.spad_read		= switchtec_ntb_spad_read,
+> @@ -680,6 +759,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
+>  
+>  	dev_dbg(&sndev->stdev->dev, "doorbell\n");
+>  
+> +	ntb_db_event(&sndev->ntb, 0);
+> +
+>  	return IRQ_HANDLED;
+>  }
+>  
+> -- 
+> 2.11.0
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
+> To post to this group, send email to linux-ntb@googlegroups.com.
+> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/20170725205753.4735-14-logang%40deltatee.com.
+> For more options, visit https://groups.google.com/d/optout.
