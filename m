@@ -1,58 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:52924 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751988AbdHCJT6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 05:19:58 -0400
-Subject: Re: [PATCH] PCI: qcom: Use gpiod_set_value_cansleep()
-To: Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-References: <1500245798-20886-1-git-send-email-festevam@gmail.com>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <bca7f466-cd7d-99b5-f625-83b34aea7553@mm-sol.com>
-Date: Thu, 3 Aug 2017 12:19:49 +0300
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH V7 2/3] PCI: handle CRS returned by device after FLR
+Date: Wed,  2 Aug 2017 15:15:16 -0400
+Message-Id: <1501701317-32249-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1501701317-32249-1-git-send-email-okaya@codeaurora.org>
+References: <1501701317-32249-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <1500245798-20886-1-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+following a Function Level Reset (FLR) request to indicate that it is
+not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
+Request Handling Rules and CRS usage in FLR context is mentioned in
+PCIe r3.1, sec 6.6.2. Function-Level Reset.
 
-Thanks for the patch!
+Adding a vendor ID read if this is a physical function before attempting
+to read any other registers on the endpoint. A CRS indication will only
+be given if the address to be read is vendor ID register.
+pci_bus_read_dev_vendor_id() knows how to deal with CRS returned values.
 
-On 07/17/2017 01:56 AM, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
-> 
-> The reset GPIO can be connected to a I2C or SPI IO expander, which
-> may sleep, so it is safer to use the gpiod_set_value_cansleep()
-> variant instead.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
-> ---
->  drivers/pci/dwc/pcie-qcom.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+Calling pci_bus_read_dev_vendor_id() with 60 seconds timeout to be
+consistent with the rest of the kernel CRS timeout policy.
 
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c | 27 +++++++++++----------------
+ 1 file changed, 11 insertions(+), 16 deletions(-)
 
-> 
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 68c5f2a..8359de0 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -141,13 +141,13 @@ struct qcom_pcie {
->  
->  static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
->  {
-> -	gpiod_set_value(pcie->reset, 1);
-> +	gpiod_set_value_cansleep(pcie->reset, 1);
->  	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
->  }
->  
->  static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
->  {
-> -	gpiod_set_value(pcie->reset, 0);
-> +	gpiod_set_value_cansleep(pcie->reset, 0);
->  	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
->  }
->  
-> 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2ed604a..ad49e73 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3813,30 +3813,25 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ 
+ /*
+  * We should only need to wait 100ms after FLR for virtual functions.
+- * Wait for up to 1000ms for config space to return something other than -1.
+- * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+- * dword because VFs don't implement the 1st dword.
++ * Wait for up to 60s for config space to return something other than -1.
++ * Intel IGD requires 300ms when an LCD panel is attached.  We use
++ * pci_bus_read_dev_vendor_id() for reading the vendor ID as it handles
++ * CRS gracefully.
+  */
+ static void pci_flr_wait(struct pci_dev *dev)
+ {
+-	int i = 0;
+ 	u32 id;
++	bool ret;
+ 
+-	if (dev->is_virtfn) {
+-		msleep(100);
+-		return;
+-	}
++	/* don't touch the HW before waiting 100ms */
++	msleep(100);
+ 
+-	do {
+-		msleep(100);
+-		pci_read_config_dword(dev, PCI_COMMAND, &id);
+-	} while (i++ < 10 && id == ~0);
++	if (dev->is_virtfn)
++		return;
+ 
+-	if (id == ~0)
++	ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id, 60000);
++	if (!ret)
+ 		dev_warn(&dev->dev, "Failed to return from FLR\n");
+-	else if (i > 1)
+-		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+-			 (i - 1) * 100);
+ }
+ 
+ /**
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
