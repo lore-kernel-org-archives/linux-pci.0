@@ -1,87 +1,67 @@
-Return-Path: <SRS0=SdD7=7Y=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=SdD7=7Y=free.fr=slash.tmp@kernel.org>
-To: linux-pci <linux-pci@vger.kernel.org>,
- linux-usb <linux-usb@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
- <stern@rowland.harvard.edu>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, Mathias Nyman <mathias.nyman@intel.com>
-From: Mason <slash.tmp@free.fr>
-Subject: Possible regression between 4.9 and 4.13
-Message-ID: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
-Date: Tue, 22 Aug 2017 19:34:11 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:43180 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751032AbdHBVuN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:50:13 -0400
+Date: Wed, 2 Aug 2017 16:50:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Carlos Palminha <CARLOS.PALMINHA@synopsys.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bhelgaas@google.com, jingoohan1@gmail.com, Joao.Pinto@synopsys.com
+Subject: Re: [PATCH] PCI: dwc: designware: make dw_pcie_prog_*_atu_unroll()
+ static
+Message-ID: <20170802215011.GN20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170717131334.1761-1-palminha@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170717131334.1761-1-palminha@synopsys.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On Mon, Jul 17, 2017 at 02:13:34PM +0100, Carlos Palminha wrote:
+> Helper functions dw_pcie_prog_*_atu_unroll don't need to be in global scope,
+> so make it static.
+> 
+> Cleans up sparse warnings:
+> - symbol 'dw_pcie_prog_outbound_atu_unroll' was not declared. Should it be static?
+> - symbol 'dw_pcie_prog_inbound_atu_unroll' was not declared. Should it be static?
+> 
+> Signed-off-by: Carlos Palminha <palminha@synopsys.com>
 
-The driver for my system's PCIe host bridge landed recently
-(in 4.13) but it was developed on 4.9
+Applied with acks from Joao and Jingoo to pci/host-designware for v4.14,
+thanks!
 
-I tested the PCIe host bridge by plugging a 4-port USB3 adapter
-into the PCIe slot (system at rest) and plugging an USB3 Flash
-drive into the USB3 adapter (at run-time).
+I rewrapped these so they still fit in 80 columns, like the rest of the
+file.
 
-On 4.9, the setup works (almost perfectly, see below).
-On 4.13, once I unplug the Flash drive, the controller port
-remains unresponsive.
-
-
-On 4.9, I said *almost* perfectly, because the pcieport driver
-does report a few non-fatal errors when I unplug:
-
-[  193.838504] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
-[  193.878081] usb-storage 2-2:1.0: USB Mass Storage device detected
-[  193.884547] scsi host0: usb-storage 2-2:1.0
-[  194.907936] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
-[  194.920296] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
-[  194.928666] sd 0:0:0:0: [sda] Write Protect is off
-[  194.933755] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-[  194.946074]  sda: sda1
-[  194.953608] sd 0:0:0:0: [sda] Attached SCSI removable disk
-
-[  208.930260] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
-[  208.938342] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
-[  208.950163] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
-[  208.958577] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
-[  208.965432] pcieport 0000:00:00.0: AER: Device recovery failed
-[  209.663733] xhci_hcd 0000:01:00.0: Cannot set link state.
-[  209.669194] usb usb2-port2: cannot disable (err = -32)
-[  209.674376] usb 2-2: USB disconnect, device number 2
-[  209.680481] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
-[  209.688689] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
-[  209.700555] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
-[  209.708978] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
-[  209.715845] pcieport 0000:00:00.0: AER: Device recovery failed
-[  209.721722] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
-[  209.729785] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
-[  209.741602] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
-[  209.750027] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
-[  209.756866] pcieport 0000:00:00.0: AER: Device recovery failed
-
-After that, I can still plug the drive into the same port.
-
-But on 4.13, I get
-
-[   27.330378] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
-[   27.369383] usb-storage 2-2:1.0: USB Mass Storage device detected
-[   27.375840] scsi host0: usb-storage 2-2:1.0
-[   28.403035] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
-[   28.413326] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
-[   28.423653] sd 0:0:0:0: [sda] Write Protect is off
-[   28.429139] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-[   28.441529]  sda: sda1
-[   28.449431] sd 0:0:0:0: [sda] Attached SCSI removable disk
-
-[   90.592134] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
-[   90.599857] xhci_hcd 0000:01:00.0: HC died; cleaning up
-[   90.605336] usb 2-2: USB disconnect, device number 2
-[   90.630414] udevd[955]: inotify_add_watch(6, /dev/sda, 10) failed: No such file or directory
-
-Trying to replug into the same port = nothing happens
-(Linux did say "assume dead")
-
-Any idea what could have changed between 4.9 and 4.13 ?
-
-Regards.
+> ---
+> Patch made against linux-next tree, tag next-20170714
+> 
+>  drivers/pci/dwc/pcie-designware.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index 0e03af279259..48d6d0712ea8 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -107,7 +107,7 @@ static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+>  	dw_pcie_writel_dbi(pci, offset + reg, val);
+>  }
+> 
+> -void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, int type,
+> +static void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, int type,
+>  				      u64 cpu_addr, u64 pci_addr, u32 size)
+>  {
+>  	u32 retries, val;
+> @@ -200,7 +200,7 @@ static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
+>  	dw_pcie_writel_dbi(pci, offset + reg, val);
+>  }
+> 
+> -int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index, int bar,
+> +static int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index, int bar,
+>  				    u64 cpu_addr, enum dw_pcie_as_type as_type)
+>  {
+>  	int type;
+> --
+> 2.11.0
+> 
