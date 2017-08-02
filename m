@@ -1,14 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: [PATCH 1/3] of/pci: Add dma-ranges parsing support
-To: Rob Herring <robh+dt@kernel.org>, Frank Rowand <frowand.list@gmail.com>,
- Mark Rutland <mark.rutland@arm.com>
-References: <f10055cc-4430-ff30-f892-3d3d6f24354c@sigmadesigns.com>
-Message-ID: <0d4313c7-6595-a7fb-680a-e231dc9c0902@sigmadesigns.com>
-Date: Tue, 29 Aug 2017 16:25:55 +0200
+Subject: Re: [PATCH V5 2/2] PCI: handle CRS returned by device after FLR
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <1501645453-22842-1-git-send-email-okaya@codeaurora.org>
+ <1501645453-22842-2-git-send-email-okaya@codeaurora.org>
+ <20170801224440.3f677a8d@w520.home>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <fc84cb54-1771-45cd-d01f-b88dc833baf2@codeaurora.org>
+Date: Wed, 2 Aug 2017 11:42:27 -0400
 MIME-Version: 1.0
-In-Reply-To: <f10055cc-4430-ff30-f892-3d3d6f24354c@sigmadesigns.com>
+In-Reply-To: <20170801224440.3f677a8d@w520.home>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,108 +17,118 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- DT <devicetree@vger.kernel.org>, Jason Cooper <jason@lakedaemon.net>,
- Mason <slash.tmp@free.fr>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Andrew Murray <amurray@embedded-bits.co.uk>, Liviu Dudau <liviu.dudau@arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Linus Walleij <linus.walleij@linaro.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Several host bridge drivers duplicate of_pci_range_parser_init()
-in order to parse their dma-ranges property.
+Hi Alex,
 
-Provide of_pci_dma_range_parser_init() for that use-case.
+On 8/2/2017 12:44 AM, Alex Williamson wrote:
+> On Tue,  1 Aug 2017 23:44:13 -0400
+> Sinan Kaya <okaya@codeaurora.org> wrote:
+> 
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 2ed604a..25c7a83 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3813,14 +3813,16 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>>  
+>>  /*
+>>   * We should only need to wait 100ms after FLR for virtual functions.
+>> - * Wait for up to 1000ms for config space to return something other than -1.
+>> - * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+>> - * dword because VFs don't implement the 1st dword.
+>> + * Wait for up to 60s for config space to return something other than -1.
+>> + * Intel IGD requires 1s when an LCD panel is attached.  We use
+>> + * pci_bus_read_dev_vendor_id() for reading the vendor ID as it handles
+>> + * CRS gracefully.
+> 
+> nit, stating that IGD requires 1s with an LCD panel is a
+> misinterpretation of the previous comment.  In fact the original commit
+> only mentions 300ms.  I think perhaps 1s was simply a nice round
+> interval.
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
- drivers/of/address.c       | 19 ++++++++++++++++---
- include/linux/of_address.h | 10 +++++++++-
- 2 files changed, 25 insertions(+), 4 deletions(-)
+I can fix the comment as 300ms to be correct. 
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 580bbf6ca2b1..4cfd29e4ee1b 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -232,8 +232,8 @@ int of_pci_address_to_resource(struct device_node *dev, int bar,
- }
- EXPORT_SYMBOL_GPL(of_pci_address_to_resource);
- 
--int of_pci_range_parser_init(struct of_pci_range_parser *parser,
--				struct device_node *node)
-+static int parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node, const char *name)
- {
- 	const int na = 3, ns = 2;
- 	int rlen;
-@@ -242,7 +242,7 @@ int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 	parser->pna = of_n_addr_cells(node);
- 	parser->np = parser->pna + na + ns;
- 
--	parser->range = of_get_property(node, "ranges", &rlen);
-+	parser->range = of_get_property(node, name, &rlen);
- 	if (parser->range == NULL)
- 		return -ENOENT;
- 
-@@ -250,8 +250,21 @@ int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 
- 	return 0;
- }
-+
-+int of_pci_range_parser_init(struct of_pci_range_parser *parser,
-+				struct device_node *node)
-+{
-+	return parser_init(parser, node, "ranges");
-+}
- EXPORT_SYMBOL_GPL(of_pci_range_parser_init);
- 
-+int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+				struct device_node *node)
-+{
-+	return parser_init(parser, node, "dma-ranges");
-+}
-+EXPORT_SYMBOL_GPL(of_pci_dma_range_parser_init);
-+
- struct of_pci_range *of_pci_range_parser_one(struct of_pci_range_parser *parser,
- 						struct of_pci_range *range)
- {
-diff --git a/include/linux/of_address.h b/include/linux/of_address.h
-index 37864734ca50..8beed2de98e9 100644
---- a/include/linux/of_address.h
-+++ b/include/linux/of_address.h
-@@ -49,6 +49,8 @@ extern const __be32 *of_get_address(struct device_node *dev, int index,
- 
- extern int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node);
-+extern int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node);
- extern struct of_pci_range *of_pci_range_parser_one(
- 					struct of_pci_range_parser *parser,
- 					struct of_pci_range *range);
-@@ -85,7 +87,13 @@ static inline const __be32 *of_get_address(struct device_node *dev, int index,
- static inline int of_pci_range_parser_init(struct of_pci_range_parser *parser,
- 			struct device_node *node)
- {
--	return -1;
-+	return -ENOSYS;
-+}
-+
-+static inline int of_pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+			struct device_node *node)
-+{
-+	return -ENOSYS;
- }
- 
- static inline struct of_pci_range *of_pci_range_parser_one(
+> 
+>>   */
+>>  static void pci_flr_wait(struct pci_dev *dev)
+>>  {
+>>  	int i = 0;
+>>  	u32 id;
+>> +	bool ret;
+>>  
+>>  	if (dev->is_virtfn) {
+>>  		msleep(100);
+>> @@ -3828,15 +3830,15 @@ static void pci_flr_wait(struct pci_dev *dev)
+>>  	}
+>>  
+>>  	do {
+>> -		msleep(100);
+>> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
+>> -	} while (i++ < 10 && id == ~0);
+>> +		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
+>> +						 1000);
+> 
+> Is it a problem that there's now zero delay between the FLR and first
+> attempt to read config space?  
+
+I agree, we should wait 100ms before attempting to do anything.
+
+> Seems like there should be a 100ms
+> delay before we start trying.  This is also going to print a kernel
+> warning 60 times in the course of getting to a 60s timeout, why not let
+> pci_bus_read_dev_vendor_id() manage the entire timeout?  
+
+Bjorn was concerned that if a device is taking too long to come out of reset, 
+there won't be any visible output on the screen and somebody might be under the
+impression that system is frozen even though we are just busy waiting. 
+
+That's why, I tried to introduce some verbosity.
+
+What I can do is instead of polling 60 times, I can follow a similar pattern
+in vendor_id() function and sleep 1 second first, followed by 2 seconds, followed
+by 4 seconds etc. to be less verbose. 
+
+User will still see a warning on each read loop that failed. At least, we won't 
+fill the screen with warning messages.
+
+> Are we only
+> trying to preserve the dev_info() below?  Thanks,
+
+Yes and no, we want to see the progress of polling and a final result. 60 seconds
+is a very long time.
+
+> 
+> Alex
+> 
+>> +	} while (i++ < 60 && !ret);
+>>  
+>> -	if (id == ~0)
+>> +	if (!ret)
+>>  		dev_warn(&dev->dev, "Failed to return from FLR\n");
+>>  	else if (i > 1)
+>> -		dev_info(&dev->dev, "Required additional %dms to
+>> return from FLR\n",
+>> -			 (i - 1) * 100);
+>> +		dev_info(&dev->dev, "Required additional %ds to
+>> return from FLR\n",
+>> +			 (i - 1));
+>>  }
+>>  
+>>  /**
+> 
+> 
+
+
 -- 
-2.11.0
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
