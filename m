@@ -1,118 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V6 2/2] PCI: handle CRS returned by device after FLR
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <1501694304-16554-1-git-send-email-okaya@codeaurora.org>
- <1501694304-16554-2-git-send-email-okaya@codeaurora.org>
- <20170802114924.18dd30e2@w520.home>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <563c7f28-851b-b531-34d0-2cee252766d0@codeaurora.org>
-Date: Wed, 2 Aug 2017 14:16:51 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:34548 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751186AbdHBTGt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2017 15:06:49 -0400
+Received: by mail-qt0-f196.google.com with SMTP id i19so5528041qte.1
+        for <linux-pci@vger.kernel.org>; Wed, 02 Aug 2017 12:06:48 -0700 (PDT)
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Bjorn Helgaas'" <bhelgaas@google.com>,
+        "'vidya sagar'" <sagar.tv@gmail.com>
+Cc: "'Lucas Stach'" <l.stach@pengutronix.de>,
+        "'Pratyush Anand'" <pratyush.anand@gmail.com>,
+        <linux-pci@vger.kernel.org>,
+        "'Joao Pinto'" <Joao.Pinto@synopsys.com>
+References: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com> <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
+In-Reply-To: <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
+Subject: Re: MSI-X support with Synopsys DesignWare IP core driver
+Date: Wed, 2 Aug 2017 15:06:45 -0400
+Message-ID: <000401d30bc2$7cfdb8c0$76f92a40$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170802114924.18dd30e2@w520.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain;
+        charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/2/2017 1:49 PM, Alex Williamson wrote:
-> On Wed,  2 Aug 2017 13:18:24 -0400
-
-[snip]
-
->>  static void pci_flr_wait(struct pci_dev *dev)
->>  {
->> -	int i = 0;
->> +	u32 sleep = 1000, total = 0;
->>  	u32 id;
->> +	bool ret;
->>  
->>  	if (dev->is_virtfn) {
->>  		msleep(100);
->>  		return;
->>  	}
->>  
->> +	/* don't touch the HW before waiting 100ms */
->> +	msleep(100);
->> +
+On Tuesday, August 1, 2017 1:13 PM, Bjorn Helgaas wrote:
 > 
+> This was a multi-part message with HTML, which I think causes the
+> mailing list to automatically drop it.  Please post this as plain text
+> with a changelog and signed-off-by and copy the DesignWare maintainers
+> (Jingoo and Joao, cc'd).
 > 
-> Wouldn't it be better as:
-> 
+> On Tue, Aug 1, 2017 at 12:28 AM, vidya sagar <sagar.tv@gmail.com> wrote:
+> > Hi,
+> > As you might be knowing it already, in the current pcie-designware.c ,
+> there
+> > is no support for MSI-X
+> > Although there is no native support from Synopsys IP as well to have
+> 2048
+> > interrupts, we can at least have basic support to get MSI-X also
+> allocated
+> > (along with MSI) as many as possible in the system at that point. Of
+> course,
+> > all these interrupts will have the same address to which downstream
+> devices
+> > need to initiate mem-write transactions. Though it doesn't leverage one
+> of
+> > the advantages of having MSI-X over MSI, it at least avoids drivers
+> falling
+> > back to legacy interrupts when the card doesn't support MSI. Some of the
+> > Intel NVMe cards are examples here. Legacy interrupt being a shared
+> > interrupt, it unnecessarily triggers all other shared ISRs to be called
+> > whenever there is a legacy interrupt.
+> >
+> > I have the following patch which enables MSI-X support also. Would like
+> to
+> > have your comments on this.
 
-Sure, that looks reasonable.
+Hi all,
 
-> 	msleep(100);
-> 
-> 	if (dev->is_virtfn)
-> 		return;
-> 
-> Perhaps with a spec reference in a comment why we don't care about
-> checking config space for the vf.
+As far as I know, in order to support MSI-X with Synopsys IP, additional
+controller is required. For example, GICv2m can be used to do so.
 
-The spec reference is in the commit message of 
+In addition, I think that some HACK patches can be used to support some
+MSI-X only PCI cards. In this case, we cannot take advantage of MSI-X really.
+Nevertheless, I am not sure that the following patch is safe.
 
-"PCI: limit FLR wait time to 100ms maximum"
+Best regards,
+Jingoo Han
 
-where I introduce this check. Do you prefer a reference in the code?
-I was under the impression that commit messages are used for these
-kind of documentation.
-
-> 
->>  	do {
->> -		msleep(100);
->> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
->> -	} while (i++ < 10 && id == ~0);
->> -
->> -	if (id == ~0)
->> -		dev_warn(&dev->dev, "Failed to return from FLR\n");
->> -	else if (i > 1)
->> -		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
->> -			 (i - 1) * 100);
->> +		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
->> +						 sleep);
->> +		if (ret)
->> +			break;
->> +		total += sleep;
->> +		sleep *= 2;
->> +	} while (total < 60000 && !ret);
->> +
->> +	if (!ret)
->> +		dev_warn(&dev->dev, "Failed to return from FLR after %ds\n",
->> +			 total);
->> +	else if (total)
->> +		dev_info(&dev->dev, "Required additional %ds to return from FLR\n",
->> +			 total);
->>  }
-> 
-> I'm not a big fan.  Nested exponential backoff is pretty nasty.  Are
-> there users of pci_bus_read_dev_vendor_id() that don't want a "still
-> trying" message?  It seems better to add that to the function than try
-> to wrap this bandage around it.  Thanks,
-
-I can work towards that if Bjorn doesn't have any objections.
-
-> 
-> Alex
-> 
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >
+> >
+> > diff --git a/drivers/pci/host/pcie-designware.c
+> > b/drivers/pci/host/pcie-designware.c
+> > index af8f6e9..9086253 100644
+> > --- a/drivers/pci/host/pcie-designware.c
+> > +++ b/drivers/pci/host/pcie-designware.c
+> > @@ -406,9 +406,6 @@ static int dw_msi_setup_irq(struct msi_controller
+> *chip,
+> > struct pci_dev *pdev,
+> >      int irq, pos;
+> >      struct pcie_port *pp = pdev->bus->sysdata;
+> >
+> > -    if (desc->msi_attrib.is_msix)
+> > -        return -EINVAL;
+> > -
+> >      irq = assign_irq(1, desc, &pos);
+> >      if (irq < 0)
+> >          return irq;
+> > @@ -426,9 +423,16 @@ static int dw_msi_setup_irqs(struct msi_controller
+> > *chip, struct pci_dev *pdev,
+> >      struct msi_desc *desc;
+> >      struct pcie_port *pp = pdev->bus->sysdata;
+> >
+> > -    /* MSI-X interrupts are not supported */
+> > -    if (type == PCI_CAP_ID_MSIX)
+> > -        return -EINVAL;
+> > +    if (type == PCI_CAP_ID_MSIX) {
+> > +        for_each_pci_msi_entry(desc, pdev) {
+> > +            irq = arch_setup_msi_irq(pdev, desc);
+> > +            if (irq < 0)
+> > +                return irq;
+> > +            if (irq > 0)
+> > +                return -ENOSPC;
+> > +        }
+> > +        return 0;
+> > +    }
+> >
+> >      WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+> >      desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+> >
