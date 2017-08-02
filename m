@@ -1,133 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw01.mediatek.com ([210.61.82.183]:21023 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752305AbdHJGfL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 02:35:11 -0400
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v4 3/7] PCI: mediatek: Add a structure to abstract the controller generations
-Date: Thu, 10 Aug 2017 14:34:56 +0800
-Message-ID: <e60b42e3830ba65b3b1599fd25880bc244ccb752.1502336769.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
-References: <cover.1502336769.git.honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V7 1/3] PCI: limit FLR wait time to 100ms maximum
+Date: Wed,  2 Aug 2017 15:15:15 -0400
+Message-Id: <1501701317-32249-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Code is currently allowing PCIe devices to extend polling time up to 1
+second. Reducing the wait time for virtual functions to 100ms maximum to
+satisfy spec requirement mentioned in PCIe r3.1, sec 6.6.2. Function-Level
+Reset (FLR).
 
-Introduce a structure "mtk_pcie_soc" to abstract the differences between
-controller generations, and the .startup() hook is used to encapsulate
-some SoC-dependent related setting. In doing so, the common code which
-will be reused by future chips.
+SR-IOV r1.1, sec 2.2.2 also mentions that the virtual function's presence
+from configuration space is not affected from FLR. There is no point in
+polling the command register since it should always return success.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/host/pcie-mediatek.c | 31 ++++++++++++++++++++++++++-----
- 1 file changed, 26 insertions(+), 5 deletions(-)
+ drivers/pci/pci.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index 7d1b7cd..01caa98 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -64,6 +64,18 @@
- #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
- #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..2ed604a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3812,7 +3812,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
  
-+struct mtk_pcie_port;
+ /*
+- * We should only need to wait 100ms after FLR, but some devices take longer.
++ * We should only need to wait 100ms after FLR for virtual functions.
+  * Wait for up to 1000ms for config space to return something other than -1.
+  * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+  * dword because VFs don't implement the 1st dword.
+@@ -3822,6 +3822,11 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 	int i = 0;
+ 	u32 id;
+ 
++	if (dev->is_virtfn) {
++		msleep(100);
++		return;
++	}
 +
-+/**
-+ * struct mtk_pcie_soc - differentiate between host generations
-+ * @ops: pointer to configuration access functions
-+ * @startup: pointer to controller setting functions
-+ */
-+struct mtk_pcie_soc {
-+	struct pci_ops *ops;
-+	int (*startup)(struct mtk_pcie_port *port);
-+};
-+
- /**
-  * struct mtk_pcie_port - PCIe port information
-  * @base: IO mapped register base
-@@ -97,6 +109,7 @@ struct mtk_pcie_port {
-  * @busn: bus range
-  * @offset: IO / Memory offset
-  * @ports: pointer to PCIe port information
-+ * @soc: pointer to SoC-dependent operations
-  */
- struct mtk_pcie {
- 	struct device *dev;
-@@ -112,6 +125,7 @@ struct mtk_pcie {
- 		resource_size_t io;
- 	} offset;
- 	struct list_head ports;
-+	const struct mtk_pcie_soc *soc;
- };
- 
- static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
-@@ -229,7 +243,8 @@ static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
- 
- static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
- {
--	struct device *dev = port->pcie->dev;
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct device *dev = pcie->dev;
- 	int err;
- 
- 	err = clk_prepare_enable(port->sys_ck);
-@@ -247,7 +262,7 @@ static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
- 		goto err_phy_on;
- 	}
- 
--	if (!mtk_pcie_startup_port(port))
-+	if (!pcie->soc->startup(port))
- 		return;
- 
- 	dev_info(dev, "Port%d link down\n", port->slot);
-@@ -472,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 
- 	host->busnr = pcie->busn.start;
- 	host->dev.parent = pcie->dev;
--	host->ops = &mtk_pcie_ops;
-+	host->ops = pcie->soc->ops;
- 	host->map_irq = of_irq_parse_and_map_pci;
- 	host->swizzle_irq = pci_common_swizzle;
- 
-@@ -505,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(host);
- 
- 	pcie->dev = dev;
-+	pcie->soc = of_device_get_match_data(dev);
- 	platform_set_drvdata(pdev, pcie);
- 	INIT_LIST_HEAD(&pcie->ports);
- 
-@@ -529,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
- 	return err;
- }
- 
-+static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-+	.ops = &mtk_pcie_ops,
-+	.startup = mtk_pcie_startup_port,
-+};
-+
- static const struct of_device_id mtk_pcie_ids[] = {
--	{ .compatible = "mediatek,mt7623-pcie"},
--	{ .compatible = "mediatek,mt2701-pcie"},
-+	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
-+	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
- 	{},
- };
- 
+ 	do {
+ 		msleep(100);
+ 		pci_read_config_dword(dev, PCI_COMMAND, &id);
 -- 
-2.6.4
+1.9.1
