@@ -1,40 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34342 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751236AbdHCRKE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 13:10:04 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: bhelgaas@google.com, scott@spiteful.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 1/5] PCI: hotplug: shpchp: constify pci_device_id.
-Date: Thu,  3 Aug 2017 22:39:12 +0530
-Message-Id: <1501780156-24708-2-git-send-email-arvind.yadav.cs@gmail.com>
-In-Reply-To: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH V5 1/2] PCI: limit FLR wait time to 100ms maximum
+Date: Tue,  1 Aug 2017 23:44:12 -0400
+Message-Id: <1501645453-22842-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+Code is currently allowing PCIe devices to extend polling time up to 1
+second. Reducing the wait time for virtual functions to 100ms maximum to
+satisfy spec requirement mentioned in PCIe r3.1, sec 6.6.2. Function-Level
+Reset (FLR).
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+SR-IOV r1.1, sec 2.2.2 also mentions that the virtual function's presence
+from configuration space is not affected from FLR. There is no point in
+polling the command register since it should always return success.
+
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/hotplug/shpchp_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/shpchp_core.c b/drivers/pci/hotplug/shpchp_core.c
-index 3454dc7..7bfb87b 100644
---- a/drivers/pci/hotplug/shpchp_core.c
-+++ b/drivers/pci/hotplug/shpchp_core.c
-@@ -351,7 +351,7 @@ static void shpc_remove(struct pci_dev *dev)
- 	kfree(ctrl);
- }
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..2ed604a 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3812,7 +3812,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+ EXPORT_SYMBOL(pci_wait_for_pending_transaction);
  
--static struct pci_device_id shpcd_pci_tbl[] = {
-+static const struct pci_device_id shpcd_pci_tbl[] = {
- 	{PCI_DEVICE_CLASS(((PCI_CLASS_BRIDGE_PCI << 8) | 0x00), ~0)},
- 	{ /* end: all zeroes */ }
- };
+ /*
+- * We should only need to wait 100ms after FLR, but some devices take longer.
++ * We should only need to wait 100ms after FLR for virtual functions.
+  * Wait for up to 1000ms for config space to return something other than -1.
+  * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+  * dword because VFs don't implement the 1st dword.
+@@ -3822,6 +3822,11 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 	int i = 0;
+ 	u32 id;
+ 
++	if (dev->is_virtfn) {
++		msleep(100);
++		return;
++	}
++
+ 	do {
+ 		msleep(100);
+ 		pci_read_config_dword(dev, PCI_COMMAND, &id);
 -- 
-2.7.4
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
