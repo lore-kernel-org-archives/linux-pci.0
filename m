@@ -1,61 +1,51 @@
-Return-Path: <SRS0=sI7x=7N=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=sI7x=7N=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V9 1/2] PCI: handle CRS returned by device after FLR
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-References: <1502240245-11714-1-git-send-email-okaya@codeaurora.org>
- <20170810215937.GR16580@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <31155fef-1deb-aad7-ee9d-dc5250214e99@codeaurora.org>
-Date: Thu, 10 Aug 2017 23:06:32 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750725AbdHBVnG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:43:06 -0400
+Date: Wed, 2 Aug 2017 16:43:02 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Fabio Estevam <festevam@gmail.com>
+Cc: bhelgaas@google.com, thomas.petazzoni@free-electrons.com,
+        jason@lakedaemon.net, linux-pci@vger.kernel.org,
+        Fabio Estevam <fabio.estevam@nxp.com>
+Subject: Re: [PATCH] PCI: mvebu: Remove unneeded gpiod NULL check
+Message-ID: <20170802214302.GK20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1500239773-15632-1-git-send-email-festevam@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170810215937.GR16580@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1500239773-15632-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/10/2017 5:59 PM, Bjorn Helgaas wrote:
-> On Tue, Aug 08, 2017 at 08:57:24PM -0400, Sinan Kaya wrote:
->> Sporadic reset issues have been observed with Intel 750 NVMe drive by
->> writing to the reset file in sysfs in a loop. The sequence of events
->> observed is as follows:
->>
->> - perform a Function Level Reset (FLR)
->> - sleep up to 1000ms total
->> - read ~0 from PCI_COMMAND
->> - warn that the device didn't return from FLR
->> - touch the device before it's ready
->>
->> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
->> following a FLR request to indicate that it is not ready to accept new
->> requests. CRS is defined in PCIe r3.1, sec 2.3.1. Request Handling Rules
->> and CRS usage in FLR context is mentioned in PCIe r3.1a, sec 6.6.2.
->> Function-Level Reset.
+On Sun, Jul 16, 2017 at 06:16:13PM -0300, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@nxp.com>
 > 
-> Don't we have a similar issue for other types of reset?  I would think
-> conventional reset, e.g., using secondary bus reset, hotplug slot
-> power, power management, etc., would have the same situation where a
-> device might return CRS status.
+> The gpiod API checks for NULL descriptors, so there is no need to
+> duplicate the check in the driver.
 > 
+> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
 
-Yes, same issue exists on secondary bus reset. V1-V3 of this series tried to
-address this but I couldn't find a solution that is not intrusive. 
+Applied with Thomas' ack to pci/host-mvebu for v4.14, thanks!
 
-I was told that hot reset is a broadcast message. Therefore, we need to handle
-CRS for every single device in the tree following a bus reset.
-
-Hotplug code is calling the vendor id read function after power on so it doesn't
-have this issue.
-
-I picked up this issue between v4..v9 due to an actual bug reported during our
-internal testing. Otherwise, this issue was in rest waiting for review feedback.
-
-CRS handling in hot reset is still open. We can move onto that issue once
-we close the FLR.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+>  drivers/pci/host/pci-mvebu.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index f353a6e..fa227d8 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -1186,8 +1186,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
+>   */
+>  static void mvebu_pcie_powerdown(struct mvebu_pcie_port *port)
+>  {
+> -	if (port->reset_gpio)
+> -		gpiod_set_value_cansleep(port->reset_gpio, 1);
+> +	gpiod_set_value_cansleep(port->reset_gpio, 1);
+>  
+>  	clk_disable_unprepare(port->clk);
+>  }
+> -- 
+> 2.7.4
+> 
