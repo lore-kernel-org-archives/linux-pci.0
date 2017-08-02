@@ -1,58 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 05/15] mei: make device_type const
-Date: Sat, 19 Aug 2017 13:52:16 +0530
-Message-Id: <1503130946-2854-6-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 Aug 2017 16:52:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jisheng Zhang <jszhang@marvell.com>
+Subject: Re: [PATCH v2] PCI: dwc: designware: test PCIE_ATU_ENABLE bit to
+ check enabled or not
+Message-ID: <20170802215241.GO20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170718064821.3668-1-jszhang@marvell.com>
+MIME-Version: 1.0
+In-Reply-To: <20170718064821.3668-1-jszhang@marvell.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Joao.Pinto@synopsys.com, jingoohan1@gmail.com, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make this const as it is only stored in the type field of a device
-structure, which is const.
-Done using Coccinelle.
+On Tue, Jul 18, 2017 at 02:48:21PM +0800, Jisheng Zhang wrote:
+> The ATU CTRL2 register is 32 bit, besides the enable bit, other bits
+> may also be set. To check whether the ATU is enabled or not, we should
+> test the enable bit.
+> 
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> Acked-by: Joao Pinto <jpinto@synopsys.com>
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/misc/mei/bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied with Jingoo's ack to pci/host-designware for v4.14, thanks!
 
-diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
-index 40c7908..1ac10cb 100644
---- a/drivers/misc/mei/bus.c
-+++ b/drivers/misc/mei/bus.c
-@@ -845,7 +845,7 @@ static void mei_cl_bus_dev_release(struct device *dev)
- 	kfree(cldev);
- }
- 
--static struct device_type mei_cl_device_type = {
-+static const struct device_type mei_cl_device_type = {
- 	.release	= mei_cl_bus_dev_release,
- };
- 
--- 
-1.9.1
+> ---
+> Since v1:
+>  - Add Joao's Ack
+>  - Fix typo in commit msg, thank Jingoo
+> 
+>  drivers/pci/dwc/pcie-designware.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index 0e03af279259..6bf0b409050a 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -177,7 +177,7 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+>  	 */
+>  	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
+>  		val = dw_pcie_readl_dbi(pci, PCIE_ATU_CR2);
+> -		if (val == PCIE_ATU_ENABLE)
+> +		if (val & PCIE_ATU_ENABLE)
+>  			return;
+>  
+>  		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> -- 
+> 2.13.2
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
