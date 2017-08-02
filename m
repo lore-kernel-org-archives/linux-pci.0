@@ -1,62 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33946 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751742AbdHSI1s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 04:27:48 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 15/15] usb: make device_type const
-Date: Sat, 19 Aug 2017 13:52:26 +0530
-Message-Id: <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:41782 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750850AbdHBVgm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:36:42 -0400
+Date: Wed, 2 Aug 2017 16:36:39 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH] pci: ftpci100: fix of_irq_get() error check
+Message-ID: <20170802213639.GI20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170715214406.657273405@cogentembedded.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170715214406.657273405@cogentembedded.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make this const as it is only stored in the type field of a device
-structure, which is const.
-Done using Coccinelle.
+On Sun, Jul 16, 2017 at 12:43:10AM +0300, Sergei Shtylyov wrote:
+> of_irq_get() may return a negative error number as well as 0 on failure,
+> while the driver only checks for 0, blithely continuing with the call to
+> irq_set_chained_handler_and_data() -- that function expects *unsigned int*
+> so should probably do nothing when a large IRQ number resulting from a
+> conversion of a negative error number is passed to it. The driver then
+> probes successfully while being only partly functional...
+> 
+> Check for 'irq <= 0' instead and propagate the negative error number to
+> the probe method --  that will allow the deferred probing as well...
+> 
+> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/usb/common/ulpi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied with Linus' reviewed-by to pci/host-faraday for v4.14, thanks!
 
-diff --git a/drivers/usb/common/ulpi.c b/drivers/usb/common/ulpi.c
-index 930e8f3..4aa5195 100644
---- a/drivers/usb/common/ulpi.c
-+++ b/drivers/usb/common/ulpi.c
-@@ -135,7 +135,7 @@ static void ulpi_dev_release(struct device *dev)
- 	kfree(to_ulpi_dev(dev));
- }
- 
--static struct device_type ulpi_dev_type = {
-+static const struct device_type ulpi_dev_type = {
- 	.name = "ulpi_device",
- 	.groups = ulpi_dev_attr_groups,
- 	.release = ulpi_dev_release,
--- 
-1.9.1
+> ---
+>  drivers/pci/host/pci-ftpci100.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: pci/drivers/pci/host/pci-ftpci100.c
+> ===================================================================
+> --- pci.orig/drivers/pci/host/pci-ftpci100.c
+> +++ pci/drivers/pci/host/pci-ftpci100.c
+> @@ -350,9 +350,9 @@ static int faraday_pci_setup_cascaded_ir
+>  
+>  	/* All PCI IRQs cascade off this one */
+>  	irq = of_irq_get(intc, 0);
+> -	if (!irq) {
+> +	if (irq <= 0) {
+>  		dev_err(p->dev, "failed to get parent IRQ\n");
+> -		return -EINVAL;
+> +		return irq ?: -EINVAL;
+>  	}
+>  
+>  	p->irqdomain = irq_domain_add_linear(intc, 4,
+> 
