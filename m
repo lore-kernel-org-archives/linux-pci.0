@@ -1,183 +1,79 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35610 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:50764 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753041AbdHVUrv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Aug 2017 16:47:51 -0400
-Date: Tue, 22 Aug 2017 15:47:50 -0500
+        id S1751699AbdHBRcx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 13:32:53 -0400
+Date: Wed, 2 Aug 2017 12:32:49 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: manipulate phy properly if failing to
- probe the driver
-Message-ID: <20170822204750.GG6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <1502277263-187898-1-git-send-email-shawn.lin@rock-chips.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pciehp: Enable hot plug capable detection
+Message-ID: <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1502277263-187898-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 09, 2017 at 07:14:23PM +0800, Shawn Lin wrote:
-> We observed that the clk_pciephy_ref is still enabled when we actually
-> fail to probe the driver.
-> 
-> root@linaro-alip:~# cat /sys/kernel/debug/clk/clk_summary | grep pcie
-> clk_pciephy_ref			  1	1	 24000000	0 0
-> clk_pcie_pm			  0	0	 24000000	0 0
->       clk_pcie_core_cru           0	0	125000000	0 0
->       clk_pciephy_ref100m         0	0	100000000	0 0
-> 		aclk_pcie         0	0	148500000	0 0
-> 		aclk_perf_pcie    0	0	148500000	0 0
-> 			pclk_pcie 0	0	 37125000	0 0
-> clk_pcie_core                     0	0		0	0 0
-> 
-> clk_pciephy_ref is used by phy driver and we need to properly disable
-> it for this case. So this patch add error handle for the function of
-> rockchip_pcie_init_port to fix this issue.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Hi Keith,
 
-Applied to pci/host-rockchip for v4.14, thanks!
+On Wed, Aug 02, 2017 at 01:15:07AM -0400, Keith Busch wrote:
+> The PCIe specification ties presence detect change enabling to the hot plug
+> capable bit in Slot Capabilities. This capability is not mutally exclusive
+> with attention buttons, so enabing detection should not be tied it.
 
+Can you clarify this a little?
+
+  - Please include the spec section you're referring to.
+
+  - I'm not sure what "This capability is not ..." refers to.  There
+    is not a "presence detect change enabling" capability.  I agree
+    that the "Hot-Plug Capable" bit is independent of the "Attention
+    Button Present" bit.
+
+  - Slot Control (PCIe r3.1, sec 7.8.10) says PDCE *is permitted* to
+    be read-only zero if PCI_EXP_SLTCAP_HPC is zero.  It doesn't say
+    PDCE is *required* to be read-only in that case.
+
+My initial reaction is that it probably makes sense per the spec to
+enable PDCE unconditionally, but I would want to do some archaeology
+to figure out why it wasn't that way from the beginning.  There's
+probably some reason for it being the way it is, so we have to take
+that into account.  Maybe it works around some flaky presence detect
+hardware or something.
+
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
 > ---
+>  drivers/pci/hotplug/pciehp.h     | 1 +
+>  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+>  2 files changed, 2 insertions(+), 1 deletion(-)
 > 
->  drivers/pci/host/pcie-rockchip.c | 38 ++++++++++++++++++++++++--------------
->  1 file changed, 24 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 2eccd53..ce6371b 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -561,32 +561,32 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		err = phy_init(rockchip->phys[i]);
->  		if (err) {
->  			dev_err(dev, "init phy%d err %d\n", i, err);
-> -			return err;
-> +			goto err_phy_exit;
->  		}
->  	}
->  
->  	err = reset_control_assert(rockchip->core_rst);
->  	if (err) {
->  		dev_err(dev, "assert core_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	err = reset_control_assert(rockchip->mgmt_rst);
->  	if (err) {
->  		dev_err(dev, "assert mgmt_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	err = reset_control_assert(rockchip->mgmt_sticky_rst);
->  	if (err) {
->  		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	err = reset_control_assert(rockchip->pipe_rst);
->  	if (err) {
->  		dev_err(dev, "assert pipe_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	udelay(10);
-> @@ -594,19 +594,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  	err = reset_control_deassert(rockchip->pm_rst);
->  	if (err) {
->  		dev_err(dev, "deassert pm_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	err = reset_control_deassert(rockchip->aclk_rst);
->  	if (err) {
->  		dev_err(dev, "deassert aclk_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	err = reset_control_deassert(rockchip->pclk_rst);
->  	if (err) {
->  		dev_err(dev, "deassert pclk_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_exit;
->  	}
->  
->  	if (rockchip->link_gen == 2)
-> @@ -628,7 +628,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  		err = phy_power_on(rockchip->phys[i]);
->  		if (err) {
->  			dev_err(dev, "power on phy%d err %d\n", i, err);
-> -			return err;
-> +			goto err_phy_power_off;
->  		}
->  	}
->  
-> @@ -639,25 +639,25 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
->  	if (err) {
->  		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_power_off;
->  	}
->  
->  	err = reset_control_deassert(rockchip->core_rst);
->  	if (err) {
->  		dev_err(dev, "deassert core_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_power_off;
->  	}
->  
->  	err = reset_control_deassert(rockchip->mgmt_rst);
->  	if (err) {
->  		dev_err(dev, "deassert mgmt_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_power_off;
->  	}
->  
->  	err = reset_control_deassert(rockchip->pipe_rst);
->  	if (err) {
->  		dev_err(dev, "deassert pipe_rst err %d\n", err);
-> -		return err;
-> +		goto err_phy_power_off;
->  	}
->  
->  	/* Fix the transmitted FTS count desired to exit from L0s. */
-> @@ -690,7 +690,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  				 500 * USEC_PER_MSEC);
->  	if (err) {
->  		dev_err(dev, "PCIe link training gen1 timeout!\n");
-> -		return -ETIMEDOUT;
-> +		err = -ETIMEDOUT;
-> +		goto err_phy_power_off;
->  	}
->  
->  	if (rockchip->link_gen == 2) {
-> @@ -751,6 +752,15 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
->  
->  	return 0;
-> +
-> +err_phy_exit:
-> +	for (; i >= 0; --i)
-> +		phy_exit(rockchip->phys[i]);
-> +err_phy_power_off:
-> +	for (; i >= 0; --i)
-> +		phy_power_off(rockchip->phys[i]);
-> +
-> +	return err;
->  }
->  
->  static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> index 06109d4..610e295 100644
+> --- a/drivers/pci/hotplug/pciehp.h
+> +++ b/drivers/pci/hotplug/pciehp.h
+> @@ -120,6 +120,7 @@ struct controller {
+>  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+>  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+>  #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+> +#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
+>  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+>  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+>  #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 026830a..43a86ed 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -691,7 +691,7 @@ void pcie_enable_notification(struct controller *ctrl)
+>  	cmd = PCI_EXP_SLTCTL_DLLSCE;
+>  	if (ATTN_BUTTN(ctrl))
+>  		cmd |= PCI_EXP_SLTCTL_ABPE;
+> -	else
+> +	if (HP_CAP(ctrl))
+>  		cmd |= PCI_EXP_SLTCTL_PDCE;
+>  	if (!pciehp_poll_mode)
+>  		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
 > -- 
-> 1.9.1
-> 
+> 2.5.5
 > 
