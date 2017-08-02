@@ -1,61 +1,98 @@
-Return-Path: <SRS0=i78b=7Z=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=i78b=7Z=free.fr=slash.tmp@kernel.org>
-Subject: Re: Possible regression between 4.9 and 4.13
-To: Mathias Nyman <mathias.nyman@intel.com>,
- Felipe Balbi <felipe.balbi@linux.intel.com>,
- linux-pci <linux-pci@vger.kernel.org>, linux-usb
- <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
- <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
- <87a82qbyv5.fsf@linux.intel.com> <599D3410.9050504@intel.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
-Date: Wed, 23 Aug 2017 11:31:29 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 Aug 2017 16:29:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+Subject: Re: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
+Message-ID: <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <599D3410.9050504@intel.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Minghuan Lian <minghuan.Lian@freescale.com>,
+ robh+dt@kernel.org, bhelgaas@google.com, Mingkai Hu <mingkai.hu@freescale.com>,
+ Roy Zang <tie-fei.zang@freescale.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/08/2017 09:51, Mathias Nyman wrote:
+[+cc Minghuan, Mingkai, Roy]
 
-> very likely cause is the more aggressive detection of pci removed xhci hosts
+On Thu, Jul 06, 2017 at 05:39:44PM +0800, Zhiqiang Hou wrote:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-> See commit d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
->      xhci: Rework how we handle unresponsive or hoptlug removed hosts
+> The ls1088a and ls2088a has the same PCIe controller, so the ls1088a
+> will reuse the ls2088a's pcie compatible.
 > 
-> It checks if a xhci register reads returns 0xffffffff and assumes xhci
-> died in that case.
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> ---
+>  Documentation/devicetree/bindings/pci/layerscape-pci.txt | 1 +
+>  drivers/pci/dwc/pci-layerscape.c                         | 9 +++++++++
+>  2 files changed, 10 insertions(+)
 > 
-> Could you add something like the below to check which what is killing the host?
-> Or a BUG()/WARN() in xhci_hc_died() to get a backtrace of who called it.
+> diff --git a/Documentation/devicetree/bindings/pci/layerscape-pci.txt b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> index ee1c72d5..cb735e1 100644
+> --- a/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/layerscape-pci.txt
+> @@ -15,6 +15,7 @@ Required properties:
+>  - compatible: should contain the platform identifier such as:
+>          "fsl,ls1021a-pcie", "snps,dw-pcie"
+>          "fsl,ls2080a-pcie", "fsl,ls2085a-pcie", "snps,dw-pcie"
+> +        "fsl,ls2088a-pcie", "fsl,ls1088a-pcie"
 
-[   46.525247] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
-[   46.565496] usb-storage 2-2:1.0: USB Mass Storage device detected
-[   46.571934] scsi host0: usb-storage 2-2:1.0
-[   47.601227] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
-[   47.611340] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
-[   47.621624] sd 0:0:0:0: [sda] Write Protect is off
-[   47.627131] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-[   47.639637]  sda: sda1
-[   47.648091] sd 0:0:0:0: [sda] Attached SCSI removable disk
-[   58.100306] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
-[   58.108021] CPU: 0 PID: 939 Comm: kworker/0:2 Tainted: G         C      4.13.0-rc6 #11
-[   58.115976] Hardware name: Sigma Tango DT
-[   58.120016] Workqueue: usb_hub_wq hub_event
-[   58.124241] [<c010f288>] (unwind_backtrace) from [<c010af58>] (show_stack+0x10/0x14)
-[   58.132033] [<c010af58>] (show_stack) from [<c049d714>] (dump_stack+0x84/0x98)
-[   58.139302] [<c049d714>] (dump_stack) from [<c03b090c>] (xhci_hc_died.part.9+0x50/0x23c)
-[   58.147438] [<c03b090c>] (xhci_hc_died.part.9) from [<c03b5d80>] (xhci_hub_control+0xf3c/0x175c)
-[   58.156273] [<c03b5d80>] (xhci_hub_control) from [<c03934a4>] (usb_hcd_submit_urb+0x264/0x814)
-[   58.164932] [<c03934a4>] (usb_hcd_submit_urb) from [<c0394fa4>] (usb_start_wait_urb+0x4c/0xbc)
-[   58.173591] [<c0394fa4>] (usb_start_wait_urb) from [<c03950b4>] (usb_control_msg+0xa0/0xcc)
-[   58.181985] [<c03950b4>] (usb_control_msg) from [<c038bf54>] (usb_clear_port_feature+0x44/0x4c)
-[   58.190730] [<c038bf54>] (usb_clear_port_feature) from [<c038c320>] (hub_port_reset+0x228/0x51c)
-[   58.199561] [<c038c320>] (hub_port_reset) from [<c038fd68>] (hub_event+0x87c/0x108c)
-[   58.207349] [<c038fd68>] (hub_event) from [<c012ecc4>] (process_one_work+0x1d8/0x3f0)
-[   58.215220] [<c012ecc4>] (process_one_work) from [<c012f8d8>] (worker_thread+0x38/0x554)
-[   58.223354] [<c012f8d8>] (worker_thread) from [<c01347d0>] (kthread+0x108/0x138)
-[   58.230789] [<c01347d0>] (kthread) from [<c01076d8>] (ret_from_fork+0x14/0x3c)
-[   58.238056] xhci_hcd 0000:01:00.0: HC died; cleaning up
-[   58.243391] usb 2-2: USB disconnect, device number 2
+You add "fsl,ls1088a-pcie" here, but not in the ls_pcie_of_match[]
+table in the driver, so I don't think this will actually make the
+driver claim ls1088a devices, will it?
+
+I'm also waiting for an ack from the layerscape maintainers (added to
+cc list).
+
+>          "fsl,ls1046a-pcie"
+>  - reg: base addresses and lengths of the PCIe controller
+>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+> index 9bed3cd..0df8189 100644
+> --- a/drivers/pci/dwc/pci-layerscape.c
+> +++ b/drivers/pci/dwc/pci-layerscape.c
+> @@ -239,12 +239,21 @@ static struct ls_pcie_drvdata ls2080_drvdata = {
+>  	.dw_pcie_ops = &dw_ls_pcie_ops,
+>  };
+>  
+> +static struct ls_pcie_drvdata ls2088_drvdata = {
+> +	.lut_offset = 0x80000,
+> +	.ltssm_shift = 0,
+> +	.lut_dbg = 0x407fc,
+> +	.ops = &ls_pcie_host_ops,
+> +	.dw_pcie_ops = &dw_ls_pcie_ops,
+> +};
+> +
+>  static const struct of_device_id ls_pcie_of_match[] = {
+>  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021_drvdata },
+>  	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043_drvdata },
+>  	{ .compatible = "fsl,ls1046a-pcie", .data = &ls1046_drvdata },
+>  	{ .compatible = "fsl,ls2080a-pcie", .data = &ls2080_drvdata },
+>  	{ .compatible = "fsl,ls2085a-pcie", .data = &ls2080_drvdata },
+> +	{ .compatible = "fsl,ls2088a-pcie", .data = &ls2088_drvdata },
+>  	{ },
+>  };
+>  
+> -- 
+> 2.1.0.27.g96db324
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
