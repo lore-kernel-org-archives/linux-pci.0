@@ -1,171 +1,38 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linuxarm@huawei.com>
-Subject: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
-Date: Sat, 5 Aug 2017 15:15:11 +0800
-Message-ID: <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:41518 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751128AbdHBVc6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:32:58 -0400
+Date: Wed, 2 Aug 2017 16:32:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        Niklas Cassel <niklass@axis.com>, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: dwc: convert remaining dbi read/writes to
+ dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+Message-ID: <20170802213255.GB7667@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170714120735.11993-1-niklas.cassel@axis.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170714120735.11993-1-niklas.cassel@axis.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When bit4 is set in the PCIe Device Control register, it indicates
-whether the device is permitted to use relaxed ordering.
-On some platforms using relaxed ordering can have performance issues or
-due to erratum can cause data-corruption. In such cases devices must avoid
-using relaxed ordering.
+[+cc Kishon, Pratyush]
 
-This patch checks if there is any node in the hierarchy that indicates that
-using relaxed ordering is not safe. In such cases the patch turns off the
-relaxed ordering by clearing the eapability for this device. And if the
-device is probably running in a guest machine, we should do nothing.
+On Fri, Jul 14, 2017 at 02:07:33PM +0200, Niklas Cassel wrote:
+> Since the introduction of the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros,
+> most dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..) calls
+> have been converted to dw_pcie_readX_dbi/dw_pcie_writeX_dbi calls.
+> Convert the remaining calls.
+> 
+> Niklas Cassel (2):
+>   PCI: dwc: dra7xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
+>   PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+>     macros
+> 
+>  drivers/pci/dwc/pci-dra7xx.c     | 14 ++++++--------
+>  drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
+>  2 files changed, 16 insertions(+), 20 deletions(-)
 
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-Acked-by: Ashok Raj <ashok.raj@intel.com>
----
- drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
- drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  2 ++
- 3 files changed, 68 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..4f9d7c1 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
- EXPORT_SYMBOL(pcie_set_mps);
- 
- /**
-+ * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
-+ * @dev: PCI device to query
-+ *
-+ * If possible clear relaxed ordering
-+ */
-+int pcie_clear_relaxed_ordering(struct pci_dev *dev)
-+{
-+	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-+					  PCI_EXP_DEVCTL_RELAX_EN);
-+}
-+EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
-+
-+/**
-+ * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
-+ * @dev: PCI device to query
-+ *
-+ * Returns true if the device support relaxed ordering attribute.
-+ */
-+bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
-+{
-+	u16 v;
-+
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-+
-+	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-+}
-+EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
-+
-+/**
-  * pcie_get_minimum_link - determine minimum link settings of a PCI device
-  * @dev: PCI device to query
-  * @speed: storage for minimum speed
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310d..48df012 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1762,6 +1762,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- }
- 
-+/**
-+ * pci_dev_should_disable_relaxed_ordering - check if the PCI device
-+ * should disable the relaxed ordering attribute.
-+ * @dev: PCI device
-+ *
-+ * Return true if any of the PCI devices above us do not support
-+ * relaxed ordering.
-+ */
-+static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
-+{
-+	while (dev) {
-+		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
-+			return true;
-+
-+		dev = dev->bus->self;
-+	}
-+
-+	return false;
-+}
-+
-+static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-+{
-+	/* We should not alter the relaxed ordering bit for the VF */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	/* If the releaxed ordering enable bit is not set, do nothing. */
-+	if (!pcie_relaxed_ordering_supported(dev))
-+		return;
-+
-+	if (pci_dev_should_disable_relaxed_ordering(dev)) {
-+		pcie_clear_relaxed_ordering(dev);
-+		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
-+	}
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
- 	struct hotplug_params hpp;
-@@ -1769,6 +1805,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev);
-+	pci_configure_relaxed_ordering(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 412ec1c..3aa23a2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1127,6 +1127,8 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
-+int pcie_clear_relaxed_ordering(struct pci_dev *dev);
-+bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
- 
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
--- 
-1.8.3.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Waiting for ack from maintainers (cc'd).
