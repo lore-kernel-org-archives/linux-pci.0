@@ -1,44 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:38297 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753144AbdHOTLg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:11:36 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: <linux-pci@vger.kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v7 0/3] PCI: xilinx: Optimisation & MIPS support
-Date: Tue, 15 Aug 2017 12:11:14 -0700
-Message-ID: <20170815191117.19882-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=jmEW=7E=gmail.com=zuban32s@kernel.org>
+Return-Path: <SRS0=jmEW=7E=gmail.com=zuban32s@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170802223547.GP20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1500387145-4216-1-git-send-email-zuban32s@gmail.com> <20170802223547.GP20308@bhelgaas-glaptop.roam.corp.google.com>
+From: Alexander Bezzubikov <zuban32s@gmail.com>
+Date: Thu, 3 Aug 2017 01:48:51 +0300
+Message-ID: <CAKSfGUA_1ccDBaChXaWwOKthq-okkAmYADpWxQXQ67DG6SjgYA@mail.gmail.com>
+Subject: Re: [PATCH] pci: shpchp: set the bridge busmaster if MSI are enabled
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Marcel Apfelbaum <marcel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This series implements a couple of optimisations around interrupt
-handling for the Xilinx AXI PCIe Host Bridge IP, then enables building
-our driver for the MIPS architecture in order to make use of it on the
-MIPS Boston development board.
+2017-08-03 1:35 GMT+03:00 Bjorn Helgaas <helgaas@kernel.org>:
+> On Tue, Jul 18, 2017 at 05:12:25PM +0300, Aleksandr Bezzubikov wrote:
+>> An MSI-based SHPC built in PCI bridges can configure hotplugged devices
+>> only if they notify the bridge with MSI.
+>
+> I think you're referring to the events listed in SHPC r1.0, sec 4.7.3,
+> table 4-24, right?  Attention Button Press, Isolated Power Fault, Card
+> Presence Change, MRS Sensor Change, etc?
+>
+> So IIUC, this is really about the bridge itself generating MSIs about
+> slot-related events, not the hot-added devices generating MSIs.
+>
 
-The INTD fix was moved out of this series in v7 and is now part of a
-"PCI: INTx interrupt fixes & cleanup" series which should be applied
-first in order to avoid hitting the broken INTD interrupt issue on MIPS
-Boston boards.
+You're right, it's definitely about the bridge's built-in SHPC
+that generates MSIs.
 
-Applies atop v4.13-rc5, ideally after my "PCI: INTx interrupt fixes &
-cleanup" series.
+> I agree this patch makes sense, I'm just trying to clarify the
+> changelog.
+>
+>> But they can't trigger interrupt without the bridge being busmaster,
+>> that's why it should be enabled.
+>>
+>> Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
+>> ---
+>>  drivers/pci/hotplug/shpchp_hpc.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
+>> index de0ea47..e5824c7 100644
+>> --- a/drivers/pci/hotplug/shpchp_hpc.c
+>> +++ b/drivers/pci/hotplug/shpchp_hpc.c
+>> @@ -1062,6 +1062,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
+>>               if (rc) {
+>>                       ctrl_info(ctrl, "Can't get msi for the hotplug controller\n");
+>>                       ctrl_info(ctrl, "Use INTx for the hotplug controller\n");
+>> +             } else {
+>> +                     pci_set_master(pdev);
+>>               }
+>>
+>>               rc = request_irq(ctrl->pci_dev->irq, shpc_isr, IRQF_SHARED,
+>> --
+>> 2.7.4
+>>
 
-Paul Burton (3):
-  PCI: xilinx: Unify INTx & MSI interrupt decode
-  PCI: xilinx: Don't enable config completion interrupts
-  PCI: xilinx: Allow build on MIPS platforms
 
- drivers/pci/host/Kconfig       |  2 +-
- drivers/pci/host/pcie-xilinx.c | 53 ++++++++++++++----------------------------
- 2 files changed, 19 insertions(+), 36 deletions(-)
 
 -- 
-2.14.1
+Aleksandr Bezzubikov
