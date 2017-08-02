@@ -1,143 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55572 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750729AbdHRJLB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 05:11:01 -0400
-Date: Fri, 18 Aug 2017 14:40:51 +0530
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v9 0/3] Add support for IPQ8074 PCIe phy and controller
-Message-ID: <20170818091050.GA8756@codeaurora.org>
-References: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 Aug 2017 11:49:24 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V6 2/2] PCI: handle CRS returned by device after FLR
+Message-ID: <20170802114924.18dd30e2@w520.home>
+In-Reply-To: <1501694304-16554-2-git-send-email-okaya@codeaurora.org>
+References: <1501694304-16554-1-git-send-email-okaya@codeaurora.org>
+ <1501694304-16554-2-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 18, 2017 at 12:59:50PM +0530, Varadarajan Narayanan wrote:
-> v9:
->   Incorporate Stanimir's feedback for
-> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+On Wed,  2 Aug 2017 13:18:24 -0400
+Sinan Kaya <okaya@codeaurora.org> wrote:
 
-Forgot to mention that the patches were rebased against
-Bjorn's pci.git/next.
+> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+> following a Function Level Reset (FLR) request to indicate that it is
+> not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
+> Request Handling Rules and CRS usage in FLR context is mentioned in
+> PCIe r3.1, sec 6.6.2. Function-Level Reset.
+> 
+> Adding a vendor ID read if this is a physical function before attempting
+> to read any other registers on the endpoint. A CRS indication will only
+> be given if the address to be read is vendor ID register.
+> pci_bus_read_dev_vendor_id() knows how to deal with CRS returned values.
+> 
+> If pci_bus_read_dev_vendor_id() fails, it prints a user visible warning
+> after provided 1 second timeout is reached. pci_flr_wait() will keep
+> calling this function 60 times to allow up to 60 seconds to be consistent
+> with the rest of the kernel CRS timeout handling.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pci.c | 36 +++++++++++++++++++++++-------------
+>  1 file changed, 23 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2ed604a..01b28ac 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3813,30 +3813,40 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>  
+>  /*
+>   * We should only need to wait 100ms after FLR for virtual functions.
+> - * Wait for up to 1000ms for config space to return something other than -1.
+> - * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
+> - * dword because VFs don't implement the 1st dword.
+> + * Wait for up to 60s for config space to return something other than -1.
+> + * Intel IGD requires 300ms when an LCD panel is attached.  We use
+> + * pci_bus_read_dev_vendor_id() for reading the vendor ID as it handles
+> + * CRS gracefully.
+>   */
+>  static void pci_flr_wait(struct pci_dev *dev)
+>  {
+> -	int i = 0;
+> +	u32 sleep = 1000, total = 0;
+>  	u32 id;
+> +	bool ret;
+>  
+>  	if (dev->is_virtfn) {
+>  		msleep(100);
+>  		return;
+>  	}
+>  
+> +	/* don't touch the HW before waiting 100ms */
+> +	msleep(100);
+> +
 
-Thanks
-Varada
 
->   Add Stanimir's Ack for
-> 	PCI: dwc: qcom: Use block IP version for operations
-> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
->
->   Add Rob's Ack for
-> 	dt-bindings: pci: qcom: Add support for IPQ8074
->
-> v8:
->   Incorporate Stanimir's feedback for
-> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
->
-> v7:
->   Skip PHY patches as they are already included by Kishon
->
->   Incorporate Stanimir's feedback for the below patches
-> 	PCI: dwc: qcom: Use block IP version for operations
-> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
->
-> v6:
->   Added 'Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>' and fixed
->   white space issues as mentioned by Vivek.
-> 	phy: qcom-qmp: Fix phy pipe clock name
-> 	dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
->
-> v5:
->   dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
->         Renamed phy_phy clock as common clock
->
->   phy: qcom-qmp: Fix phy pipe clock name
->         Moved the DT get into the registering function
->
->   phy: qcom-qmp: Add support for IPQ8074
->         Place the IPQ8074 related structs similar to existing SoC.
->         Renamed phy_phy clock as common clock
-> v4:
->   phy: qcom-qmp: Fix phy pipe clock name
-> 	Based on Vivek's comments, return failure only for
-> 	PCI/USB type of phys.
-> 	Removed Ack.
->
->   phy: qcom-qmp: Handle unavailable registers
-> 	Removed this patch.
-> 	Incorrectly used a block of code that is not applicable
-> 	to IPQ8074, hence had to avoid an "unavailable" register.
-> 	Since that is addressed using 'has_phy_com_ctrl' this
-> 	patch is not needed.
->
->   phy: qcom-qmp: Add support for IPQ8074
-> 	Set 'has_phy_com_ctrl' to false
-> 	Remove ipq8074_pciephy_regs_layout
->
-> v3:
->   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-> 	Incoporate Stan's feedback:-
-> 	 - Add SoC Wrapper and Synopsys Core IP versions
->
-> v2:
->   dt-bindings: phy: qmp: Add output-clock-names
-> 	Added Rob H's Ack
->
->   dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
-> 	Removed example
-> 	Added IPQ8074 specific details
->
->   phy: qcom-qmp: Fix phy pipe clock name
-> 	Added Vivek's Ack
->
->   phy: qcom-qmp: Handle unavailable registers
-> 	No changes
->
->   phy: qcom-qmp: Add support for IPQ8074
-> 	No changes
->
->   PCI: dwc: qcom: Use block IP version for operations
-> 	Added new patch to use block IP version instead of v1, v2...
->
->   dt-bindings: pci: qcom: Add support for IPQ8074
-> 	Removed example
-> 	Added IPQ8074 specific details
->
->   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
-> 	Incorporated Bjorn's feedback:-
-> 	 - Removed reset names, helper function to assert/deassert, helper
-> 	   function to R/M/W register.
-> 	 - Renamed sys_noc clock as iface clock
-> 	 - Added deinit if phy power on fails
->
-> v1:
-> Add definitions required to enable QMP phy support for IPQ8074.
->
-> Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
-> Gen 1/2, one lane, two PCIe root complex with support for MSI and
-> legacy interrupts, and it conforms to PCI Express Base 2.1
-> specification.
->
-> Varadarajan Narayanan (3):
->   PCI: dwc: qcom: Use block IP version for operations
->   dt-bindings: pci: qcom: Add support for IPQ8074
->   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
->
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
->  drivers/pci/dwc/pcie-qcom.c                        | 346 +++++++++++++++++----
->  2 files changed, 302 insertions(+), 67 deletions(-)
->
-> --
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
->
+Wouldn't it be better as:
 
---
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+	msleep(100);
+
+	if (dev->is_virtfn)
+		return;
+
+Perhaps with a spec reference in a comment why we don't care about
+checking config space for the vf.
+
+>  	do {
+> -		msleep(100);
+> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
+> -	} while (i++ < 10 && id == ~0);
+> -
+> -	if (id == ~0)
+> -		dev_warn(&dev->dev, "Failed to return from FLR\n");
+> -	else if (i > 1)
+> -		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+> -			 (i - 1) * 100);
+> +		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
+> +						 sleep);
+> +		if (ret)
+> +			break;
+> +		total += sleep;
+> +		sleep *= 2;
+> +	} while (total < 60000 && !ret);
+> +
+> +	if (!ret)
+> +		dev_warn(&dev->dev, "Failed to return from FLR after %ds\n",
+> +			 total);
+> +	else if (total)
+> +		dev_info(&dev->dev, "Required additional %ds to return from FLR\n",
+> +			 total);
+>  }
+
+I'm not a big fan.  Nested exponential backoff is pretty nasty.  Are
+there users of pci_bus_read_dev_vendor_id() that don't want a "still
+trying" message?  It seems better to add that to the function than try
+to wrap this bandage around it.  Thanks,
+
+Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
