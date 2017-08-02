@@ -1,115 +1,222 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753411AbdHXWNE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 18:13:04 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 2 Aug 2017 17:39:28 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH] PCI: Convert to using %pOF instead of full_name
+Message-ID: <20170802223928.GQ20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170718214339.7774-41-robh@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu-D0tgygJ84iGEoEU9OcjUwrtvS2Z2wrOHAZ9kO_kE_rA@mail.gmail.com>
-References: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
- <20170824184321.19432-4-ard.biesheuvel@linaro.org> <CAL_JsqJTGeLv-c0wXCvMZggU4yzo__s-pD7qEZ7Q3w8=uUuu4Q@mail.gmail.com>
- <CAKv+Gu-D0tgygJ84iGEoEU9OcjUwrtvS2Z2wrOHAZ9kO_kE_rA@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 24 Aug 2017 17:12:42 -0500
-Message-ID: <CAL_JsqJkDmT3_Umhi+y9e6qML+Ei=ee7G7EohpoMJacBeecirQ@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] dt-bindings: designware: add binding for
- Designware PCIe in ECAM mode
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170718214339.7774-41-robh@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ devicetree@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Jonathan Hunter <jonathanh@nvidia.com>,
+ linux-tegra@vger.kernel.org, Thierry Reding <thierry.reding@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>,
+ Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 3:12 PM, Ard Biesheuvel
-<ard.biesheuvel@linaro.org> wrote:
-> On 24 August 2017 at 21:02, Rob Herring <robh@kernel.org> wrote:
->> Cc the DT list for bindings please.
->>
->> On Thu, Aug 24, 2017 at 1:43 PM, Ard Biesheuvel
->> <ard.biesheuvel@linaro.org> wrote:
->>> Describe the binding for firmware-configured instances of the Synopsys
->>> Designware PCIe controller in RC mode.
->>>
->>> Cc: Rob Herring <robh@kernel.org>
->>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->>> ---
->>>  Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
->>>  1 file changed, 56 insertions(+)
->>>
->>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
->>> new file mode 100644
->>> index 000000000000..b8127b19c220
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
->>> @@ -0,0 +1,56 @@
->>> +* Synopsys Designware PCIe root complex in ECAM mode
->>> +
->>> +In some cases, firmware may already have configured the Synopsys Designware
->>> +PCIe controller in RC mode with static ATU window mappings that cover all
->>> +config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
->>> +In this case, there is no need for the OS to perform any low level setup
->>> +of clocks or device registers, nor is there any reason for the driver to
->>> +reconfigure ATU windows for config and/or IO space accesses at runtime.
->>> +
->>> +Such hardware configurations should be described as "pci-host-ecam-generic"
->>> +if they are truly ECAM compatible. Configurations that require no low-level
->>> +setup by the OS nor any ATU window reconfiguration at runtime, but do
->>> +require special handling for type 0 config TLPs may instead be described as
->>> +"snps,dw-pcie-ecam".
->>
->> Humm, what happens when we have the next exception that's SoC specific
->> or another vendor?
->
-> This is not SoC specific, but IP specific. We are working with two
-> different SoCs from completely different vendors that both synthesized
-> this IP with a 64 KB ATU window size, not expecting this to break ECAM
-> compatibility.
+On Tue, Jul 18, 2017 at 04:43:21PM -0500, Rob Herring wrote:
+> Now that we have a custom printf format specifier, convert users of
+> full_name to use %pOF instead. This is preparation to remove storing
+> of the full path string for each node.
+> 
+> Signed-off-by: Rob Herring <robh@kernel.org>
+> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Thierry Reding <thierry.reding@gmail.com>
+> Cc: Jonathan Hunter <jonathanh@nvidia.com>
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-tegra@vger.kernel.org
+> Cc: linuxppc-dev@lists.ozlabs.org
 
-This case is not SoC specific, but quirks/bugs show up in both places.
-Plus "dw-pcie" is fairly meaningless because the IP is both
-configurable and has multiple releases.
+Applied to pci/misc for v4.14, thanks!
 
->> Seems like perhaps "firmware initialized" should
->> have been a separate property flag for bootloaders to add rather than
->> a compatible string.
->>
->
-> Yes, but then you still have 10 different drivers that all retain the
-> low-level bits that are all different between SoCs. That is exactly
-> what I want to get rid of, and usually we can do that with existing
-> bindings, because we simply expose it as pci-host-ecam-generic. Only
-> in this particular case, that doesn't fly due to the quirk.
+> ---
+>  drivers/pci/host/pci-mvebu.c        | 8 ++++----
+>  drivers/pci/host/pci-tegra.c        | 3 +--
+>  drivers/pci/hotplug/pnv_php.c       | 4 ++--
+>  drivers/pci/hotplug/rpadlpar_core.c | 4 ++--
+>  drivers/pci/hotplug/rpaphp_core.c   | 2 +-
+>  drivers/pci/hotplug/rpaphp_pci.c    | 4 ++--
+>  drivers/pci/hotplug/rpaphp_slot.c   | 4 ++--
+>  drivers/pci/pci-sysfs.c             | 4 ++--
+>  drivers/pci/pci.c                   | 4 ++--
+>  9 files changed, 18 insertions(+), 19 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index f353a6eb2f01..424982997eb9 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -1054,8 +1054,8 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+>  	port->pcie = pcie;
+> 
+>  	if (of_property_read_u32(child, "marvell,pcie-port", &port->port)) {
+> -		dev_warn(dev, "ignoring %s, missing pcie-port property\n",
+> -			 of_node_full_name(child));
+> +		dev_warn(dev, "ignoring %pOF, missing pcie-port property\n",
+> +			 child);
+>  		goto skip;
+>  	}
+> 
+> @@ -1106,8 +1106,8 @@ static int mvebu_pcie_parse_port(struct mvebu_pcie *pcie,
+>  		}
+> 
+>  		if (flags & OF_GPIO_ACTIVE_LOW) {
+> -			dev_info(dev, "%s: reset gpio is active low\n",
+> -				 of_node_full_name(child));
+> +			dev_info(dev, "%pOF: reset gpio is active low\n",
+> +				 child);
+>  			gpio_flags = GPIOF_ACTIVE_LOW |
+>  				     GPIOF_OUT_INIT_LOW;
+>  		} else {
+> diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+> index b3722b7709df..7eb9be5ae357 100644
+> --- a/drivers/pci/host/pci-tegra.c
+> +++ b/drivers/pci/host/pci-tegra.c
+> @@ -1703,8 +1703,7 @@ static int tegra_pcie_get_legacy_regulators(struct tegra_pcie *pcie)
+>  		pcie->num_supplies = 2;
+> 
+>  	if (pcie->num_supplies == 0) {
+> -		dev_err(dev, "device %s not supported in legacy mode\n",
+> -			np->full_name);
+> +		dev_err(dev, "device %pOF not supported in legacy mode\n", np);
+>  		return -ENODEV;
+>  	}
+> 
+> diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+> index 7c203198b582..74f6a17e4614 100644
+> --- a/drivers/pci/hotplug/pnv_php.c
+> +++ b/drivers/pci/hotplug/pnv_php.c
+> @@ -163,8 +163,8 @@ static void pnv_php_detach_device_nodes(struct device_node *parent)
+>  		of_node_put(dn);
+>  		refcount = kref_read(&dn->kobj.kref);
+>  		if (refcount != 1)
+> -			pr_warn("Invalid refcount %d on <%s>\n",
+> -				refcount, of_node_full_name(dn));
+> +			pr_warn("Invalid refcount %d on <%pOF>\n",
+> +				refcount, dn);
+> 
+>  		of_detach_node(dn);
+>  	}
+> diff --git a/drivers/pci/hotplug/rpadlpar_core.c b/drivers/pci/hotplug/rpadlpar_core.c
+> index 3f93a4e79595..a3449d717a99 100644
+> --- a/drivers/pci/hotplug/rpadlpar_core.c
+> +++ b/drivers/pci/hotplug/rpadlpar_core.c
+> @@ -150,8 +150,8 @@ static void dlpar_pci_add_bus(struct device_node *dn)
+>  	/* Add EADS device to PHB bus, adding new entry to bus->devices */
+>  	dev = of_create_pci_dev(dn, phb->bus, pdn->devfn);
+>  	if (!dev) {
+> -		printk(KERN_ERR "%s: failed to create pci dev for %s\n",
+> -				__func__, dn->full_name);
+> +		printk(KERN_ERR "%s: failed to create pci dev for %pOF\n",
+> +				__func__, dn);
+>  		return;
+>  	}
+> 
+> diff --git a/drivers/pci/hotplug/rpaphp_core.c b/drivers/pci/hotplug/rpaphp_core.c
+> index 8d132024f06e..1e29abaaea08 100644
+> --- a/drivers/pci/hotplug/rpaphp_core.c
+> +++ b/drivers/pci/hotplug/rpaphp_core.c
+> @@ -318,7 +318,7 @@ int rpaphp_add_slot(struct device_node *dn)
+>  	if (!is_php_dn(dn, &indexes, &names, &types, &power_domains))
+>  		return 0;
+> 
+> -	dbg("Entry %s: dn->full_name=%s\n", __func__, dn->full_name);
+> +	dbg("Entry %s: dn=%pOF\n", __func__, dn);
+> 
+>  	/* register PCI devices */
+>  	name = (char *) &names[1];
+> diff --git a/drivers/pci/hotplug/rpaphp_pci.c b/drivers/pci/hotplug/rpaphp_pci.c
+> index ea41ea1d3c00..32aabc533be8 100644
+> --- a/drivers/pci/hotplug/rpaphp_pci.c
+> +++ b/drivers/pci/hotplug/rpaphp_pci.c
+> @@ -95,7 +95,7 @@ int rpaphp_enable_slot(struct slot *slot)
+> 
+>  	bus = pci_find_bus_by_node(slot->dn);
+>  	if (!bus) {
+> -		err("%s: no pci_bus for dn %s\n", __func__, slot->dn->full_name);
+> +		err("%s: no pci_bus for dn %pOF\n", __func__, slot->dn);
+>  		return -EINVAL;
+>  	}
+> 
+> @@ -125,7 +125,7 @@ int rpaphp_enable_slot(struct slot *slot)
+> 
+>  		if (rpaphp_debug) {
+>  			struct pci_dev *dev;
+> -			dbg("%s: pci_devs of slot[%s]\n", __func__, slot->dn->full_name);
+> +			dbg("%s: pci_devs of slot[%pOF]\n", __func__, slot->dn);
+>  			list_for_each_entry(dev, &bus->devices, bus_list)
+>  				dbg("\t%s\n", pci_name(dev));
+>  		}
+> diff --git a/drivers/pci/hotplug/rpaphp_slot.c b/drivers/pci/hotplug/rpaphp_slot.c
+> index 388c4d8fcdd1..489862360f2c 100644
+> --- a/drivers/pci/hotplug/rpaphp_slot.c
+> +++ b/drivers/pci/hotplug/rpaphp_slot.c
+> @@ -122,8 +122,8 @@ int rpaphp_register_slot(struct slot *slot)
+>  	int retval;
+>  	int slotno = -1;
+> 
+> -	dbg("%s registering slot:path[%s] index[%x], name[%s] pdomain[%x] type[%d]\n",
+> -		__func__, slot->dn->full_name, slot->index, slot->name,
+> +	dbg("%s registering slot:path[%pOF] index[%x], name[%s] pdomain[%x] type[%d]\n",
+> +		__func__, slot->dn, slot->index, slot->name,
+>  		slot->power_domain, slot->type);
+> 
+>  	/* should not try to register the same slot twice */
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 2f3780b50723..33d4df7ed591 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -556,9 +556,9 @@ static ssize_t devspec_show(struct device *dev,
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+>  	struct device_node *np = pci_device_to_OF_node(pdev);
+> 
+> -	if (np == NULL || np->full_name == NULL)
+> +	if (np == NULL)
+>  		return 0;
+> -	return sprintf(buf, "%s", np->full_name);
+> +	return sprintf(buf, "%pOF", np);
+>  }
+>  static DEVICE_ATTR_RO(devspec);
+>  #endif
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index af0cc3456dc1..e8e40dea2842 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5363,8 +5363,8 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
+>  		use_dt_domains = 0;
+>  		domain = pci_get_new_domain_nr();
+>  	} else {
+> -		dev_err(parent, "Node %s has inconsistent \"linux,pci-domain\" property in DT\n",
+> -			parent->of_node->full_name);
+> +		dev_err(parent, "Node %pOF has inconsistent \"linux,pci-domain\" property in DT\n",
+> +			parent->of_node);
+>  		domain = -1;
+>  	}
+> 
+> --
+> 2.11.0
+> 
 
-You can expose it as "vendor,soc-pcie", "pci-host-ecam-generic" and
-then the kernel can decide. Then you can use: the default ecam driver,
-the ecam driver but match on "vendor,soc-pcie" for quirks, or a vendor
-specific driver. The only thing that wouldn't work would be having
-both quirks in the ecam driver and a vendor driver which IMO we just
-shouldn't support anyway.
-
-Now if you have 10 SoCs all needing this same quirk, then maybe adding
-"snps,dw-pcie-ecam" addtionally to the above makes sense. But that
-only saves you match strings.
-
->> I'd rather see this done in a way that does not require DT updates if
->> quirks have to be handled/added later.
->>
->
-> Do you see a way that still allows us to keep the abstraction? I don't
-> want a flag, I simply don't want to expose any low-level specifics
-> about the device to the OS, beyond what it needs to use it in its
-> configured state.
-
-That's not how DT works. Detailed information is exposed to the OS and
-the OS decides if it can handle things generically or not because that
-decision can change over time. Whenever we don't make things specific
-enough, we've gotten burned.
-
-Rob
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
