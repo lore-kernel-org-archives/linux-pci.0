@@ -1,116 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [PATCH v4 2/4] PCI: rockchip: Add support for pcie wake irq
-Date: Tue, 22 Aug 2017 11:19:32 +0800
-Message-Id: <20170822031934.8675-3-jeffy.chen@rock-chips.com>
-In-Reply-To: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
- dianders@chromium.org, linux-rockchip@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=H88W=7E=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=H88W=7E=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V7 1/3] PCI: limit FLR wait time to 100ms maximum
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-kernel@vger.kernel.org
+References: <1501701317-32249-1-git-send-email-okaya@codeaurora.org>
+ <20170802202735.GE20308@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <db1860be-9b0b-85b1-814c-40e497ac792f@codeaurora.org>
+Date: Wed, 2 Aug 2017 17:22:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170802202735.GE20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for PCIE_WAKE pin in rockchip pcie driver.
+On 8/2/2017 4:27 PM, Bjorn Helgaas wrote:
+> On Wed, Aug 02, 2017 at 03:15:15PM -0400, Sinan Kaya wrote:
+> My hypothesis was that CRS isn't useful on VFs because of sec 2.2.2
+> says "FLR ... does not affect its existence in PCI Configuration
+> Space".  But I think that hypothesis is wrong because sec 3.3.3.1
+> does talk about a VF returning CRS.
+> 
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+hmm, good catch. I'll drop the first patch.
 
-Changes in v4: None
-Changes in v3:
-Fix error handling
+> The SR-IOV spec (sec 3.4.1.1) says a VF's Vendor ID is read-only
+> 0xffff.  But I expect CRS visibility (PCIe r3.1, sec 2.3.2) would work
+> normally and return a Vendor ID of 0x0001 to indicate CRS for a VF.
+> 
+> Of course, not all Root Ports support CRS software visibility, so
+> whatever we do has to work when it's absent.
 
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq
-        -- Suggested by Brian Norris <briannorris@chromium.com>
+How about a mixture of old code and new code as follows?
 
- drivers/pci/host/pcie-rockchip.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+static void pci_flr_wait(struct pci_dev *dev)
+{
+	u32 id;
+	bool ret = false;
+	int i = 0;
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 5d85ec2e2fb0..a0f7267984da 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -37,6 +37,7 @@
- #include <linux/pci_ids.h>
- #include <linux/phy/phy.h>
- #include <linux/platform_device.h>
-+#include <linux/pm_wakeirq.h>
- #include <linux/reset.h>
- #include <linux/regmap.h>
+	if (CRS supported) {
+		/* don't touch the HW before waiting 100ms */
+		msleep(100);
+
+		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id, 60000);
+		if (ret)
+			return;
+	}
+
+	do {
+		msleep(100);
+		pci_read_config_dword(dev, PCI_COMMAND, &id);
+	} while (i++ < 10 && id == ~0);
  
-@@ -1111,6 +1112,15 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 		return err;
- 	}
- 
-+	/* Must init wakeup before setting dedicated wake irq. */
-+	device_init_wakeup(dev, true);
-+	irq = platform_get_irq_byname(pdev, "wake");
-+	if (irq >= 0) {
-+		err = dev_pm_set_dedicated_wake_irq(dev, irq);
-+		if (err)
-+			dev_err(dev, "failed to setup PCIe wake IRQ\n");
-+	}
-+
- 	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
- 	if (IS_ERR(rockchip->vpcie12v)) {
- 		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
-@@ -1493,12 +1503,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- 	err = rockchip_pcie_parse_dt(rockchip);
- 	if (err)
--		return err;
-+		/* It's safe to disable wake even not enabled */
-+		goto err_disable_wake;
- 
- 	err = clk_prepare_enable(rockchip->aclk_pcie);
- 	if (err) {
- 		dev_err(dev, "unable to enable aclk_pcie clock\n");
--		return err;
-+		goto err_disable_wake;
- 	}
- 
- 	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
-@@ -1633,6 +1644,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
- err_disable_aclk_pcie:
- 	clk_disable_unprepare(rockchip->aclk_pcie);
-+err_disable_wake:
-+	dev_pm_clear_wake_irq(dev);
-+	device_init_wakeup(dev, false);
- 	return err;
- }
- 
-@@ -1662,6 +1676,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
- 	if (!IS_ERR(rockchip->vpcie12v))
- 		regulator_disable(rockchip->vpcie12v);
- 
-+	dev_pm_clear_wake_irq(dev);
-+	device_init_wakeup(dev, false);
-+
- 	return 0;
- }
- 
+	if (id == ~0)
+ 		dev_warn(&dev->dev, "Failed to return from FLR\n");
+	else if (i > 1)
+		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+			 (i - 1) * 100);
+}
+
+
 -- 
-2.11.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
