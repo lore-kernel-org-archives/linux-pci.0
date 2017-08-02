@@ -1,58 +1,54 @@
-Return-Path: <SRS0=WTXb=7U=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=WTXb=7U=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V3 1/2] PCI/DPC: Add local struct device
-To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
-References: <1502970505-89777-1-git-send-email-liudongdong3@huawei.com>
- <1502970505-89777-2-git-send-email-liudongdong3@huawei.com>
- <20170817153221.GM7233@localhost.localdomain>
- <20170817163414.GG28977@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <23b5de50-afd9-d25d-151c-8849d986ad55@huawei.com>
-Date: Fri, 18 Aug 2017 09:55:07 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:42212 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751161AbdHBVpk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 17:45:40 -0400
+Date: Wed, 2 Aug 2017 16:45:37 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH v1] xen/pci: Use acpi_noirq_set() helper
+Message-ID: <20170802214537.GM20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170717103907.77308-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170817163414.GG28977@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170717103907.77308-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jul 17, 2017 at 01:39:07PM +0300, Andy Shevchenko wrote:
+> No need to keep an #ifdef since we have a helper (in x86 world).
+> Use it instead.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
+Looks reasonable to me, and I assume some non-PCI tree will take it.
 
-在 2017/8/18 0:34, Bjorn Helgaas 写道:
-> On Thu, Aug 17, 2017 at 11:32:21AM -0400, Keith Busch wrote:
->> On Thu, Aug 17, 2017 at 07:48:24PM +0800, Dongdong Liu wrote:
->>> Use a local "struct device *dev" for brevity and consistency in DPC driver.
->>> No functional change intended.
->>
->> I think there is a functional change here:
->>
->>> @@ -119,10 +120,11 @@ static int dpc_probe(struct pcie_device *dev)
->>>  {
->>>  	struct dpc_dev *dpc;
->>>  	struct pci_dev *pdev = dev->port;
->>> +	struct device *device = &pdev->dev;
->>>  	int status;
->>>  	u16 ctl, cap;
->>>
->>> -	dpc = devm_kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
->>> +	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
->>>  	if (!dpc)
->>>  		return -ENOMEM;
->>
->> We were using the pcie_device's device for the devres API, but now it's
->> the pci_dev's. That will change the lifetime of memory allocations. I'm
->> not sure that it matters at th emoment, but it's certainly different.
->
-> Yep.  I'll drop this rev.  When you repost it, please make the
-> cosmetic change last in the series so the important thing is easier to
-> backport.
-
-Ok, I will restore the change and adjust the PATCH sequence in PATCH V4.
-
-Thanks,
-Dongdong
-
->
-
-> .
->
+> ---
+>  arch/x86/pci/xen.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
+> 
+> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> index c4b3646bd04c..9542a746dc50 100644
+> --- a/arch/x86/pci/xen.c
+> +++ b/arch/x86/pci/xen.c
+> @@ -409,10 +409,8 @@ int __init pci_xen_init(void)
+>  	pcibios_enable_irq = xen_pcifront_enable_irq;
+>  	pcibios_disable_irq = NULL;
+>  
+> -#ifdef CONFIG_ACPI
+>  	/* Keep ACPI out of the picture */
+> -	acpi_noirq = 1;
+> -#endif
+> +	acpi_noirq_set();
+>  
+>  #ifdef CONFIG_PCI_MSI
+>  	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+> -- 
+> 2.11.0
+> 
