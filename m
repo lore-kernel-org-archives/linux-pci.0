@@ -1,172 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:44211 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751872AbdHILPD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 07:15:03 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: manipulate phy properly if failing to probe the driver
-Date: Wed,  9 Aug 2017 19:14:23 +0800
-Message-Id: <1502277263-187898-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <000001d30b90$31697f70$943c7e50$@dell.com>
+References: <20170725205753.4735-1-logang@deltatee.com> <20170725205753.4735-15-logang@deltatee.com>
+ <20170801191050.GJ4186@kudzu.us> <dda576ad-d3ca-814b-f0cf-478cbb61adf2@deltatee.com>
+ <000001d30b90$31697f70$943c7e50$@dell.com>
+From: Jon Mason <jdmason@kudzu.us>
+Date: Wed, 2 Aug 2017 12:32:24 -0400
+Message-ID: <CAPoiz9wy3bFUWkE1udiY7ynkOT5VxvvtoawNw1qRTFnSapcOEQ@mail.gmail.com>
+Subject: Re: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
+To: Allen Hubbe <Allen.Hubbe@dell.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, linux-ntb@googlegroups.com,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We observed that the clk_pciephy_ref is still enabled when we actually
-fail to probe the driver.
+On Wed, Aug 2, 2017 at 9:06 AM, Allen Hubbe <Allen.Hubbe@dell.com> wrote:
+> From: Logan Gunthorpe
+>> On 01/08/17 01:10 PM, Jon Mason wrote:
+>> > It would probaly be better if I remarked about the SPADs in the actual
+>> > patch about the SPADS :)
+>> >
+>> > The whole point of using the SPADs in the NTB driver was to workaround
+>> > the problems establishing a connection between the two sides of the
+>> > NTB and where everything lives.  So, using a MW to get around the
+>> > SPADs is sort of backwards (and slightly funny).  I realize you are
+>> > trying to use the existing transport with minimal changes to enable
+>> > your hardware, and thus this makes logical sense to you.  However, if
+>> > the SPADs are not really needed, then we should either remove them
+>> > from the transport (or use them for something else).
+>> >
+>> > Per my comment in the other patch, I'm amenable to take this series
+>> > as-is, assuming you are willing to address this design issue in the
+>> > near future.  Thoughts?
+>>
+>> Yes, I agree. I'd be willing to help but it seems the clients are
+>> written the way they are for the other drivers, so it's their needs
+>> (which I'm not fully aware of) that have to be considered.
+>
+> The proposed change, removing use of spads from transport, would not affect ntrdma.
 
-root@linaro-alip:~# cat /sys/kernel/debug/clk/clk_summary | grep pcie
-clk_pciephy_ref			  1	1	 24000000	0 0
-clk_pcie_pm			  0	0	 24000000	0 0
-      clk_pcie_core_cru           0	0	125000000	0 0
-      clk_pciephy_ref100m         0	0	100000000	0 0
-		aclk_pcie         0	0	148500000	0 0
-		aclk_perf_pcie    0	0	148500000	0 0
-			pclk_pcie 0	0	 37125000	0 0
-clk_pcie_core                     0	0		0	0 0
+After a long-ish conversation on IRC, the way we want to go forward
+would be to provide 2 ways of communicating prior to the MW's being
+setup:  SPADs and Message Registers.  The HW driver would make
+available whichever ones are supported by the hardware.  The transport
+can see which of those are available in the HW driver, select the
+appropriate one, and use it to setup the NTB connection, MW, etc.
+similar to how the SPADs are being used today.  This would allow for
+any current clients to work unmodified, and would require minimal
+changes to the existing transport layer.
 
-clk_pciephy_ref is used by phy driver and we need to properly disable
-it for this case. So this patch add error handle for the function of
-rockchip_pcie_init_port to fix this issue.
+Since this is outside the scope of this series, per my email yesterday
+allowing the SPAD workaround, we should start up another thread on the
+NTB mailing list and flesh out the details and any benefits/drawbacks.
+Then we, as a community, can make the changes necessary to the drivers
+and transport to get this working more optimally.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Thanks,
+Jon
 
- drivers/pci/host/pcie-rockchip.c | 38 ++++++++++++++++++++++++--------------
- 1 file changed, 24 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 2eccd53..ce6371b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -561,32 +561,32 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		err = phy_init(rockchip->phys[i]);
- 		if (err) {
- 			dev_err(dev, "init phy%d err %d\n", i, err);
--			return err;
-+			goto err_phy_exit;
- 		}
- 	}
- 
- 	err = reset_control_assert(rockchip->core_rst);
- 	if (err) {
- 		dev_err(dev, "assert core_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	err = reset_control_assert(rockchip->mgmt_rst);
- 	if (err) {
- 		dev_err(dev, "assert mgmt_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	err = reset_control_assert(rockchip->mgmt_sticky_rst);
- 	if (err) {
- 		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	err = reset_control_assert(rockchip->pipe_rst);
- 	if (err) {
- 		dev_err(dev, "assert pipe_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	udelay(10);
-@@ -594,19 +594,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	err = reset_control_deassert(rockchip->pm_rst);
- 	if (err) {
- 		dev_err(dev, "deassert pm_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	err = reset_control_deassert(rockchip->aclk_rst);
- 	if (err) {
- 		dev_err(dev, "deassert aclk_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	err = reset_control_deassert(rockchip->pclk_rst);
- 	if (err) {
- 		dev_err(dev, "deassert pclk_rst err %d\n", err);
--		return err;
-+		goto err_phy_exit;
- 	}
- 
- 	if (rockchip->link_gen == 2)
-@@ -628,7 +628,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 		err = phy_power_on(rockchip->phys[i]);
- 		if (err) {
- 			dev_err(dev, "power on phy%d err %d\n", i, err);
--			return err;
-+			goto err_phy_power_off;
- 		}
- 	}
- 
-@@ -639,25 +639,25 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
- 	if (err) {
- 		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
--		return err;
-+		goto err_phy_power_off;
- 	}
- 
- 	err = reset_control_deassert(rockchip->core_rst);
- 	if (err) {
- 		dev_err(dev, "deassert core_rst err %d\n", err);
--		return err;
-+		goto err_phy_power_off;
- 	}
- 
- 	err = reset_control_deassert(rockchip->mgmt_rst);
- 	if (err) {
- 		dev_err(dev, "deassert mgmt_rst err %d\n", err);
--		return err;
-+		goto err_phy_power_off;
- 	}
- 
- 	err = reset_control_deassert(rockchip->pipe_rst);
- 	if (err) {
- 		dev_err(dev, "deassert pipe_rst err %d\n", err);
--		return err;
-+		goto err_phy_power_off;
- 	}
- 
- 	/* Fix the transmitted FTS count desired to exit from L0s. */
-@@ -690,7 +690,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 				 500 * USEC_PER_MSEC);
- 	if (err) {
- 		dev_err(dev, "PCIe link training gen1 timeout!\n");
--		return -ETIMEDOUT;
-+		err = -ETIMEDOUT;
-+		goto err_phy_power_off;
- 	}
- 
- 	if (rockchip->link_gen == 2) {
-@@ -751,6 +752,15 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
- 
- 	return 0;
-+
-+err_phy_exit:
-+	for (; i >= 0; --i)
-+		phy_exit(rockchip->phys[i]);
-+err_phy_power_off:
-+	for (; i >= 0; --i)
-+		phy_power_off(rockchip->phys[i]);
-+
-+	return err;
- }
- 
- static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
--- 
-1.9.1
+>> I've also made all the other changes you sent as well as the file rename
+>> Dave requested. Once I see the bug fix patch you were going to pull hit
+>> ntb-next I'll rebase, test and resubmit.
+>>
+>> Thanks,
+>>
+>> Logan
+>
