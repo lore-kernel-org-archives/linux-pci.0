@@ -1,109 +1,110 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Subject: [PATCH 06/18] PCI: endpoint: functions/pci-epf-test: Do not reset *command* inadvertently
-Date: Fri, 18 Aug 2017 20:27:58 +0530
-Message-ID: <20170818145810.17649-7-kishon@ti.com>
-In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
-References: <20170818145810.17649-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45866 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751754AbdHCVoC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 17:44:02 -0400
+Date: Thu, 3 Aug 2017 16:43:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH 054/102] PCI: rockchip: explicitly request exclusive
+ reset control
+Message-ID: <20170803214359.GE20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+ <20170719152646.25903-55-p.zabel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170719152646.25903-55-p.zabel@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_epf_test_cmd_handler() is the delayed work function which reads
-*command* (set by the host) and performs various actions requested
-by the host periodically. If the value in *command* is '0', it
-goes to the reset_handler where it resets *command* to '0' and queues
-pci_epf_test_cmd_handler().
-However if the host writes a value to the *command* just after the
-pci-epf-test driver checks *command* for '0' and before the control goes
-to reset_handler, the *command* will be reset to '0' and the pci-epf-test
-driver won't be able to perform the actions requested by the host.
-Fix it here by not resetting the *command* in the reset_handler.
+On Wed, Jul 19, 2017 at 05:25:58PM +0200, Philipp Zabel wrote:
+> Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+> reset lines") started to transition the reset control request API calls
+> to explicitly state whether the driver needs exclusive or shared reset
+> control behavior. Convert all drivers requesting exclusive resets to the
+> explicit API call so the temporary transition helpers can be removed.
+> 
+> No functional changes.
+> 
+> Cc: Shawn Lin <shawn.lin@rock-chips.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Heiko Stuebner <heiko@sntech.de>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-rockchip@lists.infradead.org
+> Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
----
- drivers/pci/endpoint/functions/pci-epf-test.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
+Applied with Shawn's ack to pci/host-rockchip for v4.14, thanks!
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 5cbc05a0762d..1a27d7950f2c 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -263,22 +263,26 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 	int ret;
- 	u8 irq;
- 	u8 msi_count;
-+	u32 command;
- 	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
- 						     cmd_handler.work);
- 	struct pci_epf *epf = epf_test->epf;
- 	struct pci_epc *epc = epf->epc;
- 	volatile struct pci_epf_test_reg *reg = epf_test->reg[0];
- 
--	if (!reg->command)
-+	command = reg->command;
-+	if (!command)
- 		goto reset_handler;
- 
--	if (reg->command & COMMAND_RAISE_LEGACY_IRQ) {
-+	reg->command = 0;
-+
-+	if (command & COMMAND_RAISE_LEGACY_IRQ) {
- 		reg->status = STATUS_IRQ_RAISED;
- 		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
- 		goto reset_handler;
- 	}
- 
--	if (reg->command & COMMAND_WRITE) {
-+	if (command & COMMAND_WRITE) {
- 		ret = pci_epf_test_write(epf_test);
- 		if (ret)
- 			reg->status |= STATUS_WRITE_FAIL;
-@@ -288,7 +292,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 		goto reset_handler;
- 	}
- 
--	if (reg->command & COMMAND_READ) {
-+	if (command & COMMAND_READ) {
- 		ret = pci_epf_test_read(epf_test);
- 		if (!ret)
- 			reg->status |= STATUS_READ_SUCCESS;
-@@ -298,7 +302,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 		goto reset_handler;
- 	}
- 
--	if (reg->command & COMMAND_COPY) {
-+	if (command & COMMAND_COPY) {
- 		ret = pci_epf_test_copy(epf_test);
- 		if (!ret)
- 			reg->status |= STATUS_COPY_SUCCESS;
-@@ -308,9 +312,9 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 		goto reset_handler;
- 	}
- 
--	if (reg->command & COMMAND_RAISE_MSI_IRQ) {
-+	if (command & COMMAND_RAISE_MSI_IRQ) {
- 		msi_count = pci_epc_get_msi(epc);
--		irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-+		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
- 		if (irq > msi_count || msi_count <= 0)
- 			goto reset_handler;
- 		reg->status = STATUS_IRQ_RAISED;
-@@ -319,8 +323,6 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
- 	}
- 
- reset_handler:
--	reg->command = 0;
--
- 	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
- 			   msecs_to_jiffies(1));
- }
--- 
-2.11.0
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 15 ++++++++-------
+>  1 file changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 7bb9870f6d8ce..e50d6f5a81f4b 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -903,49 +903,50 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>  	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+>  		rockchip->link_gen = 2;
+>  
+> -	rockchip->core_rst = devm_reset_control_get(dev, "core");
+> +	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
+>  	if (IS_ERR(rockchip->core_rst)) {
+>  		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing core reset property in node\n");
+>  		return PTR_ERR(rockchip->core_rst);
+>  	}
+>  
+> -	rockchip->mgmt_rst = devm_reset_control_get(dev, "mgmt");
+> +	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
+>  	if (IS_ERR(rockchip->mgmt_rst)) {
+>  		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing mgmt reset property in node\n");
+>  		return PTR_ERR(rockchip->mgmt_rst);
+>  	}
+>  
+> -	rockchip->mgmt_sticky_rst = devm_reset_control_get(dev, "mgmt-sticky");
+> +	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
+> +								     "mgmt-sticky");
+>  	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
+>  		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing mgmt-sticky reset property in node\n");
+>  		return PTR_ERR(rockchip->mgmt_sticky_rst);
+>  	}
+>  
+> -	rockchip->pipe_rst = devm_reset_control_get(dev, "pipe");
+> +	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
+>  	if (IS_ERR(rockchip->pipe_rst)) {
+>  		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing pipe reset property in node\n");
+>  		return PTR_ERR(rockchip->pipe_rst);
+>  	}
+>  
+> -	rockchip->pm_rst = devm_reset_control_get(dev, "pm");
+> +	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
+>  	if (IS_ERR(rockchip->pm_rst)) {
+>  		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing pm reset property in node\n");
+>  		return PTR_ERR(rockchip->pm_rst);
+>  	}
+>  
+> -	rockchip->pclk_rst = devm_reset_control_get(dev, "pclk");
+> +	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
+>  	if (IS_ERR(rockchip->pclk_rst)) {
+>  		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing pclk reset property in node\n");
+>  		return PTR_ERR(rockchip->pclk_rst);
+>  	}
+>  
+> -	rockchip->aclk_rst = devm_reset_control_get(dev, "aclk");
+> +	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
+>  	if (IS_ERR(rockchip->aclk_rst)) {
+>  		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
+>  			dev_err(dev, "missing aclk reset property in node\n");
+> -- 
+> 2.11.0
+> 
