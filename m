@@ -1,71 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36704 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751990AbdHSIZu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 04:25:50 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 09/15] phy: tegra: make device_type const
-Date: Sat, 19 Aug 2017 13:52:20 +0530
-Message-Id: <1503130946-2854-10-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Received: from mail.kernel.org ([198.145.29.99]:51718 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751921AbdHCXQx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 19:16:53 -0400
+Date: Thu, 3 Aug 2017 18:16:51 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stephen Hemminger <stephen@networkplumber.org>
+Cc: bhelgaas@google.com, kys@microsoft.com, linux-pci@vger.kernel.org,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: Re: [PATCH] pci-hyperv: do not sleep in compose_msi_msg
+Message-ID: <20170803231651.GU20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170731234829.2344-1-sthemmin@microsoft.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170731234829.2344-1-sthemmin@microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make these const as they are only stored in the type field of a device
-structure, which is const.
-Done using Coccinelle.
+On Mon, Jul 31, 2017 at 04:48:29PM -0700, Stephen Hemminger wrote:
+> The setup of MSI with Hyper-V host was sleeping with locks held.
+> This error is reported when doing SR-IOV hotplug with kernel built with lockdep.
+> 
+>     BUG: sleeping function called from invalid context at kernel/sched/completion.c:93
+>     in_atomic(): 1, irqs_disabled(): 1, pid: 1405, name: ip
+>     3 locks held by ip/1405:
+>    #0:  (rtnl_mutex){+.+.+.}, at: [<ffffffff976b10bb>] rtnetlink_rcv+0x1b/0x40
+>    #1:  (&desc->request_mutex){+.+...}, at: [<ffffffff970ddd33>] __setup_irq+0xb3/0x720
+>    #2:  (&irq_desc_lock_class){-.-...}, at: [<ffffffff970ddd65>] __setup_irq+0xe5/0x720
+>    irq event stamp: 3476
+>    hardirqs last  enabled at (3475): [<ffffffff971b3005>] get_page_from_freelist+0x225/0xc90
+>    hardirqs last disabled at (3476): [<ffffffff978024e7>] _raw_spin_lock_irqsave+0x27/0x90
+>    softirqs last  enabled at (2446): [<ffffffffc05ef0b0>] ixgbevf_configure+0x380/0x7c0 [ixgbevf]
+>    softirqs last disabled at (2444): [<ffffffffc05ef08d>] ixgbevf_configure+0x35d/0x7c0 [ixgbevf]
+> 
+> The workaround is to poll for host response instead of blocking on
+> completion.
+> 
+> Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/phy/tegra/xusb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Applied to pci/host-hv for v4.14, thanks!
 
-diff --git a/drivers/phy/tegra/xusb.c b/drivers/phy/tegra/xusb.c
-index 3cbcb25..bd3f1b6 100644
---- a/drivers/phy/tegra/xusb.c
-+++ b/drivers/phy/tegra/xusb.c
-@@ -155,7 +155,7 @@ static void tegra_xusb_pad_release(struct device *dev)
- 	pad->soc->ops->remove(pad);
- }
- 
--static struct device_type tegra_xusb_pad_type = {
-+static const struct device_type tegra_xusb_pad_type = {
- 	.release = tegra_xusb_pad_release,
- };
- 
-@@ -512,7 +512,7 @@ static void tegra_xusb_port_release(struct device *dev)
- {
- }
- 
--static struct device_type tegra_xusb_port_type = {
-+static const struct device_type tegra_xusb_port_type = {
- 	.release = tegra_xusb_port_release,
- };
- 
--- 
-1.9.1
+> ---
+>  drivers/pci/host/pci-hyperv.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 415dcc69a502..334c9a7b8991 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -50,6 +50,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/pci.h>
+> +#include <linux/delay.h>
+>  #include <linux/semaphore.h>
+>  #include <linux/irqdomain.h>
+>  #include <asm/irqdomain.h>
+> @@ -1159,7 +1160,12 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  		goto free_int_desc;
+>  	}
+>  
+> -	wait_for_completion(&comp.comp_pkt.host_event);
+> +	/*
+> +	 * Since this function is called with IRQ locks held, can't
+> +	 * do normal wait for completion; instead poll.
+> +	 */
+> +	while (!try_wait_for_completion(&comp.comp_pkt.host_event))
+> +		udelay(100);
+>  
+>  	if (comp.comp_pkt.completion_status < 0) {
+>  		dev_err(&hbus->hdev->device,
+> -- 
+> 2.11.0
+> 
