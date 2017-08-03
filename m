@@ -1,45 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:46936 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751496AbdH1Aq2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Aug 2017 20:46:28 -0400
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] PCI: rockchip: Use gpiod_set_value_cansleep() to allow
- reset via expanders
-To: Fabio Estevam <festevam@gmail.com>,
-        Heiko Stuebner <heiko@sntech.de>
-References: <1503187634-3823-1-git-send-email-festevam@gmail.com>
- <20170824163323.GG31858@bhelgaas-glaptop.roam.corp.google.com>
- <1690109.dqujpfY2W8@phil>
- <CAOMZO5Dh7Mxv-wePiQnW8VG5o=LeBZ1ZfUaPuHbnmqNoYW=3-g@mail.gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <d44b8ac6-9896-485d-d54e-b96e44d4d0c9@rock-chips.com>
-Date: Mon, 28 Aug 2017 08:46:29 +0800
+Received: from mail-sn1nam02on0081.outbound.protection.outlook.com ([104.47.36.81]:53539
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751223AbdHCIke (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 04:40:34 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv2 5/6] PCI: layerscape: Disable the outbound windows configured by bootloader
+Date: Thu, 3 Aug 2017 16:23:39 +0800
+Message-ID: <1501748620-42866-6-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5Dh7Mxv-wePiQnW8VG5o=LeBZ1ZfUaPuHbnmqNoYW=3-g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/8/28 8:27, Fabio Estevam wrote:
-> On Thu, Aug 24, 2017 at 1:37 PM, Heiko Stuebner <heiko@sntech.de> wrote:
-> 
->>> Waiting for Shawn's ack...
->>
->> we might want to include him then, as I'm not sure if he patrols the
->> linux-pci list :-) . [I've added him]
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Aha, I also patrol linux-rockchip for pcie-rockchip, but this patch
-didn't include it either.
+Disable the outbound windows configured by bootloader to avoid
+one transaction hitting multiple outbound windows because the
+function dw_pcie_setup_rc will re-configure the outbound windows
+which maybe confict with the bootloader configured.
 
-> 
-> Sorry, I missed to add Shawn on Cc. I have just resent the patch with him on Cc.
-> 
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V2:
+ - New patch split from patch v1 3/3.
 
-Don't worry. I will check it out ASAP.
+ drivers/pci/dwc/pci-layerscape.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-> Thanks
-> 
-> 
-> 
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 3533a8c..ad68894 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -34,6 +34,8 @@
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+ 
++#define PCIE_IATU_NUM		6
++
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+ 	u32 ltssm_shift;
+@@ -90,6 +92,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+ 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+ }
+ 
++static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
++{
++	int i;
++
++	for (i = 0; i < PCIE_IATU_NUM; i++)
++		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++}
++
+ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	u32 state;
+@@ -127,6 +137,13 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
++	/*
++	 * Disable the outbound windows configured by bootloader to avoid
++	 * one transaction hitting multiple outbound windows and the function
++	 * dw_pcie_setup_rc will re-configure the outbound windows.
++	 */
++	ls_pcie_disable_outbound_atus(pcie);
++
+ 	dw_pcie_dbi_ro_wr_en(pci);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-- 
+2.1.0.27.g96db324
