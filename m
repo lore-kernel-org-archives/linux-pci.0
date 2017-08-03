@@ -1,54 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:62337 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753386AbdHOTFL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:05:11 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v7 7/8] PCI: ftpci100: Use PCI_NUM_INTX
-Date: Tue, 15 Aug 2017 12:02:22 -0700
-Message-ID: <20170815190223.18807-8-paul.burton@imgtec.com>
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lucky1.263xmail.com ([211.157.147.134]:51430 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751914AbdHCCpD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2017 22:45:03 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: endpoint: not need to free epf_test
+Date: Thu,  3 Aug 2017 10:44:11 +0800
+Message-Id: <1501728251-196637-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the PCI_NUM_INTX macro to indicate the number of PCI INTx interrupts
-rather than the magic number 4. This makes it clearer where the number
-comes from & what it relates to.
+It's from devm_kzalloc. so not need to free it when removing
+the test driver.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
-I have only build tested this.
+Just compile only. Unless I missed something when
+trying to support ep mode for pcie-rockchip and find this
+issue.
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+ drivers/pci/endpoint/functions/pci-epf-test.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
- drivers/pci/host/pci-ftpci100.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-index 5162dffc102b..1f1f780182de 100644
---- a/drivers/pci/host/pci-ftpci100.c
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -355,7 +355,7 @@ static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
- 		return -EINVAL;
- 	}
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 53fff80..4e3abbd 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -455,9 +455,6 @@ static int pci_epf_test_probe(struct pci_epf *epf)
  
--	p->irqdomain = irq_domain_add_linear(intc, 4,
-+	p->irqdomain = irq_domain_add_linear(intc, PCI_NUM_INTX,
- 					     &faraday_pci_irqdomain_ops, p);
- 	if (!p->irqdomain) {
- 		dev_err(p->dev, "failed to create Gemini PCI IRQ domain\n");
+ static int pci_epf_test_remove(struct pci_epf *epf)
+ {
+-	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
+-
+-	kfree(epf_test);
+ 	return 0;
+ }
+ 
 -- 
-2.14.1
+1.9.1
