@@ -1,85 +1,145 @@
-Return-Path: <SRS0=uSUB=7G=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=uSUB=7G=intel.com=ashok.raj@kernel.org>
-Date: Fri, 4 Aug 2017 13:21:41 -0700
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Casey Leedom <leedom@chelsio.com>
-Cc: Ding Tianhong <dingtianhong@huawei.com>,
-	Alexander Duyck <alexander.duyck@gmail.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Sinan Kaya <okaya@codeaurora.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	Michael Werner <werner@chelsio.com>,
-	Ganesh GR <ganeshgr@chelsio.com>,
-	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
-	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
-	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
-	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
-	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
-	"amira@mellanox.com" <amira@mellanox.com>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
-	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-	"will.deacon@arm.com" <will.deacon@arm.com>,
-	"mark.rutland@arm.com" <mark.rutland@arm.com>,
-	"robin.murphy@arm.com" <robin.murphy@arm.com>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linuxarm@huawei.com" <linuxarm@huawei.com>, ashok.raj@intel.com
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-Message-ID: <20170804202141.GA39054@otc-nc-03>
-References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
- <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
- <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
- <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20170803083153.GB4883@otc-nc-03>
- <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
+Return-Path: <SRS0=2ldS=7F=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=2ldS=7F=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v7 1/3] PCI: Add new PCIe Fabric End Node flag,
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+To: "Raj, Ashok" <ashok.raj@intel.com>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-2-git-send-email-dingtianhong@huawei.com>
+ <20170803085504.GC4883@otc-nc-03>
+CC: <leedom@chelsio.com>, <bhelgaas@google.com>, <helgaas@kernel.org>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <4743d44a-f871-69b6-401c-39e5d567d995@huawei.com>
+Date: Thu, 3 Aug 2017 18:20:28 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
+In-Reply-To: <20170803085504.GC4883@otc-nc-03>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 08:20:37PM +0000, Casey Leedom wrote:
-> | From: Raj, Ashok <ashok.raj@intel.com>
-> | Sent: Thursday, August 3, 2017 1:31 AM
-> |
-> | I don't understand this completely.. So your driver would know not to send
-> | RO TLP's to root complex. But you want to send RO to the NVMe device? This
-> | is the peer-2-peer case correct?
-> 
-> Yes, this is the "heavy hammer" issue which you alluded to later.  There are
-> applications where a device will want to send TLPs to a Root Complex without
-> Relaxed Ordering set, but will want to use it when sending TLPs to a Peer
-> device (say, an NVMe storage device).  The current approach doesn't make
-> that easy ... and in fact, I still don't kow how to code a solution for this
-> with the proposed APIs.  This means that we may be trading off one
-> performance problem for another and that Relaxed Ordering may be doomed for
-> use under Linux for the foreseeable future.
-> 
-> As I've noted a number of times, it would be great if the Intel Hardware
-> Engineers who attempted to implement the Relaxed Ordering semantics in the
-> current generation of Root Complexes had left the ability to turn off the
-> logic which is obviously not working.  If there was a way to disable the
-> logic via an undocumented register, then we could have the Linux PCI Quirk
-> do that.  Since Relaxed Ordering is just a hint, it's completely legitimate
-> to completely ignore it.
 
-Suppose you are looking for the existence of a chicken bit to instruct the
-port to ignore RO traffic. So all we would do is turn the chicken bit on
-but would permit p2p traffic to be allowed since we won't turn off the
-capability as currently proposed.
 
-Let me look into that keep you posted.
-
-Cheers,
-Ashok
+On 2017/8/3 16:55, Raj, Ashok wrote:
+> Hi Ding
 > 
-> Casey
+> Not sure if V7 is the last version.
+> 
+> can you consider rewording this just to make it a little bit more
+> readable? My suggestion below, feel free to use/modify
+> 
+> Otherwise its all good and you can add my Ack.
+> 
+> Acked-by: Ashok Raj <ashok.raj@intel.com>
+> 
+> On Thu, Jul 13, 2017 at 10:21:30PM +0800, Ding Tianhong wrote:
+>> From: Casey Leedom <leedom@chelsio.com>
+> 
+
+Thanks, Ashok. :)
+
+Regards
+Ding
+
+> 
+>>
+>> The new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING indicates that the Relaxed
+>> Ordering Attribute should not be used on Transaction Layer Packets destined
+>> for the PCIe End Node so flagged.  Initially flagged this way are Intel
+>> E5-26xx Root Complex Ports which suffer from a Flow Control Credit
+>> Performance Problem and AMD A1100 ARM ("SEATTLE") Root Complex Ports which
+>> don't obey PCIe 3.0 ordering rules which can lead to Data Corruption.
+> 
+> The patch adds a new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING to indicate that
+> Relaxed Ordering (RO) attribute should not be used for Transaction Layer
+> Packets (TLP) targetted towards these affected root complexes. Current list
+> of affected parts include Intel E5-26xx root complex which suffers from 
+> flow control credits that result in performance issues. On these affected
+> parts RO can still be used for peer-2-peer traffic. AMD A1100 ARM ("SEATTLE")
+> Root complexes don't obey PCIe 3.0 ordering rules, hence could lead to
+> data-corruption.
+>>
+>> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+>> ---
+>>  drivers/pci/quirks.c | 38 ++++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h  |  2 ++
+>>  2 files changed, 40 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 6967c6b..1e1cdbe 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -4016,6 +4016,44 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
+>>  			      quirk_tw686x_class);
+>>  
+>>  /*
+>> + * Some devices have problems with Transaction Layer Packets with the Relaxed
+>> + * Ordering Attribute set.  Such devices should mark themselves and other
+>> + * Device Drivers should check before sending TLPs with RO set.
+>> + */
+>> +static void quirk_relaxedordering_disable(struct pci_dev *dev)
+>> +{
+>> +	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
+>> +}
+>> +
+>> +/*
+>> + * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
+>> + * cause performance problems with Upstream Transaction Layer Packets with
+>> + * Relaxed Ordering set.
+>> + */
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
+>> +			      quirk_relaxedordering_disable);
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
+>> +			      quirk_relaxedordering_disable);
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
+>> +			      quirk_relaxedordering_disable);
+>> +
+>> +/*
+>> + * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
+>> + * where Upstream Transaction Layer Packets with the Relaxed Ordering
+>> + * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
+>> + * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
+>> + * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
+>> + * November 10, 2010).  As a result, on this platform we can't use Relaxed
+>> + * Ordering for Upstream TLPs.
+>> + */
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
+>> +			      quirk_relaxedordering_disable);
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
+>> +			      quirk_relaxedordering_disable);
+>> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
+>> +			      quirk_relaxedordering_disable);
+>> +
+>> +/*
+>>   * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+>>   * values for the Attribute as were supplied in the header of the
+>>   * corresponding Request, except as explicitly allowed when IDO is used."
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 4869e66..412ec1c 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -188,6 +188,8 @@ enum pci_dev_flags {
+>>  	 * the direct_complete optimization.
+>>  	 */
+>>  	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
+>> +	/* Don't use Relaxed Ordering for TLPs directed at this device */
+>> +	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
+>>  };
+>>  
+>>  enum pci_irq_reroute_variant {
+>> -- 
+>> 1.8.3.1
+>>
+>>
+> 
+> .
+> 
