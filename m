@@ -1,136 +1,75 @@
-Return-Path: <SRS0=b4qK=7V=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=b4qK=7V=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
-Subject: [PATCH V5 2/2] PCI/DPC: Add local struct device
-Date: Sat, 19 Aug 2017 17:07:21 +0800
-Message-ID: <1503133641-114550-3-git-send-email-liudongdong3@huawei.com>
-In-Reply-To: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
-References: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:50946 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751791AbdHCXFZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 19:05:25 -0400
+Date: Thu, 3 Aug 2017 18:05:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v6 2/7] dt-bindings: phy: qmp: Add support for QMP phy in
+ IPQ8074
+Message-ID: <20170803230511.GR20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
+ <1501482857-14100-3-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1501482857-14100-3-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use a local "struct device *dev" for brevity and consistency in DPC driver.
-No functional change intended.
+On Mon, Jul 31, 2017 at 12:04:12PM +0530, Varadarajan Narayanan wrote:
+> IPQ8074 uses QMP phy controller that provides support to PCIe and
+> USB. Adding dt binding information for the same.
 
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
- drivers/pci/pcie/pcie-dpc.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+s/ph/PHY/
+s/dt/DT/ (as in previous changelog)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 8428d74..2d976a6 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -71,6 +71,7 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- {
- 	unsigned long timeout = jiffies + HZ;
- 	struct pci_dev *pdev = dpc->dev->port;
-+	struct device *dev = &dpc->dev->device;
- 	u16 status;
- 
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-@@ -80,15 +81,17 @@ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
- 		pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
- 	}
- 	if (status & PCI_EXP_DPC_RP_BUSY) {
--		dev_warn(&pdev->dev, "DPC root port still busy\n");
-+		dev_warn(dev, "DPC root port still busy\n");
- 		return -EBUSY;
- 	}
- 	return 0;
- }
- 
--static void dpc_wait_link_inactive(struct pci_dev *pdev)
-+static void dpc_wait_link_inactive(struct dpc_dev *dpc)
- {
- 	unsigned long timeout = jiffies + HZ;
-+	struct pci_dev *pdev = dpc->dev->port;
-+	struct device *dev = &dpc->dev->device;
- 	u16 lnk_status;
- 
- 	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-@@ -98,7 +101,7 @@ static void dpc_wait_link_inactive(struct pci_dev *pdev)
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
- 	}
- 	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
--		dev_warn(&pdev->dev, "Link state not disabled for DPC event\n");
-+		dev_warn(dev, "Link state not disabled for DPC event\n");
- }
- 
- static void interrupt_event_handler(struct work_struct *work)
-@@ -120,7 +123,7 @@ static void interrupt_event_handler(struct work_struct *work)
- 	}
- 	pci_unlock_rescan_remove();
- 
--	dpc_wait_link_inactive(pdev);
-+	dpc_wait_link_inactive(dpc);
- 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
- 		return;
- 	if (dpc->rp && dpc->rp_pio_status) {
-@@ -245,6 +248,7 @@ static irqreturn_t dpc_irq(int irq, void *context)
- {
- 	struct dpc_dev *dpc = (struct dpc_dev *)context;
- 	struct pci_dev *pdev = dpc->dev->port;
-+	struct device *dev = &dpc->dev->device;
- 	u16 status, source;
- 
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-@@ -253,14 +257,14 @@ static irqreturn_t dpc_irq(int irq, void *context)
- 	if (!status || status == (u16)(~0))
- 		return IRQ_NONE;
- 
--	dev_info(&dpc->dev->device, "DPC containment event, status:%#06x source:%#06x\n",
-+	dev_info(dev, "DPC containment event, status:%#06x source:%#06x\n",
- 		status, source);
- 
- 	if (status & PCI_EXP_DPC_STATUS_TRIGGER) {
- 		u16 reason = (status >> 1) & 0x3;
- 		u16 ext_reason = (status >> 5) & 0x3;
- 
--		dev_warn(&dpc->dev->device, "DPC %s detected, remove downstream devices\n",
-+		dev_warn(dev, "DPC %s detected, remove downstream devices\n",
- 			 (reason == 0) ? "unmasked uncorrectable error" :
- 			 (reason == 1) ? "ERR_NONFATAL" :
- 			 (reason == 2) ? "ERR_FATAL" :
-@@ -281,10 +285,11 @@ static int dpc_probe(struct pcie_device *dev)
- {
- 	struct dpc_dev *dpc;
- 	struct pci_dev *pdev = dev->port;
-+	struct device *device = &dev->device;
- 	int status;
- 	u16 ctl, cap;
- 
--	dpc = devm_kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
-+	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
- 	if (!dpc)
- 		return -ENOMEM;
- 
-@@ -293,10 +298,10 @@ static int dpc_probe(struct pcie_device *dev)
- 	INIT_WORK(&dpc->work, interrupt_event_handler);
- 	set_service_data(dev, dpc);
- 
--	status = devm_request_irq(&dev->device, dev->irq, dpc_irq, IRQF_SHARED,
-+	status = devm_request_irq(device, dev->irq, dpc_irq, IRQF_SHARED,
- 				  "pcie-dpc", dpc);
- 	if (status) {
--		dev_warn(&dev->device, "request IRQ%d failed: %d\n", dev->irq,
-+		dev_warn(device, "request IRQ%d failed: %d\n", dev->irq,
- 			 status);
- 		return status;
- 	}
-@@ -309,7 +314,7 @@ static int dpc_probe(struct pcie_device *dev)
- 	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
- 
--	dev_info(&dev->device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
-+	dev_info(device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
- 		cap & 0xf, FLAG(cap, PCI_EXP_DPC_CAP_RP_EXT),
- 		FLAG(cap, PCI_EXP_DPC_CAP_POISONED_TLP),
- 		FLAG(cap, PCI_EXP_DPC_CAP_SW_TRIGGER), (cap >> 8) & 0xf,
--- 
-1.9.1
+> 
+> Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> index 5d7a51f..802af1b 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> @@ -6,6 +6,7 @@ controllers on Qualcomm chipsets, such as, PCIe, UFS, and USB.
+>  
+>  Required properties:
+>   - compatible: compatible list, contains:
+> +	       "qcom,ipq8074-qmp-pcie-phy" for PCIe phy on IPQ8074
+>  	       "qcom,msm8996-qmp-pcie-phy" for 14nm PCIe phy on msm8996,
+>  	       "qcom,msm8996-qmp-usb3-phy" for 14nm USB3 phy on msm8996.
+>  
+> @@ -38,6 +39,8 @@ Required properties:
+>  		 "phy", "common", "cfg".
+>  		For "qcom,msm8996-qmp-usb3-phy" must contain
+>  		 "phy", "common".
+> +		For "qcom,ipq8074-qmp-pcie-phy" must contain:
+> +		 "phy", "common".
+>  
+>   - vdda-phy-supply: Phandle to a regulator supply to PHY core block.
+>   - vdda-pll-supply: Phandle to 1.8V regulator supply to PHY refclk pll block.
+> @@ -63,6 +66,11 @@ Required properties for child node:
+>   - clock-output-names: Name of the phy clock that will be the parent for
+>  		       the above pipe clock.
+>  
+> +	For "qcom,ipq8074-qmp-pcie-phy":
+> +		- "pcie20_phy0_pipe_clk"	Pipe Clock parent
+> +			(or)
+> +		  "pcie20_phy1_pipe_clk"
+> +
+>   - resets: a list of phandles and reset controller specifier pairs,
+>  	   one for each entry in reset-names.
+>   - reset-names: Must contain following for pcie qmp phys:
+> -- 
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> 
