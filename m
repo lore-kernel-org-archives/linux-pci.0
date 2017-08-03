@@ -1,168 +1,40 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:41529 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751600AbdHCSUC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 14:20:02 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  3 Aug 2017 12:19:44 -0600
-Message-Id: <20170803181954.4154-6-logang@deltatee.com>
-In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
-Subject: [PATCH v4 05/15] NTB: Ensure ntb_mw_get_align() is only called when the link is up
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34831 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751230AbdHCRKM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 13:10:12 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: bhelgaas@google.com, scott@spiteful.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 4/5] PCI: hotplug: cpcihp_zt5550: constify pci_device_id.
+Date: Thu,  3 Aug 2017 22:39:15 +0530
+Message-Id: <1501780156-24708-5-git-send-email-arvind.yadav.cs@gmail.com>
+In-Reply-To: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With Switchtec hardware it's impossible to get the alignment parameters
-for a peer's memory window until the peer's driver has configured its
-windows. Strictly speaking, the link doesn't have to be up for this,
-but the link being up is the only way the client can tell that
-the other side has been configured.
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-This patch converts ntb_transport and ntb_perf to use this function after
-the link goes up. This simplifies these clients slightly because they
-no longer have to store the alignment parameters. It also tweaks
-ntb_tool so that peer_mw_trans will print zero if it is run before
-the link goes up.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/ntb/ntb_transport.c | 20 ++++++++++----------
- drivers/ntb/test/ntb_perf.c | 18 +++++++++---------
- drivers/ntb/test/ntb_tool.c |  6 +++---
- 3 files changed, 22 insertions(+), 22 deletions(-)
+ drivers/pci/hotplug/cpcihp_zt5550.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ntb/ntb_transport.c b/drivers/ntb/ntb_transport.c
-index f58d8e305323..045e3dd4750e 100644
---- a/drivers/ntb/ntb_transport.c
-+++ b/drivers/ntb/ntb_transport.c
-@@ -191,8 +191,6 @@ struct ntb_transport_qp {
- struct ntb_transport_mw {
- 	phys_addr_t phys_addr;
- 	resource_size_t phys_size;
--	resource_size_t xlat_align;
--	resource_size_t xlat_align_size;
- 	void __iomem *vbase;
- 	size_t xlat_size;
- 	size_t buff_size;
-@@ -687,13 +685,20 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
- 	struct ntb_transport_mw *mw = &nt->mw_vec[num_mw];
- 	struct pci_dev *pdev = nt->ndev->pdev;
- 	size_t xlat_size, buff_size;
-+	resource_size_t xlat_align;
-+	resource_size_t xlat_align_size;
- 	int rc;
+diff --git a/drivers/pci/hotplug/cpcihp_zt5550.c b/drivers/pci/hotplug/cpcihp_zt5550.c
+index 5f49c3f..2f8659a 100644
+--- a/drivers/pci/hotplug/cpcihp_zt5550.c
++++ b/drivers/pci/hotplug/cpcihp_zt5550.c
+@@ -280,7 +280,7 @@ static void zt5550_hc_remove_one(struct pci_dev *pdev)
+ }
  
- 	if (!size)
- 		return -EINVAL;
  
--	xlat_size = round_up(size, mw->xlat_align_size);
--	buff_size = round_up(size, mw->xlat_align);
-+	rc = ntb_mw_get_align(nt->ndev, PIDX, num_mw, &xlat_align,
-+			      &xlat_align_size, NULL);
-+	if (rc)
-+		return rc;
-+
-+	xlat_size = round_up(size, xlat_align_size);
-+	buff_size = round_up(size, xlat_align);
- 
- 	/* No need to re-setup */
- 	if (mw->xlat_size == xlat_size)
-@@ -722,7 +727,7 @@ static int ntb_set_mw(struct ntb_transport_ctx *nt, int num_mw,
- 	 * is a requirement of the hardware. It is recommended to setup CMA
- 	 * for BAR sizes equal or greater than 4MB.
- 	 */
--	if (!IS_ALIGNED(mw->dma_addr, mw->xlat_align)) {
-+	if (!IS_ALIGNED(mw->dma_addr, xlat_align)) {
- 		dev_err(&pdev->dev, "DMA memory %pad is not aligned\n",
- 			&mw->dma_addr);
- 		ntb_free_mw(nt, num_mw);
-@@ -1104,11 +1109,6 @@ static int ntb_transport_probe(struct ntb_client *self, struct ntb_dev *ndev)
- 	for (i = 0; i < mw_count; i++) {
- 		mw = &nt->mw_vec[i];
- 
--		rc = ntb_mw_get_align(ndev, PIDX, i, &mw->xlat_align,
--				      &mw->xlat_align_size, NULL);
--		if (rc)
--			goto err1;
--
- 		rc = ntb_peer_mw_get_addr(ndev, i, &mw->phys_addr,
- 					  &mw->phys_size);
- 		if (rc)
-diff --git a/drivers/ntb/test/ntb_perf.c b/drivers/ntb/test/ntb_perf.c
-index 759f772fa00c..427112cf101a 100644
---- a/drivers/ntb/test/ntb_perf.c
-+++ b/drivers/ntb/test/ntb_perf.c
-@@ -108,8 +108,6 @@ MODULE_PARM_DESC(on_node, "Run threads only on NTB device node (default: true)")
- struct perf_mw {
- 	phys_addr_t	phys_addr;
- 	resource_size_t	phys_size;
--	resource_size_t	xlat_align;
--	resource_size_t	xlat_align_size;
- 	void __iomem	*vbase;
- 	size_t		xlat_size;
- 	size_t		buf_size;
-@@ -472,13 +470,20 @@ static int perf_set_mw(struct perf_ctx *perf, resource_size_t size)
- {
- 	struct perf_mw *mw = &perf->mw;
- 	size_t xlat_size, buf_size;
-+	resource_size_t	xlat_align;
-+	resource_size_t	xlat_align_size;
- 	int rc;
- 
- 	if (!size)
- 		return -EINVAL;
- 
--	xlat_size = round_up(size, mw->xlat_align_size);
--	buf_size = round_up(size, mw->xlat_align);
-+	rc = ntb_mw_get_align(perf->ntb, PIDX, 0, &xlat_align,
-+			      &xlat_align_size, NULL);
-+	if (rc)
-+		return rc;
-+
-+	xlat_size = round_up(size, xlat_align_size);
-+	buf_size = round_up(size, xlat_align);
- 
- 	if (mw->xlat_size == xlat_size)
- 		return 0;
-@@ -567,11 +572,6 @@ static int perf_setup_mw(struct ntb_dev *ntb, struct perf_ctx *perf)
- 
- 	mw = &perf->mw;
- 
--	rc = ntb_mw_get_align(ntb, PIDX, 0, &mw->xlat_align,
--			      &mw->xlat_align_size, NULL);
--	if (rc)
--		return rc;
--
- 	rc = ntb_peer_mw_get_addr(ntb, 0, &mw->phys_addr, &mw->phys_size);
- 	if (rc)
- 		return rc;
-diff --git a/drivers/ntb/test/ntb_tool.c b/drivers/ntb/test/ntb_tool.c
-index a69815c45ce6..91526a986caa 100644
---- a/drivers/ntb/test/ntb_tool.c
-+++ b/drivers/ntb/test/ntb_tool.c
-@@ -753,9 +753,9 @@ static ssize_t tool_peer_mw_trans_read(struct file *filep,
- 
- 	phys_addr_t base;
- 	resource_size_t mw_size;
--	resource_size_t align_addr;
--	resource_size_t align_size;
--	resource_size_t max_size;
-+	resource_size_t align_addr = 0;
-+	resource_size_t align_size = 0;
-+	resource_size_t max_size = 0;
- 
- 	buf_size = min_t(size_t, size, 512);
- 
+-static struct pci_device_id zt5550_hc_pci_tbl[] = {
++static const struct pci_device_id zt5550_hc_pci_tbl[] = {
+ 	{ PCI_VENDOR_ID_ZIATECH, PCI_DEVICE_ID_ZIATECH_5550_HC, PCI_ANY_ID, PCI_ANY_ID, },
+ 	{ 0, }
+ };
 -- 
-2.11.0
+2.7.4
