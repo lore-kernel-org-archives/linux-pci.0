@@ -1,216 +1,309 @@
-Return-Path: <SRS0=TYVx=7F=nxp.com=zhiqiang.hou@kernel.org>
-Return-Path: <SRS0=TYVx=7F=nxp.com=zhiqiang.hou@kernel.org>
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Roy Zang <roy.zang@nxp.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>, "Minghuan
- Lian" <minghuan.Lian@freescale.com>, Mingkai Hu <mingkai.hu@freescale.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: RE: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
-Date: Thu, 3 Aug 2017 03:38:52 +0000
-Message-ID: <AM5PR0402MB2771F53257F0324D6B4D589884B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
- <AM5PR04MB2945C9A811888349090A68868BB00@AM5PR04MB2945.eurprd04.prod.outlook.com>
-In-Reply-To: <AM5PR04MB2945C9A811888349090A68868BB00@AM5PR04MB2945.eurprd04.prod.outlook.com>
-Content-Type: multipart/alternative;
-	boundary="_000_AM5PR0402MB2771F53257F0324D6B4D589884B10AM5PR0402MB2771_"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:35694 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751600AbdHCS5P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 14:57:15 -0400
+Date: Thu, 3 Aug 2017 13:57:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Oza <oza.oza@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: Re: [PATCH v5 1/2] PCI: iproc: Retry request when CRS returned from
+ EP
+Message-ID: <20170803185713.GV20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
+ <1499310582-21193-2-git-send-email-oza.oza@broadcom.com>
+ <20170802210455.GF20308@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPcfUFmjg471qmzqQmayNYzfq8Wo7yfHeiEKrj7hkWF=zg@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAMSpPPcfUFmjg471qmzqQmayNYzfq8Wo7yfHeiEKrj7hkWF=zg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
---_000_AM5PR0402MB2771F53257F0324D6B4D589884B10AM5PR0402MB2771_
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+On Thu, Aug 03, 2017 at 01:50:29PM +0530, Oza Oza wrote:
+> On Thu, Aug 3, 2017 at 2:34 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Thu, Jul 06, 2017 at 08:39:41AM +0530, Oza Pawandeep wrote:
+> >> For Configuration Requests only, following reset it is possible for a
+> >> device to terminate the request but indicate that it is temporarily unable
+> >> to process the Request, but will be able to process the Request in the
+> >> future – in this case, the Configuration Request Retry Status 100 (CRS)
+> >> Completion Status is used.
+> >
+> > Please include the spec reference for this.
+> >
+> > The "100" looks like it's supposed to be the Completion Status Field
+> > value for CRS from PCIe r3.1, sec 2.2.9, Table 2-34, but the value in
+> > the table is actually 0b010, not 0b100.  I don't think this level of
+> > detail is necessary unless your hardware exposes those values to the
+> > driver.
+> >
+> 
+> I will remove the above description from the comment.
+> 
+> >> As per PCI spec, CRS Software Visibility only affects config read of the
+> >> Vendor ID, for config write or any other config read the Root must
+> >> automatically re-issue configuration request again as a new request.
+> >> Iproc based PCIe RC (hw) does not retry request on its own.
+> >
+> > I think sec 2.3.2 is the relevant part of the spec.  It basically
+> > says that when an RC receives a CRS completion for a config request:
+> >
+> >   - If CRS software visibility is not enabled, the RC must reissue the
+> >     config request as a new request.
+> >
+> >   - If CRS software visibility is enabled,
+> >     - for a config read of Vendor ID, the RC must return 0x0001 data
+> >     - for all other config reads/writes, the RC must reissue the
+> >       request
+> >
+> 
+> yes, above is more relevant, and I will include it in the description.
+> 
+> > Apparently iProc *never* reissues config requests, regardless of
+> > whether CRS software visibility is enabled?
+> >
+> 
+> that is true.
+> 
+> > But your CFG_RETRY_STATUS definition suggests that iProc always
+> > fabricates config read data of 0xffff0001 when it sees CRS status, no
+> > matter whether software visibility is enabled and no matter what
+> > config address we read?
+> 
+> yes, that is precisely the case.
 
-SGkgUm95LA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMhDQoNClRoYW5rcywNClpoaXFpYW5n
-DQoNCkZyb206IFJveSBaYW5nDQpTZW50OiAyMDE3xOo41MIzyNUgNTozOA0KVG86IEJqb3JuIEhl
-bGdhYXMgPGhlbGdhYXNAa2VybmVsLm9yZz47IFoucS4gSG91IDx6aGlxaWFuZy5ob3VAbnhwLmNv
-bT4NCkNjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3Rz
-LmluZnJhZGVhZC5vcmc7IGJoZWxnYWFzQGdvb2dsZS5jb207IHJvYmgrZHRAa2VybmVsLm9yZzsg
-TWluZ2h1YW4gTGlhbiA8bWluZ2h1YW4uTGlhbkBmcmVlc2NhbGUuY29tPjsgTWluZ2thaSBIdSA8
-bWluZ2thaS5odUBmcmVlc2NhbGUuY29tPjsgUm95IFphbmcgPHRpZS1mZWkuemFuZ0BmcmVlc2Nh
-bGUuY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBsYXllcnNjYXBlOiBBZGQgc3VwcG9y
-dCBmb3IgbHMyMDg4YSBhbmQgbHMxMDg4YQ0KDQpPbiAwOC8wMi8yMDE3IDA0OjMwIFBNLCBCam9y
-biBIZWxnYWFzIHdyb3RlOg0KDQorICAgICAgICAiZnNsLGxzMjA4OGEtcGNpZSIsICJmc2wsbHMx
-MDg4YS1wY2llIg0KDQpZb3UgYWRkICJmc2wsbHMxMDg4YS1wY2llIiBoZXJlLCBidXQgbm90IGlu
-IHRoZSBsc19wY2llX29mX21hdGNoW10NCg0KdGFibGUgaW4gdGhlIGRyaXZlciwgc28gSSBkb24n
-dCB0aGluayB0aGlzIHdpbGwgYWN0dWFsbHkgbWFrZSB0aGUNCg0KZHJpdmVyIGNsYWltIGxzMTA4
-OGEgZGV2aWNlcywgd2lsbCBpdD8NCg0KdGhlIHNhbWUgcXVlcnkuDQoNCltdIFBsZWFzZSBmaW5k
-IG15IHJlcGx5IHRvIEJqb3JuIGluIHRoaXMgdGhyZWFkLg0KDQpUaGFuay4NCg0KUm95DQo=
+Not according to the documentation you quoted below.
 
---_000_AM5PR0402MB2771F53257F0324D6B4D589884B10AM5PR0402MB2771_
-Content-Type: text/html; charset="gb2312"
-Content-Transfer-Encoding: quoted-printable
+> > What about CRS status for a config *write*?  There's nothing here to
+> > reissue those.
+> 
+> No, we do not need there, because read will always be issued first
+> before any write.
+> so we do not need to implement write.
 
-<html>
-<head>
-<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dgb2312">
-<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
-<style><!--
-/* Font Definitions */
-@font-face
-	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;}
-@font-face
-	{font-family:DengXian;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-@font-face
-	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;}
-@font-face
-	{font-family:"Microsoft YaHei";
-	panose-1:2 11 5 3 2 2 4 2 2 4;}
-@font-face
-	{font-family:"Microsoft YaHei";
-	panose-1:2 11 5 3 2 2 4 2 2 4;}
-@font-face
-	{font-family:DengXian;
-	panose-1:2 1 6 0 3 1 1 1 1 1;}
-/* Style Definitions */
-p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{margin:0cm;
-	margin-bottom:.0001pt;
-	font-size:12.0pt;
-	font-family:"Times New Roman",serif;
-	color:black;}
-a:link, span.MsoHyperlink
-	{mso-style-priority:99;
-	color:#0563C1;
-	text-decoration:underline;}
-a:visited, span.MsoHyperlinkFollowed
-	{mso-style-priority:99;
-	color:#954F72;
-	text-decoration:underline;}
-p
-	{mso-style-priority:99;
-	mso-margin-top-alt:auto;
-	margin-right:0cm;
-	mso-margin-bottom-alt:auto;
-	margin-left:0cm;
-	font-size:12.0pt;
-	font-family:"Times New Roman",serif;
-	color:black;}
-pre
-	{mso-style-priority:99;
-	mso-style-link:"HTML Preformatted Char";
-	margin:0cm;
-	margin-bottom:.0001pt;
-	font-size:10.0pt;
-	font-family:"Courier New";
-	color:black;}
-p.msonormal0, li.msonormal0, div.msonormal0
-	{mso-style-name:msonormal;
-	mso-margin-top-alt:auto;
-	margin-right:0cm;
-	mso-margin-bottom-alt:auto;
-	margin-left:0cm;
-	font-size:12.0pt;
-	font-family:"Times New Roman",serif;
-	color:black;}
-span.HTMLPreformattedChar
-	{mso-style-name:"HTML Preformatted Char";
-	mso-style-priority:99;
-	mso-style-link:"HTML Preformatted";
-	font-family:"Courier New";
-	color:black;}
-span.EmailStyle21
-	{mso-style-type:personal-reply;
-	font-family:"Calibri",sans-serif;
-	color:windowtext;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	font-size:10.0pt;}
-@page WordSection1
-	{size:612.0pt 792.0pt;
-	margin:72.0pt 90.0pt 72.0pt 90.0pt;}
-div.WordSection1
-	{page:WordSection1;}
---></style><!--[if gte mso 9]><xml>
-<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
-</xml><![endif]--><!--[if gte mso 9]><xml>
-<o:shapelayout v:ext=3D"edit">
-<o:idmap v:ext=3D"edit" data=3D"1" />
-</o:shapelayout></xml><![endif]-->
-</head>
-<body bgcolor=3D"white" lang=3D"ZH-CN" link=3D"#0563C1" vlink=3D"#954F72">
-<div class=3D"WordSection1">
-<p class=3D"MsoNormal"><span lang=3D"EN-US" style=3D"font-size:10.5pt;font-=
-family:&quot;Calibri&quot;,sans-serif;color:windowtext">Hi Roy,<o:p></o:p><=
-/span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US" style=3D"font-size:10.5pt;font-=
-family:&quot;Calibri&quot;,sans-serif;color:windowtext"><o:p>&nbsp;</o:p></=
-span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US" style=3D"font-size:10.5pt;font-=
-family:&quot;Calibri&quot;,sans-serif;color:windowtext">Thanks for your com=
-ments!<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US" style=3D"font-size:10.5pt;font-=
-family:&quot;Calibri&quot;,sans-serif;color:windowtext"><br>
-Thanks,<o:p></o:p></span></p>
-<p class=3D"MsoNormal"><span lang=3D"EN-US" style=3D"font-size:10.5pt;font-=
-family:&quot;Calibri&quot;,sans-serif;color:windowtext">Zhiqiang<br>
-<br>
-<o:p></o:p></span></p>
-<div style=3D"border:none;border-left:solid blue 1.5pt;padding:0cm 0cm 0cm =
-4.0pt">
-<div>
-<div style=3D"border:none;border-top:solid #E1E1E1 1.0pt;padding:3.0pt 0cm =
-0cm 0cm">
-<p class=3D"MsoNormal"><b><span lang=3D"EN-US" style=3D"font-size:11.0pt;fo=
-nt-family:&quot;Calibri&quot;,sans-serif;color:windowtext">From:</span></b>=
-<span lang=3D"EN-US" style=3D"font-size:11.0pt;font-family:&quot;Calibri&qu=
-ot;,sans-serif;color:windowtext"> Roy Zang
-<br>
-<b>Sent:</b> 2017</span><span style=3D"font-size:11.0pt;font-family:&quot;=
-=CE=A2=C8=ED=D1=C5=BA=DA&quot;,sans-serif;color:windowtext">=C4=EA</span><s=
-pan lang=3D"EN-US" style=3D"font-size:11.0pt;font-family:&quot;Calibri&quot=
-;,sans-serif;color:windowtext">8</span><span style=3D"font-size:11.0pt;font=
--family:&quot;=CE=A2=C8=ED=D1=C5=BA=DA&quot;,sans-serif;color:windowtext">=
-=D4=C2</span><span lang=3D"EN-US" style=3D"font-size:11.0pt;font-family:&qu=
-ot;Calibri&quot;,sans-serif;color:windowtext">3</span><span style=3D"font-s=
-ize:11.0pt;font-family:&quot;=CE=A2=C8=ED=D1=C5=BA=DA&quot;,sans-serif;colo=
-r:windowtext">=C8=D5</span><span lang=3D"EN-US" style=3D"font-size:11.0pt;f=
-ont-family:&quot;Calibri&quot;,sans-serif;color:windowtext">
- 5:38<br>
-<b>To:</b> Bjorn Helgaas &lt;helgaas@kernel.org&gt;; Z.q. Hou &lt;zhiqiang.=
-hou@nxp.com&gt;<br>
-<b>Cc:</b> linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org;=
- bhelgaas@google.com; robh&#43;dt@kernel.org; Minghuan Lian &lt;minghuan.Li=
-an@freescale.com&gt;; Mingkai Hu &lt;mingkai.hu@freescale.com&gt;; Roy Zang=
- &lt;tie-fei.zang@freescale.com&gt;<br>
-<b>Subject:</b> Re: [PATCH] PCI: layerscape: Add support for ls2088a and ls=
-1088a<o:p></o:p></span></p>
-</div>
-</div>
-<p class=3D"MsoNormal"><span lang=3D"EN-US"><o:p>&nbsp;</o:p></span></p>
-<div>
-<p class=3D"MsoNormal"><span lang=3D"EN-US">On 08/02/2017 04:30 PM, Bjorn H=
-elgaas wrote:<o:p></o:p></span></p>
-</div>
-<blockquote style=3D"margin-top:5.0pt;margin-bottom:5.0pt">
-<blockquote style=3D"margin-top:5.0pt;margin-bottom:5.0pt">
-<pre><span lang=3D"EN-US">&#43;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &=
-quot;fsl,ls2088a-pcie&quot;, &quot;fsl,ls1088a-pcie&quot;<o:p></o:p></span>=
-</pre>
-</blockquote>
-<pre><span lang=3D"EN-US">You add &quot;fsl,ls1088a-pcie&quot; here, but no=
-t in the ls_pcie_of_match[]<o:p></o:p></span></pre>
-<pre><span lang=3D"EN-US">table in the driver, so I don't think this will a=
-ctually make the<o:p></o:p></span></pre>
-<pre><span lang=3D"EN-US">driver claim ls1088a devices, will it?<o:p></o:p>=
-</span></pre>
-</blockquote>
-<p><span lang=3D"EN-US">the same query.</span><span lang=3D"EN-US" style=3D=
-"color:windowtext"><br>
-<br>
-<b><i>[] </i></b>Please find my reply to Bjorn in this thread.</span><span =
-lang=3D"EN-US"><o:p></o:p></span></p>
-<p><span lang=3D"EN-US">Thank.<o:p></o:p></span></p>
-<p><span lang=3D"EN-US">Roy<o:p></o:p></span></p>
-</div>
-</div>
-</body>
-</html>
+How so?  As far as I know, there's nothing in the spec that requires
+the first config access to a device to be a read, and there are
+reasons why we might want to do a write first:
+http://lkml.kernel.org/r/5952D144.8060609@oracle.com
 
---_000_AM5PR0402MB2771F53257F0324D6B4D589884B10AM5PR0402MB2771_--
+> > Is there a hardware erratum that describes the actual hardware
+> > behavior?
+> 
+> this is documented in our PCIe core hw manual.
+> >>
+> 4.7.3.3. Retry Status On Configuration Cycle
+> Endpoints are allowed to generate retry status on configuration
+> cycles.  In this case, the RC needs to re-issue the request.  The IP
+> does not handle this because the number of configuration cycles needed
+> will probably be less
+> than the total number of non-posted operations needed.   When a retry status
+> is received on the User RX interface for a configuration request that
+> was sent on the User TX interface, it will be indicated with a
+> completion with the CMPL_STATUS field set to 2=CRS, and the user will
+> have to find the address and data values and send a new transaction on
+> the User TX interface.
+> When the internal configuration space returns a retry status during a
+> configuration cycle (user_cscfg = 1) on the Command/Status interface,
+> the pcie_cscrs will assert with the pcie_csack signal to indicate the
+> CRS status.
+> When the CRS Software Visibility Enable register in the Root Control
+> register is enabled, the IP will return the data value to 0x0001 for
+> the Vendor ID value and 0xffff  (all 1’s) for the rest of the data in
+> the request for reads of offset 0 that return with CRS status.  This
+> is true for both the User RX Interface and for the Command/Status
+> interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
+> field of the completion on the User RX Interface will not be 2=CRS and
+> the pcie_cscrs signal will not assert on the Command/Status interface.
+> >>
+> Broadcom does not sell PCIe core IP, so above information is not
+> publicly available in terms of hardware erratum or any similar note.
+> 
+> 
+> >
+> >> As a result of the fact, PCIe RC driver (sw) should take care of CRS.
+> >> This patch fixes the problem, and attempts to read config space again in
+> >> case of PCIe code forwarding the CRS back to CPU.
+> >> It implements iproc_pcie_config_read which gets called for Stingray,
+> >> Otherwise it falls back to PCI generic APIs.
+> >>
+> >> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> >> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> >> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> >>
+> >> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+> >> index 0f39bd2..b0abcd7 100644
+> >> --- a/drivers/pci/host/pcie-iproc.c
+> >> +++ b/drivers/pci/host/pcie-iproc.c
+> >> @@ -68,6 +68,9 @@
+> >>  #define APB_ERR_EN_SHIFT             0
+> >>  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+> >>
+> >> +#define CFG_RETRY_STATUS             0xffff0001
+> >> +#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
+> >> +
+> >>  /* derive the enum index of the outbound/inbound mapping registers */
+> >>  #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+> >>
+> >> @@ -448,6 +451,55 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+> >>       }
+> >>  }
+> >>
+> >> +static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+> >> +{
+> >> +     int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
+> >> +     unsigned int ret;
+> >> +
+> >> +     /*
+> >> +      * As per PCI spec, CRS Software Visibility only
+> >> +      * affects config read of the Vendor ID.
+> >> +      * For config write or any other config read the Root must
+> >> +      * automatically re-issue configuration request again as a
+> >> +      * new request. Iproc based PCIe RC (hw) does not retry
+> >> +      * request on its own, so handle it here.
+> >> +      */
+> >> +     do {
+> >> +             ret = readl(cfg_data_p);
+> >> +             if (ret == CFG_RETRY_STATUS)
+> >> +                     udelay(1);
+> >> +             else
+> >> +                     return PCIBIOS_SUCCESSFUL;
+> >> +     } while (timeout--);
+> >
+> > Shouldn't this check *where* in config space we're reading?
+> >
+> No, we do not require, because with SPDK it was reading BAR space
+> which points to MSI-x table.
+> what I mean is, it could be anywhere.
+
+The documentation above says the IP returns data of 0x0001 for *reads
+of offset 0*.  Your current code reissues the read if *any* read 
+anywhere returns data that happens to match CFG_RETRY_STATUS.  That
+may be a perfectly valid register value for some device's config
+space.  In that case, you do not want to reissue the read and you do
+not want to timeout.
+
+> > Shouldn't we check whether CRS software visiblity is enabled?  Does
+> > iProc advertise CRS software visibility support in Root Capabilities?
+> 
+> No, this is also not required because irrespective of that, IP will
+> re-issue the request, and it will forwards error code to host bridge.
+> and in-turn host-bridge is implemented to return 0xffff0001 as code.
+
+The documentation says the IP does not handle reissuing the request.
+
+> > If CRS software visibility is enabled, we should return the 0x0001
+> > data if we're reading the Vendor ID and see CRS status.  It looks like
+> > this loop always retries if we see 0xffff0001 data.
+> >
+> our internal host bridge is implemented this way, and it returns 0xffff0001.
+> so there, we have no choice.
+
+The PCIe spec says that if CRS software visibility is enabled and we
+get a CRS completion for a config read of the Vendor ID at offset 0,
+the read should not be retried, and the read should return 0x0001.
+For example, pci_bus_read_dev_vendor_id() should see that 0x0001
+value.
+
+That's not what this code does.  If the readl() returns
+CFG_RETRY_STATUS, you do the delay and reissue the read.  You never
+return 0x0001 to the caller of pci_bus_read_config_word().
+
+> As I understand from your comments that, I have to change comment
+> description and include right PCI spec reference with section.
+> apart form that I have tried to answer your IP specific details.
+
+Please include the documentation quote above in the changelog when you
+revise this patch.
+
+> >> +
+> >> +     return PCIBIOS_DEVICE_NOT_FOUND;
+> >> +}
+> >> +
+> >> +static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
+> >> +                                            unsigned int busno,
+> >> +                                            unsigned int slot,
+> >> +                                            unsigned int fn,
+> >> +                                            int where)
+> >> +{
+> >> +     u16 offset;
+> >> +     u32 val;
+> >> +
+> >> +     /* EP device access */
+> >> +     val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+> >> +             (slot << CFG_ADDR_DEV_NUM_SHIFT) |
+> >> +             (fn << CFG_ADDR_FUNC_NUM_SHIFT) |
+> >> +             (where & CFG_ADDR_REG_NUM_MASK) |
+> >> +             (1 & CFG_ADDR_CFG_TYPE_MASK);
+> >> +
+> >> +     iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
+> >> +     offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
+> >> +
+> >> +     if (iproc_pcie_reg_is_invalid(offset))
+> >> +             return NULL;
+> >> +
+> >> +     return (pcie->base + offset);
+> >> +}
+> >> +
+> >>  /**
+> >>   * Note access to the configuration registers are protected at the higher layer
+> >>   * by 'pci_lock' in drivers/pci/access.c
+> >> @@ -499,13 +551,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+> >>               return (pcie->base + offset);
+> >>  }
+> >>
+> >> +static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> >> +                                 int where, int size, u32 *val)
+> >> +{
+> >> +     struct iproc_pcie *pcie = iproc_data(bus);
+> >> +     unsigned int slot = PCI_SLOT(devfn);
+> >> +     unsigned int fn = PCI_FUNC(devfn);
+> >> +     unsigned int busno = bus->number;
+> >> +     void __iomem *cfg_data_p;
+> >> +     int ret;
+> >> +
+> >> +     /* root complex access. */
+> >> +     if (busno == 0)
+> >> +             return pci_generic_config_read32(bus, devfn, where, size, val);
+> >> +
+> >> +     cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
+> >> +
+> >> +     if (!cfg_data_p)
+> >> +             return PCIBIOS_DEVICE_NOT_FOUND;
+> >> +
+> >> +     ret = iproc_pcie_cfg_retry(cfg_data_p);
+> >> +     if (ret)
+> >> +             return ret;
+> >> +
+> >> +     *val = readl(cfg_data_p);
+> >> +
+> >> +     if (size <= 2)
+> >> +             *val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
+> >> +
+> >> +     return PCIBIOS_SUCCESSFUL;
+> >> +}
+> >> +
+> >>  static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+> >>                                   int where, int size, u32 *val)
+> >>  {
+> >>       int ret;
+> >> +     struct iproc_pcie *pcie = iproc_data(bus);
+> >>
+> >>       iproc_pcie_apb_err_disable(bus, true);
+> >> -     ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> >> +     if (pcie->type == IPROC_PCIE_PAXB_V2)
+> >> +             ret = iproc_pcie_config_read(bus, devfn, where, size, val);
+> >> +     else
+> >> +             ret = pci_generic_config_read32(bus, devfn, where, size, val);
+> >>       iproc_pcie_apb_err_disable(bus, false);
+> >>
+> >>       return ret;
+> >> --
+> >> 1.9.1
+> >>
