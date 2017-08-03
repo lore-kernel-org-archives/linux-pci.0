@@ -1,36 +1,54 @@
-Return-Path: <SRS0=du0w=AA=8bytes.org=joro@kernel.org>
-Return-Path: <SRS0=du0w=AA=8bytes.org=joro@kernel.org>
-Date: Wed, 30 Aug 2017 13:44:12 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Samuel Sieb <samuel@sieb.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Drake <drake@endlessm.com>,
-	Alexander Deucher <Alexander.Deucher@amd.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Joerg Roedel <jroedel@suse.de>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Message-ID: <20170830114412.GH19533@8bytes.org>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
- <20170713025608.GC4486@bhelgaas-glaptop.roam.corp.google.com>
- <b1570450-1c83-1f76-ab1e-c94bd34f9b84@sieb.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:22400
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751223AbdHCIkZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 04:40:25 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv2 2/6] PCI: designware: enable write permission before updating class code
+Date: Thu, 3 Aug 2017 16:23:36 +0800
+Message-ID: <1501748620-42866-3-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <b1570450-1c83-1f76-ab1e-c94bd34f9b84@sieb.net>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 29, 2017 at 01:02:41PM -0700, Samuel Sieb wrote:
-> On 07/12/2017 07:56 PM, Bjorn Helgaas wrote:
-> >Applied with Alex's ack to pci/virtualization for v4.14, thanks!
-> 
-> Is there any chance of getting this into an earlier kernel?  This is a
-> pretty devastating bug for users!  I'm currently providing patched kernels,
-> but if they run upgrades and get a new kernel without noticing it, any
-> filesystem they access will get completely mangled.
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The patch is queued for v4.14, so it will probably be picked up by
-distributions when v4.14-rc1 is released. At least this will be the case
-for the affected (Open)SUSE distributions.
+The existing fix doesn't actually work because the Class register is
+read-only, so it must enable the write permission before write the
+correct value to this register.
 
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V2:
+ - None
 
-	Joerg
+ drivers/pci/dwc/pcie-designware-host.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index d29c020..6e10cda 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -634,8 +634,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
++	/* Enable write permission for the DBI read-only register */
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	/* program correct class for RC */
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++	/* Better disable write permission right after the update */
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+-- 
+2.1.0.27.g96db324
