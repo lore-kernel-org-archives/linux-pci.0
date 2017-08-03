@@ -1,92 +1,110 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45664 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750972AbdH3QkX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Aug 2017 12:40:23 -0400
-Date: Wed, 30 Aug 2017 11:40:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Jon Derrick <jonathan.derrick@intel.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] vmd: Remove IRQ affinity
-Message-ID: <20170830164020.GC18250@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504109704-17033-1-git-send-email-keith.busch@intel.com>
+Received: from lucky1.263xmail.com ([211.157.147.133]:34831 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751172AbdHCAcK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 2 Aug 2017 20:32:10 -0400
+Cc: linux-kernel@vger.kernel.org, shawn.lin@rock-chips.com,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH 054/102] PCI: rockchip: explicitly request exclusive reset
+ control
+To: Philipp Zabel <p.zabel@pengutronix.de>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+ <20170719152646.25903-55-p.zabel@pengutronix.de>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <2e1c1b5c-6406-64f0-c5e9-6e7ad340d357@rock-chips.com>
+Date: Thu, 3 Aug 2017 08:31:55 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1504109704-17033-1-git-send-email-keith.busch@intel.com>
+In-Reply-To: <20170719152646.25903-55-p.zabel@pengutronix.de>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Christoph]
+Hi,
 
-On Wed, Aug 30, 2017 at 12:15:04PM -0400, Keith Busch wrote:
-> VMD hardware has to share its vectors among child devices in its PCI
-> domain so we should allocate as many as possible rather than just ones
-> that can be affinitized.
-
-I don't understand this changelog.  It suggests that
-pci_alloc_irq_vectors() will allocate more vectors than
-pci_alloc_irq_vectors_affinity() would.
-
-But my understanding was that pci_alloc_irq_vectors_affinity() does have
-anything to do with the number of vectors allocated, but that it only
-provided more fine-grained control of affinity.
-
-  commit 402723ad5c62
-  Author: Christoph Hellwig <hch@lst.de>
-  Date:   Tue Nov 8 17:15:05 2016 -0800
-
-    PCI/MSI: Provide pci_alloc_irq_vectors_affinity()
-    
-    This is a variant of pci_alloc_irq_vectors() that allows passing a struct
-    irq_affinity to provide fine-grained IRQ affinity control.
-    
-    For now this means being able to exclude vectors at the beginning or end of
-    the MSI vector space, but it could also be used for any other quirks needed
-    in the future (e.g. more vectors than CPUs, or excluding CPUs from the
-    spreading).
-
-So IIUC, this patch does not change the number of vectors allocated.  It
-does remove PCI_IRQ_AFFINITY, which I suppose means all the vectors target
-the same CPU instead of being spread across CPUs.
-
-> Reported-by: Brad Goodman <Bradley.Goodman@dell.com>
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/host/vmd.c | 12 ++----------
->  1 file changed, 2 insertions(+), 10 deletions(-)
+On 2017/7/19 23:25, Philipp Zabel wrote:
+> Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+> reset lines") started to transition the reset control request API calls
+> to explicitly state whether the driver needs exclusive or shared reset
+> control behavior. Convert all drivers requesting exclusive resets to the
+> explicit API call so the temporary transition helpers can be removed.
 > 
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index 4fe1756..509893b 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -671,14 +671,6 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	struct vmd_dev *vmd;
->  	int i, err;
->  
-> -	/*
-> -	 * The first vector is reserved for special use, so start affinity at
-> -	 * the second vector
-> -	 */
-> -	struct irq_affinity affd = {
-> -		.pre_vectors = 1,
-> -	};
-> -
->  	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
->  		return -ENOMEM;
->  
-> @@ -704,8 +696,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
->  	if (vmd->msix_count < 0)
->  		return -ENODEV;
->  
-> -	vmd->msix_count = pci_alloc_irq_vectors_affinity(dev, 1, vmd->msix_count,
-> -					PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &affd);
-> +	vmd->msix_count = pci_alloc_irq_vectors(dev, 1, vmd->msix_count,
-> +					PCI_IRQ_MSIX);
->  	if (vmd->msix_count < 0)
->  		return vmd->msix_count;
->  
-> -- 
-> 2.5.5
+> No functional changes.
+> 
+> Cc: Shawn Lin <shawn.lin@rock-chips.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Heiko Stuebner <heiko@sntech.de>
+> Cc: linux-pci@vger.kernel.org
+> Cc: linux-rockchip@lists.infradead.org
+> Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
+
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+> ---
+>   drivers/pci/host/pcie-rockchip.c | 15 ++++++++-------
+>   1 file changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 7bb9870f6d8ce..e50d6f5a81f4b 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -903,49 +903,50 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>   	if (rockchip->link_gen < 0 || rockchip->link_gen > 2)
+>   		rockchip->link_gen = 2;
+>   
+> -	rockchip->core_rst = devm_reset_control_get(dev, "core");
+> +	rockchip->core_rst = devm_reset_control_get_exclusive(dev, "core");
+>   	if (IS_ERR(rockchip->core_rst)) {
+>   		if (PTR_ERR(rockchip->core_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing core reset property in node\n");
+>   		return PTR_ERR(rockchip->core_rst);
+>   	}
+>   
+> -	rockchip->mgmt_rst = devm_reset_control_get(dev, "mgmt");
+> +	rockchip->mgmt_rst = devm_reset_control_get_exclusive(dev, "mgmt");
+>   	if (IS_ERR(rockchip->mgmt_rst)) {
+>   		if (PTR_ERR(rockchip->mgmt_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing mgmt reset property in node\n");
+>   		return PTR_ERR(rockchip->mgmt_rst);
+>   	}
+>   
+> -	rockchip->mgmt_sticky_rst = devm_reset_control_get(dev, "mgmt-sticky");
+> +	rockchip->mgmt_sticky_rst = devm_reset_control_get_exclusive(dev,
+> +								     "mgmt-sticky");
+>   	if (IS_ERR(rockchip->mgmt_sticky_rst)) {
+>   		if (PTR_ERR(rockchip->mgmt_sticky_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing mgmt-sticky reset property in node\n");
+>   		return PTR_ERR(rockchip->mgmt_sticky_rst);
+>   	}
+>   
+> -	rockchip->pipe_rst = devm_reset_control_get(dev, "pipe");
+> +	rockchip->pipe_rst = devm_reset_control_get_exclusive(dev, "pipe");
+>   	if (IS_ERR(rockchip->pipe_rst)) {
+>   		if (PTR_ERR(rockchip->pipe_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing pipe reset property in node\n");
+>   		return PTR_ERR(rockchip->pipe_rst);
+>   	}
+>   
+> -	rockchip->pm_rst = devm_reset_control_get(dev, "pm");
+> +	rockchip->pm_rst = devm_reset_control_get_exclusive(dev, "pm");
+>   	if (IS_ERR(rockchip->pm_rst)) {
+>   		if (PTR_ERR(rockchip->pm_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing pm reset property in node\n");
+>   		return PTR_ERR(rockchip->pm_rst);
+>   	}
+>   
+> -	rockchip->pclk_rst = devm_reset_control_get(dev, "pclk");
+> +	rockchip->pclk_rst = devm_reset_control_get_exclusive(dev, "pclk");
+>   	if (IS_ERR(rockchip->pclk_rst)) {
+>   		if (PTR_ERR(rockchip->pclk_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing pclk reset property in node\n");
+>   		return PTR_ERR(rockchip->pclk_rst);
+>   	}
+>   
+> -	rockchip->aclk_rst = devm_reset_control_get(dev, "aclk");
+> +	rockchip->aclk_rst = devm_reset_control_get_exclusive(dev, "aclk");
+>   	if (IS_ERR(rockchip->aclk_rst)) {
+>   		if (PTR_ERR(rockchip->aclk_rst) != -EPROBE_DEFER)
+>   			dev_err(dev, "missing aclk reset property in node\n");
 > 
