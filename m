@@ -1,38 +1,50 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:40698 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751061AbdHVQX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Aug 2017 12:23:59 -0400
-Date: Tue, 22 Aug 2017 11:23:56 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?iso-8859-1?Q?G=FCrkan?= Myczko <gurkan@phys.ethz.ch>
-Cc: linux-pci@vger.kernel.org, mroos@linux.ee
-Subject: Re: pci layer problem
-Message-ID: <20170822162356.GA6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <0c50a5ba7ceadc93555c6c6dedb22829@phys.ethz.ch>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 3 Aug 2017 14:10:45 -0500
+From: Rob Herring <robh@kernel.org>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH v2 3/5] dt-bindings: PCI: rename and cleanup MediaTek
+ binding text
+Message-ID: <20170803191045.k6xqbm3ekqbnorzd@rob-hp-laptop>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+ <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <0c50a5ba7ceadc93555c6c6dedb22829@phys.ethz.ch>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ robh@kerenl.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
+ bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 22, 2017 at 04:10:29PM +0200, Gürkan Myczko wrote:
-> hello
+On Thu, Jul 27, 2017 at 10:58:37AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Ryder Lee <ryder.lee@mediatek.com>
 > 
-> i've been told on #debian-sparc to report this (SUN UltraSparc,
-> SPARC64, Debian):
+> In order to accommodate other SoC generations, this patch updates filename
+> to make it more generic, regroups specific properties by SoCs, and removes
+> redundant descriptions.
 > 
-> some dmesg output:
-> [ 2683.006327] e1000: Intel(R) PRO/1000 Network Driver - version
-> 7.3.21-k8-NAPI
-> [ 2683.006792] e1000: Copyright (c) 1999-2006 Intel Corporation.
-> [ 2683.007379] e1000 0000:02:02.0: can't ioremap BAR 0: [mem size
-> 0x00020000]
-> [ 2683.007772] e1000: probe of 0000:02:02.0 failed with error -5
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 29 +++++++++++-----------
+>  1 file changed, 14 insertions(+), 15 deletions(-)
+>  rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (91%)
 
-Hi Gürkan,
+Acked-by: Rob Herring <robh@kernel.org>
 
-Sorry you tripped over a problem.  Can you please collect the complete
-dmesg log?
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
