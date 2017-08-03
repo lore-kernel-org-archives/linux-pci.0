@@ -1,37 +1,66 @@
-Return-Path: <SRS0=dzsP=7Y=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=dzsP=7Y=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci <linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, Mason <slash.tmp@free.fr>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
- <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
-Date: Tue, 22 Aug 2017 20:02:18 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:50856 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751791AbdHCXEq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 19:04:46 -0400
+Date: Thu, 3 Aug 2017 18:04:44 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Varadarajan Narayanan <varada@codeaurora.org>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v6 1/7] dt-bindings: phy: qmp: Add output-clock-names
+Message-ID: <20170803230444.GQ20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
+ <1501482857-14100-2-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1501482857-14100-2-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/08/2017 18:29, Marc Zyngier wrote:
+On Mon, Jul 31, 2017 at 12:04:11PM +0530, Varadarajan Narayanan wrote:
+> The phy outputs a clock that will act as the parent for
+> the phy's pipe clock. Add the name of this clock to the
 
-> On 22/08/17 15:56, Marc Gonzalez wrote:
->
->>  #define SMP8759_MUX=09=090x48
->>  #define SMP8759_TEST_OUT=090x74
->> +#define SMP8759_STATUS=09=090x80
->> +#define SMP8759_ENABLE=09=090xa0
->> +#define SMP8759_DOORBELL=090xa002e07c
->=20
-> Why is this hardcoded and not coming from the device-tree, just like any
-> other address property?
+s/phy/PHY/
 
-Since this bus address is software-configurable, I didn't think
-it belonged in the DT. Also, I didn't see anything similar in
-other binding docs, especially
+> lane's DT node.
+> 
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> index e11c563..5d7a51f 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
+> @@ -60,6 +60,8 @@ Required properties for child node:
+>  	   one for each entry in clock-names.
+>   - clock-names: Must contain following for pcie and usb qmp phys:
+>  		 "pipe<lane-number>" for pipe clock specific to each lane.
+> + - clock-output-names: Name of the phy clock that will be the parent for
+> +		       the above pipe clock.
 
-Documentation/devicetree/bindings/interrupt-controller/msi.txt
+s/phy/PHY/ (this file is a hodge-podge so I guess this isn't making it much
+worse)
 
-Regards.
+>  
+>   - resets: a list of phandles and reset controller specifier pairs,
+>  	   one for each entry in reset-names.
+> @@ -96,6 +98,7 @@ Example:
+>  
+>  			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
+>  			clock-names = "pipe0";
+> +			clock-output-names = "pcie_0_pipe_clk_src";
+>  			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
+>  			reset-names = "lane0";
+>  		};
+> -- 
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> 
