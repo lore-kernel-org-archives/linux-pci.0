@@ -1,131 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Alexey Kardashevskiy <aik@ozlabs.ru>, kvm@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        shan.gavin@gmail.com,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH kernel] PCI: Disable IOV before pcibios_sriov_disable()
-Date: Fri, 11 Aug 2017 18:19:33 +1000
-Message-Id: <20170811081933.17474-1-aik@ozlabs.ru>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=l3MC=7F=cogentembedded.com=sergei.shtylyov@kernel.org>
+Return-Path: <SRS0=l3MC=7F=cogentembedded.com=sergei.shtylyov@kernel.org>
+Subject: Re: [PATCH] pci: ftpci100: fix of_irq_get() error check
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Linus Walleij <linus.walleij@linaro.org>
+References: <20170715214406.657273405@cogentembedded.com>
+ <20170802213639.GI20308@bhelgaas-glaptop.roam.corp.google.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <19109fc3-6afb-b710-4493-77227b7533ef@cogentembedded.com>
+Date: Thu, 3 Aug 2017 12:32:29 +0300
+MIME-Version: 1.0
+In-Reply-To: <20170802213639.GI20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Hello!
 
-The PowerNV platform is the only user of pcibios_sriov_disable().
-The IOV BAR could be shifted by pci_iov_update_resource(). The
-warning message in the function is printed if the IOV capability
-is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
+On 8/3/2017 12:36 AM, Bjorn Helgaas wrote:
 
-This is the backtrace of what is happening:
-   pci_disable_sriov
-   sriov_disable
-   pnv_pci_sriov_disable
-   pnv_pci_vf_resource_shift
-   pci_update_resource
-   pci_iov_update_resource
+>> of_irq_get() may return a negative error number as well as 0 on failure,
+>> while the driver only checks for 0, blithely continuing with the call to
+>> irq_set_chained_handler_and_data() -- that function expects *unsigned int*
+>> so should probably do nothing when a large IRQ number resulting from a
+>> conversion of a negative error number is passed to it. The driver then
+>> probes successfully while being only partly functional...
+>>
+>> Check for 'irq <= 0' instead and propagate the negative error number to
+>> the probe method --  that will allow the deferred probing as well...
+>>
+>> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> 
+> Applied with Linus' reviewed-by to pci/host-faraday for v4.14, thanks!
 
-This fixes the issue by disabling IOV capability before calling
-pcibios_sriov_disable(). With it, the disabling path matches
-the enabling path: pcibios_sriov_enable() is called before the
-IOV capability is enabled.
+    Thanks! But why only to 4.14?
 
-Cc: shan.gavin@gmail.com
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Paul Mackerras <paulus@samba.org>
-Reported-by: Carol L Soto <clsoto@us.ibm.com>
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Tested-by: Carol L Soto <clsoto@us.ibm.com>
-Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
----
+[...]
 
-This is repost. Since Gavin left the team, I am trying to push it out.
-The previos converstion is here: https://patchwork.ozlabs.org/patch/732653/
-
-Two questions were raised then. I'll try to comment on this below.
-
->1) "res" is already in the resource tree, so we shouldn't be changing
->   its start address, because that may make the tree inconsistent,
->   e.g., the resource may no longer be completely contained in its
->   parent, it may conflict with a sibling, etc.
-
-We should not, yes. But...
-
-At the boot time IOV BAR gets as much MMIO space as it can possibly use.
-(Embarassingly I cannot trace where this is coming from, 8GB is selected
-via pci_assign_unassigned_root_bus_resources() path somehow).
-For example, it is 256*32MB=8GB where 256 is maximum PEs number and 32MB
-is a PF/VF BAR size. Whatever shifting we do afterwards, the boudaries of
-that 8GB area do not change and we test it in pnv_pci_vf_resource_shift():
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/powerpc/platforms/powernv/pci-ioda.c#n987
-
-> 2) If we update "res->start", shouldn't we update "res->end"
->   correspondingly?
-
-We have to update the PF's IOV BAR address as we allocate PEs dynamically
-and we do not know in advance where our VF numbers start in that
-8GB window. So we change IOV BASR start. Changing the end may make it
-look more like there is a free area to use but in reality it won't be
-usable as well as the area we "release" by shifting the start address.
-
-We could probably move that M64 MMIO window by the same delta in
-opposite direction so the IOV BAR start address would remain the same
-but its VF#0 would be mapped to let's say PF#5. I am just afraid there
-is an alignment requirement for these M64 window start address; and this
-would be even more tricky to manage.
-
-We could also create reserved areas for the amount of space "release" by
-moving the start address, not sure how though.
-
-So how do we proceed with this particular patch now? Thanks.
----
- drivers/pci/iov.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 120485d6f352..ac41c8be9200 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	while (i--)
- 		pci_iov_remove_virtfn(dev, i, 0);
- 
--	pcibios_sriov_disable(dev);
- err_pcibios:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-+	pcibios_sriov_disable(dev);
-+
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
-@@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
- 	for (i = 0; i < iov->num_VFs; i++)
- 		pci_iov_remove_virtfn(dev, i, 0);
- 
--	pcibios_sriov_disable(dev);
--
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-+	pcibios_sriov_disable(dev);
-+
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
- 
--- 
-2.11.0
+MBR, Sergei
