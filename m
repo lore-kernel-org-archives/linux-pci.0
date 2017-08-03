@@ -1,173 +1,134 @@
-Return-Path: <SRS0=7NSh=7W=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=7NSh=7W=broadcom.com=oza.oza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:10762 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751865AbdHCNpo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 09:45:44 -0400
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>,
+        <robin.murphy@arm.com>, <davem@davemloft.net>,
+        <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v8 3/4] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING  flag
+Date: Thu, 3 Aug 2017 21:44:48 +0800
+Message-ID: <1501767889-7772-4-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
+References: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170819210440.GT28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
- <1501861696-25767-3-git-send-email-oza.oza@broadcom.com> <20170819210440.GT28977@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Sun, 20 Aug 2017 09:06:51 +0530
-Message-ID: <CAMSpPPeU4hycT9Kk-ObR1zZ3UUcchMxONuUOga1oJU=_+BkQOw@mail.gmail.com>
-Subject: Re: [PATCH v6 2/2] PCI: iproc: add device shutdown for PCI RC
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 20, 2017 at 2:34 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Aug 04, 2017 at 09:18:16PM +0530, Oza Pawandeep wrote:
->> PERST must be asserted around ~500ms before the reboot is applied.
->>
->> During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
->> LCPLL clock and PERST both goes off simultaneously.
->> This will cause certain Endpoints Intel NVMe not get detected, upon
->> next boot sequence.
->>
->> This is specifically happening with Intel P3700 400GB series.
->> Endpoint is expecting the clock for some amount of time after PERST is
->> asserted, which is not happening in Stingray (iproc based SOC).
->> This causes NVMe to behave in undefined way.
->>
->> On the contrary, Intel x86 boards will have ref clock running, so we
->> do not see this behavior there.
->>
->> Besides, PCI spec does not stipulate about such timings.
->> In-fact it does not tell us, whether PCIe device should consider
->> refclk to be available or not to be.
->>
->> It is completely up to vendor to design their EP the way they want
->> with respect to ref clock availability.
->
-> I am unconvinced.  Designing an endpoint that relies on ref clock
-> timing not guaranteed by the spec does not sound like a way to build
-> reliable hardware.
->
-> The PCIe Card Electromechanical spec, r2.0, sec 2.2.3 says the clock
-> goes inactive after PERST# goes active, but doesn't specify how long.
-> In the absence of a spec requirement, I don't see a reason to assume
-> other systems preserve the ref clock after PERST#, so if the Intel
-> device requires clocks for 500ms after PERST#, we should see problems
-> on other systems.
+From: Casey Leedom <leedom@chelsio.com>
 
-The reason you do not see and most likely you will not see on any
-other system is
-because, the ref clock is supplied by on board oscillator.
-when PERST# is asserted, the ref clock is still available.
+cxgb4 Ethernet driver now queries PCIe configuration space to determine
+if it can send TLPs to it with the Relaxed Ordering Attribute set.
 
-but in our case, we do not have on-board clock generator, rather we
-rely on the clock
-coming from SOC, so if SOC reset is issued, both PERST# and the ref
-clock goes off simultaneously.
+Remove the enable_pcie_relaxed_ordering() to avoid enable PCIe Capability
+Device Control[Relaxed Ordering Enable] at probe routine, to make sure
+the driver will not send the Relaxed Ordering TLPs to the Root Complex which
+could not deal the Relaxed Ordering TLPs.
 
-please also refer to the link below which stipulate on clk being
-active after PERST# being asserted.
-http://www.eetimes.com/document.asp?doc_id=1279299  [Figure 2:
-Power-down waveforms]
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Reviewed-by: Casey Leedom <leedom@chelsio.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 23 +++++++++++++++++------
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+ 3 files changed, 21 insertions(+), 8 deletions(-)
 
-however I am not saying that, this article has more to claim than PCIe spec.
-but, I think the PCIe Card Electromechanical spec leaves the margin
-for card manufactures to design the card based on the assumption
-that ref clock could be available after PERST#  is asserted.
-
-most of the cards do not assume that, but at the least we have seen that,
-once particular card which behaves as per the link which I have just
-pasted above.
-
->
-> Sec 2.2 says that on power up, the power rails must be stable at least
-> T(PVPERL) (100ms) and reference clocks must be stable at least
-> T(PERST-CLK) (100us) before PERST# is deasserted.  I think it's more
-> likely the problem is here.
->
-> The current iproc_pcie_reset() looks like it sleeps 100ms *after* it
-> deasserts PERST#.  Should that be *before* deasserting PERST#?
->
-
-T(PERST-CLK) (100us) before PERST# is deasserted.
-which we are already waiting for 250us
-
-T(PVPERL) (100ms), the power rail is stable much before linux comes up.
-so I still think we are meeting power up requirements.
-
->> 500ms is just based on the observation and taken as safe margin.
->> This patch adds platform shutdown where it should be
->> called in device_shutdown while reboot command is issued.
->> So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
->> followed by RC shutdown, which issues safe PERST assertion.
->>
->> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
->> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
->> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
->>
->> diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
->> index 90d2bdd..9512960 100644
->> --- a/drivers/pci/host/pcie-iproc-platform.c
->> +++ b/drivers/pci/host/pcie-iproc-platform.c
->> @@ -131,6 +131,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->>       return iproc_pcie_remove(pcie);
->>  }
->>
->> +static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
->> +{
->> +     struct iproc_pcie *pcie = platform_get_drvdata(pdev);
->> +
->> +     iproc_pcie_shutdown(pcie);
->> +}
->> +
->>  static struct platform_driver iproc_pcie_pltfm_driver = {
->>       .driver = {
->>               .name = "iproc-pcie",
->> @@ -138,6 +145,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
->>       },
->>       .probe = iproc_pcie_pltfm_probe,
->>       .remove = iproc_pcie_pltfm_remove,
->> +     .shutdown = iproc_pcie_pltfm_shutdown,
->>  };
->>  module_platform_driver(iproc_pcie_pltfm_driver);
->>
->> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
->> index 583cee0..ee40651 100644
->> --- a/drivers/pci/host/pcie-iproc.c
->> +++ b/drivers/pci/host/pcie-iproc.c
->> @@ -627,7 +627,7 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
->>       .write = iproc_pcie_config_write32,
->>  };
->>
->> -static void iproc_pcie_reset(struct iproc_pcie *pcie)
->> +static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
->>  {
->>       u32 val;
->>
->> @@ -639,20 +639,28 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
->>       if (pcie->ep_is_internal)
->>               return;
->>
->> -     /*
->> -      * Select perst_b signal as reset source. Put the device into reset,
->> -      * and then bring it out of reset
->> -      */
->> -     val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
->> -     val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
->> -             ~RC_PCIE_RST_OUTPUT;
->> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> -     udelay(250);
->> -
->> -     val |= RC_PCIE_RST_OUTPUT;
->> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> -     msleep(100);
->> +     if (assert) {
->> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
->> +             val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
->> +                     ~RC_PCIE_RST_OUTPUT;
->> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> +             udelay(250);
->> +     } else {
->> +             val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
->> +             val |= RC_PCIE_RST_OUTPUT;
->> +             iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
->> +             msleep(100);
->> +     }
->> +}
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+index ef4be78..09ea62e 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+@@ -529,6 +529,7 @@ enum {                                 /* adapter flags */
+ 	USING_SOFT_PARAMS  = (1 << 6),
+ 	MASTER_PF          = (1 << 7),
+ 	FW_OFLD_CONN       = (1 << 9),
++	ROOT_NO_RELAXED_ORDERING = (1 << 10),
+ };
+ 
+ enum {
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index e403fa1..391e484 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -4654,11 +4654,6 @@ static void print_port_info(const struct net_device *dev)
+ 		    dev->name, adap->params.vpd.id, adap->name, buf);
+ }
+ 
+-static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
+-{
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
+-}
+-
+ /*
+  * Free the following resources:
+  * - memory used for tables
+@@ -4908,7 +4903,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 
+ 	pci_enable_pcie_error_reporting(pdev);
+-	enable_pcie_relaxed_ordering(pdev);
+ 	pci_set_master(pdev);
+ 	pci_save_state(pdev);
+ 
+@@ -4947,6 +4941,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	adapter->msg_enable = DFLT_MSG_ENABLE;
+ 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+ 
++	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
++	 * Ingress Packet Data to Free List Buffers in order to allow for
++	 * chipset performance optimizations between the Root Complex and
++	 * Memory Controllers.  (Messages to the associated Ingress Queue
++	 * notifying new Packet Placement in the Free Lists Buffers will be
++	 * send without the Relaxed Ordering Attribute thus guaranteeing that
++	 * all preceding PCIe Transaction Layer Packets will be processed
++	 * first.)  But some Root Complexes have various issues with Upstream
++	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
++	 * The PCIe devices which under the Root Complexes will be cleared the
++	 * Relaxed Ordering bit in the configuration space, So we check our
++	 * PCIe configuration space to see if it's flagged with advice against
++	 * using Relaxed Ordering.
++	 */
++	if (!pcie_relaxed_ordering_supported(pdev))
++		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
++
+ 	spin_lock_init(&adapter->stats_lock);
+ 	spin_lock_init(&adapter->tid_release_lock);
+ 	spin_lock_init(&adapter->win0_lock);
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+index ede1220..4ef68f6 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+@@ -2719,6 +2719,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 	struct fw_iq_cmd c;
+ 	struct sge *s = &adap->sge;
+ 	struct port_info *pi = netdev_priv(dev);
++	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+ 
+ 	/* Size needs to be multiple of 16, including status entry. */
+ 	iq->size = roundup(iq->size, 16);
+@@ -2772,8 +2773,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 
+ 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+ 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+-					     FW_IQ_CMD_FL0FETCHRO_F |
+-					     FW_IQ_CMD_FL0DATARO_F |
++					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
++					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
+ 					     FW_IQ_CMD_FL0PADEN_F);
+ 		if (cong >= 0)
+ 			c.iqns_to_fl0congen |=
+-- 
+1.8.3.1
