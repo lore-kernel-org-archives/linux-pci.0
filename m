@@ -1,35 +1,124 @@
-Return-Path: <SRS0=D3nn=7Y=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=D3nn=7Y=linux.ee=mroos@kernel.org>
-Date: Tue, 22 Aug 2017 08:02:00 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: David Miller <davem@davemloft.net>
-cc: hch@lst.de, helgaas@kernel.org, sparclinux@vger.kernel.org,
-    linux-pci@vger.kernel.org, qla2xxx-upstream@qlogic.com,
-    linux-kernel@vger.kernel.org
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-In-Reply-To: <20170821.133549.1817020810110297960.davem@davemloft.net>
-Message-ID: <alpine.LRH.2.20.1708220801450.31611@math.ut.ee>
-References: <20170821.112747.1532639515902173100.davem@davemloft.net> <20170821183458.GA23205@lst.de> <alpine.LRH.2.20.1708212209280.31611@math.ut.ee> <20170821.133549.1817020810110297960.davem@davemloft.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:44904 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751736AbdHCVfG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 17:35:06 -0400
+Date: Thu, 3 Aug 2017 16:35:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Matthew Minter <matt@masarand.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>
+Subject: Re: [RFT PATCH 0/9] PCI: Remove pci_fixup_irqs()
+Message-ID: <20170803213503.GA20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Jul 31, 2017 at 05:37:48PM +0100, Lorenzo Pieralisi wrote:
+> The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+> in a system; those PCI devices possibly belong to different PCI bus trees
+> (and possibly rooted at different host bridges) and may well be enabled
+> (ie probed and bound to a driver) by the time pci_fixup_irqs() is called
+> when probing a given host bridge driver.
 > 
-> >> I think with this patch from -rc6 the symptoms should be cured:
-> >> 
-> >> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c005390374957baacbc38eef96ea360559510aa7
-> >> 
-> >> if that theory is right.
-> > 
-> > The result with 4.13-rc6 is positive but mixed: the message about MSI-X 
-> > affinty maks are still there but the rest of the detection works and the 
-> > driver is loaded successfully:
+> Furthermore, current kernel code relying on pci_fixup_irqs() to
+> assign legacy PCI IRQs to devices does not work at all for
+> hotplugged devices in that the code carrying out the IRQ fixup
+> is called at host bridge driver probe time, which just cannot take
+> into account devices hotplugged after system has booted.
 > 
-> Is this an SMP system?
+> The introduction of map/swizzle functions hook in struct pci_host_bridge
+> allows to define per-bridge map/swizzle functions, that can be used at
+> device probe time in PCI core code to allocate IRQs for a given device
+> (through pci_assign_irq()).
+> 
+> This series converts all arches still relying on pci_fixup_irqs() to
+> the new pci_scan_root_bus_bridge() API and consequently remove
+> pci_fixup_irqs() from the kernel in that it is not used anymore.
+> 
+> Compile tested only, I do not have the necessary hardware.
 
-Yes, T5120.
+Yay!  I applied this to pci/irq-fixups for v4.14.
 
--- 
-Meelis Roos (mroos@linux.ee)
+Huge thanks to both Matthew and Lorenzo for all the hard work it took
+to make this happen!
+
+> [1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/pci-fixup-irqs-removal
+> 
+> Cc: Ralf Baechle <ralf@linux-mips.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Paul Burton <paul.burton@imgtec.com>
+> Cc: Rich Felker <dalias@libc.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Richard Henderson <rth@twiddle.net>
+> Cc: Tanmay Inamdar <tinamdar@apm.com>
+> Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
+> Cc: Chris Metcalf <cmetcalf@mellanox.com>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: Matthew Minter <matt@masarand.com>
+> Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
+> Cc: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Guan Xuetao <gxt@mprc.pku.edu.cn>
+> 
+> Lorenzo Pieralisi (7):
+>   sh/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ mapping
+>     hooks
+>   alpha/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
+>     mapping hooks
+>   m68k/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
+>     mapping hooks
+>   MIPS/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
+>     mapping hooks
+>   tile/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
+>     mapping hooks
+>   unicore32/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
+>     mapping hooks
+>   sparc/PCI: Replace pci_fixup_irqs() call with PCI host bridge IRQ
+>     mapping hooks
+> 
+> Matthew Minter (2):
+>   sh/PCI: Remove __init optimisations from IRQ mapping functions/data
+>   PCI: Remove pci_fixup_irqs() function
+> 
+>  arch/alpha/kernel/pci.c                 | 27 ++++++++++++++++------
+>  arch/alpha/kernel/sys_nautilus.c        | 31 +++++++++++++++++++++----
+>  arch/m68k/coldfire/pci.c                | 36 +++++++++++++++++++++++++----
+>  arch/mips/pci/pci-legacy.c              | 24 +++++++++++++------
+>  arch/sh/drivers/pci/fixups-cayman.c     |  2 +-
+>  arch/sh/drivers/pci/fixups-dreamcast.c  |  2 +-
+>  arch/sh/drivers/pci/fixups-r7780rp.c    |  2 +-
+>  arch/sh/drivers/pci/fixups-rts7751r2d.c |  6 ++---
+>  arch/sh/drivers/pci/fixups-sdk7780.c    |  4 ++--
+>  arch/sh/drivers/pci/fixups-se7751.c     |  2 +-
+>  arch/sh/drivers/pci/fixups-sh03.c       |  2 +-
+>  arch/sh/drivers/pci/fixups-snapgear.c   |  2 +-
+>  arch/sh/drivers/pci/fixups-titan.c      |  4 ++--
+>  arch/sh/drivers/pci/pci.c               | 41 ++++++++++++++++++++-------------
+>  arch/sh/drivers/pci/pcie-sh7786.c       |  2 +-
+>  arch/sparc/kernel/leon_pci.c            | 24 ++++++++++++++-----
+>  arch/tile/kernel/pci.c                  | 21 +++++++++++++----
+>  arch/tile/kernel/pci_gx.c               | 21 +++++++++++++----
+>  arch/unicore32/kernel/pci.c             | 35 ++++++++++++++++++++++++----
+>  drivers/pci/setup-irq.c                 | 24 -------------------
+>  include/linux/pci.h                     |  2 --
+>  21 files changed, 216 insertions(+), 98 deletions(-)
+> 
+> -- 
+> 2.10.0
+> 
