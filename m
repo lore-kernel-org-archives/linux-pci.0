@@ -1,121 +1,264 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0066.outbound.protection.outlook.com ([104.47.38.66]:20431
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751234AbdH1LKS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Aug 2017 07:10:18 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv5 4/9] PCI: layerscape: move ls1021 specific host_init behind the common one
-Date: Mon, 28 Aug 2017 18:52:56 +0800
-Message-ID: <20170828105301.8511-5-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  3 Aug 2017 12:19:49 -0600
+Message-Id: <20170803181954.4154-11-logang@deltatee.com>
+In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
+References: <20170803181954.4154-1-logang@deltatee.com>
+Subject: [PATCH v4 10/15] NTB: switchtec_ntb: Add skeleton NTB driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Add a skeleton NTB driver which will be filled out in subsequent patches.
 
-To prepare for calling the common host_init in ls1021 spceific
-host_init, moves ls1021 specific host_init behind the common
-host_init function.
-
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Roy Zang <tie-fei.zang@freescale.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
 ---
-V5:
- - New patch, split from 4/9 patch v4
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 148 ++++++++++++++++++++++++++++++++-
+ include/linux/ntb.h                    |   3 +
+ 2 files changed, 150 insertions(+), 1 deletion(-)
 
- drivers/pci/dwc/pci-layerscape.c | 64 ++++++++++++++++++++--------------------
- 1 file changed, 32 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 3aa34214643c..160035efa4d9 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -108,6 +108,38 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
- 	return 1;
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index 175ac0baa7a0..158ed310cbaf 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -18,6 +18,7 @@
+ #include <linux/delay.h>
+ #include <linux/kthread.h>
+ #include <linux/interrupt.h>
++#include <linux/ntb.h>
+ 
+ MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
+ MODULE_VERSION("0.1");
+@@ -71,6 +72,7 @@ struct shared_mw {
+ #define LUT_SIZE SZ_64K
+ 
+ struct switchtec_ntb {
++	struct ntb_dev ntb;
+ 	struct switchtec_dev *stdev;
+ 
+ 	int self_partition;
+@@ -161,10 +163,148 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
+ 	return -EIO;
  }
  
-+static int ls_pcie_link_up(struct dw_pcie *pci)
++static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
 +{
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	u32 state;
-+
-+	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
-+		 pcie->drvdata->ltssm_shift) &
-+		 LTSSM_STATE_MASK;
-+
-+	if (state < LTSSM_PCIE_L0)
-+		return 0;
-+
-+	return 1;
-+}
-+
-+static int ls_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+
-+	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	ls_pcie_fix_class(pcie);
-+	ls_pcie_clear_multifunction(pcie);
-+	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+
-+	ls_pcie_drop_msg_tlp(pcie);
-+
-+	dw_pcie_setup_rc(pp);
-+
 +	return 0;
 +}
 +
- static int ls1021_pcie_host_init(struct pcie_port *pp)
++static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
++				      int widx, resource_size_t *addr_align,
++				      resource_size_t *size_align,
++				      resource_size_t *size_max)
++{
++	return 0;
++}
++
++static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
++				      dma_addr_t addr, resource_size_t size)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
++					  phys_addr_t *base,
++					  resource_size_t *size)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
++				    enum ntb_speed *speed,
++				    enum ntb_width *width)
++{
++	return 0;
++}
++
++static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
++				     enum ntb_speed max_speed,
++				     enum ntb_width max_width)
++{
++	return 0;
++}
++
++static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
++{
++	return 0;
++}
++
++static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
++{
++	return 0;
++}
++
++static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
++{
++	return 0;
++}
++
++static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
++{
++	return 0;
++}
++
++static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
++{
++	return 0;
++}
++
++static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
++					 int sidx, u32 val)
++{
++	return 0;
++}
++
++static const struct ntb_dev_ops switchtec_ntb_ops = {
++	.mw_count		= switchtec_ntb_mw_count,
++	.mw_get_align		= switchtec_ntb_mw_get_align,
++	.mw_set_trans		= switchtec_ntb_mw_set_trans,
++	.peer_mw_count		= switchtec_ntb_peer_mw_count,
++	.peer_mw_get_addr	= switchtec_ntb_peer_mw_get_addr,
++	.link_is_up		= switchtec_ntb_link_is_up,
++	.link_enable		= switchtec_ntb_link_enable,
++	.link_disable		= switchtec_ntb_link_disable,
++	.db_valid_mask		= switchtec_ntb_db_valid_mask,
++	.db_vector_count	= switchtec_ntb_db_vector_count,
++	.db_vector_mask		= switchtec_ntb_db_vector_mask,
++	.db_read		= switchtec_ntb_db_read,
++	.db_clear		= switchtec_ntb_db_clear,
++	.db_set_mask		= switchtec_ntb_db_set_mask,
++	.db_clear_mask		= switchtec_ntb_db_clear_mask,
++	.peer_db_set		= switchtec_ntb_peer_db_set,
++	.spad_count		= switchtec_ntb_spad_count,
++	.spad_read		= switchtec_ntb_spad_read,
++	.spad_write		= switchtec_ntb_spad_write,
++	.peer_spad_write	= switchtec_ntb_peer_spad_write,
++};
++
+ static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
  {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-@@ -144,38 +176,6 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
+ 	u64 part_map;
  
--static int ls_pcie_link_up(struct dw_pcie *pci)
--{
--	struct ls_pcie *pcie = to_ls_pcie(pci);
--	u32 state;
++	sndev->ntb.pdev = sndev->stdev->pdev;
++	sndev->ntb.topo = NTB_TOPO_SWITCH;
++	sndev->ntb.ops = &switchtec_ntb_ops;
++
+ 	sndev->self_partition = sndev->stdev->partition;
+ 
+ 	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
+@@ -517,7 +657,6 @@ static int switchtec_ntb_add(struct device *dev,
+ 		return -ENOMEM;
+ 
+ 	sndev->stdev = stdev;
 -
--	state = (ioread32(pcie->lut + pcie->drvdata->lut_dbg) >>
--		 pcie->drvdata->ltssm_shift) &
--		 LTSSM_STATE_MASK;
--
--	if (state < LTSSM_PCIE_L0)
--		return 0;
--
--	return 1;
--}
--
--static int ls_pcie_host_init(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct ls_pcie *pcie = to_ls_pcie(pci);
--
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--	ls_pcie_fix_class(pcie);
--	ls_pcie_clear_multifunction(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--
--	ls_pcie_drop_msg_tlp(pcie);
--
--	dw_pcie_setup_rc(pp);
--
--	return 0;
--}
--
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 				 struct msi_controller *chip)
- {
+ 	switchtec_ntb_init_sndev(sndev);
+ 	switchtec_ntb_init_mw(sndev);
+ 	switchtec_ntb_init_db(sndev);
+@@ -535,11 +674,17 @@ static int switchtec_ntb_add(struct device *dev,
+ 	if (rc)
+ 		goto deinit_shared_and_exit;
+ 
++	rc = ntb_register_device(&sndev->ntb);
++	if (rc)
++		goto deinit_and_exit;
++
+ 	stdev->sndev = sndev;
+ 	dev_info(dev, "NTB device registered");
+ 
+ 	return 0;
+ 
++deinit_and_exit:
++	switchtec_ntb_deinit_db_msg_irq(sndev);
+ deinit_shared_and_exit:
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ free_and_exit:
+@@ -558,6 +703,7 @@ void switchtec_ntb_remove(struct device *dev,
+ 		return;
+ 
+ 	stdev->sndev = NULL;
++	ntb_unregister_device(&sndev->ntb);
+ 	switchtec_ntb_deinit_db_msg_irq(sndev);
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ 	kfree(sndev);
+diff --git a/include/linux/ntb.h b/include/linux/ntb.h
+index 47f2966cfd7f..c308964777eb 100644
+--- a/include/linux/ntb.h
++++ b/include/linux/ntb.h
+@@ -70,6 +70,7 @@ struct pci_dev;
+  * @NTB_TOPO_SEC:	On secondary side of remote ntb.
+  * @NTB_TOPO_B2B_USD:	On primary side of local ntb upstream of remote ntb.
+  * @NTB_TOPO_B2B_DSD:	On primary side of local ntb downstream of remote ntb.
++ * @NTB_TOPO_SWITCH:	Connected via a switch which supports ntb.
+  */
+ enum ntb_topo {
+ 	NTB_TOPO_NONE = -1,
+@@ -77,6 +78,7 @@ enum ntb_topo {
+ 	NTB_TOPO_SEC,
+ 	NTB_TOPO_B2B_USD,
+ 	NTB_TOPO_B2B_DSD,
++	NTB_TOPO_SWITCH,
+ };
+ 
+ static inline int ntb_topo_is_b2b(enum ntb_topo topo)
+@@ -97,6 +99,7 @@ static inline char *ntb_topo_string(enum ntb_topo topo)
+ 	case NTB_TOPO_SEC:	return "NTB_TOPO_SEC";
+ 	case NTB_TOPO_B2B_USD:	return "NTB_TOPO_B2B_USD";
+ 	case NTB_TOPO_B2B_DSD:	return "NTB_TOPO_B2B_DSD";
++	case NTB_TOPO_SWITCH:	return "NTB_TOPO_SWITCH";
+ 	}
+ 	return "NTB_TOPO_INVALID";
+ }
 -- 
-2.14.1
+2.11.0
