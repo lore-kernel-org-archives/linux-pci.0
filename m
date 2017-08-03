@@ -1,113 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:55952 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752145AbdHHU1r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 16:27:47 -0400
-Date: Tue, 8 Aug 2017 15:27:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
+Return-Path: <SRS0=l3MC=7F=cogentembedded.com=sergei.shtylyov@kernel.org>
+Return-Path: <SRS0=l3MC=7F=cogentembedded.com=sergei.shtylyov@kernel.org>
+Subject: Re: [PATCH] pci: ftpci100: fix of_irq_get() error check
+To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        linux-mips@linux-mips.org
-Subject: Re: [PATCH v6 1/6] PCI: Move enum pci_interrupt_pin to a new common
- header
-Message-ID: <20170808202745.GL16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170806000351.17952-1-paul.burton@imgtec.com>
- <20170806000351.17952-2-paul.burton@imgtec.com>
+ Linus Walleij <linus.walleij@linaro.org>
+References: <20170715214406.657273405@cogentembedded.com>
+ <20170802213639.GI20308@bhelgaas-glaptop.roam.corp.google.com>
+ <19109fc3-6afb-b710-4493-77227b7533ef@cogentembedded.com>
+ <20170803161556.GS20308@bhelgaas-glaptop.roam.corp.google.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <95aac11a-c0c9-8024-8479-fcd7a37bdb6b@cogentembedded.com>
+Date: Thu, 3 Aug 2017 19:23:42 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170806000351.17952-2-paul.burton@imgtec.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170803161556.GS20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 05, 2017 at 05:03:46PM -0700, Paul Burton wrote:
-> We currently have a definition of enum pci_interrupt_pin in a header
-> specific to PCI endpoints - pci-epf.h. In order to allow for use of this
-> enum from PCI host code in a future commit, move its definition to a new
-> pci-common.h header which we'll include from both host & endpoint code.
-> 
-> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> 
-> ---
-> 
-> Changes in v6:
-> - New patch.
-> 
->  include/linux/pci-common.h | 31 +++++++++++++++++++++++++++++++
->  include/linux/pci-epf.h    |  9 +--------
->  2 files changed, 32 insertions(+), 8 deletions(-)
->  create mode 100644 include/linux/pci-common.h
-> 
-> diff --git a/include/linux/pci-common.h b/include/linux/pci-common.h
-> new file mode 100644
-> index 000000000000..6a69a2c95ac7
-> --- /dev/null
-> +++ b/include/linux/pci-common.h
-> @@ -0,0 +1,31 @@
-> +/**
-> + * Common PCI definitions
-> + *
-> + * This program is free software: you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 of
-> + * the License as published by the Free Software Foundation.
-> + */
-> +
-> +#ifndef __LINUX_PCI_COMMON_H__
-> +#define __LINUX_PCI_COMMON_H__
-> +
-> +/**
-> + * enum pci_interrupt_pin - PCI INTx interrupt values
-> + * @PCI_INTERRUPT_UNKNOWN: Unknown or unassigned interrupt
-> + * @PCI_INTERRUPT_INTA: PCI INTA pin
-> + * @PCI_INTERRUPT_INTB: PCI INTB pin
-> + * @PCI_INTERRUPT_INTC: PCI INTC pin
-> + * @PCI_INTERRUPT_INTD: PCI INTD pin
-> + *
-> + * Corresponds to values for legacy PCI INTx interrupts, as can be found in the
-> + * PCI_INTERRUPT_PIN register.
-> + */
-> +enum pci_interrupt_pin {
-> +	PCI_INTERRUPT_UNKNOWN,
-> +	PCI_INTERRUPT_INTA,
-> +	PCI_INTERRUPT_INTB,
-> +	PCI_INTERRUPT_INTC,
-> +	PCI_INTERRUPT_INTD,
-> +};
+On 08/03/2017 07:15 PM, Bjorn Helgaas wrote:
 
-Could this (and the new pci_irqd_intx_xlate() added in the next patch)
-go in drivers/pci/pci.h instead?
-
-If pci_irqd_intx_xlate() needs to be in include/linux/pci.h, is there
-a reason this enum couldn't go there as well?
-
-> +#endif /* __LINUX_PCI_COMMON_H__ */
-> diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-> index 0d529cb90143..77c92fcb2416 100644
-> --- a/include/linux/pci-epf.h
-> +++ b/include/linux/pci-epf.h
-> @@ -14,17 +14,10 @@
->  
->  #include <linux/device.h>
->  #include <linux/mod_devicetable.h>
-> +#include <linux/pci-common.h>
->  
->  struct pci_epf;
->  
-> -enum pci_interrupt_pin {
-> -	PCI_INTERRUPT_UNKNOWN,
-> -	PCI_INTERRUPT_INTA,
-> -	PCI_INTERRUPT_INTB,
-> -	PCI_INTERRUPT_INTC,
-> -	PCI_INTERRUPT_INTD,
-> -};
-> -
->  enum pci_barno {
->  	BAR_0,
->  	BAR_1,
-> -- 
-> 2.13.4
+>>>> of_irq_get() may return a negative error number as well as 0 on failure,
+>>>> while the driver only checks for 0, blithely continuing with the call to
+>>>> irq_set_chained_handler_and_data() -- that function expects *unsigned int*
+>>>> so should probably do nothing when a large IRQ number resulting from a
+>>>> conversion of a negative error number is passed to it. The driver then
+>>>> probes successfully while being only partly functional...
+>>>>
+>>>> Check for 'irq <= 0' instead and propagate the negative error number to
+>>>> the probe method --  that will allow the deferred probing as well...
+>>>>
+>>>> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+>>>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+>>>
+>>> Applied with Linus' reviewed-by to pci/host-faraday for v4.14, thanks!
+>>
+>>     Thanks! But why only to 4.14?
 > 
+> Standard practice.  We're currently in the v4.13 cycle, and the merge
+> window is closed, so the only changes we add for v4.13 are (1) fixes
+> for something we merged during the v4.13 merge window, or (2) critical
+> fixes that can't wait for v4.14.
+
+    OK, I thought the original Linus' commit was a bit more recent, like 4.13...
+
+> If we want something backported to stable kernels, we can add a tag
+> for that.  That might apply in this case?  Your patch is a fix for
+> d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host
+> Bridge driver"), which appeared in v4.12,
+
+    If not in 4.11...
+
+> so we might want to tag it for any v4.12 or v4.13 stable kernels.
+
+    I think the -stable people look at the Fixes: tag now...
+
+> Bjorn
+
+MBR, Sergei
