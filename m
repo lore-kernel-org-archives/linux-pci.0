@@ -1,94 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: <kishon@ti.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 05/10] ARM: dts: am57xx-idk: Move common MMC/SD properties to common file
-Date: Wed, 16 Aug 2017 19:15:03 +0530
-Message-ID: <20170816134508.8887-6-kishon@ti.com>
-In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
-References: <20170816134508.8887-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:45400 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751736AbdHCVlx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 17:41:53 -0400
+Date: Thu, 3 Aug 2017 16:41:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Philipp Zabel <p.zabel@pengutronix.de>
+Cc: linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 052/102] PCI: imx6: explicitly request exclusive reset
+ control
+Message-ID: <20170803214149.GC20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170719152646.25903-1-p.zabel@pengutronix.de>
+ <20170719152646.25903-53-p.zabel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170719152646.25903-53-p.zabel@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Sekhar Nori <nsekhar@ti.com>
+On Wed, Jul 19, 2017 at 05:25:56PM +0200, Philipp Zabel wrote:
+> Commit a53e35db70d1 ("reset: Ensure drivers are explicit when requesting
+> reset lines") started to transition the reset control request API calls
+> to explicitly state whether the driver needs exclusive or shared reset
+> control behavior. Convert all drivers requesting exclusive resets to the
+> explicit API call so the temporary transition helpers can be removed.
+> 
+> No functional changes.
+> 
+> Cc: Richard Zhu <hongxing.zhu@nxp.com>
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Philipp Zabel <p.zabel@pengutronix.de>
 
-AM572x IDK and AM571x IDK boards have equivalent
-design of how SD card and eMMC are connected.
+Applied to pci/host-imx6 for v4.14, thanks!
 
-The two EVMs mainly differ in IOdelay configuration
-needed (because of difference in SoC used).
 
-Move the common properties to am57xx-idk-common.dtsi
-file which is common for both EVMs.
+Richard, Lucas, holler if you see any issues.
 
-Signed-off-by: Sekhar Nori <nsekhar@ti.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/am571x-idk.dts         | 7 -------
- arch/arm/boot/dts/am572x-idk.dts         | 8 --------
- arch/arm/boot/dts/am57xx-idk-common.dtsi | 8 ++++++++
- 3 files changed, 8 insertions(+), 15 deletions(-)
-
-diff --git a/arch/arm/boot/dts/am571x-idk.dts b/arch/arm/boot/dts/am571x-idk.dts
-index 0c0bb4e93f25..78c5c7462fcc 100644
---- a/arch/arm/boot/dts/am571x-idk.dts
-+++ b/arch/arm/boot/dts/am571x-idk.dts
-@@ -64,13 +64,6 @@
- 	};
- };
- 
--&mmc1 {
--	status = "okay";
--	vmmc-supply = <&ldo1_reg>;
--	bus-width = <4>;
--	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
--};
--
- &omap_dwc3_2 {
- 	extcon = <&extcon_usb2>;
- };
-diff --git a/arch/arm/boot/dts/am572x-idk.dts b/arch/arm/boot/dts/am572x-idk.dts
-index 604d52554eda..5b22944fedad 100644
---- a/arch/arm/boot/dts/am572x-idk.dts
-+++ b/arch/arm/boot/dts/am572x-idk.dts
-@@ -76,14 +76,6 @@
- 	vbus-gpio = <&gpio3 26 GPIO_ACTIVE_HIGH>;
- };
- 
--&mmc1 {
--	status = "okay";
--	vmmc-supply = <&v3_3d>;
--	vqmmc-supply = <&ldo1_reg>;
--	bus-width = <4>;
--	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
--};
--
- &sn65hvs882 {
- 	load-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>;
- };
-diff --git a/arch/arm/boot/dts/am57xx-idk-common.dtsi b/arch/arm/boot/dts/am57xx-idk-common.dtsi
-index c536b2f5389f..97aa8e6a56da 100644
---- a/arch/arm/boot/dts/am57xx-idk-common.dtsi
-+++ b/arch/arm/boot/dts/am57xx-idk-common.dtsi
-@@ -399,6 +399,14 @@
- 	dr_mode = "peripheral";
- };
- 
-+&mmc1 {
-+	status = "okay";
-+	vmmc-supply = <&v3_3d>;
-+	vqmmc-supply = <&ldo1_reg>;
-+	bus-width = <4>;
-+	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
-+};
-+
- &mmc2 {
- 	status = "okay";
- 	vmmc-supply = <&v3_3d>;
--- 
-2.11.0
+> ---
+>  drivers/pci/dwc/pci-imx6.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> index bf5c3616e3448..5a2ece394ad39 100644
+> --- a/drivers/pci/dwc/pci-imx6.c
+> +++ b/drivers/pci/dwc/pci-imx6.c
+> @@ -778,14 +778,15 @@ static int imx6_pcie_probe(struct platform_device *pdev)
+>  		}
+>  		break;
+>  	case IMX7D:
+> -		imx6_pcie->pciephy_reset = devm_reset_control_get(dev,
+> -								  "pciephy");
+> +		imx6_pcie->pciephy_reset = devm_reset_control_get_exclusive(dev,
+> +									    "pciephy");
+>  		if (IS_ERR(imx6_pcie->pciephy_reset)) {
+>  			dev_err(dev, "Failed to get PCIEPHY reset control\n");
+>  			return PTR_ERR(imx6_pcie->pciephy_reset);
+>  		}
+>  
+> -		imx6_pcie->apps_reset = devm_reset_control_get(dev, "apps");
+> +		imx6_pcie->apps_reset = devm_reset_control_get_exclusive(dev,
+> +									 "apps");
+>  		if (IS_ERR(imx6_pcie->apps_reset)) {
+>  			dev_err(dev, "Failed to get PCIE APPS reset control\n");
+>  			return PTR_ERR(imx6_pcie->apps_reset);
+> -- 
+> 2.11.0
+> 
