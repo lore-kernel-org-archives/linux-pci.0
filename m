@@ -1,43 +1,127 @@
-Return-Path: <SRS0=WTXb=7U=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=WTXb=7U=huawei.com=liudongdong3@kernel.org>
-From: Dongdong Liu <liudongdong3@huawei.com>
-To: <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
-Subject: [PATCH V4 0/2] PCI/DPC: Add eDPC support
-Date: Fri, 18 Aug 2017 16:21:47 +0800
-Message-ID: <1503044509-35876-1-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:51702 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751231AbdHCOYn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 10:24:43 -0400
+Subject: Re: MSI-X support with Synopsys DesignWare IP core driver
+To: Jingoo Han <jingoohan1@gmail.com>,
+        'Bjorn Helgaas' <bhelgaas@google.com>,
+        'vidya sagar' <sagar.tv@gmail.com>
+CC: 'Lucas Stach' <l.stach@pengutronix.de>,
+        'Pratyush Anand' <pratyush.anand@gmail.com>,
+        <linux-pci@vger.kernel.org>, 'Joao Pinto' <Joao.Pinto@synopsys.com>
+References: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com>
+ <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
+ <000401d30bc2$7cfdb8c0$76f92a40$@gmail.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <13b0031b-0db9-21d9-733f-0140a737c145@synopsys.com>
+Date: Thu, 3 Aug 2017 15:24:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <000401d30bc2$7cfdb8c0$76f92a40$@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset is to add eDPC support and use a local
-"struct device *dev" for brevity and consistency in DPC driver.
 
-v3->v4:
-- Use pcie_device's device to keep consistency.
-- Adjust patch sequence.
- 
-v2->v3: 
-- Add a separate patch to use a local "struct device *dev" 
-  for brevity and consistency in  DPC driver.
-- Fix comments on PATCH V2.
-- Rebase on v4.13-rc5.
+Hi,
 
-v1->v2: 
-- Use a stack local variable instead of the allocated memory for
-  collecting RP PIO information.
-- Fix the condition of RP PIO error.
-- Rebase on v4.13-rc1.
+Às 8:06 PM de 8/2/2017, Jingoo Han escreveu:
+> On Tuesday, August 1, 2017 1:13 PM, Bjorn Helgaas wrote:
+>>
+>> This was a multi-part message with HTML, which I think causes the
+>> mailing list to automatically drop it.  Please post this as plain text
+>> with a changelog and signed-off-by and copy the DesignWare maintainers
+>> (Jingoo and Joao, cc'd).
+>>
+>> On Tue, Aug 1, 2017 at 12:28 AM, vidya sagar <sagar.tv@gmail.com> wrote:
+>>> Hi,
+>>> As you might be knowing it already, in the current pcie-designware.c ,
+>> there
+>>> is no support for MSI-X
+>>> Although there is no native support from Synopsys IP as well to have
+>> 2048
+>>> interrupts, we can at least have basic support to get MSI-X also
+>> allocated
+>>> (along with MSI) as many as possible in the system at that point. Of
+>> course,
+>>> all these interrupts will have the same address to which downstream
+>> devices
+>>> need to initiate mem-write transactions. Though it doesn't leverage one
+>> of
+>>> the advantages of having MSI-X over MSI, it at least avoids drivers
+>> falling
+>>> back to legacy interrupts when the card doesn't support MSI. Some of the
+>>> Intel NVMe cards are examples here. Legacy interrupt being a shared
+>>> interrupt, it unnecessarily triggers all other shared ISRs to be called
+>>> whenever there is a legacy interrupt.
+>>>
+>>> I have the following patch which enables MSI-X support also. Would like
+>> to
+>>> have your comments on this.
+> 
+> Hi all,
+> 
+> As far as I know, in order to support MSI-X with Synopsys IP, additional
+> controller is required. For example, GICv2m can be used to do so.
+> 
+> In addition, I think that some HACK patches can be used to support some
+> MSI-X only PCI cards. In this case, we cannot take advantage of MSI-X really.
+> Nevertheless, I am not sure that the following patch is safe.
+> 
+> Best regards,
+> Jingoo Han
 
-Dongdong Liu (2):
-  PCI/DPC: Add eDPC support
-  PCI/DPC: Add local struct device
+I submitted a patch a few weeks ago with the goal of updating the
+pcie-designware's interrupt API and adding MSIX. It is currently on-hold since
+we are trying to find a solution for the Keystone SoC specific driver that its
+unique way of handling msi.
+Because of this I suggest that this patch is not applied and I suggest that we
+solve the Keystone challenge and then follow to the pcie-designware interrupt
+update.
 
- drivers/pci/pcie/pcie-dpc.c   | 188 +++++++++++++++++++++++++++++++++++++++---
- include/uapi/linux/pci_regs.h |  10 +++
- 2 files changed, 188 insertions(+), 10 deletions(-)
+Thanks,
+Joao
 
--- 
-1.9.1
+> 
+>>>
+>>>
+>>> diff --git a/drivers/pci/host/pcie-designware.c
+>>> b/drivers/pci/host/pcie-designware.c
+>>> index af8f6e9..9086253 100644
+>>> --- a/drivers/pci/host/pcie-designware.c
+>>> +++ b/drivers/pci/host/pcie-designware.c
+>>> @@ -406,9 +406,6 @@ static int dw_msi_setup_irq(struct msi_controller
+>> *chip,
+>>> struct pci_dev *pdev,
+>>>      int irq, pos;
+>>>      struct pcie_port *pp = pdev->bus->sysdata;
+>>>
+>>> -    if (desc->msi_attrib.is_msix)
+>>> -        return -EINVAL;
+>>> -
+>>>      irq = assign_irq(1, desc, &pos);
+>>>      if (irq < 0)
+>>>          return irq;
+>>> @@ -426,9 +423,16 @@ static int dw_msi_setup_irqs(struct msi_controller
+>>> *chip, struct pci_dev *pdev,
+>>>      struct msi_desc *desc;
+>>>      struct pcie_port *pp = pdev->bus->sysdata;
+>>>
+>>> -    /* MSI-X interrupts are not supported */
+>>> -    if (type == PCI_CAP_ID_MSIX)
+>>> -        return -EINVAL;
+>>> +    if (type == PCI_CAP_ID_MSIX) {
+>>> +        for_each_pci_msi_entry(desc, pdev) {
+>>> +            irq = arch_setup_msi_irq(pdev, desc);
+>>> +            if (irq < 0)
+>>> +                return irq;
+>>> +            if (irq > 0)
+>>> +                return -ENOSPC;
+>>> +        }
+>>> +        return 0;
+>>> +    }
+>>>
+>>>      WARN_ON(!list_is_singular(&pdev->dev.msi_list));
+>>>      desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
+>>>
+> 
