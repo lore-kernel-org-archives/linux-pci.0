@@ -1,17 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 3 Aug 2017 17:15:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH v2 1/5] PCI: mediatek: Add a structure to abstract the
+ controller generations
+Message-ID: <20170803221546.GL20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+ <948f9bd0881402d13e6913ad425e7dff50f3fcfc.1501122135.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <20170825181959.GA64040@google.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
- <20170822031934.8675-4-jeffy.chen@rock-chips.com>
- <20170825181439.d3hlwrcbmcss3sx6@rob-hp-laptop>
- <20170825181959.GA64040@google.com>
-From: Rob Herring <robh@kernel.org>
-Date: Mon, 28 Aug 2017 16:32:55 -0500
-Message-ID: <CAL_Jsq+MeiwOf=VDLZrxgPuLNEDvtGY=X-K1=6w9aaFVZgg1hA@mail.gmail.com>
-Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
- wake irq
-To: Brian Norris <briannorris@chromium.org>
+In-Reply-To: <948f9bd0881402d13e6913ad425e7dff50f3fcfc.1501122135.git.honghui.zhang@mediatek.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,74 +17,31 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Heiko Stuebner <heiko@sntech.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>, Jeffy Chen <jeffy.chen@rock-chips.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Doug Anderson <dianders@chromium.org>,
- "open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, robh+dt@kernel.org, yt.shen@mediatek.com,
+ matthias.bgg@gmail.com, robh@kerenl.org, linux-mediatek@lists.infradead.org,
+ yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
+ eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 25, 2017 at 1:20 PM, Brian Norris <briannorris@chromium.org> wrote:
-> On Fri, Aug 25, 2017 at 01:14:39PM -0500, Rob Herring wrote:
->> On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
->> > Add an optional interrupt for PCIE_WAKE pin.
->> >
->> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
->> > ---
->> >
->> > Changes in v4: None
->> > Changes in v3: None
->> > Changes in v2: None
->> >
->> >  .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
->> >  1 file changed, 12 insertions(+), 8 deletions(-)
->> >
->> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> > index 5678be82530d..9f6504129e80 100644
->> > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
->> > @@ -20,10 +20,13 @@ Required properties:
->> >  - msi-map: Maps a Requester ID to an MSI controller and associated
->> >     msi-specifier data. See ./pci-msi.txt
->> >  - interrupts: Three interrupt entries must be specified.
->> > -- interrupt-names: Must include the following names
->> > -   - "sys"
->> > -   - "legacy"
->> > -   - "client"
->> > +- interrupt-names: Include the following names
->> > +   Required:
->> > +           - "sys"
->> > +           - "legacy"
->> > +           - "client"
->> > +   Optional:
->> > +           - "wake"
->>
->> Use the wakeup source binding:
->> Documentation/devicetree/bindings/power/wakeup-source.txt
->
-> And I suppose this means we'd fall under this paragraph?
->
->     "However if the devices have dedicated interrupt as the wakeup source
->     then they need to specify/identify the same using device specific
->     interrupt name. In such cases only that interrupt can be used as wakeup
->     interrupt."
->
-> We don't expect *any* interrupt to qualify as PCI WAKE#; so we should
-> still also document the interrupt name ("wake"?) in
-> Documentation/devicetree/bindings/pci/pci.txt as Bjorn suggested, in
-> addition to using the 'wakeup-source' property documented there.
+On Thu, Jul 27, 2017 at 10:58:35AM +0800, honghui.zhang@mediatek.com wrote:
+> From: Ryder Lee <ryder.lee@mediatek.com>
+> 
+> Introduce a structure "mtk_pcie_soc" to abstract the differences between
+> controller generations, and the .startup() hook is used to encapsulate
+> some SoC-dependent related setting. In doing so, the common code which
+> will be reused by future chips.
+> 
+> In addition, we change the approaches to waiting Gen2 training by using
+> readl_poll_timeout() calls.
 
-I believe the defined interrupt name is "wakeup" as example 1 shows.
-
-Rob
+Please split the Gen2 training change to a separate patch, since
+that's not related to the mtk_pcie_soc changes.
 
 _______________________________________________
 linux-arm-kernel mailing list
