@@ -1,85 +1,456 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jan Luebbe <jlu@pengutronix.de>
-To: Gregory Clement <gregory.clement@free-electrons.com>,
- Andrew Lunn <andrew@lunn.ch>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jason Cooper <jason@lakedaemon.net>
-Subject: [PATCH 1/2] bus: mbus: fix window size calculation for 4GB windows
-Date: Mon, 28 Aug 2017 17:25:16 +0200
-Message-Id: <20170828152517.24506-2-jlu@pengutronix.de>
-In-Reply-To: <20170828152517.24506-1-jlu@pengutronix.de>
-References: <20170828152517.24506-1-jlu@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kernel@pengutronix.de, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- Jan Luebbe <jlu@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:41624 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751905AbdHCSUJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 14:20:09 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  3 Aug 2017 12:19:47 -0600
+Message-Id: <20170803181954.4154-9-logang@deltatee.com>
+In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
+References: <20170803181954.4154-1-logang@deltatee.com>
+Subject: [PATCH v4 08/15] NTB: switchtec_ntb: Initialize hardware for memory windows
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-At least the Armada XP SoC supports 4GB on a single DRAM window. Because
-the size register values contain the actual size - 1, the MSB is set in
-that case. For example, the SDRAM window's control register's value is
-0xffffffe1 for 4GB (bits 31 to 24 contain the size).
+Add the code to initialize the memory windows in the hardware.
+This includes setting up the requester ID table, and figuring out
+which BAR corresponds to which memory window. (Seeing the switch
+can be configured with any number of BARs.)
 
-The MBUS driver reads back each window's size from registers and
-calculates the actual size as (control_reg | ~DDR_SIZE_MASK) + 1, which
-overflows for 32 bit values, resulting in other miscalculations further
-on (a bad RAM window for the CESA crypto engine calculated by
-mvebu_mbus_setup_cpu_target_nooverlap() in my case).
+Also, seeing the device doesn't have hardware for scratchpads or
+determining the link status, we create a shared memory window that has
+these features. A magic number with a version component will be used
+to determine if the other side's driver is actually up.
 
-This patch changes the type in 'struct mbus_dram_window' from u32 to
-u64, which allows us to keep using the same register calculation code in
-most MBUS-using drivers (which calculate ->size - 1 again).
+The shared memory window also informs the other side of the
+size and count of the local memory windows.
 
-Signed-off-by: Jan Luebbe <jlu@pengutronix.de>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
 ---
- drivers/bus/mvebu-mbus.c | 2 +-
- include/linux/mbus.h     | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 360 +++++++++++++++++++++++++++++++++
+ 1 file changed, 360 insertions(+)
 
-diff --git a/drivers/bus/mvebu-mbus.c b/drivers/bus/mvebu-mbus.c
-index c7f396903184..70db4d5638a6 100644
---- a/drivers/bus/mvebu-mbus.c
-+++ b/drivers/bus/mvebu-mbus.c
-@@ -720,7 +720,7 @@ mvebu_mbus_default_setup_cpu_target(struct mvebu_mbus_state *mbus)
- 			if (mbus->hw_io_coherency)
- 				w->mbus_attr |= ATTR_HW_COHERENCY;
- 			w->base = base & DDR_BASE_CS_LOW_MASK;
--			w->size = (size | ~DDR_SIZE_MASK) + 1;
-+			w->size = (u64)(size | ~DDR_SIZE_MASK) + 1;
- 		}
- 	}
- 	mvebu_mbus_dram_info.num_cs = cs;
-diff --git a/include/linux/mbus.h b/include/linux/mbus.h
-index 0d3f14fd2621..4773145246ed 100644
---- a/include/linux/mbus.h
-+++ b/include/linux/mbus.h
-@@ -31,8 +31,8 @@ struct mbus_dram_target_info
- 	struct mbus_dram_window {
- 		u8	cs_index;
- 		u8	mbus_attr;
--		u32	base;
--		u32	size;
-+		u64	base;
-+		u64	size;
- 	} cs[4];
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index 253efba72275..831bfdf40068 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -15,37 +15,396 @@
+ 
+ #include <linux/switchtec.h>
+ #include <linux/module.h>
++#include <linux/delay.h>
++#include <linux/kthread.h>
+ 
+ MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
+ MODULE_VERSION("0.1");
+ MODULE_LICENSE("GPL");
+ MODULE_AUTHOR("Microsemi Corporation");
+ 
++static bool use_lut_mws;
++module_param(use_lut_mws, bool, 0644);
++MODULE_PARM_DESC(use_lut_mws,
++		 "Enable the use of the LUT based memory windows");
++
++#ifndef ioread64
++#ifdef readq
++#define ioread64 readq
++#else
++#define ioread64 _ioread64
++static inline u64 _ioread64(void __iomem *mmio)
++{
++	u64 low, high;
++
++	low = ioread32(mmio);
++	high = ioread32(mmio + sizeof(u32));
++	return low | (high << 32);
++}
++#endif
++#endif
++
++#ifndef iowrite64
++#ifdef writeq
++#define iowrite64 writeq
++#else
++#define iowrite64 _iowrite64
++static inline void _iowrite64(u64 val, void __iomem *mmio)
++{
++	iowrite32(val, mmio);
++	iowrite32(val >> 32, mmio + sizeof(u32));
++}
++#endif
++#endif
++
++#define SWITCHTEC_NTB_MAGIC 0x45CC0001
++#define MAX_MWS     128
++
++struct shared_mw {
++	u32 magic;
++	u32 partition_id;
++	u64 mw_sizes[MAX_MWS];
++};
++
++#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
++#define LUT_SIZE SZ_64K
++
+ struct switchtec_ntb {
+ 	struct switchtec_dev *stdev;
++
++	int self_partition;
++	int peer_partition;
++
++	struct ntb_info_regs __iomem *mmio_ntb;
++	struct ntb_ctrl_regs __iomem *mmio_ctrl;
++	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
++	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
++	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
++	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
++
++	struct shared_mw *self_shared;
++	struct shared_mw __iomem *peer_shared;
++	dma_addr_t self_shared_dma;
++
++	int nr_direct_mw;
++	int nr_lut_mw;
++	int direct_mw_to_bar[MAX_DIRECT_MW];
++
++	int peer_nr_direct_mw;
++	int peer_nr_lut_mw;
++	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
  };
  
++static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
++				 struct ntb_ctrl_regs __iomem *ctl,
++				 u32 op, int wait_status)
++{
++	static const char * const op_text[] = {
++		[NTB_CTRL_PART_OP_LOCK] = "lock",
++		[NTB_CTRL_PART_OP_CFG] = "configure",
++		[NTB_CTRL_PART_OP_RESET] = "reset",
++	};
++
++	int i;
++	u32 ps;
++	int status;
++
++	switch (op) {
++	case NTB_CTRL_PART_OP_LOCK:
++		status = NTB_CTRL_PART_STATUS_LOCKING;
++		break;
++	case NTB_CTRL_PART_OP_CFG:
++		status = NTB_CTRL_PART_STATUS_CONFIGURING;
++		break;
++	case NTB_CTRL_PART_OP_RESET:
++		status = NTB_CTRL_PART_STATUS_RESETTING;
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	iowrite32(op, &ctl->partition_op);
++
++	for (i = 0; i < 1000; i++) {
++		if (msleep_interruptible(50) != 0) {
++			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
++			return -EINTR;
++		}
++
++		ps = ioread32(&ctl->partition_status) & 0xFFFF;
++
++		if (ps != status)
++			break;
++	}
++
++	if (ps == wait_status)
++		return 0;
++
++	if (ps == status) {
++		dev_err(&sndev->stdev->dev,
++			"Timed out while peforming %s (%d). (%08x)",
++			op_text[op], op,
++			ioread32(&ctl->partition_status));
++
++		return -ETIMEDOUT;
++	}
++
++	return -EIO;
++}
++
++static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
++{
++	u64 part_map;
++
++	sndev->self_partition = sndev->stdev->partition;
++
++	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
++	part_map = ioread64(&sndev->mmio_ntb->ep_map);
++	part_map &= ~(1 << sndev->self_partition);
++	sndev->peer_partition = ffs(part_map) - 1;
++
++	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
++		sndev->self_partition, sndev->stdev->partition_count,
++		part_map);
++
++	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
++		SWITCHTEC_NTB_REG_CTRL_OFFSET;
++	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
++		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
++
++	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
++	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
++	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
++}
++
++static int map_bars(int *map, struct ntb_ctrl_regs __iomem *ctrl)
++{
++	int i;
++	int cnt = 0;
++
++	for (i = 0; i < ARRAY_SIZE(ctrl->bar_entry); i++) {
++		u32 r = ioread32(&ctrl->bar_entry[i].ctl);
++
++		if (r & NTB_CTRL_BAR_VALID)
++			map[cnt++] = i;
++	}
++
++	return cnt;
++}
++
++static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
++{
++	sndev->nr_direct_mw = map_bars(sndev->direct_mw_to_bar,
++				       sndev->mmio_self_ctrl);
++
++	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
++	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
++
++	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
++		sndev->nr_direct_mw, sndev->nr_lut_mw);
++
++	sndev->peer_nr_direct_mw = map_bars(sndev->peer_direct_mw_to_bar,
++					    sndev->mmio_peer_ctrl);
++
++	sndev->peer_nr_lut_mw =
++		ioread16(&sndev->mmio_peer_ctrl->lut_table_entries);
++	sndev->peer_nr_lut_mw = rounddown_pow_of_two(sndev->peer_nr_lut_mw);
++
++	dev_dbg(&sndev->stdev->dev, "Peer MWs: %d direct, %d lut",
++		sndev->peer_nr_direct_mw, sndev->peer_nr_lut_mw);
++
++}
++
++static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
++{
++	int rc = 0;
++	u16 req_id;
++	u32 error;
++
++	req_id = ioread16(&sndev->mmio_ntb->requester_id);
++
++	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
++		dev_err(&sndev->stdev->dev,
++			"Not enough requester IDs available.");
++		return -EFAULT;
++	}
++
++	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
++				   NTB_CTRL_PART_OP_LOCK,
++				   NTB_CTRL_PART_STATUS_LOCKED);
++	if (rc)
++		return rc;
++
++	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
++		  &sndev->mmio_self_ctrl->partition_ctrl);
++
++	/*
++	 * Root Complex Requester ID (which is 0:00.0)
++	 */
++	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
++		  &sndev->mmio_self_ctrl->req_id_table[0]);
++
++	/*
++	 * Host Bridge Requester ID (as read from the mmap address)
++	 */
++	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
++		  &sndev->mmio_self_ctrl->req_id_table[1]);
++
++	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
++				   NTB_CTRL_PART_OP_CFG,
++				   NTB_CTRL_PART_STATUS_NORMAL);
++	if (rc == -EIO) {
++		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
++		dev_err(&sndev->stdev->dev,
++			"Error setting up the requester ID table: %08x",
++			error);
++	}
++
++	return rc;
++}
++
++static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
++{
++	int i;
++
++	memset(sndev->self_shared, 0, LUT_SIZE);
++	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
++	sndev->self_shared->partition_id = sndev->stdev->partition;
++
++	for (i = 0; i < sndev->nr_direct_mw; i++) {
++		int bar = sndev->direct_mw_to_bar[i];
++		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
++
++		if (i == 0)
++			sz = min_t(resource_size_t, sz,
++				   LUT_SIZE * sndev->nr_lut_mw);
++
++		sndev->self_shared->mw_sizes[i] = sz;
++	}
++
++	for (i = 0; i < sndev->nr_lut_mw; i++) {
++		int idx = sndev->nr_direct_mw + i;
++
++		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
++	}
++}
++
++static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
++{
++	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
++	int bar = sndev->direct_mw_to_bar[0];
++	u32 ctl_val;
++	int rc;
++
++	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
++						 LUT_SIZE,
++						 &sndev->self_shared_dma,
++						 GFP_KERNEL);
++	if (!sndev->self_shared) {
++		dev_err(&sndev->stdev->dev,
++			"unable to allocate memory for shared mw");
++		return -ENOMEM;
++	}
++
++	switchtec_ntb_init_shared(sndev);
++
++	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
++				   NTB_CTRL_PART_STATUS_LOCKED);
++	if (rc)
++		goto unalloc_and_exit;
++
++	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
++	ctl_val &= 0xFF;
++	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
++	ctl_val |= ilog2(LUT_SIZE) << 8;
++	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
++	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
++
++	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
++		   sndev->self_shared_dma),
++		  &ctl->lut_entry[0]);
++
++	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
++				   NTB_CTRL_PART_STATUS_NORMAL);
++	if (rc) {
++		u32 bar_error, lut_error;
++
++		bar_error = ioread32(&ctl->bar_error);
++		lut_error = ioread32(&ctl->lut_error);
++		dev_err(&sndev->stdev->dev,
++			"Error setting up shared MW: %08x / %08x",
++			bar_error, lut_error);
++		goto unalloc_and_exit;
++	}
++
++	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
++	if (!sndev->peer_shared) {
++		rc = -ENOMEM;
++		goto unalloc_and_exit;
++	}
++
++	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
++	return 0;
++
++unalloc_and_exit:
++	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
++			  sndev->self_shared, sndev->self_shared_dma);
++
++	return rc;
++}
++
++static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
++{
++	if (sndev->peer_shared)
++		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
++
++	if (sndev->self_shared)
++		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
++				  sndev->self_shared,
++				  sndev->self_shared_dma);
++}
++
+ static int switchtec_ntb_add(struct device *dev,
+ 			     struct class_interface *class_intf)
+ {
+ 	struct switchtec_dev *stdev = to_stdev(dev);
+ 	struct switchtec_ntb *sndev;
++	int rc;
+ 
+ 	stdev->sndev = NULL;
+ 
+ 	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
+ 		return -ENODEV;
+ 
++	if (stdev->partition_count != 2)
++		dev_warn(dev, "ntb driver only supports 2 partitions");
++
+ 	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
+ 	if (!sndev)
+ 		return -ENOMEM;
+ 
+ 	sndev->stdev = stdev;
+ 
++	switchtec_ntb_init_sndev(sndev);
++	switchtec_ntb_init_mw(sndev);
++
++	rc = switchtec_ntb_init_req_id_table(sndev);
++	if (rc)
++		goto free_and_exit;
++
++	rc = switchtec_ntb_init_shared_mw(sndev);
++	if (rc)
++		goto free_and_exit;
++
+ 	stdev->sndev = sndev;
+ 	dev_info(dev, "NTB device registered");
+ 
+ 	return 0;
++
++free_and_exit:
++	kfree(sndev);
++	dev_err(dev, "failed to register ntb device: %d", rc);
++	return rc;
+ }
+ 
+ void switchtec_ntb_remove(struct device *dev,
+@@ -58,6 +417,7 @@ void switchtec_ntb_remove(struct device *dev,
+ 		return;
+ 
+ 	stdev->sndev = NULL;
++	switchtec_ntb_deinit_shared_mw(sndev);
+ 	kfree(sndev);
+ 	dev_info(dev, "ntb device unregistered");
+ }
 -- 
 2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
