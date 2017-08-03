@@ -1,22 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linuxarm@huawei.com>
-Subject: [PATCH v8 0/4] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-Date: Thu, 3 Aug 2017 21:44:45 +0800
-Message-ID: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
+Date: Thu, 3 Aug 2017 13:19:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+Subject: Re: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
+Message-ID: <20170803181915.GU20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
+ <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
 MIME-Version: 1.0
+In-Reply-To: <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -24,110 +17,68 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some devices have problems with Transaction Layer Packets with the Relaxed
-Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
-PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
-devices with Relaxed Ordering issues, and a use of this new flag by the
-cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
-Ports.
-
-It's been years since I've submitted kernel.org patches, I appolgise for the
-almost certain submission errors.
-
-v2: Alexander point out that the v1 was only a part of the whole solution,
-    some platform which has some issues could use the new flag to indicate
-    that it is not safe to enable relaxed ordering attribute, then we need
-    to clear the relaxed ordering enable bits in the PCI configuration when
-    initializing the device. So add a new second patch to modify the PCI
-    initialization code to clear the relaxed ordering enable bit in the
-    event that the root complex doesn't want relaxed ordering enabled.
-
-    The third patch was base on the v1's second patch and only be changed
-    to query the relaxed ordering enable bit in the PCI configuration space
-    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
-    set.
-
-    This version didn't plan to drop the defines for Intel Drivers to use the
-    new checking way to enable relaxed ordering because it is not the hardest
-    part of the moment, we could fix it in next patchset when this patches
-    reach the goal.
-
-v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
-    If a PCIe device didn't enable the relaxed ordering attribute default,
-    we should not do anything in the PCIe configuration, otherwise we
-    should check if any of the devices above us do not support relaxed
-    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
-    the result if we get a return that indicate that the relaxed ordering
-    is not supported we should update our device to disable relaxed ordering
-    in configuration space. If the device above us doesn't exist or isn't
-    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
-    because we are probably running in a guest.
-
-v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
-    according John's suggestion, and modify the description, use the true/false
-    as the return value.
-
-    We shouldn't enable relaxed ordering attribute by the setting in the root
-    complex configuration space for PCIe device, so fix it for cxgb4.
-
-    Fix some format issues.
-
-v5: Removed the unnecessary code for some function which only return the bool
-    value, and add the check for VF device.
-
-    Make this patch set base on 4.12-rc5.
-
-v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
-
-v7: The cxgb4 drivers will enable the PCIe Capability Device Control[Relaxed
-    Ordering Enable] in PCI Probe() routine, this will break our current
-    solution for some platform which has problematic when enable the relaxed
-    ordering attribute. According to the latest recommendations, remove the
-    enable_pcie_relaxed_ordering(), although it could not cover the Peer-to-Peer
-    scene, but we agree to leave this problem until we really trigger it.
-
-    Make this patch set base on 4.12 release version.
-
-v8: Modify the change log for first 2 patches to make it more reasonable, and
-    add the Acked-by from Alex and Ashok.
-
-    Add a new patch to enable the Relaxed Ordering Attribute for cxgb4vf driver.
-
-    Make this patch set base on 4.13-rc2.
-
-Casey Leedom (3):
-  PCI: Add new PCIe Fabric End Node flag,
-    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-  net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-
-Ding Tianhong (1):
-  PCI: Disable PCIe Relaxed Ordering if unsupported
-
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |  1 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    | 23 +++++++++----
- drivers/net/ethernet/chelsio/cxgb4/sge.c           |  5 +--
- drivers/net/ethernet/chelsio/cxgb4vf/adapter.h     |  1 +
- .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    | 18 ++++++++++
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |  3 ++
- drivers/pci/pci.c                                  | 29 +++++++++++++++++
- drivers/pci/probe.c                                | 37 +++++++++++++++++++++
- drivers/pci/quirks.c                               | 38 ++++++++++++++++++++++
- include/linux/pci.h                                |  4 +++
- 10 files changed, 151 insertions(+), 8 deletions(-)
-
--- 
-1.8.3.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+T24gVGh1LCBBdWcgMDMsIDIwMTcgYXQgMDM6MzU6NDZBTSArMDAwMCwgWi5xLiBIb3Ugd3JvdGU6
+Cj4gSGkgQmpvcm4sCj4gCj4gVGhhbmtzIGEgbG90IGZvciB5b3VyIGNvbW1lbnRzIQo+IAo+ID4g
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0KPiA+IEZyb206IEJqb3JuIEhlbGdhYXMgW21haWx0
+bzpoZWxnYWFzQGtlcm5lbC5vcmddCj4gPiBTZW50OiAyMDE35bm0OOaciDPml6UgNTozMAo+ID4g
+VG86IFoucS4gSG91IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4KPiA+IENjOiBsaW51eC1wY2lAdmdl
+ci5rZXJuZWwub3JnOyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmc7Cj4gPiBi
+aGVsZ2Fhc0Bnb29nbGUuY29tOyByb2JoK2R0QGtlcm5lbC5vcmc7IE1pbmdodWFuIExpYW4KPiA+
+IDxtaW5naHVhbi5MaWFuQGZyZWVzY2FsZS5jb20+OyBNaW5na2FpIEh1IDxtaW5na2FpLmh1QGZy
+ZWVzY2FsZS5jb20+Owo+ID4gUm95IFphbmcgPHRpZS1mZWkuemFuZ0BmcmVlc2NhbGUuY29tPgo+
+ID4gU3ViamVjdDogUmU6IFtQQVRDSF0gUENJOiBsYXllcnNjYXBlOiBBZGQgc3VwcG9ydCBmb3Ig
+bHMyMDg4YSBhbmQgbHMxMDg4YQo+ID4gCj4gPiBbK2NjIE1pbmdodWFuLCBNaW5na2FpLCBSb3ld
+Cj4gPiAKPiA+IE9uIFRodSwgSnVsIDA2LCAyMDE3IGF0IDA1OjM5OjQ0UE0gKzA4MDAsIFpoaXFp
+YW5nIEhvdSB3cm90ZToKPiA+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhw
+LmNvbT4KPiA+ID4KPiA+ID4gVGhlIGxzMTA4OGEgYW5kIGxzMjA4OGEgaGFzIHRoZSBzYW1lIFBD
+SWUgY29udHJvbGxlciwgc28gdGhlIGxzMTA4OGEKPiA+ID4gd2lsbCByZXVzZSB0aGUgbHMyMDg4
+YSdzIHBjaWUgY29tcGF0aWJsZS4KPiA+ID4KPiA+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFp
+YW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4KPiA+ID4gLS0tCj4gPiA+ICBEb2N1bWVudGF0aW9u
+L2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dCB8IDEgKwo+ID4gPiAg
+ZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMgICAgICAgICAgICAgICAgICAgICAgICAg
+fCA5Cj4gPiArKysrKysrKysKPiA+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygr
+KQo+ID4gPgo+ID4gPiBkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQKPiA+ID4gYi9Eb2N1bWVudGF0aW9uL2RldmljZXRy
+ZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dAo+ID4gPiBpbmRleCBlZTFjNzJkNS4u
+Y2I3MzVlMSAxMDA2NDQKPiA+ID4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQKPiA+ID4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQKPiA+ID4gQEAgLTE1LDYgKzE1
+LDcgQEAgUmVxdWlyZWQgcHJvcGVydGllczoKPiA+ID4gIC0gY29tcGF0aWJsZTogc2hvdWxkIGNv
+bnRhaW4gdGhlIHBsYXRmb3JtIGlkZW50aWZpZXIgc3VjaCBhczoKPiA+ID4gICAgICAgICAgImZz
+bCxsczEwMjFhLXBjaWUiLCAic25wcyxkdy1wY2llIgo+ID4gPiAgICAgICAgICAiZnNsLGxzMjA4
+MGEtcGNpZSIsICJmc2wsbHMyMDg1YS1wY2llIiwgInNucHMsZHctcGNpZSIKPiA+ID4gKyAgICAg
+ICAgImZzbCxsczIwODhhLXBjaWUiLCAiZnNsLGxzMTA4OGEtcGNpZSIKPiA+IAo+ID4gWW91IGFk
+ZCAiZnNsLGxzMTA4OGEtcGNpZSIgaGVyZSwgYnV0IG5vdCBpbiB0aGUgbHNfcGNpZV9vZl9tYXRj
+aFtdCj4gPiB0YWJsZSBpbiB0aGUgZHJpdmVyLCBzbyBJIGRvbid0IHRoaW5rIHRoaXMgd2lsbCBh
+Y3R1YWxseSBtYWtlIHRoZQo+ID4gZHJpdmVyIGNsYWltIGxzMTA4OGEgZGV2aWNlcywgd2lsbCBp
+dD8KPiAKPiBJIG1lYW4gdGhlIGxzMTA4OGEgcGNpZSBEVCBub2RlcyB3aWxsIHVzZSB0aGUgImZz
+bCxsczIwODhhLXBjaWUiCj4gdG9vLCBzbyBJIGRpZG4ndCBhZGQgYW4gZW50cnkgZm9yIGxzMTA4
+OGEgcGNpZSB0bwo+IGxzX3BjaWVfb2ZfbWF0Y2hbXS4gIElzIGl0IHJlYXNvbmFibGU/IE9yIGl0
+J3MgYmV0dGVyIHRvIGFkZAo+ICJmc2wsbHMxMDg4YS1wY2llIiB0byBsc19wY2llX29mX21hdGNo
+W10sIHRoZW4gbHMxMDg4YSBwY2llIERUIG5vZGVzCj4gdXNlIHRoZSBjb21wYXRpYmxlIHN0cmlu
+ZyAiZnNsLGxzMTA4OGEtcGNpZSI/CgpZb3VyIGJpbmRpbmcgc2F5cyAiZnNsLGxzMTA4OGEtcGNp
+ZSIgaXMgYSB2YWxpZCB2YWx1ZSBmb3IKImNvbXBhdGlibGUiLiAgQnV0IGlmIGEgRFQgYWN0dWFs
+bHkgKnVzZXMqIHRoYXQsIEkgZG9uJ3QgdGhpbmsgdGhlCmRyaXZlciB3aWxsIGNsYWltIGl0LgoK
+SWYgeW91IHdhbnQgdG8gZGVzY3JpYmUgbHMxMDg4YSBkZXZpY2VzIHdpdGggImZzbCxsczIwODhh
+LXBjaWUiLCBJCnRoaW5rIHlvdSBjb3VsZCBkbyB0aGF0LCBidXQgdGhlbiB3aHkgd291bGQgeW91
+IGV2ZW4gbWVudGlvbgoiZnNsLGxzMTA4OGEtcGNpZSIgaW4gdGhlIGJpbmRpbmc/CgpQZXJzb25h
+bGx5LCBpZiBsczEwODhhIGFuZCBsczIwODhhIGFyZSBkaWZmZXJlbnQgaW4gYW55IHdheSwgSSB3
+b3VsZAp0aGluayB5b3Ugc2hvdWxkIHVzZSBkaWZmZXJlbnQgaWRlbnRpZmllcnMgZm9yIHRoZW0g
+KGFuZCBhZGQgdGhlbSBib3RoCnRvIHRoZSBiaW5kaW5nIGFuZCB0byB0aGUgZHJpdmVyKS4gIFRo
+YXQgd2F5IGlmIGEgZnV0dXJlIGZlYXR1cmUKZGVwZW5kcyBvbiB0aGUgZGlmZmVyZW5jZSwgeW91
+J2xsIGhhdmUgYSB3YXkgdG8gdGVzdCBmb3IgaXQuCgpCdXQgSSdtIG5vdCBhIERUIGd1eS4gIE1h
+eWJlIFJvYiBoYXMgYSBiZXR0ZXIgcmVjb21tZW5kYXRpb24/CgpCam9ybgoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWls
+aW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0
+cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
