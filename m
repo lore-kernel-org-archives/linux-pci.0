@@ -1,70 +1,90 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <599CE56D.3060000@rock-chips.com>
-Date: Wed, 23 Aug 2017 10:16:13 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
+Date: Thu, 3 Aug 2017 01:31:53 -0700
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Ding Tianhong <dingtianhong@huawei.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	Michael Werner <werner@chelsio.com>,
+	Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"amira@mellanox.com" <amira@mellanox.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linuxarm@huawei.com" <linuxarm@huawei.com>, ashok.raj@intel.com
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Message-ID: <20170803083153.GB4883@otc-nc-03>
+References: <e496ff1d-b836-ebef-fdf7-76273aaaaef6@codeaurora.org>
+ <0260e398-bd8e-6615-6d5c-1f7c07b6fc09@huawei.com>
+ <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
+ <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
+ <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
+ <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-To: Brian Norris <briannorris@chromium.org>
-Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
-References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
- <20170817120431.12398-2-jeffy.chen@rock-chips.com>
- <20170818170107.GA119461@google.com> <20170818181416.GF6008@atomide.com>
- <5997486D.4040803@rock-chips.com> <20170822172653.GJ6008@atomide.com>
- <599CDB37.3070307@rock-chips.com> <20170823015714.GA129497@google.com>
-In-Reply-To: <20170823015714.GA129497@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, Tony Lindgren <tony@atomide.com>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brian,
+Hi Casey
 
-On 08/23/2017 09:57 AM, Brian Norris wrote:
-> Hi Jeffy,
->
-> On Wed, Aug 23, 2017 at 09:32:39AM +0800, Jeffy Chen wrote:
->> and for eage irq, maybe we should enable it right after(or before)
->> the driver activate wake function(for example activate WOWLAN or
->> WOLAN), otherwise would it be possible to miss some irqs(triggered
->> before we actually enable the wake irq)?
->
-> I already mentioned this: for the PCI case, the specification explicitly
-> says that the WAKE# pin must remain asserted until the system wakes and
-> resets the link. So we don't have this problem.
-Sorry, i means for other use cases of wakeirq, for example sdio wifi
+On Wed, Aug 02, 2017 at 05:53:52PM +0000, Casey Leedom wrote:
+>   Okay, here you go.  As you can tell, it's almost a trivial copy of the
+> cxgb4 patch.
+>  
+>   By the way, I realized that we have yet another hole which is likely not
+> to be fixable.  If we're dealing with a problematic Root Complex, and we
+> instantiate Virtual Functions and attach them to a Virtual Machine along
+> with an NVMe device which can deal with Relaxed Ordering TLPs, the VF driver
+> in the VM will be able to tell that it shouldn't attempt to send RO TLPs to
+> the RC because it will see the state of its own PCIe Capability Device
+> Control[Relaxed Ordering Enable] (a copy of the setting in the VF's
+> corresponding PF), but it won't be able to change that and send non-RO TLPs
+> to the RC, and RO TLPs to the NVMe device.  Oh well.
 
->
-> But it is probably still useful to make sure there's a well-defined
-> point at which these interrupts are armed, so that if a device driver
-> does care, it can account for that. Just before suspend_noirq (as it is
-> today) is probably fine, so if there's some device-level handling that
-> needs to happen before we get to suspend (but after the wakeirq is
-> armed), it can go in the device or bus {suspend,resume}_noirq callbacks.
+I don't understand this completely.. So your driver would know not to send RO
+TLP's to root complex. But you want to send RO to the NVMe device? This is the
+peer-2-peer case correct?
 
-Yes, then we may need to handle "disable level irq" job in the irq 
-handler(or runtime resume callback as current wakeirq API suggested) for 
-irqs received before suspend devices irqs.
->
-> Brian
->
->
->
+The issue in the current patchset is that we device to turn off the device 
+capability for all devices in the hierarchy so one would expect that 
+the NVMe also would have RO turned off i suppose. 
 
+The other approach is to not turn off the device capabilty, but let the
+driver do the right thing. i.e for transactions towards system memory vs. 
+peer-2-peer? But since we wanted to take a big hammer approach because
+some platforms there can be data-corruption and we can't let trust guest
+drivers to do the right thing. This isn't something we can fix in this 
+current version.
 
+One possible approach is to provide a strict flag, where we use this heavy 
+hammer approach only on platforms that have a serious implication, and the 
+other is we let the driver do the right thing depending on the platform.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Worst case if the driver doesn't do the right thing, you would see perf issues
+but nothing bad would happen. It would allow you to select when to turn on 
+RO and when to turn it off.
+
+Cheers,
+Ashok
