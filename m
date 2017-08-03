@@ -1,120 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0063.outbound.protection.outlook.com ([104.47.42.63]:61119
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753057AbdHWG0v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Aug 2017 02:26:51 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv4 4/9] PCI: layerscape: refactor the host_init function
-Date: Wed, 23 Aug 2017 14:08:51 +0800
-Message-ID: <20170823060856.9387-5-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
-References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: RE: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
+Date: Thu, 3 Aug 2017 03:35:46 +0000
+Message-ID: <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Minghuan
+ Lian <minghuan.Lian@freescale.com>, "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="gb2312"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-
-Make the ls1021a's host_init reuse layerscape platform's common
-host_init function.
-
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
-V4:
- - no change
-
- drivers/pci/dwc/pci-layerscape.c | 65 ++++++++++++++++++----------------------
- 1 file changed, 29 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 3aa34214643c..57b86a0cd2c8 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -108,42 +108,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
- 	return 1;
- }
- 
--static int ls1021_pcie_host_init(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct ls_pcie *pcie = to_ls_pcie(pci);
--	struct device *dev = pci->dev;
--	u32 index[2];
--	int ret;
--
--	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
--						     "fsl,pcie-scfg");
--	if (IS_ERR(pcie->scfg)) {
--		ret = PTR_ERR(pcie->scfg);
--		dev_err(dev, "No syscfg phandle specified\n");
--		pcie->scfg = NULL;
--		return ret;
--	}
--
--	if (of_property_read_u32_array(dev->of_node,
--				       "fsl,pcie-scfg", index, 2)) {
--		pcie->scfg = NULL;
--		return -EINVAL;
--	}
--	pcie->index = index[1];
--
--	dw_pcie_setup_rc(pp);
--
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--	ls_pcie_fix_class(pcie);
--	ls_pcie_clear_multifunction(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--
--	ls_pcie_drop_msg_tlp(pcie);
--
--	return 0;
--}
--
- static int ls_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
-@@ -176,6 +140,35 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- 
-+static int ls1021_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	struct device *dev = pci->dev;
-+	u32 index[2];
-+	int ret;
-+
-+	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-+						     "fsl,pcie-scfg");
-+	if (IS_ERR(pcie->scfg)) {
-+		ret = PTR_ERR(pcie->scfg);
-+		dev_err(dev, "No syscfg phandle specified\n");
-+		pcie->scfg = NULL;
-+		return ret;
-+	}
-+
-+	if (of_property_read_u32_array(dev->of_node,
-+				       "fsl,pcie-scfg", index, 2)) {
-+		pcie->scfg = NULL;
-+		return -EINVAL;
-+	}
-+	pcie->index = index[1];
-+
-+	ls_pcie_host_init(pp);
-+
-+	return 0;
-+}
-+
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 				 struct msi_controller *chip)
- {
--- 
-2.14.1
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIzyNUgNTozMA0KPiBUbzogWi5xLiBIb3Ug
+PHpoaXFpYW5nLmhvdUBueHAuY29tPg0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
+bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUu
+Y29tOyByb2JoK2R0QGtlcm5lbC5vcmc7IE1pbmdodWFuIExpYW4NCj4gPG1pbmdodWFuLkxpYW5A
+ZnJlZXNjYWxlLmNvbT47IE1pbmdrYWkgSHUgPG1pbmdrYWkuaHVAZnJlZXNjYWxlLmNvbT47DQo+
+IFJveSBaYW5nIDx0aWUtZmVpLnphbmdAZnJlZXNjYWxlLmNvbT4NCj4gU3ViamVjdDogUmU6IFtQ
+QVRDSF0gUENJOiBsYXllcnNjYXBlOiBBZGQgc3VwcG9ydCBmb3IgbHMyMDg4YSBhbmQgbHMxMDg4
+YQ0KPiANCj4gWytjYyBNaW5naHVhbiwgTWluZ2thaSwgUm95XQ0KPiANCj4gT24gVGh1LCBKdWwg
+MDYsIDIwMTcgYXQgMDU6Mzk6NDRQTSArMDgwMCwgWmhpcWlhbmcgSG91IHdyb3RlOg0KPiA+IEZy
+b206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4NCj4gPiBUaGUgbHMx
+MDg4YSBhbmQgbHMyMDg4YSBoYXMgdGhlIHNhbWUgUENJZSBjb250cm9sbGVyLCBzbyB0aGUgbHMx
+MDg4YQ0KPiA+IHdpbGwgcmV1c2UgdGhlIGxzMjA4OGEncyBwY2llIGNvbXBhdGlibGUuDQo+ID4N
+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0K
+PiA+IC0tLQ0KPiA+ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVy
+c2NhcGUtcGNpLnR4dCB8IDEgKw0KPiA+ICBkcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUu
+YyAgICAgICAgICAgICAgICAgICAgICAgICB8IDkNCj4gKysrKysrKysrDQo+ID4gIDIgZmlsZXMg
+Y2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL0RvY3VtZW50
+YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ID4gYi9E
+b2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0K
+PiA+IGluZGV4IGVlMWM3MmQ1Li5jYjczNWUxIDEwMDY0NA0KPiA+IC0tLSBhL0RvY3VtZW50YXRp
+b24vZGV2aWNldHJlZS9iaW5kaW5ncy9wY2kvbGF5ZXJzY2FwZS1wY2kudHh0DQo+ID4gKysrIGIv
+RG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQN
+Cj4gPiBAQCAtMTUsNiArMTUsNyBAQCBSZXF1aXJlZCBwcm9wZXJ0aWVzOg0KPiA+ICAtIGNvbXBh
+dGlibGU6IHNob3VsZCBjb250YWluIHRoZSBwbGF0Zm9ybSBpZGVudGlmaWVyIHN1Y2ggYXM6DQo+
+ID4gICAgICAgICAgImZzbCxsczEwMjFhLXBjaWUiLCAic25wcyxkdy1wY2llIg0KPiA+ICAgICAg
+ICAgICJmc2wsbHMyMDgwYS1wY2llIiwgImZzbCxsczIwODVhLXBjaWUiLCAic25wcyxkdy1wY2ll
+Ig0KPiA+ICsgICAgICAgICJmc2wsbHMyMDg4YS1wY2llIiwgImZzbCxsczEwODhhLXBjaWUiDQo+
+IA0KPiBZb3UgYWRkICJmc2wsbHMxMDg4YS1wY2llIiBoZXJlLCBidXQgbm90IGluIHRoZSBsc19w
+Y2llX29mX21hdGNoW10gdGFibGUgaW4gdGhlDQo+IGRyaXZlciwgc28gSSBkb24ndCB0aGluayB0
+aGlzIHdpbGwgYWN0dWFsbHkgbWFrZSB0aGUgZHJpdmVyIGNsYWltIGxzMTA4OGEgZGV2aWNlcywN
+Cj4gd2lsbCBpdD8NCg0KSSBtZWFuIHRoZSBsczEwODhhIHBjaWUgRFQgbm9kZXMgd2lsbCB1c2Ug
+dGhlICJmc2wsbHMyMDg4YS1wY2llIiB0b28sIHNvIEkgZGlkbid0IGFkZCBhbiBlbnRyeSBmb3Ig
+bHMxMDg4YSBwY2llIHRvIGxzX3BjaWVfb2ZfbWF0Y2hbXS4NCklzIGl0IHJlYXNvbmFibGU/IE9y
+IGl0J3MgYmV0dGVyIHRvIGFkZCAiZnNsLGxzMTA4OGEtcGNpZSIgdG8gbHNfcGNpZV9vZl9tYXRj
+aFtdLCB0aGVuIGxzMTA4OGEgcGNpZSBEVCBub2RlcyB1c2UgdGhlIGNvbXBhdGlibGUgc3RyaW5n
+ICJmc2wsbHMxMDg4YS1wY2llIj8NCg0KPiBJJ20gYWxzbyB3YWl0aW5nIGZvciBhbiBhY2sgZnJv
+bSB0aGUgbGF5ZXJzY2FwZSBtYWludGFpbmVycyAoYWRkZWQgdG8gY2MgbGlzdCkuDQo+IA0KPiA+
+ICAgICAgICAgICJmc2wsbHMxMDQ2YS1wY2llIg0KPiA+ICAtIHJlZzogYmFzZSBhZGRyZXNzZXMg
+YW5kIGxlbmd0aHMgb2YgdGhlIFBDSWUgY29udHJvbGxlcg0KPiA+ICAtIGludGVycnVwdHM6IEEg
+bGlzdCBvZiBpbnRlcnJ1cHQgb3V0cHV0cyBvZiB0aGUgY29udHJvbGxlci4gTXVzdA0KPiA+IGNv
+bnRhaW4gYW4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+
+ID4gYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IGluZGV4IDliZWQzY2Qu
+LjBkZjgxODkgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBl
+LmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IEBAIC0y
+MzksMTIgKzIzOSwyMSBAQCBzdGF0aWMgc3RydWN0IGxzX3BjaWVfZHJ2ZGF0YSBsczIwODBfZHJ2
+ZGF0YSA9IHsNCj4gPiAgCS5kd19wY2llX29wcyA9ICZkd19sc19wY2llX29wcywNCj4gPiAgfTsN
+Cj4gPg0KPiA+ICtzdGF0aWMgc3RydWN0IGxzX3BjaWVfZHJ2ZGF0YSBsczIwODhfZHJ2ZGF0YSA9
+IHsNCj4gPiArCS5sdXRfb2Zmc2V0ID0gMHg4MDAwMCwNCj4gPiArCS5sdHNzbV9zaGlmdCA9IDAs
+DQo+ID4gKwkubHV0X2RiZyA9IDB4NDA3ZmMsDQo+ID4gKwkub3BzID0gJmxzX3BjaWVfaG9zdF9v
+cHMsDQo+ID4gKwkuZHdfcGNpZV9vcHMgPSAmZHdfbHNfcGNpZV9vcHMsDQo+ID4gK307DQo+ID4g
+Kw0KPiA+ICBzdGF0aWMgY29uc3Qgc3RydWN0IG9mX2RldmljZV9pZCBsc19wY2llX29mX21hdGNo
+W10gPSB7DQo+ID4gIAl7IC5jb21wYXRpYmxlID0gImZzbCxsczEwMjFhLXBjaWUiLCAuZGF0YSA9
+ICZsczEwMjFfZHJ2ZGF0YSB9LA0KPiA+ICAJeyAuY29tcGF0aWJsZSA9ICJmc2wsbHMxMDQzYS1w
+Y2llIiwgLmRhdGEgPSAmbHMxMDQzX2RydmRhdGEgfSwNCj4gPiAgCXsgLmNvbXBhdGlibGUgPSAi
+ZnNsLGxzMTA0NmEtcGNpZSIsIC5kYXRhID0gJmxzMTA0Nl9kcnZkYXRhIH0sDQo+ID4gIAl7IC5j
+b21wYXRpYmxlID0gImZzbCxsczIwODBhLXBjaWUiLCAuZGF0YSA9ICZsczIwODBfZHJ2ZGF0YSB9
+LA0KPiA+ICAJeyAuY29tcGF0aWJsZSA9ICJmc2wsbHMyMDg1YS1wY2llIiwgLmRhdGEgPSAmbHMy
+MDgwX2RydmRhdGEgfSwNCj4gPiArCXsgLmNvbXBhdGlibGUgPSAiZnNsLGxzMjA4OGEtcGNpZSIs
+IC5kYXRhID0gJmxzMjA4OF9kcnZkYXRhIH0sDQo+ID4gIAl7IH0sDQo+ID4gIH07DQo+ID4NCj4g
+PiAtLQ0KPiA+IDIuMS4wLjI3Lmc5NmRiMzI0DQo+ID4NCj4gPg0KPiA+IF9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+ID4gbGludXgtYXJtLWtlcm5lbCBt
+YWlsaW5nIGxpc3QNCj4gPiBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4g
+PiBodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1r
+ZXJuZWwNCg0KVGhhbmtzLA0KWmhpcWlhbmcNCg0KX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgt
+YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
+L21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
