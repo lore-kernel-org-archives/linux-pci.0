@@ -1,110 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59787 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752703AbdHKMbU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Aug 2017 08:31:20 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Zheng, Lv" <lv.zheng@intel.com>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-Date: Fri, 11 Aug 2017 14:23:00 +0200
-Message-ID: <3677056.OS19FbOdkF@aspire.rjw.lan>
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF09085@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <5185778.X36DhrMnGV@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF09085@SHSMSX101.ccr.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from ale.deltatee.com ([207.54.116.67]:41534 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751746AbdHCSUD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 14:20:03 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  3 Aug 2017 12:19:39 -0600
+Message-Id: <20170803181954.4154-1-logang@deltatee.com>
+Subject: [PATCH v4 00/15] Switchtec NTB Support
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, August 11, 2017 7:40:56 AM CEST Zheng, Lv wrote:
-> Hi, Rafael
-> 
-> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > 
-> > On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
-> > > Hi, Rafael
-> > >
-> > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > > >
-> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > >
-> > > > In some cases GPEs are already active when they are enabled by
-> > > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
-> > > > on the result of handling the events signaled by them, so the
-> > > > events should not be discarded (which is what happens currently) and
-> > > > they should be handled as soon as reasonably possible.
-> > > >
-> > > > For this reason, modify acpi_ev_initialize_gpe_block() to
-> > > > dispatch GPEs with the status flag set in-band right after
-> > > > enabling them.
-> > >
-> > > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
-> > > right after enabling an GPE. So there are 2 conditions related:
-> > > 1. GPE is enabled for the first time.
-> > > 2. GPE is initialized.
-> > >
-> > > And we need to make sure that before acpi_update_all_gpes() is invoked,
-> > > all GPE EN bits are actually disabled.
-> > 
-> > But we don't do it today, do we?
-> 
-> We don't do that.
-> 
-> > 
-> > And still calling _dispatch() should not be incorrect even if the GPE
-> > has been enabled already at this point.  Worst case it just will
-> > queue up the execution of _Lxx/_Exx which may or may not do anything
-> > useful.
-> > 
-> > And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
-> > will block on it if run concurrently and we've checked the status, so
-> > we know that the GPE *should* be dispatched, so I sort of fail to see
-> > the problem.
-> 
-> There is another problem related:
-> ACPICA clears GPEs before enabling it.
-> This is proven to be wrong, and we have to fix it:
-> https://bugzilla.kernel.org/show_bug.cgi?id=196249
-> 
-> without fixing this issue, in this solution, we surely need to save the
-> GPE STS bit before incrementing GPE reference count, and poll it according
-> to the saved STS bit. Because if we poll it after enabling, STS bit will
-> be wrongly cleared.
+Changes since v3:
 
-I'm not sure if I understand you correctly, but why would we poll it?
+- Rebased onto the Jon's ntb branch that contains one of the patches
+  that was in v3
+- Various spelling and commit log mistakes noticed by Bjorn
+- Renamed switchtec_ntb to ntb_hw_switchtec per Dave's suggestion
+- Fixed a number of code nits pointed out by Jon
 
-In the $subject patch the status is checked and then
-acpi_ev_add_gpe_reference() is called to add a reference to the GPE.
+--
 
-If this is the first reference (which will be the case in the majority
-of cases), acpi_ev_enable_gpe() will be called and that will clear the
-status.
+Changes since v2:
 
-Then, acpi_ev_gpe_dispatch() is called if the status was set and that
-itself doesn't check the status.  It disables the GPE upfront (so the
-status doesn't matter from now on until the GPE is enabled again) and
-clears the status unconditionally if the GPE is edge-triggered.  This
-means that for edge-triggered GPEs the clearing of the status by
-acpi_ev_enable_gpe() doesn't matter here.
+- Reordered the ntb_test link patch per Allen
+- Removed an extra call to switchtec_ntb_init_mw
+- Fixed a typo in the switchtec.txt documentation.
 
-For level-triggered GPEs the status is not cleared by acpi_ev_gpe_dispatch()
-itself, but _Lxx is executed (again, without checking the status) and
-finally the status is cleared by acpi_ev_finish_gpe() anyway, so we
-end up with cleared status no matter what (and that before re-enabling
-the GPE).  End even if _Lxx itself checked the status (but honestly why
-would it?), then this is a level-triggered GPE, so it will re-trigger
-anyway if not handled this time.
+--
 
-So it looks like the fact that acpi_ev_enable_gpe() clears the status before
-enabling the GPE doesn't matter for this patch, although it may matter in
-general, but that is a different (and somewhat related) issue.
+Changes since v1:
 
-Thanks,
-Rafael
+- Rebased onto latest ntb-next branch (with v4.13-rc1)
+- Reworked ntb_mw_count() function so that it can be called all the
+  time (per discussion with Allen)
+- Various spelling and formatting cleanups from Bjorn
+- Added request_module() call such that the NTB module is automatically
+  loaded when appropriate hardware exists.
+
+--
+
+Changes since the rfc:
+
+- Rebased on ntb-next
+- Switched ntb_part_op to use sleep instead of delay
+- Dropped a number of useless dbg __func__ prints
+- Went back to the dynamic instead of the static class
+- Swapped the notifier block for a simple callback
+- Modified the new ntb api so that a couple functions with pidx
+  now must be called after link up. Per our discussion on the list.
+
+--
+
+This patchset implements Non-Transparent Bridge (NTB) support for the
+Microsemi Switchtec series of switches. We're looking for some
+review from the community at this point but hope to get it upstreamed
+for v4.14.
+
+Switchtec NTB support is configured over the same function and bar
+as the management endpoint. Thus, the new driver hooks into the
+management driver which we had merged in v4.12. We use the class
+interface API to register an NTB device for every switchtec device
+which supports NTB (not all do).
+
+The Switchtec hardware supports doorbells, memory windows and messages.
+Seeing there is no native scratchpad support, 128 spads are emulated
+through the use of a pre-setup memory window. The switch has 64
+doorbells which are shared between the two partitions and a
+configurable set of memory windows. While the hardware supports more
+than 2 partitions, this driver only supports the first two seeing
+the current NTB API only supports two hosts.
+
+The driver has been tested with ntb_netdev and fully passes the
+ntb_test script.
+
+This patchset is based off of ntb-next and can be found in this
+git repo:
+
+https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb_v4
+
+Logan Gunthorpe (15):
+  NTB: switchtec: Move structure definitions into a common header
+  NTB: switchtec: Export class symbol for use in upper layer driver
+  NTB: switchtec: Add NTB hardware register definitions
+  NTB: switchtec: Add link event notifier callback
+  NTB: Ensure ntb_mw_get_align() is only called when the link is up
+  NTB: Add check and comment for link up to mw_count() and
+    mw_get_align()
+  NTB: switchtec_ntb: Introduce initial NTB driver
+  NTB: switchtec_ntb: Initialize hardware for memory windows
+  NTB: switchtec_ntb: Initialize hardware for doorbells and messages
+  NTB: switchtec_ntb: Add skeleton NTB driver
+  NTB: switchtec_ntb: Add link management
+  NTB: switchtec_ntb: Implement doorbell registers
+  NTB: switchtec_ntb: Implement scratchpad registers
+  NTB: switchtec_ntb: Add memory window support
+  NTB: switchtec_ntb: Update switchtec documentation with notes for NTB
+
+ Documentation/switchtec.txt            |   12 +
+ MAINTAINERS                            |    2 +
+ drivers/ntb/hw/Kconfig                 |    1 +
+ drivers/ntb/hw/Makefile                |    1 +
+ drivers/ntb/hw/mscc/Kconfig            |    9 +
+ drivers/ntb/hw/mscc/Makefile           |    1 +
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1216 ++++++++++++++++++++++++++++++++
+ drivers/ntb/ntb_transport.c            |   20 +-
+ drivers/ntb/test/ntb_perf.c            |   18 +-
+ drivers/ntb/test/ntb_tool.c            |    6 +-
+ drivers/pci/switch/switchtec.c         |  316 ++-------
+ include/linux/ntb.h                    |   11 +-
+ include/linux/switchtec.h              |  373 ++++++++++
+ 13 files changed, 1703 insertions(+), 283 deletions(-)
+ create mode 100644 drivers/ntb/hw/mscc/Kconfig
+ create mode 100644 drivers/ntb/hw/mscc/Makefile
+ create mode 100644 drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+ create mode 100644 include/linux/switchtec.h
+
+--
+2.11.0
