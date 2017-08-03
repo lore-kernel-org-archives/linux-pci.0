@@ -1,127 +1,153 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:51702 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751231AbdHCOYn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 10:24:43 -0400
-Subject: Re: MSI-X support with Synopsys DesignWare IP core driver
-To: Jingoo Han <jingoohan1@gmail.com>,
-        'Bjorn Helgaas' <bhelgaas@google.com>,
-        'vidya sagar' <sagar.tv@gmail.com>
-CC: 'Lucas Stach' <l.stach@pengutronix.de>,
-        'Pratyush Anand' <pratyush.anand@gmail.com>,
-        <linux-pci@vger.kernel.org>, 'Joao Pinto' <Joao.Pinto@synopsys.com>
-References: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com>
- <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
- <000401d30bc2$7cfdb8c0$76f92a40$@gmail.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <13b0031b-0db9-21d9-733f-0140a737c145@synopsys.com>
-Date: Thu, 3 Aug 2017 15:24:32 +0100
-MIME-Version: 1.0
-In-Reply-To: <000401d30bc2$7cfdb8c0$76f92a40$@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from ale.deltatee.com ([207.54.116.67]:41653 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751987AbdHCSUK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 14:20:10 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  3 Aug 2017 12:19:52 -0600
+Message-Id: <20170803181954.4154-14-logang@deltatee.com>
+In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
+References: <20170803181954.4154-1-logang@deltatee.com>
+Subject: [PATCH v4 13/15] NTB: switchtec_ntb: Implement scratchpad registers
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Seeing there is no dedicated hardware for this, we simply add
+these as entries in the shared memory window. Thus, we could support
+any number of them but 128 seems like enough, for now.
 
-Hi,
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
+---
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 75 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 73 insertions(+), 2 deletions(-)
 
-Às 8:06 PM de 8/2/2017, Jingoo Han escreveu:
-> On Tuesday, August 1, 2017 1:13 PM, Bjorn Helgaas wrote:
->>
->> This was a multi-part message with HTML, which I think causes the
->> mailing list to automatically drop it.  Please post this as plain text
->> with a changelog and signed-off-by and copy the DesignWare maintainers
->> (Jingoo and Joao, cc'd).
->>
->> On Tue, Aug 1, 2017 at 12:28 AM, vidya sagar <sagar.tv@gmail.com> wrote:
->>> Hi,
->>> As you might be knowing it already, in the current pcie-designware.c ,
->> there
->>> is no support for MSI-X
->>> Although there is no native support from Synopsys IP as well to have
->> 2048
->>> interrupts, we can at least have basic support to get MSI-X also
->> allocated
->>> (along with MSI) as many as possible in the system at that point. Of
->> course,
->>> all these interrupts will have the same address to which downstream
->> devices
->>> need to initiate mem-write transactions. Though it doesn't leverage one
->> of
->>> the advantages of having MSI-X over MSI, it at least avoids drivers
->> falling
->>> back to legacy interrupts when the card doesn't support MSI. Some of the
->>> Intel NVMe cards are examples here. Legacy interrupt being a shared
->>> interrupt, it unnecessarily triggers all other shared ISRs to be called
->>> whenever there is a legacy interrupt.
->>>
->>> I have the following patch which enables MSI-X support also. Would like
->> to
->>> have your comments on this.
-> 
-> Hi all,
-> 
-> As far as I know, in order to support MSI-X with Synopsys IP, additional
-> controller is required. For example, GICv2m can be used to do so.
-> 
-> In addition, I think that some HACK patches can be used to support some
-> MSI-X only PCI cards. In this case, we cannot take advantage of MSI-X really.
-> Nevertheless, I am not sure that the following patch is safe.
-> 
-> Best regards,
-> Jingoo Han
-
-I submitted a patch a few weeks ago with the goal of updating the
-pcie-designware's interrupt API and adding MSIX. It is currently on-hold since
-we are trying to find a solution for the Keystone SoC specific driver that its
-unique way of handling msi.
-Because of this I suggest that this patch is not applied and I suggest that we
-solve the Keystone challenge and then follow to the pcie-designware interrupt
-update.
-
-Thanks,
-Joao
-
-> 
->>>
->>>
->>> diff --git a/drivers/pci/host/pcie-designware.c
->>> b/drivers/pci/host/pcie-designware.c
->>> index af8f6e9..9086253 100644
->>> --- a/drivers/pci/host/pcie-designware.c
->>> +++ b/drivers/pci/host/pcie-designware.c
->>> @@ -406,9 +406,6 @@ static int dw_msi_setup_irq(struct msi_controller
->> *chip,
->>> struct pci_dev *pdev,
->>>      int irq, pos;
->>>      struct pcie_port *pp = pdev->bus->sysdata;
->>>
->>> -    if (desc->msi_attrib.is_msix)
->>> -        return -EINVAL;
->>> -
->>>      irq = assign_irq(1, desc, &pos);
->>>      if (irq < 0)
->>>          return irq;
->>> @@ -426,9 +423,16 @@ static int dw_msi_setup_irqs(struct msi_controller
->>> *chip, struct pci_dev *pdev,
->>>      struct msi_desc *desc;
->>>      struct pcie_port *pp = pdev->bus->sysdata;
->>>
->>> -    /* MSI-X interrupts are not supported */
->>> -    if (type == PCI_CAP_ID_MSIX)
->>> -        return -EINVAL;
->>> +    if (type == PCI_CAP_ID_MSIX) {
->>> +        for_each_pci_msi_entry(desc, pdev) {
->>> +            irq = arch_setup_msi_irq(pdev, desc);
->>> +            if (irq < 0)
->>> +                return irq;
->>> +            if (irq > 0)
->>> +                return -ENOSPC;
->>> +        }
->>> +        return 0;
->>> +    }
->>>
->>>      WARN_ON(!list_is_singular(&pdev->dev.msi_list));
->>>      desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
->>>
-> 
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index 4a6125d2f305..205bd9481122 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -67,6 +67,7 @@ struct shared_mw {
+ 	u32 link_sta;
+ 	u32 partition_id;
+ 	u64 mw_sizes[MAX_MWS];
++	u32 spad[128];
+ };
+ 
+ #define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
+@@ -455,22 +456,90 @@ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ 
+ static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return ARRAY_SIZE(sndev->self_shared->spad);
+ }
+ 
+ static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return 0;
++
++	if (!sndev->self_shared)
++		return 0;
++
++	return sndev->self_shared->spad[idx];
+ }
+ 
+ static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (idx < 0 || idx >= ARRAY_SIZE(sndev->self_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->self_shared)
++		return -EIO;
++
++	sndev->self_shared->spad[idx] = val;
++
+ 	return 0;
+ }
+ 
++static u32 switchtec_ntb_peer_spad_read(struct ntb_dev *ntb, int pidx,
++					int sidx)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return 0;
++
++	if (!sndev->peer_shared)
++		return 0;
++
++	return ioread32(&sndev->peer_shared->spad[sidx]);
++}
++
+ static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
+ 					 int sidx, u32 val)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	if (sidx < 0 || sidx >= ARRAY_SIZE(sndev->peer_shared->spad))
++		return -EINVAL;
++
++	if (!sndev->peer_shared)
++		return -EIO;
++
++	iowrite32(val, &sndev->peer_shared->spad[sidx]);
++
++	return 0;
++}
++
++static int switchtec_ntb_peer_spad_addr(struct ntb_dev *ntb, int pidx,
++					int sidx, phys_addr_t *spad_addr)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	if (pidx != NTB_DEF_PEER_IDX)
++		return -EINVAL;
++
++	offset = (unsigned long)&sndev->peer_shared->spad[sidx] -
++		(unsigned long)sndev->stdev->mmio;
++
++	if (spad_addr)
++		*spad_addr = pci_resource_start(ntb->pdev, 0) + offset;
++
+ 	return 0;
+ }
+ 
+@@ -496,7 +565,9 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+ 	.spad_write		= switchtec_ntb_spad_write,
++	.peer_spad_read		= switchtec_ntb_peer_spad_read,
+ 	.peer_spad_write	= switchtec_ntb_peer_spad_write,
++	.peer_spad_addr		= switchtec_ntb_peer_spad_addr,
+ };
+ 
+ static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
+-- 
+2.11.0
