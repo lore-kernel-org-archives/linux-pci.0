@@ -1,50 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39026 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751598AbdHOVfB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Aug 2017 17:35:01 -0400
-Date: Tue, 15 Aug 2017 16:34:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: Re: [PATCH v7 0/3] PCI: xilinx: Optimisation & MIPS support
-Message-ID: <20170815213458.GN32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170815191117.19882-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=Ttdp=7F=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=Ttdp=7F=intel.com=keith.busch@kernel.org>
+Date: Wed, 2 Aug 2017 23:59:24 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pciehp: Enable hot plug capable detection
+Message-ID: <20170803035924.GB13257@localhost.localdomain>
+References: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
+ <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170815191117.19882-1-paul.burton@imgtec.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 12:11:14PM -0700, Paul Burton wrote:
-> This series implements a couple of optimisations around interrupt
-> handling for the Xilinx AXI PCIe Host Bridge IP, then enables building
-> our driver for the MIPS architecture in order to make use of it on the
-> MIPS Boston development board.
+On Wed, Aug 02, 2017 at 12:32:49PM -0500, Bjorn Helgaas wrote:
+> Hi Keith,
 > 
-> The INTD fix was moved out of this series in v7 and is now part of a
-> "PCI: INTx interrupt fixes & cleanup" series which should be applied
-> first in order to avoid hitting the broken INTD interrupt issue on MIPS
-> Boston boards.
+> On Wed, Aug 02, 2017 at 01:15:07AM -0400, Keith Busch wrote:
+> > The PCIe specification ties presence detect change enabling to the hot plug
+> > capable bit in Slot Capabilities. This capability is not mutally exclusive
+> > with attention buttons, so enabing detection should not be tied it.
 > 
-> Applies atop v4.13-rc5, ideally after my "PCI: INTx interrupt fixes &
-> cleanup" series.
+> Can you clarify this a little?
 > 
-> Paul Burton (3):
->   PCI: xilinx: Unify INTx & MSI interrupt decode
->   PCI: xilinx: Don't enable config completion interrupts
->   PCI: xilinx: Allow build on MIPS platforms
+>   - Please include the spec section you're referring to.
 > 
->  drivers/pci/host/Kconfig       |  2 +-
->  drivers/pci/host/pcie-xilinx.c | 53 ++++++++++++++----------------------------
->  2 files changed, 19 insertions(+), 36 deletions(-)
+>   - I'm not sure what "This capability is not ..." refers to.  There
+>     is not a "presence detect change enabling" capability.  I agree
+>     that the "Hot-Plug Capable" bit is independent of the "Attention
+>     Button Present" bit.
+> 
+>   - Slot Control (PCIe r3.1, sec 7.8.10) says PDCE *is permitted* to
+>     be read-only zero if PCI_EXP_SLTCAP_HPC is zero.  It doesn't say
+>     PDCE is *required* to be read-only in that case.
+> 
+> My initial reaction is that it probably makes sense per the spec to
+> enable PDCE unconditionally, but I would want to do some archaeology
+> to figure out why it wasn't that way from the beginning.  There's
+> probably some reason for it being the way it is, so we have to take
+> that into account.  Maybe it works around some flaky presence detect
+> hardware or something.
 
-I tentatively applied these (and the other Xilinx patches) on
-pci/host-xilinx.  I'd like to get maintainer acks for the whole shebang.
+Thanks for the feedback. I can definitely make the commit message better
+if that's the only concern.
 
-See https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-xilinx
+The part of the specification that suggests PDCE is tied to the hotplug
+capable bit is the "Slot Control Register" section in 7.8.10 of PCIe
+Base spec rev4. Specifically:
 
-Bjorn
+  "If the Hot-Plug Capable bit in the Slot Capabilities register is 0b,
+   this bit is permitted to be read-only with a value of 0b"
+
+So this control doesn't do anything if hotplug capable is not set.
+
+The only reference I find on why the code is currently done this way is
+from this thread:
+
+  https://marc.info/?l=linux-kernel&m=138688828930718&w=2
+
+It seems the current behavior was done this way as a hunch more than
+anything emperical.
+
+The problem I'm trying to solve, though, is with a real platform
+that supports hot-add. The reason it is currently broken with Linux
+is because this platform advertises "Attention Button Present" when
+in fact no physical button exists on the platform. Since the kernel
+doesn't enable presence detect change events when attention button
+present is set, we don't get hot-add events. We've been working around
+this by using pciehp_poll_mode=1, but we'd prefer to see this working
+without kernel parameters.
+
+> > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > ---
+> >  drivers/pci/hotplug/pciehp.h     | 1 +
+> >  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+> >  2 files changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> > index 06109d4..610e295 100644
+> > --- a/drivers/pci/hotplug/pciehp.h
+> > +++ b/drivers/pci/hotplug/pciehp.h
+> > @@ -120,6 +120,7 @@ struct controller {
+> >  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+> >  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+> >  #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+> > +#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
+> >  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+> >  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+> >  #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
+> > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> > index 026830a..43a86ed 100644
+> > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > @@ -691,7 +691,7 @@ void pcie_enable_notification(struct controller *ctrl)
+> >  	cmd = PCI_EXP_SLTCTL_DLLSCE;
+> >  	if (ATTN_BUTTN(ctrl))
+> >  		cmd |= PCI_EXP_SLTCTL_ABPE;
+> > -	else
+> > +	if (HP_CAP(ctrl))
+> >  		cmd |= PCI_EXP_SLTCTL_PDCE;
+> >  	if (!pciehp_poll_mode)
+> >  		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
+> > -- 
+> > 2.5.5
+> > 
