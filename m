@@ -1,62 +1,109 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:64895 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752664AbdHRO7y (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:59:54 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Subject: [PATCH 10/18] PCI: dwc: designware: Provide page_size to pci_epc_mem
-Date: Fri, 18 Aug 2017 20:28:02 +0530
-Message-ID: <20170818145810.17649-11-kishon@ti.com>
-In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
-References: <20170818145810.17649-1-kishon@ti.com>
+Received: from mail-dm3nam03on0086.outbound.protection.outlook.com ([104.47.41.86]:55207
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751213AbdHCIkb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 04:40:31 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
+Date: Thu, 3 Aug 2017 16:23:38 +0800
+Message-ID: <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the newly introduced __pci_epc_mem_init instead of pci_epc_mem_init
-to provide page_size to pci_epc_mem. This is in preparation for
-adding EP support to K2G which has a restriction that the
-address region should be either divided into 1MB/2MB/4MB or 8MB
-sizes (Ref: 11.14.4.9.1 Outbound Address Translation in K2G TRM SPRUHY8F
-January 2016 – Revised May 2017).
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Make the ls1021a's host_init reuse layerscape platform's common
+host_init function.
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- drivers/pci/dwc/pcie-designware-ep.c | 3 ++-
- drivers/pci/dwc/pcie-designware.h    | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+V2:
+ - Removed the disable outbound windows code and the remove duplicate class code
+   fixup code from this patch.
 
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-index 398406393f37..e70ebe3b9b6f 100644
---- a/drivers/pci/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -328,7 +328,8 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	if (ret < 0)
- 		epc->max_functions = 1;
+ drivers/pci/dwc/pci-layerscape.c | 54 ++++++++++++++++++++--------------------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 09056a6..3533a8c 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -107,33 +107,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ 	return 1;
+ }
  
--	ret = pci_epc_mem_init(epc, ep->phys_base, ep->addr_size);
-+	ret = __pci_epc_mem_init(epc, ep->phys_base, ep->addr_size,
-+				 ep->page_size);
- 	if (ret < 0) {
- 		dev_err(dev, "Failed to initialize address space\n");
- 		return ret;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index b4d2a89f8e58..714f6f21ea93 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -186,6 +186,7 @@ struct dw_pcie_ep {
- 	struct dw_pcie_ep_ops	*ops;
- 	phys_addr_t		phys_base;
- 	size_t			addr_size;
-+	size_t			page_size;
- 	u8			bar_to_atu[6];
- 	phys_addr_t		*outbound_addr;
- 	unsigned long		ib_window_map;
+-static void ls1021_pcie_host_init(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct ls_pcie *pcie = to_ls_pcie(pci);
+-	struct device *dev = pci->dev;
+-	u32 index[2];
+-
+-	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
+-						     "fsl,pcie-scfg");
+-	if (IS_ERR(pcie->scfg)) {
+-		dev_err(dev, "No syscfg phandle specified\n");
+-		pcie->scfg = NULL;
+-		return;
+-	}
+-
+-	if (of_property_read_u32_array(dev->of_node,
+-				       "fsl,pcie-scfg", index, 2)) {
+-		pcie->scfg = NULL;
+-		return;
+-	}
+-	pcie->index = index[1];
+-
+-	dw_pcie_setup_rc(pp);
+-
+-	ls_pcie_drop_msg_tlp(pcie);
+-}
+-
+ static int ls_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+@@ -160,6 +133,33 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	ls_pcie_drop_msg_tlp(pcie);
++
++	dw_pcie_setup_rc(pp);
++}
++
++static void ls1021_pcie_host_init(struct pcie_port *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct ls_pcie *pcie = to_ls_pcie(pci);
++	struct device *dev = pci->dev;
++	u32 index[2];
++
++	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
++						     "fsl,pcie-scfg");
++	if (IS_ERR(pcie->scfg)) {
++		dev_err(dev, "No syscfg phandle specified\n");
++		pcie->scfg = NULL;
++		return;
++	}
++
++	if (of_property_read_u32_array(dev->of_node,
++				       "fsl,pcie-scfg", index, 2)) {
++		pcie->scfg = NULL;
++		return;
++	}
++	pcie->index = index[1];
++
++	ls_pcie_host_init(pp);
+ }
+ 
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
 -- 
-2.11.0
+2.1.0.27.g96db324
