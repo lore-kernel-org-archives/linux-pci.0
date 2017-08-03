@@ -1,87 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:52846 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751851AbdHQC0L (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 22:26:11 -0400
-From: "Zheng, Lv" <lv.zheng@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: RE: [PATCH 3/3] ACPI / scan: Enable GPEs before scanning the
- namespace
-Date: Thu, 17 Aug 2017 02:25:52 +0000
-Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF0BC6D@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
- <6344941.kJ2o2XerZ0@aspire.rjw.lan>
- <1AE640813FDE7649BE1B193DEA596E886CF0AFE3@SHSMSX101.ccr.corp.intel.com>
- <1868898.NJio3FymBZ@aspire.rjw.lan>
-In-Reply-To: <1868898.NJio3FymBZ@aspire.rjw.lan>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-by2nam01on0040.outbound.protection.outlook.com ([104.47.34.40]:31472
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751200AbdHCIk1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 04:40:27 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv2 3/6] PCI: layerscape: use accessors to enable/disable DBI RO registers' write permission
+Date: Thu, 3 Aug 2017 16:23:37 +0800
+Message-ID: <1501748620-42866-4-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Rafael
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> Subject: Re: [PATCH 3/3] ACPI / scan: Enable GPEs before scanning the namespace
-> 
-> On Tuesday, August 15, 2017 4:12:24 AM CEST Zheng, Lv wrote:
-> > Hi, Rafael
-> >
-> > > From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.kernel.org] On Behalf Of
-> Rafael J.
-> > > Wysocki
-> > > Subject: [PATCH 3/3] ACPI / scan: Enable GPEs before scanning the namespace
-> > >
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >
-> > > On some systems the platform firmware expects GPEs to be enabled
-> > > before the enumeration of devices and if that expectation is not
-> > > met, the systems in question may not boot in some situations.
-> > >
-> > > For this reason, change the initialization ordering of the ACPI
-> > > subsystem to make it enable GPEs before scanning the namespace
-> > > for the first time in order to enumerate devices.
-> > >
-> > > Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > ---
-> > >  drivers/acpi/scan.c |    8 ++++----
-> > >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > >
-> > > Index: linux-pm/drivers/acpi/scan.c
-> > > ===================================================================
-> > > --- linux-pm.orig/drivers/acpi/scan.c
-> > > +++ linux-pm/drivers/acpi/scan.c
-> > > @@ -2139,6 +2139,10 @@ int __init acpi_scan_init(void)
-> > >  			acpi_get_spcr_uart_addr();
-> > >  	}
-> > >
-> > > +	acpi_gpe_apply_masked_gpes();
-> > > +	acpi_update_all_gpes();
-> > > +	acpi_ec_ecdt_start();
-> > > +
-> >
-> > Just for your information.
-> > A recent internal bug reveals that acpi_ec_ecdt_start() should only be
-> > invoked after the enumeration (acpi_ec_add()) for now.
-> > The function contains logics that need to be altered by acpi_ec_add().
-> >
-> > So it seems we can only do less aggressive change by moving the GPE
-> > related 2 lines up.
-> 
-> OK, done.
-> 
-> Please check my linux-next branch and see if that's what it should be.
+Use the accessors instead accessing the DBI read-only write enable
+register directly. And the STRFMR1 is not read-only register, so move it
+out from the write-enable bracket.
 
-I confirmed.
-And refreshed my EC regression fix on top of that with v2 tagged in the subjects.
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V2:
+ - New patch split from patch v1 3/3.
 
-Thanks and best regards
-Lv
+ drivers/pci/dwc/pci-layerscape.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index fd86128..09056a6 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -33,7 +33,6 @@
+ 
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+-#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+ 
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+@@ -155,11 +154,12 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
+-	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
++	dw_pcie_dbi_ro_wr_dis(pci);
++
+ 	ls_pcie_drop_msg_tlp(pcie);
+-	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ }
+ 
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+-- 
+2.1.0.27.g96db324
