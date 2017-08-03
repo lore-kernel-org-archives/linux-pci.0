@@ -1,86 +1,133 @@
-Return-Path: <SRS0=nKW4=7G=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=nKW4=7G=broadcom.com=oza.oza@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+ <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linuxarm@huawei.com>
+Subject: [PATCH v8 0/4] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Thu, 3 Aug 2017 21:44:45 +0800
+Message-ID: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170804132743.GC16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
- <1499310582-21193-2-git-send-email-oza.oza@broadcom.com> <20170802210455.GF20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPcfUFmjg471qmzqQmayNYzfq8Wo7yfHeiEKrj7hkWF=zg@mail.gmail.com>
- <20170803185713.GV20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPcbnVefeVVh3HJd1M+8co+4VMj8HU2zmXMv4K5VGcdjVg@mail.gmail.com>
- <CAMSpPPfOwnevUNui+zUe1bbq655kHQ=u3FyOiRTO5NAo0yWBTg@mail.gmail.com> <20170804132743.GC16580@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Fri, 4 Aug 2017 19:48:53 +0530
-Message-ID: <CAMSpPPch4MTHrVCR=5=R93JWswo4PJbUzC6BPzT1=H87z1aNvQ@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] PCI: iproc: Retry request when CRS returned from EP
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 4, 2017 at 6:57 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Aug 04, 2017 at 11:40:46AM +0530, Oza Oza wrote:
->> On Fri, Aug 4, 2017 at 11:29 AM, Oza Oza <oza.oza@broadcom.com> wrote:
->> > On Fri, Aug 4, 2017 at 12:27 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> >> On Thu, Aug 03, 2017 at 01:50:29PM +0530, Oza Oza wrote:
->> >>> On Thu, Aug 3, 2017 at 2:34 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> >>> > On Thu, Jul 06, 2017 at 08:39:41AM +0530, Oza Pawandeep wrote:
-> ...
->
->> >>> > What about CRS status for a config *write*?  There's nothing here to
->> >>> > reissue those.
->> >>>
->> >>> No, we do not need there, because read will always be issued first
->> >>> before any write.
->> >>> so we do not need to implement write.
->> >>
->> >> How so?  As far as I know, there's nothing in the spec that requires
->> >> the first config access to a device to be a read, and there are
->> >> reasons why we might want to do a write first:
->> >> http://lkml.kernel.org/r/5952D144.8060609@oracle.com
->> >>
->> >
->> > I understand your point here. my thinking was during enumeration
->> > process first read will always be issued
->> > such as vendor/device id.
->> > I will extend this implementation for write.
->>
->> I am sorry, but I just released that, it is not possible to implement
->> retry for write.
->> the reason is:
->>
->> we have indirect way of accessing configuration space access.
->> for e.g.
->> for config write:
->>
->> A) write to to addr register.
->> B) write to data register
->>
->> now above those 2 registers are implemented by host bridge (not in
->> PCIe core IP).
->> there is no way of knowing for software, if write has to be retried.
->>
->> e.g. I can not read data register (step B) to check if write was successful.
->> I have double checked this with internal ASIC team here.
->
-> The bottom line is that you're saying this hardware cannot correctly
-> support CRS.  Maybe the workaround you're proposing will work in many
-> cases, but we need to acknowledge in the code and changelog that there
-> are issues we might trip over.
+Some devices have problems with Transaction Layer Packets with the Relaxed
+Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+devices with Relaxed Ordering issues, and a use of this new flag by the
+cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+Ports.
 
-yes this is precisely right.
+It's been years since I've submitted kernel.org patches, I appolgise for the
+almost certain submission errors.
 
-1) I will have to add notes in the code as you are suggesting.
-2) I will add documentation notes in the Change-log.
+v2: Alexander point out that the v1 was only a part of the whole solution,
+    some platform which has some issues could use the new flag to indicate
+    that it is not safe to enable relaxed ordering attribute, then we need
+    to clear the relaxed ordering enable bits in the PCI configuration when
+    initializing the device. So add a new second patch to modify the PCI
+    initialization code to clear the relaxed ordering enable bit in the
+    event that the root complex doesn't want relaxed ordering enabled.
 
-But even going forward, we will still have one more separate register
-in host bridge,
-which will be dedicated to CRS. but again to a very limited extent.
-because CRS software visibility bit will not have any effect, (e.g. HW
-is not going to consider it).
+    The third patch was base on the v1's second patch and only be changed
+    to query the relaxed ordering enable bit in the PCI configuration space
+    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
+    set.
 
-Regards,
-Oza.
+    This version didn't plan to drop the defines for Intel Drivers to use the
+    new checking way to enable relaxed ordering because it is not the hardest
+    part of the moment, we could fix it in next patchset when this patches
+    reach the goal.
+
+v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
+    If a PCIe device didn't enable the relaxed ordering attribute default,
+    we should not do anything in the PCIe configuration, otherwise we
+    should check if any of the devices above us do not support relaxed
+    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+    the result if we get a return that indicate that the relaxed ordering
+    is not supported we should update our device to disable relaxed ordering
+    in configuration space. If the device above us doesn't exist or isn't
+    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+    because we are probably running in a guest.
+
+v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
+    according John's suggestion, and modify the description, use the true/false
+    as the return value.
+
+    We shouldn't enable relaxed ordering attribute by the setting in the root
+    complex configuration space for PCIe device, so fix it for cxgb4.
+
+    Fix some format issues.
+
+v5: Removed the unnecessary code for some function which only return the bool
+    value, and add the check for VF device.
+
+    Make this patch set base on 4.12-rc5.
+
+v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
+
+v7: The cxgb4 drivers will enable the PCIe Capability Device Control[Relaxed
+    Ordering Enable] in PCI Probe() routine, this will break our current
+    solution for some platform which has problematic when enable the relaxed
+    ordering attribute. According to the latest recommendations, remove the
+    enable_pcie_relaxed_ordering(), although it could not cover the Peer-to-Peer
+    scene, but we agree to leave this problem until we really trigger it.
+
+    Make this patch set base on 4.12 release version.
+
+v8: Modify the change log for first 2 patches to make it more reasonable, and
+    add the Acked-by from Alex and Ashok.
+
+    Add a new patch to enable the Relaxed Ordering Attribute for cxgb4vf driver.
+
+    Make this patch set base on 4.13-rc2.
+
+Casey Leedom (3):
+  PCI: Add new PCIe Fabric End Node flag,
+    PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+  net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+
+Ding Tianhong (1):
+  PCI: Disable PCIe Relaxed Ordering if unsupported
+
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    | 23 +++++++++----
+ drivers/net/ethernet/chelsio/cxgb4/sge.c           |  5 +--
+ drivers/net/ethernet/chelsio/cxgb4vf/adapter.h     |  1 +
+ .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    | 18 ++++++++++
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |  3 ++
+ drivers/pci/pci.c                                  | 29 +++++++++++++++++
+ drivers/pci/probe.c                                | 37 +++++++++++++++++++++
+ drivers/pci/quirks.c                               | 38 ++++++++++++++++++++++
+ include/linux/pci.h                                |  4 +++
+ 10 files changed, 151 insertions(+), 8 deletions(-)
+
+-- 
+1.8.3.1
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
