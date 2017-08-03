@@ -1,63 +1,192 @@
-Return-Path: <SRS0=jmEW=7E=gmail.com=zuban32s@kernel.org>
-Return-Path: <SRS0=jmEW=7E=gmail.com=zuban32s@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170802223547.GP20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1500387145-4216-1-git-send-email-zuban32s@gmail.com> <20170802223547.GP20308@bhelgaas-glaptop.roam.corp.google.com>
-From: Alexander Bezzubikov <zuban32s@gmail.com>
-Date: Thu, 3 Aug 2017 01:48:51 +0300
-Message-ID: <CAKSfGUA_1ccDBaChXaWwOKthq-okkAmYADpWxQXQ67DG6SjgYA@mail.gmail.com>
-Subject: Re: [PATCH] pci: shpchp: set the bridge busmaster if MSI are enabled
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Marcel Apfelbaum <marcel@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:41627 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751982AbdHCSUJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 14:20:09 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  3 Aug 2017 12:19:51 -0600
+Message-Id: <20170803181954.4154-13-logang@deltatee.com>
+In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
+References: <20170803181954.4154-1-logang@deltatee.com>
+Subject: [PATCH v4 12/15] NTB: switchtec_ntb: Implement doorbell registers
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2017-08-03 1:35 GMT+03:00 Bjorn Helgaas <helgaas@kernel.org>:
-> On Tue, Jul 18, 2017 at 05:12:25PM +0300, Aleksandr Bezzubikov wrote:
->> An MSI-based SHPC built in PCI bridges can configure hotplugged devices
->> only if they notify the bridge with MSI.
->
-> I think you're referring to the events listed in SHPC r1.0, sec 4.7.3,
-> table 4-24, right?  Attention Button Press, Isolated Power Fault, Card
-> Presence Change, MRS Sensor Change, etc?
->
-> So IIUC, this is really about the bridge itself generating MSIs about
-> slot-related events, not the hot-added devices generating MSIs.
->
+Pretty straightforward implementation of doorbell registers.
+The shift and mask were setup in an earlier patch and this just hooks
+up the appropriate portion of the IDB register as the local doorbells
+and the opposite portion of ODB as the peer doorbells. The DB mask is
+protected by a spinlock to avoid concurrent read-modify-write accesses.
 
-You're right, it's definitely about the bridge's built-in SHPC
-that generates MSIs.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Stephen Bates <sbates@raithlin.com>
+Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
+---
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 89 ++++++++++++++++++++++++++++++++--
+ 1 file changed, 85 insertions(+), 4 deletions(-)
 
-> I agree this patch makes sense, I'm just trying to clarify the
-> changelog.
->
->> But they can't trigger interrupt without the bridge being busmaster,
->> that's why it should be enabled.
->>
->> Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
->> ---
->>  drivers/pci/hotplug/shpchp_hpc.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
->> index de0ea47..e5824c7 100644
->> --- a/drivers/pci/hotplug/shpchp_hpc.c
->> +++ b/drivers/pci/hotplug/shpchp_hpc.c
->> @@ -1062,6 +1062,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
->>               if (rc) {
->>                       ctrl_info(ctrl, "Can't get msi for the hotplug controller\n");
->>                       ctrl_info(ctrl, "Use INTx for the hotplug controller\n");
->> +             } else {
->> +                     pci_set_master(pdev);
->>               }
->>
->>               rc = request_irq(ctrl->pci_dev->irq, shpc_isr, IRQF_SHARED,
->> --
->> 2.7.4
->>
-
-
-
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index b477a8915245..4a6125d2f305 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -98,6 +98,9 @@ struct switchtec_ntb {
+ 	int db_shift;
+ 	int db_peer_shift;
+ 
++	/* synchronize rmw access of db_mask and hw reg */
++	spinlock_t db_mask_lock;
++
+ 	int nr_direct_mw;
+ 	int nr_lut_mw;
+ 	int direct_mw_to_bar[MAX_DIRECT_MW];
+@@ -338,41 +341,115 @@ static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
+ 
+ static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
+ {
+-	return 0;
++	return 1;
+ }
+ 
+ static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
+ {
+-	return 0;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_vector < 0 || db_vector > 1)
++		return 0;
++
++	return sndev->db_valid_mask;
+ }
+ 
+ static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
+ {
+-	return 0;
++	u64 ret;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	ret = ioread64(&sndev->mmio_self_dbmsg->idb) >> sndev->db_shift;
++
++	return ret & sndev->db_valid_mask;
+ }
+ 
+ static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_shift, &sndev->mmio_self_dbmsg->idb);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++
++	sndev->db_mask |= db_bits << sndev->db_shift;
++	iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
+ {
++	unsigned long irqflags;
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	if (db_bits & ~sndev->db_valid_mask)
++		return -EINVAL;
++
++	spin_lock_irqsave(&sndev->db_mask_lock, irqflags);
++
++	sndev->db_mask &= ~(db_bits << sndev->db_shift);
++	iowrite64(~sndev->db_mask, &sndev->mmio_self_dbmsg->idb_mask);
++
++	spin_unlock_irqrestore(&sndev->db_mask_lock, irqflags);
++
++	return 0;
++}
++
++static u64 switchtec_ntb_db_read_mask(struct ntb_dev *ntb)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	return (sndev->db_mask >> sndev->db_shift) & sndev->db_valid_mask;
++}
++
++static int switchtec_ntb_peer_db_addr(struct ntb_dev *ntb,
++				      phys_addr_t *db_addr,
++				      resource_size_t *db_size)
++{
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++	unsigned long offset;
++
++	offset = (unsigned long)sndev->mmio_self_dbmsg->odb -
++		(unsigned long)sndev->stdev->mmio;
++
++	offset += sndev->db_shift / 8;
++
++	if (db_addr)
++		*db_addr = pci_resource_start(ntb->pdev, 0) + offset;
++	if (db_size)
++		*db_size = sizeof(u32);
++
+ 	return 0;
+ }
+ 
+ static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
+ {
++	struct switchtec_ntb *sndev = ntb_sndev(ntb);
++
++	iowrite64(db_bits << sndev->db_peer_shift,
++		  &sndev->mmio_self_dbmsg->odb);
++
+ 	return 0;
+ }
+ 
+@@ -413,6 +490,8 @@ static const struct ntb_dev_ops switchtec_ntb_ops = {
+ 	.db_clear		= switchtec_ntb_db_clear,
+ 	.db_set_mask		= switchtec_ntb_db_set_mask,
+ 	.db_clear_mask		= switchtec_ntb_db_clear_mask,
++	.db_read_mask		= switchtec_ntb_db_read_mask,
++	.peer_db_addr		= switchtec_ntb_peer_db_addr,
+ 	.peer_db_set		= switchtec_ntb_peer_db_set,
+ 	.spad_count		= switchtec_ntb_spad_count,
+ 	.spad_read		= switchtec_ntb_spad_read,
+@@ -685,6 +764,8 @@ static irqreturn_t switchtec_ntb_doorbell_isr(int irq, void *dev)
+ 
+ 	dev_dbg(&sndev->stdev->dev, "doorbell\n");
+ 
++	ntb_db_event(&sndev->ntb, 0);
++
+ 	return IRQ_HANDLED;
+ }
+ 
 -- 
-Aleksandr Bezzubikov
+2.11.0
