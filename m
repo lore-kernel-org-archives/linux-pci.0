@@ -1,75 +1,178 @@
-Return-Path: <SRS0=wuQe=77=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=wuQe=77=wunner.de=lukas@kernel.org>
-Date: Tue, 29 Aug 2017 17:34:56 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Mathias Nyman <mathias.nyman@linux.intel.com>,
-	Mason <slash.tmp@free.fr>,
-	Felipe Balbi <felipe.balbi@linux.intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-usb <linux-usb@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Possible regression between 4.9 and 4.13
-Message-ID: <20170829153456.GA13712@wunner.de>
-References: <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
- <599D62EA.7050100@linux.intel.com>
- <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
- <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
- <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
- <59A3D6BF.7010400@linux.intel.com>
- <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
- <59A56C15.2000403@linux.intel.com>
- <20170829133852.GA13355@wunner.de>
- <20170829144725.GB22532@kroah.com>
+Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=FMod=7F=intel.com=ashok.raj@kernel.org>
+Date: Thu, 3 Aug 2017 02:13:36 -0700
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Ding Tianhong <dingtianhong@huawei.com>
+Cc: leedom@chelsio.com, bhelgaas@google.com, helgaas@kernel.org,
+	werner@chelsio.com, ganeshgr@chelsio.com, asit.k.mallick@intel.com,
+	patrick.j.cramer@intel.com, Suravee.Suthikulpanit@amd.com,
+	Bob.Shaw@amd.com, l.stach@pengutronix.de, amira@mellanox.com,
+	gabriele.paoloni@huawei.com, David.Laight@aculab.com,
+	jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com,
+	will.deacon@arm.com, mark.rutland@arm.com, robin.murphy@arm.com,
+	davem@davemloft.net, alexander.duyck@gmail.com,
+	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxarm@huawei.com, ashok.raj@intel.com
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Message-ID: <20170803091336.GD4883@otc-nc-03>
+References: <1499955692-26556-1-git-send-email-dingtianhong@huawei.com>
+ <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170829144725.GB22532@kroah.com>
+In-Reply-To: <1499955692-26556-3-git-send-email-dingtianhong@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 29, 2017 at 04:47:25PM +0200, Greg Kroah-Hartman wrote:
-> On Tue, Aug 29, 2017 at 03:38:52PM +0200, Lukas Wunner wrote:
-> > On Tue, Aug 29, 2017 at 04:28:53PM +0300, Mathias Nyman wrote:
-> > > Then again it might be a bit too drastic to kill xhci just because
-> > > we read 0xffffffff once from a mmio xhci register. Maybe we should
-> > > return an error a couple times before actually tearing down xhci.
-> > > 
-> > > This tight check was originally done to detect pci hotplug removed
-> > > hosts as soon as possible.
-> > 
-> > Just make pci_dev_is_disconnected() public to detect PCI hot removal.
-> > We *know* when the device was hot removed, so I think there's no need
-> > to guess that based on reading "all ones" from mmio (which may happen
-> > for entirely legitimate reasons unrelated to hot removal).
+Hi Ding
+
+patch looks good, except would reword the patch description for clarity
+
+here is my crack at it, feel free to use.
+
+On Thu, Jul 13, 2017 at 10:21:31PM +0800, Ding Tianhong wrote:
+> The PCIe Device Control Register use the bit 4 to indicate that
+> whether the device is permitted to enable relaxed ordering or not.
+> But relaxed ordering is not safe for some platform which could only
+> use strong write ordering, so devices are allowed (but not required)
+> to enable relaxed ordering bit by default.
 > 
-> No, you don't always "know" when a device is removed, don't rely on it,
-> not all platforms support that.
+> If a PCIe device didn't enable the relaxed ordering attribute default,
+> we should not do anything in the PCIe configuration, otherwise we
+> should check if any of the devices above us do not support relaxed
+> ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+> the result if we get a return that indicate that the relaxed ordering
+> is not supported we should update our device to disable relaxed ordering
+> in configuration space. If the device above us doesn't exist or isn't
+> the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+> because we are probably running in a guest machine.
 
-Please explain, which platforms don't support that?  They wouldn't be
-compliant with the spec it seems.
+When bit4 is set in the PCIe Device Control register, it indicates
+whether the device is permitted to use relaxed ordering.
+On some platforms using relaxed ordering can have performance issues or
+due to erratum can cause data-corruption. In such cases devices must avoid
+using relaxed ordering.
 
-PCIe r3.1, section 6.7.3:
+This patch checks if there is any node in the hierarchy that indicates that
+using relaxed ordering is not safe. In such cases the patch turns off the
+relaxed ordering by clearing the eapability for this device.
 
-	"A Downstream Port with hot-plug capabilities supports the
-	 following hot-plug events:
-
-	 Presence Detect Changed
-
-	 A Downstream Port with hot-plug capabilities monitors the slot
-	 it controls for the slot events listed above. [...]
-	 If enabled through the associated enable field, slot events
-	 must generate a software notification."
-
-And pciehp sets the flag on all downstream devices that they're removed
-once the software notification has been received and processed.
-
-
-> Reading all ff shows the device is removed, that's all the PCI spec
-> guarantees.  What other legitimate reason could that happen for?
-
-Is 0xffffffff not a valid value to be stored in and read from mmio space?
-
-Best regards,
-
-Lukas
+> 
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> ---
+>  drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+>  drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
+>  include/linux/pci.h |  2 ++
+>  3 files changed, 68 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index d88edf5..7a6b32f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>  EXPORT_SYMBOL(pcie_set_mps);
+>  
+>  /**
+> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
+> + * @dev: PCI device to query
+> + *
+> + * If possible clear relaxed ordering
+> + */
+> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
+> +{
+> +	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+> +					  PCI_EXP_DEVCTL_RELAX_EN);
+> +}
+> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
+> +
+> +/**
+> + * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
+> + * @dev: PCI device to query
+> + *
+> + * Returns true if the device support relaxed ordering attribute.
+> + */
+> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
+> +{
+> +	u16 v;
+> +
+> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
+> +
+> +	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
+> +}
+> +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
+> +
+> +/**
+>   * pcie_get_minimum_link - determine minimum link settings of a PCI device
+>   * @dev: PCI device to query
+>   * @speed: storage for minimum speed
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index c31310d..48df012 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1762,6 +1762,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+>  					 PCI_EXP_DEVCTL_EXT_TAG);
+>  }
+>  
+> +/**
+> + * pci_dev_should_disable_relaxed_ordering - check if the PCI device
+> + * should disable the relaxed ordering attribute.
+> + * @dev: PCI device
+> + *
+> + * Return true if any of the PCI devices above us do not support
+> + * relaxed ordering.
+> + */
+> +static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
+> +{
+> +	while (dev) {
+> +		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
+> +			return true;
+> +
+> +		dev = dev->bus->self;
+> +	}
+> +
+> +	return false;
+> +}
+> +
+> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+> +{
+> +	/* We should not alter the relaxed ordering bit for the VF */
+> +	if (dev->is_virtfn)
+> +		return;
+> +
+> +	/* If the releaxed ordering enable bit is not set, do nothing. */
+> +	if (!pcie_relaxed_ordering_supported(dev))
+> +		return;
+> +
+> +	if (pci_dev_should_disable_relaxed_ordering(dev)) {
+> +		pcie_clear_relaxed_ordering(dev);
+> +		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
+> +	}
+> +}
+> +
+>  static void pci_configure_device(struct pci_dev *dev)
+>  {
+>  	struct hotplug_params hpp;
+> @@ -1769,6 +1805,7 @@ static void pci_configure_device(struct pci_dev *dev)
+>  
+>  	pci_configure_mps(dev);
+>  	pci_configure_extended_tags(dev);
+> +	pci_configure_relaxed_ordering(dev);
+>  
+>  	memset(&hpp, 0, sizeof(hpp));
+>  	ret = pci_get_hp_params(dev, &hpp);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 412ec1c..3aa23a2 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1127,6 +1127,8 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+>  void pci_pme_wakeup_bus(struct pci_bus *bus);
+>  void pci_d3cold_enable(struct pci_dev *dev);
+>  void pci_d3cold_disable(struct pci_dev *dev);
+> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
+> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
+>  
+>  /* PCI Virtual Channel */
+>  int pci_save_vc_state(struct pci_dev *dev);
+> -- 
+> 1.8.3.1
+> 
+> 
