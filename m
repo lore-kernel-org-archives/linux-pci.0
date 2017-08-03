@@ -1,58 +1,169 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Subject: [PATCH 17/18] misc: pci_endpoint_test: Enable/Disable MSI using module param
-Date: Fri, 18 Aug 2017 20:28:09 +0530
-Message-ID: <20170818145810.17649-18-kishon@ti.com>
-In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
-References: <20170818145810.17649-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39946 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751754AbdHCUKg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 16:10:36 -0400
+Date: Thu, 3 Aug 2017 15:10:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Rajat Jain <rajatja@google.com>
+Subject: Re: [PATCH] pciehp: Enable hot plug capable detection
+Message-ID: <20170803201034.GW20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
+ <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
+ <20170803035924.GB13257@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170803035924.GB13257@localhost.localdomain>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In certain platforms like TI's DRA7 SoCs, use of legacy PCI
-interrupt is exclusive with use of MSI (Section 24.9.4.6.2.1
-Legacy PCI Interrupts in
-http://www.ti.com/lit/ug/spruhz6i/spruhz6i.pdf).
+[+cc Yinghai, Rajat]
 
-However pci_endpoint_test driver enables MSI by default in probe.
-In order for pci_endpoint_test to be able to test legacy interrupt,
-MSI should be disabled. Add a module param 'no_msi' to disable MSI
-(only when legacy interrupt has to be tested).
+On Wed, Aug 02, 2017 at 11:59:24PM -0400, Keith Busch wrote:
+> On Wed, Aug 02, 2017 at 12:32:49PM -0500, Bjorn Helgaas wrote:
+> > Hi Keith,
+> > 
+> > On Wed, Aug 02, 2017 at 01:15:07AM -0400, Keith Busch wrote:
+> > > The PCIe specification ties presence detect change enabling to the hot plug
+> > > capable bit in Slot Capabilities. This capability is not mutally exclusive
+> > > with attention buttons, so enabing detection should not be tied it.
+> > 
+> > Can you clarify this a little?
+> > 
+> >   - Please include the spec section you're referring to.
+> > 
+> >   - I'm not sure what "This capability is not ..." refers to.  There
+> >     is not a "presence detect change enabling" capability.  I agree
+> >     that the "Hot-Plug Capable" bit is independent of the "Attention
+> >     Button Present" bit.
+> > 
+> >   - Slot Control (PCIe r3.1, sec 7.8.10) says PDCE *is permitted* to
+> >     be read-only zero if PCI_EXP_SLTCAP_HPC is zero.  It doesn't say
+> >     PDCE is *required* to be read-only in that case.
+> > 
+> > My initial reaction is that it probably makes sense per the spec to
+> > enable PDCE unconditionally, but I would want to do some archaeology
+> > to figure out why it wasn't that way from the beginning.  There's
+> > probably some reason for it being the way it is, so we have to take
+> > that into account.  Maybe it works around some flaky presence detect
+> > hardware or something.
+> 
+> Thanks for the feedback. I can definitely make the commit message better
+> if that's the only concern.
+> 
+> The part of the specification that suggests PDCE is tied to the hotplug
+> capable bit is the "Slot Control Register" section in 7.8.10 of PCIe
+> Base spec rev4. Specifically:
+> 
+>   "If the Hot-Plug Capable bit in the Slot Capabilities register is 0b,
+>    this bit is permitted to be read-only with a value of 0b"
+> 
+> So this control doesn't do anything if hotplug capable is not set.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/misc/pci_endpoint_test.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+I thought that might be the part of the spec you were referring to,
+but that's not how I read it :)  I read sec 7.8.10 as saying:
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 1f37ad39b169..1f64d943794d 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -72,6 +72,11 @@ static DEFINE_IDA(pci_endpoint_test_ida);
- 
- #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
- 					    miscdev)
-+
-+bool no_msi;
-+module_param(no_msi, bool, 0444);
-+MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
-+
- enum pci_barno {
- 	BAR_0,
- 	BAR_1,
-@@ -451,7 +456,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
- 	int err;
- 	int irq = 0;
- 	int id;
--	bool no_msi = false;
- 	char name[20];
- 	enum pci_barno bar;
- 	void __iomem *base;
--- 
-2.11.0
+  - Presence Detect Changed Enable is a read/write bit,
+  - However, if Hot-Plug Capable (a HwInit/read-only bit) is 0,
+    PDCE may be a read-only 0 (OR it may be read/write)
+
+So I think it's slightly misleading to suggest that PDCE is "tied" to
+HPC.  I think the spec allows PDCE to be read/write and to have some
+effect, even if HPC is 0.
+
+I don't know what it would *mean* to have a slot that said "I don't
+support hot-plug operations, but my Presence Detect State might
+change".  We've seen some creative uses of pciehp, so I wouldn't be
+surprised if somebody dreamed up a way to use it.
+
+> The only reference I find on why the code is currently done this way is
+> from this thread:
+> 
+>   https://marc.info/?l=linux-kernel&m=138688828930718&w=2
+> 
+> It seems the current behavior was done this way as a hunch more than
+> anything emperical.
+
+Yeah, this is the sort of thing that niggles at me, but I don't know
+how to resolve it other than to just apply your patch and see if
+anything breaks.  There is this hint that presence detect flaps
+sometimes:
+
+  http://www.spinics.net/lists/hotplug/msg05812.html
+
+But there's nothing there we can really act on, unless Yinghai or
+Rajat can dredge up something more concrete.
+
+> The problem I'm trying to solve, though, is with a real platform
+> that supports hot-add. The reason it is currently broken with Linux
+> is because this platform advertises "Attention Button Present" when
+> in fact no physical button exists on the platform. Since the kernel
+> doesn't enable presence detect change events when attention button
+> present is set, we don't get hot-add events. We've been working around
+> this by using pciehp_poll_mode=1, but we'd prefer to see this working
+> without kernel parameters.
+
+I agree, using pciehp_poll_mode stinks, and I like your patch.
+
+Can we mention the platform name here, just in case this oddity
+(advertising Attention Button without having a button) is of interest
+in the future?
+
+I propose the following changelog (and I'll add the platform name if
+you can supply it):
+
+  PCI: pciehp: Always enable Presence Detect notifications for hotplug slots
+
+  Previously we only enabled notification of Presence Detect change events if
+  the slot did not advertise an Attention Button.
+
+  But there are platforms that support hotplug and advertise "Attention
+  Button Present" when in fact there is no physical button.  On these
+  platforms, we enabled Attention Button notifications, but never got any.
+  Presence Detect events occurred, but we left Presence Detect notification
+  disabled, so we never noticed them.
+
+  Always enable Presence Detect notifications for hotplug slots, even if they
+  advertise "Attention Button Present", so we can detect hotplug events.
+
+  Signed-off-by: Keith Busch <keith.busch@intel.com>
+  [bhelgaas: changelog]
+  Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> > > Signed-off-by: Keith Busch <keith.busch@intel.com>
+> > > ---
+> > >  drivers/pci/hotplug/pciehp.h     | 1 +
+> > >  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
+> > >  2 files changed, 2 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
+> > > index 06109d4..610e295 100644
+> > > --- a/drivers/pci/hotplug/pciehp.h
+> > > +++ b/drivers/pci/hotplug/pciehp.h
+> > > @@ -120,6 +120,7 @@ struct controller {
+> > >  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
+> > >  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
+> > >  #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
+> > > +#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
+> > >  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
+> > >  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
+> > >  #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
+> > > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> > > index 026830a..43a86ed 100644
+> > > --- a/drivers/pci/hotplug/pciehp_hpc.c
+> > > +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> > > @@ -691,7 +691,7 @@ void pcie_enable_notification(struct controller *ctrl)
+> > >  	cmd = PCI_EXP_SLTCTL_DLLSCE;
+> > >  	if (ATTN_BUTTN(ctrl))
+> > >  		cmd |= PCI_EXP_SLTCTL_ABPE;
+> > > -	else
+> > > +	if (HP_CAP(ctrl))
+> > >  		cmd |= PCI_EXP_SLTCTL_PDCE;
+> > >  	if (!pciehp_poll_mode)
+> > >  		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
+> > > -- 
+> > > 2.5.5
+> > > 
