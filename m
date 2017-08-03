@@ -1,53 +1,100 @@
-Return-Path: <SRS0=bs7s=7Z=mediatek.com=ryder.lee@kernel.org>
-Return-Path: <SRS0=bs7s=7Z=mediatek.com=ryder.lee@kernel.org>
-Message-ID: <1503450266.11985.3.camel@mtkswgap22>
-Subject: Re: [PATCH v2 0/3] PCI: mediatek: Add MSI support for MT2712 and
- MT7622
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <honghui.zhang@mediatek.com>, <bhelgaas@google.com>,
-	<matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-	<hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
-	<yong.wu@mediatek.com>, <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-	<xinping.qian@mediatek.com>
-Date: Wed, 23 Aug 2017 09:04:26 +0800
-In-Reply-To: <20170822213602.GK6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <1502715868-17651-1-git-send-email-honghui.zhang@mediatek.com>
-	 <20170822213602.GK6948@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr10078.outbound.protection.outlook.com ([40.107.1.78]:53834
+        "EHLO EUR02-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751073AbdHCDZh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 2 Aug 2017 23:25:37 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+Subject: RE: [PATCH 1/3] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+Date: Thu, 3 Aug 2017 03:25:35 +0000
+Message-ID: <AM5PR0402MB27717D6D4DADE635D93789AF84B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <a4510ddb-3037-0787-c00e-b2703d66d54b@synopsys.com>
+ <20170802212515.GH20308@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170802212515.GH20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-08-22 at 16:36 -0500, Bjorn Helgaas wrote:
-> On Mon, Aug 14, 2017 at 09:04:25PM +0800, honghui.zhang@mediatek.com wrote:
-> > From: Honghui Zhang <honghui.zhang@mediatek.com>
-> > 
-> > MT2712 and MT7622's PCIe host controller support MSI, but only 32bit MSI
-> > address are supportted. It connect to GIC with the same IRQ number of INTx
-> > IRQ, so it shares the same IRQ with INTx IRQ.
-> > 
-> > This patchset add MSI support for MT2712 and MT7622.
-> > Also do some code fixup and cleanups.
-> > 
-> > Change Since V1:
-> >  - Add the first two patches into this patchset.
-> >  - Using -ENODEV instead of PTR_ERR if msi_domain == NULL
-> >  - Change the error logs with consistency of lower-case
-> >  - Using has_msi instead of support_msi to make the parameter name a bit shorter
-> > 
-> > Honghui Zhang (3):
-> >   PCI: mediatek: Fix return value in case of error
-> >   PCI: mediatek: take use of bus->sysdata to get host private data
-> >   PCI: mediatek: add msi support for MT2712 and MT7622
-> > 
-> >  drivers/pci/host/pcie-mediatek.c | 157 +++++++++++++++++++++++++++++++++++++--
-> >  1 file changed, 151 insertions(+), 6 deletions(-)
-> 
-> Just waiting for an ack from Ryder...
-
-For whole series:
-
-Acked-by: Ryder Lee <ryder.lee@mediatek.com>
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE35bm0OOaciDPml6UgNToyNQ0KPiBUbzogSm9hbyBQ
+aW50byA8Sm9hby5QaW50b0BzeW5vcHN5cy5jb20+DQo+IENjOiBaLnEuIEhvdSA8emhpcWlhbmcu
+aG91QG54cC5jb20+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29n
+bGUuY29tOyBqaW5nb29oYW4xQGdtYWlsLmNvbQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvM10g
+UENJOiBkZXNpZ253YXJlOiBhZGQgYWNjZXNzb3JzIGZvciB3cml0ZSBwZXJtaXNzaW9uDQo+IG9m
+IERCSSByZWFkLW9ubHkgcmVnaXN0ZXJzDQo+IA0KPiBPbiBUaHUsIEp1bCAwNiwgMjAxNyBhdCAx
+MDo0NDowNEFNICswMTAwLCBKb2FvIFBpbnRvIHdyb3RlOg0KPiA+DQo+ID4gSGkgWmhpcWlhbmcs
+DQo+ID4NCj4gPiDDgHMgNzozMyBBTSBkZSA3LzYvMjAxNywgWmhpcWlhbmcgSG91IGVzY3JldmV1
+Og0KPiA+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiA+
+DQo+ID4gPiBUaGUgcmVhZC1vbmx5IERCSSByZWdpc3RlcnMgY2FuIGJlIHdyaXR0ZW4gb3ZlciB0
+aGUgREJJIHdoZW4gc2V0IHRoZQ0KPiA+ID4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBE
+QkkiIChEQklfUk9fV1JfRU4pIGZpZWxkIG9mIHRoZQ0KPiA+ID4gTUlTQ19DT05UUk9MXzFfT0ZG
+IHJlZ2lzdGVyLg0KPiA+DQo+ID4gSSB3b3VsZCBzdWdnZXN0IHlvdSB0byBhZGQgYSBjb3Zlci1s
+ZXR0ZXIgbmV4dCB0aW1lIHRvIGV4cGxhaW4gdGhlDQo+ID4gZ2xvYmFsIHBpY3R1cmUgb2YgdGhl
+IHBhdGNoLXNldC4NCj4gPg0KPiA+IEkgdW5kZXJzdGFuZCB5b3VyIG5lZWQgZm9yIHRoaXMgcGF0
+Y2gsIGJ1dCBJIGRvbid0IGFncmVlIG9uIHRoZSBhcHByb2FjaC4NCj4gPiBTb21ldGltZXMgdGhl
+IHBlb3BsZSBpbiBjaGFyZ2Ugb2YgdGhlIGhhcmR3YXJlIGRlc2lnbiAvIGNvbmZpZ3VyYXRpb24s
+DQo+ID4gZm9yZ2V0IHRvIHNwZWNpZnkgdGhlIGRldmljZSBjbGFzcyBhbmQgdGhhdCBjYW4gYmUg
+cHJvYmxlbWF0aWMgZm9yDQo+ID4gc29tZSBkcml2ZXJzLCBhbmQgc28gdGhlIHR5cGljYWwgd29y
+a2Fyb3VuZCBpcyB0byBzZXQgaXQgaW4gdGhlIGRyaXZlciB1c2luZyBhDQo+IHF1aXJrIGZvciBl
+eGFtcGxlLg0KPiA+DQo+ID4gWW91IGNhbiBzZWUgc29tZSBleGFtcGxlcyBoZXJlOg0KPiA+IGh0
+dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L3RvcnZhbGRzL2xp
+bnV4LmdpdC90cmUNCj4gPiBlL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQo+IA0KPiBJIGFzc3VtZSB5
+b3UncmUgc3VnZ2VzdGluZyBzb21ldGhpbmcgc2ltaWxhciB0byBxdWlya190dzY4NnhfY2xhc3Mo
+KSBhbmQNCj4gZml4dXBfdGk4MTZ4X2NsYXNzKCksIHF1aXJrX2FtZF9ubF9jbGFzcygpLCBxdWly
+a19laXNhX2JyaWRnZSgpLA0KPiBmaXh1cF9yZXYxXzUzYzgxMCgpLCBldGMuDQo+IA0KPiBUaGUg
+Y3VycmVudCBkd19wY2llX3NldHVwX3JjKCkgY29udGFpbnMgdGhpczoNCj4gDQo+ICAgLyogcHJv
+Z3JhbSBjb3JyZWN0IGNsYXNzIGZvciBSQyAqLw0KPiAgIGR3X3BjaWVfd3Jfb3duX2NvbmYocHAs
+IFBDSV9DTEFTU19ERVZJQ0UsIDIsIFBDSV9DTEFTU19CUklER0VfUENJKTsNCj4gDQo+IFRoYXQg
+c3VnZ2VzdHMgdGhhdCBEZXNpZ25XYXJlLWJhc2VkIGRldmljZXMgaGF2ZSB0aGUgd3JvbmcgY2xh
+c3MgY29kZSwgYW5kDQo+IHdlJ3JlIHRyeWluZyB0byBmaXggaXQuDQo+IA0KPiBQYXRjaCAyLzMg
+b2YgdGhpcyBzZXJpZXMgc3VnZ2VzdHMgdGhhdCB0aGUgZXhpc3RpbmcgZml4IGRvZXNuJ3QgYWN0
+dWFsbHkgd29yaw0KPiBiZWNhdXNlIHRoZSByZWdpc3RlciBpcyByZWFkLW9ubHkuDQo+IA0KPiBJ
+ZiBpdCdzIG5lY2Vzc2FyeSBhbmQgcG9zc2libGUgdG8gdXBkYXRlIHRoZSBjbGFzcyBjb2RlIHJl
+Z2lzdGVyIGluDQo+IGR3X3BjaWVfc2V0dXBfcmMoKSwgSSB0aGluayB0aGF0J3MgYSByZWFzb25h
+YmxlIHNwb3QgdG8gZG8gaXQuDQo+IA0KPiBUaGUgcXVpcmtzIGluIGRyaXZlcnMvcGNpL3F1aXJr
+cy5jIGFyZSBuZWNlc3NhcnkgYmVjYXVzZSBwZXIgc3BlYywgdGhlIFBDSSBDbGFzcw0KPiBDb2Rl
+IGlzIHJlYWQtb25seSwgc28gaW4gZ2VuZXJhbCB3ZSBjYW4ndCB1cGRhdGUgaXQuDQo+IA0KPiBJ
+biB0aGUgRGVzaWduV2FyZSBjYXNlLCB0aGUgZHJpdmVyIGhhcyBhZGRpdGlvbmFsIGRldmljZS1z
+cGVjaWZpYyBrbm93bGVkZ2UNCj4gdGhhdCBhbGxvd3MgaXQgdG8gdXBkYXRlIENsYXNzIENvZGUg
+dmFsdWUsIGFuZCBJIHRoaW5rIGl0IG1ha2VzIHNlbnNlIHRvIGRvIGl0DQo+IHRoZXJlLiANCg0K
+WWVzLCB3aWxsIGtlZXAgdGhlIENsYXNzIENvZGUgZml4dXAgZnVuY3Rpb24gaW4gdGhlIERlc2ln
+bldhcmUgZHJpdmVyLg0KDQo+IA0KPiA+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFpYW5nIDxa
+aGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
+Y2llLWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiA+ICAx
+IGZpbGUgY2hhbmdlZCwgMjUgaW5zZXJ0aW9ucygrKQ0KPiA+ID4NCj4gPiA+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiA+IGIvZHJpdmVycy9wY2kv
+ZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gPiBpbmRleCBiNGQyYTg5Li5iYmRmMzViIDEwMDY0
+NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gPiAr
+KysgYi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiA+IEBAIC03Niw2ICs3
+Niw5IEBADQo+ID4gPiAgI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwg
+MTYpDQo+ID4gPiAgI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9UQVJHRVQJCTB4OTFDDQo+ID4gPg0K
+PiA+ID4gKyNkZWZpbmUgUENJRV9NSVNDX0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4gPiArI2Rl
+ZmluZSBQQ0lFX0RCSV9ST19XUl9FTgkJKDB4MSA8PCAwKQ0KPiA+ID4gKw0KPiA+ID4gIC8qDQo+
+ID4gPiAgICogaUFUVSBVbnJvbGwtc3BlY2lmaWMgcmVnaXN0ZXIgZGVmaW5pdGlvbnMNCj4gPiA+
+ICAgKiBGcm9tIDQuODAgY29yZSB2ZXJzaW9uIHRoZSBhZGRyZXNzIHRyYW5zbGF0aW9uIHdpbGwg
+YmUgbWFkZSBieQ0KPiA+ID4gdW5yb2xsIEBAIC0yNzksNiArMjgyLDI4IEBAIHN0YXRpYyBpbmxp
+bmUgdTMyIGR3X3BjaWVfcmVhZGxfZGJpMihzdHJ1Y3QNCj4gZHdfcGNpZSAqcGNpLCB1MzIgcmVn
+KQ0KPiA+ID4gIAlyZXR1cm4gX19kd19wY2llX3JlYWRfZGJpKHBjaSwgcGNpLT5kYmlfYmFzZTIs
+IHJlZywgMHg0KTsgIH0NCj4gPiA+DQo+ID4gPiArc3RhdGljIGlubGluZSB2b2lkIGR3X3BjaWVf
+ZGJpX3JvX3dyX2VuKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiA+ICsJdTMyIHJlZzsNCj4g
+PiA+ICsJdTMyIHZhbDsNCj4gPiA+ICsNCj4gPiA+ICsJcmVnID0gUENJRV9NSVNDX0NPTlRST0xf
+MV9PRkY7DQo+ID4gPiArCXZhbCA9IGR3X3BjaWVfcmVhZGxfZGJpKHBjaSwgcmVnKTsNCj4gPiA+
+ICsJdmFsIHw9IFBDSUVfREJJX1JPX1dSX0VOOw0KPiA+ID4gKwlkd19wY2llX3dyaXRlbF9kYmko
+cGNpLCByZWcsIHZhbCk7IH0NCj4gPiA+ICsNCj4gPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQgZHdf
+cGNpZV9kYmlfcm9fd3JfZGlzKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiA+ICsJdTMyIHJl
+ZzsNCj4gPiA+ICsJdTMyIHZhbDsNCj4gPiA+ICsNCj4gPiA+ICsJcmVnID0gUENJRV9NSVNDX0NP
+TlRST0xfMV9PRkY7DQo+ID4gPiArCXZhbCA9IGR3X3BjaWVfcmVhZGxfZGJpKHBjaSwgcmVnKTsN
+Cj4gPiA+ICsJdmFsICY9IH5QQ0lFX0RCSV9ST19XUl9FTjsNCj4gPiA+ICsJZHdfcGNpZV93cml0
+ZWxfZGJpKHBjaSwgcmVnLCB2YWwpOyB9DQo+ID4gPiArDQo+ID4gPiAgI2lmZGVmIENPTkZJR19Q
+Q0lFX0RXX0hPU1QNCj4gPiA+ICBpcnFyZXR1cm5fdCBkd19oYW5kbGVfbXNpX2lycShzdHJ1Y3Qg
+cGNpZV9wb3J0ICpwcCk7ICB2b2lkDQo+ID4gPiBkd19wY2llX21zaV9pbml0KHN0cnVjdCBwY2ll
+X3BvcnQgKnBwKTsNCj4gPiA+DQo+ID4NCg0KVGhhbmtzLA0KWmhpcWlhbmcNCg==
