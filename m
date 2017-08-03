@@ -1,71 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 24 Aug 2017 06:55:11 -0400
-From: Simon Horman <horms@verge.net.au>
-To: Biju Das <biju.das@bp.renesas.com>
-Subject: Re: [PATCH ] PCI: rcar: Add r8a7743/5 support
-Message-ID: <20170824105511.GE27788@verge.net.au>
-References: <1503567344-5610-1-git-send-email-biju.das@bp.renesas.com>
-MIME-Version: 1.0
-In-Reply-To: <1503567344-5610-1-git-send-email-biju.das@bp.renesas.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Chris Paterson <chris.paterson2@renesas.com>, linux-pci@vger.kernel.org,
- Magnus Damm <magnus.damm@gmail.com>, Russell King <linux@armlinux.org.uk>,
- linux-renesas-soc@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:36502 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751963AbdHCRKH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 13:10:07 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: bhelgaas@google.com, scott@spiteful.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 2/5] PCI: hotplug: ibmphp: constify pci_device_id.
+Date: Thu,  3 Aug 2017 22:39:13 +0530
+Message-Id: <1501780156-24708-3-git-send-email-arvind.yadav.cs@gmail.com>
+In-Reply-To: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 10:35:44AM +0100, Biju Das wrote:
-> Add internal PCI bridge support for r8a7743/5 SoC. Renesas RZ/G1[ME]
-> (R8A7743/5) internal PCI bridge is identical to the R-Car Gen2 family.
-> 
-> Signed-off-by: Biju Das <biju.das@bp.renesas.com>
+pci_device_id are not supposed to change at runtime. All functions
+working with pci_device_id provided by <linux/pci.h> work with
+const pci_device_id. So mark the non-const structs as const.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+---
+ drivers/pci/hotplug/ibmphp_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> ---
-> This patch is tested against Linux next tag next-20170824 and
-> renesas-dev branch renesas-devel-20170822-v4.13-rc6. 
-> 
->  Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt | 7 +++++--
->  1 file changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> index 07a7509..3d03863 100644
-> --- a/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> +++ b/Documentation/devicetree/bindings/pci/pci-rcar-gen2.txt
-> @@ -6,11 +6,14 @@ AHB. There is one bridge instance per USB port connected to the internal
->  OHCI and EHCI controllers.
->  
->  Required properties:
-> -- compatible: "renesas,pci-r8a7790" for the R8A7790 SoC;
-> +- compatible: "renesas,pci-r8a7743" for the R8A7743 SoC;
-> +	      "renesas,pci-r8a7745" for the R8A7745 SoC;
-> +	      "renesas,pci-r8a7790" for the R8A7790 SoC;
->  	      "renesas,pci-r8a7791" for the R8A7791 SoC;
->  	      "renesas,pci-r8a7793" for the R8A7793 SoC;
->  	      "renesas,pci-r8a7794" for the R8A7794 SoC;
-> -	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 compatible device
-> +	      "renesas,pci-rcar-gen2" for a generic R-Car Gen2 or
-> +				      RZ/G1 compatible device.
->  
->  
->  	      When compatible with the generic version, nodes must list the
-> -- 
-> 1.9.1
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
+index 5efd01d..73cf846 100644
+--- a/drivers/pci/hotplug/ibmphp_core.c
++++ b/drivers/pci/hotplug/ibmphp_core.c
+@@ -852,7 +852,7 @@ static int set_bus(struct slot *slot_cur)
+ 	u8 speed;
+ 	u8 cmd = 0x0;
+ 	int retval;
+-	static struct pci_device_id ciobx[] = {
++	static const struct pci_device_id ciobx[] = {
+ 		{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS, 0x0101) },
+ 		{ },
+ 	};
+-- 
+2.7.4
