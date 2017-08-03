@@ -1,109 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44240 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:51868 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751181AbdHBEol (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 00:44:41 -0400
-Date: Tue, 1 Aug 2017 22:44:40 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V5 2/2] PCI: handle CRS returned by device after FLR
-Message-ID: <20170801224440.3f677a8d@w520.home>
-In-Reply-To: <1501645453-22842-2-git-send-email-okaya@codeaurora.org>
-References: <1501645453-22842-1-git-send-email-okaya@codeaurora.org>
-        <1501645453-22842-2-git-send-email-okaya@codeaurora.org>
+        id S1751194AbdHCQep (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 12:34:45 -0400
+Date: Thu, 3 Aug 2017 11:34:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Bezzubikov <zuban32s@gmail.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Marcel Apfelbaum <marcel@redhat.com>
+Subject: Re: [PATCH] pci: shpchp: set the bridge busmaster if MSI are enabled
+Message-ID: <20170803163443.GT20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+ <20170802223547.GP20308@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKSfGUA_1ccDBaChXaWwOKthq-okkAmYADpWxQXQ67DG6SjgYA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKSfGUA_1ccDBaChXaWwOKthq-okkAmYADpWxQXQ67DG6SjgYA@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue,  1 Aug 2017 23:44:13 -0400
-Sinan Kaya <okaya@codeaurora.org> wrote:
-
-> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
-> following a Function Level Reset (FLR) request to indicate that it is
-> not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
-> Request Handling Rules and CRS usage in FLR context is mentioned in
-> PCIe r3.1, sec 6.6.2. Function-Level Reset.
+On Thu, Aug 03, 2017 at 01:48:51AM +0300, Alexander Bezzubikov wrote:
+> 2017-08-03 1:35 GMT+03:00 Bjorn Helgaas <helgaas@kernel.org>:
+> > On Tue, Jul 18, 2017 at 05:12:25PM +0300, Aleksandr Bezzubikov wrote:
+> >> An MSI-based SHPC built in PCI bridges can configure hotplugged devices
+> >> only if they notify the bridge with MSI.
+> >
+> > I think you're referring to the events listed in SHPC r1.0, sec 4.7.3,
+> > table 4-24, right?  Attention Button Press, Isolated Power Fault, Card
+> > Presence Change, MRS Sensor Change, etc?
+> >
+> > So IIUC, this is really about the bridge itself generating MSIs about
+> > slot-related events, not the hot-added devices generating MSIs.
+> >
 > 
-> Adding a vendor ID read if this is a physical function before attempting
-> to read any other registers on the endpoint. A CRS indication will only
-> be given if the address to be read is vendor ID register.
-> pci_bus_read_dev_vendor_id() knows how to deal with CRS returned values.
-> 
-> If pci_bus_read_dev_vendor_id() fails, it prints a user visible warning
-> after provided 1 second timeout is reached. pci_flr_wait() will keep
-> calling this function 60 times to allow up to 60 seconds to be consistent
-> with the rest of the kernel CRS timeout handling.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 20 +++++++++++---------
->  1 file changed, 11 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2ed604a..25c7a83 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3813,14 +3813,16 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
->  
->  /*
->   * We should only need to wait 100ms after FLR for virtual functions.
-> - * Wait for up to 1000ms for config space to return something other than -1.
-> - * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
-> - * dword because VFs don't implement the 1st dword.
-> + * Wait for up to 60s for config space to return something other than -1.
-> + * Intel IGD requires 1s when an LCD panel is attached.  We use
-> + * pci_bus_read_dev_vendor_id() for reading the vendor ID as it handles
-> + * CRS gracefully.
+> You're right, it's definitely about the bridge's built-in SHPC
+> that generates MSIs.
 
-nit, stating that IGD requires 1s with an LCD panel is a
-misinterpretation of the previous comment.  In fact the original commit
-only mentions 300ms.  I think perhaps 1s was simply a nice round
-interval.
+Great, thanks for confirming that.  I applied this to pci/hotplug for v4.14
+with the following changelog:
 
->   */
->  static void pci_flr_wait(struct pci_dev *dev)
->  {
->  	int i = 0;
->  	u32 id;
-> +	bool ret;
->  
->  	if (dev->is_virtfn) {
->  		msleep(100);
-> @@ -3828,15 +3830,15 @@ static void pci_flr_wait(struct pci_dev *dev)
->  	}
->  
->  	do {
-> -		msleep(100);
-> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
-> -	} while (i++ < 10 && id == ~0);
-> +		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-> +						 1000);
+  PCI: shpchp: Enable bridge bus mastering if MSI is enabled
 
-Is it a problem that there's now zero delay between the FLR and first
-attempt to read config space?  Seems like there should be a 100ms
-delay before we start trying.  This is also going to print a kernel
-warning 60 times in the course of getting to a 60s timeout, why not let
-pci_bus_read_dev_vendor_id() manage the entire timeout?  Are we only
-trying to preserve the dev_info() below?  Thanks,
+  An SHPC may generate MSIs to notify software about slot or controller
+  events (SHPC spec r1.0, sec 4.7).  A PCI device can only generate an MSI if
+  it has bus mastering enabled.
 
-Alex
+  Enable bus mastering if the bridge contains an SHPC that uses MSI for event
+  notifications.
 
-> +	} while (i++ < 60 && !ret);
->  
-> -	if (id == ~0)
-> +	if (!ret)
->  		dev_warn(&dev->dev, "Failed to return from FLR\n");
->  	else if (i > 1)
-> -		dev_info(&dev->dev, "Required additional %dms to
-> return from FLR\n",
-> -			 (i - 1) * 100);
-> +		dev_info(&dev->dev, "Required additional %ds to
-> return from FLR\n",
-> +			 (i - 1));
->  }
->  
->  /**
+  Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
+  [bhelgaas: changelog]
+  Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+  Reviewed-by: Marcel Apfelbaum <marcel@redhat.com>
+  Acked-by: Michael S. Tsirkin <mst@redhat.com>
+  Cc: stable@vger.kernel.org
