@@ -1,53 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55550 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:57234 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751823AbdHAP5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Aug 2017 11:57:45 -0400
-Date: Tue, 1 Aug 2017 18:57:42 +0300
-From: "Michael S. Tsirkin" <mst@redhat.com>
-To: Aleksandr Bezzubikov <zuban32s@gmail.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, marcel@redhat.com,
-        stable@vger.kernel.org
-Subject: Re: pci: shpchp: set the bridge busmaster if MSI are enabled
-Message-ID: <20170801185648-mutt-send-email-mst@kernel.org>
-References: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+        id S1751429AbdHDOab (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 4 Aug 2017 10:30:31 -0400
+Date: Fri, 4 Aug 2017 09:30:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1] x86/platform/intel-mid: Make IRQ allocation a bit
+ more flexible
+Message-ID: <20170804143025.GE16580@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170724173402.12939-1-andriy.shevchenko@linux.intel.com>
+ <20170803220804.GK20308@bhelgaas-glaptop.roam.corp.google.com>
+ <1501848579.29303.375.camel@linux.intel.com>
+ <20170804132418.GB16580@bhelgaas-glaptop.roam.corp.google.com>
+ <1501854195.29303.377.camel@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500387145-4216-1-git-send-email-zuban32s@gmail.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1501854195.29303.377.camel@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 18, 2017 at 05:12:25PM +0300, Aleksandr Bezzubikov wrote:
-> An MSI-based SHPC built in PCI bridges can configure hotplugged devices
-> only if they notify the bridge with MSI.
-> But they can't trigger interrupt without the bridge being busmaster,
-> that's why it should be enabled.
+On Fri, Aug 04, 2017 at 04:43:15PM +0300, Andy Shevchenko wrote:
+> On Fri, 2017-08-04 at 08:24 -0500, Bjorn Helgaas wrote:
+> > On Fri, Aug 04, 2017 at 03:09:39PM +0300, Andy Shevchenko wrote:
+> > > On Thu, 2017-08-03 at 17:08 -0500, Bjorn Helgaas wrote:
+> > > > On Mon, Jul 24, 2017 at 08:34:02PM +0300, Andy Shevchenko wrote:
+> > > > > In the future we would use dynamic allocation for IRQ which
+> > > > > brings
+> > > > > non-1:1 mapping for IOAPIC domain. Thus, we need to respect
+> > > > > return
+> > > > > value
+> > > > > of mp_map_gsi_to_irq() and assign it back to the device
+> > > > > structure.
+> > > > > 
+> > > > > Besides that we need to read GSI from interrupt pin register to
+> > > > > avoid
+> > > > > cases when some drivers will try to initialize PCI device twice
+> > > > > in a
+> > > > > row
+> > > > > which will call pcibios_enable_irq() twice as well.
+> > > > 
+> > > > This seems sort of suspect.  It doesn't seem robust to rely on the
+> > > > value of PCI_INTERRUPT_LINE being zero before
+> > > > pcibios_enable_irq().
+> > > 
+> > > So, you are telling that it's possible to get pcibios_enable_irq()
+> > > called with PCI_INTERRUPT_LINE == 0?
+> > 
+> > I don't know about that.  I'm just saying that it sounds like you're
+> > relying on some condition that is hard to verify.  PCI_INTERRUPT_LINE
+> > is read/write and it's hard to know what, if anything, BIOS did with
+> > it.
 > 
-> Signed-off-by: Aleksandr Bezzubikov <zuban32s@gmail.com>
-> Reviewed-by: Marcel Apfelbaum <marcel@redhat.com>
-
-
-Given there's pci_enable_msi above, not enabling bus master
-seems like a very strange thing to do.
-
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
-
-This also looks like a good candidate for stable.
-
-> ---
->  drivers/pci/hotplug/shpchp_hpc.c | 2 ++
->  1 file changed, 2 insertions(+)
+> _On this platform_ BIOS provides a static mapping for IRQ lines (there
+> is no separate PIR, just IOAPIC). So, that register is initialized by
+> firmware. We are not suppose to touch it _on this platform_.
 > 
-> diff --git a/drivers/pci/hotplug/shpchp_hpc.c b/drivers/pci/hotplug/shpchp_hpc.c
-> index de0ea47..e5824c7 100644
-> --- a/drivers/pci/hotplug/shpchp_hpc.c
-> +++ b/drivers/pci/hotplug/shpchp_hpc.c
-> @@ -1062,6 +1062,8 @@ int shpc_init(struct controller *ctrl, struct pci_dev *pdev)
->  		if (rc) {
->  			ctrl_info(ctrl, "Can't get msi for the hotplug controller\n");
->  			ctrl_info(ctrl, "Use INTx for the hotplug controller\n");
-> +		} else {
-> +			pci_set_master(pdev);
->  		}
->  
->  		rc = request_irq(ctrl->pci_dev->irq, shpc_isr, IRQF_SHARED,
+> > > > Can't we make pcibios_enable_irq() idempotent?  I guess I don't
+> > > > understand the real problem here.
+> > > 
+> > > Currently there is no problem here.
+> > > 
+> > > Firmware assigns IRQ line and wrote this to the configuration space.
+> > > Intel MID uses 1:1 mapping (IRQ domain is STRICT), so, it just
+> > > allocates
+> > > a vector inside kernel with the very same number.
+> > > 
+> > > But...
+> > > 
+> > > If we switch to dynamic allocation (it's a default for ACPI case),
+> > > _on
+> > > this platform_ we will get wrong allocation in the IOAPIC since
+> > > mapping
+> > > is not 1:1 anymore.
+> > > 
+> > > That's what I'm trying to avoid (dev->irq after this patch points
+> > > correctly to dynamically allocated number).
+> > > 
+> > > For old SFI enabled platforms it will not make any change.
+> > > 
+> > > Note, there is no legacy PIC on this platform (as same case as for
+> > > ACPI
+> > > HW reduced platforms), just IOAPIC.
+> > > 
+> > > > Is this really two separate patches that could be separated?
+> > > 
+> > > I didn't get this, what separation you see might be applied here?
+> > 
+> > The "Besides that" in your changelog suggested that "here is another
+> > change lumped into this patch."  I was wondering if the "read GSI from
+> > PCI_INTERRUPT_LINE" part could be separated out.  That makes me wonder
+> > whether this is really safe, since GSIs are 32 bits, but
+> > PCI_INTERRUPT_LINE is only 8 bits.  I don't know enough to know why
+> > this is safe in this case.
+> 
+> "Besides that" part means "we have a second circumstance we have to
+> follow to avoid breaking working platforms".
+> 
+> The old code, if you look into patch, uses dev->irq as a predefined
+> constant, which is not in case of dynamic allocation, so, if we respect
+> return value from mp_map_gsi_to_irq() we may not use dev->irq as
+> _source_ of IRQ mapping anymore.
+> 
+> I didn't check if we can do things in reversed order than I have done,
+> i.e. apply part 2 as separate change and then respect the return value.
+> It looks like it may be done in this way.
+> 
+> However, the patch is applied and I don't see any strong reason
+> to revert it and bring again as a set of two patches.
+
+I agree, thanks for your explanations.
