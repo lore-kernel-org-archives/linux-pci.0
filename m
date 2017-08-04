@@ -1,144 +1,500 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gloria.sntech.de ([95.129.55.99]:35362 "EHLO gloria.sntech.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751418AbdHJJ1q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Aug 2017 05:27:46 -0400
-From: Heiko Stuebner <heiko@sntech.de>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        linux-kernel@vger.kernel.org,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [RFC PATCH] PCI: rockchip: fix system hang up if activate CONFIG_DEBUG_SHIRQ
-Date: Thu, 10 Aug 2017 11:27:37 +0200
-Message-ID: <5781211.7fcSyQo7bC@phil>
-In-Reply-To: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <SRS0=Wx1y=7G=mediatek.com=honghui.zhang@kernel.org>
+Return-Path: <SRS0=Wx1y=7G=mediatek.com=honghui.zhang@kernel.org>
+Message-ID: <1501835976.24341.21.camel@mtksdaap41>
+Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
+ support
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+	<matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+	<ryder.lee@mediatek.com>, <hongkun.cao@mediatek.com>,
+	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
+	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
+Date: Fri, 4 Aug 2017 16:39:36 +0800
+In-Reply-To: <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
+	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
-
-Am Donnerstag, 10. August 2017, 16:21:13 CEST schrieb Shawn Lin:
-> With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
-> would still access the irq handler registed as a shard irq.
-> Per the comment within the function of __free_irq, it says
-> "It's a shared IRQ -- the driver ought to be prepared for
-> an IRQ event to happen even now it's being freed". However
-> when failing to probe the driver, it may disable the clock
-> for accessing the register and the following check for shared
-> irq state would call the irq handler which accesses the register
-> w/o the clk enabled. That will hang the system forever.
-
-The key point would be to fix the ordering. So you could also just use
-devm_add_action to move the clock-disabling into a callback that
-gets run at the appropriate time, as devm does the shutdown in the
-exact opposite order this should fix your problem.
-
-So until all clocks could be enabled, you would disable them manually
-and after that rely on the devm_action to fire at the appropriate time.
-
-ret = clk_prepare_enable(clk1);
-if (ret < 0 )
-	return ret;
-
-ret = clk_prepare_enable(clk2);
-if (ret < 0) {
-	clk_disable_unprepare(clk1);
-	return ret;
-}
-
-devm_add_action_or_reset(dev, rk_pcie_disable_clocks);
-
-The rockchip crypto driver [0] shows how this could be done.
+Hi, Bjorn,
+	Thanks very much for your reviews.
+The mis-spells will be fixed in next version.
 
 
-Heiko
+On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
 
-[0] http://elixir.free-electrons.com/linux/latest/source/drivers/crypto/rockchip/rk3288_crypto.c#L307
+
+......
+> > +}
+> > +
+> > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
+> > +						struct pci_bus *bus, int devfn)
+> > +{
+> > +	struct pci_dev *dev;
+> > +	struct pci_bus *pbus;
+> > +	struct mtk_pcie_port *port, *tmp;
+> > +
+> > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
+> > +			return port;
+> > +		} else if (bus->number != 0) {
+> > +			pbus = bus;
+> > +			do {
+> > +				dev = pbus->self;
+> > +				if (port->index == PCI_SLOT(dev->devfn))
+> > +					return port;
+> > +				pbus = dev->bus;
+> > +			} while (dev->bus->number != 0);
+> > +		}
+> > +	}
+> > +
+> > +	return NULL;
+> 
+> You should be able to use sysdata to avoid searching the list.
+> See drivers/pci/host/pci-aardvark.c, for example.
+> 
+
+I could put the mtk_pcie * in sysdata, but still need to searching the
+list to get the mtk_pcie_port *, how about:
+
+	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+		if (port->index == PCI_SLOT(devfn))
+			return port;
+	}
+
+> > +}
+> > +
+> > +static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> > +				int where, int size, u32 *val)
+> > +{
+> > +	struct mtk_pcie_port *port;
+> > +	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+> > +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
+> 
+> Sysdata should make this very simple; see advk_pcie_rd_conf().
+
+thanks.
 
 > 
-> With adding some dump_stack we could see how that happened.
+> > +	u32 bn = bus->number;
+> > +	int ret;
+> > +
+> > +	port = mtk_pcie_find_port(pcie, bus, devfn);
+> > +	if (!port) {
+> > +		*val = ~0;
+> > +		return PCIBIOS_DEVICE_NOT_FOUND;
+> > +	}
+> > +
+> > +	ret = mtk_pcie_hw_rd_cfg(port, bn, devfn, where, size, val);
+> > +	if (ret)
+> > +		*val = ~0;
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
+> > +				 int where, int size, u32 val)
+> > +{
+> > +	u32 bn = bus->number;
+> > +	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+> > +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
+> > +	struct mtk_pcie_port *port;
+> > +
+> > +	port = mtk_pcie_find_port(pcie, bus, devfn);
+> > +	if (!port)
+> > +		return PCIBIOS_DEVICE_NOT_FOUND;
+> > +
+> > +	return mtk_pcie_hw_wr_cfg(port, bn, devfn, where, size, val);
+> > +}
+> > +
+> > +static struct pci_ops mtk_pcie_ops_v2 = {
+> > +	.read  = mtk_pcie_config_read,
+> > +	.write = mtk_pcie_config_write,
+> > +};
+> > +
+> > +static int mtk_pcie_startup_ports_v2(struct mtk_pcie_port *port)
+> > +{
+> > +	struct mtk_pcie *pcie = port->pcie;
+> > +	struct resource *mem = &pcie->mem;
+> > +	u32 val;
+> > +	size_t size;
+> > +	int err;
+> > +
+> > +	/* mt7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+> > +	if (pcie->base) {
+> > +		val = readl(pcie->base + PCIE_SYS_CFG_V2);
+> > +		val |= PCIE_CSR_LTSSM_EN(port->index) |
+> > +		       PCIE_CSR_ASPM_L1_EN(port->index);
+> > +		writel(val, pcie->base + PCIE_SYS_CFG_V2);
+> > +	}
+> > +
+> > +	/* Assert all reset signals */
+> > +	writel(0, port->base + PCIE_RST_CTRL);
+> > +
+> > +	/*
+> > +	 * Enable rc internal reset.
+> > +	 * The reset will work when the link is from link up to link down.
 > 
-> calling  rockchip_pcie_driver_init+0x0/0x28 @ 1
-> rockchip-pcie f8000000.pcie: no vpcie3v3 regulator found
-> rockchip-pcie f8000000.pcie: no vpcie1v8 regulator found
-> rockchip-pcie f8000000.pcie: no vpcie0v9 regulator found
-> rockchip-pcie f8000000.pcie: PCIe link training gen1 timeout!
-> CPU: 0 PID: 1 Comm: swapper/0 Not tainted
-> 4.13.0-rc3-next-20170807-ARCH+ #189
-> Hardware name: Firefly-RK3399 Board (DT)
-> Call trace:
-> [<ffff000008089bf0>] dump_backtrace+0x0/0x250
-> [<ffff000008089eb0>] show_stack+0x20/0x28
-> [<ffff000008c3313c>] dump_stack+0x90/0xb0
-> [<ffff000008632ad4>] rockchip_pcie_read.isra.11+0x54/0x58
-> [<ffff0000086334fc>] rockchip_pcie_client_irq_handler+0x30/0x1a0
-> [<ffff00000813ce98>] __free_irq+0x1c8/0x2dc
-> [<ffff00000813d044>] free_irq+0x44/0x74
-> [<ffff0000081415fc>] devm_irq_release+0x24/0x2c
-> [<ffff00000877429c>] release_nodes+0x1d8/0x30c
-> [<ffff000008774838>] devres_release_all+0x3c/0x5c
-> [<ffff00000876f19c>] driver_probe_device+0x244/0x494
-> [<ffff00000876f50c>] __driver_attach+0x120/0x124
-> [<ffff00000876cb80>] bus_for_each_dev+0x6c/0xac
-> [<ffff00000876e984>] driver_attach+0x2c/0x34
-> [<ffff00000876e3a4>] bus_add_driver+0x244/0x2b0
-> [<ffff000008770264>] driver_register+0x70/0x110
-> [<ffff0000087718b4>] platform_driver_register+0x60/0x6c
-> [<ffff0000091eb108>] rockchip_pcie_driver_init+0x20/0x28
-> [<ffff000008083a2c>] do_one_initcall+0xc8/0x130
-> [<ffff0000091a0ea8>] kernel_init_freeable+0x1a0/0x238
-> [<ffff000008c461cc>] kernel_init+0x18/0x108
-> [<ffff0000080836c0>] ret_from_fork+0x10/0x50
+> ?  That sentence doesn't parse for me.
+
+What about:
+
+	/*
+	 * Enable PCIe link down reset, if link status changed from link up to
+	 * link down, this will reset MAC control registers and configuration
+	 * space.
+	 */
+
 > 
-> In order to fix this, we check the clk state before accessing the
-> pcie register in rockchip_pcie_read, but don't touch rockchip_pcie_write
-> as no case to trigger that from write routine.
+> > +	 */
+> > +	writel(PCI_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
+> > +
+> > +	/* De-assert phy, pe, pipe, mac and configuration reset	*/
+> > +	val = readl(port->base + PCIE_RST_CTRL);
+> > +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
+> > +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
+> > +	writel(val, port->base + PCIE_RST_CTRL);
+> > +
+> > +	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
+> > +	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
+> > +				 !!(val & PCIE_PORT_LINKUP_V2), 20,
+> > +				 100 * USEC_PER_MSEC);
+> > +	if (err)
+> > +		return -ETIMEDOUT;
+> > +
+> > +	/* Set INTx mask */
+> > +	val = readl(port->base + PCIE_INT_MASK);
+> > +	val &= ~INTX_MASK;
+> > +	writel(val, port->base + PCIE_INT_MASK);
+> > +
+> > +	/* Set AHB to PCIe translation windows */
+> > +	size = mem->end - mem->start;
+> > +	val = AHB2PCIE_BASEL(mem->start) | AHB2PCIE_SIZE(fls(size));
+> > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+> > +
+> > +	val = AHB2PCIE_BASEH(mem->start);
+> > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
+> > +
+> > +	/* Set PCIe to axi translation memory space.*/
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> s/axi/AXI/
 > 
-> ---
-> Hi Bjorn, Thomas and Marc,
+> > +	val = fls(0xffffffff) | WIN_ENABLE;
+> > +	writel(val, port->base + PCIE_AXI_WINDOW0);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+> > +			     irq_hw_number_t hwirq)
+> > +{
+> > +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
+> > +	irq_set_chip_data(irq, domain->host_data);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static const struct irq_domain_ops intx_domain_ops = {
+> > +	.map = mtk_pcie_intx_map,
+> > +};
+> > +
+> > +static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+> > +				    struct device_node *node)
+> > +{
+> > +	struct device *dev = port->pcie->dev;
+> > +	struct device_node *pcie_intc_node;
+> > +
+> > +	/* Setup INTx */
+> > +	pcie_intc_node = of_get_next_child(node, NULL);
+> > +	if (!pcie_intc_node) {
+> > +		dev_err(dev, "No PCIe Intc node found\n");
+> > +		return PTR_ERR(pcie_intc_node);
+> > +	}
+> > +
+> > +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
+> > +						 &intx_domain_ops, port);
 > 
-> This fix looks more like a hack, but I don't know the legit way to
-> deal with that case. Just quick look into the drivers/pci/host, and
-> I see almost all drivers register shard irq and also disable the clk
-> in their probe's error handle path. So I guess this is NOT pcie-rockchip
-> specified even not pcie host drivers specified, but folks just luckily didn't
-> trip over it.
+> I think there's an issue here with a 4-element IRQ domain and the
+> hwirq numbers 1-4 from the of_irq_parse_and_map_pci() path, so INTD
+> may not work correctly.
 > 
-> Could you give some suggestion on this?
+> See
+> http://lkml.kernel.org/r/20170801212931.GA26498@bhelgaas-glaptop.roam.corp.google.com
+> and related discussion.
 > 
->  drivers/pci/host/pcie-rockchip.c | 4 ++++
->  1 file changed, 4 insertions(+)
+
+Sorry, I did not get this,
+I do some test with an intel E350T4 PCIe NICs, it's a x1 lane
+multi-function device.
+What I got from the log is below:
+->of_irq_parse_and_map_pci
+	->of_irq_parse_pci
+		->irq_create_of_mapping
+			->irq_create_fwspec_mapping
+				->irq_domain_translate
+				which will go through
+				d->ops->translate #the hwirq really start from 0
+
+And I tested every NIC port of the Intel E350T4 with tftp transfer data,
+seems all are OK with this code.
+
+What I got from the proc is as below:
+cat /proc/interrupts
+           CPU0       CPU1       CPU2       
+  1:          0          0          0     GICv2  25 Level     vgic
+  3:       5042        224        206     GICv2  30 Level     arch_timer
+  4:          0          0          0     GICv2  27 Level     kvm guest
+timer
+  6:        201          0          0  MT_SYSIRQ  91 Level     ttyS0
+  7:         57          0          0  MT_SYSIRQ 115 Level     mtk-pcie
+  8:          0          0          0  MT_SYSIRQ 117 Level     mtk-pcie
+  9:          9          0          0     dummy   0 Edge      eth0
+ 10:         40          0          0     dummy   1 Edge      eth1
+ 11:          5          0          0     dummy   2 Edge      eth2
+ 12:          3          0          0     dummy   3 Edge      eth3
+IPI0:       314        507       1164       Rescheduling interrupts
+
+or did I missed something?
+
+
+> > +	if (!port->irq_domain) {
+> > +		dev_err(dev, "Failed to get INTx IRQ domain\n");
+> > +		return PTR_ERR(port->irq_domain);
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
+> > +{
+> > +	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
+> > +	struct device *dev = port->pcie->dev;
+> > +	unsigned long status;
+> > +	u32 virq;
+> > +	u32 bit = INTX_SHIFT;
+> > +
+> > +	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
+> > +		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
+> > +			/* Clear the INTx */
+> > +			writel(1 << bit, port->base + PCIE_INT_STATUS);
+> > +			virq = irq_find_mapping(port->irq_domain,
+> > +						bit - INTX_SHIFT);
+> > +			if (virq)
+> > +				generic_handle_irq(virq);
+> > +			else
+> > +				dev_err(dev, "unexpected IRQ, INT%d\n",
+> > +					bit - INTX_SHIFT);
 > 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 39aafe2..daaa868b 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -17,6 +17,7 @@
->  
->  #include <linux/bitrev.h>
->  #include <linux/clk.h>
-> +#include <linux/clk-provider.h>
->  #include <linux/delay.h>
->  #include <linux/gpio/consumer.h>
->  #include <linux/init.h>
-> @@ -252,6 +253,9 @@ struct rockchip_pcie {
->  
->  static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
->  {
-> +	if (!__clk_is_enabled(rockchip->hclk_pcie))
-> +		return 0;
-> +
->  	return readl(rockchip->apb_base + reg);
->  }
->  
+> PCI INTx are conventionally INTA, INTB, INTC, INTD (not INT1, INT2,
+> etc).
 > 
+> > +		}
+> > +	}
+> > +
+> > +	return IRQ_HANDLED;
+> > +}
+> > +
+> > +static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+> > +			      struct device_node *node)
+> > +{
+> > +	struct mtk_pcie *pcie = port->pcie;
+> > +	struct device *dev = pcie->dev;
+> > +	struct platform_device *pdev = to_platform_device(dev);
+> > +	int err, irq;
+> > +
+> > +	irq = platform_get_irq(pdev, port->index);
+> > +	err = devm_request_irq(dev, irq, mtk_pcie_intr_handler,
+> > +			       IRQF_SHARED, "mtk-pcie", port);
+> > +	if (err) {
+> > +		dev_err(dev, "unable to request irq %d\n", irq);
+> 
+> s/irq/IRQ/
+> 
+> > +		return err;
+> > +	}
+> > +
+> > +	err = mtk_pcie_init_irq_domain(port, node);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to init pcie lagecy irq domain\n");
+> 
+> s/lagecy/legacy/
+> s/irq/IRQ/
+> s/pcie/PCIe/
+> 
+> > +		return -ENODEV;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+> >  				      unsigned int devfn, int where)
+> >  {
+> > @@ -249,13 +625,49 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+> >  
+> >  	err = clk_prepare_enable(port->sys_ck);
+> >  	if (err) {
+> > -		dev_err(dev, "failed to enable port%d clock\n", port->index);
+> > +		dev_err(dev, "failed to enable sys_ck%d\n", port->index);
+> >  		goto err_sys_clk;
+> >  	}
+> >  
+> > +	err = clk_prepare_enable(port->ahb_ck);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to enable ahb_ck%d\n", port->index);
+> > +		goto err_ahb_clk;
+> > +	}
+> > +
+> > +	err = clk_prepare_enable(port->aux_ck);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to enable aux_ck%d\n", port->index);
+> > +		goto err_aux_clk;
+> > +	}
+> > +
+> > +	err = clk_prepare_enable(port->axi_ck);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to enable axi_ck%d\n", port->index);
+> > +		goto err_axi_clk;
+> > +	}
+> > +
+> > +	err = clk_prepare_enable(port->obff_ck);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to enable obff_ck%d\n", port->index);
+> > +		goto err_obff_clk;
+> > +	}
+> > +
+> > +	err = clk_prepare_enable(port->pipe_ck);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to enable pipe_ck%d\n", port->index);
+> > +		goto err_pipe_clk;
+> > +	}
+> > +
+> >  	reset_control_assert(port->reset);
+> >  	reset_control_deassert(port->reset);
+> >  
+> > +	err = phy_init(port->phy);
+> > +	if (err) {
+> > +		dev_err(dev, "failed to initialize port%d phy\n", port->index);
+> > +		goto err_phy_init;
+> > +	}
+> > +
+> >  	err = phy_power_on(port->phy);
+> >  	if (err) {
+> >  		dev_err(dev, "failed to power on port%d phy\n", port->index);
+> > @@ -269,6 +681,18 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+> >  
+> >  	phy_power_off(port->phy);
+> >  err_phy_on:
+> > +	phy_exit(port->phy);
+> > +err_phy_init:
+> > +	clk_disable_unprepare(port->pipe_ck);
+> > +err_pipe_clk:
+> > +	clk_disable_unprepare(port->obff_ck);
+> > +err_obff_clk:
+> > +	clk_disable_unprepare(port->axi_ck);
+> > +err_axi_clk:
+> > +	clk_disable_unprepare(port->aux_ck);
+> > +err_aux_clk:
+> > +	clk_disable_unprepare(port->ahb_ck);
+> > +err_ahb_clk:
+> >  	clk_disable_unprepare(port->sys_ck);
+> >  err_sys_clk:
+> >  	mtk_pcie_port_free(port);
+> > @@ -306,10 +730,56 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
+> >  	snprintf(name, sizeof(name), "sys_ck%d", index);
+> >  	port->sys_ck = devm_clk_get(dev, name);
+> >  	if (IS_ERR(port->sys_ck)) {
+> > -		dev_err(dev, "failed to get port%d clock\n", index);
+> > +		dev_err(dev, "failed to get sys_ck%d\n", index);
+> >  		return PTR_ERR(port->sys_ck);
+> >  	}
+> >  
+> > +	/* sys_ck might be divided into the following parts in some chips */
+> > +	snprintf(name, sizeof(name), "ahb_ck%d", index);
+> > +	port->ahb_ck = devm_clk_get(dev, name);
+> > +	if (IS_ERR(port->ahb_ck)) {
+> > +		if (PTR_ERR(port->ahb_ck) == -EPROBE_DEFER)
+> > +			return -EPROBE_DEFER;
+> > +
+> > +		port->ahb_ck = NULL;
+> > +	}
+> > +
+> > +	snprintf(name, sizeof(name), "axi_ck%d", index);
+> > +	port->axi_ck = devm_clk_get(dev, name);
+> > +	if (IS_ERR(port->axi_ck)) {
+> > +		if (PTR_ERR(port->axi_ck) == -EPROBE_DEFER)
+> > +			return -EPROBE_DEFER;
+> > +
+> > +		port->axi_ck = NULL;
+> > +	}
+> > +
+> > +	snprintf(name, sizeof(name), "aux_ck%d", index);
+> > +	port->aux_ck = devm_clk_get(dev, name);
+> > +	if (IS_ERR(port->aux_ck)) {
+> > +		if (PTR_ERR(port->aux_ck) == -EPROBE_DEFER)
+> > +			return -EPROBE_DEFER;
+> > +
+> > +		port->aux_ck = NULL;
+> > +	}
+> > +
+> > +	snprintf(name, sizeof(name), "obff_ck%d", index);
+> > +	port->obff_ck = devm_clk_get(dev, name);
+> > +	if (IS_ERR(port->obff_ck)) {
+> > +		if (PTR_ERR(port->obff_ck) == -EPROBE_DEFER)
+> > +			return -EPROBE_DEFER;
+> > +
+> > +		port->obff_ck = NULL;
+> > +	}
+> > +
+> > +	snprintf(name, sizeof(name), "pipe_ck%d", index);
+> > +	port->pipe_ck = devm_clk_get(dev, name);
+> > +	if (IS_ERR(port->pipe_ck)) {
+> > +		if (PTR_ERR(port->pipe_ck) == -EPROBE_DEFER)
+> > +			return -EPROBE_DEFER;
+> > +
+> > +		port->pipe_ck = NULL;
+> > +	}
+> > +
+> >  	snprintf(name, sizeof(name), "pcie-rst%d", index);
+> >  	port->reset = devm_reset_control_get_optional(dev, name);
+> >  	if (PTR_ERR(port->reset) == -EPROBE_DEFER)
+> > @@ -324,6 +794,12 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
+> >  	port->index = index;
+> >  	port->pcie = pcie;
+> >  
+> > +	if (pcie->soc->setup_irq) {
+> > +		err = pcie->soc->setup_irq(port, node);
+> > +		if (err)
+> > +			return err;
+> > +	}
+> > +
+> >  	INIT_LIST_HEAD(&port->list);
+> >  	list_add_tail(&port->list, &pcie->ports);
+> >  
+> > @@ -553,9 +1029,17 @@ static struct mtk_pcie_soc mtk_pcie_soc_v1 = {
+> >  	.startup = mtk_pcie_startup_ports,
+> >  };
+> >  
+> > +static struct mtk_pcie_soc mtk_pcie_soc_v2 = {
+> > +	.ops = &mtk_pcie_ops_v2,
+> > +	.startup = mtk_pcie_startup_ports_v2,
+> > +	.setup_irq = mtk_pcie_setup_irq,
+> > +};
+> > +
+> >  static const struct of_device_id mtk_pcie_ids[] = {
+> >  	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
+> >  	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+> > +	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_v2 },
+> > +	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_v2 },
+> >  	{},
+> >  };
+> >  
+> > -- 
+> > 2.6.4
+> > 
