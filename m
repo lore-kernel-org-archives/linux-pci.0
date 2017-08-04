@@ -1,71 +1,108 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Zheng, Lv" <lv.zheng@intel.com>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: Re: [PATCH 3/3] ACPI / scan: Enable GPEs before scanning the namespace
-Date: Tue, 15 Aug 2017 14:22:26 +0200
-Message-ID: <1868898.NJio3FymBZ@aspire.rjw.lan>
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF0AFE3@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <6344941.kJ2o2XerZ0@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF0AFE3@SHSMSX101.ccr.corp.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v3 4/6] dt-bindings: PCI: rename and cleanup MediaTek binding text
+Date: Fri, 4 Aug 2017 20:06:40 +0800
+Message-ID: <4209148bf2fa9bb981d44e8b0245141ccb25c23a.1501846816.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1501846816.git.honghui.zhang@mediatek.com>
+References: <cover.1501846816.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 15, 2017 4:12:24 AM CEST Zheng, Lv wrote:
-> Hi, Rafael
-> 
-> > From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.kernel.org] On Behalf Of Rafael J.
-> > Wysocki
-> > Subject: [PATCH 3/3] ACPI / scan: Enable GPEs before scanning the namespace
-> > 
-> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > On some systems the platform firmware expects GPEs to be enabled
-> > before the enumeration of devices and if that expectation is not
-> > met, the systems in question may not boot in some situations.
-> > 
-> > For this reason, change the initialization ordering of the ACPI
-> > subsystem to make it enable GPEs before scanning the namespace
-> > for the first time in order to enumerate devices.
-> > 
-> > Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > ---
-> >  drivers/acpi/scan.c |    8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > Index: linux-pm/drivers/acpi/scan.c
-> > ===================================================================
-> > --- linux-pm.orig/drivers/acpi/scan.c
-> > +++ linux-pm/drivers/acpi/scan.c
-> > @@ -2139,6 +2139,10 @@ int __init acpi_scan_init(void)
-> >  			acpi_get_spcr_uart_addr();
-> >  	}
-> > 
-> > +	acpi_gpe_apply_masked_gpes();
-> > +	acpi_update_all_gpes();
-> > +	acpi_ec_ecdt_start();
-> > +
-> 
-> Just for your information.
-> A recent internal bug reveals that acpi_ec_ecdt_start() should only be
-> invoked after the enumeration (acpi_ec_add()) for now.
-> The function contains logics that need to be altered by acpi_ec_add().
-> 
-> So it seems we can only do less aggressive change by moving the GPE
-> related 2 lines up.
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-OK, done.
+In order to accommodate other SoC generations, this patch updates filename
+to make it more generic, regroups specific properties by SoCs, and removes
+redundant descriptions.
 
-Please check my linux-next branch and see if that's what it should be.
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 32 +++++++++++-----------
+ 1 file changed, 16 insertions(+), 16 deletions(-)
+ rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (90%)
 
-Thanks,
-Rafael
-
+diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+similarity index 90%
+rename from Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+rename to Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+index fe80dda..0fdcb15 100644
+--- a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+@@ -1,18 +1,13 @@
+-MediaTek Gen2 PCIe controller which is available on MT7623 series SoCs
+-
+-PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
+-ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
++MediaTek Gen2 PCIe controller
+ 
+ Required properties:
+-- compatible: Should contain "mediatek,mt7623-pcie".
++- compatible: Should contain one of the following strings:
++	"mediatek,mt2701-pcie"
++	"mediatek,mt7623-pcie"
+ - device_type: Must be "pci"
+ - reg: Base addresses and lengths of the PCIe controller.
+ - #address-cells: Address representation for root ports (must be 3)
+ - #size-cells: Size representation for root ports (must be 2)
+-- #interrupt-cells: Size representation for interrupts (must be 1)
+-- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+-  Please refer to the standard PCI bus binding document for a more detailed
+-  explanation.
+ - clocks: Must contain an entry for each entry in clock-names.
+   See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+@@ -20,12 +15,6 @@ Required properties:
+   - sys_ck0 :for clock of Port0
+   - sys_ck1 :for clock of Port1
+   - sys_ck2 :for clock of Port2
+-- resets: Must contain an entry for each entry in reset-names.
+-  See ../reset/reset.txt for details.
+-- reset-names: Must include the following entries:
+-  - pcie-rst0 :port0 reset
+-  - pcie-rst1 :port1 reset
+-  - pcie-rst2 :port2 reset
+ - phys: List of PHY specifiers (used by generic PHY framework).
+ - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+   number of PHYs as specified in *phys* property.
+@@ -34,6 +23,16 @@ Required properties:
+ - bus-range: Range of bus numbers associated with this controller.
+ - ranges: Ranges for the PCI memory and I/O regions.
+ 
++Required properties for MT7623/MT2701:
++- #interrupt-cells: Size representation for interrupts (must be 1)
++- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++- resets: Must contain an entry for each entry in reset-names.
++  See ../reset/reset.txt for details.
++- reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
++  number of root ports.
++
+ In addition, the device tree node must have sub-nodes describing each
+ PCIe port interface, having the following mandatory properties:
+ 
+@@ -85,7 +84,8 @@ Examples:
+ 			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
+ 			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
+ 		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
+-		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
++		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>,
++		       <&pcie2_phy PHY_TYPE_PCIE>;
+ 		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
+ 		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
+ 		bus-range = <0x00 0xff>;
+-- 
+2.6.4
