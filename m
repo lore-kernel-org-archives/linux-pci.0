@@ -1,37 +1,54 @@
-Return-Path: <SRS0=rgPv=7R=verge.net.au=horms@kernel.org>
-Return-Path: <SRS0=rgPv=7R=verge.net.au=horms@kernel.org>
-Date: Tue, 15 Aug 2017 17:56:35 +0200
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: rcar-pcie: Fix memory leak
-Message-ID: <20170815155634.GA21763@verge.net.au>
-References: <20170804033255.27171-1-harunobu.kurokawa.dn@renesas.com>
- <20170814211114.GH32525@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=kCPO=7G=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=kCPO=7G=redhat.com=alex.williamson@kernel.org>
+Date: Fri, 4 Aug 2017 08:28:13 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: 'Bjorn Helgaas' <helgaas@kernel.org>, Roland Dreier <roland@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "netdev@vger.kernel.org"
+ <netdev@vger.kernel.org>, Emil Tantilov <emil.s.tantilov@intel.com>
+Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
+Message-ID: <20170804082813.3162ee15@w520.home>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DD004B362@AcuExch.aculab.com>
+References: <20170720214101.7449-1-roland@kernel.org>
+	<20170803214911.GG20308@bhelgaas-glaptop.roam.corp.google.com>
+	<063D6719AE5E284EB5DD2968C1650D6DD004B362@AcuExch.aculab.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170814211114.GH32525@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 14, 2017 at 04:11:14PM -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 04, 2017 at 12:32:53PM +0900, Harunobu Kurokawa wrote:
-> > When no PCIe card is inserted, there is a memory leak as
-> > pci_free_resource_list is not called before returning.
-> > 
-> > v2:
-> >  separate the patch to two files.
-> > 
-> > Harunobu Kurokawa (1):
-> >   PCI: rcar-pcie: Fix memory leak when no PCIe card is inserted
-> > 
-> > Lorenzo Pieralisi (1):
-> >   PCI: rcar: Fix error exit path
-> > 
-> >  drivers/pci/host/pcie-rcar.c | 12 ++++++------
-> >  1 file changed, 6 insertions(+), 6 deletions(-)
-> 
-> Waiting for Simon's ack...
+On Fri, 4 Aug 2017 13:28:32 +0000
+David Laight <David.Laight@ACULAB.COM> wrote:
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+> From: Bjorn Helgaas
+> > Sent: 03 August 2017 22:49
+> > On Thu, Jul 20, 2017 at 02:41:01PM -0700, Roland Dreier wrote:  
+> > > From: Roland Dreier <roland@purestorage.com>
+> > >
+> > > Add one more variant of the 82599 plus the device IDs for X540 and X550
+> > > variants.  Intel has confirmed that none of these devices does peer-to-peer
+> > > between functions.  The X540 and X550 have added ACS capabilities in their
+> > > PCI config space, but the ACS control register is hard-wired to 0 for both
+> > > devices, so we still need the quirk for IOMMU grouping to allow assignment
+> > > of individual SR-IOV functions.  
+> ...
+> > > --- a/drivers/pci/quirks.c
+> > > +++ b/drivers/pci/quirks.c
+> > > @@ -4335,12 +4335,33 @@ static const struct pci_dev_acs_enabled {
+> > >  	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
+> > >  	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
+> > >  	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
+> > > +	{ PCI_VENDOR_ID_INTEL, 0x1528, pci_quirk_mf_endpoint_acs },
+> > >  	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
+> > > +	{ PCI_VENDOR_ID_INTEL, 0x154A, pci_quirk_mf_endpoint_acs },  
+> ...
+> 
+> That list is looking a bit long.
+> Is it possible to run-time determine that the ACS control register is hard wired
+> to zero, and apply the quirk to all such devices.
+> Or even changing to a (device & mask) == value test??
+
+In fact, hard-wired ACS doesn't need a quirk at all, please see the
+other thread of the discussion.  Thanks,
+
+Alex
