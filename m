@@ -1,59 +1,48 @@
-Return-Path: <SRS0=FFZG=7U=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=FFZG=7U=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <liudongdong3@huawei.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] PCIe AER: report uncorrectable errors only to the functions that logged the errors
-Date: Fri, 18 Aug 2017 12:02:21 +0100
-Message-ID: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <SRS0=5VDd=7G=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=5VDd=7G=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH 0/2] PCI: dwc: convert remaining dbi read/writes to
+ dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+To: Bjorn Helgaas <helgaas@kernel.org>, Niklas Cassel <niklas.cassel@axis.com>
+References: <20170714120735.11993-1-niklas.cassel@axis.com>
+ <20170802213255.GB7667@bhelgaas-glaptop.roam.corp.google.com>
+ <20170803201215.GX20308@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        Niklas Cassel
+	<niklass@axis.com>, <linux-kernel@vger.kernel.org>,
+        Pratyush Anand
+	<pratyush.anand@gmail.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <c074c3cb-f6fe-cb1e-f664-fc6f80ad1500@ti.com>
+Date: Fri, 4 Aug 2017 10:49:21 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170803201215.GX20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently if an uncorrectable error is reported by an EP the AER
-driver walks over all the devices connected to the upstream port
-bus and in turns call the report_error_detected() callback.
-If any of the devices connected to the bus does not implement
-dev->driver->err_handler->error_detected() do_recovery() will fail
-leaving all the bus hierarchy devices unrecovered.
 
-However for non fatal errors the PCIe link should not be considered
-compromised, therefore it makes sense to report the error only to
-all the functions that logged an error.
-This patch implements this new behaviour for non fatal errors.
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
----
-Changes from v1:
-   - now errors are reported only to the fucntions that logged the error
-     instead of all the functions in the same device.
-   - the patch subject has changed to match the new implementation
----
- drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+On Friday 04 August 2017 01:42 AM, Bjorn Helgaas wrote:
+> Adding Kishon & Pratyush for real this time.
+> 
+> On Wed, Aug 02, 2017 at 04:32:56PM -0500, Bjorn Helgaas wrote:
+>> [+cc Kishon, Pratyush]
+>>
+>> On Fri, Jul 14, 2017 at 02:07:33PM +0200, Niklas Cassel wrote:
+>>> Since the introduction of the dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros,
+>>> most dw_pcie_read(pci->dbi_base, ..)/dw_pcie_write(pci->dbi_base, ..) calls
+>>> have been converted to dw_pcie_readX_dbi/dw_pcie_writeX_dbi calls.
+>>> Convert the remaining calls.
+>>>
+>>> Niklas Cassel (2):
+>>>   PCI: dwc: dra7xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
+>>>   PCI: dwc: spear13xx: utilize dw_pcie_readX_dbi/dw_pcie_writeX_dbi
+>>>     macros
+>>>
+>>>  drivers/pci/dwc/pci-dra7xx.c     | 14 ++++++--------
+>>>  drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
+>>>  2 files changed, 16 insertions(+), 20 deletions(-)
+>>
+>> Waiting for ack from maintainers (cc'd).
 
-diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
-index b1303b3..057465ad 100644
---- a/drivers/pci/pcie/aer/aerdrv_core.c
-+++ b/drivers/pci/pcie/aer/aerdrv_core.c
-@@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
- 		 * If the error is reported by an end point, we think this
- 		 * error is related to the upstream link of the end point.
- 		 */
--		pci_walk_bus(dev->bus, cb, &result_data);
-+		if (state == pci_channel_io_normal)
-+			/*
-+			 * the error is non fatal so the bus is ok, just invoke
-+			 * the callback for the function that logged the error.
-+			 */
-+			cb(dev, &result_data);
-+		else
-+			pci_walk_bus(dev->bus, cb, &result_data);
- 	}
- 
- 	return result_data.result;
--- 
-2.7.4
+Tested this in dra7xx
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
