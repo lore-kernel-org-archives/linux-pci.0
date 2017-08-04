@@ -1,102 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37346 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755512AbdHYVil (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 25 Aug 2017 17:38:41 -0400
-Date: Fri, 25 Aug 2017 16:38:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v5 0/10] Some cleanup and bug fix for pcie-rockchip
-Message-ID: <20170825213838.GB8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=zv1j=7G=linux.intel.com=andriy.shevchenko@kernel.org>
+Return-Path: <SRS0=zv1j=7G=linux.intel.com=andriy.shevchenko@kernel.org>
+Message-ID: <1501854195.29303.377.camel@linux.intel.com>
+Subject: Re: [PATCH v1] x86/platform/intel-mid: Make IRQ allocation a bit
+ more flexible
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org, Ingo Molnar
+	 <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
+	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Date: Fri, 04 Aug 2017 16:43:15 +0300
+In-Reply-To: <20170804132418.GB16580@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170724173402.12939-1-andriy.shevchenko@linux.intel.com>
+	 <20170803220804.GK20308@bhelgaas-glaptop.roam.corp.google.com>
+	 <1501848579.29303.375.camel@linux.intel.com>
+	 <20170804132418.GB16580@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 23, 2017 at 03:01:13PM +0800, Shawn Lin wrote:
+On Fri, 2017-08-04 at 08:24 -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 04, 2017 at 03:09:39PM +0300, Andy Shevchenko wrote:
+> > On Thu, 2017-08-03 at 17:08 -0500, Bjorn Helgaas wrote:
+> > > On Mon, Jul 24, 2017 at 08:34:02PM +0300, Andy Shevchenko wrote:
+> > > > In the future we would use dynamic allocation for IRQ which
+> > > > brings
+> > > > non-1:1 mapping for IOAPIC domain. Thus, we need to respect
+> > > > return
+> > > > value
+> > > > of mp_map_gsi_to_irq() and assign it back to the device
+> > > > structure.
+> > > > 
+> > > > Besides that we need to read GSI from interrupt pin register to
+> > > > avoid
+> > > > cases when some drivers will try to initialize PCI device twice
+> > > > in a
+> > > > row
+> > > > which will call pcibios_enable_irq() twice as well.
+> > > 
+> > > This seems sort of suspect.  It doesn't seem robust to rely on the
+> > > value of PCI_INTERRUPT_LINE being zero before
+> > > pcibios_enable_irq().
+> > 
+> > So, you are telling that it's possible to get pcibios_enable_irq()
+> > called with PCI_INTERRUPT_LINE == 0?
 > 
-> Hi Bjorn,
-> 
-> Patch 1 -> 4 are for what you suggested in my V4
-> of bug fixing[1].
-> 
-> Patch 5 -> 7 are sloving what I said for my former
-> patch of PHY cleanup[2]. It seems you didn't see my
-> V2 of that[3], and my v2 also have some minor issues
-> that was fixed by Jeffy's patch[4]. So these patches in
-> flight for cleaning up the pcie-rockchip error handling
-> path which would conflict with each other. I merge the
-> similar PHY cleanup from patch[4].
-> 
-> Also I think we need to split it[4] up into smaller pieces.
-> So patch 8 -> 10 are for this purpose and avoid Jeffy to
-> rebase this work again.
-> 
-> Could you kindly drop patch[2] from your host-rockchip branch
-> and apply this patchset if it looks good to you? :)
-> 
-> [1]: https://patchwork.kernel.org/patch/9895141/
-> [2]: https://patchwork.kernel.org/patch/9890367/
-> [3]: https://patchwork.kernel.org/patch/9892461/
-> [4]: http://patchwork.ozlabs.org/patch/804239/
-> 
-> 
-> Changes in v5:
-> - rebase on former reconstrtion patches suggested by Bjorn
-> - fix all the missing error handling cases that need to cleanup
->   PHY
-> 
-> Changes in v4:
-> - split out rockchip_pcie_enable_clocks and reuse
->   rockchip_pcie_enable_clocks and rockchip_pcie_disable_clocks
->   for elsewhere suggested by Jeffy
-> 
-> Changes in v3:
-> - check the return value of devm_add_action_or_reset and spilt out
->   rockchip_pcie_setup_irq in order to move requesting irq after
->   enabling clks.
-> 
-> Changes in v2:
-> - use devm_add_action_or_reset to fix this ordering suggested by
->   Heiko and Jeffy. Thanks!
-> 
-> Jeffy Chen (3):
->   PCI: rockchip: disable vpcie0v9 for resume_noirq error handling path
->   PCI: rockchip: remove irq domain if failing to probe
->   PCI: rockchip: umap io space if failing to probe
-> 
-> Shawn Lin (7):
->   PCI: rockchip: spilt out rockchip_pcie_setup_irq
->   PCI: rockchip: spilt out rockchip_pcie_enable_clocks
->   PCI: rockchip: spilt out rockchip_pcie_disable_clocks
->   PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
->   PCI: rockchip: spilt out rockchip_pcie_deinit_phys
->   PCI: rockchip: fix missing phy manipulation for legacy phy
->   PCI: rockchip: Clean up PHY if driver probe or resume fails
-> 
->  drivers/pci/host/pcie-rockchip.c | 297 ++++++++++++++++++++++-----------------
->  1 file changed, 166 insertions(+), 131 deletions(-)
+> I don't know about that.  I'm just saying that it sounds like you're
+> relying on some condition that is hard to verify.  PCI_INTERRUPT_LINE
+> is read/write and it's hard to know what, if anything, BIOS did with
+> it.
 
-I applied these to pci/host-rockchip except for these:
+_On this platform_ BIOS provides a static mapping for IRQ lines (there
+is no separate PIR, just IOAPIC). So, that register is initialized by
+firmware. We are not suppose to touch it _on this platform_.
 
-  PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
-  PCI: rockchip: fix missing phy manipulation for legacy phy
+> > > Can't we make pcibios_enable_irq() idempotent?  I guess I don't
+> > > understand the real problem here.
+> > 
+> > Currently there is no problem here.
+> > 
+> > Firmware assigns IRQ line and wrote this to the configuration space.
+> > Intel MID uses 1:1 mapping (IRQ domain is STRICT), so, it just
+> > allocates
+> > a vector inside kernel with the very same number.
+> > 
+> > But...
+> > 
+> > If we switch to dynamic allocation (it's a default for ACPI case),
+> > _on
+> > this platform_ we will get wrong allocation in the IOAPIC since
+> > mapping
+> > is not 1:1 anymore.
+> > 
+> > That's what I'm trying to avoid (dev->irq after this patch points
+> > correctly to dynamically allocated number).
+> > 
+> > For old SFI enabled platforms it will not make any change.
+> > 
+> > Note, there is no legacy PIC on this platform (as same case as for
+> > ACPI
+> > HW reduced platforms), just IOAPIC.
+> > 
+> > > Is this really two separate patches that could be separated?
+> > 
+> > I didn't get this, what separation you see might be applied here?
+> 
+> The "Besides that" in your changelog suggested that "here is another
+> change lumped into this patch."  I was wondering if the "read GSI from
+> PCI_INTERRUPT_LINE" part could be separated out.  That makes me wonder
+> whether this is really safe, since GSIs are 32 bits, but
+> PCI_INTERRUPT_LINE is only 8 bits.  I don't know enough to know why
+> this is safe in this case.
 
-I'm not really happy with the devm/clk_prepare_enable situation, so
-I'm waiting to see if a better solution emerges.
+"Besides that" part means "we have a second circumstance we have to
+follow to avoid breaking working platforms".
 
-I went ahead and applied the tweaks I proposed to the earlier "PCI:
-rockchip: Add per-lane PHY support" and "PCI: rockchip: Idle inactive
-PHY(s)" patches.  I *think* those make the "fix missing phy
-manipulation for legacy phy" patch unnecessary.
+The old code, if you look into patch, uses dev->irq as a predefined
+constant, which is not in case of dynamic allocation, so, if we respect
+return value from mp_map_gsi_to_irq() we may not use dev->irq as
+_source_ of IRQ mapping anymore.
 
-But please take a look and make sure.  If I went the wrong direction,
-I'll gladly back it out.
+I didn't check if we can do things in reversed order than I have done,
+i.e. apply part 2 as separate change and then respect the return value.
+It looks like it may be done in this way.
 
-Bjorn
+However, the patch is applied and I don't see any strong reason
+to revert it and bring again as a set of two patches. Thanks for your
+input anyway!
+
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
