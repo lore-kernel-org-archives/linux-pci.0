@@ -1,120 +1,119 @@
-Return-Path: <SRS0=obu3=7U=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=obu3=7U=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V10 1/3] PCI: introduce pci_bus_wait_crs() function
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-kernel@vger.kernel.org
-References: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
- <20170818030009.GK28977@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <255545a4-0481-e77a-63ad-260d02a43131@codeaurora.org>
-Date: Fri, 18 Aug 2017 09:33:11 -0400
+Return-Path: <SRS0=hGoy=7G=chelsio.com=leedom@kernel.org>
+Return-Path: <SRS0=hGoy=7G=chelsio.com=leedom@kernel.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Ding Tianhong <dingtianhong@huawei.com>, "ashok.raj@intel.com"
+	<ashok.raj@intel.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>, Michael Werner
+	<werner@chelsio.com>, Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>, "l.stach@pengutronix.de"
+	<l.stach@pengutronix.de>, "amira@mellanox.com" <amira@mellanox.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>, "will.deacon@arm.com"
+	<will.deacon@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>, "davem@davemloft.net"
+	<davem@davemloft.net>, "alexander.duyck@gmail.com"
+	<alexander.duyck@gmail.com>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
+Subject: Re: [PATCH v8 1/4] PCI: Add new PCIe Fabric End Node flag,
+  PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Fri, 4 Aug 2017 21:06:15 +0000
+Message-ID: <MWHPR12MB1600F5F2E2C4A5A7C5449896C8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>,<1501767889-7772-2-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1501767889-7772-2-git-send-email-dingtianhong@huawei.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20170818030009.GK28977@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/17/2017 11:00 PM, Bjorn Helgaas wrote:
-> On Fri, Aug 11, 2017 at 12:56:34PM -0400, Sinan Kaya wrote:
->> Kernel is hiding Configuration Request Retry Status (CRS) inside
->> pci_bus_read_dev_vendor_id() function. We are looking to add support for
->> Function Level Reset (FLR) where vendor id read returns ~0.
->>
->> Move CRS handling into its own function so that it can be called from other
->> places as well.
-> 
-> I think this is a much better idea than what I proposed.  I still have
-> a few questions proposals.  I'll post a v11 to show what I'm thinking.
-> 
+| From: Ding Tianhong <dingtianhong@huawei.com>
+| Sent: Thursday, August 3, 2017 6:44 AM
+|
+| diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+| index 6967c6b..1e1cdbe 100644
+| --- a/drivers/pci/quirks.c
+| +++ b/drivers/pci/quirks.c
+| @@ -4016,6 +4016,44 @@ static void quirk_tw686x_class(struct pci_dev *pde=
+v)
+|                                quirk_tw686x_class);
+|
+|  /*
+| + * Some devices have problems with Transaction Layer Packets with the Re=
+laxed
+| + * Ordering Attribute set.  Such devices should mark themselves and othe=
+r
+| + * Device Drivers should check before sending TLPs with RO set.
+| + */
+| +static void quirk_relaxedordering_disable(struct pci_dev *dev)
+| +{
+| +       dev->dev_flags |=3D PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
+| +}
+| +
+| +/*
+| + * Intel E5-26xx Root Complex has a Flow Control Credit issue which can
+| + * cause performance problems with Upstream Transaction Layer Packets wi=
+th
+| + * Relaxed Ordering set.
+| + */
+| +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT=
+_DEFINED, 8,
+| +                             quirk_relaxedordering_disable);
+| +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT=
+_DEFINED, 8,
+| +                             quirk_relaxedordering_disable);
+| +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT=
+_DEFINED, 8,
+| +                             quirk_relaxedordering_disable);
+| + ...
 
-Sure, let me know. I can test it.
+It looks like this is missing the set of Root Complex IDs that were noted i=
+n
+the document to which Patrick Cramer sent us a reference:
 
->> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
->> ---
->>  drivers/pci/pci.h   |  2 ++
->>  drivers/pci/probe.c | 44 ++++++++++++++++++++++++++++++--------------
->>  2 files changed, 32 insertions(+), 14 deletions(-)
->>
+https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-archi=
+tectures-optimization-manual.pdf
 
->>  		msleep(delay);
->>  		delay *= 2;
->>  		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
->> @@ -1858,6 +1846,34 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->>  			       PCI_FUNC(devfn));
->>  			return false;
-> 
-> While staring at this, I think I found a pre-existing bug in
-> pci_bus_read_dev_vendor_id().  It looks like this:
-> 
->   while ((*l & 0xffff) == 0x0001) {
->     pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l);
->     if (delay > crs_timeout)
->       return false;
->   }
-> 
-> The problem is that the config read may have *succeeded* that last
-> time before we time out.  I think the correct sequence is:
-> 
->   - check for timeout
->   - read PCI_VENDOR_ID
->   - check for CRS
-> 
+In section 3.9.1 we have:
 
-Yeah, it makes sense.
+    3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
+          and Toward MMIO Regions (P2P)
 
->>  		}
->> +	} while ((*l & 0xffff) == 0x0001);
->> +
->> +	return true;
->> +}
->> +EXPORT_SYMBOL(pci_bus_wait_crs);
-> 
-> I don't think we need EXPORT_SYMBOL here, do we?
+    In order to maximize performance for PCIe devices in the processors
+    listed in Table 3-6 below, the soft- ware should determine whether the
+    accesses are toward coherent memory (system memory) or toward MMIO
+    regions (P2P access to other devices). If the access is toward MMIO
+    region, then software can command HW to set the RO bit in the TLP
+    header, as this would allow hardware to achieve maximum throughput for
+    these types of accesses. For accesses toward coherent memory, software
+    can command HW to clear the RO bit in the TLP header (no RO), as this
+    would allow hardware to achieve maximum throughput for these types of
+    accesses.
 
-copy/paste mistake. 
+    Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
+               PCIe Performance
 
-> 
->> +bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->> +				int crs_timeout)
->> +{
->> +	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
->> +		return false;
->> +
->> +	/* some broken boards return 0 or ~0 if a slot is empty: */
->> +	if (*l == 0xffffffff || *l == 0x00000000 ||
->> +	    *l == 0x0000ffff || *l == 0xffff0000)
->> +		return false;
->> +
->> +	/*
->> +	 * Configuration Request Retry Status.  Some root ports return the
->> +	 * actual device ID instead of the synthetic ID (0xFFFF) required
->> +	 * by the PCIe spec.  Ignore the device ID and only check for
->> +	 * (vendor id == 1).
->> +	 */
->> +	if ((*l & 0xffff) == 0x0001) {
->> +		if (!crs_timeout)
->> +			return false;
-> 
-> One thing I don't like is that every caller of pci_bus_wait_crs() has
-> to know about the 0x0001 value.
+    Processor                            CPU RP Device IDs
 
-Another helper function? I was trying to poll for CRS completion only
-if we know that we are observing CRS.
+    Intel Xeon processors based on       6F01H-6F0EH
+    Broadwell microarchitecture
 
-> 
->> +		return pci_bus_wait_crs(bus, devfn, l, crs_timeout);
->>  	}
->>  
->>  	return true;
->> -- 
->> 1.9.1
->>
-> 
+    Intel Xeon processors based on       2F01H-2F0EH
+    Haswell microarchitecture
 
+The PCI Device IDs you have there are the first ones that I guessed at
+having the performance problem with Relaxed Ordering.  We now apparently
+have a complete list from Intel.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+I don't want to phrase this as a "NAK" because you've gone around the
+mulberry bush a bunch of times already.  So maybe just go with what you've
+got in version 8 of your patch and then do a follow on patch to complete th=
+e
+table?
+
+Casey=
