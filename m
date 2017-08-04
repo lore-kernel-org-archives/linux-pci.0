@@ -1,112 +1,114 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 29 Aug 2017 14:53:22 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V13 1/4] PCI: Don't ignore valid response before CRS
- timeout
-Message-ID: <20170829195322.GB2304@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503855651-17409-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1503855651-17409-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
- linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [RFC PATCH v3] pci: Concurrency issue during pci enable bridge
+Date: Fri,  4 Aug 2017 20:27:28 +0530
+Message-Id: <1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 27, 2017 at 01:40:48PM -0400, Sinan Kaya wrote:
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> While waiting for a device to become ready (i.e., to return a non-CRS
-> completion to a read of its Vendor ID), if we got a valid response to the
-> very last read before timing out, we printed a warning and gave up on the
-> device even though it was actually ready.
-> 
-> For a typical 60s timeout, we wait about 65s (it's not exact because of the
-> exponential backoff), but we treated devices that became ready between 33s
-> and 65s as though they failed.
-> 
-> Move the Device ID read later so we check whether the device is ready
-> immediately, before checking for a timeout.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> [okaya: reorder reads so that we check device presence after sleep]
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Concurrency issue is observed during pci enable bridge called
+for multiple pci devices initialization in SMP system.
 
-Applied this series to pci/enumeration for v4.14.  You didn't include a
-cover letter, but the series includes:
+Setup details:
+ - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+ - Two EPs are connected to PCIe RC through bridge as shown
+   in the below figure.
 
-  [V13 1/4] PCI: Don't ignore valid response before CRS timeout
-  [V13 2/4] PCI: Factor out pci_bus_wait_crs()
-  [V13 3/4] PCI: Handle CRS ('device not ready') returned by device af
-  [V13 4/4] PCI: Warn periodically while waiting for device to become
+                   [RC]
+                    |
+                 [BRIDGE]
+                    |
+               -----------
+              |           |
+             [EP]        [EP]
 
-I made some changes:
+Issue description:
+After PCIe enumeration completed EP driver probe function called
+for both the devices from two CPUS simultaneously.
+>From EP probe function, pci_enable_device_mem called for both the EPs.
+This function called pci_enable_bridge enable for all the bridges
+recursively in the path of EP to RC.
 
-  - Renamed pci_bus_crs_visibility_pending() to pci_bus_crs_vendor_id()
-    because the CRS completion is not "pending".  It is not waiting
-    somewhere for us to do something about it.  The CRS completion has
-    already occurred and is over.  All we have now is a magic Vendor ID
-    value that tells us that it happened.
+Inside pci_enable_bridge function, at two places concurrency issue is
+observed.
 
-  - Split addition of pci_bus_crs_vendor_id() to a separate patch, move
-    it to probe.c, and make it static.
+Place 1:
+  CPU 0:
+    1. Done Atomic increment dev->enable_cnt
+       in pci_enable_device_flags
+    2. Inside pci_enable_resources
+    3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+    4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
+  CPU 1:
+    1. Check pci_is_enabled in function pci_enable_bridge
+       and it is true
+    2. Check (!dev->is_busmaster) also true
+    3. Gone into pci_set_master
+    4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+    5. Ready to set PCI_COMMAND_MASTER (0x4) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
 
-  - Pass a pointer, not a value, to pci_bus_wait_crs() so the caller gets
-    correct Vendor ID when we're finished waiting.
+By the time of last point for both the CPUs are read value 0 and
+ready to write 2 and 4.
+After last point final value in PCI_COMMAND register is 4 instead of 6.
 
-  - Add in the 100ms mandatory sleep in the delays we print in
-    pci_flr_wait() so the printed value reflects the entire time since the
-    FLR was started.
+Place 2:
+  CPU 0:
+    1. Done Atomic increment dev->enable_cnt in
+       pci_enable_device_flags
 
-> ---
->  drivers/pci/probe.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c31310d..2849e0e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1847,17 +1847,18 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
->  		if (!crs_timeout)
->  			return false;
->  
-> -		msleep(delay);
-> -		delay *= 2;
-> -		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-> -			return false;
-> -		/* Card hasn't responded in 60 seconds?  Must be stuck. */
->  		if (delay > crs_timeout) {
->  			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
->  			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
->  			       PCI_FUNC(devfn));
->  			return false;
->  		}
-> +
-> +		msleep(delay);
-> +		delay *= 2;
-> +
-> +		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-> +			return false;
->  	}
->  
->  	return true;
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+---
+ drivers/pci/pci.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..12721df 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -52,6 +52,7 @@ static void pci_pme_list_scan(struct work_struct *work);
+ static LIST_HEAD(pci_pme_list);
+ static DEFINE_MUTEX(pci_pme_list_mutex);
+ static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
++static DEFINE_MUTEX(pci_bridge_mutex);
+ 
+ struct pci_pme_device {
+ 	struct list_head list;
+@@ -1348,10 +1349,11 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+ 
++	mutex_lock(&pci_bridge_mutex);
+ 	if (pci_is_enabled(dev)) {
+ 		if (!dev->is_busmaster)
+ 			pci_set_master(dev);
+-		return;
++		goto end;
+ 	}
+ 
+ 	retval = pci_enable_device(dev);
+@@ -1359,6 +1361,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
+ 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+ 			retval);
+ 	pci_set_master(dev);
++end:
++	mutex_unlock(&pci_bridge_mutex);
+ }
+ 
+ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+@@ -1383,7 +1387,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+ 		return 0;		/* already enabled */
+ 
+ 	bridge = pci_upstream_bridge(dev);
+-	if (bridge)
++	if (bridge && !pci_is_enabled(bridge))
+ 		pci_enable_bridge(bridge);
+ 
+ 	/* only skip sriov related */
+-- 
+2.7.4
