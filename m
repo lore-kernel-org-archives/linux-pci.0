@@ -1,113 +1,100 @@
-Return-Path: <SRS0=zv1j=7G=linux.intel.com=andriy.shevchenko@kernel.org>
-Return-Path: <SRS0=zv1j=7G=linux.intel.com=andriy.shevchenko@kernel.org>
-Message-ID: <1501854195.29303.377.camel@linux.intel.com>
-Subject: Re: [PATCH v1] x86/platform/intel-mid: Make IRQ allocation a bit
- more flexible
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org, Ingo Molnar
-	 <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Date: Fri, 04 Aug 2017 16:43:15 +0300
-In-Reply-To: <20170804132418.GB16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170724173402.12939-1-andriy.shevchenko@linux.intel.com>
-	 <20170803220804.GK20308@bhelgaas-glaptop.roam.corp.google.com>
-	 <1501848579.29303.375.camel@linux.intel.com>
-	 <20170804132418.GB16580@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: RE: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
+Date: Fri, 4 Aug 2017 03:45:22 +0000
+Message-ID: <AM5PR0402MB27710ADE6D6B36445B1EA79084B60@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
+ <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+ <20170803181915.GU20308@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170803181915.GU20308@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ "robh+dt@kernel.org" <robh+dt@kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2017-08-04 at 08:24 -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 04, 2017 at 03:09:39PM +0300, Andy Shevchenko wrote:
-> > On Thu, 2017-08-03 at 17:08 -0500, Bjorn Helgaas wrote:
-> > > On Mon, Jul 24, 2017 at 08:34:02PM +0300, Andy Shevchenko wrote:
-> > > > In the future we would use dynamic allocation for IRQ which
-> > > > brings
-> > > > non-1:1 mapping for IOAPIC domain. Thus, we need to respect
-> > > > return
-> > > > value
-> > > > of mp_map_gsi_to_irq() and assign it back to the device
-> > > > structure.
-> > > > 
-> > > > Besides that we need to read GSI from interrupt pin register to
-> > > > avoid
-> > > > cases when some drivers will try to initialize PCI device twice
-> > > > in a
-> > > > row
-> > > > which will call pcibios_enable_irq() twice as well.
-> > > 
-> > > This seems sort of suspect.  It doesn't seem robust to rely on the
-> > > value of PCI_INTERRUPT_LINE being zero before
-> > > pcibios_enable_irq().
-> > 
-> > So, you are telling that it's possible to get pcibios_enable_irq()
-> > called with PCI_INTERRUPT_LINE == 0?
-> 
-> I don't know about that.  I'm just saying that it sounds like you're
-> relying on some condition that is hard to verify.  PCI_INTERRUPT_LINE
-> is read/write and it's hard to know what, if anything, BIOS did with
-> it.
-
-_On this platform_ BIOS provides a static mapping for IRQ lines (there
-is no separate PIR, just IOAPIC). So, that register is initialized by
-firmware. We are not suppose to touch it _on this platform_.
-
-> > > Can't we make pcibios_enable_irq() idempotent?  I guess I don't
-> > > understand the real problem here.
-> > 
-> > Currently there is no problem here.
-> > 
-> > Firmware assigns IRQ line and wrote this to the configuration space.
-> > Intel MID uses 1:1 mapping (IRQ domain is STRICT), so, it just
-> > allocates
-> > a vector inside kernel with the very same number.
-> > 
-> > But...
-> > 
-> > If we switch to dynamic allocation (it's a default for ACPI case),
-> > _on
-> > this platform_ we will get wrong allocation in the IOAPIC since
-> > mapping
-> > is not 1:1 anymore.
-> > 
-> > That's what I'm trying to avoid (dev->irq after this patch points
-> > correctly to dynamically allocated number).
-> > 
-> > For old SFI enabled platforms it will not make any change.
-> > 
-> > Note, there is no legacy PIC on this platform (as same case as for
-> > ACPI
-> > HW reduced platforms), just IOAPIC.
-> > 
-> > > Is this really two separate patches that could be separated?
-> > 
-> > I didn't get this, what separation you see might be applied here?
-> 
-> The "Besides that" in your changelog suggested that "here is another
-> change lumped into this patch."  I was wondering if the "read GSI from
-> PCI_INTERRUPT_LINE" part could be separated out.  That makes me wonder
-> whether this is really safe, since GSIs are 32 bits, but
-> PCI_INTERRUPT_LINE is only 8 bits.  I don't know enough to know why
-> this is safe in this case.
-
-"Besides that" part means "we have a second circumstance we have to
-follow to avoid breaking working platforms".
-
-The old code, if you look into patch, uses dev->irq as a predefined
-constant, which is not in case of dynamic allocation, so, if we respect
-return value from mp_map_gsi_to_irq() we may not use dev->irq as
-_source_ of IRQ mapping anymore.
-
-I didn't check if we can do things in reversed order than I have done,
-i.e. apply part 2 as separate change and then respect the return value.
-It looks like it may be done in this way.
-
-However, the patch is applied and I don't see any strong reason
-to revert it and bring again as a set of two patches. Thanks for your
-input anyway!
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE35bm0OOaciDTml6UgMjoxOQ0KPiBUbzogWi5xLiBI
+b3UgPHpoaXFpYW5nLmhvdUBueHAuY29tPg0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9y
+ZzsgTWluZ2h1YW4gTGlhbg0KPiA8bWluZ2h1YW4uTGlhbkBmcmVlc2NhbGUuY29tPjsgcm9iaCtk
+dEBrZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBNaW5na2FpIEh1IDxtaW5na2Fp
+Lmh1QGZyZWVzY2FsZS5jb20+OyBSb3kgWmFuZw0KPiA8dGllLWZlaS56YW5nQGZyZWVzY2FsZS5j
+b20+OyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUmU6
+IFtQQVRDSF0gUENJOiBsYXllcnNjYXBlOiBBZGQgc3VwcG9ydCBmb3IgbHMyMDg4YSBhbmQgbHMx
+MDg4YQ0KPiANCj4gT24gVGh1LCBBdWcgMDMsIDIwMTcgYXQgMDM6MzU6NDZBTSArMDAwMCwgWi5x
+LiBIb3Ugd3JvdGU6DQo+ID4gSGkgQmpvcm4sDQo+ID4NCj4gPiBUaGFua3MgYSBsb3QgZm9yIHlv
+dXIgY29tbWVudHMhDQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4g
+PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fhc0BrZXJuZWwub3JnXQ0KPiA+ID4g
+U2VudDogMjAxN+W5tDjmnIgz5pelIDU6MzANCj4gPiA+IFRvOiBaLnEuIEhvdSA8emhpcWlhbmcu
+aG91QG54cC5jb20+DQo+ID4gPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
+YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiA+ID4gYmhlbGdhYXNAZ29vZ2xlLmNv
+bTsgcm9iaCtkdEBrZXJuZWwub3JnOyBNaW5naHVhbiBMaWFuDQo+ID4gPiA8bWluZ2h1YW4uTGlh
+bkBmcmVlc2NhbGUuY29tPjsgTWluZ2thaSBIdQ0KPiA+ID4gPG1pbmdrYWkuaHVAZnJlZXNjYWxl
+LmNvbT47IFJveSBaYW5nIDx0aWUtZmVpLnphbmdAZnJlZXNjYWxlLmNvbT4NCj4gPiA+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0hdIFBDSTogbGF5ZXJzY2FwZTogQWRkIHN1cHBvcnQgZm9yIGxzMjA4OGEg
+YW5kDQo+ID4gPiBsczEwODhhDQo+ID4gPg0KPiA+ID4gWytjYyBNaW5naHVhbiwgTWluZ2thaSwg
+Um95XQ0KPiA+ID4NCj4gPiA+IE9uIFRodSwgSnVsIDA2LCAyMDE3IGF0IDA1OjM5OjQ0UE0gKzA4
+MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4gPiA+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlx
+aWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiA+ID4NCj4gPiA+ID4gVGhlIGxzMTA4OGEgYW5kIGxzMjA4
+OGEgaGFzIHRoZSBzYW1lIFBDSWUgY29udHJvbGxlciwgc28gdGhlDQo+ID4gPiA+IGxzMTA4OGEg
+d2lsbCByZXVzZSB0aGUgbHMyMDg4YSdzIHBjaWUgY29tcGF0aWJsZS4NCj4gPiA+ID4NCj4gPiA+
+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4g
+PiA+ID4gLS0tDQo+ID4gPiA+ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNp
+L2xheWVyc2NhcGUtcGNpLnR4dCB8IDEgKw0KPiA+ID4gPiAgZHJpdmVycy9wY2kvZHdjL3BjaS1s
+YXllcnNjYXBlLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCA5DQo+ID4gPiArKysrKysrKysN
+Cj4gPiA+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKQ0KPiA+ID4gPg0KPiA+
+ID4gPiBkaWZmIC0tZ2l0DQo+ID4gPiA+IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
+bmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQNCj4gPiA+ID4gYi9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0KPiA+ID4gPiBpbmRleCBlZTFj
+NzJkNS4uY2I3MzVlMSAxMDA2NDQNCj4gPiA+ID4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0
+cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQNCj4gPiA+ID4gKysrIGIvRG9jdW1l
+bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQNCj4gPiA+
+ID4gQEAgLTE1LDYgKzE1LDcgQEAgUmVxdWlyZWQgcHJvcGVydGllczoNCj4gPiA+ID4gIC0gY29t
+cGF0aWJsZTogc2hvdWxkIGNvbnRhaW4gdGhlIHBsYXRmb3JtIGlkZW50aWZpZXIgc3VjaCBhczoN
+Cj4gPiA+ID4gICAgICAgICAgImZzbCxsczEwMjFhLXBjaWUiLCAic25wcyxkdy1wY2llIg0KPiA+
+ID4gPiAgICAgICAgICAiZnNsLGxzMjA4MGEtcGNpZSIsICJmc2wsbHMyMDg1YS1wY2llIiwgInNu
+cHMsZHctcGNpZSINCj4gPiA+ID4gKyAgICAgICAgImZzbCxsczIwODhhLXBjaWUiLCAiZnNsLGxz
+MTA4OGEtcGNpZSINCj4gPiA+DQo+ID4gPiBZb3UgYWRkICJmc2wsbHMxMDg4YS1wY2llIiBoZXJl
+LCBidXQgbm90IGluIHRoZSBsc19wY2llX29mX21hdGNoW10NCj4gPiA+IHRhYmxlIGluIHRoZSBk
+cml2ZXIsIHNvIEkgZG9uJ3QgdGhpbmsgdGhpcyB3aWxsIGFjdHVhbGx5IG1ha2UgdGhlDQo+ID4g
+PiBkcml2ZXIgY2xhaW0gbHMxMDg4YSBkZXZpY2VzLCB3aWxsIGl0Pw0KPiA+DQo+ID4gSSBtZWFu
+IHRoZSBsczEwODhhIHBjaWUgRFQgbm9kZXMgd2lsbCB1c2UgdGhlICJmc2wsbHMyMDg4YS1wY2ll
+Ig0KPiA+IHRvbywgc28gSSBkaWRuJ3QgYWRkIGFuIGVudHJ5IGZvciBsczEwODhhIHBjaWUgdG8g
+bHNfcGNpZV9vZl9tYXRjaFtdLg0KPiA+IElzIGl0IHJlYXNvbmFibGU/IE9yIGl0J3MgYmV0dGVy
+IHRvIGFkZCAiZnNsLGxzMTA4OGEtcGNpZSIgdG8NCj4gPiBsc19wY2llX29mX21hdGNoW10sIHRo
+ZW4gbHMxMDg4YSBwY2llIERUIG5vZGVzIHVzZSB0aGUgY29tcGF0aWJsZQ0KPiA+IHN0cmluZyAi
+ZnNsLGxzMTA4OGEtcGNpZSI/DQo+IA0KPiBZb3VyIGJpbmRpbmcgc2F5cyAiZnNsLGxzMTA4OGEt
+cGNpZSIgaXMgYSB2YWxpZCB2YWx1ZSBmb3IgImNvbXBhdGlibGUiLiAgQnV0IGlmIGENCj4gRFQg
+YWN0dWFsbHkgKnVzZXMqIHRoYXQsIEkgZG9uJ3QgdGhpbmsgdGhlIGRyaXZlciB3aWxsIGNsYWlt
+IGl0Lg0KPiANCj4gSWYgeW91IHdhbnQgdG8gZGVzY3JpYmUgbHMxMDg4YSBkZXZpY2VzIHdpdGgg
+ImZzbCxsczIwODhhLXBjaWUiLCBJIHRoaW5rIHlvdQ0KPiBjb3VsZCBkbyB0aGF0LCBidXQgdGhl
+biB3aHkgd291bGQgeW91IGV2ZW4gbWVudGlvbiAiZnNsLGxzMTA4OGEtcGNpZSIgaW4gdGhlDQo+
+IGJpbmRpbmc/DQo+IA0KPiBQZXJzb25hbGx5LCBpZiBsczEwODhhIGFuZCBsczIwODhhIGFyZSBk
+aWZmZXJlbnQgaW4gYW55IHdheSwgSSB3b3VsZCB0aGluayB5b3UNCj4gc2hvdWxkIHVzZSBkaWZm
+ZXJlbnQgaWRlbnRpZmllcnMgZm9yIHRoZW0gKGFuZCBhZGQgdGhlbSBib3RoIHRvIHRoZSBiaW5k
+aW5nIGFuZA0KPiB0byB0aGUgZHJpdmVyKS4gIFRoYXQgd2F5IGlmIGEgZnV0dXJlIGZlYXR1cmUg
+ZGVwZW5kcyBvbiB0aGUgZGlmZmVyZW5jZSwgeW91J2xsDQo+IGhhdmUgYSB3YXkgdG8gdGVzdCBm
+b3IgaXQuDQoNCkdvdCBpdCwgd2lsbCBhZGQgYm90aCBvZiB0aGVtIHRvIGRyaXZlciBhbmQgdGhl
+IGJpbmdkaW5nIGRvYy4NClRoYW5rcyBmb3IgdGhlIHN1Z2dlc3Rpb24hDQoNCj4gQnV0IEknbSBu
+b3QgYSBEVCBndXkuICBNYXliZSBSb2IgaGFzIGEgYmV0dGVyIHJlY29tbWVuZGF0aW9uPw0KPiAN
+Cg0KVGhhbmtzLA0KWmhpcWlhbmcNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFu
+L2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
