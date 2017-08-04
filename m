@@ -1,61 +1,202 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36269 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751624AbdHLMKp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2017 08:10:45 -0400
-Subject: Re: Support SVM without PASID
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
- <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
- <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
- <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
-Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
-        kevin.tian@intel.com, jacob.jun.pan@intel.com
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
-Date: Sat, 12 Aug 2017 17:40:54 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v6 1/2] PCI: iproc: Retry request when CRS returned from EP
+Date: Fri,  4 Aug 2017 21:18:15 +0530
+Message-Id: <1501861696-25767-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
+References: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+PCIe spec r3.1, sec 2.3.2
+If CRS software visibility is not enabled, the RC must reissue the
+config request as a new request.
 
+- If CRS software visibility is enabled,
+- for a config read of Vendor ID, the RC must return 0x0001 data
+- for all other config reads/writes, the RC must reissue the
+  request
 
-On 8/7/2017 4:01 PM, Jean-Philippe Brucker wrote:
-> On 05/08/17 06:14, valmiki wrote:
-> [...]
->> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
->> documentation we fill vaddr and iova in struct vfio_iommu_type1_dma_map
->> and pass them to VFIO. But if we use dynamic allocation in application
->> (say malloc), do we need to use dma API to get iova and then call
->> VFIO_IOMMU_MAP ioctl ?
->> If application needs multiple such dynamic allocations, then it need to
->> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and then
->> manage rest allocations requirements from this buffer ?
->
-> Yes, without SVM, the application allocates large buffers, allocates IOVAs
-> itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely on the
-> DMA API at all, it manages IOVAs as it wants. Sizes passed to
-> VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page granularity
-> (that is at least 4kB), and both iova and vaddr have to be aligned on that
-> granularity as well. So malloc isn't really suitable in this case, you'll
-> need mmap. The application can then implement a small allocator to manage
-> the DMA pool created with VFIO_IOMMU_MAP.
+iproc PCIe Controller spec:
+4.7.3.3. Retry Status On Configuration Cycle
+Endpoints are allowed to generate retry status on configuration
+cycles. In this case, the RC needs to re-issue the request. The IP
+does not handle this because the number of configuration cycles needed
+will probably be less than the total number of non-posted operations
+needed.
 
-Thanks Jean, I have a confusion allocate IOVA's in userspace means, how 
-can user application decide IOVA address, can user application pick any 
-random IOVA address ?
+When a retry status is received on the User RX interface for a
+configuration request that was sent on the User TX interface,
+it will be indicated with a completion with the CMPL_STATUS field set
+to 2=CRS, and the user will have to find the address and data values
+and send a new transaction on the User TX interface.
+When the internal configuration space returns a retry status during a
+configuration cycle (user_cscfg = 1) on the Command/Status interface,
+the pcie_cscrs will assert with the pcie_csack signal to indicate the
+CRS status.
+When the CRS Software Visibility Enable register in the Root Control
+register is enabled, the IP will return the data value to 0x0001 for
+the Vendor ID value and 0xffff  (all 1’s) for the rest of the data in
+the request for reads of offset 0 that return with CRS status.  This
+is true for both the User RX Interface and for the Command/Status
+interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
+field of the completion on the User RX Interface will not be 2=CRS and
+the pcie_cscrs signal will not assert on the Command/Status interface.
 
-Regards,
-Valmiki
+Note that, neither PCIe host bridge nor PCIe core re-issues the
+request for any configuration offset.
+
+As a result of the fact, PCIe RC driver (sw) should take care of
+retrying.
+This patch fixes the problem, and attempts to read config space again
+in case of PCIe code forwarding the CRS back to CPU.
+It implements iproc_pcie_config_read which gets called for Stingray,
+Otherwise it falls back to PCI generic APIs.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 0f39bd2..583cee0 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -68,6 +68,9 @@
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
++#define CFG_RETRY_STATUS             0xffff0001
++#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
++
+ /* derive the enum index of the outbound/inbound mapping registers */
+ #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+ 
+@@ -448,6 +451,66 @@ static inline void iproc_pcie_apb_err_disable(struct pci_bus *bus,
+ 	}
+ }
+ 
++static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++{
++	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
++	unsigned int ret;
++
++	/*
++	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software
++	 * Visibility only affects config read of the Vendor ID.
++	 * For config write or any other config read the Root must
++	 * automatically re-issue configuration request again as a
++	 * new request.
++	 *
++	 * Iproc based PCIe RC (hw) does not retry
++	 * request on its own, so handle it here.
++	 * Note that, AXI data 0xffff0001 returned by PAXB could be
++	 * valid data in configuration space, for e.g. BAR requesting
++	 * 64bit IO memory, so we retry till timeout.
++	 * And leave to be handled by upper layers.
++	 *
++	 * Also, iproc PCIe RC does not have any effect on
++	 * CRS Software visibility bit, irrespective if it
++	 * set or unset, the RC will never re-issue any configuration
++	 * access request.
++	 */
++	do {
++		ret = readl(cfg_data_p);
++		if (ret == CFG_RETRY_STATUS)
++			udelay(1);
++		else
++			return PCIBIOS_SUCCESSFUL;
++	} while (timeout--);
++
++	return PCIBIOS_DEVICE_NOT_FOUND;
++}
++
++static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
++					       unsigned int busno,
++					       unsigned int slot,
++					       unsigned int fn,
++					       int where)
++{
++	u16 offset;
++	u32 val;
++
++	/* EP device access */
++	val = (busno << CFG_ADDR_BUS_NUM_SHIFT) |
++		(slot << CFG_ADDR_DEV_NUM_SHIFT) |
++		(fn << CFG_ADDR_FUNC_NUM_SHIFT) |
++		(where & CFG_ADDR_REG_NUM_MASK) |
++		(1 & CFG_ADDR_CFG_TYPE_MASK);
++
++	iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
++	offset = iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
++
++	if (iproc_pcie_reg_is_invalid(offset))
++		return NULL;
++
++	return (pcie->base + offset);
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -499,13 +562,48 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct pci_bus *bus,
+ 		return (pcie->base + offset);
+ }
+ 
++static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	unsigned int slot = PCI_SLOT(devfn);
++	unsigned int fn = PCI_FUNC(devfn);
++	unsigned int busno = bus->number;
++	void __iomem *cfg_data_p;
++	int ret;
++
++	/* root complex access. */
++	if (busno == 0)
++		return pci_generic_config_read32(bus, devfn, where, size, val);
++
++	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
++
++	if (!cfg_data_p)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	ret = iproc_pcie_cfg_retry(cfg_data_p);
++	if (ret)
++		return ret;
++
++	*val = readl(cfg_data_p);
++
++	if (size <= 2)
++		*val = (*val >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+ 	int ret;
++	struct iproc_pcie *pcie = iproc_data(bus);
+ 
+ 	iproc_pcie_apb_err_disable(bus, true);
+-	ret = pci_generic_config_read32(bus, devfn, where, size, val);
++	if (pcie->type == IPROC_PCIE_PAXB_V2)
++		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
++	else
++		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	iproc_pcie_apb_err_disable(bus, false);
+ 
+ 	return ret;
+-- 
+1.9.1
