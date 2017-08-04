@@ -1,66 +1,85 @@
-Return-Path: <SRS0=YfgC=7R=mm-sol.com=svarbanov@kernel.org>
-Return-Path: <SRS0=YfgC=7R=mm-sol.com=svarbanov@kernel.org>
-Subject: Re: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-To: Bjorn Helgaas <helgaas@kernel.org>, Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, jingoohan1@gmail.com,
- Joao.Pinto@synopsys.com, minghuan.lian@nxp.com, mingkai.hu@nxp.com,
- roy.zang@nxp.com, Niklas Cassel <niklas.cassel@axis.com>,
- Jesper Nilsson <jesper.nilsson@axis.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
- <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <f74fb76f-4797-7d80-703b-440bc9c831dd@mm-sol.com>
-Date: Tue, 15 Aug 2017 12:34:25 +0300
+Return-Path: <SRS0=uSUB=7G=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=uSUB=7G=intel.com=ashok.raj@kernel.org>
+Date: Fri, 4 Aug 2017 13:21:41 -0700
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Casey Leedom <leedom@chelsio.com>
+Cc: Ding Tianhong <dingtianhong@huawei.com>,
+	Alexander Duyck <alexander.duyck@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Sinan Kaya <okaya@codeaurora.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	Michael Werner <werner@chelsio.com>,
+	Ganesh GR <ganeshgr@chelsio.com>,
+	"asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+	"patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+	"Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+	"Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>,
+	"amira@mellanox.com" <amira@mellanox.com>,
+	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+	"catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+	"will.deacon@arm.com" <will.deacon@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>,
+	"robin.murphy@arm.com" <robin.murphy@arm.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linuxarm@huawei.com" <linuxarm@huawei.com>, ashok.raj@intel.com
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Message-ID: <20170804202141.GA39054@otc-nc-03>
+References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
+ <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
+ <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
+ <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20170803083153.GB4883@otc-nc-03>
+ <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 08/15/2017 01:26 AM, Bjorn Helgaas wrote:
-> [+cc Stanimir, Niklas, Jesper]
+On Fri, Aug 04, 2017 at 08:20:37PM +0000, Casey Leedom wrote:
+> | From: Raj, Ashok <ashok.raj@intel.com>
+> | Sent: Thursday, August 3, 2017 1:31 AM
+> |
+> | I don't understand this completely.. So your driver would know not to send
+> | RO TLP's to root complex. But you want to send RO to the NVMe device? This
+> | is the peer-2-peer case correct?
 > 
-> On Mon, Aug 14, 2017 at 04:38:24PM -0500, Bjorn Helgaas wrote:
->> On Thu, Aug 03, 2017 at 04:23:38PM +0800, Zhiqiang Hou wrote:
->>> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
->>>
->>> Make the ls1021a's host_init reuse layerscape platform's common
->>> host_init function.
->>>
->>> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
->>> ---
->>> V2:
->>>  - Removed the disable outbound windows code and the remove duplicate class code
->>>    fixup code from this patch.
->>>
->>>  drivers/pci/dwc/pci-layerscape.c | 54 ++++++++++++++++++++--------------------
->>>  1 file changed, 27 insertions(+), 27 deletions(-)
->>>
->>> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
->>> index 09056a6..3533a8c 100644
->>> --- a/drivers/pci/dwc/pci-layerscape.c
->>> +++ b/drivers/pci/dwc/pci-layerscape.c
->>> @@ -107,33 +107,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
->>>  	return 1;
->>>  }
->>>  
-
-<cut>
-
+> Yes, this is the "heavy hammer" issue which you alluded to later.  There are
+> applications where a device will want to send TLPs to a Root Complex without
+> Relaxed Ordering set, but will want to use it when sending TLPs to a Peer
+> device (say, an NVMe storage device).  The current approach doesn't make
+> that easy ... and in fact, I still don't kow how to code a solution for this
+> with the proposed APIs.  This means that we may be trading off one
+> performance problem for another and that Relaxed Ordering may be doomed for
+> use under Linux for the foreseeable future.
 > 
->   - Enable write permission in dw_pcie_setup_rc() and remove class
->     code update from ls_pcie_host_init()  This will make it obvious
->     that fixing dw_pcie_setup_rc() makes ls_pcie_fix_class() obsolete.
+> As I've noted a number of times, it would be great if the Intel Hardware
+> Engineers who attempted to implement the Relaxed Ordering semantics in the
+> current generation of Root Complexes had left the ability to turn off the
+> logic which is obviously not working.  If there was a way to disable the
+> logic via an undocumented register, then we could have the Linux PCI Quirk
+> do that.  Since Relaxed Ordering is just a hint, it's completely legitimate
+> to completely ignore it.
+
+Suppose you are looking for the existence of a chicken bit to instruct the
+port to ignore RO traffic. So all we would do is turn the chicken bit on
+but would permit p2p traffic to be allowed since we won't turn off the
+capability as currently proposed.
+
+Let me look into that keep you posted.
+
+Cheers,
+Ashok
 > 
-> Does this dw_pcie_setup_rc() fix mean we can also get rid of the
-> device class check in qcom_pcie_rd_own_conf()?
-
-Thanks for the CC, I'll manage to test those patches and after that I'll
-confirm does this fixes device_class register value for qcom driver.
-
-
-regards,
-Stan
+> Casey
