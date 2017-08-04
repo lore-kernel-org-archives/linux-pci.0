@@ -1,18 +1,22 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
- <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
- <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
- <ryder.lee@mediatek.com>
-Subject: [PATCH v3 6/6] dt-bindings: PCI: add support for new generation
- controller
-Date: Fri, 4 Aug 2017 20:06:42 +0800
-Message-ID: <721a9148b9e80ad52ec0b8fbd5f9fe9b9be0f23e.1501846816.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1501846816.git.honghui.zhang@mediatek.com>
-References: <cover.1501846816.git.honghui.zhang@mediatek.com>
+From: Casey Leedom <leedom@chelsio.com>
+To: "Raj, Ashok" <ashok.raj@intel.com>
+Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
+Date: Fri, 4 Aug 2017 20:48:34 +0000
+Message-ID: <MWHPR12MB160086C4B4FA8F3B2EC1D5F9C8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
+ <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
+ <20170724090516.2e0f0d2a@w520.home>
+ <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
+ <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
+ <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
+ <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20170803083153.GB4883@otc-nc-03>
+ <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>,
+ <20170804202141.GA39054@otc-nc-03>
+In-Reply-To: <20170804202141.GA39054@otc-nc-03>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -21,239 +25,85 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>,
+ Alexander Duyck <alexander.duyck@gmail.com>, Sinan Kaya <okaya@codeaurora.org>,
+ "amira@mellanox.com" <amira@mellanox.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ Ding Tianhong <dingtianhong@huawei.com>, Ganesh GR <ganeshgr@chelsio.com>,
+ "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, Michael
+ Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+| From: Raj, Ashok <ashok.raj@intel.com>
+| Sent: Friday, August 4, 2017 1:21 PM
+|
+| On Fri, Aug 04, 2017 at 08:20:37PM +0000, Casey Leedom wrote:
+| > ...
+| > As I've noted a number of times, it would be great if the Intel Hardware
+| > Engineers who attempted to implement the Relaxed Ordering semantics in the
+| > current generation of Root Complexes had left the ability to turn off the
+| > logic which is obviously not working.  If there was a way to disable the
+| > logic via an undocumented register, then we could have the Linux PCI Quirk
+| > do that.  Since Relaxed Ordering is just a hint, it's completely legitimate
+| > to completely ignore it.
+|
+| Suppose you are looking for the existence of a chicken bit to instruct the
+| port to ignore RO traffic. So all we would do is turn the chicken bit on
+| but would permit p2p traffic to be allowed since we won't turn off the
+| capability as currently proposed.
+|
+| Let me look into that keep you posted.
 
-Add support for MediaTek new generation controller and update related
-properities.
+Huh, I'd never heard it called a "chicken bit" before, but yes, that's what
+I'm talking about.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/pci/mediatek-pcie.txt      | 168 ++++++++++++++++++++-
- 1 file changed, 161 insertions(+), 7 deletions(-)
+Whenever our Hardware Designers implement new functionality in our hardware,
+they almost always put in A. several "knobs" which can control fundamental
+parameters of the new Hardware Feature, and B.  a mechanism of completely
+disabling it if necessary.  This stems from the incredibly long Design ->
+Deployment cyle for Hardware (as opposed to the edit->compile->run cycle for s!
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 0fdcb15..2e81742 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -3,18 +3,31 @@ MediaTek Gen2 PCIe controller
- Required properties:
- - compatible: Should contain one of the following strings:
- 	"mediatek,mt2701-pcie"
-+	"mediatek,mt2712-pcie"
-+	"mediatek,mt7622-pcie"
- 	"mediatek,mt7623-pcie"
- - device_type: Must be "pci"
--- reg: Base addresses and lengths of the PCIe controller.
-+- reg: Base addresses and lengths of the PCIe subsys and root ports.
-+- reg-names: Names of the above areas to use during resource look-up.
- - #address-cells: Address representation for root ports (must be 3)
- - #size-cells: Size representation for root ports (must be 2)
- - clocks: Must contain an entry for each entry in clock-names.
-   See ../clocks/clock-bindings.txt for details.
--- clock-names: Must include the following entries:
--  - free_ck :for reference clock of PCIe subsys
--  - sys_ck0 :for clock of Port0
--  - sys_ck1 :for clock of Port1
--  - sys_ck2 :for clock of Port2
-+- clock-names:
-+  Mandatory entries:
-+   - sys_ckN :transaction layer and data link layer clock
-+  Required entries for MT2701/MT7623:
-+   - free_ck :for reference clock of PCIe subsys
-+  Required entries for MT2712/MT7622:
-+   - ahb_ckN :AHB slave interface operating clock for CSR access and RC
-+	      initiated MMIO access
-+  Required entries for MT7622:
-+   - axi_ckN :application layer MMIO channel operating clock
-+   - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-+	      pcie_mac_ck/pcie_pipe_ck is turned off
-+   - obff_ckN :OBFF functional block operating clock
-+   - pipe_ckN :LTSSM and PHY/MAC layer operating clock
-+  where N starting from 0 to one less than the number of root ports.
- - phys: List of PHY specifiers (used by generic PHY framework).
- - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-   number of PHYs as specified in *phys* property.
-@@ -33,6 +46,10 @@ Required properties for MT7623/MT2701:
- - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
-   number of root ports.
- 
-+Required properties for MT2712/MT7622:
-+-interrupts: A list of interrupt outputs of the controller, must have one
-+	     entry for each PCIe port
-+
- In addition, the device tree node must have sub-nodes describing each
- PCIe port interface, having the following mandatory properties:
- 
-@@ -50,7 +67,7 @@ Required properties:
-   property is sufficient.
- - num-lanes: Number of lanes to use for this port.
- 
--Examples:
-+Examples for MT7623:
- 
- 	hifsys: syscon@1a000000 {
- 		compatible = "mediatek,mt7623-hifsys",
-@@ -68,6 +85,7 @@ Examples:
- 		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
- 		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
- 		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
-+		reg-names = "subsys", "port0", "port1", "port2";
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		#interrupt-cells = <1>;
-@@ -128,3 +146,139 @@ Examples:
- 			num-lanes = <1>;
- 		};
- 	};
-+
-+Examples for MT2712:
-+	pcie: pcie@11700000 {
-+		compatible = "mediatek,mt2712-pcie";
-+		device_type = "pci";
-+		reg = <0 0x11700000 0 0x1000>,
-+		      <0 0x112ff000 0 0x1000>;
-+		reg-names = "port0", "port1";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
-+			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>,
-+			 <&pericfg CLK_PERI_PCIE0>,
-+			 <&pericfg CLK_PERI_PCIE1>;
-+		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1";
-+		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
-+		phy-names = "pcie-phy0", "pcie-phy1";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-+
-+		pcie0: pcie@0,0 {
-+			device_type = "pci";
-+			reg = <0x0000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+					<0 0 0 2 &pcie_intc0 1>,
-+					<0 0 0 3 &pcie_intc0 2>,
-+					<0 0 0 4 &pcie_intc0 3>;
-+			pcie_intc0: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+
-+		pcie1: pcie@1,0 {
-+			device_type = "pci";
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+					<0 0 0 2 &pcie_intc1 1>,
-+					<0 0 0 3 &pcie_intc1 2>,
-+					<0 0 0 4 &pcie_intc1 3>;
-+			pcie_intc1: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+	};
-+
-+Examples for MT7622:
-+	pcie: pcie@1a140000 {
-+		compatible = "mediatek,mt7622-pcie";
-+		device_type = "pci";
-+		reg = <0 0x1a140000 0 0x1000>,
-+		      <0 0x1a143000 0 0x1000>,
-+		      <0 0x1a145000 0 0x1000>;
-+		reg-names = "subsys", "port0", "port1";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
-+		clocks = <&pciesys CLK_PCIE_P0_MAC_EN>,
-+			 <&pciesys CLK_PCIE_P1_MAC_EN>,
-+			 <&pciesys CLK_PCIE_P0_AHB_EN>,
-+			 <&pciesys CLK_PCIE_P1_AHB_EN>,
-+			 <&pciesys CLK_PCIE_P0_AUX_EN>,
-+			 <&pciesys CLK_PCIE_P1_AUX_EN>,
-+			 <&pciesys CLK_PCIE_P0_AXI_EN>,
-+			 <&pciesys CLK_PCIE_P1_AXI_EN>,
-+			 <&pciesys CLK_PCIE_P0_OBFF_EN>,
-+			 <&pciesys CLK_PCIE_P1_OBFF_EN>,
-+			 <&pciesys CLK_PCIE_P0_PIPE_EN>,
-+			 <&pciesys CLK_PCIE_P1_PIPE_EN>;
-+		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1",
-+			      "aux_ck0", "aux_ck1", "axi_ck0", "axi_ck1",
-+			      "obff_ck0", "obff_ck1", "pipe_ck0", "pipe_ck1";
-+		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
-+		phy-names = "pcie-phy0", "pcie-phy1";
-+		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-+
-+		pcie0: pcie@0,0 {
-+			device_type = "pci";
-+			reg = <0x0000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+					<0 0 0 2 &pcie_intc0 1>,
-+					<0 0 0 3 &pcie_intc0 2>,
-+					<0 0 0 4 &pcie_intc0 3>;
-+			pcie_intc0: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+
-+		pcie1: pcie@1,0 {
-+			device_type = "pci";
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+					<0 0 0 2 &pcie_intc1 1>,
-+					<0 0 0 3 &pcie_intc1 2>,
-+					<0 0 0 4 &pcie_intc1 3>;
-+			pcie_intc1: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+	};
--- 
-2.6.4
+It's obvious that handling Relaxed Ordering is a new Hardware Feature for
+Intel's Root Complexes since previous versions simply ignored it (because
+that's legal[1]).  If I was a Hardware Engineer tasked with implementing
+Relaxed Ordering semantics for a device, I would certainly have also
+implemented a switch to turn it off in case there were unintended
+consequences (performance in this case).
 
+And if there is such a mechanism to simply disable processing of Relaxed
+Ordering semantics in the Root Complex, that would be a far easier "fix" for
+this problem ... and leave the code in place to continue sending Relaxed
+Ordering TLPs for a future Root Complex implementation which got it right ...
+
+Casey
+
+[1] One can't ~quite~ just ignore the Relaxed Ordering Attribute on an
+    incoming Transaction Layer Packet Request: PCIe completion rules (see
+    section 2.2.9 of the PCIe 3.0 specificatin) require that the Relaxed
+    Ordering and No Snoop Attributes in a Request TLP be reflected back
+    verbatim in any corresponding Response TLP.  (The rules for ID-Based
+    Ordering are more complex.)
 
 _______________________________________________
 linux-arm-kernel mailing list
