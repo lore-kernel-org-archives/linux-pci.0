@@ -1,254 +1,125 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 8 Aug 2017 21:22:39 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ding Tianhong <dingtianhong@huawei.com>
-Subject: Re: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
-Message-ID: <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
- <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=Imnu=7G=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=Imnu=7G=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Dongdong Liu
+	<liudongdong3@huawei.com>
+Subject: [PATCH] PCIe AER: report non fatal errors only to the functions of the same device
+Date: Fri, 4 Aug 2017 10:18:26 +0800
+Message-ID: <1501813106-89672-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
- alexander.duyck@gmail.com, ashok.raj@intel.com, jeffrey.t.kirsher@intel.com,
- linux-pci@vger.kernel.org, ganeshgr@chelsio.com, Bob.Shaw@amd.com,
- leedom@chelsio.com, patrick.j.cramer@intel.com, bhelgaas@google.com,
- werner@chelsio.com, linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
- netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
- Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, davem@davemloft.net,
- l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 05, 2017 at 03:15:11PM +0800, Ding Tianhong wrote:
-> When bit4 is set in the PCIe Device Control register, it indicates
-> whether the device is permitted to use relaxed ordering.
-> On some platforms using relaxed ordering can have performance issues or
-> due to erratum can cause data-corruption. In such cases devices must avoid
-> using relaxed ordering.
-> 
-> This patch checks if there is any node in the hierarchy that indicates that
-> using relaxed ordering is not safe. 
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 
-I think you only check the devices between the root port and the
-target device.  For example, you don't check siblings or cousins of
-the target device.
+Currently if an uncorrectable error is reported by an EP the AER
+driver walks over all the devices connected to the upstream port
+bus and in turns call the report_error_detected() callback.
+If any of the devices connected to the bus does not implement
+dev->driver->err_handler->error_detected() do_recovery() will fail.
 
-> In such cases the patch turns off the
-> relaxed ordering by clearing the eapability for this device.
+However for non fatal errors the PCIe link should not be considered
+compromised, therefore it makes sense to report the error only to
+all the functions of a multifunction device.
+This patch implements this new behaviour for non fatal errors.
 
-s/eapability/capability/
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ drivers/pci/bus.c                  | 38 ++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pcie/aer/aerdrv_core.c | 13 ++++++++++++-
+ include/linux/pci.h                |  3 ++-
+ 3 files changed, 52 insertions(+), 2 deletions(-)
 
-> And if the
-> device is probably running in a guest machine, we should do nothing.
-
-I don't know what this sentence means.  "Probably running in a guest
-machine" doesn't really make sense, and there's nothing in your patch
-that explicitly checks for being in a guest machine.
-
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-> Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-> Acked-by: Ashok Raj <ashok.raj@intel.com>
-> ---
->  drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
->  drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  2 ++
->  3 files changed, 68 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index af0cc34..4f9d7c1 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
->  EXPORT_SYMBOL(pcie_set_mps);
->  
->  /**
-> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
-> + * @dev: PCI device to query
-> + *
-> + * If possible clear relaxed ordering
-
-Why "If possible"?  The bit is required to be RW or hardwired to zero,
-so PCI_EXP_DEVCTL_RELAX_EN should *always* be zero when this returns.
-
-> + */
-> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-> +					  PCI_EXP_DEVCTL_RELAX_EN);
-> +}
-> +EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
-
-The current series doesn't add any callers of this except
-pci_configure_relaxed_ordering(), so it doesn't need to be exported to
-modules.
-
-I think I would put both of these functions in drivers/pci/probe.c.
-Then this one could be static and you'd only have to add
-pcie_relaxed_ordering_supported() to include/linux/pci.h.
-
-> +
-> +/**
-> + * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
-
-s/relexed/relaxed/
-
-> + * @dev: PCI device to query
-> + *
-> + * Returns true if the device support relaxed ordering attribute.
-> + */
-> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
-> +{
-> +	u16 v;
-> +
-> +	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-> +
-> +	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-> +}
-> +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
-
-This is misnamed.  This doesn't tell us anything about whether the
-device *supports* relaxed ordering.  It only tells us whether the
-device is *permitted* to use it.
-
-When a device initiates a transaction, the hardware should set the RO
-bit in the TLP with logic something like this:
-
-  RO = <this Function supports relaxed ordering> &&
-       <this transaction doesn't require strong write ordering> &&
-       <PCI_EXP_DEVCTL_RELAX_EN is set>
-
-The issue you're fixing is that some Completers don't handle RO
-correctly.  The determining factor is not the Requester, but the
-Completer (for this series, a Root Port).  So I think this should be
-something like:
-
-  int pcie_relaxed_ordering_broken(struct pci_dev *completer)
-  {
-    if (!completer)
-      return 0;
-
-    return completer->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
-  }
-
-and the caller should do something like this:
-
- if (pcie_relaxed_ordering_broken(pci_find_pcie_root_port(pdev)))
-   adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-
-That way it's obvious where the issue is, and it's obvious that the
-answer might be different for peer-to-peer transactions than it is for
-transactions to the root port, i.e., to coherent memory.
-
-> +
-> +/**
->   * pcie_get_minimum_link - determine minimum link settings of a PCI device
->   * @dev: PCI device to query
->   * @speed: storage for minimum speed
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index c31310d..48df012 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1762,6 +1762,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
->  					 PCI_EXP_DEVCTL_EXT_TAG);
->  }
->  
-> +/**
-> + * pci_dev_should_disable_relaxed_ordering - check if the PCI device
-> + * should disable the relaxed ordering attribute.
-> + * @dev: PCI device
-> + *
-> + * Return true if any of the PCI devices above us do not support
-> + * relaxed ordering.
-> + */
-> +static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	while (dev) {
-> +		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
-> +			return true;
-> +
-> +		dev = dev->bus->self;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-> +{
-> +	/* We should not alter the relaxed ordering bit for the VF */
-> +	if (dev->is_virtfn)
-> +		return;
-> +
-> +	/* If the releaxed ordering enable bit is not set, do nothing. */
-
-s/releaxed/relaxed/
-
-> +	if (!pcie_relaxed_ordering_supported(dev))
-> +		return;
-> +
-> +	if (pci_dev_should_disable_relaxed_ordering(dev)) {
-> +		pcie_clear_relaxed_ordering(dev);
-> +		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
-
-This associates the message with the Requester that may potentially
-use relaxed ordering.  But there's nothing wrong or unusual about the
-Requester; the issue is with the *Completer*, so I think the message
-should be in the quirk where we set PCI_DEV_FLAGS_NO_RELAXED_ORDERING.
-Maybe it should be both places; I dunno.
-
-This implementation assumes the device only initiates transactions to
-coherent memory, i.e., it assumes the device never does peer-to-peer
-DMA.  I guess we'll have to wait and see if we trip over any
-peer-to-peer issues, then figure out how to handle them.
-
-> +	}
-> +}
-> +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->  	struct hotplug_params hpp;
-> @@ -1769,6 +1805,7 @@ static void pci_configure_device(struct pci_dev *dev)
->  
->  	pci_configure_mps(dev);
->  	pci_configure_extended_tags(dev);
-> +	pci_configure_relaxed_ordering(dev);
->  
->  	memset(&hpp, 0, sizeof(hpp));
->  	ret = pci_get_hp_params(dev, &hpp);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 412ec1c..3aa23a2 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1127,6 +1127,8 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
->  void pci_pme_wakeup_bus(struct pci_bus *bus);
->  void pci_d3cold_enable(struct pci_dev *dev);
->  void pci_d3cold_disable(struct pci_dev *dev);
-> +int pcie_clear_relaxed_ordering(struct pci_dev *dev);
-> +bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
->  
->  /* PCI Virtual Channel */
->  int pci_save_vc_state(struct pci_dev *dev);
-> -- 
-> 1.8.3.1
-> 
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index bc56cf1..bc8f8b2 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -364,6 +364,44 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_bus_add_devices);
+ 
++/** pci_walk_mf_dev - walk all functions of a multi-function
++ *  device calling callback.
++ *  @dev      a function in a multi-function device
++ *  @cb       callback to be called for each device found
++ *  @userdata arbitrary pointer to be passed to callback.
++ *
++ *  Walk, on a given bus, only the adjacent functions of a
++ *  multi-function device. Call the provided callback on each
++ *  device found.
++ *
++ *  We check the return of @cb each time. If it returns anything
++ *  other than 0, we break out.
++ *
++ */
++void pci_walk_mf_dev(struct pci_dev *dev, int (*cb)(struct pci_dev *, void *),
++		  void *userdata)
++{
++	int retval;
++	struct pci_bus *bus;
++	struct pci_dev *pdev;
++	int ndev;
++
++	bus = dev->bus;
++	ndev = PCI_SLOT(dev->devfn);
++
++	down_read(&pci_bus_sem);
++	/* call cb for all the functions of the mf device */
++	list_for_each_entry(pdev, &bus->devices, bus_list) {
++		if (PCI_SLOT(pdev->devfn) == ndev) {
++			retval = cb(pdev, userdata);
++			if (retval)
++				break;
++		}
++	}
++	up_read(&pci_bus_sem);
++}
++EXPORT_SYMBOL_GPL(pci_walk_mf_dev);
++
+ /** pci_walk_bus - walk devices on/under bus, calling callback.
+  *  @top      bus whose devices should be walked
+  *  @cb       callback to be called for each device found
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index b1303b3..67c3dc0 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -390,7 +390,18 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		 * If the error is reported by an end point, we think this
+ 		 * error is related to the upstream link of the end point.
+ 		 */
+-		pci_walk_bus(dev->bus, cb, &result_data);
++		if ((state == pci_channel_io_normal) &&
++				(!pci_ari_enabled(dev->bus)))
++			/*
++			 * the error is non fatal so the bus is ok, just walk
++			 * through all the functions in a multifunction device.
++			 * if ARI is enabled on the bus then there can be only
++			 * one device under that bus (so walk all the functions
++			 * under the bus).
++			 */
++			pci_walk_mf_dev(dev, cb, &result_data);
++		else
++			pci_walk_bus(dev->bus, cb, &result_data);
+ 	}
+ 
+ 	return result_data.result;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4869e66..69e77bb 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1269,7 +1269,8 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+ 					 struct pci_dev *dev);
+ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 		    int pass);
+-
++void pci_walk_mf_dev(struct pci_dev *dev, int (*cb)(struct pci_dev *, void *),
++		  void *userdata);
+ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		  void *userdata);
+ int pci_cfg_space_size(struct pci_dev *dev);
+-- 
+1.9.1
