@@ -1,44 +1,94 @@
-Return-Path: <SRS0=tUeC=77=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=tUeC=77=h08.hostsharing.net=foo00@kernel.org>
-Date: Wed, 30 Aug 2017 01:53:10 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mathias Nyman <mathias.nyman@linux.intel.com>
-Cc: Mason <slash.tmp@free.fr>, Felipe Balbi <felipe.balbi@linux.intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-usb <linux-usb@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: Possible regression between 4.9 and 4.13
-Message-ID: <20170829235310.GA20214@wunner.de>
-References: <87a82qbyv5.fsf@linux.intel.com>
- <599D3410.9050504@intel.com>
- <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
- <599D62EA.7050100@linux.intel.com>
- <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
- <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
- <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
- <59A3D6BF.7010400@linux.intel.com>
- <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
- <59A56C15.2000403@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <59A56C15.2000403@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:33297 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751278AbdHDKV3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Aug 2017 06:21:29 -0400
+Received: by mail-wr0-f195.google.com with SMTP id y43so2692623wrd.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Aug 2017 03:21:28 -0700 (PDT)
+From: Daniel Axtens <dja@axtens.net>
+To: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org
+Cc: benh@kernel.crashing.org, z.liuxinliang@hisilicon.com,
+        zourongrong@gmail.com, catalin.marinas@arm.com,
+        will.deacon@arm.com, gabriele.paoloni@huawei.com,
+        bhelgaas@google.com, airlied@linux.ie, daniel.vetter@intel.com,
+        alex.williamson@redhat.com, Daniel Axtens <dja@axtens.net>,
+        Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/3] powerpc: simplify and fix VGA default device behaviour
+Date: Fri,  4 Aug 2017 20:20:31 +1000
+Message-Id: <20170804102033.27731-2-dja@axtens.net>
+In-Reply-To: <20170804102033.27731-1-dja@axtens.net>
+References: <20170804102033.27731-1-dja@axtens.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 29, 2017 at 04:28:53PM +0300, Mathias Nyman wrote:
-> This tight check was originally done to detect pci hotplug removed
-> hosts as soon as possible.
+Some powerpc devices provide a PCI display that isn't picked up by
+the VGA arbiter, presumably because it doesn't support the PCI
+legacy VGA ranges.
 
-In Mason's case, the parent of the XHCI controller isn't a hotplug port,
-see this lspci output:
+Commit c2e1d84523ad ("powerpc: Set default VGA device") introduced
+an arch quirk to mark these devices as default to fix X autoconfig.
 
-https://www.spinics.net/lists/linux-usb/msg160010.html
+The commit message stated that the patch:
 
-Please check is_hotplug_bridge in the parent's struct pci_dev before
-assuming that the XHCI controller was unplugged.
+    Ensures a default VGA is always set if a graphics adapter is present,
+    even if firmware did not initialize it. If more than one graphics
+    adapter is present, ensure the one initialized by firmware is set
+    as the default VGA device.
 
-Thanks,
+The patch used the following test to decide whether or not to mark
+a device as default:
 
-Lukas
+  pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+  if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
+          vga_set_default_device(pdev);
+
+This doesn't seem like it works quite as intended. Because of the
+logical OR, the default device will be set in 2 cases:
+
+ 1) if there is no default device
+OR
+ 2) if this device has normal memory/IO decoding turned on
+
+This will work as intended if there is only one device, but if
+there are multiple devices, we may override the device the VGA
+arbiter picked.
+
+Instead, set a device as default if there is no default device AND
+this device decodes.
+
+This will not change behaviour on single-headed systems.
+
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Daniel Axtens <dja@axtens.net>
+
+---
+
+Tested in TCG (the card provided by qemu doesn't automatically
+register with vgaarb, so the relevant code path has been tested)
+but I would appreciate any tests on real hardware.
+
+Informal benh ack: https://patchwork.kernel.org/patch/9850235/
+---
+ arch/powerpc/kernel/pci-common.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index 341a7469cab8..c95fdda3a2dc 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
+ {
+ 	u16 cmd;
+ 
++	if (vga_default_device())
++		return;
++
+ 	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+-	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
++	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
+ 		vga_set_default_device(pdev);
+ 
+ }
+-- 
+2.11.0
