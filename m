@@ -1,62 +1,61 @@
-Return-Path: <SRS0=h81V=7U=redhat.com=dledford@kernel.org>
-Return-Path: <SRS0=h81V=7U=redhat.com=dledford@kernel.org>
-Message-ID: <1503071066.2598.15.camel@redhat.com>
-Subject: Re: PCI/IB: add support for pci driver attribute groups
-From: Doug Ledford <dledford@redhat.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Greg KH <gregkh@linuxfoundation.org>
-Cc: Faisal Latif <faisal.latif@intel.com>, Sean Hefty
- <sean.hefty@intel.com>,  Hal Rosenstock <hal.rosenstock@gmail.com>, Bjorn
- Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 18 Aug 2017 11:44:26 -0400
-In-Reply-To: <20170801214046.GB26498@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170719130106.GE17776@kroah.com>
-	 <20170801214046.GB26498@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:35731 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752604AbdHDPsa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 4 Aug 2017 11:48:30 -0400
+Received: by mail-wm0-f43.google.com with SMTP id m85so23090883wma.0
+        for <linux-pci@vger.kernel.org>; Fri, 04 Aug 2017 08:48:29 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v6 0/2] PCI: iproc: SOC specific fixes
+Date: Fri,  4 Aug 2017 21:18:14 +0530
+Message-Id: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-08-01 at 16:40 -0500, Bjorn Helgaas wrote:
-> On Wed, Jul 19, 2017 at 03:01:06PM +0200, Greg KH wrote:
-> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> > 
-> > Some drivers (specifically the nes IB driver), want to create a lot
-> > of
-> > sysfs driver attributes.  Instead of open-coding the creation and
-> > removal of these files (and getting it wrong btw), it's a better
-> > idea to
-> > let the driver core handle all of this logic for us.
-> > 
-> > So add a new field to the pci driver structure, **groups, that
-> > allows
-> > pci drivers to specify an attribute group list it wishes to have
-> > created
-> > when it is registered with the driver core.
-> > 
-> > Big bonus is now the driver doesn't race with userspace when the
-> > sysfs
-> > files are created vs. when the kobject is announced, so any
-> > script/tool
-> > that actually wanted to use these files will not have to poll
-> > waiting
-> > for them to show up.
-> > 
-> > Cc: Faisal Latif <faisal.latif@intel.com>
-> > Cc: Doug Ledford <dledford@redhat.com>
-> > Cc: Sean Hefty <sean.hefty@intel.com>
-> > Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> If you want me to take this let me know; otherwise I'll assume Doug
-> will
-> merge it.
+PCI: iproc: Retry request when CRS returned from EP
+Above patch adds support for CRS in PCI RC driver, otherwise if not
+handled at lower level, the user space PMD (poll mode drivers) can
+timeout.
 
-I've picked it up for for-next.  Thanks.
+PCI: iproc: add device shutdown for PCI RC
+This fixes the issue where certian PCI endpoints are not getting
+detected on Stingray SOC after reboot.
+
+Changes Since v6:
+Bjorn's comments addressed.
+Added reference to PCIe spec and iproc Controller spec in Changelog.
+
+Changes Since v5:
+Ray's comments addressed.
+
+Changes Since v4:
+Bjorn's comments addressed.
+
+Changes Since v3:
+[re-send]
+
+Changes Since v2:
+Fix compilation errors for pcie-iproc-platform.ko which was caught by
+kbuild.
+
+Oza Pawandeep (2):
+  PCI: iproc: Retry request when CRS returned from EP
+  PCI: iproc: add device shutdown for PCI RC
+
+ drivers/pci/host/pcie-iproc-platform.c |   8 ++
+ drivers/pci/host/pcie-iproc.c          | 139 +++++++++++++++++++++++++++++----
+ drivers/pci/host/pcie-iproc.h          |   1 +
+ 3 files changed, 132 insertions(+), 16 deletions(-)
 
 -- 
-Doug Ledford <dledford@redhat.com>
-    GPG KeyID: B826A3330E572FDD
-    Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
+1.9.1
