@@ -1,120 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0047.outbound.protection.outlook.com ([104.47.42.47]:47472
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750912AbdHPFOH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 01:14:07 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv3 4/9] PCI: layerscape: refactor the host_init function
-Date: Wed, 16 Aug 2017 12:56:54 +0800
-Message-ID: <1502859419-33696-5-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v3 2/6] PCI: mediatek: Add a structure to abstract the controller generations
+Date: Fri, 4 Aug 2017 20:06:38 +0800
+Message-ID: <d8d42eae0a649b0c944dbc9b2ceebed432a04f32.1501846816.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1501846816.git.honghui.zhang@mediatek.com>
+References: <cover.1501846816.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-Make the ls1021a's host_init reuse layerscape platform's common
-host_init function.
+Introduce a structure "mtk_pcie_soc" to abstract the differences between
+controller generations, and the .startup() hook is used to encapsulate
+some SoC-dependent related setting. In doing so, the common code which
+will be reused by future chips.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
 ---
-V3:
- - Separate the calling of dw_pcie_setup_rc() to 1/9 of this patch set.
+ drivers/pci/host/pcie-mediatek.c | 31 ++++++++++++++++++++++++++-----
+ 1 file changed, 26 insertions(+), 5 deletions(-)
 
- drivers/pci/dwc/pci-layerscape.c | 65 ++++++++++++++++++----------------------
- 1 file changed, 29 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 3aa3421..57b86a0 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -108,42 +108,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
- 	return 1;
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 0d46cda..5d7f62e 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -64,6 +64,18 @@
+ #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
+ #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
+ 
++struct mtk_pcie_port;
++
++/**
++ * struct mtk_pcie_soc - differentiate between host generations
++ * @ops: pointer to configuration access functions
++ * @startup: pointer to controller setting functions
++ */
++struct mtk_pcie_soc {
++	struct pci_ops *ops;
++	int (*startup)(struct mtk_pcie_port *port);
++};
++
+ /**
+  * struct mtk_pcie_port - PCIe port information
+  * @base: IO mapped register base
+@@ -97,6 +109,7 @@ struct mtk_pcie_port {
+  * @busn: bus range
+  * @offset: IO / Memory offset
+  * @ports: pointer to PCIe port information
++ * @soc: pointer to SoC-dependent operations
+  */
+ struct mtk_pcie {
+ 	struct device *dev;
+@@ -112,6 +125,7 @@ struct mtk_pcie {
+ 		resource_size_t io;
+ 	} offset;
+ 	struct list_head ports;
++	const struct mtk_pcie_soc *soc;
+ };
+ 
+ static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+@@ -229,7 +243,8 @@ static int mtk_pcie_startup_ports(struct mtk_pcie_port *port)
+ 
+ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ {
+-	struct device *dev = port->pcie->dev;
++	struct mtk_pcie *pcie = port->pcie;
++	struct device *dev = pcie->dev;
+ 	int err;
+ 
+ 	err = clk_prepare_enable(port->sys_ck);
+@@ -247,7 +262,7 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
+ 		goto err_phy_on;
+ 	}
+ 
+-	if (!mtk_pcie_startup_ports(port))
++	if (!pcie->soc->startup(port))
+ 		return;
+ 
+ 	dev_info(dev, "Port%d link down\n", port->index);
+@@ -472,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
+ 
+ 	host->busnr = pcie->busn.start;
+ 	host->dev.parent = pcie->dev;
+-	host->ops = &mtk_pcie_ops;
++	host->ops = pcie->soc->ops;
+ 	host->map_irq = of_irq_parse_and_map_pci;
+ 	host->swizzle_irq = pci_common_swizzle;
+ 
+@@ -505,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	pcie = pci_host_bridge_priv(host);
+ 
+ 	pcie->dev = dev;
++	pcie->soc = of_device_get_match_data(dev);
+ 	platform_set_drvdata(pdev, pcie);
+ 	INIT_LIST_HEAD(&pcie->ports);
+ 
+@@ -529,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return err;
  }
  
--static int ls1021_pcie_host_init(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct ls_pcie *pcie = to_ls_pcie(pci);
--	struct device *dev = pci->dev;
--	u32 index[2];
--	int ret;
--
--	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
--						     "fsl,pcie-scfg");
--	if (IS_ERR(pcie->scfg)) {
--		ret = PTR_ERR(pcie->scfg);
--		dev_err(dev, "No syscfg phandle specified\n");
--		pcie->scfg = NULL;
--		return ret;
--	}
--
--	if (of_property_read_u32_array(dev->of_node,
--				       "fsl,pcie-scfg", index, 2)) {
--		pcie->scfg = NULL;
--		return -EINVAL;
--	}
--	pcie->index = index[1];
--
--	dw_pcie_setup_rc(pp);
--
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--	ls_pcie_fix_class(pcie);
--	ls_pcie_clear_multifunction(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--
--	ls_pcie_drop_msg_tlp(pcie);
--
--	return 0;
--}
--
- static int ls_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
-@@ -176,6 +140,35 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
++static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
++	.ops = &mtk_pcie_ops,
++	.startup = mtk_pcie_startup_ports,
++};
++
+ static const struct of_device_id mtk_pcie_ids[] = {
+-	{ .compatible = "mediatek,mt7623-pcie"},
+-	{ .compatible = "mediatek,mt2701-pcie"},
++	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
++	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+ 	{},
+ };
  
-+static int ls1021_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	struct device *dev = pci->dev;
-+	u32 index[2];
-+	int ret;
-+
-+	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-+						     "fsl,pcie-scfg");
-+	if (IS_ERR(pcie->scfg)) {
-+		ret = PTR_ERR(pcie->scfg);
-+		dev_err(dev, "No syscfg phandle specified\n");
-+		pcie->scfg = NULL;
-+		return ret;
-+	}
-+
-+	if (of_property_read_u32_array(dev->of_node,
-+				       "fsl,pcie-scfg", index, 2)) {
-+		pcie->scfg = NULL;
-+		return -EINVAL;
-+	}
-+	pcie->index = index[1];
-+
-+	ls_pcie_host_init(pp);
-+
-+	return 0;
-+}
-+
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
- 				 struct msi_controller *chip)
- {
 -- 
-2.1.0.27.g96db324
+2.6.4
