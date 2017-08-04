@@ -1,57 +1,43 @@
-Return-Path: <SRS0=GXRf=72=sntech.de=heiko@kernel.org>
-Return-Path: <SRS0=GXRf=72=sntech.de=heiko@kernel.org>
-From: Heiko Stuebner <heiko@sntech.de>
-To: Bjorn Helgaas <helgaas@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Fabio Estevam <festevam@gmail.com>, bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: rockchip: Use gpiod_set_value_cansleep() to allow reset via expanders
-Date: Thu, 24 Aug 2017 18:37:02 +0200
-Message-ID: <1690109.dqujpfY2W8@phil>
-In-Reply-To: <20170824163323.GG31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503187634-3823-1-git-send-email-festevam@gmail.com> <20170824163323.GG31858@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-db5eur01on0082.outbound.protection.outlook.com ([104.47.2.82]:54592
+        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751942AbdHDDqo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 3 Aug 2017 23:46:44 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Roy Zang <roy.zang@nxp.com>, Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "Minghuan Lian" <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>
+Subject: RE: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
+Date: Fri, 4 Aug 2017 03:46:39 +0000
+Message-ID: <AM5PR0402MB27716C990B0A0BF8DA807F3A84B60@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
+ <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+ <DB6PR04MB2949CCDAADC03863B80852108BB10@DB6PR04MB2949.eurprd04.prod.outlook.com>
+In-Reply-To: <DB6PR04MB2949CCDAADC03863B80852108BB10@DB6PR04MB2949.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, 24. August 2017, 11:33:23 CEST schrieb Bjorn Helgaas:
-> On Sat, Aug 19, 2017 at 09:07:14PM -0300, Fabio Estevam wrote:
-> > The reset GPIO can be connected to a I2C or SPI IO expander, which may
-> > sleep, so it is safer to use the gpiod_set_value_cansleep() variant
-> > instead.
-> > 
-> > Signed-off-by: Fabio Estevam <festevam@gmail.com>
-> 
-> Waiting for Shawn's ack...
-
-we might want to include him then, as I'm not sure if he patrols the
-linux-pci list :-) . [I've added him]
-
-
-> 
-> > ---
-> >  drivers/pci/host/pcie-rockchip.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> > index 2eccd53..124b280 100644
-> > --- a/drivers/pci/host/pcie-rockchip.c
-> > +++ b/drivers/pci/host/pcie-rockchip.c
-> > @@ -537,7 +537,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
-> >  	int err, i;
-> >  	u32 status;
-> >  
-> > -	gpiod_set_value(rockchip->ep_gpio, 0);
-> > +	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
-> >  
-> >  	err = reset_control_assert(rockchip->aclk_rst);
-> >  	if (err) {
-> > @@ -682,7 +682,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
-> >  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
-> >  			    PCIE_CLIENT_CONFIG);
-> >  
-> > -	gpiod_set_value(rockchip->ep_gpio, 1);
-> > +	gpiod_set_value_cansleep(rockchip->ep_gpio, 1);
-> >  
-> >  	/* 500ms timeout value should be enough for Gen1/2 training */
-> >  	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
-> 
-> 
+SGkgUm95LA0KDQpUaGFua3MgYSBsb3QgZm9yIHlvdXIgY29tbWVudHMhDQoNCj4gLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUm95IFphbmcNCj4gU2VudDogMjAxN8TqONTCNMjV
+IDI6MjMNCj4gVG86IFoucS4gSG91IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT47IEJqb3JuIEhlbGdh
+YXMgPGhlbGdhYXNAa2VybmVsLm9yZz4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+IGxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsNCj4gYmhlbGdhYXNAZ29vZ2xl
+LmNvbTsgcm9iaCtkdEBrZXJuZWwub3JnOyBNaW5naHVhbiBMaWFuDQo+IDxtaW5naHVhbi5MaWFu
+QGZyZWVzY2FsZS5jb20+OyBNaW5na2FpIEh1IDxtaW5na2FpLmh1QGZyZWVzY2FsZS5jb20+Ow0K
+PiBSb3kgWmFuZyA8dGllLWZlaS56YW5nQGZyZWVzY2FsZS5jb20+DQo+IFN1YmplY3Q6IFJlOiBb
+UEFUQ0hdIFBDSTogbGF5ZXJzY2FwZTogQWRkIHN1cHBvcnQgZm9yIGxzMjA4OGEgYW5kIGxzMTA4
+OGENCj4gDQo+IE9uIDA4LzAyLzIwMTcgMTA6MzYgUE0sIFoucS4gSG91IHdyb3RlOg0KPiA+IGFk
+ZCAiZnNsLGxzMTA4OGEtcGNpZSIgdG8gbHNfcGNpZV9vZl9tYXRjaFtdLCB0aGVuIGxzMTA4OGEg
+cGNpZSBEVCBub2RlcyB1c2UNCj4gdGhlIGNvbXBhdGlibGUgc3RyaW5nICJmc2wsbHMxMDg4YS1w
+Y2llIj8NCj4gDQo+IEknZCBzdWdnZXN0IGdvaW5nIHRoaXMgd2F5Lg0KDQpZZXMsIHRoYW5rcyBm
+b3IgdGhlIHN1Z2dlc3Rpb24uDQoNClRoYW5rcywNClpoaXFpYW5nDQoNCg==
