@@ -1,148 +1,103 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-To: Borislav Petkov <bp@suse.de>
-Cc: "Baicar, Tyler" <tbaicar@codeaurora.org>,
-        Tony Luck <tony.luck@intel.com>, rjw@rjwysocki.net,
-        lenb@kernel.org, will.deacon@arm.com, james.morse@arm.com,
-        prarit@redhat.com, punit.agrawal@arm.com, shiju.jose@huawei.com,
-        andriy.shevchenko@linux.intel.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
- <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
- <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
- <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
- <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
- <20170830101617.3m266q7xuew6ctxl@pd.tnic>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
-Date: Wed, 30 Aug 2017 10:05:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170830101617.3m266q7xuew6ctxl@pd.tnic>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:37806 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751241AbdHEGi1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 02:38:27 -0400
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 01/10] PCI: avoid arch_remove_reservations() for PCI_TEST
+Date: Fri,  4 Aug 2017 23:37:52 -0700
+Message-Id: <20170805063801.15880-2-yinghai@kernel.org>
+In-Reply-To: <20170805063801.15880-1-yinghai@kernel.org>
+References: <20170805063801.15880-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/30/2017 6:16 AM, Borislav Petkov wrote:
-> On Tue, Aug 29, 2017 at 06:34:49PM -0400, Sinan Kaya wrote:
->> The do_recovery function needs to be called for both uncorrectable error
->> categories. (#2 and #3 above)
-> 
-> Care to share why exactly that needs to happen?
+arch_remove_reservations will clip out with e820 from host that kernel
+running, that will cause failure from PCI_TEST from simulated data.
 
-Let me try below:
+PCI_TEST has different iomem resource instead iomem_resource,
+so check if iomem_resource is related to avoid calling
+arch_remove_reservations()
 
-> 
-> Because I'm reading this in pcieaer-howto.txt:
-> 
-> "If an error message indicates a non-fatal error, performing link reset
-> at upstream is not required."
-> 
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/kernel/resource.c | 15 +++++++++++++--
+ include/linux/ioport.h     |  3 ++-
+ kernel/resource.c          |  5 +++--
+ 3 files changed, 18 insertions(+), 5 deletions(-)
 
-Link reset is not the only recovery mechanism. In the case
-of nonfatal errors, it is assumed that the endpoint CSR is still reachable. 
-Error is propagated the PCIe endpoint driver. Endpoint driver does a
-re-initialization, we are back in business.
-
-> and
-> 
-> "If an error message indicates a fatal error, kernel will broadcast
-> error_detected(dev, pci_channel_io_frozen) to all drivers within a
-> hierarchy in question. Then, performing link reset at upstream is
-> necessary."
-> 
-> Now, pci-error-recovery.txt has link reset as step 3 so I'm assuming
-> recovery means link reset. And thus, non-fatal AER errors are not
-> required to do recovery but fatal are.
-
-Nope, link reset is the second approach. Endpoint recovery won't happen
-if the endpoint CSRs are unreachable. We have to recover the link by
-doing a link reset in this case. 
-
-Therefore, different behavior in do_recovery function based on the
-severity of the error.
-
-> 
->> How these map to GHES error categories is out of know-how.
-> 
->         case CPER_SEV_INFORMATIONAL:
->                 return GHES_SEV_NO;
->         case CPER_SEV_CORRECTED:
->                 return GHES_SEV_CORRECTED;
->         case CPER_SEV_RECOVERABLE:
->                 return GHES_SEV_RECOVERABLE;
->         case CPER_SEV_FATAL:
->                 return GHES_SEV_PANIC;
-> 
-> and
-> 
->         case CPER_SEV_RECOVERABLE:
->                 return AER_NONFATAL;
->         case CPER_SEV_FATAL:
->                 return AER_FATAL;
->         default:
->                 return AER_CORRECTABLE;
-> 
-
-Thanks for the mapping.
-
-> So I see GHES_SEV_RECOVERABLE -> CPER_SEV_RECOVERABLE -> AER_NONFATAL.
-> 
-> Which means, we've never done error recovery for AER_FATAL errors. Which
-> we should've been doing in the first place! Unless...
-That's not true. The GHES code is changing the severity here before posting
-to the AER driver in ghes_do_proc().
-
-	if (gdata->flags & CPER_SEC_RESET)
-		aer_severity = AER_FATAL;
-
-A PCIe error could be AER_FATAL but it is recoverable. It does not need to
-crash the system.
-
-Here is another mapping below based on my understanding.
-
-GHES_SEV_RECOVERABLE -> CPER_SEV_RECOVERABLE -> CPER_SEC_RESET-> AER_FATAL
-
-> 
-> ... Error recovery for those fatal errors has been happening down the
-> other, PCI path:
-> 
-> aer_isr->aer_isr_one_error->...->do_recovery()
-
-No, AER ISR is not set up if firmware first is enabled.
-
-> 
-> Which then makes me look at this contraption in the ghes code:
-> 
-> config ACPI_APEI_PCIEAER
->         bool "APEI PCIe AER logging/recovering support"
->         depends on ACPI_APEI && PCIEAER
->         help
->           PCIe AER errors may be reported via APEI firmware first mode.
->           Turn on this option to enable the corresponding support.
-> 
-> So this says "may be" reported.
-> 
-> Now the question is, what kind of errors are being reported through here
-> and what exactly are we expected to do about them? Print them? Or do
-> more?
-
-The behavior should match non firmware-first case ideally.
-
-1. Print all correctable errors.
-2. Go to do_recovery for all uncorrectable errors including fatal and
-non-fatal. 
-
-This is also what AER driver does in the absence of firmware first via
-handle_error_source().
-
-> 
-> Hmmm.
-> 
-
-
+diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
+index 5ab3895..f19b0f6 100644
+--- a/arch/x86/kernel/resource.c
++++ b/arch/x86/kernel/resource.c
+@@ -35,14 +35,25 @@ static void remove_e820_regions(struct resource *avail)
+ 	}
+ }
+ 
+-void arch_remove_reservations(struct resource *avail)
++static int is_from_iomem_resource(struct resource *root)
++{
++	while (root->parent)
++		root = root->parent;
++
++	if (root == &iomem_resource)
++		return 1;
++
++	return 0;
++}
++
++void arch_remove_reservations(struct resource *root, struct resource *avail)
+ {
+ 	/*
+ 	 * Trim out BIOS area (high 2MB) and E820 regions. We do not remove
+ 	 * the low 1MB unconditionally, as this area is needed for some ISA
+ 	 * cards requiring a memory range, e.g. the i82365 PCMCIA controller.
+ 	 */
+-	if (avail->flags & IORESOURCE_MEM) {
++	if ((avail->flags & IORESOURCE_MEM) && is_from_iomem_resource(root)) {
+ 		resource_clip(avail, BIOS_ROM_BASE, BIOS_ROM_END);
+ 
+ 		remove_e820_regions(avail);
+diff --git a/include/linux/ioport.h b/include/linux/ioport.h
+index 6230064..4e9272d 100644
+--- a/include/linux/ioport.h
++++ b/include/linux/ioport.h
+@@ -177,7 +177,8 @@ extern struct resource *insert_resource_conflict(struct resource *parent, struct
+ extern int insert_resource(struct resource *parent, struct resource *new);
+ extern void insert_resource_expand_to_fit(struct resource *root, struct resource *new);
+ extern int remove_resource(struct resource *old);
+-extern void arch_remove_reservations(struct resource *avail);
++extern void arch_remove_reservations(struct resource *root,
++					struct resource *avail);
+ extern int allocate_resource(struct resource *root, struct resource *new,
+ 			     resource_size_t size, resource_size_t min,
+ 			     resource_size_t max, resource_size_t align,
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 9b5f044..4174020 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -570,7 +570,8 @@ int region_intersects(resource_size_t start, size_t size, unsigned long flags,
+ }
+ EXPORT_SYMBOL_GPL(region_intersects);
+ 
+-void __weak arch_remove_reservations(struct resource *avail)
++void __weak arch_remove_reservations(struct resource *root,
++					 struct resource *avail)
+ {
+ }
+ 
+@@ -622,7 +623,7 @@ static int __find_resource(struct resource *root, struct resource *old,
+ 			goto next;
+ 
+ 		resource_clip(&tmp, constraint->min, constraint->max);
+-		arch_remove_reservations(&tmp);
++		arch_remove_reservations(root, &tmp);
+ 
+ 		/* Check for overflow after ALIGN() */
+ 		avail.start = ALIGN(tmp.start, constraint->align);
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.9.4
