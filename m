@@ -1,69 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57322 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751708AbdH3N7d (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Aug 2017 09:59:33 -0400
-Date: Wed, 30 Aug 2017 08:59:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Himanshu Jha <himanshujha199640@gmail.com>, bhelgaas@google.com,
-        jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Use PTR_ERR_OR_ZERO
-Message-ID: <20170830135931.GA18250@bhelgaas-glaptop.roam.corp.google.com>
-References: <1504013940-16304-1-git-send-email-himanshujha199640@gmail.com>
- <20170829135517.GA30733@ulmo>
+Return-Path: <SRS0=OR4n=7H=mediatek.com=ryder.lee@kernel.org>
+Return-Path: <SRS0=OR4n=7H=mediatek.com=ryder.lee@kernel.org>
+Message-ID: <1501913813.12086.17.camel@mtkswgap22>
+Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
+ support
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Honghui Zhang <honghui.zhang@mediatek.com>, <bhelgaas@google.com>,
+	<robh@kerenl.org>, <robh+dt@kernel.org>, <matthias.bgg@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+	<eddie.huang@mediatek.com>, <hongkun.cao@mediatek.com>,
+	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
+	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
+Date: Sat, 5 Aug 2017 14:16:53 +0800
+In-Reply-To: <1501908763.8298.11.camel@mtkswgap22>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
+	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
+	 <1501835976.24341.21.camel@mtksdaap41>
+	 <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
+	 <1501908763.8298.11.camel@mtkswgap22>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170829135517.GA30733@ulmo>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 29, 2017 at 03:55:17PM +0200, Thierry Reding wrote:
-> On Tue, Aug 29, 2017 at 07:09:00PM +0530, Himanshu Jha wrote:
-> > Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
-> > 
-> > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> > ---
-> >  drivers/pci/host/pci-tegra.c | 5 +----
-> >  1 file changed, 1 insertion(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-> > index 9c40da5..90cda5b 100644
-> > --- a/drivers/pci/host/pci-tegra.c
-> > +++ b/drivers/pci/host/pci-tegra.c
-> > @@ -1156,10 +1156,7 @@ static int tegra_pcie_resets_get(struct tegra_pcie *pcie)
-> >  		return PTR_ERR(pcie->afi_rst);
-> >  
-> >  	pcie->pcie_xrst = devm_reset_control_get_exclusive(dev, "pcie_x");
-> > -	if (IS_ERR(pcie->pcie_xrst))
-> > -		return PTR_ERR(pcie->pcie_xrst);
-> > -
-> > -	return 0;
-> > +	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
-> >  }
+On Sat, 2017-08-05 at 12:52 +0800, Ryder Lee wrote:
+> Hi Honghui, Bjorn,
 > 
-> I'm not a big fan of this construct because it's a pain to undo this if
-> ever we need to add code to this function. But since we do have scripts
-> that will flag this, I guess this would pop up every now and again. The
-> driver is unlikely to change in this part, too, so:
+> On Fri, 2017-08-04 at 08:18 -0500, Bjorn Helgaas wrote:
+> > On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
+> > > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
+> > > > > +
+> > > > > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
+> > > > > +						struct pci_bus *bus, int devfn)
+> > > > > +{
+> > > > > +	struct pci_dev *dev;
+> > > > > +	struct pci_bus *pbus;
+> > > > > +	struct mtk_pcie_port *port, *tmp;
+> > > > > +
+> > > > > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> > > > > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
+> > > > > +			return port;
+> > > > > +		} else if (bus->number != 0) {
+> > > > > +			pbus = bus;
+> > > > > +			do {
+> > > > > +				dev = pbus->self;
+> > > > > +				if (port->index == PCI_SLOT(dev->devfn))
+> > > > > +					return port;
+> > > > > +				pbus = dev->bus;
+> > > > > +			} while (dev->bus->number != 0);
+> > > > > +		}
+> > > > > +	}
+> > > > > +
+> > > > > +	return NULL;
+> > > > 
+> > > > You should be able to use sysdata to avoid searching the list.
+> > > > See drivers/pci/host/pci-aardvark.c, for example.
+> > > > 
+> > > 
+> > > I could put the mtk_pcie * in sysdata, but still need to searching the
+> > > list to get the mtk_pcie_port *, how about:
+> > > 
+> > > 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> > > 		if (port->index == PCI_SLOT(devfn))
+> > > 			return port;
+> > > 	}
+> > 
+> > No.  Other drivers don't need to search the list.  Please take a look
+> > at them and see how they solve this problem.  I don't think your
+> > hardware is fundamentally different in a way that means you need to
+> > search when the others don't.
+> > 
+> 
+> I'm not directly involved in this generation, but I guess the main reason why Honghui need to do that is just because this hardware access configuration space via per-port registers, not just for the guard.  
+> Currently, We had a host bridge with two ports (two subnodes in binding text), thus he tried to tells them apart so that he can get the correct registers.
+> 
+> Some platforms don't need to do that since they just have a single port (no more subnodes), the others might have specific/shared registers to access configuration space. (e.g. Tegra, MTK legacy IP block).
+> Or, he can split them into two independent nodes, but it will break common probing flow by doing so. (I'd prefer to use subnodes.)
+> 
+> Ryder
+> 
 
-Thanks for pointing this out.  Do you know what the benefit of
-PTR_ERR_OR_ZERO() is?  To me, it makes the following code harder
-to read because the error tests are no longer parallel:
+Sorry for the typesetting in previous mail and noise again,
 
-  ...
-  res->ahb_reset = devm_reset_control_get(dev, "ahb");
-  if (IS_ERR(res->ahb_reset))
-    return PTR_ERR(res->ahb_reset);
+I've took a look at pci-rcar-gen2.c, this is a similar case I can found
+for Honghui's case. It gathers two ports reg regions into one, and uses
+the "slot id" to calculate the cfg base of each port.
 
-  res->por_reset = devm_reset_control_get(dev, "por");
-  if (IS_ERR(res->por_reset))
-    return PTR_ERR(res->por_reset);
+Perhaps this is a example for those who need to use subnodes and use
+port registers for cfg operation. Not sure whether it's worthwhile doing
+that since we need to changes ports/host structures.
 
-  res->phy_reset = devm_reset_control_get(dev, "phy");
-  return PTR_ERR_OR_ZERO(res->phy_reset);
-
-So I'd be inclined to avoid it unless there's some significant benefit.
-
-Bjorn
+Ryder.
