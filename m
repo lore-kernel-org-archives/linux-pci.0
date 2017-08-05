@@ -1,135 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:44381 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751542AbdHOM3z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 08:29:55 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "Zheng, Lv" <lv.zheng@intel.com>
-Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-Date: Tue, 15 Aug 2017 14:21:30 +0200
-Message-ID: <1635689.qJin4YfZ5x@aspire.rjw.lan>
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF0B3F2@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <3677056.OS19FbOdkF@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF0B3F2@SHSMSX101.ccr.corp.intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+ <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linuxarm@huawei.com>
+Subject: [PATCH v9 4/4] net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+ flag
+Date: Sat, 5 Aug 2017 15:15:13 +0800
+Message-ID: <1501917313-9812-5-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, August 15, 2017 11:59:00 AM CEST Zheng, Lv wrote:
-> Hi,
-> 
-> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > 
-> > On Friday, August 11, 2017 7:40:56 AM CEST Zheng, Lv wrote:
-> > > Hi, Rafael
-> > >
-> > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > > >
-> > > > On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
-> > > > > Hi, Rafael
-> > > > >
-> > > > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > > > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > > > > >
-> > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > >
-> > > > > > In some cases GPEs are already active when they are enabled by
-> > > > > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
-> > > > > > on the result of handling the events signaled by them, so the
-> > > > > > events should not be discarded (which is what happens currently) and
-> > > > > > they should be handled as soon as reasonably possible.
-> > > > > >
-> > > > > > For this reason, modify acpi_ev_initialize_gpe_block() to
-> > > > > > dispatch GPEs with the status flag set in-band right after
-> > > > > > enabling them.
-> > > > >
-> > > > > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
-> > > > > right after enabling an GPE. So there are 2 conditions related:
-> > > > > 1. GPE is enabled for the first time.
-> > > > > 2. GPE is initialized.
-> > > > >
-> > > > > And we need to make sure that before acpi_update_all_gpes() is invoked,
-> > > > > all GPE EN bits are actually disabled.
-> > > >
-> > > > But we don't do it today, do we?
-> > >
-> > > We don't do that.
-> > >
-> > > >
-> > > > And still calling _dispatch() should not be incorrect even if the GPE
-> > > > has been enabled already at this point.  Worst case it just will
-> > > > queue up the execution of _Lxx/_Exx which may or may not do anything
-> > > > useful.
-> > > >
-> > > > And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
-> > > > will block on it if run concurrently and we've checked the status, so
-> > > > we know that the GPE *should* be dispatched, so I sort of fail to see
-> > > > the problem.
-> > >
-> > > There is another problem related:
-> > > ACPICA clears GPEs before enabling it.
-> > > This is proven to be wrong, and we have to fix it:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=196249
-> > >
-> > > without fixing this issue, in this solution, we surely need to save the
-> > > GPE STS bit before incrementing GPE reference count, and poll it according
-> > > to the saved STS bit. Because if we poll it after enabling, STS bit will
-> > > be wrongly cleared.
-> > 
-> > I'm not sure if I understand you correctly, but why would we poll it?
-> > 
-> > In the $subject patch the status is checked and then
-> > acpi_ev_add_gpe_reference() is called to add a reference to the GPE.
-> > 
-> > If this is the first reference (which will be the case in the majority
-> > of cases), acpi_ev_enable_gpe() will be called and that will clear the
-> > status.
-> > 
-> > Then, acpi_ev_gpe_dispatch() is called if the status was set and that
-> > itself doesn't check the status.  It disables the GPE upfront (so the
-> > status doesn't matter from now on until the GPE is enabled again) and
-> > clears the status unconditionally if the GPE is edge-triggered.  This
-> > means that for edge-triggered GPEs the clearing of the status by
-> > acpi_ev_enable_gpe() doesn't matter here.
-> 
-> No problem, I understood.
-> And was thinking thought this patch [edge GPE dispatch fix] should be
-> correct and good for current Linux upstream.
-> 
-> What I meant is:
-> PATCH [edge GPE clear fix] https://patchwork.kernel.org/patch/9894983/
-> is a fix we need for upstream as it is the only possible fix for the
-> issue fixed by it.
-> On top of that, when acpi_ev_enable_gpe() is called, GPE won't be cleared.
-> and then things can be done in a simpler way:
-> PATCH [edge GPE enable fix] https://patchwork.kernel.org/patch/9894989/
-> 
-> As [edge GPE clear fix] is risky, I think [edge GPE dispatch fix] is OK
-> for Linux upstream.
-> 
-> So we can have 2 processes:
-> 1. Merge [edge GPE dispatch fix] and let [edge GPE clear fix] and
->    [edge GPE enable fix] released from ACPICA upstream so that:
->    1. We can enhance them in ACPICA upstream.
->    2. It will be regression safer for us to merge [edge GPE clear fix].
-> 2. Merge [edge GPE clear fix] and [edge GPE enable fix] without
->    merging [edge GPE dispatch fix].
-> 
-> What I meant is:
-> It's up to you to decide which process we should take. :)
+From: Casey Leedom <leedom@chelsio.com>
 
-OK
+cxgb4vf Ethernet driver now queries PCIe configuration space to
+determine if it can send TLPs to it with the Relaxed Ordering
+Attribute set, just like the pf did.
 
-So I would go with what is already there in my tree.  Please work on top of
-that.
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Reviewed-by: Casey Leedom <leedom@chelsio.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4vf/adapter.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c | 18 ++++++++++++++++++
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c          |  3 +++
+ 3 files changed, 22 insertions(+)
 
-Thanks,
-Rafael
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
+index 109bc63..08c6ddb 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
+@@ -408,6 +408,7 @@ enum { /* adapter flags */
+ 	USING_MSI          = (1UL << 1),
+ 	USING_MSIX         = (1UL << 2),
+ 	QUEUES_BOUND       = (1UL << 3),
++	ROOT_NO_RELAXED_ORDERING = (1UL << 4),
+ };
+ 
+ /*
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
+index ac7a150..59e7639 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
+@@ -2888,6 +2888,24 @@ static int cxgb4vf_pci_probe(struct pci_dev *pdev,
+ 	 */
+ 	adapter->name = pci_name(pdev);
+ 	adapter->msg_enable = DFLT_MSG_ENABLE;
++
++	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
++	 * Ingress Packet Data to Free List Buffers in order to allow for
++	 * chipset performance optimizations between the Root Complex and
++	 * Memory Controllers.  (Messages to the associated Ingress Queue
++	 * notifying new Packet Placement in the Free Lists Buffers will be
++	 * send without the Relaxed Ordering Attribute thus guaranteeing that
++	 * all preceding PCIe Transaction Layer Packets will be processed
++	 * first.)  But some Root Complexes have various issues with Upstream
++	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
++	 * The PCIe devices which under the Root Complexes will be cleared the
++	 * Relaxed Ordering bit in the configuration space, So we check our
++	 * PCIe configuration space to see if it's flagged with advice against
++	 * using Relaxed Ordering.
++	 */
++	if (!pcie_relaxed_ordering_supported(pdev))
++		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
++
+ 	err = adap_init0(adapter);
+ 	if (err)
+ 		goto err_unmap_bar;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
+index e37dde2..05498e7 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
+@@ -2205,6 +2205,7 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
+ 	struct port_info *pi = netdev_priv(dev);
+ 	struct fw_iq_cmd cmd, rpl;
+ 	int ret, iqandst, flsz = 0;
++	int relaxed = !(adapter->flags & ROOT_NO_RELAXED_ORDERING);
+ 
+ 	/*
+ 	 * If we're using MSI interrupts and we're not initializing the
+@@ -2300,6 +2301,8 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
+ 			cpu_to_be32(
+ 				FW_IQ_CMD_FL0HOSTFCMODE_V(SGE_HOSTFCMODE_NONE) |
+ 				FW_IQ_CMD_FL0PACKEN_F |
++				FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
++				FW_IQ_CMD_FL0DATARO_V(relaxed) |
+ 				FW_IQ_CMD_FL0PADEN_F);
+ 
+ 		/* In T6, for egress queue type FL there is internal overhead
+-- 
+1.8.3.1
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
