@@ -1,90 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57626 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752392AbdHHUpJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 16:45:09 -0400
-Date: Tue, 8 Aug 2017 15:45:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        linux-mips@linux-mips.org
-Subject: Re: [PATCH v6 1/6] PCI: Move enum pci_interrupt_pin to a new common
- header
-Message-ID: <20170808204506.GA21796@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170806000351.17952-1-paul.burton@imgtec.com>
- <20170806000351.17952-2-paul.burton@imgtec.com>
- <20170808202745.GL16580@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170808202745.GL16580@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH 03/10] PCI: export symbol for PCI_TEST module
+Date: Fri,  4 Aug 2017 23:37:54 -0700
+Message-Id: <20170805063801.15880-4-yinghai@kernel.org>
+In-Reply-To: <20170805063801.15880-1-yinghai@kernel.org>
+References: <20170805063801.15880-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 08, 2017 at 03:27:45PM -0500, Bjorn Helgaas wrote:
-> On Sat, Aug 05, 2017 at 05:03:46PM -0700, Paul Burton wrote:
-> > We currently have a definition of enum pci_interrupt_pin in a header
-> > specific to PCI endpoints - pci-epf.h. In order to allow for use of this
-> > enum from PCI host code in a future commit, move its definition to a new
-> > pci-common.h header which we'll include from both host & endpoint code.
-> > 
-> > Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: linux-pci@vger.kernel.org
-> > 
-> > ---
-> > 
-> > Changes in v6:
-> > - New patch.
-> > 
-> >  include/linux/pci-common.h | 31 +++++++++++++++++++++++++++++++
-> >  include/linux/pci-epf.h    |  9 +--------
-> >  2 files changed, 32 insertions(+), 8 deletions(-)
-> >  create mode 100644 include/linux/pci-common.h
-> > 
-> > diff --git a/include/linux/pci-common.h b/include/linux/pci-common.h
-> > new file mode 100644
-> > index 000000000000..6a69a2c95ac7
-> > --- /dev/null
-> > +++ b/include/linux/pci-common.h
-> > @@ -0,0 +1,31 @@
-> > +/**
-> > + * Common PCI definitions
-> > + *
-> > + * This program is free software: you can redistribute it and/or modify
-> > + * it under the terms of the GNU General Public License version 2 of
-> > + * the License as published by the Free Software Foundation.
-> > + */
-> > +
-> > +#ifndef __LINUX_PCI_COMMON_H__
-> > +#define __LINUX_PCI_COMMON_H__
-> > +
-> > +/**
-> > + * enum pci_interrupt_pin - PCI INTx interrupt values
-> > + * @PCI_INTERRUPT_UNKNOWN: Unknown or unassigned interrupt
-> > + * @PCI_INTERRUPT_INTA: PCI INTA pin
-> > + * @PCI_INTERRUPT_INTB: PCI INTB pin
-> > + * @PCI_INTERRUPT_INTC: PCI INTC pin
-> > + * @PCI_INTERRUPT_INTD: PCI INTD pin
-> > + *
-> > + * Corresponds to values for legacy PCI INTx interrupts, as can be found in the
-> > + * PCI_INTERRUPT_PIN register.
-> > + */
-> > +enum pci_interrupt_pin {
-> > +	PCI_INTERRUPT_UNKNOWN,
-> > +	PCI_INTERRUPT_INTA,
-> > +	PCI_INTERRUPT_INTB,
-> > +	PCI_INTERRUPT_INTC,
-> > +	PCI_INTERRUPT_INTD,
-> > +};
-> 
-> Could this (and the new pci_irqd_intx_xlate() added in the next patch)
-> go in drivers/pci/pci.h instead?
-> 
-> If pci_irqd_intx_xlate() needs to be in include/linux/pci.h, is there
-> a reason this enum couldn't go there as well?
+We need to use them from pci_test module, so expose them.
 
-Also, I'd kind of like to have a PCI_NUM_INTX or similar that all the
-drivers could use instead of defining their own.
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+---
+ arch/x86/pci/i386.c     | 1 +
+ drivers/pci/setup-bus.c | 1 +
+ kernel/resource.c       | 2 ++
+ 3 files changed, 4 insertions(+)
+
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 7b43071..9065c58 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -383,6 +383,7 @@ void pcibios_resource_survey_bus(struct pci_bus *bus)
+ 	if (!(pci_probe & PCI_ASSIGN_ROMS))
+ 		pcibios_allocate_rom_resources(bus);
+ }
++EXPORT_SYMBOL_GPL(pcibios_resource_survey_bus);
+ 
+ void __init pcibios_resource_survey(void)
+ {
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index 1c30102..24292e9 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1839,6 +1839,7 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	/* dump the resource on buses */
+ 	pci_bus_dump_resources(bus);
+ }
++EXPORT_SYMBOL_GPL(pci_assign_unassigned_root_bus_resources);
+ 
+ void __init pci_assign_unassigned_resources(void)
+ {
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 4174020..0d40d9a 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -301,6 +301,8 @@ void release_child_resources(struct resource *r)
+ 	write_unlock(&resource_lock);
+ }
+ 
++EXPORT_SYMBOL_GPL(release_child_resources);
++
+ /**
+  * request_resource_conflict - request and reserve an I/O or memory resource
+  * @root: root resource descriptor
+-- 
+2.9.4
