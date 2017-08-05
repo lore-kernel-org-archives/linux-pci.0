@@ -1,81 +1,171 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0051.outbound.protection.outlook.com ([104.47.42.51]:53979
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750912AbdHPFOL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 01:14:11 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv3 5/9] PCI: layerscape: Disable the outbound windows configured by bootloader
-Date: Wed, 16 Aug 2017 12:56:55 +0800
-Message-ID: <1502859419-33696-6-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+ <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linuxarm@huawei.com>
+Subject: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
+Date: Sat, 5 Aug 2017 15:15:11 +0800
+Message-ID: <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+When bit4 is set in the PCIe Device Control register, it indicates
+whether the device is permitted to use relaxed ordering.
+On some platforms using relaxed ordering can have performance issues or
+due to erratum can cause data-corruption. In such cases devices must avoid
+using relaxed ordering.
 
-Disable all the outbound windows to avoid one transaction hitting
-multiple outbound windows, because the function dw_pcie_setup_rc
-will re-configure the outbound windows which maybe confict with
-the bootloader configured.
+This patch checks if there is any node in the hierarchy that indicates that
+using relaxed ordering is not safe. In such cases the patch turns off the
+relaxed ordering by clearing the eapability for this device. And if the
+device is probably running in a guest machine, we should do nothing.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+Acked-by: Ashok Raj <ashok.raj@intel.com>
 ---
-V3:
- - No change
+ drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+ drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 ++
+ 3 files changed, 68 insertions(+)
 
- drivers/pci/dwc/pci-layerscape.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 57b86a0..44a603d 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -35,6 +35,8 @@
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
- #define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..4f9d7c1 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+ EXPORT_SYMBOL(pcie_set_mps);
  
-+#define PCIE_IATU_NUM		6
+ /**
++ * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
++ * @dev: PCI device to query
++ *
++ * If possible clear relaxed ordering
++ */
++int pcie_clear_relaxed_ordering(struct pci_dev *dev)
++{
++	return pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
++					  PCI_EXP_DEVCTL_RELAX_EN);
++}
++EXPORT_SYMBOL(pcie_clear_relaxed_ordering);
 +
- struct ls_pcie_drvdata {
- 	u32 lut_offset;
- 	u32 ltssm_shift;
-@@ -91,6 +93,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
- 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
++/**
++ * pcie_relaxed_ordering_supported - Probe for PCIe relexed ordering support
++ * @dev: PCI device to query
++ *
++ * Returns true if the device support relaxed ordering attribute.
++ */
++bool pcie_relaxed_ordering_supported(struct pci_dev *dev)
++{
++	u16 v;
++
++	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
++
++	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
++}
++EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
++
++/**
+  * pcie_get_minimum_link - determine minimum link settings of a PCI device
+  * @dev: PCI device to query
+  * @speed: storage for minimum speed
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c31310d..48df012 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1762,6 +1762,42 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
+ 					 PCI_EXP_DEVCTL_EXT_TAG);
  }
  
-+static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
++/**
++ * pci_dev_should_disable_relaxed_ordering - check if the PCI device
++ * should disable the relaxed ordering attribute.
++ * @dev: PCI device
++ *
++ * Return true if any of the PCI devices above us do not support
++ * relaxed ordering.
++ */
++static bool pci_dev_should_disable_relaxed_ordering(struct pci_dev *dev)
 +{
-+	int i;
++	while (dev) {
++		if (dev->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING)
++			return true;
 +
-+	for (i = 0; i < PCIE_IATU_NUM; i++)
-+		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++		dev = dev->bus->self;
++	}
++
++	return false;
 +}
 +
- static int ls1021_pcie_link_up(struct dw_pcie *pci)
- {
- 	u32 state;
-@@ -128,6 +138,13 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
- 
-+	/*
-+	 * Disable the outbound windows configured by bootloader to avoid
-+	 * one transaction hitting multiple outbound windows and the function
-+	 * dw_pcie_setup_rc will re-configure the outbound windows.
-+	 */
-+	ls_pcie_disable_outbound_atus(pcie);
++static void pci_configure_relaxed_ordering(struct pci_dev *dev)
++{
++	/* We should not alter the relaxed ordering bit for the VF */
++	if (dev->is_virtfn)
++		return;
 +
- 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- 	ls_pcie_fix_class(pcie);
- 	ls_pcie_clear_multifunction(pcie);
++	/* If the releaxed ordering enable bit is not set, do nothing. */
++	if (!pcie_relaxed_ordering_supported(dev))
++		return;
++
++	if (pci_dev_should_disable_relaxed_ordering(dev)) {
++		pcie_clear_relaxed_ordering(dev);
++		dev_info(&dev->dev, "Disable Relaxed Ordering\n");
++	}
++}
++
+ static void pci_configure_device(struct pci_dev *dev)
+ {
+ 	struct hotplug_params hpp;
+@@ -1769,6 +1805,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ 
+ 	pci_configure_mps(dev);
+ 	pci_configure_extended_tags(dev);
++	pci_configure_relaxed_ordering(dev);
+ 
+ 	memset(&hpp, 0, sizeof(hpp));
+ 	ret = pci_get_hp_params(dev, &hpp);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 412ec1c..3aa23a2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1127,6 +1127,8 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
++int pcie_clear_relaxed_ordering(struct pci_dev *dev);
++bool pcie_relaxed_ordering_supported(struct pci_dev *dev);
+ 
+ /* PCI Virtual Channel */
+ int pci_save_vc_state(struct pci_dev *dev);
 -- 
-2.1.0.27.g96db324
+1.8.3.1
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
