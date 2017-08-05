@@ -1,118 +1,175 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50350 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752296AbdHBJBO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 05:01:14 -0400
-Date: Wed, 2 Aug 2017 10:03:07 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: rcar-pcie: Fix memory leak when no PCIe card is
- inserted
-Message-ID: <20170802090307.GA24167@red-moon>
-References: <20170802071320.28674-1-harunobu.kurokawa.dn@renesas.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+ <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linuxarm@huawei.com>
+Subject: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Sat, 5 Aug 2017 15:15:10 +0800
+Message-ID: <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170802071320.28674-1-harunobu.kurokawa.dn@renesas.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 02, 2017 at 04:13:20PM +0900, Harunobu Kurokawa wrote:
-> When no PCIe card is inserted, there is a memory leak as
-> pci_free_resource_list is not called before returning.
-> 
-> Signed-off-by: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-> ---
->  drivers/pci/host/pcie-rcar.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index ac80fbb..9b06de6 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1190,14 +1190,15 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  
->  	return 0;
->  
-> -err_free_bridge:
-> -	pci_free_host_bridge(bridge);
-> -
->  err_pm_put:
->  	pm_runtime_put(dev);
->  
->  err_pm_disable:
->  	pm_runtime_disable(dev);
-> +
-> +err_free_bridge:
-> +	pci_free_host_bridge(bridge);
-> +	pci_free_resource_list(&pcie->resources);
->  	return err;
->  }
+From: Casey Leedom <leedom@chelsio.com>
 
-The error code path needs fixing but not like this (with a single
-patch lumping all fixes - well, actually it does not - together).
+The patch adds a new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING to indicate that
+Relaxed Ordering (RO) attribute should not be used for Transaction Layer
+Packets (TLP) targetted towards these affected root complexes. Current list
+of affected parts include some Intel Xeon processors root complex which suffers from
+flow control credits that result in performance issues. On these affected
+parts RO can still be used for peer-2-peer traffic. AMD A1100 ARM ("SEATTLE")
+Root complexes don't obey PCIe 3.0 ordering rules, hence could lead to
+data-corruption.
 
-Step one, patch below. Step two free the &pci->resources list
-(which IIUC was not freed even before commit 90634e854079) in
-a separate patch.
-
-Am I missing something ?
-
-Please apply, check and repost the patch if it is ok, thanks.
-
--- >8 --
-Subject: [PATCH] PCI: rcar: Fix error exit path
-
-Commit 90634e854079 ("PCI: rcar: Convert PCI scan API to
-pci_scan_root_bus_bridge()") converted PCI root bus scan API
-to the new pci_scan_root_bus_bridge() API; in the process
-some error paths were not updated correctly which may
-cause memory leaks.
-
-Fix the driver error exit path reinstating the previous
-correct error exit behaviour.
-
-Fixes: 90634e854079 ("PCI: rcar: Convert PCI scan API to pci_scan_root_bus_bridge()")
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Acked-by: Ashok Raj <ashok.raj@intel.com>
 ---
- drivers/pci/host/pcie-rcar.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/pci/quirks.c | 88 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h  |  2 ++
+ 2 files changed, 90 insertions(+)
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index 246d485..007523e 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -471,10 +471,8 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
- 		bridge->msi = &pcie->msi.chip;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6967c6b..5c9e125 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4016,6 +4016,94 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
+ 			      quirk_tw686x_class);
  
- 	ret = pci_scan_root_bus_bridge(bridge);
--	if (ret < 0) {
--		kfree(bridge);
-+	if (ret < 0)
- 		return ret;
--	}
- 
- 	bus = bridge->bus;
- 
-@@ -1190,14 +1188,15 @@ static int rcar_pcie_probe(struct platform_device *pdev)
- 
- 	return 0;
- 
--err_free_bridge:
--	pci_free_host_bridge(bridge);
--
- err_pm_put:
- 	pm_runtime_put(dev);
- 
- err_pm_disable:
- 	pm_runtime_disable(dev);
+ /*
++ * Some devices have problems with Transaction Layer Packets with the Relaxed
++ * Ordering Attribute set.  Such devices should mark themselves and other
++ * Device Drivers should check before sending TLPs with RO set.
++ */
++static void quirk_relaxedordering_disable(struct pci_dev *dev)
++{
++	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
++}
 +
-+err_free_bridge:
-+	pci_free_host_bridge(bridge);
++/*
++ * Intel Xeon processors based on Broadwell/Haswell microarchitecture Root
++ * Complex has a Flow Control Credit issue which can cause performance
++ * problems with Upstream Transaction Layer Packets with Relaxed Ordering set.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f03, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f05, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f06, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f07, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f09, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0a, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0b, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0c, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0d, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0e, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f03, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f05, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f06, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f07, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f09, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0a, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0b, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0c, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0d, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0e, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
 +
- 	return err;
- }
++/*
++ * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
++ * where Upstream Transaction Layer Packets with the Relaxed Ordering
++ * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
++ * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
++ * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
++ * November 10, 2010).  As a result, on this platform we can't use Relaxed
++ * Ordering for Upstream TLPs.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
+  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+  * values for the Attribute as were supplied in the header of the
+  * corresponding Request, except as explicitly allowed when IDO is used."
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4869e66..412ec1c 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -188,6 +188,8 @@ enum pci_dev_flags {
+ 	 * the direct_complete optimization.
+ 	 */
+ 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
++	/* Don't use Relaxed Ordering for TLPs directed at this device */
++	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
+ };
  
+ enum pci_irq_reroute_variant {
 -- 
-2.10.0
+1.8.3.1
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
