@@ -1,86 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:33267 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751746AbdHARNC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 13:13:02 -0400
-Received: by mail-wr0-f180.google.com with SMTP id v105so9456002wrb.0
-        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 10:13:02 -0700 (PDT)
+Received: from mailapp01.imgtec.com ([195.59.15.196]:22813 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751207AbdHFAF0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 20:05:26 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v6 4/6] PCI: xilinx: Unify INTx & MSI interrupt decode
+Date: Sat, 5 Aug 2017 17:03:49 -0700
+Message-ID: <20170806000351.17952-5-paul.burton@imgtec.com>
+In-Reply-To: <20170806000351.17952-1-paul.burton@imgtec.com>
+References: <20170806000351.17952-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
-In-Reply-To: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com>
-References: <CAN7O0+L8ergfE1_Thow2Lz+5UnhLvQO_LmEqhh=XqKfiu3m8XA@mail.gmail.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 1 Aug 2017 12:12:39 -0500
-Message-ID: <CAErSpo58kndyFLOnq-85HK8NnYOG2mMkn3HzRP_+FKPY0La7AQ@mail.gmail.com>
-Subject: Re: MSI-X support with Synopsys DesignWare IP core driver
-To: vidya sagar <sagar.tv@gmail.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This was a multi-part message with HTML, which I think causes the
-mailing list to automatically drop it.  Please post this as plain text
-with a changelog and signed-off-by and copy the DesignWare maintainers
-(Jingoo and Joao, cc'd).
+The INTx & MSI interrupt decode paths duplicated a fair bit of common
+functionality. They also strictly handled interrupts in order of INTx
+then MSI, so if both types of interrupt were to be asserted
+simultaneously and the MSI interrupt were first in the FIFO then the
+INTx code would read it & ignore it before the MSI code then had to read
+it again, wasting the original FIFO read.
 
-On Tue, Aug 1, 2017 at 12:28 AM, vidya sagar <sagar.tv@gmail.com> wrote:
-> Hi,
-> As you might be knowing it already, in the current pcie-designware.c , there
-> is no support for MSI-X
-> Although there is no native support from Synopsys IP as well to have 2048
-> interrupts, we can at least have basic support to get MSI-X also allocated
-> (along with MSI) as many as possible in the system at that point. Of course,
-> all these interrupts will have the same address to which downstream devices
-> need to initiate mem-write transactions. Though it doesn't leverage one of
-> the advantages of having MSI-X over MSI, it at least avoids drivers falling
-> back to legacy interrupts when the card doesn't support MSI. Some of the
-> Intel NVMe cards are examples here. Legacy interrupt being a shared
-> interrupt, it unnecessarily triggers all other shared ISRs to be called
-> whenever there is a legacy interrupt.
->
-> I have the following patch which enables MSI-X support also. Would like to
-> have your comments on this.
->
->
-> diff --git a/drivers/pci/host/pcie-designware.c
-> b/drivers/pci/host/pcie-designware.c
-> index af8f6e9..9086253 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -406,9 +406,6 @@ static int dw_msi_setup_irq(struct msi_controller *chip,
-> struct pci_dev *pdev,
->      int irq, pos;
->      struct pcie_port *pp = pdev->bus->sysdata;
->
-> -    if (desc->msi_attrib.is_msix)
-> -        return -EINVAL;
-> -
->      irq = assign_irq(1, desc, &pos);
->      if (irq < 0)
->          return irq;
-> @@ -426,9 +423,16 @@ static int dw_msi_setup_irqs(struct msi_controller
-> *chip, struct pci_dev *pdev,
->      struct msi_desc *desc;
->      struct pcie_port *pp = pdev->bus->sysdata;
->
-> -    /* MSI-X interrupts are not supported */
-> -    if (type == PCI_CAP_ID_MSIX)
-> -        return -EINVAL;
-> +    if (type == PCI_CAP_ID_MSIX) {
-> +        for_each_pci_msi_entry(desc, pdev) {
-> +            irq = arch_setup_msi_irq(pdev, desc);
-> +            if (irq < 0)
-> +                return irq;
-> +            if (irq > 0)
-> +                return -ENOSPC;
-> +        }
-> +        return 0;
-> +    }
->
->      WARN_ON(!list_is_singular(&pdev->dev.msi_list));
->      desc = list_entry(pdev->dev.msi_list.next, struct msi_desc, list);
->
+Unify the INTx & MSI decode in order to reduce that duplication & allow
+a single FIFO read to be performed for each interrupt regardless of its
+type.
+
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+---
+
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-xilinx.c | 48 +++++++++++++-----------------------------
+ 1 file changed, 15 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index 83929e6881b2..bffd1505ea2d 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -385,7 +385,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ {
+ 	struct xilinx_pcie_port *port = (struct xilinx_pcie_port *)data;
+ 	struct device *dev = port->dev;
+-	u32 val, mask, status, msi_data;
++	u32 val, mask, status;
+ 
+ 	/* Read interrupt decode and mask registers */
+ 	val = pcie_read(port, XILINX_PCIE_REG_IDR);
+@@ -425,8 +425,7 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 		xilinx_pcie_clear_err_interrupts(port);
+ 	}
+ 
+-	if (status & XILINX_PCIE_INTR_INTX) {
+-		/* INTx interrupt received */
++	if (status & (XILINX_PCIE_INTR_INTX | XILINX_PCIE_INTR_MSI)) {
+ 		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
+ 
+ 		/* Check whether interrupt valid */
+@@ -435,41 +434,24 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
+ 			goto error;
+ 		}
+ 
+-		if (!(val & XILINX_PCIE_RPIFR1_MSI_INTR)) {
+-			/* Clear interrupt FIFO register 1 */
+-			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+-				   XILINX_PCIE_REG_RPIFR1);
+-
+-			/* Handle INTx Interrupt */
++		/* Decode the IRQ number */
++		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
++			val = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
++				XILINX_PCIE_RPIFR2_MSG_DATA;
++		} else {
+ 			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
+ 				XILINX_PCIE_RPIFR1_INTR_SHIFT;
+-			generic_handle_irq(irq_find_mapping(port->leg_domain,
+-							    val));
++			val = irq_find_mapping(port->leg_domain, val);
+ 		}
+-	}
+ 
+-	if (status & XILINX_PCIE_INTR_MSI) {
+-		/* MSI Interrupt */
+-		val = pcie_read(port, XILINX_PCIE_REG_RPIFR1);
++		/* Clear interrupt FIFO register 1 */
++		pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
++			   XILINX_PCIE_REG_RPIFR1);
+ 
+-		if (!(val & XILINX_PCIE_RPIFR1_INTR_VALID)) {
+-			dev_warn(dev, "RP Intr FIFO1 read error\n");
+-			goto error;
+-		}
+-
+-		if (val & XILINX_PCIE_RPIFR1_MSI_INTR) {
+-			msi_data = pcie_read(port, XILINX_PCIE_REG_RPIFR2) &
+-				   XILINX_PCIE_RPIFR2_MSG_DATA;
+-
+-			/* Clear interrupt FIFO register 1 */
+-			pcie_write(port, XILINX_PCIE_RPIFR1_ALL_MASK,
+-				   XILINX_PCIE_REG_RPIFR1);
+-
+-			if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-				/* Handle MSI Interrupt */
+-				generic_handle_irq(msi_data);
+-			}
+-		}
++		/* Handle the interrupt */
++		if (IS_ENABLED(CONFIG_PCI_MSI) ||
++		    !(val & XILINX_PCIE_RPIFR1_MSI_INTR))
++			generic_handle_irq(val);
+ 	}
+ 
+ 	if (status & XILINX_PCIE_INTR_SLV_UNSUPP)
+-- 
+2.13.4
