@@ -1,71 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:47408 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751969AbdHPUfp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 16:35:45 -0400
-Date: Wed, 16 Aug 2017 15:35:43 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kbuild test robot <fengguang.wu@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, kbuild-all@01.org,
-        linux-pci@vger.kernel.org
-Subject: Re: [pci:pci/host-xilinx 8/8] drivers/pci/host/pcie-xilinx.c:225:62:
- warning: format '%x' expects argument of type 'unsigned int', but argument 4
- has type 'irq_hw_number_t {aka long unsigned int}'
-Message-ID: <20170816203543.GF28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <201708170457.hTqAwlWn%fengguang.wu@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Daniel Axtens <dja@axtens.net>
+To: Lukas Wunner <lukas@wunner.de>
+Subject: Re: [PATCH 2/3] Split VGA default device handler out of VGA arbiter
+In-Reply-To: <20170805065754.GA8509@wunner.de>
+References: <20170804102033.27731-1-dja@axtens.net>
+ <20170804102033.27731-3-dja@axtens.net> <20170805065754.GA8509@wunner.de>
+Date: Mon, 07 Aug 2017 09:49:24 +1000
+Message-ID: <87zibcqmt7.fsf@linkitivity.dja.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201708170457.hTqAwlWn%fengguang.wu@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, gabriele.paoloni@huawei.com, airlied@linux.ie,
+ linux-pci@vger.kernel.org, will.deacon@arm.com,
+ dri-devel@lists.freedesktop.org, z.liuxinliang@hisilicon.com,
+ bhelgaas@google.com, alex.williamson@redhat.com, benh@kernel.crashing.org,
+ zourongrong@gmail.com, daniel.vetter@intel.com, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 17, 2017 at 04:01:01AM +0800, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-xilinx
-> head:   3869791df25e649d3d05c0129cfc25cd3dea8ee7
-> commit: 3869791df25e649d3d05c0129cfc25cd3dea8ee7 [8/8] Speculative ... is this what other drivers do?
-> config: arm-allmodconfig (attached as .config)
-> compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> reproduce:
->         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 3869791df25e649d3d05c0129cfc25cd3dea8ee7
->         # save the attached .config to linux build tree
->         make.cross ARCH=arm 
-> 
-> All warnings (new ones prefixed by >>):
-> 
->    drivers/pci/host/pcie-xilinx.c: In function 'xilinx_pcie_destroy_msi':
-> >> drivers/pci/host/pcie-xilinx.c:225:62: warning: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'irq_hw_number_t {aka long unsigned int}' [-Wformat=]
->       dev_err(port->dev, "Trying to free unused MSI#%d (hwirq 0x%x)\n",
+Hi Lukas,
 
-My fault.  I included a draft patch by mistake.  I dropped it.
+Let me reply "back-to-front":
 
-> vim +225 drivers/pci/host/pcie-xilinx.c
-> 
->    210	
->    211	/**
->    212	 * xilinx_pcie_destroy_msi - Free MSI number
->    213	 * @irq: IRQ to be freed
->    214	 */
->    215	static void xilinx_pcie_destroy_msi(unsigned int irq)
->    216	{
->    217		struct msi_desc *msi;
->    218		struct xilinx_pcie_port *port;
->    219		struct irq_data *d = irq_get_irq_data(irq);
->    220		irq_hw_number_t hwirq = irqd_to_hwirq(d);
->    221	
->    222		if (!test_bit(hwirq, msi_irq_in_use)) {
->    223			msi = irq_get_msi_desc(irq);
->    224			port = msi_desc_to_pci_sysdata(msi);
->  > 225			dev_err(port->dev, "Trying to free unused MSI#%d (hwirq 0x%x)\n",
->    226				irq, hwirq);
->    227			return;
->    228		}
->    229	
->    230		clear_bit(hwirq, msi_irq_in_use);
->    231	}
->    232	
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> Please cc dri-devel when proposing changes to vgaarb.c (see
+> MAINTAINERS).
+
+Sorry, will do in future.
+
+> I'm missing some context as to the negative consequences you're
+> experiencing on other arches (the cover letter merely refers to
+> "quirks in ppc and concerns in arm land" and is missing links to
+> archived versions of v1 and v2), but clearly legacy resources are
+> x86-specific so any code dealing with them seems superfluous on
+> other arches and should be marked as such.
+
+Quirk/v1: https://www.spinics.net/lists/linux-pci/msg62865.html
+Approach 2: https://www.spinics.net/lists/linux-pci/msg63092.html
+            https://www.spinics.net/lists/linux-pci/msg63083.html
+
+The quirk in powerpc land that I'm referring to is
+arch/powerpc/kernel/pci-common.c::fixup_vga() which is a class enable
+hook that marks the first VGA device it comes across as default if the
+arbiter has not marked one.
+
+The arm concerns are ventaliated in the threads I linked - they boil
+down to "why do we need the arbiter at all on platforms without legacy
+resources? Can't we do this more simply?"
+
+> Would it be feasible to just sprinkle some "if (IS_ENABLED(CONFIG_X86))"
+> over the portions of vgaarb.c that deal with legacy resources?
+
+Yes and no. That would disable the unnecessary chunks of the VGA
+arbiter, but we then still have to figure out how to mark devices as
+default if not with the arbiter.
+
+Regards,
+Daniel
+
+>
+> Thanks,
+>
+> Lukas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
