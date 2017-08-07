@@ -1,99 +1,37 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
-Subject: [PATCH V5 2/2] PCI: handle CRS returned by device after FLR
-Date: Tue,  1 Aug 2017 23:44:13 -0400
-Message-Id: <1501645453-22842-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1501645453-22842-1-git-send-email-okaya@codeaurora.org>
-References: <1501645453-22842-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=FD0M=7J=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=FD0M=7J=davemloft.net=davem@kernel.org>
+Date: Sun, 06 Aug 2017 20:47:44 -0700 (PDT)
+Message-Id: <20170806.204744.1934067595236180060.davem@davemloft.net>
+To: dingtianhong@huawei.com
+Cc: leedom@chelsio.com, ashok.raj@intel.com, bhelgaas@google.com,
+ helgaas@kernel.org, werner@chelsio.com, ganeshgr@chelsio.com,
+ asit.k.mallick@intel.com, patrick.j.cramer@intel.com,
+ Suravee.Suthikulpanit@amd.com, Bob.Shaw@amd.com, l.stach@pengutronix.de,
+ amira@mellanox.com, gabriele.paoloni@huawei.com, David.Laight@aculab.com,
+ jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com, will.deacon@arm.com,
+ mark.rutland@arm.com, robin.murphy@arm.com, alexander.duyck@gmail.com,
+ linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxarm@huawei.com
+Subject: Re: [PATCH v9 0/4] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-An endpoint is allowed to issue Configuration Request Retry Status (CRS)
-following a Function Level Reset (FLR) request to indicate that it is
-not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
-Request Handling Rules and CRS usage in FLR context is mentioned in
-PCIe r3.1, sec 6.6.2. Function-Level Reset.
+From: Ding Tianhong <dingtianhong@huawei.com>
+Date: Sat, 5 Aug 2017 15:15:09 +0800
 
-Adding a vendor ID read if this is a physical function before attempting
-to read any other registers on the endpoint. A CRS indication will only
-be given if the address to be read is vendor ID register.
-pci_bus_read_dev_vendor_id() knows how to deal with CRS returned values.
+> Some devices have problems with Transaction Layer Packets with the Relaxed
+> Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+> PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+> devices with Relaxed Ordering issues, and a use of this new flag by the
+> cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+> Ports.
+> 
+> It's been years since I've submitted kernel.org patches, I appolgise for the
+> almost certain submission errors.
 
-If pci_bus_read_dev_vendor_id() fails, it prints a user visible warning
-after provided 1 second timeout is reached. pci_flr_wait() will keep
-calling this function 60 times to allow up to 60 seconds to be consistent
-with the rest of the kernel CRS timeout handling.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 20 +++++++++++---------
- 1 file changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2ed604a..25c7a83 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3813,14 +3813,16 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- 
- /*
-  * We should only need to wait 100ms after FLR for virtual functions.
-- * Wait for up to 1000ms for config space to return something other than -1.
-- * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
-- * dword because VFs don't implement the 1st dword.
-+ * Wait for up to 60s for config space to return something other than -1.
-+ * Intel IGD requires 1s when an LCD panel is attached.  We use
-+ * pci_bus_read_dev_vendor_id() for reading the vendor ID as it handles
-+ * CRS gracefully.
-  */
- static void pci_flr_wait(struct pci_dev *dev)
- {
- 	int i = 0;
- 	u32 id;
-+	bool ret;
- 
- 	if (dev->is_virtfn) {
- 		msleep(100);
-@@ -3828,15 +3830,15 @@ static void pci_flr_wait(struct pci_dev *dev)
- 	}
- 
- 	do {
--		msleep(100);
--		pci_read_config_dword(dev, PCI_COMMAND, &id);
--	} while (i++ < 10 && id == ~0);
-+		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-+						 1000);
-+	} while (i++ < 60 && !ret);
- 
--	if (id == ~0)
-+	if (!ret)
- 		dev_warn(&dev->dev, "Failed to return from FLR\n");
- 	else if (i > 1)
--		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
--			 (i - 1) * 100);
-+		dev_info(&dev->dev, "Required additional %ds to return from FLR\n",
-+			 (i - 1));
- }
- 
- /**
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Which tree should merge this?  The PCI tree or my networking tree?
