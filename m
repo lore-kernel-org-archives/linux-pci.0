@@ -1,44 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0052.outbound.protection.outlook.com ([104.47.37.52]:23168
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751375AbdHaRwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Aug 2017 13:52:41 -0400
-From: Fabio Estevam <fabio.estevam@nxp.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 02/10] PCI: dra7xx: Fix platform_get_irq() error handling
-Date: Thu, 31 Aug 2017 14:52:02 -0300
-Message-ID: <1504201930-3617-2-git-send-email-fabio.estevam@nxp.com>
-In-Reply-To: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
-References: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
+Return-Path: <SRS0=6JFg=7J=mediatek.com=honghui.zhang@kernel.org>
+Return-Path: <SRS0=6JFg=7J=mediatek.com=honghui.zhang@kernel.org>
+Message-ID: <1502077231.24341.29.camel@mtksdaap41>
+Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
+ support
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Ryder Lee <ryder.lee@mediatek.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, <bhelgaas@google.com>,
+	<robh@kerenl.org>, <robh+dt@kernel.org>, <matthias.bgg@gmail.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
+	<eddie.huang@mediatek.com>, <hongkun.cao@mediatek.com>,
+	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
+	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
+Date: Mon, 7 Aug 2017 11:40:31 +0800
+In-Reply-To: <1501913813.12086.17.camel@mtkswgap22>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
+	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
+	 <1501835976.24341.21.camel@mtksdaap41>
+	 <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
+	 <1501908763.8298.11.camel@mtkswgap22>
+	 <1501913813.12086.17.camel@mtkswgap22>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When platform_get_irq() fails we should propagate the real error
-value instead of always returning -EINVAL.
+On Sat, 2017-08-05 at 14:16 +0800, Ryder Lee wrote:
+> On Sat, 2017-08-05 at 12:52 +0800, Ryder Lee wrote:
+> > Hi Honghui, Bjorn,
+> > 
+> > On Fri, 2017-08-04 at 08:18 -0500, Bjorn Helgaas wrote:
+> > > On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
+> > > > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
+> > > > > > +
+> > > > > > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
+> > > > > > +						struct pci_bus *bus, int devfn)
+> > > > > > +{
+> > > > > > +	struct pci_dev *dev;
+> > > > > > +	struct pci_bus *pbus;
+> > > > > > +	struct mtk_pcie_port *port, *tmp;
+> > > > > > +
+> > > > > > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> > > > > > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
+> > > > > > +			return port;
+> > > > > > +		} else if (bus->number != 0) {
+> > > > > > +			pbus = bus;
+> > > > > > +			do {
+> > > > > > +				dev = pbus->self;
+> > > > > > +				if (port->index == PCI_SLOT(dev->devfn))
+> > > > > > +					return port;
+> > > > > > +				pbus = dev->bus;
+> > > > > > +			} while (dev->bus->number != 0);
+> > > > > > +		}
+> > > > > > +	}
+> > > > > > +
+> > > > > > +	return NULL;
+> > > > > 
+> > > > > You should be able to use sysdata to avoid searching the list.
+> > > > > See drivers/pci/host/pci-aardvark.c, for example.
+> > > > > 
+> > > > 
+> > > > I could put the mtk_pcie * in sysdata, but still need to searching the
+> > > > list to get the mtk_pcie_port *, how about:
+> > > > 
+> > > > 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> > > > 		if (port->index == PCI_SLOT(devfn))
+> > > > 			return port;
+> > > > 	}
+> > > 
+> > > No.  Other drivers don't need to search the list.  Please take a look
+> > > at them and see how they solve this problem.  I don't think your
+> > > hardware is fundamentally different in a way that means you need to
+> > > search when the others don't.
+> > > 
+> > 
+> > I'm not directly involved in this generation, but I guess the main reason why Honghui need to do that is just because this hardware access configuration space via per-port registers, not just for the guard.  
+> > Currently, We had a host bridge with two ports (two subnodes in binding text), thus he tried to tells them apart so that he can get the correct registers.
+> > 
+> > Some platforms don't need to do that since they just have a single port (no more subnodes), the others might have specific/shared registers to access configuration space. (e.g. Tegra, MTK legacy IP block).
+> > Or, he can split them into two independent nodes, but it will break common probing flow by doing so. (I'd prefer to use subnodes.)
+> > 
+> > Ryder
+> > 
+> 
+> Sorry for the typesetting in previous mail and noise again,
+> 
+> I've took a look at pci-rcar-gen2.c, this is a similar case I can found
+> for Honghui's case. It gathers two ports reg regions into one, and uses
+> the "slot id" to calculate the cfg base of each port.
+> 
+> Perhaps this is a example for those who need to use subnodes and use
+> port registers for cfg operation. Not sure whether it's worthwhile doing
+> that since we need to changes ports/host structures.
+> 
+> Ryder.
+> 
+As Ryder's description, Mediatek's new generation HW blocks has two
+separate ports, they have separate control register base address. We
+must touch the per-port control register to access the EP's
+configuration space. One port's control register is the only way to
+access the EP's configuration space(the EP which is connect under this
+very port).
+Given an EP device, we need to determine which ports it's been
+connected, and get the base address for that port. It's a bit like
+pci-tegra/pci-mvebu.
 
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- drivers/pci/dwc/pci-dra7xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Seems list is not forbidden, pci-tegra search the list to identify the
+ports[1], mvebu use point array to search the ports[2], they have the
+same functionality through different approach. I may propose another
+patch to make the code like mvebu[2] if you insist, but I'm prefer the
+current list way.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index e0dd98d..1e2aaed 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -450,7 +450,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 	pp->irq = platform_get_irq(pdev, 1);
- 	if (pp->irq < 0) {
- 		dev_err(dev, "missing IRQ resource\n");
--		return -EINVAL;
-+		return pp->irq;
- 	}
- 
- 	ret = devm_request_irq(dev, pp->irq, dra7xx_pcie_msi_irq_handler,
--- 
-2.7.4
+[1]http://elixir.free-electrons.com/linux/v4.13-rc4/source/drivers/pci/host/pci-tegra.c#L456
+[2]http://elixir.free-electrons.com/linux/v4.13-rc4/source/drivers/pci/host/pci-mvebu.c#L780
+
+thanks.
+> 
