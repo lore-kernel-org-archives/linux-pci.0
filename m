@@ -1,50 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 3 Aug 2017 14:10:45 -0500
-From: Rob Herring <robh@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH v2 3/5] dt-bindings: PCI: rename and cleanup MediaTek
- binding text
-Message-ID: <20170803191045.k6xqbm3ekqbnorzd@rob-hp-laptop>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
- <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-In-Reply-To: <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
- robh@kerenl.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
- bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: <linux-pci@vger.kernel.org>,
+	<iommu@lists.linux-foundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	David Fugate <david.fugate@intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 3/3] iommu: prevent VMD child devices from being remapping targets
+Date: Mon,  7 Aug 2017 13:57:13 -0600
+Message-Id: <20170807195713.10963-3-jonathan.derrick@intel.com>
+In-Reply-To: <20170807195713.10963-1-jonathan.derrick@intel.com>
+References: <20170807195713.10963-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 27, 2017 at 10:58:37AM +0800, honghui.zhang@mediatek.com wrote:
-> From: Ryder Lee <ryder.lee@mediatek.com>
-> 
-> In order to accommodate other SoC generations, this patch updates filename
-> to make it more generic, regroups specific properties by SoCs, and removes
-> redundant descriptions.
-> 
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 29 +++++++++++-----------
->  1 file changed, 14 insertions(+), 15 deletions(-)
->  rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (91%)
+VMD child devices must use the VMD endpoint's ID as the DMA source.
+Because of this, there needs to be a way to link the parent VMD
+endpoint's DMAR domain to the VMD child devices' DMAR domain such that
+attaching and detaching child devices modify the endpoint's DMAR mapping
+and prevents early detaching.
 
-Acked-by: Rob Herring <robh@kernel.org>
+This is outside the scope of VMD, so disable binding child devices to
+prevent unforeseen issues. This functionality may be implemented in the
+future.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+This patch prevents VMD child devices from returning an IOMMU, which
+prevents it from exposing iommu_group sysfs directories and subsequent
+binding by userspace-access drivers such as VFIO.
+
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ drivers/iommu/intel-iommu.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+index 687f18f..651a6cd 100644
+--- a/drivers/iommu/intel-iommu.c
++++ b/drivers/iommu/intel-iommu.c
+@@ -905,6 +905,11 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
+ 		 * the PF instead to find the IOMMU. */
+ 		pf_pdev = pci_physfn(pdev);
+ 		dev = &pf_pdev->dev;
++
++		/* VMD child devices currently cannot be handled individually */
++		if (pci_bus_is_vmd(pdev->bus))
++			return NULL;
++
+ 		segment = pci_domain_nr(pdev->bus);
+ 	} else if (has_acpi_companion(dev))
+ 		dev = &ACPI_COMPANION(dev)->dev;
+-- 
+2.9.4
