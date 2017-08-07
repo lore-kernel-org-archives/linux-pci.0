@@ -1,56 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:34179 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752103AbdHAW1E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Aug 2017 18:27:04 -0400
-To: Jon Mason <jdmason@kudzu.us>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-15-logang@deltatee.com> <20170801191050.GJ4186@kudzu.us>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <dda576ad-d3ca-814b-f0cf-478cbb61adf2@deltatee.com>
-Date: Tue, 1 Aug 2017 16:26:57 -0600
-MIME-Version: 1.0
-In-Reply-To: <20170801191050.GJ4186@kudzu.us>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH v3 14/16] switchtec_ntb: implement scratchpad registers
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: <linux-pci@vger.kernel.org>,
+	<iommu@lists.linux-foundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	David Fugate <david.fugate@intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH 2/3] pci: Generalize is_vmd behavior
+Date: Mon,  7 Aug 2017 13:57:12 -0600
+Message-Id: <20170807195713.10963-2-jonathan.derrick@intel.com>
+In-Reply-To: <20170807195713.10963-1-jonathan.derrick@intel.com>
+References: <20170807195713.10963-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+Generalize is_vmd behavior to remove dependency on domain number
+checking in pci quirks.
 
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ arch/x86/include/asm/pci.h | 8 +++-----
+ arch/x86/pci/common.c      | 2 +-
+ drivers/pci/quirks.c       | 2 +-
+ include/linux/pci.h        | 4 ++++
+ 4 files changed, 9 insertions(+), 7 deletions(-)
 
-On 01/08/17 01:10 PM, Jon Mason wrote:
-> It would probaly be better if I remarked about the SPADs in the actual
-> patch about the SPADS :)
-> 
-> The whole point of using the SPADs in the NTB driver was to workaround
-> the problems establishing a connection between the two sides of the
-> NTB and where everything lives.  So, using a MW to get around the
-> SPADs is sort of backwards (and slightly funny).  I realize you are
-> trying to use the existing transport with minimal changes to enable
-> your hardware, and thus this makes logical sense to you.  However, if
-> the SPADs are not really needed, then we should either remove them
-> from the transport (or use them for something else).
->
-> Per my comment in the other patch, I'm amenable to take this series
-> as-is, assuming you are willing to address this design issue in the
-> near future.  Thoughts?
-
-Yes, I agree. I'd be willing to help but it seems the clients are
-written the way they are for the other drivers, so it's their needs
-(which I'm not fully aware of) that have to be considered.
-
-I've also made all the other changes you sent as well as the file rename
-Dave requested. Once I see the bug fix patch you were going to pull hit
-ntb-next I'll rebase, test and resubmit.
-
-Thanks,
-
-Logan
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 473a729..5c5d54a 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -60,16 +60,14 @@ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+ #define pci_root_bus_fwnode	_pci_root_bus_fwnode
+ #endif
+ 
+-static inline bool is_vmd(struct pci_bus *bus)
+-{
+ #if IS_ENABLED(CONFIG_VMD)
++static inline bool pci_bus_is_vmd(struct pci_bus *bus)
++{
+ 	struct pci_sysdata *sd = bus->sysdata;
+ 
+ 	return sd->vmd_domain;
+-#else
+-	return false;
+-#endif
+ }
++#endif
+ 
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index dbe2132..18b2277 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -662,7 +662,7 @@ static void set_dma_domain_ops(struct pci_dev *pdev) {}
+ 
+ static void set_dev_domain_options(struct pci_dev *pdev)
+ {
+-	if (is_vmd(pdev->bus))
++	if (pci_bus_is_vmd(pdev->bus))
+ 		pdev->hotplug_user_indicators = 1;
+ }
+ 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6967c6b..ba47995 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4666,7 +4666,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+ static void quirk_no_aersid(struct pci_dev *pdev)
+ {
+ 	/* VMD Domain */
+-	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
++	if (pci_bus_is_vmd(pdev->bus))
+ 		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4869e66..0299d8b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1471,6 +1471,10 @@ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
++#if !IS_ENABLED(CONFIG_VMD)
++static inline bool pci_bus_is_vmd(struct pci_bus *bus) { return false; }
++#endif
++
+ /*
+  * Generic implementation for PCI domain support. If your
+  * architecture does not need custom management of PCI
+-- 
+2.9.4
