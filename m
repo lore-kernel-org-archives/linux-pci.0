@@ -1,44 +1,81 @@
-Return-Path: <SRS0=TwQd=7Y=redhat.com=alex.williamson@kernel.org>
-Return-Path: <SRS0=TwQd=7Y=redhat.com=alex.williamson@kernel.org>
-Date: Tue, 22 Aug 2017 16:43:12 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, eric.auger@redhat.com,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: Fix and amend express capability sizes
-Message-ID: <20170822164312.302874c6@w520.home>
-In-Reply-To: <20170822210501.GI6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170810165403.2968.49940.stgit@gimli.home>
-	<20170822210501.GI6948@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH V8 1/2] PCI: handle CRS returned by device after FLR
+Date: Sun,  6 Aug 2017 22:09:51 -0400
+Message-Id: <1502071792-15263-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 22 Aug 2017 16:05:01 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+following a Function Level Reset (FLR) request to indicate that it is
+not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
+Request Handling Rules and CRS usage in FLR context is mentioned in
+PCIe r3.1, sec 6.6.2. Function-Level Reset.
 
-> On Thu, Aug 10, 2017 at 10:54:31AM -0600, Alex Williamson wrote:
-> > PCI_CAP_EXP_ENDPOINT_SIZEOF_V1 defines the size of the PCIe express
-> > capability structure for v1 devices with link, but we also have a need
-> > in the vfio code for sizing the capability for devices without link,
-> > such as root complex endpoints.  Create a separate define for this
-> > ending the structure before the link fields.
-> > 
-> > Additionally, this reveals that PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 is
-> > currently incorrect, ending the capability length before the v2 link
-> > fields.  Rename this to specify an RC endpoint (no link) capability
-> > length and move PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 to include the link
-> > fields as we have for the v1 version.
-> > 
-> > Signed-off-by: Alex Williamson <alex.williamson@redhat.com>  
-> 
-> Applied with Eric's reviewed-by to pci/misc for v4.14, thanks!
-> 
-> I think there was an underscore missing here:
-> 
-> > -#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
-> > +#define PCI_CAP_EXP_RC ENDPOINT_SIZEOF_V2	44	/* v2 endpoints without link end here */  
+A CRS indication will only be given if the address to be read is vendor ID
+register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
+0xFFFF0001 value and will continue polling until a value other than
+0xFFFF0001 is returned within a given timeout.
 
-Urgh, not sure how that happened.  Thanks for the fixup!
+Try to discover device presence via CRS if supported. Otherwise, fall
+through to old behavior.
 
-Alex
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..cc9f1c0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3819,8 +3819,26 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+  */
+ static void pci_flr_wait(struct pci_dev *dev)
+ {
++	u16 root_cap = 0;
+ 	int i = 0;
+ 	u32 id;
++	bool ret;
++
++	pcie_capability_read_word(dev, PCI_EXP_RTCAP, &root_cap);
++	if (root_cap & PCI_EXP_RTCAP_CRSVIS) {
++		/* don't touch the HW before waiting 100ms */
++		msleep(100);
++
++		/*
++		 * Physical functions return from here if found,
++		 * virtual functions fall through as they return ~0 on vendor
++		 * id read once CRS is completed.
++		 */
++		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
++						 60000);
++		if (ret)
++			return;
++	}
+ 
+ 	do {
+ 		msleep(100);
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
