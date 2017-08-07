@@ -1,134 +1,270 @@
-Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v11 0/5] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
-To: Eric Dumazet <eric.dumazet@gmail.com>, David Miller <davem@davemloft.net>
-References: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
- <20170814.221512.1430356980828045690.davem@davemloft.net>
- <1502805534.4936.73.camel@edumazet-glaptop3.roam.corp.google.com>
- <1502805794.4936.75.camel@edumazet-glaptop3.roam.corp.google.com>
-CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <alexander.duyck@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <79546d64-ea06-1723-4433-c990bda40a5b@huawei.com>
-Date: Tue, 15 Aug 2017 22:45:00 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1502097481.24341.32.camel@mtksdaap41>
+Subject: Re: [PATCH v3 5/6] PCI: mediatek: Add new generation controller
+ support
+From: Honghui Zhang <honghui.zhang@mediatek.com>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Date: Mon, 7 Aug 2017 17:18:01 +0800
+In-Reply-To: <1501985190.8058.20.camel@mtkswgap22>
+References: <cover.1501846816.git.honghui.zhang@mediatek.com>
+ <2adcb5f915eb8bd5817592ea32974eb25da02e4f.1501846816.git.honghui.zhang@mediatek.com>
+ <1501985190.8058.20.camel@mtkswgap22>
 MIME-Version: 1.0
-In-Reply-To: <1502805794.4936.75.camel@edumazet-glaptop3.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, yt.shen@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, matthias.bgg@gmail.com, robh@kerenl.org,
+ linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
+ yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 2017/8/15 22:03, Eric Dumazet wrote:
-> On Tue, 2017-08-15 at 06:58 -0700, Eric Dumazet wrote:
->> On Mon, 2017-08-14 at 22:15 -0700, David Miller wrote:
->>> From: Ding Tianhong <dingtianhong@huawei.com>
->>> Date: Tue, 15 Aug 2017 11:23:22 +0800
->>>
->>>> Some devices have problems with Transaction Layer Packets with the Relaxed
->>>> Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
->>>> PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
->>>> devices with Relaxed Ordering issues, and a use of this new flag by the
->>>> cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
->>>> Ports.
->>>  ...
->>>
->>> Series applied, thanks.
->>
->> I got a NULL deref in pci_find_pcie_root_port()
->>
+On Sun, 2017-08-06 at 10:06 +0800, Ryder Lee wrote:
+> Hi Honghui,
 > 
-> This was :
+> If you plan to send next version, then I would suggest some minor
+> changes.
 > 
-> [    4.241029] BUG: unable to handle kernel NULL pointer dereference at 0000000000000050
-> [    4.247001] IP: pci_find_pcie_root_port+0x62/0x80
-> [    4.253011] PGD 0 
-> [    4.253011] P4D 0 
-> [    4.253011] 
-> [    4.258013] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-> [    4.262015] Modules linked in:
-> [    4.265005] CPU: 31 PID: 1 Comm: swapper/0 Not tainted 4.13.0-dbx-DEV #316
-> [    4.271002] Hardware name: Intel RML,PCH/Iota_QC_19, BIOS 2.40.0 06/22/2016
-> [    4.279002] task: ffffa2ee38cfa040 task.stack: ffffa51ec0004000
-> [    4.285001] RIP: 0010:pci_find_pcie_root_port+0x62/0x80
-> [    4.290012] RSP: 0000:ffffa51ec0007ab8 EFLAGS: 00010246
-> [    4.295003] RAX: 0000000000000000 RBX: ffffa2ee36bae000 RCX: 0000000000000006
-> [    4.303002] RDX: 000000000000081c RSI: ffffa2ee38cfa8c8 RDI: ffffa2ee36bae000
-> [    4.310013] RBP: ffffa51ec0007b58 R08: 0000000000000001 R09: 0000000000000000
-> [    4.317001] R10: 0000000000000000 R11: 0000000000000000 R12: ffffa51ec0007ad0
-> [    4.324005] R13: ffffa2ee36bae098 R14: 0000000000000002 R15: ffffa2ee37204818
-> [    4.331002] FS:  0000000000000000(0000) GS:ffffa2ee3fcc0000(0000) knlGS:0000000000000000
-> [    4.339002] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [    4.345001] CR2: 0000000000000050 CR3: 000000401000f000 CR4: 00000000001406e0
-> [    4.351002] Call Trace:
-> [    4.354012]  ? pci_configure_device+0x19f/0x570
-> [    4.359002]  ? pci_conf1_read+0xb8/0xf0
-> [    4.363002]  ? raw_pci_read+0x23/0x40
-> [    4.366011]  ? pci_read+0x2c/0x30
-> [    4.370014]  ? pci_read_config_word+0x67/0x70
-> [    4.374012]  pci_device_add+0x28/0x230
-> [    4.378012]  ? pci_vpd_f0_read+0x50/0x80
-> [    4.382014]  pci_scan_single_device+0x96/0xc0
-> [    4.386012]  pci_scan_slot+0x79/0xf0
-> [    4.389001]  pci_scan_child_bus+0x31/0x180
-> [    4.394014]  acpi_pci_root_create+0x1c6/0x240
-> [    4.398013]  pci_acpi_scan_root+0x15f/0x1b0
-> [    4.402012]  acpi_pci_root_add+0x2e6/0x400
-> [    4.406012]  ? acpi_evaluate_integer+0x37/0x60
-> [    4.411002]  acpi_bus_attach+0xdf/0x200
-> [    4.415002]  acpi_bus_attach+0x6a/0x200
-> [    4.418014]  acpi_bus_attach+0x6a/0x200
-> [    4.422013]  acpi_bus_scan+0x38/0x70
-> [    4.426011]  acpi_scan_init+0x10c/0x271
-> [    4.429001]  acpi_init+0x2fa/0x348
-> [    4.433004]  ? acpi_sleep_proc_init+0x2d/0x2d
-> [    4.437001]  do_one_initcall+0x43/0x169
-> [    4.441001]  kernel_init_freeable+0x1d0/0x258
-> [    4.445003]  ? rest_init+0xe0/0xe0
-> [    4.449001]  kernel_init+0xe/0x150
-> [    4.451002]  ret_from_fork+0x27/0x40
-> [    4.457004] Code: 85 d2 74 27 80 7a 4a 00 74 21 48 89 d0 48 89 c2 f6 80 1b 09 00 00 10 74 07 48 8b 90 a0 0a 00 00 48 8b 52 10 48 83 7a 10 00 75 d0 <0f> b7 50 50 5d 81 e2 f0 00 00 00 83 fa 40 ba 00 00 00 00 48 0f 
-> [    4.474012] RIP: pci_find_pcie_root_port+0x62/0x80 RSP: ffffa51ec0007ab8
-> [    4.481004] CR2: 0000000000000050
-> [    4.484001] ---[ end trace 6f9be6a057581199 ]---
-> [    4.488001] Kernel panic - not syncing: Fatal exception
-> [    4.494013] Rebooting in 10 seconds..
-> [    4.494013] ACPI MEMORY or I/O RESET_REG.
+> On Fri, 2017-08-04 at 20:06 +0800, honghui.zhang@mediatek.com wrote:
+> > +#define PCIE_CRSTB		BIT(3)
+> > +#define PCIE_PERSTB		BIT(8)
+> > +#define PCI_LINKDOWN_RST_EN	GENMASK(15, 13)
 > 
->>
->> This local hack seems to fix the issue.
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index af0cc3456dc1b48b1325c06c5edd2ca8cc22a640..cfd8eb5a3d0ba8347d44952ffab28d9c761044d3 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -522,7 +522,7 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
->>                 bridge = pci_upstream_bridge(bridge);
->>         }
->>  
->> -       if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
->> +       if (highest_pcie_bridge && pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
->>                 return NULL;
->>  
->>         return highest_pcie_bridge;
-> 
+> PCIE_LINKDOWN_RST_EN
 
-It is very strange that I could not reproduce this problem on my server which is Xeon 2690v3,
-but it is really a obviously issue when the dev could not find a upstream bridge in the
-pci_find_pcie_root_port(), so the better way is just like your did in this patch. Thanks.
-
-Regards
-Tianhong
+Thanks, I will change it in the next version.
 
 > 
+> > +#define PCIE_LINK_STATUS_V2	0x804
+> > +#define PCIE_PORT_LINKUP_V2	BIT(10)
+> > +
+> > +
+> > +static int mtk_pcie_hw_rd_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
+> > +			      int where, int size, u32 *val)
+> > +{
+> > +	int reg, shift = 8 * (where & 3);
 > 
-> .
+> int reg => u32
+
+sharp eyes, thanks.
+
 > 
+> > +	/* Write PCIe Configuration Transaction Header for cfgrd */
+> > +	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_RD_FMT),
+> > +	       port->base + PCIE_CFG_HEADER0);
+> > +	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
+> > +	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
+> > +	       port->base + PCIE_CFG_HEADER2);
+> > +
+> > +	/* Trigger h/w to transmit Cfgrd TLP */
+> > +	reg = readl(port->base + PCIE_APP_TLP_REQ);
+> > +	writel(reg | APP_CFG_REQ, port->base + PCIE_APP_TLP_REQ);
+> > +
+> > +	/* Check completion status */
+> > +	if (mtk_pcie_check_cfg_cpld(port))
+> > +		return PCIBIOS_SET_FAILED;
+> > +
+> > +	/* Read cpld payload of Cfgrd */
+> > +	*val = readl(port->base + PCIE_CFG_RDATA);
+> > +
+> > +	switch (size) {
+> > +	case 4:
+> > +		break;
+> > +	case 3:
+> > +		*val = (*val >> shift) & 0xffffff;
+> > +		break;
+> > +	case 2:
+> > +		*val = (*val >> shift) & 0xffff;
+> > +		break;
+> > +	case 1:
+> > +		*val = (*val >> shift) & 0xff;
+> > +		break;
+> > +	default:
+> > +		return PCIBIOS_BAD_REGISTER_NUMBER;
+> > +	}
+> 
+> Do we really need case 3? I guess case 1, 2 or 4 should be enough.
+> 
+
+I will change this as the following snippet:
+	if (size == 1)
+		*val = (*val >> (8 * (where & 3))) & 0xff;
+	else if (size == 2)
+		*val = (*val >> (8 * (where & 3))) & 0xffff;
+
+thanks.
+
+> > +	return PCIBIOS_SUCCESSFUL;
+> > +}
+> > +
+> > +static int mtk_pcie_hw_wr_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
+> > +			      int where, int size, u32 val)
+> > +{
+> > +	/* Write PCIe Configuration Transaction Header for Cfgwr */
+> > +	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_WR_FMT),
+> > +	       port->base + PCIE_CFG_HEADER0);
+> > +	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
+> > +	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
+> > +	       port->base + PCIE_CFG_HEADER2);
+> > +
+> > +	/* Write cfgwr data */
+> > +	val = val << 8 * (where & 3);
+> > +	writel(val, port->base + PCIE_CFG_WDATA);
+> > +
+> > +	/* Trigger h/w to transmit Cfgwr TLP */
+> > +	val = readl(port->base + PCIE_APP_TLP_REQ);
+> > +	val |= APP_CFG_REQ;
+> > +	writel(val, port->base + PCIE_APP_TLP_REQ);
+> > +
+> > +	/* Check completion status */
+> > +	return mtk_pcie_check_cfg_cpld(port);
+> > +}
+> > +
+> > +static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
+> > +				int where, int size, u32 *val)
+> > +{
+> > +	struct mtk_pcie_port *port = NULL, *iter, *tmp;
+> > +	struct mtk_pcie *pcie = bus->sysdata;
+> > +	u32 bn = bus->number;
+> > +	int ret;
+> > +
+> > +	list_for_each_entry_safe(iter, tmp, &pcie->ports, list)
+> > +		if (iter->index == PCI_SLOT(devfn)) {
+> > +			port = iter;
+> > +			break;
+> > +		}
+> > +
+> > +	if (!port) {
+> > +		*val = ~0;
+> > +		return PCIBIOS_DEVICE_NOT_FOUND;
+> > +	}
+> 
+> list_for_each_entry(), since you don't really remove or free something.
+> 
+> I know you need to find port->base to write/read configuration space. I
+> think it's better to move this part to another function. You can take a
+> look at pci-mvebu.c mvebu_pcie_find_portmvebu().
+
+
+Sure, I will add the mtk_pcie_find_port interface, then the code is a
+bit more readable.
+
+thanks.
+
+>  
+> > +	ret = mtk_pcie_hw_rd_cfg(port, bn, devfn, where, size, val);
+> > +	if (ret)
+> > +		*val = ~0;
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
+> > +				 int where, int size, u32 val)
+> > +{
+> > +	struct mtk_pcie_port *port = NULL, *iter, *tmp;
+> > +	struct mtk_pcie *pcie = bus->sysdata;
+> > +	u32 bn = bus->number;
+> > +
+> > +	list_for_each_entry_safe(iter, tmp, &pcie->ports, list)
+> > +		if (iter->index == PCI_SLOT(devfn)) {
+> > +			port = iter;
+> > +			break;
+> > +		}
+> > +
+> > +	if (!port)
+> > +		return PCIBIOS_DEVICE_NOT_FOUND;
+> 
+> Ditto.
+> 
+> > +	return mtk_pcie_hw_wr_cfg(port, bn, devfn, where, size, val);
+> > +}
+> > +
+> > +static struct pci_ops mtk_pcie_ops_v2 = {
+> > +	.read  = mtk_pcie_config_read,
+> > +	.write = mtk_pcie_config_write,
+> > +};
+> > +
+> > +static int mtk_pcie_startup_ports_v2(struct mtk_pcie_port *port)
+> > +{
+> > +	struct mtk_pcie *pcie = port->pcie;
+> > +	struct resource *mem = &pcie->mem;
+> > +	u32 val;
+> > +	size_t size;
+> > +	int err;
+> > +
+> > +	/* mt7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
+> > +	if (pcie->base) {
+> > +		val = readl(pcie->base + PCIE_SYS_CFG_V2);
+> > +		val |= PCIE_CSR_LTSSM_EN(port->index) |
+> > +		       PCIE_CSR_ASPM_L1_EN(port->index);
+> > +		writel(val, pcie->base + PCIE_SYS_CFG_V2);
+> > +	}
+> > +
+> > +	/* Assert all reset signals */
+> > +	writel(0, port->base + PCIE_RST_CTRL);
+> > +
+> > +	/*
+> > +	 * Enable PCIe link down reset, if link status changed from link up to
+> > +	 * link down, this will reset MAC control registers and configuration
+> > +	 * space.
+> > +	 */
+> > +	writel(PCI_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
+> > +
+> > +	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
+> > +	val = readl(port->base + PCIE_RST_CTRL);
+> > +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
+> > +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
+> > +	writel(val, port->base + PCIE_RST_CTRL);
+> > +
+> > +	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
+> 
+> /* 100ms timeout value should be enough for Gen1/2 training */ for
+> consistency.
+> 
+> > +	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
+> > +				 !!(val & PCIE_PORT_LINKUP_V2), 20,
+> > +				 100 * USEC_PER_MSEC);
+> > +	if (err)
+> > +		return -ETIMEDOUT;
+> > +
+> > +	/* Set INTx mask */
+> > +	val = readl(port->base + PCIE_INT_MASK);
+> > +	val &= ~INTX_MASK;
+> > +	writel(val, port->base + PCIE_INT_MASK);
+> > +
+> > +	/* Set AHB to PCIe translation windows */
+> > +	size = mem->end - mem->start;
+> > +	val = AHB2PCIE_BASEL(mem->start) | AHB2PCIE_SIZE(fls(size));
+> > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
+> > +
+> > +	val = AHB2PCIE_BASEH(mem->start);
+> > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
+> > +
+> > +	/* Set PCIe to AXI translation memory space.*/
+> > +	val = fls(0xffffffff) | WIN_ENABLE;
+> > +	writel(val, port->base + PCIE_AXI_WINDOW0);
+> > +
+> > +	return 0;
+> > +}
+> 
+> Ryder
+> 
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
