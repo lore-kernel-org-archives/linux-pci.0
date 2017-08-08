@@ -1,139 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:57850 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750757AbdH3TCI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Aug 2017 15:02:08 -0400
-Date: Wed, 30 Aug 2017 14:02:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: linuxppc-dev@lists.ozlabs.org, kvm@vger.kernel.org,
-        Yongji Xie <elohimes@gmail.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        shan.gavin@gmail.com,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: Re: [PATCH kernel] PCI: Disable IOV before pcibios_sriov_disable()
-Message-ID: <20170830190206.GU8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170811081933.17474-1-aik@ozlabs.ru>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+To: <bhelgaas@google.com>, <michal.simek@xilinx.com>,
+        <soren.brinkmann@xilinx.com>, <lorenzo.pieralisi@arm.com>,
+        <bharat.kumar.gogada@xilinx.com>, <vjonnal@xilinx.com>,
+        <paul.gortmaker@windriver.com>, <linux-pci@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <dan.j.williams@intel.com>,
+        <vinod.koul@intel.com>, <dmaengine@vger.kernel.org>
+Subject: [PATCH 1/4] PCI:xilinx-nwl: Enable Root DMA
+Date: Tue, 8 Aug 2017 16:42:16 +0530
+Message-ID: <1502190739-13474-2-git-send-email-vjonnal@xilinx.com>
+In-Reply-To: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
+References: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170811081933.17474-1-aik@ozlabs.ru>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 11, 2017 at 06:19:33PM +1000, Alexey Kardashevskiy wrote:
-> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> 
-> The PowerNV platform is the only user of pcibios_sriov_disable().
-> The IOV BAR could be shifted by pci_iov_update_resource(). The
-> warning message in the function is printed if the IOV capability
-> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
-> 
-> This is the backtrace of what is happening:
->    pci_disable_sriov
->    sriov_disable
->    pnv_pci_sriov_disable
->    pnv_pci_vf_resource_shift
->    pci_update_resource
->    pci_iov_update_resource
-> 
-> This fixes the issue by disabling IOV capability before calling
-> pcibios_sriov_disable(). With it, the disabling path matches
-> the enabling path: pcibios_sriov_enable() is called before the
-> IOV capability is enabled.
-> 
-> Cc: shan.gavin@gmail.com
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Reported-by: Carol L Soto <clsoto@us.ibm.com>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Tested-by: Carol L Soto <clsoto@us.ibm.com>
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> ---
-> 
-> This is repost. Since Gavin left the team, I am trying to push it out.
-> The previos converstion is here: https://patchwork.ozlabs.org/patch/732653/
+Enabling Root DMA interrupts
 
-I gave up on the previous issue.  I think this patch makes sense as-is
-at least as far as the fact that we can't update a struct resource
-while the device is still consuming it.  I reworked the changelog to
-emphasize that.
+Adding Root DMA translations to bridge for Register Access
 
-I assume the fact that pci_iov_update_resource() dropped the resource
-update caused some user-visible issue later on, and I might mention
-that, too, if I knew what it was.
+Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+---
+ drivers/pci/host/pcie-xilinx-nwl.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-Here's what I would consider putting on pci/virtualization (the diff
-is unchanged from your post):
-
-
-commit 08132e7759b3929bea0ccdf8afe81ebf05351389
-Author: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Date:   Fri Aug 11 18:19:33 2017 +1000
-
-    PCI: Disable VF decoding before updating resources in pcibios_sriov_disable()
-    
-    A struct resource represents the address space consumed by a device.  We
-    should not modify that resource while the device is actively using the
-    address space.  For VFs, pci_iov_update_resource() enforces this by
-    printing a warning and doing nothing if the VFE (VF Enable) and MSE (VF
-    Memory Space Enable) bits are set.
-    
-    Previously, both sriov_enable() and sriov_disable() called the
-    pcibios_sriov_disable() arch hook, which may update the struct resource,
-    while VFE and MSE were enabled.  This effectively dropped the resource
-    update pcibios_sriov_disable() intended to do.
-    
-    Disable VF memory decoding before calling pcibios_sriov_disable().
-    
-    Reported-by: Carol L Soto <clsoto@us.ibm.com>
-    Tested-by: Carol L Soto <clsoto@us.ibm.com>
-    Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-    Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-    [bhelgaas: changelog]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Cc: shan.gavin@gmail.com
-    Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-    Cc: Paul Mackerras <paulus@samba.org>
-
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 120485d6f352..ac41c8be9200 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	while (i--)
- 		pci_iov_remove_virtfn(dev, i, 0);
- 
--	pcibios_sriov_disable(dev);
- err_pcibios:
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
-@@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-+	pcibios_sriov_disable(dev);
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index eec641a..5766582 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -39,6 +39,11 @@
+ #define E_ECAM_CONTROL			0x00000228
+ #define E_ECAM_BASE_LO			0x00000230
+ #define E_ECAM_BASE_HI			0x00000234
++#define E_DREG_CTRL			0x00000288
++#define E_DREG_BASE_LO			0x00000290
 +
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
++#define DREG_DMA_EN			BIT(0)
++#define DREG_DMA_BASE_LO		0xFD0F0000
  
-@@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
- 	for (i = 0; i < iov->num_VFs; i++)
- 		pci_iov_remove_virtfn(dev, i, 0);
- 
--	pcibios_sriov_disable(dev);
--
- 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
- 	pci_cfg_access_lock(dev);
- 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
- 	ssleep(1);
- 	pci_cfg_access_unlock(dev);
- 
-+	pcibios_sriov_disable(dev);
+ /* Ingress - address translations */
+ #define I_MSII_CAPABILITIES		0x00000300
+@@ -57,6 +62,10 @@
+ #define MSGF_MSI_STATUS_HI		0x00000444
+ #define MSGF_MSI_MASK_LO		0x00000448
+ #define MSGF_MSI_MASK_HI		0x0000044C
++/* Root DMA Interrupt register */
++#define MSGF_DMA_MASK			0x00000464
 +
- 	if (iov->link != dev->devfn)
- 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
++#define MSGF_INTR_EN			BIT(0)
  
+ /* Msg filter mask bits */
+ #define CFG_ENABLE_PM_MSG_FWD		BIT(1)
+@@ -766,6 +775,12 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+ 	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+ 			  MSGF_LEG_SR_MASKALL, MSGF_LEG_STATUS);
+ 
++	/* Enabling DREG translations */
++	nwl_bridge_writel(pcie, DREG_DMA_EN, E_DREG_CTRL);
++	nwl_bridge_writel(pcie, DREG_DMA_BASE_LO, E_DREG_BASE_LO);
++	/* Enabling Root DMA interrupts */
++	nwl_bridge_writel(pcie, MSGF_INTR_EN, MSGF_DMA_MASK);
++
+ 	/* Enable all legacy interrupts */
+ 	nwl_bridge_writel(pcie, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
+ 
+-- 
+2.1.1
