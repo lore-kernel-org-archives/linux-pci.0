@@ -1,456 +1,177 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:41624 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751905AbdHCSUJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 14:20:09 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  3 Aug 2017 12:19:47 -0600
-Message-Id: <20170803181954.4154-9-logang@deltatee.com>
-In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
-Subject: [PATCH v4 08/15] NTB: switchtec_ntb: Initialize hardware for memory windows
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+Subject: [PATCH] ARM: dts: DRA7: Add pcie1 dt node for EP mode
+Date: Tue, 8 Aug 2017 11:10:24 +0530
+Message-ID: <20170808054024.18507-1-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add the code to initialize the memory windows in the hardware.
-This includes setting up the requester ID table, and figuring out
-which BAR corresponds to which memory window. (Seeing the switch
-can be configured with any number of BARs.)
+Add pcie1 dt node in order for the controller to operate in
+endpoint mode. However since none of the dra7 based boards have
+slots configured to operate in endpoint mode, keep EP mode
+disabled.
 
-Also, seeing the device doesn't have hardware for scratchpads or
-determining the link status, we create a shared memory window that has
-these features. A magic number with a version component will be used
-to determine if the other side's driver is actually up.
-
-The shared memory window also informs the other side of the
-size and count of the local memory windows.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 360 +++++++++++++++++++++++++++++++++
- 1 file changed, 360 insertions(+)
+ arch/arm/boot/dts/am571x-idk.dts                |  9 +++++++++
+ arch/arm/boot/dts/am572x-idk.dts                |  7 ++++++-
+ arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi |  7 ++++++-
+ arch/arm/boot/dts/dra7-evm.dts                  |  4 ++++
+ arch/arm/boot/dts/dra7.dtsi                     | 23 ++++++++++++++++++++++-
+ arch/arm/boot/dts/dra72-evm-common.dtsi         |  4 ++++
+ 6 files changed, 51 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index 253efba72275..831bfdf40068 100644
---- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -15,37 +15,396 @@
- 
- #include <linux/switchtec.h>
- #include <linux/module.h>
-+#include <linux/delay.h>
-+#include <linux/kthread.h>
- 
- MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
- MODULE_VERSION("0.1");
- MODULE_LICENSE("GPL");
- MODULE_AUTHOR("Microsemi Corporation");
- 
-+static bool use_lut_mws;
-+module_param(use_lut_mws, bool, 0644);
-+MODULE_PARM_DESC(use_lut_mws,
-+		 "Enable the use of the LUT based memory windows");
+diff --git a/arch/arm/boot/dts/am571x-idk.dts b/arch/arm/boot/dts/am571x-idk.dts
+index adc70fb091a2..0c0bb4e93f25 100644
+--- a/arch/arm/boot/dts/am571x-idk.dts
++++ b/arch/arm/boot/dts/am571x-idk.dts
+@@ -96,3 +96,12 @@
+ 		status = "okay";
+ 	};
+ };
 +
-+#ifndef ioread64
-+#ifdef readq
-+#define ioread64 readq
-+#else
-+#define ioread64 _ioread64
-+static inline u64 _ioread64(void __iomem *mmio)
-+{
-+	u64 low, high;
-+
-+	low = ioread32(mmio);
-+	high = ioread32(mmio + sizeof(u32));
-+	return low | (high << 32);
-+}
-+#endif
-+#endif
-+
-+#ifndef iowrite64
-+#ifdef writeq
-+#define iowrite64 writeq
-+#else
-+#define iowrite64 _iowrite64
-+static inline void _iowrite64(u64 val, void __iomem *mmio)
-+{
-+	iowrite32(val, mmio);
-+	iowrite32(val >> 32, mmio + sizeof(u32));
-+}
-+#endif
-+#endif
-+
-+#define SWITCHTEC_NTB_MAGIC 0x45CC0001
-+#define MAX_MWS     128
-+
-+struct shared_mw {
-+	u32 magic;
-+	u32 partition_id;
-+	u64 mw_sizes[MAX_MWS];
++&pcie1_rc {
++	status = "okay";
++	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
 +};
 +
-+#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-+#define LUT_SIZE SZ_64K
-+
- struct switchtec_ntb {
- 	struct switchtec_dev *stdev;
-+
-+	int self_partition;
-+	int peer_partition;
-+
-+	struct ntb_info_regs __iomem *mmio_ntb;
-+	struct ntb_ctrl_regs __iomem *mmio_ctrl;
-+	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
-+	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
-+	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
-+	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
-+
-+	struct shared_mw *self_shared;
-+	struct shared_mw __iomem *peer_shared;
-+	dma_addr_t self_shared_dma;
-+
-+	int nr_direct_mw;
-+	int nr_lut_mw;
-+	int direct_mw_to_bar[MAX_DIRECT_MW];
-+
-+	int peer_nr_direct_mw;
-+	int peer_nr_lut_mw;
-+	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
++&pcie1_ep {
++	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
++};
+diff --git a/arch/arm/boot/dts/am572x-idk.dts b/arch/arm/boot/dts/am572x-idk.dts
+index 940fcbe5380b..5ff75004afcf 100644
+--- a/arch/arm/boot/dts/am572x-idk.dts
++++ b/arch/arm/boot/dts/am572x-idk.dts
+@@ -88,7 +88,12 @@
+ 	load-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>;
  };
  
-+static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
-+				 struct ntb_ctrl_regs __iomem *ctl,
-+				 u32 op, int wait_status)
-+{
-+	static const char * const op_text[] = {
-+		[NTB_CTRL_PART_OP_LOCK] = "lock",
-+		[NTB_CTRL_PART_OP_CFG] = "configure",
-+		[NTB_CTRL_PART_OP_RESET] = "reset",
-+	};
+-&pcie1 {
++&pcie1_rc {
++	status = "okay";
++	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
++};
 +
-+	int i;
-+	u32 ps;
-+	int status;
-+
-+	switch (op) {
-+	case NTB_CTRL_PART_OP_LOCK:
-+		status = NTB_CTRL_PART_STATUS_LOCKING;
-+		break;
-+	case NTB_CTRL_PART_OP_CFG:
-+		status = NTB_CTRL_PART_STATUS_CONFIGURING;
-+		break;
-+	case NTB_CTRL_PART_OP_RESET:
-+		status = NTB_CTRL_PART_STATUS_RESETTING;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	iowrite32(op, &ctl->partition_op);
-+
-+	for (i = 0; i < 1000; i++) {
-+		if (msleep_interruptible(50) != 0) {
-+			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
-+			return -EINTR;
-+		}
-+
-+		ps = ioread32(&ctl->partition_status) & 0xFFFF;
-+
-+		if (ps != status)
-+			break;
-+	}
-+
-+	if (ps == wait_status)
-+		return 0;
-+
-+	if (ps == status) {
-+		dev_err(&sndev->stdev->dev,
-+			"Timed out while peforming %s (%d). (%08x)",
-+			op_text[op], op,
-+			ioread32(&ctl->partition_status));
-+
-+		return -ETIMEDOUT;
-+	}
-+
-+	return -EIO;
-+}
-+
-+static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
-+{
-+	u64 part_map;
-+
-+	sndev->self_partition = sndev->stdev->partition;
-+
-+	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-+	part_map = ioread64(&sndev->mmio_ntb->ep_map);
-+	part_map &= ~(1 << sndev->self_partition);
-+	sndev->peer_partition = ffs(part_map) - 1;
-+
-+	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
-+		sndev->self_partition, sndev->stdev->partition_count,
-+		part_map);
-+
-+	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
-+		SWITCHTEC_NTB_REG_CTRL_OFFSET;
-+	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
-+		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
-+
-+	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
-+	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
-+	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
-+}
-+
-+static int map_bars(int *map, struct ntb_ctrl_regs __iomem *ctrl)
-+{
-+	int i;
-+	int cnt = 0;
-+
-+	for (i = 0; i < ARRAY_SIZE(ctrl->bar_entry); i++) {
-+		u32 r = ioread32(&ctrl->bar_entry[i].ctl);
-+
-+		if (r & NTB_CTRL_BAR_VALID)
-+			map[cnt++] = i;
-+	}
-+
-+	return cnt;
-+}
-+
-+static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
-+{
-+	sndev->nr_direct_mw = map_bars(sndev->direct_mw_to_bar,
-+				       sndev->mmio_self_ctrl);
-+
-+	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
-+	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
-+
-+	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
-+		sndev->nr_direct_mw, sndev->nr_lut_mw);
-+
-+	sndev->peer_nr_direct_mw = map_bars(sndev->peer_direct_mw_to_bar,
-+					    sndev->mmio_peer_ctrl);
-+
-+	sndev->peer_nr_lut_mw =
-+		ioread16(&sndev->mmio_peer_ctrl->lut_table_entries);
-+	sndev->peer_nr_lut_mw = rounddown_pow_of_two(sndev->peer_nr_lut_mw);
-+
-+	dev_dbg(&sndev->stdev->dev, "Peer MWs: %d direct, %d lut",
-+		sndev->peer_nr_direct_mw, sndev->peer_nr_lut_mw);
-+
-+}
-+
-+static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
-+{
-+	int rc = 0;
-+	u16 req_id;
-+	u32 error;
-+
-+	req_id = ioread16(&sndev->mmio_ntb->requester_id);
-+
-+	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
-+		dev_err(&sndev->stdev->dev,
-+			"Not enough requester IDs available.");
-+		return -EFAULT;
-+	}
-+
-+	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-+				   NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		return rc;
-+
-+	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
-+		  &sndev->mmio_self_ctrl->partition_ctrl);
-+
-+	/*
-+	 * Root Complex Requester ID (which is 0:00.0)
-+	 */
-+	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
-+		  &sndev->mmio_self_ctrl->req_id_table[0]);
-+
-+	/*
-+	 * Host Bridge Requester ID (as read from the mmap address)
-+	 */
-+	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
-+		  &sndev->mmio_self_ctrl->req_id_table[1]);
-+
-+	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-+				   NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+	if (rc == -EIO) {
-+		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
-+		dev_err(&sndev->stdev->dev,
-+			"Error setting up the requester ID table: %08x",
-+			error);
-+	}
-+
-+	return rc;
-+}
-+
-+static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
-+{
-+	int i;
-+
-+	memset(sndev->self_shared, 0, LUT_SIZE);
-+	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
-+	sndev->self_shared->partition_id = sndev->stdev->partition;
-+
-+	for (i = 0; i < sndev->nr_direct_mw; i++) {
-+		int bar = sndev->direct_mw_to_bar[i];
-+		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
-+
-+		if (i == 0)
-+			sz = min_t(resource_size_t, sz,
-+				   LUT_SIZE * sndev->nr_lut_mw);
-+
-+		sndev->self_shared->mw_sizes[i] = sz;
-+	}
-+
-+	for (i = 0; i < sndev->nr_lut_mw; i++) {
-+		int idx = sndev->nr_direct_mw + i;
-+
-+		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
-+	}
-+}
-+
-+static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
-+{
-+	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-+	int bar = sndev->direct_mw_to_bar[0];
-+	u32 ctl_val;
-+	int rc;
-+
-+	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
-+						 LUT_SIZE,
-+						 &sndev->self_shared_dma,
-+						 GFP_KERNEL);
-+	if (!sndev->self_shared) {
-+		dev_err(&sndev->stdev->dev,
-+			"unable to allocate memory for shared mw");
-+		return -ENOMEM;
-+	}
-+
-+	switchtec_ntb_init_shared(sndev);
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
-+				   NTB_CTRL_PART_STATUS_LOCKED);
-+	if (rc)
-+		goto unalloc_and_exit;
-+
-+	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
-+	ctl_val &= 0xFF;
-+	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
-+	ctl_val |= ilog2(LUT_SIZE) << 8;
-+	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
-+	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
-+
-+	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
-+		   sndev->self_shared_dma),
-+		  &ctl->lut_entry[0]);
-+
-+	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
-+				   NTB_CTRL_PART_STATUS_NORMAL);
-+	if (rc) {
-+		u32 bar_error, lut_error;
-+
-+		bar_error = ioread32(&ctl->bar_error);
-+		lut_error = ioread32(&ctl->lut_error);
-+		dev_err(&sndev->stdev->dev,
-+			"Error setting up shared MW: %08x / %08x",
-+			bar_error, lut_error);
-+		goto unalloc_and_exit;
-+	}
-+
-+	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
-+	if (!sndev->peer_shared) {
-+		rc = -ENOMEM;
-+		goto unalloc_and_exit;
-+	}
-+
-+	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
-+	return 0;
-+
-+unalloc_and_exit:
-+	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-+			  sndev->self_shared, sndev->self_shared_dma);
-+
-+	return rc;
-+}
-+
-+static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
-+{
-+	if (sndev->peer_shared)
-+		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
-+
-+	if (sndev->self_shared)
-+		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-+				  sndev->self_shared,
-+				  sndev->self_shared_dma);
-+}
-+
- static int switchtec_ntb_add(struct device *dev,
- 			     struct class_interface *class_intf)
- {
- 	struct switchtec_dev *stdev = to_stdev(dev);
- 	struct switchtec_ntb *sndev;
-+	int rc;
++&pcie1_ep {
+ 	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
+ };
  
- 	stdev->sndev = NULL;
+diff --git a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
+index fdfe5b16b806..d433a50cd18a 100644
+--- a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
++++ b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
+@@ -570,7 +570,12 @@
+ 	};
+ };
  
- 	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
- 		return -ENODEV;
- 
-+	if (stdev->partition_count != 2)
-+		dev_warn(dev, "ntb driver only supports 2 partitions");
+-&pcie1 {
++&pcie1_rc {
++	status = "ok";
++	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
++};
 +
- 	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
- 	if (!sndev)
- 		return -ENOMEM;
++&pcie1_ep {
+ 	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
+ };
  
- 	sndev->stdev = stdev;
- 
-+	switchtec_ntb_init_sndev(sndev);
-+	switchtec_ntb_init_mw(sndev);
+diff --git a/arch/arm/boot/dts/dra7-evm.dts b/arch/arm/boot/dts/dra7-evm.dts
+index f47fc4daf062..57bd75909d96 100644
+--- a/arch/arm/boot/dts/dra7-evm.dts
++++ b/arch/arm/boot/dts/dra7-evm.dts
+@@ -720,3 +720,7 @@
+ 		status = "okay";
+ 	};
+ };
 +
-+	rc = switchtec_ntb_init_req_id_table(sndev);
-+	if (rc)
-+		goto free_and_exit;
-+
-+	rc = switchtec_ntb_init_shared_mw(sndev);
-+	if (rc)
-+		goto free_and_exit;
-+
- 	stdev->sndev = sndev;
- 	dev_info(dev, "NTB device registered");
++&pcie1_rc {
++	status = "okay";
++};
+diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
+index 0f0f6f58bd18..e6f2c6a15dc1 100644
+--- a/arch/arm/boot/dts/dra7.dtsi
++++ b/arch/arm/boot/dts/dra7.dtsi
+@@ -196,6 +196,7 @@
+ 				scm_conf1: scm_conf@1c04 {
+ 					compatible = "syscon";
+ 					reg = <0x1c04 0x0020>;
++					#syscon-cells = <2>;
+ 				};
  
- 	return 0;
+ 				scm_conf_pcie: scm_conf@1c24 {
+@@ -287,7 +288,11 @@
+ 			#address-cells = <1>;
+ 			ranges = <0x51000000 0x51000000 0x3000
+ 				  0x0	     0x20000000 0x10000000>;
+-			pcie1: pcie@51000000 {
++			/**
++			 * To enable PCI endpoint mode, disable the pcie1_rc
++			 * node and enable pcie1_ep mode.
++			 */
++			pcie1_rc: pcie@51000000 {
+ 				compatible = "ti,dra7-pcie";
+ 				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
+ 				reg-names = "rc_dbics", "ti_conf", "config";
+@@ -309,12 +314,28 @@
+ 						<0 0 0 2 &pcie1_intc 2>,
+ 						<0 0 0 3 &pcie1_intc 3>,
+ 						<0 0 0 4 &pcie1_intc 4>;
++				status = "disabled";
+ 				pcie1_intc: interrupt-controller {
+ 					interrupt-controller;
+ 					#address-cells = <0>;
+ 					#interrupt-cells = <1>;
+ 				};
+ 			};
 +
-+free_and_exit:
-+	kfree(sndev);
-+	dev_err(dev, "failed to register ntb device: %d", rc);
-+	return rc;
- }
++			pcie1_ep: pcie_ep@51000000 {
++				compatible = "ti,dra7-pcie-ep";
++				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
++				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
++				interrupts = <0 232 0x4>;
++				num-lanes = <1>;
++				num-ib-windows = <4>;
++				num-ob-windows = <16>;
++				ti,hwmods = "pcie1";
++				phys = <&pcie1_phy>;
++				phy-names = "pcie-phy0";
++				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
++				status = "disabled";
++			};
+ 		};
  
- void switchtec_ntb_remove(struct device *dev,
-@@ -58,6 +417,7 @@ void switchtec_ntb_remove(struct device *dev,
- 		return;
- 
- 	stdev->sndev = NULL;
-+	switchtec_ntb_deinit_shared_mw(sndev);
- 	kfree(sndev);
- 	dev_info(dev, "ntb device unregistered");
- }
+ 		axi@1 {
+diff --git a/arch/arm/boot/dts/dra72-evm-common.dtsi b/arch/arm/boot/dts/dra72-evm-common.dtsi
+index 85780549bc26..2e619748d948 100644
+--- a/arch/arm/boot/dts/dra72-evm-common.dtsi
++++ b/arch/arm/boot/dts/dra72-evm-common.dtsi
+@@ -564,3 +564,7 @@
+ 		status = "okay";
+ 	};
+ };
++
++&pcie1_rc {
++	status = "okay";
++};
 -- 
 2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
