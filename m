@@ -1,75 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:54242 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752613AbdHVTJn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Aug 2017 15:09:43 -0400
-Date: Tue, 22 Aug 2017 14:09:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2 v2] PCI: v3: Update the device tree bindings
-Message-ID: <20170822190940.GD6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170809141455.22220-1-linus.walleij@linaro.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 8 Aug 2017 14:25:10 +0100
+From: Will Deacon <will.deacon@arm.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
+ counters
+Message-ID: <20170808132509.GJ13355@arm.com>
+References: <20170726161949.GB15426@kroah.com>
+ <20170726163049.GG28875@nazgul.tnic>
+ <20170726173353.GB21705@kroah.com>
+ <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
+ <20170726200802.GA17722@kroah.com>
+ <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
+ <20170727051157.GA4525@nazgul.tnic> <20170727090856.GB15784@hc>
+ <20170727131515.GC28548@nazgul.tnic>
+ <20170728231233.GA29240@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170809141455.22220-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170728231233.GA29240@kroah.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Suzuki K Poulose <Suzuki.Poulose@arm.com>, linux-pci@vger.kernel.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jan Glauber <jan.glauber@caviumnetworks.com>, Borislav Petkov <bp@alien8.de>,
+ David Daney <ddaney.cavm@gmail.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 09, 2017 at 04:14:54PM +0200, Linus Walleij wrote:
-> The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
-> and predates the more formal format we have adopted for the bindings.
-> Update them a bit so it is easier to read, and add the Integrator AP-
-> specific compatible so we can detect that we are running on that specific
-> platform.
+On Fri, Jul 28, 2017 at 04:12:33PM -0700, Greg KH wrote:
+> On Thu, Jul 27, 2017 at 03:15:15PM +0200, Borislav Petkov wrote:
+> > On Thu, Jul 27, 2017 at 11:08:56AM +0200, Jan Glauber wrote:
+> > > OK. As fixing the firmware will take quite some time I'll go for the memory
+> > > controller driver that starts EDAC / PMU depending on their CONFIG_.
+> > > 
+> > > What would be the proper location for the multiplexer?
+> > > drivers/soc/cavium or drivers/misc?
+> > 
+> > Uff, no idea. Greg? You're the special drivers guy. :-)
 > 
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-> ChangeLog v1->v2:
-> - Added Rob's ACK.
-> 
-> Bjorn: please merge this when you feel confident with it.
-> ---
->  .../devicetree/bindings/pci/v3-v360epc-pci.txt        | 19 ++++++++++---------
->  1 file changed, 10 insertions(+), 9 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-> index 30b364e504ba..bcc5fe2a74cb 100644
-> --- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-> @@ -2,14 +2,15 @@ V3 Semiconductor V360 EPC PCI bridge
->  
->  This bridge is found in the ARM Integrator/AP (Application Platform)
->  
-> -Integrator-specific notes:
-> -
-> -- syscon: should contain a link to the syscon device node (since
-> -  on the Integrator, some registers in the syscon are required to
-> -  operate the V3).
-> -
-> -V360 EPC specific notes:
-> -
-> -- reg: should contain the base address of the V3 adapter.
-> +Required properties:
-> +- compatible: should be one of:
-> +  "v3,v360epc-pci"
-> +  "arm,integrator-ap-pci", "v3,v360epc-pci"
-> +- reg: should contain the base address of the V3 host bridge.
+> Start out in misc/ and let's see the code to determine if it should be
+> moved elsewhere.
 
-Does this need some sort of comment about how the non-pref and pref mem
-windows need to be 256Mb and adjacent?  I think the driver makes some
-unverified assumptions about them.
+Jan, are you ok making this change, or are you waiting for anything else
+from us? (Mark and I are just going through the pending PMU patches and
+we're not clear on the status of this one).
 
->  - interrupts: should contain a reference to the V3 error interrupt
->    as routed on the system.
-> +
-> +Integrator-specific required properties:
-> +- syscon: should contain a link to the syscon device node, since
-> +  on the Integrator, some registers in the syscon are required to
-> +  operate the V3 host bridge.
-> -- 
-> 2.9.4
-> 
+Cheers,
+
+Will
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
