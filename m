@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
-Date: Mon, 21 Aug 2017 09:53:56 -0400
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Daniel Axtens <dja@axtens.net>, linux-pci@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 3/3] powerpc: replace vga_fixup() with generic code
+In-Reply-To: <87wp6fq8y5.fsf@linkitivity.dja.id.au>
+References: <20170804102033.27731-1-dja@axtens.net>
+ <20170804102033.27731-4-dja@axtens.net>
+ <87efsnq217.fsf@concordia.ellerman.id.au>
+ <87wp6fq8y5.fsf@linkitivity.dja.id.au>
+Date: Tue, 08 Aug 2017 20:12:55 +1000
+Message-ID: <8760dynza0.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-In-Reply-To: <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,58 +19,70 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: gabriele.paoloni@huawei.com, airlied@linux.ie, catalin.marinas@arm.com,
+ will.deacon@arm.com, z.liuxinliang@hisilicon.com, bhelgaas@google.com,
+ alex.williamson@redhat.com, zourongrong@gmail.com,
+ Brian King <brking@linux.vnet.ibm.com>, daniel.vetter@intel.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/18/2017 5:32 PM, Bjorn Helgaas wrote:
-> +	if ((*l & 0xffff) != 0x0001)
-> +		return true;	/* not a CRS completion */
->  
+Daniel Axtens <dja@axtens.net> writes:
 
-This version certainly looks cleaner. However, it breaks pci_flr_wait().
+> Michael Ellerman <mpe@ellerman.id.au> writes:
+>
+>> Daniel Axtens <dja@axtens.net> writes:
+>>
+>>> Currently, we do a PCI fixup to mark a default card so that Xorg
+>>> autoconfiguration works.
+>>>
+>>> There is a new generic method to do this sort of vga fixup, and
+>>> it occurs by default.
+>>>
+>>> Drop our old method.
+>>>
+>>> This method is different:
+>>>  - it will only mark a card as default if a driver is bound
+>>>  - the marking will happen at late_initcall time, or even later
+>>>    if a card is enabled later on (via an ENABLE hook). Currently
+>>>    things are enabled in a FINAL hook.
+>>>
+>>> This *does* change behaviour under some circumstances.
+>>>
+>>> For example, pseries_le_defconfig doesn't have DRM drivers for
+>>> many of the qemu GPU models, including the 'standard' vga.
+>>
+>> Should we enable them/it?
+>
+> Hard to say.
+>
+> The 'standard' vga module (bochs_drm) was blacklisted by Ubuntu -
+> apparently at IBM's request [0] - some years back. Even if you
+> un-blacklist it, I had trouble with getting it and the openfirmware
+> framebuffer driver to play nicely together. It may not be worth the
+> trouble for bochs_drm.
+>
+> There's a better case for including some of the more modern drivers -
+> maybe QXL and virtio - but I wasn't able to test them: my particular
+> build of qemu/TCG refused to start with them and I didn't feel like
+> rebuilding/debugging qemu.
 
-If some root port doesn't support CRS and returns 0xFFFFFFFF, pci_bus_wait_crs()
-function returns true. pci_flr_wait() prematurely bails out from here.
+Yeah OK. Sounds like a bit of mess :)
 
+I'll leave it unless someone who knows Qemu/Gfx etc. tells me otherwise.
 
-pci_flr_wait()
-{
+> It would also be legitmate to say that you're focussing on headless use
+> with pseries_*defconfig and not include them: you need to bring in the
+> DRM core if you want these drivers.
 
-+	ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
-+	if (ret)
-+		return;
+True. There's a bit of a tension there between making them useful
+configs for developers and also turning on as much code as possible so
+it gets tested.
 
-}
+Arguably we should have DRM enabled because the distros will.
 
-We can change the return code to false above but then we break pci_bus_read_dev_vendor_id()
-function. 
-
-That's why, I was interested in creating a pci_bus_crs_visibility_supported() helper
-function that would check for the magic 0x0001 value and return true. Otherwise, false. 
-
-pci_bus_read_dev_vendor_id() would do this
-
-pci_bus_read_dev_vendor_id()
-{
-	...
-	if (pci_bus_crs_visibility_supported())
-		return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
-
-	return true
-}
-
-Similar pattern for pci_flr_wait().
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+cheers
 
 _______________________________________________
 linux-arm-kernel mailing list
