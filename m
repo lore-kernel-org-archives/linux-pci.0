@@ -1,71 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v7 8/8] PCI: rockchip: Use PCI_NUM_INTX
-Date: Tue, 15 Aug 2017 12:02:23 -0700
-Message-ID: <20170815190223.18807-9-paul.burton@imgtec.com>
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2571 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751581AbdHHAxB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Aug 2017 20:53:01 -0400
+Subject: Re: Support SVM without PASID
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        valmiki <valmikibow@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+ <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+ <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
+ <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
+ <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
+ <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
+ <ed289d79-880a-a542-dcb1-0de8c55a8ca0@huawei.com>
+ <1ef75c2d-f980-5cef-f760-be3b133c82ca@arm.com>
+CC: <tianyu.lan@intel.com>, <kevin.tian@intel.com>,
+        <kvm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <iommu@lists.linux-foundation.org>, <jacob.jun.pan@intel.com>,
+        "xieyisheng (A)" <xieyisheng1@huawei.com>
+From: Bob Liu <liubo95@huawei.com>
+Message-ID: <d737a46a-cebc-f38d-371b-ffb91b7b344a@huawei.com>
+Date: Tue, 8 Aug 2017 08:51:51 +0800
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- Paul Burton <paul.burton@imgtec.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1ef75c2d-f980-5cef-f760-be3b133c82ca@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Use the PCI_NUM_INTX macro to indicate the number of PCI INTx interrupts
-rather than the magic number 4. This makes it clearer where the number
-comes from & what it relates to.
+On 2017/8/7 20:52, Jean-Philippe Brucker wrote:
+> Hi Bob,
+> 
+> On 07/08/17 13:18, Bob Liu wrote:
+>> On 2017/8/7 18:31, Jean-Philippe Brucker wrote:
+>>> On 05/08/17 06:14, valmiki wrote:
+>>> [...]
+>>>> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
+>>>> documentation we fill vaddr and iova in struct vfio_iommu_type1_dma_map
+>>>> and pass them to VFIO. But if we use dynamic allocation in application
+>>>> (say malloc), do we need to use dma API to get iova and then call
+>>>> VFIO_IOMMU_MAP ioctl ?
+>>>> If application needs multiple such dynamic allocations, then it need to
+>>>> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and then
+>>>> manage rest allocations requirements from this buffer ?
+>>>
+>>> Yes, without SVM, the application allocates large buffers, allocates IOVAs
+>>> itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely on the
+>>> DMA API at all, it manages IOVAs as it wants. Sizes passed to
+>>> VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page granularity
+>>> (that is at least 4kB), and both iova and vaddr have to be aligned on that
+>>> granularity as well. So malloc isn't really suitable in this case, you'll
+>>> need mmap. The application can then implement a small allocator to manage
+>>> the DMA pool created with VFIO_IOMMU_MAP.
+>>>
+>>> With SVM the application binds its address space to the device, and then
+>>> uses malloc for all DMA buffers, no need for VFIO_IOMMU_MAP.
+>>>
+>>
+>> Hi Jean,
+>>
+>> I think there is another way to support SVM without PASID.
+>>
+>> Suppose there is a device in the same SOC-chip, the device access memory through SMMU(using internal bus instead of PCIe)
+>> Once page fault, the device send an event with (vaddr, substreamID) to SMMU, then SMMU triggers an event interrupt.
+>>
+>> In the event interrupt handler, we can implement the same logic as PRI interrupt in your patch.
+>> What do you think about that?
+> What you're describing is the SMMU stall model for platform devices. From
+> the driver perspective it's the same as PRI and PASID (SubstreamID=PASID).
+> 
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Heiko Stuebner <heiko@sntech.de>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-rockchip@lists.infradead.org
+Indeed!
 
----
-I have only build tested this.
+> When a stall-capable device accesses unmapped memory, the SMMU parks the
+> transaction and sends an event marked "stall" on the event queue, with a
+> stall tag (STAG, roughly equivalent to PRG Index). The OS handles the
+> fault and sends a CMD_RESUME command with the status and the STAG. Then
+> the SMMU completes the access or terminates it.
+> 
+> In a prototype I have, the stall implementation reuses most of the
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+Glad to hear that.
+Would you mind to share me the prototype patch？
 
- drivers/pci/host/pcie-rockchip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> PASID/PRI code. The main difficulty is defining SSID and stall capability
+> in firmware, as there are no standard capability probing for platform
+> devices. Stall-capable devices must be able to wait an indefinite amount
+> of time that their DMA transactions returns, therefore the stall model
+> cannot work with PCI, only some integrated devices.
+> 
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 7bb9870f6d8c..eae195ca06ab 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1116,7 +1116,7 @@ static int rockchip_pcie_init_irq_domain(struct rockchip_pcie *rockchip)
- 		return -EINVAL;
- 	}
- 
--	rockchip->irq_domain = irq_domain_add_linear(intc, 4,
-+	rockchip->irq_domain = irq_domain_add_linear(intc, PCI_NUM_INTX,
- 						    &intx_domain_ops, rockchip);
- 	if (!rockchip->irq_domain) {
- 		dev_err(dev, "failed to get a INTx IRQ domain\n");
--- 
-2.14.1
+I happen to have a board with such devices and like to do the test.
+Will re-post a full version patch upstream once completing the verification.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Bob Liu
