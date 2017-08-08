@@ -1,52 +1,46 @@
-Return-Path: <SRS0=+xF7=7Z=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=+xF7=7Z=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from
- EP
-To: Oza Oza <oza.oza@broadcom.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
- Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
- linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
- Timur Tabi <timur@codeaurora.org>,
- Alex Williamson <alex.williamson@redhat.com>
-References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
- <1503331124-25029-2-git-send-email-oza.oza@broadcom.com>
- <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
- <20170823135140.GA8498@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPf5c2=zO81-7TEidOHbB8K0L3T2_wV4+9Gem5DB6rHWFw@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <eb01a01b-ee8a-1c51-69ba-838bfe94b6f6@codeaurora.org>
-Date: Wed, 23 Aug 2017 11:52:40 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAMSpPPf5c2=zO81-7TEidOHbB8K0L3T2_wV4+9Gem5DB6rHWFw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:35051 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752011AbdHHEoY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2017 00:44:24 -0400
+Received: by mail-qk0-f174.google.com with SMTP id d145so13890845qkc.2
+        for <linux-pci@vger.kernel.org>; Mon, 07 Aug 2017 21:44:24 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH 0/2] PCI hotplug feature
+Date: Tue,  8 Aug 2017 10:14:13 +0530
+Message-Id: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Oza,
+These patches bring in PCI hotplug support for iproc family chipsets.
 
-> In working Enumuration case I get following:
-> [    9.125976] pci 0000:00:00.0: bridge configuration invalid ([bus
-> 00-00]), re-configuring
-> [    9.134267] where=0x0 val=0xffff0001
-> [    9.146946] where=0x0 val=0xffff0001
-> [    9.158943] where=0x0 val=0xffff0001
-> [    9.170945] where=0x0 val=0xffff0001
-> [    9.186945] where=0x0 val=0xffff0001
-> [    9.210944] where=0x0 val=0xffff0001
-> [    9.250943] where=0x0 val=0xffff0001
-> [    9.322942] where=0x0 val=0xffff0001
-> [    9.458943] where=0x0 val=0xffff0001
-> [    9.726942] where=0x0 val=0x9538086    >> actual vendor and device id.
-> 
-> so I think I have to retry in RC driver, so the old code still holds good.
-> except that I have to do factoring out
-You need to return 0xFFFF0001 for vendor ID register and return 0xFFFFFFFF for
-other registers like COMMAND register during the CRS period.
+It includes DT binding documentation update and, implementation in
+iproc pcie RC driver.
 
-> 
-> please let me know If I missed anything, or you want me to try anything else.
+These patch set is made on top of following patches.
+[PATCH v6 2/2] PCI: iproc: add device shutdown for PCI RC
+[PATCH v6 1/2] PCI: iproc: Retry request when CRS returned from EP
 
-Sinan
+Oza Pawandeep (2):
+  PCI: iproc: Implement PCI hotplug support
+  PCI: iproc: Add optional brcm,pci-hotplug
+
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  23 ++++
+ drivers/pci/host/pcie-iproc-platform.c             |   3 +
+ drivers/pci/host/pcie-iproc.c                      | 130 ++++++++++++++++++++-
+ drivers/pci/host/pcie-iproc.h                      |   7 ++
+ 4 files changed, 157 insertions(+), 6 deletions(-)
+
+-- 
+1.9.1
