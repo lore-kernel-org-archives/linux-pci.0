@@ -1,74 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 17 Aug 2017 07:00:17 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jan Glauber <jglauber@cavium.com>
-Subject: Re: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
-Message-ID: <20170817070017.1e9c9456@w520.home>
-In-Reply-To: <1502957663-5527-4-git-send-email-jglauber@cavium.com>
-References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
- <1502957663-5527-4-git-send-email-jglauber@cavium.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.60.111]:42489 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751993AbdHHMqS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2017 08:46:18 -0400
+Subject: Re: [PATCHv2 3/6] PCI: layerscape: use accessors to enable/disable
+ DBI RO registers' write permission
+To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>, <linux-pci@vger.kernel.org>,
+        <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1501748620-42866-4-git-send-email-Zhiqiang.Hou@nxp.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <a7c1e517-4488-c979-fc13-e45fc78809be@synopsys.com>
+Date: Tue, 8 Aug 2017 13:46:13 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1501748620-42866-4-git-send-email-Zhiqiang.Hou@nxp.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 17 Aug 2017 10:14:23 +0200
-Jan Glauber <jglauber@cavium.com> wrote:
-
-> If a PCI device supports neither function-level reset, nor slot
-> or bus reset then refuse to probe it. A line is printed to inform
-> the user.
-
-But that's not what this does, this requires that the device is on a
-reset-able bus.  This is a massive regression.  With this we could no
-longer assign devices on the root complex or any device which doesn't
-return from bus reset and currently makes use of the NO_BUS_RESET flag
-and works happily otherwise.  Full NAK.  Thanks,
-
-Alex
- 
-> Without this change starting qemu with a vfio-pci device can lead to
-> a kernel panic on some Cavium cn8xxx systems, depending on the used
-> device.
+Às 9:23 AM de 8/3/2017, Zhiqiang Hou escreveu:
+> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > 
-> Signed-off-by: Jan Glauber <jglauber@cavium.com>
+> Use the accessors instead accessing the DBI read-only write enable
+> register directly. And the STRFMR1 is not read-only register, so move it
+> out from the write-enable bracket.
+> 
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 > ---
->  drivers/vfio/pci/vfio_pci.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+> V2:
+>  - New patch split from patch v1 3/3.
 > 
-> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
-> index 063c1ce..029ba13 100644
-> --- a/drivers/vfio/pci/vfio_pci.c
-> +++ b/drivers/vfio/pci/vfio_pci.c
-> @@ -1196,6 +1196,12 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
->  		return -EINVAL;
+>  drivers/pci/dwc/pci-layerscape.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+> index fd86128..09056a6 100644
+> --- a/drivers/pci/dwc/pci-layerscape.c
+> +++ b/drivers/pci/dwc/pci-layerscape.c
+> @@ -33,7 +33,6 @@
 >  
-> +	ret = pci_probe_reset_bus(pdev->bus);
-> +	if (ret) {
-> +		dev_warn(&pdev->dev, "Refusing to probe because reset is not possible.\n");
-> +		return ret;
-> +	}
+>  /* PEX Internal Configuration Registers */
+>  #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+> -#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+>  
+>  struct ls_pcie_drvdata {
+>  	u32 lut_offset;
+> @@ -155,11 +154,12 @@ static void ls_pcie_host_init(struct pcie_port *pp)
+>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>  	struct ls_pcie *pcie = to_ls_pcie(pci);
+>  
+> -	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+> +	dw_pcie_dbi_ro_wr_en(pci);
+>  	ls_pcie_fix_class(pcie);
+>  	ls_pcie_clear_multifunction(pcie);
+> +	dw_pcie_dbi_ro_wr_dis(pci);
 > +
->  	group = vfio_iommu_group_get(&pdev->dev);
->  	if (!group)
->  		return -EINVAL;
+>  	ls_pcie_drop_msg_tlp(pcie);
+> -	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+>  }
+>  
+>  static int ls_pcie_msi_host_init(struct pcie_port *pp,
+> 
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-By: Joao Pinto <jpinto@synopsys.com>
