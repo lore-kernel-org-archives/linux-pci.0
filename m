@@ -1,53 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0071.outbound.protection.outlook.com ([104.47.38.71]:14016
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753057AbdHWG0l (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 23 Aug 2017 02:26:41 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv4 2/9] PCI: layerscape: move STRFMR1 access out from the DBI write-enable bracket
-Date: Wed, 23 Aug 2017 14:08:49 +0800
-Message-ID: <20170823060856.9387-3-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
-References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 8 Aug 2017 16:19:26 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V8 1/2] PCI: handle CRS returned by device after FLR
+Message-ID: <20170808211926.GN16580@bhelgaas-glaptop.roam.corp.google.com>
+References: <1502071792-15263-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1502071792-15263-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Sun, Aug 06, 2017 at 10:09:51PM -0400, Sinan Kaya wrote:
 
-The STRFMR1 is not a DBI read-only register, so move it out from the
-write-enable bracket.
+We should include some high-level description of the problem we're
+trying to solve here.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
-V4:
- - no change
+I *think* the problem is that we do something like this:
 
- drivers/pci/dwc/pci-layerscape.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+  - perform an FLR
+  - sleep up to 1000ms total
+  - read ~0 from PCI_COMMAND
+  - warn that the device didn't return from FLR
+  - touch the device before it's ready
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index aebefb42377a..c16940044ed6 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -162,9 +162,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- 	ls_pcie_fix_class(pcie);
- 	ls_pcie_clear_multifunction(pcie);
--	ls_pcie_drop_msg_tlp(pcie);
- 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- 
-+	ls_pcie_drop_msg_tlp(pcie);
-+
- 	dw_pcie_setup_rc(pp);
- 
- 	return 0;
--- 
-2.14.1
+When in fact the device is still initializing after the FLR and would
+return CRS status if we looked for it.  So we should be looking for
+CRS and waiting longer before we start using the device.
+
+> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+> following a Function Level Reset (FLR) request to indicate that it is
+> not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
+> Request Handling Rules and CRS usage in FLR context is mentioned in
+> PCIe r3.1, sec 6.6.2. Function-Level Reset.
+> 
+> A CRS indication will only be given if the address to be read is vendor ID
+> register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
+> 0xFFFF0001 value and will continue polling until a value other than
+> 0xFFFF0001 is returned within a given timeout.
+> 
+> Try to discover device presence via CRS if supported. Otherwise, fall
+> through to old behavior.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pci.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index af0cc34..cc9f1c0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3819,8 +3819,26 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>   */
+>  static void pci_flr_wait(struct pci_dev *dev)
+>  {
+> +	u16 root_cap = 0;
+>  	int i = 0;
+>  	u32 id;
+> +	bool ret;
+> +
+> +	pcie_capability_read_word(dev, PCI_EXP_RTCAP, &root_cap);
+> +	if (root_cap & PCI_EXP_RTCAP_CRSVIS) {
+
+Why do we want to look at PCI_EXP_RTCAP_CRSVIS here?  We don't look at
+it in other paths that call pci_bus_read_dev_vendor_id().
+
+> +		/* don't touch the HW before waiting 100ms */
+
+I believe this, but would like to include a reference to the section
+of the spec that contains this number.  Otherwise it's just a magic
+number and makes future maintenance hard.
+
+> +		msleep(100);
+> +
+> +		/*
+> +		 * Physical functions return from here if found,
+> +		 * virtual functions fall through as they return ~0 on vendor
+> +		 * id read once CRS is completed.
+> +		 */
+> +		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
+> +						 60000);
+> +		if (ret)
+> +			return;
+> +	}
+>  
+>  	do {
+>  		msleep(100);
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
