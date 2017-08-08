@@ -1,228 +1,121 @@
-Return-Path: <SRS0=6IDk=72=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=6IDk=72=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1503544447.19072.7.camel@mhfsdcap03>
-Subject: Re: [pci:pci/host-mediatek 11/11]
- drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
-From: mtk11102 <honghui.zhang@mediatek.com>
+Return-Path: <SRS0=ZAMg=7K=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=ZAMg=7K=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V8 1/2] PCI: handle CRS returned by device after FLR
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: kbuild test robot <fengguang.wu@intel.com>, <kbuild-all@01.org>,
-	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 24 Aug 2017 11:14:07 +0800
-In-Reply-To: <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
-References: <201708232205.SymULNVt%fengguang.wu@intel.com>
-	 <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+References: <1502071792-15263-1-git-send-email-okaya@codeaurora.org>
+ <20170808211926.GN16580@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <adaeb2e6-988d-a9af-b344-25b25198e1f0@codeaurora.org>
+Date: Tue, 8 Aug 2017 19:39:38 -0400
 MIME-Version: 1.0
+In-Reply-To: <20170808211926.GN16580@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
-> On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
-> > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-mediatek
-> > head:   8e8ed61600e99258ff59bf36b85b671eed25a462
-> > commit: 8e8ed61600e99258ff59bf36b85b671eed25a462 [11/11] PCI: mediatek: Add MSI support for MT2712 and MT7622
-> > config: arm-allmodconfig (attached as .config)
-> > compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> > reproduce:
-> >         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-> >         chmod +x ~/bin/make.cross
-> >         git checkout 8e8ed61600e99258ff59bf36b85b671eed25a462
-> >         # save the attached .config to linux build tree
-> >         make.cross ARCH=arm 
+On 8/8/2017 5:19 PM, Bjorn Helgaas wrote:
+> On Sun, Aug 06, 2017 at 10:09:51PM -0400, Sinan Kaya wrote:
 > 
-> The "node" and "dev" undeclared errors are my fault, and I fixed them.  But
-> I don't think I introduced the casting warnings.  These warnings are on a
-> 32-bit build.
+> We should include some high-level description of the problem we're
+> trying to solve here.
 > 
-> I pushed the update to fix the node/dev errors.  Please take a look at the
-> remaining casting warnings.
+> I *think* the problem is that we do something like this:
 > 
-> > All error/warnings (new ones prefixed by >>):
-> > 
-> >    In file included from include/linux/clk.h:16:0,
-> >                     from drivers/pci/host/pcie-mediatek.c:18:
-> >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_msi_setup_irq':
-> > >> drivers/pci/host/pcie-mediatek.c:488:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-> >      msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> >                                     ^
-> >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
-> >     #define lower_32_bits(n) ((u32)(n))
-> >                                     ^
-> >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_enable_msi':
-> > >> drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared (first use in this function)
-> >      port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
-> >                                               ^~~~
-> >    drivers/pci/host/pcie-mediatek.c:541:43: note: each undeclared identifier is reported only once for each function it appears in
-> > >> drivers/pci/host/pcie-mediatek.c:545:11: error: 'dev' undeclared (first use in this function)
-> >       dev_err(dev, "failed to create MSI IRQ domain\n");
-> >               ^~~
-> >    In file included from include/linux/clk.h:16:0,
-> >                     from drivers/pci/host/pcie-mediatek.c:18:
-> >    drivers/pci/host/pcie-mediatek.c:549:22: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-> >      val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> >                          ^
-> >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
-> >     #define lower_32_bits(n) ((u32)(n))
-> >                                     ^
-> > 
-
-hi, Bjorn,
-I fixed the build warning at arm by the following diff:
-diff --git a/drivers/pci/host/pcie-mediatek.c
-b/drivers/pci/host/pcie-mediatek.c
-index 707e669..b8d6ed8 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -459,6 +459,7 @@ static int mtk_pcie_msi_setup_irq(struct
-msi_controller *chip,
-        struct msi_msg msg;
-        int hwirq;
-        u32 irq;
-+       phys_addr_t msg_addr;
-
-        port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
-        if (!port)
-@@ -475,9 +476,10 @@ static int mtk_pcie_msi_setup_irq(struct
-msi_controller *chip,
-
-        irq_set_msi_desc(irq, desc);
-
-+       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-        /* MT2712/MT7622 only support 32 bit MSI address */
-        msg.address_hi = 0;
--       msg.address_lo = lower_32_bits((u64)(port->base +
-PCIE_MSI_VECTOR));
-+       msg.address_lo = lower_32_bits(msg_addr);
-        msg.data = hwirq;
-
-        pci_write_msi_msg(irq, &msg);
-@@ -531,8 +533,10 @@ static const struct irq_domain_ops msi_domain_ops =
-{
- static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
- {
-        u32 val;
-+       phys_addr_t msg_addr;
-
--       val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-+       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-+       val = lower_32_bits(msg_addr);
-        writel(val, port->base + PCIE_IMSI_ADDR);
-
-        val = readl(port->base + PCIE_INT_MASK);
-
-
-I pull the your host-mediatek branch and seems the build error is still
-there.
-Should I send a new patch base on your pci/host-mediatek to fix the
-build warnings, or should I wait for your push for build error and then
-send the patch?
-
-thanks.
-
-> > vim +/node +541 drivers/pci/host/pcie-mediatek.c
-> > 
-> >    459	
-> >    460	static int mtk_pcie_msi_setup_irq(struct msi_controller *chip,
-> >    461					  struct pci_dev *pdev, struct msi_desc *desc)
-> >    462	{
-> >    463		struct mtk_pcie_port *port;
-> >    464		struct msi_msg msg;
-> >    465		unsigned int irq;
-> >    466		int hwirq;
-> >    467	
-> >    468		port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
-> >    469		if (!port)
-> >    470			return -EINVAL;
-> >    471	
-> >    472		hwirq = mtk_pcie_msi_alloc(port);
-> >    473		if (hwirq < 0)
-> >    474			return hwirq;
-> >    475	
-> >    476		irq = irq_create_mapping(port->msi_domain, hwirq);
-> >    477		if (!irq) {
-> >    478			mtk_pcie_msi_free(port, hwirq);
-> >    479			return -EINVAL;
-> >    480		}
-> >    481	
-> >    482		chip->dev = &pdev->dev;
-> >    483	
-> >    484		irq_set_msi_desc(irq, desc);
-> >    485	
-> >    486		/* MT2712/MT7622 only support 32-bit MSI addresses */
-> >    487		msg.address_hi = 0;
-> >  > 488		msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> >    489		msg.data = hwirq;
-> >    490	
-> >    491		pci_write_msi_msg(irq, &msg);
-> >    492	
-> >    493		return 0;
-> >    494	}
-> >    495	
-> >    496	static void mtk_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
-> >    497	{
-> >    498		struct pci_dev *pdev = to_pci_dev(chip->dev);
-> >    499		struct irq_data *d = irq_get_irq_data(irq);
-> >    500		irq_hw_number_t hwirq = irqd_to_hwirq(d);
-> >    501		struct mtk_pcie_port *port;
-> >    502	
-> >    503		port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
-> >    504		if (!port)
-> >    505			return;
-> >    506	
-> >    507		irq_dispose_mapping(irq);
-> >    508		mtk_pcie_msi_free(port, hwirq);
-> >    509	}
-> >    510	
-> >    511	static struct msi_controller mtk_pcie_msi_chip = {
-> >    512		.setup_irq = mtk_pcie_msi_setup_irq,
-> >    513		.teardown_irq = mtk_msi_teardown_irq,
-> >    514	};
-> >    515	
-> >    516	static struct irq_chip mtk_msi_irq_chip = {
-> >    517		.name = "MTK PCIe MSI",
-> >    518		.irq_enable = pci_msi_unmask_irq,
-> >    519		.irq_disable = pci_msi_mask_irq,
-> >    520		.irq_mask = pci_msi_mask_irq,
-> >    521		.irq_unmask = pci_msi_unmask_irq,
-> >    522	};
-> >    523	
-> >    524	static int mtk_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-> >    525				    irq_hw_number_t hwirq)
-> >    526	{
-> >    527		irq_set_chip_and_handler(irq, &mtk_msi_irq_chip, handle_simple_irq);
-> >    528		irq_set_chip_data(irq, domain->host_data);
-> >    529	
-> >    530		return 0;
-> >    531	}
-> >    532	
-> >    533	static const struct irq_domain_ops msi_domain_ops = {
-> >    534		.map = mtk_pcie_msi_map,
-> >    535	};
-> >    536	
-> >    537	static int mtk_pcie_enable_msi(struct mtk_pcie_port *port)
-> >    538	{
-> >    539		u32 val;
-> >    540	
-> >  > 541		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
-> >    542							 &msi_domain_ops,
-> >    543							 &mtk_pcie_msi_chip);
-> >    544		if (!port->msi_domain) {
-> >  > 545			dev_err(dev, "failed to create MSI IRQ domain\n");
-> >    546			return -ENOMEM;
-> >    547		}
-> >    548	
-> >    549		val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> >    550		writel(val, port->base + PCIE_IMSI_ADDR);
-> >    551	
-> >    552		val = readl(port->base + PCIE_INT_MASK);
-> >    553		val &= ~MSI_MASK;
-> >    554		writel(val, port->base + PCIE_INT_MASK);
-> >    555	
-> >    556		return 0;
-> >    557	}
-> >    558	
-> > 
-> > ---
-> > 0-DAY kernel test infrastructure                Open Source Technology Center
-> > https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+>   - perform an FLR
+>   - sleep up to 1000ms total
+>   - read ~0 from PCI_COMMAND
+>   - warn that the device didn't return from FLR
+>   - touch the device before it's ready
 > 
+> When in fact the device is still initializing after the FLR and would
+> return CRS status if we looked for it.  So we should be looking for
+> CRS and waiting longer before we start using the device.
+
+OK. I'll reuse your sentences towards an introductory paragraph. Yes, the
+issue describing is what is happening.
+
 > 
+>> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+>> following a Function Level Reset (FLR) request to indicate that it is
+>> not ready to accept new requests. CRS is defined in PCIe r3.1, sec 2.3.1.
+>> Request Handling Rules and CRS usage in FLR context is mentioned in
+>> PCIe r3.1, sec 6.6.2. Function-Level Reset.
+>>
+>> A CRS indication will only be given if the address to be read is vendor ID
+>> register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
+>> 0xFFFF0001 value and will continue polling until a value other than
+>> 0xFFFF0001 is returned within a given timeout.
+>>
+>> Try to discover device presence via CRS if supported. Otherwise, fall
+>> through to old behavior.
+>>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/pci/pci.c | 18 ++++++++++++++++++
+>>  1 file changed, 18 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index af0cc34..cc9f1c0 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -3819,8 +3819,26 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>>   */
+>>  static void pci_flr_wait(struct pci_dev *dev)
+>>  {
+>> +	u16 root_cap = 0;
+>>  	int i = 0;
+>>  	u32 id;
+>> +	bool ret;
+>> +
+>> +	pcie_capability_read_word(dev, PCI_EXP_RTCAP, &root_cap);
+>> +	if (root_cap & PCI_EXP_RTCAP_CRSVIS) {
+> 
+> Why do we want to look at PCI_EXP_RTCAP_CRSVIS here?  We don't look at
+> it in other paths that call pci_bus_read_dev_vendor_id().
+
+OK. I was trying to separate old cold path from new code path for CRS capable
+HW. There is no harm in removing this check like you mentioned.  
+
+> 
+>> +		/* don't touch the HW before waiting 100ms */
+> 
+> I believe this, but would like to include a reference to the section
+> of the spec that contains this number.  Otherwise it's just a magic
+> number and makes future maintenance hard.
+
+OK.
+
+> 
+>> +		msleep(100);
+>> +
+>> +		/*
+>> +		 * Physical functions return from here if found,
+>> +		 * virtual functions fall through as they return ~0 on vendor
+>> +		 * id read once CRS is completed.
+>> +		 */
+>> +		ret = pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
+>> +						 60000);
+>> +		if (ret)
+>> +			return;
+>> +	}
+>>  
+>>  	do {
+>>  		msleep(100);
+>> -- 
+>> 1.9.1
+>>
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
