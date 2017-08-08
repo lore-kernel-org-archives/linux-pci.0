@@ -1,17 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
-To: <bhelgaas@google.com>, <michal.simek@xilinx.com>,
- <soren.brinkmann@xilinx.com>, <lorenzo.pieralisi@arm.com>,
- <bharat.kumar.gogada@xilinx.com>, <vjonnal@xilinx.com>,
- <paul.gortmaker@windriver.com>, <linux-pci@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
- <dan.j.williams@intel.com>, <vinod.koul@intel.com>,
- <dmaengine@vger.kernel.org>
-Subject: [PATCH 0/4] ZynqMP PS PCIe DMA Driver
-Date: Tue, 8 Aug 2017 16:42:15 +0530
-Message-ID: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
+Date: Tue, 8 Aug 2017 15:19:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Honghui Zhang <honghui.zhang@mediatek.com>
+Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
+ support
+Message-ID: <20170808201912.GJ16580@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1501122135.git.honghui.zhang@mediatek.com>
+ <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
+ <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
+ <1501835976.24341.21.camel@mtksdaap41>
+ <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+In-Reply-To: <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,49 +20,56 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
+ robh+dt@kernel.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
+ yt.shen@mediatek.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ bhelgaas@google.com, xinping.qian@mediatek.com, robh@kerenl.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-ZynqMP devices have PCIe Bridge along with DMA in PS.
-These devices can be configured as either PCIe Endpoints
-or as PCIe Root Complex.
-This patch series shall provide a driver to initiate
-transactions using this DMA.
-Single platform driver shall handle both EndPoint and
-Root DMA transfers.
-Patch 1 enables Root DMA register translation and
-	interrupts
-Patch 2 corrects styling errors seen with checkpatch
-Patch 3 adds DMA driver functionality for both PCI
-	end points and Root DMA
-Patch 4 describes device tree bindings for Root DMA
+On Fri, Aug 04, 2017 at 08:18:09AM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
+> > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
 
-Ravi Shankar Jonnalagadda (4):
-  PCI:xilinx-nwl: Enable Root DMA
-  PCI:xilinx-nwl: Correcting Styling checks
-  PCI: ZYNQMP PS PCIe DMA driver: Adding support for DMA driver
-  PCI: ZYNQMP PS PCIe DMA driver: Devicetree binding for Root DMA
+> > > > +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
+> > > > +						 &intx_domain_ops, port);
+> > > 
+> > > I think there's an issue here with a 4-element IRQ domain and the
+> > > hwirq numbers 1-4 from the of_irq_parse_and_map_pci() path, so INTD
+> > > may not work correctly.
+> > > 
+> > > See
+> > > http://lkml.kernel.org/r/20170801212931.GA26498@bhelgaas-glaptop.roam.corp.google.com
+> > > and related discussion.
+> > 
+> > Sorry, I did not get this,
+> > I do some test with an intel E350T4 PCIe NICs, it's a x1 lane
+> > multi-function device.
+> > What I got from the log is below:
+> > ->of_irq_parse_and_map_pci
+> > 	->of_irq_parse_pci
+> > 		->irq_create_of_mapping
+> > 			->irq_create_fwspec_mapping
+> > 				->irq_domain_translate
+> > 				which will go through
+> > 				d->ops->translate #the hwirq really start from 0
+> > 
+> > And I tested every NIC port of the Intel E350T4 with tftp transfer data,
+> > seems all are OK with this code.
+> 
+> OK.  I don't know what d->ops->translate is involved here, but if it
+> works, I guess this is OK for now.  We're trying to clean this up and
+> make it consistent across all the drivers.  Many of them allocate a
+> 5-element IRQ domain, some make a 4-element domain, and on some of
+> them INTD doesn't work.  It's a mess.
 
- .../devicetree/bindings/dma/xilinx/ps-pcie-dma.txt |   67 +
- drivers/dma/Kconfig                                |   12 +
- drivers/dma/xilinx/Makefile                        |    2 +
- drivers/dma/xilinx/xilinx_ps_pcie.h                |   43 +
- drivers/dma/xilinx/xilinx_ps_pcie_main.c           |  200 ++
- drivers/dma/xilinx/xilinx_ps_pcie_platform.c       | 3059 ++++++++++++++++++++
- drivers/pci/host/pcie-xilinx-nwl.c                 |   23 +-
- include/linux/dma/xilinx_ps_pcie_dma.h             |   69 +
- 8 files changed, 3471 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/dma/xilinx/ps-pcie-dma.txt
- create mode 100644 drivers/dma/xilinx/xilinx_ps_pcie.h
- create mode 100644 drivers/dma/xilinx/xilinx_ps_pcie_main.c
- create mode 100644 drivers/dma/xilinx/xilinx_ps_pcie_platform.c
- create mode 100644 include/linux/dma/xilinx_ps_pcie_dma.h
-
--- 
-2.1.1
-
+Paul Burton is cleaning this up.  Can you point out the d->ops->translate
+function that's involved here?
 
 _______________________________________________
 linux-arm-kernel mailing list
