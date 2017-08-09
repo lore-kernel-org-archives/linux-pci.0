@@ -1,77 +1,172 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1502499441.31707.6.camel@mtkswgap22>
-Subject: Re: [PATCH] PCI: mediatek: add msi support for mt2712 and mt7622
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: <honghui.zhang@mediatek.com>
-Date: Sat, 12 Aug 2017 08:57:21 +0800
-In-Reply-To: <1502454469-29230-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1502454469-29230-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, yt.shen@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
- linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
- yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:44211 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751872AbdHILPD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 07:15:03 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: rockchip: manipulate phy properly if failing to probe the driver
+Date: Wed,  9 Aug 2017 19:14:23 +0800
+Message-Id: <1502277263-187898-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Honghui,
+We observed that the clk_pciephy_ref is still enabled when we actually
+fail to probe the driver.
 
-On Fri, 2017-08-11 at 20:27 +0800, honghui.zhang@mediatek.com wrote:
-...
-> +static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
-> +{
-> +	u32 val;
-> +
-> +	val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> +	writel(val, port->base + PCIE_IMSI_ADDR);
-> +
-> +	val = readl(port->base + PCIE_INT_MASK);
-> +	val &= ~MSI_MASK;
-> +	writel(val, port->base + PCIE_INT_MASK);
-> +}
-> +
->  static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
->  			     irq_hw_number_t hwirq)
->  {
-> @@ -460,6 +574,18 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
->  		return PTR_ERR(port->irq_domain);
->  	}
->  
-> +	/* Setup MSI */
-> +	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> +		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
-> +							 &msi_domain_ops,
-> +							 &mtk_pcie_msi_chip);
-> +		if (!port->msi_domain) {
-> +			dev_err(dev, "Failed to get a MSI IRQ domain\n");
-> +			return PTR_ERR(port->msi_domain);
+root@linaro-alip:~# cat /sys/kernel/debug/clk/clk_summary | grep pcie
+clk_pciephy_ref			  1	1	 24000000	0 0
+clk_pcie_pm			  0	0	 24000000	0 0
+      clk_pcie_core_cru           0	0	125000000	0 0
+      clk_pciephy_ref100m         0	0	100000000	0 0
+		aclk_pcie         0	0	148500000	0 0
+		aclk_perf_pcie    0	0	148500000	0 0
+			pclk_pcie 0	0	 37125000	0 0
+clk_pcie_core                     0	0		0	0 0
 
-Just return -ENOMEM. PTR_ERR(NULL) will cause a static checker warning.
+clk_pciephy_ref is used by phy driver and we need to properly disable
+it for this case. So this patch add error handle for the function of
+rockchip_pcie_init_port to fix this issue.
 
-> +		}
-> +		mtk_pcie_enable_msi(port);
-> +	}
-> +
->  	return 0;
->  }
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Ryder
+ drivers/pci/host/pcie-rockchip.c | 38 ++++++++++++++++++++++++--------------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 2eccd53..ce6371b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -561,32 +561,32 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		err = phy_init(rockchip->phys[i]);
+ 		if (err) {
+ 			dev_err(dev, "init phy%d err %d\n", i, err);
+-			return err;
++			goto err_phy_exit;
+ 		}
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->core_rst);
+ 	if (err) {
+ 		dev_err(dev, "assert core_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->mgmt_rst);
+ 	if (err) {
+ 		dev_err(dev, "assert mgmt_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->mgmt_sticky_rst);
+ 	if (err) {
+ 		dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	err = reset_control_assert(rockchip->pipe_rst);
+ 	if (err) {
+ 		dev_err(dev, "assert pipe_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	udelay(10);
+@@ -594,19 +594,19 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	err = reset_control_deassert(rockchip->pm_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert pm_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->aclk_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert aclk_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->pclk_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert pclk_rst err %d\n", err);
+-		return err;
++		goto err_phy_exit;
+ 	}
+ 
+ 	if (rockchip->link_gen == 2)
+@@ -628,7 +628,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 		err = phy_power_on(rockchip->phys[i]);
+ 		if (err) {
+ 			dev_err(dev, "power on phy%d err %d\n", i, err);
+-			return err;
++			goto err_phy_power_off;
+ 		}
+ 	}
+ 
+@@ -639,25 +639,25 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	err = reset_control_deassert(rockchip->mgmt_sticky_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
+-		return err;
++		goto err_phy_power_off;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->core_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert core_rst err %d\n", err);
+-		return err;
++		goto err_phy_power_off;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->mgmt_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert mgmt_rst err %d\n", err);
+-		return err;
++		goto err_phy_power_off;
+ 	}
+ 
+ 	err = reset_control_deassert(rockchip->pipe_rst);
+ 	if (err) {
+ 		dev_err(dev, "deassert pipe_rst err %d\n", err);
+-		return err;
++		goto err_phy_power_off;
+ 	}
+ 
+ 	/* Fix the transmitted FTS count desired to exit from L0s. */
+@@ -690,7 +690,8 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 				 500 * USEC_PER_MSEC);
+ 	if (err) {
+ 		dev_err(dev, "PCIe link training gen1 timeout!\n");
+-		return -ETIMEDOUT;
++		err = -ETIMEDOUT;
++		goto err_phy_power_off;
+ 	}
+ 
+ 	if (rockchip->link_gen == 2) {
+@@ -751,6 +752,15 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
+ 
+ 	return 0;
++
++err_phy_exit:
++	for (; i >= 0; --i)
++		phy_exit(rockchip->phys[i]);
++err_phy_power_off:
++	for (; i >= 0; --i)
++		phy_power_off(rockchip->phys[i]);
++
++	return err;
+ }
+ 
+ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+-- 
+1.9.1
