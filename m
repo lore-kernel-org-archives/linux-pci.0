@@ -1,68 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0067.outbound.protection.outlook.com ([104.47.32.67]:39183
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750912AbdHPFOW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 01:14:22 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv3 8/9] PCI: designware: enable write permission before updating DBI RO registers
-Date: Wed, 16 Aug 2017 12:56:58 +0800
-Message-ID: <1502859419-33696-9-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-lf0-f52.google.com ([209.85.215.52]:38174 "EHLO
+        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751704AbdHIOOm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 10:14:42 -0400
+Received: by mail-lf0-f52.google.com with SMTP id y15so28485008lfd.5
+        for <linux-pci@vger.kernel.org>; Wed, 09 Aug 2017 07:14:42 -0700 (PDT)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>
+Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
+Subject: [PATCH 1/2 v2] PCI: v3: Update the device tree bindings
+Date: Wed,  9 Aug 2017 16:14:30 +0200
+Message-Id: <20170809141431.22146-1-linus.walleij@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
+and predates the more formal format we have adopted for the bindings.
+Update them a bit so it is easier to read, and add the Integrator AP-
+specific compatible so we can detect that we are running on that specific
+platform.
 
-The existing fix doesn't actually work because the Class register and
-interrupt PIN register are read-only, so it must enable the write
-permission before writing the correct value to these registers.
-
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
-V3:
- - Add the same fixup for interrupt pin code.
+ChangeLog v1->v2:
+- Added Rob's ACK.
 
- drivers/pci/dwc/pcie-designware-host.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Bjorn: please merge this when you feel confident with it.
+---
+ .../devicetree/bindings/pci/v3-v360epc-pci.txt        | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 1576211..582f5cc 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -597,10 +597,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
+diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+index 30b364e504ba..bcc5fe2a74cb 100644
+--- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
++++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+@@ -2,14 +2,15 @@ V3 Semiconductor V360 EPC PCI bridge
  
- 	/* setup interrupt pins */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
- 	val &= 0xffff00ff;
- 	val |= 0x00000100;
- 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
-+	dw_pcie_dbi_ro_wr_dis(pci);
+ This bridge is found in the ARM Integrator/AP (Application Platform)
  
- 	/* setup bus numbers */
- 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
-@@ -637,8 +639,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
-+	/* Enable write permission for the DBI read-only register */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	/* program correct class for RC */
- 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+	/* Better disable write permission right after the update */
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
+-Integrator-specific notes:
+-
+-- syscon: should contain a link to the syscon device node (since
+-  on the Integrator, some registers in the syscon are required to
+-  operate the V3).
+-
+-V360 EPC specific notes:
+-
+-- reg: should contain the base address of the V3 adapter.
++Required properties:
++- compatible: should be one of:
++  "v3,v360epc-pci"
++  "arm,integrator-ap-pci", "v3,v360epc-pci"
++- reg: should contain the base address of the V3 host bridge.
+ - interrupts: should contain a reference to the V3 error interrupt
+   as routed on the system.
++
++Integrator-specific required properties:
++- syscon: should contain a link to the syscon device node, since
++  on the Integrator, some registers in the syscon are required to
++  operate the V3 host bridge.
 -- 
-2.1.0.27.g96db324
+2.9.4
