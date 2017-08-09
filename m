@@ -1,52 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:35872 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751069AbdHVUvg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 22 Aug 2017 16:51:36 -0400
-Date: Tue, 22 Aug 2017 15:51:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Faiz Abbas <faiz_abbas@ti.com>
-Cc: jingoohan1@gmail.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] pci: dwc: Clear MSI interrupt status after it is handled
-Message-ID: <20170822205134.GH6948@bhelgaas-glaptop.roam.corp.google.com>
-References: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Lv Zheng <lv.zheng@intel.com>,
+        Bob Moore <robert.moore@intel.com>
+Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+Date: Thu, 10 Aug 2017 00:30:09 +0200
+Message-ID: <46980112.WLPtxWZQ3y@aspire.rjw.lan>
+In-Reply-To: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 10, 2017 at 04:54:55PM +0530, Faiz Abbas wrote:
-> If the interrupt status is cleared before it is handled, it is possible
-> that another interrupt will trigger while servicing the previous one.
-> This is causing timeouts in some wireless lan cards which use pcie.
-> Therefore, clear MSI interrupt status after it gets serviced instead
-> of before calling generic_handler.
-> 
-> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Applied with Joao's ack to pci/host-designware for v4.14, thanks!
+In some cases GPEs are already active when they are enabled by
+acpi_ev_initialize_gpe_block() and whatever happens next may depend
+on the result of handling the events signaled by them, so the
+events should not be discarded (which is what happens currently) and
+they should be handled as soon as reasonably possible.
 
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 28ed32b..78b2584 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -71,9 +71,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  		while ((pos = find_next_bit((unsigned long *) &val, 32,
->  					    pos)) != 32) {
->  			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-> +			generic_handle_irq(irq);
->  			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
->  					    4, 1 << pos);
-> -			generic_handle_irq(irq);
->  			pos++;
->  		}
->  	}
-> -- 
-> 2.7.4
-> 
+For this reason, modify acpi_ev_initialize_gpe_block() to
+dispatch GPEs with the status flag set in-band right after
+enabling them.
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/acpica/evgpeblk.c |   28 +++++++++++++++++++---------
+ 1 file changed, 19 insertions(+), 9 deletions(-)
+
+Index: linux-pm/drivers/acpi/acpica/evgpeblk.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/acpica/evgpeblk.c
++++ linux-pm/drivers/acpi/acpica/evgpeblk.c
+@@ -440,9 +440,11 @@ acpi_ev_initialize_gpe_block(struct acpi
+ 			     void *ignored)
+ {
+ 	acpi_status status;
++	acpi_event_status event_status;
+ 	struct acpi_gpe_event_info *gpe_event_info;
+ 	u32 gpe_enabled_count;
+ 	u32 gpe_index;
++	u32 gpe_number;
+ 	u32 i;
+ 	u32 j;
+ 
+@@ -470,30 +472,38 @@ acpi_ev_initialize_gpe_block(struct acpi
+ 
+ 			gpe_index = (i * ACPI_GPE_REGISTER_WIDTH) + j;
+ 			gpe_event_info = &gpe_block->event_info[gpe_index];
++			gpe_number = gpe_block->block_base_number + gpe_index;
+ 
+ 			/*
+ 			 * Ignore GPEs that have no corresponding _Lxx/_Exx method
+-			 * and GPEs that are used to wake the system
++			 * and GPEs that are used for wakeup
+ 			 */
+-			if ((ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) ==
+-			     ACPI_GPE_DISPATCH_NONE)
+-			    || (ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) ==
+-				ACPI_GPE_DISPATCH_HANDLER)
+-			    || (ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) ==
+-				ACPI_GPE_DISPATCH_RAW_HANDLER)
++			if ((ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) !=
++			     ACPI_GPE_DISPATCH_METHOD)
+ 			    || (gpe_event_info->flags & ACPI_GPE_CAN_WAKE)) {
+ 				continue;
+ 			}
+ 
++			event_status = 0;
++			(void)acpi_hw_get_gpe_status(gpe_event_info,
++						     &event_status);
++
+ 			status = acpi_ev_add_gpe_reference(gpe_event_info);
+ 			if (ACPI_FAILURE(status)) {
+ 				ACPI_EXCEPTION((AE_INFO, status,
+ 					"Could not enable GPE 0x%02X",
+-					gpe_index +
+-					gpe_block->block_base_number));
++					gpe_number));
+ 				continue;
+ 			}
+ 
++			if (event_status & ACPI_EVENT_FLAG_STATUS_SET) {
++				ACPI_INFO(("GPE 0x%02X active on init",
++					   gpe_number));
++				(void)acpi_ev_gpe_dispatch(gpe_block->node,
++							   gpe_event_info,
++							   gpe_number);
++			}
++
+ 			gpe_enabled_count++;
+ 		}
+ 	}
+
