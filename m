@@ -1,182 +1,119 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <5994E262.9070300@rock-chips.com>
-Date: Thu, 17 Aug 2017 08:25:06 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <SRS0=/PPU=7N=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=/PPU=7N=intel.com=jonathan.derrick@kernel.org>
+Subject: Re: [PATCH 2/3] pci: Generalize is_vmd behavior
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+ David Woodhouse <dwmw2@infradead.org>, Keith Busch <keith.busch@intel.com>,
+ Scott Bauer <scott.bauer@intel.com>, David Fugate <david.fugate@intel.com>,
+ linux-kernel@vger.kernel.org
+References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+ <20170807195713.10963-2-jonathan.derrick@intel.com>
+ <20170811170319.GB17039@bhelgaas-glaptop.roam.corp.google.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+Message-ID: <d70aa83d-8d9c-2393-8ce5-5890062134a7@intel.com>
+Date: Wed, 9 Aug 2017 11:02:41 -0600
 MIME-Version: 1.0
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [RFC PATCH 1/3] PCI: rockchip: Add support for pcie wake irq
-References: <20170816075224.31734-1-jeffy.chen@rock-chips.com>
- <20170816075224.31734-2-jeffy.chen@rock-chips.com>
- <5440b476-f811-c478-c19a-9ee08005de6b@rock-chips.com>
-In-Reply-To: <5440b476-f811-c478-c19a-9ee08005de6b@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- briannorris@chromium.org, linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170811170319.GB17039@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-hi shawn,
-
-
-On 08/16/2017 05:00 PM, Shawn Lin wrote:
-> Hi Jeffy,
->
-> On 2017/8/16 15:52, Jeffy Chen wrote:
->> Add support for PCIE_WAKE pin in rockchip pcie driver.
+On 08/11/2017 11:03 AM, Bjorn Helgaas wrote:
+> On Mon, Aug 07, 2017 at 01:57:12PM -0600, Jon Derrick wrote:
+>> Generalize is_vmd behavior to remove dependency on domain number
+>> checking in pci quirks.
 >>
->> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 >> ---
+>>  arch/x86/include/asm/pci.h | 8 +++-----
+>>  arch/x86/pci/common.c      | 2 +-
+>>  drivers/pci/quirks.c       | 2 +-
+>>  include/linux/pci.h        | 4 ++++
+>>  4 files changed, 9 insertions(+), 7 deletions(-)
 >>
->>   drivers/pci/host/pcie-rockchip.c | 58
->> ++++++++++++++++++++++++++++++++++++++++
->>   1 file changed, 58 insertions(+)
+>> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+>> index 473a729..5c5d54a 100644
+>> --- a/arch/x86/include/asm/pci.h
+>> +++ b/arch/x86/include/asm/pci.h
+>> @@ -60,16 +60,14 @@ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+>>  #define pci_root_bus_fwnode	_pci_root_bus_fwnode
+>>  #endif
+>>  
+>> -static inline bool is_vmd(struct pci_bus *bus)
+>> -{
+>>  #if IS_ENABLED(CONFIG_VMD)
+>> +static inline bool pci_bus_is_vmd(struct pci_bus *bus)
+>> +{
+>>  	struct pci_sysdata *sd = bus->sysdata;
+>>  
+>>  	return sd->vmd_domain;
+>> -#else
+>> -	return false;
+>> -#endif
+>>  }
+>> +#endif
+>>  
+>>  /* Can be used to override the logic in pci_scan_bus for skipping
+>>     already-configured bus numbers - to be used for buggy BIOSes
+>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>> index dbe2132..18b2277 100644
+>> --- a/arch/x86/pci/common.c
+>> +++ b/arch/x86/pci/common.c
+>> @@ -662,7 +662,7 @@ static void set_dma_domain_ops(struct pci_dev *pdev) {}
+>>  
+>>  static void set_dev_domain_options(struct pci_dev *pdev)
+>>  {
+>> -	if (is_vmd(pdev->bus))
+>> +	if (pci_bus_is_vmd(pdev->bus))
+>>  		pdev->hotplug_user_indicators = 1;
+>>  }
+>>  
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 6967c6b..ba47995 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -4666,7 +4666,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+>>  static void quirk_no_aersid(struct pci_dev *pdev)
+>>  {
+>>  	/* VMD Domain */
+>> -	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
+>> +	if (pci_bus_is_vmd(pdev->bus))
+> 
+> I like this part ...
+> 
+>>  		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
+>>  }
+>>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index 4869e66..0299d8b 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -1471,6 +1471,10 @@ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+>>  static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>>  #endif /* CONFIG_PCI_DOMAINS */
+>>  
+>> +#if !IS_ENABLED(CONFIG_VMD)
+>> +static inline bool pci_bus_is_vmd(struct pci_bus *bus) { return false; }
+>> +#endif
+> 
+> But not so much this part.  VMD is (AFAIK) still fundamentally an
+> x86-only thing, so I'd like it better if this could all be within
+> arch/x86.  Could this be done by moving quirk_no_aersid() to
+> arch/x86/pci/fixup.c?
+> 
+Thanks for pointing this out. I'll think of something different and
+localize it to the x86 code domain.
+
+> BTW, CONFIG_VMD in drivers/pci/host/Kconfig is currently "depends on
+> SRCU".  I'm not a Kconfig expert, but that doesn't seem like an
+> intuitive connection.  And it's the only such dependency on SRCU in
+> the tree -- most other places use "select SRCU", which makes more
+> sense to me.
+I agree - most places use select SRCU. I'll add that to v2.
+
+> 
+>>  /*
+>>   * Generic implementation for PCI domain support. If your
+>>   * architecture does not need custom management of PCI
+>> -- 
+>> 2.9.4
 >>
->> diff --git a/drivers/pci/host/pcie-rockchip.c
->> b/drivers/pci/host/pcie-rockchip.c
->> index 7bb9870f6d8c..f969a6d3cd85 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -38,6 +38,7 @@
->>   #include <linux/platform_device.h>
->>   #include <linux/reset.h>
->>   #include <linux/regmap.h>
->> +#include <linux/suspend.h>
->>   /*
->>    * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the
->> lower 16
->> @@ -226,6 +227,8 @@ struct rockchip_pcie {
->>       struct    regulator *vpcie1v8; /* 1.8V power supply */
->>       struct    regulator *vpcie0v9; /* 0.9V power supply */
->>       struct    gpio_desc *ep_gpio;
->> +    int    wake_irq;
->> +    bool    wake_by_pcie;
->>       u32    lanes;
->>       u8    root_bus_nr;
->>       int    link_gen;
->> @@ -853,6 +856,20 @@ static void
->> rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
->>       chained_irq_exit(chip, desc);
->>   }
->> +static irqreturn_t rockchip_pcie_wake_irq_handler(int irq, void *arg)
->> +{
->> +    struct rockchip_pcie *rockchip = arg;
->> +
->> +    rockchip->wake_by_pcie = true;
->> +
->> +    disable_irq_nosync(rockchip->wake_irq);
->> +    disable_irq_wake(rockchip->wake_irq);
->> +
->> +    pm_wakeup_event(rockchip->dev, 0);
->> +    pm_system_wakeup();
->> +
->> +    return IRQ_HANDLED;
->> +}
->>   /**
->>    * rockchip_pcie_parse_dt - Parse Device Tree
->> @@ -868,6 +885,7 @@ static int rockchip_pcie_parse_dt(struct
->> rockchip_pcie *rockchip)
->>       struct resource *regs;
->>       int irq;
->>       int err;
->> +    bool wakeup = 0;
->>       regs = platform_get_resource_byname(pdev,
->>                           IORESOURCE_MEM,
->> @@ -1018,6 +1036,21 @@ static int rockchip_pcie_parse_dt(struct
->> rockchip_pcie *rockchip)
->>           return err;
->>       }
->> +    rockchip->wake_irq = platform_get_irq_byname(pdev, "wake");
->> +    if (rockchip->wake_irq >= 0) {
->> +        err = devm_request_irq(dev, rockchip->wake_irq,
->> +                       rockchip_pcie_wake_irq_handler,
->> +                       0, "pcie-wake", rockchip);
->> +        if (err) {
->> +            dev_err(dev, "failed to request PCIe wake IRQ\n");
->> +            return err;
->
-> This is optional, so I'm not sure if we should prevent the driver to
-> probe?
-it would only break probe when there's a wake irq, but failed to enable 
-it. but the wake irq itself is optional
->
->> +        }
->> +
->> +        disable_irq(rockchip->wake_irq);
->> +        wakeup = device_property_read_bool(dev, "wakeup-source");
->
-> The purpose we add this, is for ep to wakeup the system, so why not
-> always treate it as a wakeup source.
-it's an extra option to disable wake by wakeup-source property
->
->> +    }
->> +    device_init_wakeup(dev, wakeup);
->> +
->>       rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
->>       if (IS_ERR(rockchip->vpcie3v3)) {
->>           if (PTR_ERR(rockchip->vpcie3v3) == -EPROBE_DEFER)
->> @@ -1270,6 +1303,30 @@ static int rockchip_pcie_wait_l2(struct
->> rockchip_pcie *rockchip)
->>       return 0;
->>   }
->> +static int __maybe_unused rockchip_pcie_suspend(struct device *dev)
->> +{
->> +    struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
->> +
->> +    rockchip->wake_by_pcie = false;
->> +
->> +    if (device_may_wakeup(dev)) {
->> +        enable_irq_wake(rockchip->wake_irq);
->> +        enable_irq(rockchip->wake_irq);
->> +    }
->> +    return 0;
->> +}
->> +
->> +static int __maybe_unused rockchip_pcie_resume(struct device *dev)
->> +{
->> +    struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
->> +
->> +    if (device_may_wakeup(dev) && !rockchip->wake_by_pcie) {
->
-> I don't get this that why we need to check wake_by_pcie here?
->
-it's to avoid double disable when it got a irq before resume
->> +        disable_irq(rockchip->wake_irq);
->> +        disable_irq_wake(rockchip->wake_irq);
->> +    }
->> +    return 0;
->> +}
->> +
->>   static int __maybe_unused rockchip_pcie_suspend_noirq(struct device
->> *dev)
->>   {
->>       struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
->> @@ -1548,6 +1605,7 @@ static int rockchip_pcie_remove(struct
->> platform_device *pdev)
->>   }
->>   static const struct dev_pm_ops rockchip_pcie_pm_ops = {
->> +    SET_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend, rockchip_pcie_resume)
->>       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
->>                         rockchip_pcie_resume_noirq)
->>   };
->>
->
->
->
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
