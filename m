@@ -1,37 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:5504 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751793AbdHaOVV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 31 Aug 2017 10:21:21 -0400
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [Question] PCI ACS is broken for ARM SMMU v3?
-To: Alex Williamson <alex.williamson@redhat.com>,
-        Will Deacon <will.deacon@arm.com>
-CC: <linux-arm-kernel@lists.infradead.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        <wangzhou1@hisilicon.com>
-Message-ID: <59A81B4C.3020402@hisilicon.com>
-Date: Thu, 31 Aug 2017 22:21:00 +0800
+Return-Path: <SRS0=h2C8=7L=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=h2C8=7L=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+ <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
+ <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
+CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <a016e598-bcda-32bc-bfb1-4862550e6794@huawei.com>
+Date: Wed, 9 Aug 2017 21:23:58 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Will and Alex,
+Hi Bjorn:
 
-pci_request_acs is called in drivers/iommu/arm-smmu-v3.c to set pci_acs_enable.
+On 2017/8/9 10:22, Bjorn Helgaas wrote:
+> On Sat, Aug 05, 2017 at 03:15:11PM +0800, Ding Tianhong wrote:
+>> When bit4 is set in the PCIe Device Control register, it indicates
+>> whether the device is permitted to use relaxed ordering.
+>> On some platforms using relaxed ordering can have performance issues or
+>> due to erratum can cause data-corruption. In such cases devices must avoid
+>> using relaxed ordering.
+>>
+>> This patch checks if there is any node in the hierarchy that indicates that
+>> using relaxed ordering is not safe. 
+> 
+> I think you only check the devices between the root port and the
+> target device.  For example, you don't check siblings or cousins of
+> the target device.
+> 
 
-PCI subsystem tries to enable ACS as below:
+OK, update the description.
 
-	pci_device_add
-		--> pci_init_capabilities
-			--> pci_enable_acs
+>> In such cases the patch turns off the
+>> relaxed ordering by clearing the eapability for this device.
+> 
+> s/eapability/capability/
+> 
+>> And if the
+>> device is probably running in a guest machine, we should do nothing.
+> 
+> I don't know what this sentence means.  "Probably running in a guest
+> machine" doesn't really make sense, and there's nothing in your patch
+> that explicitly checks for being in a guest machine.
+> 
 
-in ACPI PCI driver. However, ACPI PCI driver will be called before SMMU v3 driver,
-which will lead pci_enable_acs to return directly as pci_acs_enable is not set
-before SMMU v3 driver loading.
+Alex noticed that we should do nothing if in the virtual machine because
+the Root Complex is NULL at that time, so I think this word should be more
+clearly here.
 
-I think this is a bug, what do you think about this problem?
+>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+>> Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+>> Acked-by: Ashok Raj <ashok.raj@intel.com>
+>> ---
+>>  drivers/pci/pci.c   | 29 +++++++++++++++++++++++++++++
+>>  drivers/pci/probe.c | 37 +++++++++++++++++++++++++++++++++++++
+>>  include/linux/pci.h |  2 ++
+>>  3 files changed, 68 insertions(+)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index af0cc34..4f9d7c1 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4854,6 +4854,35 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>>  EXPORT_SYMBOL(pcie_set_mps);
+>>  
+>>  /**
+>> + * pcie_clear_relaxed_ordering - clear PCI Express relaxed ordering bit
+>> + * @dev: PCI device to query
+>> + *
+>> + * If possible clear relaxed ordering
+> 
+> Why "If possible"?  The bit is required to be RW or hardwired to zero,
+> so PCI_EXP_DEVCTL_RELAX_EN should *always* be zero when this returns.
+> 
 
-Best,
-Zhou
+OK
+
+>> + */
+>> +int pcie_clear_relaxed_ordering(struct pci_dev *dev)
+>> +{
+...
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> .
+> 
