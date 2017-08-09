@@ -1,70 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37382 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751168AbdHXUC6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 16:02:58 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170824184321.19432-4-ard.biesheuvel@linaro.org>
-References: <20170824184321.19432-1-ard.biesheuvel@linaro.org> <20170824184321.19432-4-ard.biesheuvel@linaro.org>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 24 Aug 2017 15:02:35 -0500
-Message-ID: <CAL_JsqJTGeLv-c0wXCvMZggU4yzo__s-pD7qEZ7Q3w8=uUuu4Q@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] dt-bindings: designware: add binding for
- Designware PCIe in ECAM mode
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:34048 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750798AbdHIF1w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 01:27:52 -0400
+Received: by mail-pg0-f50.google.com with SMTP id u185so23740132pgb.1
+        for <linux-pci@vger.kernel.org>; Tue, 08 Aug 2017 22:27:51 -0700 (PDT)
+Subject: Re: [PATCH 2/2] PCI: iproc: Add optional brcm,pci-hotplug
+To: Oza Oza <oza.oza@broadcom.com>, Rob Herring <robh+dt@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        "bcm-kernel-feedback-list@broadcom.com"
+        <bcm-kernel-feedback-list@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Oza Pawandeep <oza.pawandeep@gmail.com>,
         "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+References: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com>
+ <1502167455-10516-3-git-send-email-oza.oza@broadcom.com>
+ <CAL_JsqL3dWA-0Sq-_8ufa-cwXZEbFQBJHCK-5wLp_xw5NrTHKw@mail.gmail.com>
+ <CAMSpPPfjxbjaScqovegcRG6GBhkUutqgj3Ly1B+0_BnZN2Ewug@mail.gmail.com>
+From: Ray Jui <ray.jui@broadcom.com>
+Message-ID: <735e0534-ab77-7440-fbc6-5b40598da445@broadcom.com>
+Date: Tue, 8 Aug 2017 22:27:48 -0700
+MIME-Version: 1.0
+In-Reply-To: <CAMSpPPfjxbjaScqovegcRG6GBhkUutqgj3Ly1B+0_BnZN2Ewug@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc the DT list for bindings please.
 
-On Thu, Aug 24, 2017 at 1:43 PM, Ard Biesheuvel
-<ard.biesheuvel@linaro.org> wrote:
-> Describe the binding for firmware-configured instances of the Synopsys
-> Designware PCIe controller in RC mode.
+
+On 8/8/2017 10:22 PM, Oza Oza wrote:
+> On Tue, Aug 8, 2017 at 7:50 PM, Rob Herring <robh+dt@kernel.org> wrote:
+>> Please send bindings to DT list.
+> Sure, will do that.
 >
-> Cc: Rob Herring <robh@kernel.org>
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-> ---
->  Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
->  1 file changed, 56 insertions(+)
->
-> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
-> new file mode 100644
-> index 000000000000..b8127b19c220
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
-> @@ -0,0 +1,56 @@
-> +* Synopsys Designware PCIe root complex in ECAM mode
-> +
-> +In some cases, firmware may already have configured the Synopsys Designware
-> +PCIe controller in RC mode with static ATU window mappings that cover all
-> +config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
-> +In this case, there is no need for the OS to perform any low level setup
-> +of clocks or device registers, nor is there any reason for the driver to
-> +reconfigure ATU windows for config and/or IO space accesses at runtime.
-> +
-> +Such hardware configurations should be described as "pci-host-ecam-generic"
-> +if they are truly ECAM compatible. Configurations that require no low-level
-> +setup by the OS nor any ATU window reconfiguration at runtime, but do
-> +require special handling for type 0 config TLPs may instead be described as
-> +"snps,dw-pcie-ecam".
+>> On Mon, Aug 7, 2017 at 11:44 PM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+>>> Add description for optional device tree property
+>>> 'brcm,pci-hotplug' for PCI hotplug feature.
+>>>
+>>> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+>>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+>>>
+>>> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>>> index b8e48b4..a3bad24 100644
+>>> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>>> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
+>>> @@ -72,6 +72,29 @@ Optional properties:
+>>>   - brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
+>>>   require the interrupt enable registers to be set explicitly to enable MSI
+>>>
+>>> +Optional properties:
+>>> +- brcm,pci-hotplug: PCI hotplug feature is supported.
+>> I think we should make this a common property. We already have
+>> "ibm,slot-pluggable", so I'd propose "slot-pluggable".
+>>
+>> There's also "hotpluggable" for memory nodes defined, so we could
+>> reuse that here.
+>>
+> ok I will rename this to
+> brcm,slot-pluggable
 
-Humm, what happens when we have the next exception that's SoC specific
-or another vendor? Seems like perhaps "firmware initialized" should
-have been a separate property flag for bootloaders to add rather than
-a compatible string.
+How's brcm,slot-pluggable a common property? It's still brcm specific. 
+Didn't Rob propose either "slot-pluggable" or "hotpluggable"?
 
-I'd rather see this done in a way that does not require DT updates if
-quirks have to be handled/added later.
-
-Rob
+And note it goes to the generic PCI binding instead iProc PCIe specific 
+binding.
