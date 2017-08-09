@@ -1,50 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v6 5/7] PCI: dwc: qcom: Use block IP version for
- operations
-To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
-        robh+dt@kernel.org, mark.rutland@arm.com, kishon@ti.com,
-        sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
-        fengguang.wu@intel.com, weiyongjun1@huawei.com,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
- <1501482857-14100-6-git-send-email-varada@codeaurora.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <285396b4-cadb-6f4a-8cca-d781503b9d49@mm-sol.com>
-Date: Wed, 2 Aug 2017 21:34:22 +0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr20074.outbound.protection.outlook.com ([40.107.2.74]:9993
+        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751974AbdHICut (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Aug 2017 22:50:49 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+CC: "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
+Subject: RE: [PATCHv2 1/6] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+Date: Wed, 9 Aug 2017 02:50:45 +0000
+Message-ID: <AM5PR0402MB27712F7FCC7E7F7FE93CC45B848B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1501748620-42866-2-git-send-email-Zhiqiang.Hou@nxp.com>
+ <ea408ca6-ef74-b4e1-1434-52e5ef09a260@synopsys.com>
+In-Reply-To: <ea408ca6-ef74-b4e1-1434-52e5ef09a260@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1501482857-14100-6-git-send-email-varada@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 31.07.2017 09:34, Varadarajan Narayanan wrote:
-> Presently, when support for a new SoC is added, the driver ops
-> structures and functions are versioned with plain 1, 2, 3 etc.
-> Instead use the block IP version number.
-> 
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
->   drivers/pci/dwc/pcie-qcom.c | 133 +++++++++++++++++++++++---------------------
->   1 file changed, 71 insertions(+), 62 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-
-<cut>
-
-> +/*
-> + * Declare one of_device_id entry
-> + * c - Compatible string
-> + * d - Associated data
-> + * w - SoC wrapper version (ignored)
-> + * s - Synopsys core version (ignored)
-> + */
-> +#define QCOM_DECL(c, d, w, s) { .compatible = c, .data = &d }
-
-Please don't introduce this macro, just add a comment with qcom version 
-and corresponding synopsys version.
-
-regards,
-Stan
+SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGFjayENCg0KPiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0BzeW5v
+cHN5cy5jb21dDQo+IFNlbnQ6IDIwMTflubQ45pyIOOaXpSAyMDo0NQ0KPiBUbzogWi5xLiBIb3Ug
+PHpoaXFpYW5nLmhvdUBueHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhl
+bGdhYXNAZ29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lub3Bz
+eXMuY29tDQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkg
+SHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPg0K
+PiBTdWJqZWN0OiBSZTogW1BBVENIdjIgMS82XSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nlc3Nv
+cnMgZm9yIHdyaXRlDQo+IHBlcm1pc3Npb24gb2YgREJJIHJlYWQtb25seSByZWdpc3RlcnMNCj4g
+DQo+IMOAcyA5OjIzIEFNIGRlIDgvMy8yMDE3LCBaaGlxaWFuZyBIb3UgZXNjcmV2ZXU6DQo+ID4g
+RnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+IFRoZSBy
+ZWFkLW9ubHkgREJJIHJlZ2lzdGVycyBjYW4gYmUgd3JpdHRlbiBvdmVyIHRoZSBEQkkgd2hlbiBz
+ZXQgdGhlDQo+ID4gIldyaXRlIHRvIFJPIFJlZ2lzdGVycyBVc2luZyBEQkkiIChEQklfUk9fV1Jf
+RU4pIGZpZWxkIG9mIHRoZQ0KPiA+IE1JU0NfQ09OVFJPTF8xX09GRiByZWdpc3Rlci4NCj4gPg0K
+PiA+IFNpZ25lZC1vZmYtYnk6IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+
+ID4gLS0tDQo+ID4gVjI6DQo+ID4gIC0gTm9uZQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9w
+Y2llLWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBm
+aWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ll
+LWRlc2lnbndhcmUuaA0KPiA+IGluZGV4IGI0ZDJhODkuLmJiZGYzNWIgMTAwNjQ0DQo+ID4gLS0t
+IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gKysrIGIvZHJpdmVycy9w
+Y2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gQEAgLTc2LDYgKzc2LDkgQEANCj4gPiAgI2Rl
+ZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwgMTYpDQo+ID4gICNkZWZpbmUg
+UENJRV9BVFVfVVBQRVJfVEFSR0VUCQkweDkxQw0KPiA+DQo+ID4gKyNkZWZpbmUgUENJRV9NSVND
+X0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4gKyNkZWZpbmUgUENJRV9EQklfUk9fV1JfRU4JCSgw
+eDEgPDwgMCkNCj4gPiArDQo+ID4gIC8qDQo+ID4gICAqIGlBVFUgVW5yb2xsLXNwZWNpZmljIHJl
+Z2lzdGVyIGRlZmluaXRpb25zDQo+ID4gICAqIEZyb20gNC44MCBjb3JlIHZlcnNpb24gdGhlIGFk
+ZHJlc3MgdHJhbnNsYXRpb24gd2lsbCBiZSBtYWRlIGJ5DQo+ID4gdW5yb2xsIEBAIC0yNzksNiAr
+MjgyLDI4IEBAIHN0YXRpYyBpbmxpbmUgdTMyIGR3X3BjaWVfcmVhZGxfZGJpMihzdHJ1Y3QNCj4g
+ZHdfcGNpZSAqcGNpLCB1MzIgcmVnKQ0KPiA+ICAJcmV0dXJuIF9fZHdfcGNpZV9yZWFkX2RiaShw
+Y2ksIHBjaS0+ZGJpX2Jhc2UyLCByZWcsIDB4NCk7ICB9DQo+ID4NCj4gPiArc3RhdGljIGlubGlu
+ZSB2b2lkIGR3X3BjaWVfZGJpX3JvX3dyX2VuKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiAr
+CXUzMiByZWc7DQo+ID4gKwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19D
+T05UUk9MXzFfT0ZGOw0KPiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0K
+PiA+ICsJdmFsIHw9IFBDSUVfREJJX1JPX1dSX0VOOw0KPiA+ICsJZHdfcGNpZV93cml0ZWxfZGJp
+KHBjaSwgcmVnLCB2YWwpOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQg
+ZHdfcGNpZV9kYmlfcm9fd3JfZGlzKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiArCXUzMiBy
+ZWc7DQo+ID4gKwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19DT05UUk9M
+XzFfT0ZGOw0KPiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0KPiA+ICsJ
+dmFsICY9IH5QQ0lFX0RCSV9ST19XUl9FTjsNCj4gPiArCWR3X3BjaWVfd3JpdGVsX2RiaShwY2ks
+IHJlZywgdmFsKTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgI2lmZGVmIENPTkZJR19QQ0lFX0RXX0hP
+U1QNCj4gPiAgaXJxcmV0dXJuX3QgZHdfaGFuZGxlX21zaV9pcnEoc3RydWN0IHBjaWVfcG9ydCAq
+cHApOyAgdm9pZA0KPiA+IGR3X3BjaWVfbXNpX2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApOw0K
+PiA+DQo+IA0KPiBBY2tlZC1CeTogSm9hbyBQaW50byA8anBpbnRvQHN5bm9wc3lzLmNvbT5bXSAN
+Cg0KLSBaaGlxaWFuZw0K
