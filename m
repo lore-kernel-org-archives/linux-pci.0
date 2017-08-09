@@ -1,77 +1,152 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 8 Aug 2017 15:19:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
- support
-Message-ID: <20170808201912.GJ16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
- <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
- <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
- <1501835976.24341.21.camel@mtksdaap41>
- <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=0tDA=7L=chelsio.com=leedom@kernel.org>
+Return-Path: <SRS0=0tDA=7L=chelsio.com=leedom@kernel.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Ding Tianhong
+	<dingtianhong@huawei.com>
+CC: "ashok.raj@intel.com" <ashok.raj@intel.com>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, Michael Werner <werner@chelsio.com>, Ganesh GR
+	<ganeshgr@chelsio.com>, "asit.k.mallick@intel.com"
+	<asit.k.mallick@intel.com>, "patrick.j.cramer@intel.com"
+	<patrick.j.cramer@intel.com>, "Suravee.Suthikulpanit@amd.com"
+	<Suravee.Suthikulpanit@amd.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+	"l.stach@pengutronix.de" <l.stach@pengutronix.de>, "amira@mellanox.com"
+	<amira@mellanox.com>, "gabriele.paoloni@huawei.com"
+	<gabriele.paoloni@huawei.com>, "David.Laight@aculab.com"
+	<David.Laight@aculab.com>, "jeffrey.t.kirsher@intel.com"
+	<jeffrey.t.kirsher@intel.com>, "catalin.marinas@arm.com"
+	<catalin.marinas@arm.com>, "will.deacon@arm.com" <will.deacon@arm.com>,
+	"mark.rutland@arm.com" <mark.rutland@arm.com>, "robin.murphy@arm.com"
+	<robin.murphy@arm.com>, "davem@davemloft.net" <davem@davemloft.net>,
+	"alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linuxarm@huawei.com" <linuxarm@huawei.com>
+Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Wed, 9 Aug 2017 01:40:01 +0000
+Message-ID: <MWHPR12MB1600249E96C320D5472F77ADC88B0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+ <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>,<20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-In-Reply-To: <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, linux-kernel@vger.kernel.org, matthias.bgg@gmail.com,
- robh+dt@kernel.org, linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
- yt.shen@mediatek.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- bhelgaas@google.com, xinping.qian@mediatek.com, robh@kerenl.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 08:18:09AM -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
-> > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
+| From: Bjorn Helgaas <helgaas@kernel.org>
+| Sent: Tuesday, August 8, 2017 4:22 PM
+|=20
+| This needs to include a link to the Intel spec
+| (https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-ar=
+chitectures-optimization-manual.pdf,
+| sec 3.9.1).
 
-> > > > +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-> > > > +						 &intx_domain_ops, port);
-> > > 
-> > > I think there's an issue here with a 4-element IRQ domain and the
-> > > hwirq numbers 1-4 from the of_irq_parse_and_map_pci() path, so INTD
-> > > may not work correctly.
-> > > 
-> > > See
-> > > http://lkml.kernel.org/r/20170801212931.GA26498@bhelgaas-glaptop.roam.corp.google.com
-> > > and related discussion.
-> > 
-> > Sorry, I did not get this,
-> > I do some test with an intel E350T4 PCIe NICs, it's a x1 lane
-> > multi-function device.
-> > What I got from the log is below:
-> > ->of_irq_parse_and_map_pci
-> > 	->of_irq_parse_pci
-> > 		->irq_create_of_mapping
-> > 			->irq_create_fwspec_mapping
-> > 				->irq_domain_translate
-> > 				which will go through
-> > 				d->ops->translate #the hwirq really start from 0
-> > 
-> > And I tested every NIC port of the Intel E350T4 with tftp transfer data,
-> > seems all are OK with this code.
-> 
-> OK.  I don't know what d->ops->translate is involved here, but if it
-> works, I guess this is OK for now.  We're trying to clean this up and
-> make it consistent across all the drivers.  Many of them allocate a
-> 5-element IRQ domain, some make a 4-element domain, and on some of
-> them INTD doesn't work.  It's a mess.
+  In the commit message or as a comment?  Regardless, I agree.  It's always
+nice to be able to go back and see what the official documentation says.
+However, that said, links on the internet are ... fragile as time goes by,
+so we might want to simply quote section 3.9.1 in the commit message since
+it's relatively short:
 
-Paul Burton is cleaning this up.  Can you point out the d->ops->translate
-function that's involved here?
+    3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
+          and Toward MMIO Regions (P2P)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    In order to maximize performance for PCIe devices in the processors
+    listed in Table 3-6 below, the soft- ware should determine whether the
+    accesses are toward coherent memory (system memory) or toward MMIO
+    regions (P2P access to other devices). If the access is toward MMIO
+    region, then software can command HW to set the RO bit in the TLP
+    header, as this would allow hardware to achieve maximum throughput for
+    these types of accesses. For accesses toward coherent memory, software
+    can command HW to clear the RO bit in the TLP header (no RO), as this
+    would allow hardware to achieve maximum throughput for these types of
+    accesses.
+
+    Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
+               PCIe Performance
+
+    Processor                            CPU RP Device IDs
+
+    Intel Xeon processors based on       6F01H-6F0EH
+    Broadwell microarchitecture
+
+    Intel Xeon processors based on       2F01H-2F0EH
+    Haswell microarchitecture
+
+| It should also include a pointer to the AMD erratum, if available, or
+| at least some reference to how we know it doesn't obey the rules.
+
+  Getting an ACK from AMD seems like a forlorn cause at this point.  My
+contact was Bob Shaw <Bob.Shaw@amd.com> and he stopped responding to me
+messages almost a year ago saying that all of AMD's energies were being
+redirected towards upcoming x86 products (likely Ryzen as we now know).  As
+far as I can tell AMD has walked away from their A1100 (AKA "Seattle") ARM
+SoC.
+
+  On the specific issue, I can certainly write up somthing even more
+extensive than I wrote up for the comment in drivers/pci/quirks.c.  Please
+review the comment I wrote up and tell me if you'd like something even more
+detailed -- I'm usually acused of writing comments which are too long, so
+this would be a new one on me ... :-)
+
+| Ashok, thanks for chiming in.  Now that you have, I have a few more
+| questions for you:
+
+  I can answer a few of these:
+
+|  - Is the above doc the one you mentioned as being now public?
+
+  Yes.  Ashok worked with me to the extent he was allowed prior to the
+publishing of the public technocal note, but he couldn't say much.  (Believ=
+e
+it or not, it is possible to say less than the quoted section above.)  When
+the note was published, Patrick Cramer sent me the note about it and pointe=
+d
+me at section 3.9.1.
+
+|  - Is this considered a hardware erratum?
+
+  I certainly consider it a Hardware Bug.  And I'm really hoping that Ashok
+will be able to find a "Chicken Bit" which allows the broken feature to be
+turned off.  Remember, the Relaxed Ordering Attribute on a Transaction Laye=
+r
+Packet is simply a HINT.  It is perfectly reasonable for a compliant
+implementation to simply ignore the Relaxed Ordering Attribute on an
+incoming TLP Request.  The sole responsibility of a compliant implementatio=
+n
+is to return the exact same Relaxed Ordering and No Snoop Attributes in any
+TLP Response (The rules for ID-Based Ordering Attribute are more complex.)
+=20
+  Earlier Intel Root Complexes did exactly this: they ignored the Relaxed
+Ordering Attribute and there was no performance difference for
+using/not-using it.  It's pretty obvious that an attempt was made to
+implement optimizations surounding the use of Relaxed Ordering and they
+didn't work.
+
+|  - If so, is there a pointer to that as well?
+
+  Intel is historically tight-lipped about admiting any bugs/errata in thei=
+r
+products.  I'm guessing that the above quoted Section 3.9.1 is likely to be
+all we ever get. The language above regarding TLPs targetting Coherent
+Shared Memory are basically as much of an admission that they got it wrong
+as we're going to get.  But heck, maybe we'll get lucky ...  Especially wit=
+h
+regard to the hoped for "Chicken Bit" ...
+
+|  - If this is not considered an erratum, can you provide any guidance
+|    about how an OS should determine when it should use RO?
+
+  Software?  We don't need no stinking software!
+
+  Sorry, I couldn't resist.
+
+| Relying on a list of device IDs in an optimization manual is OK for an
+| erratum, but if it's *not* an erratum, it seems like a hole in the specs
+| because as far as I know there's no generic way for the OS to discover
+| whether to use RO.
+
+  Well, here's to hoping that Ashok and/or Patrick are able to offer more
+detailed information ...
+
+Casey
