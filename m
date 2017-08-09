@@ -1,72 +1,41 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v11 1/4] PCI: Don't ignore valid response before CRS timeout
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Date: Fri, 18 Aug 2017 16:32:03 -0500
-Message-ID: <20170818213203.15145.36487.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=/PPU=7N=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=/PPU=7N=intel.com=jonathan.derrick@kernel.org>
+Subject: Re: [PATCH 3/3] iommu: prevent VMD child devices from being remapping
+ targets
+To: Robin Murphy <robin.murphy@arm.com>, linux-pci@vger.kernel.org,
+ iommu@lists.linux-foundation.org
+Cc: linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, David Fugate <david.fugate@intel.com>,
+ David Woodhouse <dwmw2@infradead.org>, Scott Bauer <scott.bauer@intel.com>
+References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+ <20170807195713.10963-3-jonathan.derrick@intel.com>
+ <fda8e2c5-11da-7189-794c-59a68273e4d8@arm.com>
+From: Jon Derrick <jonathan.derrick@intel.com>
+Message-ID: <e1ead7c8-0891-f1b2-e5b0-d601d1af80e0@intel.com>
+Date: Wed, 9 Aug 2017 11:13:30 -0600
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <fda8e2c5-11da-7189-794c-59a68273e4d8@arm.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-While waiting for a device to become ready (i.e., to return a non-CRS
-completion to a read of its Vendor ID), if we got a valid response to the
-very last read before timing out, we printed a warning and gave up on the
-device even though it was actually ready.
+Hi Robin, thanks for the reply.
 
-For a typical 60s timeout, we wait about 65s (it's not exact because of the
-exponential backoff), but we treated devices that became ready between 33s
-and 65s as though they failed.
-
-Move the Device ID read later so we check whether the device is ready
-immediately, before checking for a timeout.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310db0404..08ea844ac4ba 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1849,15 +1849,16 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 
- 		msleep(delay);
- 		delay *= 2;
--		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
--			return false;
--		/* Card hasn't responded in 60 seconds?  Must be stuck. */
-+
- 		if (delay > crs_timeout) {
- 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
- 			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
- 			       PCI_FUNC(devfn));
- 			return false;
- 		}
-+
-+		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-+			return false;
- 	}
- 
- 	return true;
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 08/11/2017 12:25 PM, Robin Murphy wrote:
+> On 07/08/17 20:57, Jon Derrick wrote:
+>> VMD child devices must use the VMD endpoint's ID as the DMA source.
+>> Because of this, there needs to be a way to link the parent VMD
+>> endpoint's DMAR domain to the VMD child devices' DMAR domain such that
+>> attaching and detaching child devices modify the endpoint's DMAR mapping
+>> and prevents early detaching.
+> > That sounds like either pci_device_group() needs modifying, or perhaps
+> that intel-iommu needs its own extended iommu_ops::device_group
+> implementation, to ensure that VMD child devices get put in the same
+> group as their parent - if they share requester IDs they can't feasibly
+> be attached to different domains anyway.
+> 
+> Robin.
+Yes it seems like that to me too. I have a high-level understanding of
+the changes required but not too much in the nitty-gritty details. It's
+a bit more complicated anyways because VMD emerges a set of root ports,
+and AFAICT, PCI ACS end at the root ports and iommu groups rely on ACS
+to group devices. Either way it's not within the scope of VMD.
