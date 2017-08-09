@@ -1,96 +1,83 @@
-Return-Path: <SRS0=fMXc=7X=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=fMXc=7X=davemloft.net=davem@kernel.org>
-Date: Mon, 21 Aug 2017 11:27:47 -0700 (PDT)
-Message-Id: <20170821.112747.1532639515902173100.davem@davemloft.net>
-To: helgaas@kernel.org
-Cc: mroos@linux.ee, sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
- qla2xxx-upstream@qlogic.com, linux-kernel@vger.kernel.org, hch@lst.de
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
-	<alpine.LRH.2.20.1708162136220.16834@math.ut.ee>
-	<20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve1eur01on0063.outbound.protection.outlook.com ([104.47.1.63]:29776
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752265AbdHICxr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 8 Aug 2017 22:53:47 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+CC: "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
+Subject: RE: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
+Date: Wed, 9 Aug 2017 02:53:44 +0000
+Message-ID: <AM5PR0402MB2771B580C7DF44688DCFC5CD848B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
+ <a564fe46-f0f0-ac69-cf5f-f788bd13833c@synopsys.com>
+In-Reply-To: <a564fe46-f0f0-ac69-cf5f-f788bd13833c@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <helgaas@kernel.org>
-Date: Wed, 16 Aug 2017 14:02:41 -0500
-
-> On Wed, Aug 16, 2017 at 09:39:08PM +0300, Meelis Roos wrote:
->> > > > I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
->> > > > t5120 server: can't allocate MSI-X affinity masks.
->> > > > 
->> > > > [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
->> > > > [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
->> > > > [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
->> > > > [   30.816882] scsi host1: qla2xxx
->> > > > [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
->> > > > [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
->> > > > [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
->> > > > [   31.367083] scsi host1: qla2xxx
->> > > > [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
->> > > > 
->> > > > I do not know if the driver works since nothing is attached to the FC 
->> > > > HBA at the moment, but from the error messages it looks like the driver 
->> > > > fails to load.
->> > > > 
->> > > > I booted 4.12 and 4.11 - the red error is not there but the failure 
->> > > > seems to be the same error -22:
->> > 
->> > 4.10.0 works, 4.11.0 errors out with EINVAL and 4.13-rc4 errorr sout 
->> > with more verbose MSI messages. So something between 4.10 and 4.11 has 
->> > broken it.
->> 
->> I can not reproduice the older kernels that misbehave. I checked out 
->> earlier kernels and recompiled them (old config lost, nothing changed 
->> AFAIK), everything works up to 4.12 inclusive.
->> 
->> > Also, 4.13-rc4 is broken on another sun4v here (T1000). So it seems to 
->> > be sun4v interrupt related.
->> 
->> This still holds - 4.13-rc4 has MSI trouble on at least 2 of my sun4v 
->> machines.
-> 
-> IIUC, that means v4.12 works and v4.13-rc4 does not, so this is a
-> regression we introduced this cycle.
-> 
-> If nobody steps up with a theory, bisecting might be the easiest path
-> forward.
-
-I suspect the test added by:
-
-commit 6f9a22bc5775d231ab8fbe2c2f3c88e45e3e7c28
-Author: Michael Hernandez <michael.hernandez@cavium.com>
-Date:   Thu May 18 10:47:47 2017 -0700
-
-    PCI/MSI: Ignore affinity if pre/post vector count is more than min_vecs
-
-is triggering.
-
-The rest of the failure cases are memory allocation failures which should
-not be happening here.
-
-There have only been 5 commits to kernel/irq/affinity.c since v4.10
-
-I suppose we have been getting away with something that has silently
-been allowed in the past, or something like that.
-
-Meelis can you run with the following debuggingspatch?
-
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index d69bd77252a7..d16c6326000a 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -110,6 +110,9 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
- 	struct cpumask *masks;
- 	cpumask_var_t nmsk, *node_to_present_cpumask;
- 
-+	pr_info("irq_create_affinity_masks: nvecs[%d] affd->pre_vectors[%d] "
-+		"affd->post_vectors[%d]\n",
-+		nvecs, affd->pre_vectors, affd->post_vectors);
- 	/*
- 	 * If there aren't any vectors left after applying the pre/post
- 	 * vectors don't bother with assigning affinity.
+SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIHJldmVpdyENCg0KPiAtLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0Bz
+eW5vcHN5cy5jb21dDQo+IFNlbnQ6IDIwMTflubQ45pyIOOaXpSAyMToxNA0KPiBUbzogWi5xLiBI
+b3UgPHpoaXFpYW5nLmhvdUBueHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4g
+YmhlbGdhYXNAZ29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lu
+b3BzeXMuY29tDQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdr
+YWkgSHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29t
+Pg0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjIgNC82XSBQQ0k6IGxheWVyc2NhcGU6IHJlZmFjdG9y
+IHRoZSBob3N0X2luaXQgZnVuY3Rpb24NCj4gDQo+IMOAcyA5OjIzIEFNIGRlIDgvMy8yMDE3LCBa
+aGlxaWFuZyBIb3UgZXNjcmV2ZXU6DQo+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5I
+b3VAbnhwLmNvbT4NCj4gPg0KPiA+IE1ha2UgdGhlIGxzMTAyMWEncyBob3N0X2luaXQgcmV1c2Ug
+bGF5ZXJzY2FwZSBwbGF0Zm9ybSdzIGNvbW1vbg0KPiA+IGhvc3RfaW5pdCBmdW5jdGlvbi4NCj4g
+Pg0KPiA+IFNpZ25lZC1vZmYtYnk6IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+
+DQo+ID4gLS0tDQo+ID4gVjI6DQo+ID4gIC0gUmVtb3ZlZCB0aGUgZGlzYWJsZSBvdXRib3VuZCB3
+aW5kb3dzIGNvZGUgYW5kIHRoZSByZW1vdmUgZHVwbGljYXRlDQo+IGNsYXNzIGNvZGUNCj4gPiAg
+ICBmaXh1cCBjb2RlIGZyb20gdGhpcyBwYXRjaC4NCj4gPg0KPiA+ICBkcml2ZXJzL3BjaS9kd2Mv
+cGNpLWxheWVyc2NhcGUuYyB8IDU0DQo+ID4gKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0t
+LS0tLS0tLS0tLQ0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwgMjcgZGVs
+ZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaS1sYXll
+cnNjYXBlLmMNCj4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gaW5k
+ZXggMDkwNTZhNi4uMzUzM2E4YyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3BjaS9kd2MvcGNp
+LWxheWVyc2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5j
+DQo+ID4gQEAgLTEwNywzMyArMTA3LDYgQEAgc3RhdGljIGludCBsczEwMjFfcGNpZV9saW5rX3Vw
+KHN0cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIAlyZXR1cm4gMTsNCj4gPiAgfQ0KPiA+DQo+ID4g
+LXN0YXRpYyB2b2lkIGxzMTAyMV9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkg
+LXsNCj4gPiAtCXN0cnVjdCBkd19wY2llICpwY2kgPSB0b19kd19wY2llX2Zyb21fcHAocHApOw0K
+PiA+IC0Jc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7DQo+ID4gLQlzdHJ1
+Y3QgZGV2aWNlICpkZXYgPSBwY2ktPmRldjsNCj4gPiAtCXUzMiBpbmRleFsyXTsNCj4gPiAtDQo+
+ID4gLQlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29rdXBfYnlfcGhhbmRsZShkZXYtPm9m
+X25vZGUsDQo+ID4gLQkJCQkJCSAgICAgImZzbCxwY2llLXNjZmciKTsNCj4gPiAtCWlmIChJU19F
+UlIocGNpZS0+c2NmZykpIHsNCj4gPiAtCQlkZXZfZXJyKGRldiwgIk5vIHN5c2NmZyBwaGFuZGxl
+IHNwZWNpZmllZFxuIik7DQo+ID4gLQkJcGNpZS0+c2NmZyA9IE5VTEw7DQo+ID4gLQkJcmV0dXJu
+Ow0KPiA+IC0JfQ0KPiA+IC0NCj4gPiAtCWlmIChvZl9wcm9wZXJ0eV9yZWFkX3UzMl9hcnJheShk
+ZXYtPm9mX25vZGUsDQo+ID4gLQkJCQkgICAgICAgImZzbCxwY2llLXNjZmciLCBpbmRleCwgMikp
+IHsNCj4gPiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1cm47DQo+ID4gLQl9DQo+
+ID4gLQlwY2llLT5pbmRleCA9IGluZGV4WzFdOw0KPiA+IC0NCj4gPiAtCWR3X3BjaWVfc2V0dXBf
+cmMocHApOw0KPiA+IC0NCj4gPiAtCWxzX3BjaWVfZHJvcF9tc2dfdGxwKHBjaWUpOw0KPiA+IC19
+DQo+ID4gLQ0KPiA+ICBzdGF0aWMgaW50IGxzX3BjaWVfbGlua191cChzdHJ1Y3QgZHdfcGNpZSAq
+cGNpKSAgew0KPiA+ICAJc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBjaSk7IEBA
+IC0xNjAsNiArMTMzLDMzIEBAIHN0YXRpYw0KPiA+IHZvaWQgbHNfcGNpZV9ob3N0X2luaXQoc3Ry
+dWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gIAlkd19wY2llX2RiaV9yb193cl9kaXMocGNpKTsNCj4g
+Pg0KPiA+ICAJbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+ID4gKw0KPiA+ICsJZHdfcGNp
+ZV9zZXR1cF9yYyhwcCk7DQo+ID4gK30NCj4gPiArDQo+ID4gK3N0YXRpYyB2b2lkIGxzMTAyMV9w
+Y2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgew0KPiA+ICsJc3RydWN0IGR3X3Bj
+aWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4gKwlzdHJ1Y3QgbHNfcGNpZSAq
+cGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPiArCXN0cnVjdCBkZXZpY2UgKmRldiA9IHBjaS0+
+ZGV2Ow0KPiA+ICsJdTMyIGluZGV4WzJdOw0KPiA+ICsNCj4gPiArCXBjaWUtPnNjZmcgPSBzeXNj
+b25fcmVnbWFwX2xvb2t1cF9ieV9waGFuZGxlKGRldi0+b2Zfbm9kZSwNCj4gPiArCQkJCQkJICAg
+ICAiZnNsLHBjaWUtc2NmZyIpOw0KPiA+ICsJaWYgKElTX0VSUihwY2llLT5zY2ZnKSkgew0KPiA+
+ICsJCWRldl9lcnIoZGV2LCAiTm8gc3lzY2ZnIHBoYW5kbGUgc3BlY2lmaWVkXG4iKTsNCj4gPiAr
+CQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiArCQlyZXR1cm47DQo+ID4gKwl9DQo+ID4gKw0KPiA+
+ICsJaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyX2FycmF5KGRldi0+b2Zfbm9kZSwNCj4gPiArCQkJ
+CSAgICAgICAiZnNsLHBjaWUtc2NmZyIsIGluZGV4LCAyKSkgew0KPiA+ICsJCXBjaWUtPnNjZmcg
+PSBOVUxMOw0KPiA+ICsJCXJldHVybjsNCj4gPiArCX0NCj4gPiArCXBjaWUtPmluZGV4ID0gaW5k
+ZXhbMV07DQo+ID4gKw0KPiA+ICsJbHNfcGNpZV9ob3N0X2luaXQocHApOw0KPiA+ICB9DQo+ID4N
+Cj4gPiAgc3RhdGljIGludCBsc19wY2llX21zaV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAq
+cHAsDQo+ID4NCj4gDQo+IFJldmlld2VkLWJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMu
+Y29tPg0KDQotIFpoaXFpYW5nDQo=
