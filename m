@@ -1,75 +1,76 @@
-Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
-Date: Wed, 30 Aug 2017 11:06:33 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Mason <slash.tmp@free.fr>
-Cc: Lukas Wunner <lukas@wunner.de>,
-	Mathias Nyman <mathias.nyman@linux.intel.com>,
-	Felipe Balbi <felipe.balbi@linux.intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-usb <linux-usb@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Possible regression between 4.9 and 4.13
-Message-ID: <20170830090633.GA1208@kroah.com>
-References: <599D62EA.7050100@linux.intel.com>
- <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
- <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
- <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
- <59A3D6BF.7010400@linux.intel.com>
- <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
- <59A56C15.2000403@linux.intel.com>
- <20170829235310.GA20214@wunner.de>
- <20170830060237.GA2782@kroah.com>
- <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: "Raj, Ashok" <ashok.raj@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Wed, 9 Aug 2017 16:46:07 +0000
+Message-ID: <MWHPR12MB1600E9D94E74E1DECC192097C88B0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+ <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>
+ <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>,
+ <20170809155841.GA8675@otc-nc-03>
+In-Reply-To: <20170809155841.GA8675@otc-nc-03>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>,
+ "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+ "amira@mellanox.com" <amira@mellanox.com>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ Ding Tianhong <dingtianhong@huawei.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Michael Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 10:55:37AM +0200, Mason wrote:
-> On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
-> 
-> > To get back to the original issue here, the hardware seems to have died,
-> > the driver stops talking to it, and all is good.  The "regression" here
-> > is that we now properly can determine that the hardware is crap.
-> 
-> Before 4.12, when I unplugged my USB3 Flash drive, Linux would
-> detect a few "Uncorrected Non-Fatal errors" via AER, but it was
-> still possible to plug the drive back in.
-> 
-> Since 4.12, once I unplug the drive, the whole USB3 card is marked
-> as dead (all 4 ports), and I can no longer plug anything in (not even
-> the USB2 drive that didn't have any issues, IIRC).
-> 
-> It seems a bit premature to "mark as dead" something that remains
-> functional, doesn't it?
+| From: Raj, Ashok <ashok.raj@intel.com>
+| Sent: Wednesday, August 9, 2017 8:58 AM
+| ...
+| As Casey pointed out in an earlier thread, we choose the heavy hammer
+| approach because there are some that can lead to data-corruption as opposed
+| to perf degradation.
 
-I agree, but if the device sends all ones, it's a good indication it is
-really dead, right?  Or something is wrong with it.
+Careful.  As far as I'm aware, there is no Data Corruption problem
+whatsoever with Intel Root Ports and processing of Transaction Layer Packets
+with and without the Relaxed Ordering Attribute set.
 
-> Disclaimer, there are many variables in this setup, and I've only
-> tested a small fraction of the problem space: only one system,
-> only one USB3 board, only one USB3 Flash drive.
+The only issue which we've discovered with relatively recent Intel Root Port
+implementations and the use of the Relaxed Ordering Attribute is a
+performance issue.  To the best of our ability to analyze the PCIe traces,
+it appeared that the Intel Root Complex delayed returning Link Flow Control
+Credits resulting in lowered performance (total bandwidth).  When we used
+Relaxed Ordering for Ingress Packet Data delivery on a 100Gb/s Ethernet
+link with 1500-byte MTU, we were pegged at ~75Gb/s.  Once we disabled
+Relaxed Ordering, we were able to deliver Ingress Packet Data to Host Memory
+at the full link rate.
 
-Did you ever happen to narrow this down to a single git commit using
-'git bisect'?  I can't remember what happened in the beginning of this
-thread...
+Casey
 
-> > So, how do you think we should proceed, delay a bit longer before saying
-> > the device is gone?  How long is "long enough"?  How many bus errors are
-> > we allowed to tolerate (hint, the PCI spec says none...)
-> > 
-> > Maybe someone wants to get to the root problem here, why is the hardware
-> > suddenly reporting all 1s?
-> 
-> I'm afraid I won't be able to make any progress on this front,
-> unless I can get my hands on a PCIe packet analyzer.
-
-Odds of that happening are pretty rare, right?  I've never even seen one
-of those...
-
-thanks,
-
-greg k-h
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
