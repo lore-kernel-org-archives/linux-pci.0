@@ -1,99 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41050 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753251AbdHKQ4q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Aug 2017 12:56:46 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        alex.williamson@redhat.com
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH V10 2/3] PCI: handle CRS returned by device after FLR
-Date: Fri, 11 Aug 2017 12:56:35 -0400
-Message-Id: <1502470596-4112-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
-References: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:37867 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752213AbdHIHtE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 03:49:04 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, bhelgaas@google.com,
+        songxiaowei@hisilicon.com, wangbinghui@hisilicon.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] PCI: dwc: make dw_pcie_host_ops const
+Date: Wed,  9 Aug 2017 13:18:48 +0530
+Message-Id: <1502264928-30004-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sporadic reset issues have been observed with Intel 750 NVMe drive while
-assigning the physical function to the guest machine. The sequence of
-events observed is as follows:
+Make these structures const as they are only stored in the ops field of
+a pcie_port structure, which is of type const.
+Done using Coccinelle.
 
-- perform a Function Level Reset (FLR)
-- sleep up to 1000ms total
-- read ~0 from PCI_COMMAND
-- warn that the device didn't return from FLR
-- touch the device before it's ready
-- drop register read and writes performing register settings restore
-- incomplete reset operation and partial register restoration
-- second time device probe fails in the guest machine as HW is left in
-limbo.
-
-An endpoint is allowed to issue Configuration Request Retry Status (CRS)
-following a FLR request to indicate that it is not ready to accept new
-requests. CRS is defined in PCIe r3.1, sec 2.3.1. Request Handling Rules
-and CRS usage in FLR context is mentioned in PCIe r3.1, sec 6.6.2.
-Function-Level Reset.
-
-A CRS indication will only be given if the address to be read is vendor ID
-register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
-0xFFFF0001 value and will continue polling until a value other than
-0xFFFF0001 is returned within a given timeout.
-
-Try to discover device presence via CRS first. If device is not found, fall
-through to old behavior.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/pci/pci.c | 23 +++++++++++++++++++++--
- 1 file changed, 21 insertions(+), 2 deletions(-)
+ drivers/pci/dwc/pcie-hisi.c  | 2 +-
+ drivers/pci/dwc/pcie-kirin.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..c853551 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3821,17 +3821,36 @@ static void pci_flr_wait(struct pci_dev *dev)
- {
- 	int i = 0;
- 	u32 id;
-+	bool ret;
-+
-+	/*
-+	 * Don't touch the HW before waiting 100ms. HW has to finish
-+	 * within 100ms according to PCI Express Base Specification
-+	 * Revision 3.1 Section 6.6.2: Function-Level Reset (FLR).
-+	 */
-+	msleep(100);
-+
-+	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID,
-+				      &id))
-+		return;
-+
-+	/* See if we can find a device via CRS first. */
-+	if ((id & 0xffff) == 0x0001) {
-+		ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
-+		if (ret)
-+			return;
-+	}
- 
- 	do {
- 		msleep(100);
- 		pci_read_config_dword(dev, PCI_COMMAND, &id);
--	} while (i++ < 10 && id == ~0);
-+	} while (i++ < 9 && id == ~0);
- 
- 	if (id == ~0)
- 		dev_warn(&dev->dev, "Failed to return from FLR\n");
- 	else if (i > 1)
- 		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
--			 (i - 1) * 100);
-+			 i * 100);
+diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+index e51acee..518cd7e 100644
+--- a/drivers/pci/dwc/pcie-hisi.c
++++ b/drivers/pci/dwc/pcie-hisi.c
+@@ -223,7 +223,7 @@ static int hisi_pcie_link_up(struct dw_pcie *pci)
+ 	return hisi_pcie->soc_ops->hisi_pcie_link_up(hisi_pcie);
  }
  
- /**
+-static struct dw_pcie_host_ops hisi_pcie_host_ops = {
++static const struct dw_pcie_host_ops hisi_pcie_host_ops = {
+ 	.rd_own_conf = hisi_pcie_cfg_read,
+ 	.wr_own_conf = hisi_pcie_cfg_write,
+ };
+diff --git a/drivers/pci/dwc/pcie-kirin.c b/drivers/pci/dwc/pcie-kirin.c
+index 33fddb9..a623f96 100644
+--- a/drivers/pci/dwc/pcie-kirin.c
++++ b/drivers/pci/dwc/pcie-kirin.c
+@@ -441,7 +441,7 @@ static void kirin_pcie_host_init(struct pcie_port *pp)
+ 	.link_up = kirin_pcie_link_up,
+ };
+ 
+-static struct dw_pcie_host_ops kirin_pcie_host_ops = {
++static const struct dw_pcie_host_ops kirin_pcie_host_ops = {
+ 	.rd_own_conf = kirin_pcie_rd_own_conf,
+ 	.wr_own_conf = kirin_pcie_wr_own_conf,
+ 	.host_init = kirin_pcie_host_init,
 -- 
 1.9.1
