@@ -1,59 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr50057.outbound.protection.outlook.com ([40.107.5.57]:64758
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752360AbdHICvG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 22:51:06 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-CC: "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
-Subject: RE: [PATCHv2 2/6] PCI: designware: enable write permission before
- updating class code
-Date: Wed, 9 Aug 2017 02:51:02 +0000
-Message-ID: <AM5PR0402MB27711A696D80EA72F60BF8EB848B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-3-git-send-email-Zhiqiang.Hou@nxp.com>
- <20d204aa-027f-6d90-7eeb-b9c86d62df62@synopsys.com>
-In-Reply-To: <20d204aa-027f-6d90-7eeb-b9c86d62df62@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Ding Tianhong <dingtianhong@huawei.com>, Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Date: Wed, 9 Aug 2017 16:36:32 +0000
+Message-ID: <MWHPR12MB1600289FF0943C59565B39B6C88B0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+ <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>
+ <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
+ <MWHPR12MB1600249E96C320D5472F77ADC88B0@MWHPR12MB1600.namprd12.prod.outlook.com>
+ <20170809030236.GA7191@bhelgaas-glaptop.roam.corp.google.com>,
+ <d168687d-f849-4d09-1a2d-c9c6718b3318@huawei.com>
+In-Reply-To: <d168687d-f849-4d09-1a2d-c9c6718b3318@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>,
+ "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+ "ashok.raj@intel.com" <ashok.raj@intel.com>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Michael Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "amira@mellanox.com" <amira@mellanox.com>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGFjayENCg0KPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0BzeW5v
-cHN5cy5jb21dDQo+IFNlbnQ6IDIwMTflubQ45pyIOOaXpSAyMDo0Ng0KPiBUbzogWi5xLiBIb3Ug
-PHpoaXFpYW5nLmhvdUBueHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhl
-bGdhYXNAZ29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lub3Bz
-eXMuY29tDQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkg
-SHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPg0K
-PiBTdWJqZWN0OiBSZTogW1BBVENIdjIgMi82XSBQQ0k6IGRlc2lnbndhcmU6IGVuYWJsZSB3cml0
-ZSBwZXJtaXNzaW9uIGJlZm9yZQ0KPiB1cGRhdGluZyBjbGFzcyBjb2RlDQo+IA0KPiDDgHMgOToy
-MyBBTSBkZSA4LzMvMjAxNywgWmhpcWlhbmcgSG91IGVzY3JldmV1Og0KPiA+IEZyb206IEhvdSBa
-aGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4NCj4gPiBUaGUgZXhpc3RpbmcgZml4
-IGRvZXNuJ3QgYWN0dWFsbHkgd29yayBiZWNhdXNlIHRoZSBDbGFzcyByZWdpc3RlciBpcw0KPiA+
-IHJlYWQtb25seSwgc28gaXQgbXVzdCBlbmFibGUgdGhlIHdyaXRlIHBlcm1pc3Npb24gYmVmb3Jl
-IHdyaXRlIHRoZQ0KPiA+IGNvcnJlY3QgdmFsdWUgdG8gdGhpcyByZWdpc3Rlci4NCj4gPg0KPiA+
-IFNpZ25lZC1vZmYtYnk6IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4g
-LS0tDQo+ID4gVjI6DQo+ID4gIC0gTm9uZQ0KPiA+DQo+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ll
-LWRlc2lnbndhcmUtaG9zdC5jIHwgNCArKysrDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCA0IGluc2Vy
-dGlvbnMoKykNCj4gPg0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNp
-Z253YXJlLWhvc3QuYw0KPiA+IGIvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS1ob3N0
-LmMNCj4gPiBpbmRleCBkMjljMDIwLi42ZTEwY2RhIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMv
-cGNpL2R3Yy9wY2llLWRlc2lnbndhcmUtaG9zdC5jDQo+ID4gKysrIGIvZHJpdmVycy9wY2kvZHdj
-L3BjaWUtZGVzaWdud2FyZS1ob3N0LmMNCj4gPiBAQCAtNjM0LDggKzYzNCwxMiBAQCB2b2lkIGR3
-X3BjaWVfc2V0dXBfcmMoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ID4NCj4gPiAgCWR3X3BjaWVf
-d3Jfb3duX2NvbmYocHAsIFBDSV9CQVNFX0FERFJFU1NfMCwgNCwgMCk7DQo+ID4NCj4gPiArCS8q
-IEVuYWJsZSB3cml0ZSBwZXJtaXNzaW9uIGZvciB0aGUgREJJIHJlYWQtb25seSByZWdpc3RlciAq
-Lw0KPiA+ICsJZHdfcGNpZV9kYmlfcm9fd3JfZW4ocGNpKTsNCj4gPiAgCS8qIHByb2dyYW0gY29y
-cmVjdCBjbGFzcyBmb3IgUkMgKi8NCj4gPiAgCWR3X3BjaWVfd3Jfb3duX2NvbmYocHAsIFBDSV9D
-TEFTU19ERVZJQ0UsIDIsDQo+IFBDSV9DTEFTU19CUklER0VfUENJKTsNCj4gPiArCS8qIEJldHRl
-ciBkaXNhYmxlIHdyaXRlIHBlcm1pc3Npb24gcmlnaHQgYWZ0ZXIgdGhlIHVwZGF0ZSAqLw0KPiA+
-ICsJZHdfcGNpZV9kYmlfcm9fd3JfZGlzKHBjaSk7DQo+ID4NCj4gPiAgCWR3X3BjaWVfcmRfb3du
-X2NvbmYocHAsIFBDSUVfTElOS19XSURUSF9TUEVFRF9DT05UUk9MLCA0LA0KPiAmdmFsKTsNCj4g
-PiAgCXZhbCB8PSBQT1JUX0xPR0lDX1NQRUVEX0NIQU5HRTsNCj4gPg0KPiANCj4gQWNrZWQtQnk6
-IEpvYW8gUGludG8gPGpwaW50b0BzeW5vcHN5cy5jb20+DQoNCi0gWmhpcWlhbmcNCg==
+| From: Ding Tianhong <dingtianhong@huawei.com>
+| Sent: Wednesday, August 9, 2017 5:17 AM
+|
+| On 2017/8/9 11:02, Bjorn Helgaas wrote:
+| >
+| > On Wed, Aug 09, 2017 at 01:40:01AM +0000, Casey Leedom wrote:
+| > >
+| >> | From: Bjorn Helgaas <helgaas@kernel.org>
+| >> | Sent: Tuesday, August 8, 2017 4:22 PM
+| >> | ...
+| >> | It should also include a pointer to the AMD erratum, if available, or
+| >> | at least some reference to how we know it doesn't obey the rules.
+| >>
+| >>   Getting an ACK from AMD seems like a forlorn cause at this point.  My
+| >> contact was Bob Shaw <Bob.Shaw@amd.com> and he stopped responding to me
+| >> messages almost a year ago saying that all of AMD's energies were being
+| >> redirected towards upcoming x86 products (likely Ryzen as we now know).
+| >> As far as I can tell AMD has walked away from their A1100 (AKA
+| >> "Seattle") ARM SoC.
+| >>
+| >>   On the specific issue, I can certainly write up somthing even more
+| >> extensive than I wrote up for the comment in drivers/pci/quirks.c.
+| >> Please review the comment I wrote up and tell me if you'd like
+| >> something even more detailed -- I'm usually acused of writing comments
+| >> which are too long, so this would be a new one on me ... :-)
+| >
+| > If you have any bug reports with info about how you debugged it and
+| > concluded that Seattle is broken, you could include a link (probably
+| > in the changelog).  But if there isn't anything, there isn't anything.
+| ...
+| OK, I could reorganize it, but still need the Casey to give me the link
+| for the Seattle, otherwise I could remove the AMD part and wait until
+| someone show it. Thanks
+
+There are no links and I was never given an internal bug number at AMD.  As
+I said, they stopped responding to my notes about a years ago saying that
+they were moving the focus of all their people and no longer had resources
+to pursue the issue.  Hopefully for them, Ryzen doesn't have the same
+Data Corruption problem ...
+
+As for how we diagnosed it, with our Ingress Packet delivery, we have the
+Ingress Packet Data delivered (DMA Write) into Free List Buffers, and then
+then a small message (DMA Write) to a "Response Queue" indicating delivery
+of the Ingress Packet Data into the Free List Buffers.  The Transaction
+Layer Packets which convey the Ingress Packet Data all have the Relaxed
+Ordering Attribute set, while the following TLP carring the Ingress Data
+delivery notification into the Response Queue does not have the Relaxed
+Ordering Attribute set.
+
+The rules for processing TLPs with and without the Relaxed Ordering
+Attribute set are covered in Section 2.4.1 of the PCIe 3.0 specification
+(Revision 3.0 November 10, 2010).  Table 2-34 "Ordering Rules Summary"
+covers the cases where one TLP may "pass" (be proccessed earlier) than a
+preceding TLP.  In the case we're talking about, we have a sequence of one
+or more Posted DMA Write TLPs with the Relaxed Ordering Attribute set and a
+following Posted DMA Write TLP without the Relaxed Ordering Attribute set.
+Thus we need to look at the Row A, Column 2 cell of Table 2-34 governing
+when a Posted Request may "pass" a preceeding Posted Request.  In that cell
+we have:
+
+    a) No
+    b) Y/N
+
+with the explanatory text:
+
+    A2a    A Posted Request must not pass another Posted Request
+           unless A2b applies.
+
+    A2b    A Posted Request with RO[23] Set is permitted to pass
+           another Posted Request[24].  A Posted Request with IDO
+           Set is permitted to pass another Posted Request if the
+           two Requester IDs are different.
+
+    [23] In this section, "RO" is an abbreviation for the Relaxed
+         Ordering Attribute field.
+
+    [24] Some usages are enabled by not implementing this passing
+         (see the No RO-enabled PR-PR Passing bit in Section
+         7.8.15).
+
+In our case, we were getting notifications of Ingress Packet Delivery in our
+Response Queues, but not all of the Ingress Packet Data Posted DMA Write
+TLPs had been processed yet by the Root Complex.  As a result, we were
+picking up old stale memory data before those lagging Ingress Packet Data
+TLPs could be processed.  This is a clear violation of the PCIe 3.0 TLP
+processing rules outlined above.
+
+Does that help?
+
+Casey
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
