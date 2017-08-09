@@ -1,55 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46770 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751736AbdHCWCu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 18:02:50 -0400
-Date: Thu, 3 Aug 2017 17:02:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, thomas.petazzoni@free-electrons.com,
-        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: Re: [PATCH v2] PCI: armada8k: Check the return value from
- clk_prepare_enable()
-Message-ID: <20170803220248.GJ20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1500755119-19983-1-git-send-email-festevam@gmail.com>
+Return-Path: <SRS0=FO4X=7L=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=FO4X=7L=intel.com=ashok.raj@kernel.org>
+Date: Wed, 9 Aug 2017 08:58:43 -0700
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Ding Tianhong <dingtianhong@huawei.com>, leedom@chelsio.com,
+	bhelgaas@google.com, werner@chelsio.com, ganeshgr@chelsio.com,
+	asit.k.mallick@intel.com, patrick.j.cramer@intel.com,
+	Suravee.Suthikulpanit@amd.com, Bob.Shaw@amd.com,
+	l.stach@pengutronix.de, amira@mellanox.com,
+	gabriele.paoloni@huawei.com, David.Laight@aculab.com,
+	jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com,
+	will.deacon@arm.com, mark.rutland@arm.com, robin.murphy@arm.com,
+	davem@davemloft.net, alexander.duyck@gmail.com,
+	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxarm@huawei.com, ashok.raj@intel.com
+Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
+ PCI_DEV_FLAGS_NO_RELAXED_ORDERING
+Message-ID: <20170809155841.GA8675@otc-nc-03>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+ <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>
+ <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500755119-19983-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jul 22, 2017 at 05:25:19PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
-> 
-> clk_prepare_enable() may fail, so we should better check its return value
-> and propagate it in the case of error.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+Hi Bjorn
 
-Applied with Thomas' ack to pci/host-armada for v4.14, thanks!
+On Tue, Aug 08, 2017 at 06:22:00PM -0500, Bjorn Helgaas wrote:
+> On Sat, Aug 05, 2017 at 03:15:10PM +0800, Ding Tianhong wrote:
+> > From: Casey Leedom <leedom@chelsio.com>
+> > 
+> > Root complexes don't obey PCIe 3.0 ordering rules, hence could lead to
+> > data-corruption.
+> 
+> This needs to include a link to the Intel spec
+> (https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-architectures-optimization-manual.pdf,
+> sec 3.9.1).
+> 
+> It should also include a pointer to the AMD erratum, if available, or
+> at least some reference to how we know it doesn't obey the rules.
+> 
+> Ashok, thanks for chiming in.  Now that you have, I have a few more
+> questions for you:
+> 
+>   - Is the above doc the one you mentioned as being now public?
 
-> ---
-> Changes since v1:
-> - Improve Subject style
+Yes. 
+>   
+>   - Is this considered a hardware erratum?
+
+I would think so. I have tried to pursue the publication in that direction
+but it morphed into the optimization guide instead. Once it got into some
+open doc i stopped pushing.. but will continue to get this into erratum. i do
+agree that's the right place holder for this.
+
+>   
+>   - If so, is there a pointer to that as well?
+>   
+>   - If this is not considered an erratum, can you provide any guidance
+>     about how an OS should determine when it should use RO?
+
+The optimization guide states that it only applies to transactions targetting
+system memory. For peer-2-peer RO is allowed and has perf upside.
+
+As Casey pointed out in an earlier thread, we choose the heavy hammer approach
+because there are some that can lead to data-corruption as opposed to perf
+degradation. 
+
+This looks ugly, but maybe we can have 2 flags. one that indicates its a strict
+no-no, and one that says no to system memory only. That way driver can
+determine when the device would turn the hint on in the TLP.
+
+>     
+> Relying on a list of device IDs in an optimization manual is OK for an
+> erratum, but if it's *not* an erratum, it seems like a hole in the
+
+Good point.. for this specific case its really an erratum, but for some
+reason they made the decision to use this doc vs. the generic errata
+data-sheet that would have been the preferred way to document.
+
+> specs because as far as I know there's no generic way for the OS to
+> discover whether to use RO.
 > 
->  drivers/pci/dwc/pcie-armada8k.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-> index ea8f34a..7297223 100644
-> --- a/drivers/pci/dwc/pcie-armada8k.c
-> +++ b/drivers/pci/dwc/pcie-armada8k.c
-> @@ -226,7 +226,9 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
->  	if (IS_ERR(pcie->clk))
->  		return PTR_ERR(pcie->clk);
->  
-> -	clk_prepare_enable(pcie->clk);
-> +	ret = clk_prepare_enable(pcie->clk);
-> +	if (ret)
-> +		return ret;
->  
->  	/* Get the dw-pcie unit configuration/control registers base. */
->  	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
-> -- 
-> 2.7.4
-> 
+
+Cheers,
+Ashok
