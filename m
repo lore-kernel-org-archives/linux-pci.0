@@ -1,85 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45478 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752092AbdHHOUt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 10:20:49 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Lv Zheng <lv.zheng@intel.com>,
+        Bob Moore <robert.moore@intel.com>
+Subject: [PATCH 3/3] ACPI / scan: Enable GPEs before scanning the namespace
+Date: Thu, 10 Aug 2017 00:34:23 +0200
+Message-ID: <6344941.kJ2o2XerZ0@aspire.rjw.lan>
+In-Reply-To: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1502167455-10516-3-git-send-email-oza.oza@broadcom.com>
-References: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com> <1502167455-10516-3-git-send-email-oza.oza@broadcom.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Tue, 8 Aug 2017 09:20:26 -0500
-Message-ID: <CAL_JsqL3dWA-0Sq-_8ufa-cwXZEbFQBJHCK-5wLp_xw5NrTHKw@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: Add optional brcm,pci-hotplug
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        "bcm-kernel-feedback-list@broadcom.com"
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Please send bindings to DT list.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-On Mon, Aug 7, 2017 at 11:44 PM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
-> Add description for optional device tree property
-> 'brcm,pci-hotplug' for PCI hotplug feature.
->
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
->
-> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> index b8e48b4..a3bad24 100644
-> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-> @@ -72,6 +72,29 @@ Optional properties:
->  - brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
->  require the interrupt enable registers to be set explicitly to enable MSI
->
-> +Optional properties:
-> +- brcm,pci-hotplug: PCI hotplug feature is supported.
+On some systems the platform firmware expects GPEs to be enabled
+before the enumeration of devices and if that expectation is not
+met, the systems in question may not boot in some situations.
 
-I think we should make this a common property. We already have
-"ibm,slot-pluggable", so I'd propose "slot-pluggable".
+For this reason, change the initialization ordering of the ACPI
+subsystem to make it enable GPEs before scanning the namespace
+for the first time in order to enumerate devices.
 
-There's also "hotpluggable" for memory nodes defined, so we could
-reuse that here.
+Reported-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/scan.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> +
-> +If the brcm,pcie-hotplug property is present, the following properties become
-> +effective:
-> +
-> +- brcm,prsnt-gpio: Array of gpios, needs to be present if Hotplug is supported.
+Index: linux-pm/drivers/acpi/scan.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/scan.c
++++ linux-pm/drivers/acpi/scan.c
+@@ -2139,6 +2139,10 @@ int __init acpi_scan_init(void)
+ 			acpi_get_spcr_uart_addr();
+ 	}
+ 
++	acpi_gpe_apply_masked_gpes();
++	acpi_update_all_gpes();
++	acpi_ec_ecdt_start();
++
+ 	mutex_lock(&acpi_scan_lock);
+ 	/*
+ 	 * Enumerate devices in the ACPI namespace.
+@@ -2163,10 +2167,6 @@ int __init acpi_scan_init(void)
+ 		}
+ 	}
+ 
+-	acpi_gpe_apply_masked_gpes();
+-	acpi_update_all_gpes();
+-	acpi_ec_ecdt_start();
+-
+ 	acpi_scan_initialized = true;
+ 
+  out:
 
-prsnt-gpios
 
-> +
-> +PCI hotplug implementation is SOC/Board specific, and also it depends on
-> +how add-in card is designed (e.g. how many present pins are implemented).
-> +
-> +If x8 card is connected, then it might be possible that all the
-> +3 present pins could go low, or at least one pin goes low.
-> +
-> +If x4 card is connected, then it might be possible that 2 present
-> +pins go low, or at least one pin goes low.
-> +
-> +Example:
-> +brcm,prsnt-gpio: <&pca9505 32 1>, <&pca9505 33 1>;
-> +This is x4 connector: monitoring max 2 present lines.
-> +brcm,prsnt-gpio: <&pca9505 32 1>, <&pca9505 33 1>, <&pca9505 34 1>;
-> +This is x8 connector: monitoring max 3 present lines.
-> +
->  Example:
->         pcie0: pcie@18012000 {
->                 compatible = "brcm,iproc-pcie";
-> --
-> 1.9.1
->
