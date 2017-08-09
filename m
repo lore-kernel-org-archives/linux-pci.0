@@ -1,74 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:38934 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751848AbdHOVdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 15 Aug 2017 17:33:18 -0400
-Date: Tue, 15 Aug 2017 16:33:15 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 0/8] PCI: INTx interrupt fixes & cleanup
-Message-ID: <20170815213315.GM32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux ACPI <linux-acpi@vger.kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Lv Zheng <lv.zheng@intel.com>,
+        Bob Moore <robert.moore@intel.com>
+Subject: [PATCH 0/3] ACPI: Initialize GPEs before the initial namespace scan
+Date: Thu, 10 Aug 2017 00:29:12 +0200
+Message-ID: <12346760.yAFCnkEgf6@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 12:02:15PM -0700, Paul Burton wrote:
-> This series fixes our handling of the PCI INTD interrupts in both Xilinx
-> PCIe controller drivers, and cleans up a wasted IRQ domain entry in the
-> Altera PCIe controller driver. It also adds a common PCI_INTX_NUM
-> definition which all relevant drivers under drivers/pci/host/ are
-> adjusted to make use of.
-> 
-> - Patch 1 moves enum pci_interrupt_pin to somewhere we can use it from
->   PCI host code.
-> 
-> - Patch 2 introduces a helper function to translate 1-4 INTx ranges into
->   the 0-3 range, by using it as a struct irq_domain's xlate callback.
-> 
-> - Patches 3 adjusts the Altera driver to avoid wasting an IRQ domain
->   entry.
-> 
-> - Patches 4 & 5 fix the INTD interrupt for Xilinx PCIe drivers.
-> 
-> - Patches 6-8 make use of PCI_NUM_INTX to replace custom definitions or
->   magic numbers in drivers.
-> 
-> The series versioning is continuing on from that of my "PCI: xilinx:
-> Fixes, optimisation & MIPS support" series which some of the earlier
-> patches were originally a part of, in order to prevent individual
-> patches from jumping backwards in versioning.
-> 
-> Applies atop v4.13-rc5.
-> 
-> Paul Burton (8):
->   PCI: Move enum pci_interrupt_pin to linux/pci.h
->   PCI: Introduce pci_irqd_intx_xlate()
->   PCI: altera: Use size=4 IRQ domain for legacy INTx
->   PCI: xilinx: Translate INTx range to hwirqs 0-3
->   PCI: xilinx-nwl: Translate INTx range to hwirqs 0-3
->   PCI: aardvark: Use PCI_NUM_INTX
->   PCI: ftpci100: Use PCI_NUM_INTX
->   PCI: rockchip: Use PCI_NUM_INTX
-> 
->  drivers/pci/host/pci-aardvark.c    |  5 ++--
->  drivers/pci/host/pci-ftpci100.c    |  2 +-
->  drivers/pci/host/pcie-altera.c     |  9 +++----
->  drivers/pci/host/pcie-rockchip.c   |  2 +-
->  drivers/pci/host/pcie-xilinx-nwl.c |  9 +++----
->  drivers/pci/host/pcie-xilinx.c     |  7 ++---
->  include/linux/pci-epf.h            |  9 +------
->  include/linux/pci.h                | 54 ++++++++++++++++++++++++++++++++++++++
->  8 files changed, 71 insertions(+), 26 deletions(-)
+Hi,
 
-Thanks for updating these, Paul.  I applied them on pci/irq-intx and the
-individual driver branches.  I added Thomas' reviewed-by for Aardvark, and
-I expect we'll get more for the others.
+This is exceptional for at least two reasons.
 
-I found two more places we can use PCI_NUM_INTX; I'll post those in a
-minute.
+First, we need it now to work around boot problems on multiple platforms
+already seen in the field (which are shipping products).
 
-Thanks for all your work on this!
+Second, the ACPICA changes in this series are kind of Linux-specific, because
+they are related to how Linux carries out the initialization of devices, which
+very well may be different from what the other OSes using ACPICA do.
+
+For these reasons, I'd like to make the following ACPICA changes in Linux
+only for the time being and then decide whether or not to take them into
+the upstream.  If there are major concerns about that, please let me know.
+
+The issue at hand is that some platforms with Thunderbolt controllers won't
+boot if there are any Thunderbolt devices connected to them at boot time (if
+the devices are connected later, everything works as expected).  That turns
+out to be related to a complicated sequence of events involving the platform
+firmware which needs to happen in exactly the right order at the right time
+for things to work and that requires GPEs to be enabled before enumerating
+the PCI bus.
+
+The first patch changes ACPICA to check the status of runtime GPEs before
+enabling them for the first time in order to avoid missing events (that
+is key for edge-triggered GPEs) and to process them early enough.
+
+The second one makes it possible to change the ordering of initialization
+between GPEs and devices, and the third one actually changes that ordering.
+
+The patches are based on Mika's work, so kudos to him.
+
+Thanks,
+Rafael
+
