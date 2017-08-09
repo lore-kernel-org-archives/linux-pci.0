@@ -1,36 +1,138 @@
-Return-Path: <SRS0=DmIV=73=gmail.com=robherring2@kernel.org>
-Return-Path: <SRS0=DmIV=73=gmail.com=robherring2@kernel.org>
-Date: Fri, 25 Aug 2017 17:03:57 -0500
-From: Rob Herring <robh@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, helgaas@kernel.org,
-	Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: Re: [PATCH v4 2/3] dt-bindings: PCI: add PCIe hotplug property
-Message-ID: <20170825220356.s75yxkfasnnaygfc@rob-hp-laptop>
-References: <1503564548-1834-1-git-send-email-oza.oza@broadcom.com>
- <1503564548-1834-3-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 8 Aug 2017 22:25:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ding Tianhong <dingtianhong@huawei.com>
+Subject: Re: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
+Message-ID: <20170809032503.GB7191@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
+ <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
+ <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503564548-1834-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
+ alexander.duyck@gmail.com, ashok.raj@intel.com, jeffrey.t.kirsher@intel.com,
+ linux-pci@vger.kernel.org, ganeshgr@chelsio.com, Bob.Shaw@amd.com,
+ leedom@chelsio.com, patrick.j.cramer@intel.com, bhelgaas@google.com,
+ werner@chelsio.com, linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
+ Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, davem@davemloft.net,
+ l.stach@pengutronix.de
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 02:19:07PM +0530, Oza Pawandeep wrote:
-> Host drivers have the requirement of implementing PCI hotplug
-> based on the how their SOC supports PCI hotplug.
-> 
-> Couple of properties have been added. the one to enable
-> the hotplug feature itself, and the other caters to
-> the PCI hotplug implementation with the use of gpios.
-> 
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+On Tue, Aug 08, 2017 at 09:22:39PM -0500, Bjorn Helgaas wrote:
+> On Sat, Aug 05, 2017 at 03:15:11PM +0800, Ding Tianhong wrote:
+> > When bit4 is set in the PCIe Device Control register, it indicates
+> > whether the device is permitted to use relaxed ordering.
+> > On some platforms using relaxed ordering can have performance issues or
+> > due to erratum can cause data-corruption. In such cases devices must avoid
+> > using relaxed ordering.
+> > 
+> > This patch checks if there is any node in the hierarchy that indicates that
+> > using relaxed ordering is not safe. 
+...
 
-I acked v2. Please add acks when posting new versions.
+> > +EXPORT_SYMBOL(pcie_relaxed_ordering_supported);
+> 
+> This is misnamed.  This doesn't tell us anything about whether the
+> device *supports* relaxed ordering.  It only tells us whether the
+> device is *permitted* to use it.
+> 
+> When a device initiates a transaction, the hardware should set the RO
+> bit in the TLP with logic something like this:
+> 
+>   RO = <this Function supports relaxed ordering> &&
+>        <this transaction doesn't require strong write ordering> &&
+>        <PCI_EXP_DEVCTL_RELAX_EN is set>
+> 
+> The issue you're fixing is that some Completers don't handle RO
+> correctly.  The determining factor is not the Requester, but the
+> Completer (for this series, a Root Port).  So I think this should be
+> something like:
+> 
+>   int pcie_relaxed_ordering_broken(struct pci_dev *completer)
+>   {
+>     if (!completer)
+>       return 0;
+> 
+>     return completer->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
+>   }
+> 
+> and the caller should do something like this:
+> 
+>  if (pcie_relaxed_ordering_broken(pci_find_pcie_root_port(pdev)))
+>    adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+> 
+> That way it's obvious where the issue is, and it's obvious that the
+> answer might be different for peer-to-peer transactions than it is for
+> transactions to the root port, i.e., to coherent memory.
 
-Rob
+After looking at the driver, I wonder if it would be simpler like
+this:
+
+  int pcie_relaxed_ordering_enabled(struct pci_dev *dev)
+  {
+    u16 ctl;
+
+    pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+    return ctl & PCI_EXP_DEVCTL_RELAX_EN;
+  }
+  EXPORT_SYMBOL(pcie_relaxed_ordering_enabled);
+
+  static void pci_configure_relaxed_ordering(struct pci_dev *dev)
+  {
+    struct pci_dev *root;
+
+    if (dev->is_virtfn)
+      return;  /* PCI_EXP_DEVCTL_RELAX_EN is RsvdP in VFs */
+
+    if (!pcie_relaxed_ordering_enabled(dev))
+      return;
+
+    /*
+     * For now, we only deal with Relaxed Ordering issues with Root
+     * Ports.  Peer-to-peer DMA is another can of worms.
+     */
+    root = pci_find_pcie_root_port(dev);
+    if (!root)
+      return;
+
+    if (root->relaxed_ordering_broken)
+      pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
+                                 PCI_EXP_DEVCTL_RELAX_EN);
+  }
+
+This doesn't check every intervening switch, but I don't think we know
+about any issues except with root ports.
+
+And the driver could do:
+
+  if (!pcie_relaxed_ordering_enabled(pdev))
+    adapter->flags |= ROOT_NO_RELAXED_ORDERING;
+
+The driver code wouldn't show anything about coherent memory vs.
+peer-to-peer, but we really don't have a clue about how to handle that
+yet anyway.
+
+I guess this is back to exactly what you proposed, except that I
+changed the name of pcie_relaxed_ordering_supported() to
+pcie_relaxed_ordering_enabled(), which I think is slightly more
+specific from the device's point of view.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
