@@ -1,98 +1,104 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 10 Aug 2017 17:26:13 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52948 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752437AbdHJRws (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Aug 2017 13:52:48 -0400
+Date: Thu, 10 Aug 2017 12:52:46 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH v4 0/7] PCI: MediaTek: Add host controller support for
- mt2712 and mt7622
-Message-ID: <20170810222613.GA4142@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1502336769.git.honghui.zhang@mediatek.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Ralf Baechle <ralf@linux-mips.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Paul Burton <paul.burton@imgtec.com>,
+        Rich Felker <dalias@libc.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Richard Henderson <rth@twiddle.net>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+        Chris Metcalf <cmetcalf@mellanox.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Matthew Minter <matt@masarand.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Guan Xuetao <gxt@mprc.pku.edu.cn>
+Subject: [PATCH] PCI: Inline and remove pcibios_update_irq()
+Message-ID: <20170810175246.GB18397@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, robh+dt@kernel.org, yt.shen@mediatek.com,
- matthias.bgg@gmail.com, robh@kerenl.org, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 10, 2017 at 02:34:53PM +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
+On Mon, Jul 31, 2017 at 05:37:48PM +0100, Lorenzo Pieralisi wrote:
+> The pci_fixup_irqs() function allocates IRQs for all PCI devices present
+> in a system; those PCI devices possibly belong to different PCI bus trees
+> (and possibly rooted at different host bridges) and may well be enabled
+> (ie probed and bound to a driver) by the time pci_fixup_irqs() is called
+> when probing a given host bridge driver.
 > 
-> MediaTek's PCIe host controller has two generation HWs, MT2712 and MT7622
-> using the new generation HW, which has two root ports. They share most
-> probing flow with MT2701/MT7623. But the read/write config space logical
-> is different. The per-port registers must be touched for read/write
-> configuration space.
+> Furthermore, current kernel code relying on pci_fixup_irqs() to
+> assign legacy PCI IRQs to devices does not work at all for
+> hotplugged devices in that the code carrying out the IRQ fixup
+> is called at host bridge driver probe time, which just cannot take
+> into account devices hotplugged after system has booted.
 > 
-> This patchset abstract the common probing flow, and add support for the
-> new generation controller.
+> The introduction of map/swizzle functions hook in struct pci_host_bridge
+> allows to define per-bridge map/swizzle functions, that can be used at
+> device probe time in PCI core code to allocate IRQs for a given device
+> (through pci_assign_irq()).
 > 
-> Changes since v3:
->  - Unify the macro define's names with PCIE_ prefix.
->  - Use lower/upper_32_bits macro and remove AHB2PCIE_BASEL/AHB2PCIE_BASEH.
->  - Factor out mtk_pcie_find_port to eliminate duplicate code.
->  - Use list_for_each_entry instead of list_for_each_entry_safe when search list.
->  - Simplify the mtk_pcie_hw_rd_cfg flow.
->  - Split a new patch to rename the parameter and function names.
->  - Update the subject and changelog to include specific SoC IDs.
-> 
-> Changes since v2:
->  - Split the Gen2 training change to a separate patch.
->  - Simplify the config_read/write logical and get rid of mtk_pcie_find_port.
->  - Using bus->sysdata to simplify the code.
->  - Rebase to commit 65b83b13204a ("PCI: mediatek: Explicitly request exclusive
->    reset control")[1].
->  - Fix some misspells.
->  - Add review tags in commit message.
-> 
-> Changes since v1:
->  - Fix build warnings in arm arch.
->  - Using SoC specific compatible instead of generic compatible.
->  - Add devicetree binding example for mt7622.
->  - Unified the register define names with PCIE_ prefix.
->  - Cleanup some un-necessary condition determine when starup port.
->  - minor code cleanups.
-> 
-> [1] https://patchwork.kernel.org/patch/9852591/
-> 
-> Honghui Zhang (2):
->   PCI: mediatek: make the parameter and function names more accurate
->   PCI: mediatek: Add a structure to abstract the controller generations
-> 
-> Ryder Lee (5):
->   PCI: mediatek: Using readl_poll_timeout to wait Gen2 training
->   PCI: mediatek: switch to use platform_get_resource_byname()
->   dt-bindings: PCI: rename and cleanup MediaTek binding text
->   PCI: mediatek: Add controller support for mt2712 and mt7622
->   dt-bindings: PCI: add support for mt2712 and mt7622
-> 
->  .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 -----
->  .../devicetree/bindings/pci/mediatek-pcie.txt      | 284 ++++++++++
->  drivers/pci/host/Kconfig                           |   5 +-
->  drivers/pci/host/pcie-mediatek.c                   | 598 ++++++++++++++++++---
->  4 files changed, 820 insertions(+), 197 deletions(-)
->  delete mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
->  create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+> This series converts all arches still relying on pci_fixup_irqs() to
+> the new pci_scan_root_bus_bridge() API and consequently remove
+> pci_fixup_irqs() from the kernel in that it is not used anymore.
 
-I applied these on pci/host-mediatek for v4.14, thanks!
+I tentatively applied the following patch on top of this series on
+pci/irq-fixups for v4.14.  Any comments welcome.
 
-I did split the rename/cleanup DT patch into two to make the changes more
-obvious.
+commit 606799cc5049ae4ccb51ba3242365ca2d411da13
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Aug 10 12:49:57 2017 -0500
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    PCI: Inline and remove pcibios_update_irq()
+    
+    pcibios_update_irq() was a weak function with only one trivial
+    implementation.  Inline it and remove the weak function.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
+index 69e3b56c32a4..86106c44ce94 100644
+--- a/drivers/pci/setup-irq.c
++++ b/drivers/pci/setup-irq.c
+@@ -17,12 +17,6 @@
+ #include <linux/cache.h>
+ #include "pci.h"
+ 
+-void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
+-{
+-	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
+-	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+-}
+-
+ void pci_assign_irq(struct pci_dev *dev)
+ {
+ 	u8 pin;
+@@ -65,5 +59,5 @@ void pci_assign_irq(struct pci_dev *dev)
+ 
+ 	/* Always tell the device, so the driver knows what is
+ 	   the real IRQ to use; the device does not use it. */
+-	pcibios_update_irq(dev, irq);
++	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
+ }
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 69034ab8a68e..a9e8d2f3bd91 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -844,7 +844,6 @@ char *pcibios_setup(char *str);
+ resource_size_t pcibios_align_resource(void *, const struct resource *,
+ 				resource_size_t,
+ 				resource_size_t);
+-void pcibios_update_irq(struct pci_dev *, int irq);
+ 
+ /* Weak but can be overriden by arch */
+ void pci_fixup_cardbus(struct pci_bus *);
