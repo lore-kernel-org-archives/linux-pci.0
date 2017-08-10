@@ -1,146 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33591 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753849AbdHQWFw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 18:05:52 -0400
-Received: by mail-pg0-f66.google.com with SMTP id u185so11818084pgb.0
-        for <linux-pci@vger.kernel.org>; Thu, 17 Aug 2017 15:05:51 -0700 (PDT)
-Subject: Re: [PATCH kernel] PCI: Disable IOV before pcibios_sriov_disable()
-To: linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: kvm@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
-        Eric Auger <eric.auger@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        shan.gavin@gmail.com,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <20170811081933.17474-1-aik@ozlabs.ru>
-From: Alexey Kardashevskiy <aik@ozlabs.ru>
-Message-ID: <2163ef83-3633-a8cf-3416-0e37a6c500db@ozlabs.ru>
-Date: Fri, 18 Aug 2017 08:05:42 +1000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+ <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+ <ryder.lee@mediatek.com>
+Subject: [PATCH v4 4/7] PCI: mediatek: switch to use
+ platform_get_resource_byname()
+Date: Thu, 10 Aug 2017 14:34:57 +0800
+Message-ID: <f7810da34df710a2b98f903e7a95247ee9387032.1502336769.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
+References: <cover.1502336769.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <20170811081933.17474-1-aik@ozlabs.ru>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
+ xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
+ yong.wu@mediatek.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/08/17 18:19, Alexey Kardashevskiy wrote:
-> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> 
-> The PowerNV platform is the only user of pcibios_sriov_disable().
-> The IOV BAR could be shifted by pci_iov_update_resource(). The
-> warning message in the function is printed if the IOV capability
-> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
-> 
-> This is the backtrace of what is happening:
->    pci_disable_sriov
->    sriov_disable
->    pnv_pci_sriov_disable
->    pnv_pci_vf_resource_shift
->    pci_update_resource
->    pci_iov_update_resource
-> 
-> This fixes the issue by disabling IOV capability before calling
-> pcibios_sriov_disable(). With it, the disabling path matches
-> the enabling path: pcibios_sriov_enable() is called before the
-> IOV capability is enabled.
-> 
-> Cc: shan.gavin@gmail.com
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Reported-by: Carol L Soto <clsoto@us.ibm.com>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Tested-by: Carol L Soto <clsoto@us.ibm.com>
-> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-> ---
-> 
-> This is repost. Since Gavin left the team, I am trying to push it out.
-> The previos converstion is here: https://patchwork.ozlabs.org/patch/732653/
-> 
-> Two questions were raised then. I'll try to comment on this below.
+From: Ryder Lee <ryder.lee@mediatek.com>
 
-Bjorn, ping? Thanks.
+This is a transitional patch. We currently use platfarm_get_resource() for
+retrieving the IOMEM resources, but there might be some chips don't have
+subsys/shared registers part, which depends on platform design, and these
+will be introduced in further patches.
 
-> 
->> 1) "res" is already in the resource tree, so we shouldn't be changing
->>   its start address, because that may make the tree inconsistent,
->>   e.g., the resource may no longer be completely contained in its
->>   parent, it may conflict with a sibling, etc.
-> 
-> We should not, yes. But...
-> 
-> At the boot time IOV BAR gets as much MMIO space as it can possibly use.
-> (Embarassingly I cannot trace where this is coming from, 8GB is selected
-> via pci_assign_unassigned_root_bus_resources() path somehow).
-> For example, it is 256*32MB=8GB where 256 is maximum PEs number and 32MB
-> is a PF/VF BAR size. Whatever shifting we do afterwards, the boudaries of
-> that 8GB area do not change and we test it in pnv_pci_vf_resource_shift():
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/powerpc/platforms/powernv/pci-ioda.c#n987
-> 
->> 2) If we update "res->start", shouldn't we update "res->end"
->>   correspondingly?
-> 
-> We have to update the PF's IOV BAR address as we allocate PEs dynamically
-> and we do not know in advance where our VF numbers start in that
-> 8GB window. So we change IOV BASR start. Changing the end may make it
-> look more like there is a free area to use but in reality it won't be
-> usable as well as the area we "release" by shifting the start address.
-> 
-> We could probably move that M64 MMIO window by the same delta in
-> opposite direction so the IOV BAR start address would remain the same
-> but its VF#0 would be mapped to let's say PF#5. I am just afraid there
-> is an alignment requirement for these M64 window start address; and this
-> would be even more tricky to manage.
-> 
-> We could also create reserved areas for the amount of space "release" by
-> moving the start address, not sure how though.
-> 
-> So how do we proceed with this particular patch now? Thanks.
-> ---
->  drivers/pci/iov.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 120485d6f352..ac41c8be9200 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	while (i--)
->  		pci_iov_remove_virtfn(dev, i, 0);
->  
-> -	pcibios_sriov_disable(dev);
->  err_pcibios:
->  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->  	pci_cfg_access_lock(dev);
-> @@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	ssleep(1);
->  	pci_cfg_access_unlock(dev);
->  
-> +	pcibios_sriov_disable(dev);
-> +
->  	if (iov->link != dev->devfn)
->  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->  
-> @@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
->  	for (i = 0; i < iov->num_VFs; i++)
->  		pci_iov_remove_virtfn(dev, i, 0);
->  
-> -	pcibios_sriov_disable(dev);
-> -
->  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->  	pci_cfg_access_lock(dev);
->  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->  	ssleep(1);
->  	pci_cfg_access_unlock(dev);
->  
-> +	pcibios_sriov_disable(dev);
-> +
->  	if (iov->link != dev->devfn)
->  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->  
-> 
+Switch this function to use the platform_get_resource_byname() so that the
+binding can be agnostic of the resource order.
 
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 01caa98..c649ab4 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -295,7 +295,8 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+ 		return err;
+ 	}
+ 
+-	regs = platform_get_resource(pdev, IORESOURCE_MEM, slot + 1);
++	snprintf(name, sizeof(name), "port%d", slot);
++	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
+ 	port->base = devm_ioremap_resource(dev, regs);
+ 	if (IS_ERR(port->base)) {
+ 		dev_err(dev, "failed to map port%d base\n", slot);
+@@ -336,12 +337,14 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ 	struct resource *regs;
+ 	int err;
+ 
+-	/* get shared registers */
+-	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	pcie->base = devm_ioremap_resource(dev, regs);
+-	if (IS_ERR(pcie->base)) {
+-		dev_err(dev, "failed to map shared register\n");
+-		return PTR_ERR(pcie->base);
++	/* get shared registers, which are optional */
++	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, "subsys");
++	if (regs) {
++		pcie->base = devm_ioremap_resource(dev, regs);
++		if (IS_ERR(pcie->base)) {
++			dev_err(dev, "failed to map shared register\n");
++			return PTR_ERR(pcie->base);
++		}
+ 	}
+ 
+ 	pcie->free_ck = devm_clk_get(dev, "free_ck");
 -- 
-Alexey
+2.6.4
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
