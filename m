@@ -1,105 +1,73 @@
-Return-Path: <SRS0=WsbS=7P=axtens.net=dja@kernel.org>
-Return-Path: <SRS0=WsbS=7P=axtens.net=dja@kernel.org>
-From: Daniel Axtens <dja@axtens.net>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org, benh@kernel.crashing.org, z.liuxinliang@hisilicon.com, zourongrong@gmail.com, catalin.marinas@arm.com, will.deacon@arm.com, gabriele.paoloni@huawei.com, bhelgaas@google.com, airlied@linux.ie, daniel.vetter@intel.com, alex.williamson@redhat.com, Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/3] powerpc: simplify and fix VGA default device behaviour
-In-Reply-To: <20170811214438.GI17039@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170804102033.27731-1-dja@axtens.net> <20170804102033.27731-2-dja@axtens.net> <20170811214438.GI17039@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 14 Aug 2017 08:34:05 +1000
-Message-ID: <87tw1bqeqq.fsf@linkitivity.dja.id.au>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.130]:49233 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751914AbdHJJkr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 05:40:47 -0400
+Message-ID: <598C2A13.8060504@rock-chips.com>
+Date: Thu, 10 Aug 2017 17:40:35 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Heiko Stuebner <heiko@sntech.de>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        linux-kernel@vger.kernel.org,
+        Douglas Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: Re: [RFC PATCH] PCI: rockchip: fix system hang up if activate CONFIG_DEBUG_SHIRQ
+References: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com> <5781211.7fcSyQo7bC@phil>
+In-Reply-To: <5781211.7fcSyQo7bC@phil>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Hi Heiko,
 
-Thanks for reading the patch and providing some feedback.
-
->> This will work as intended if there is only one device, but if
->> there are multiple devices, we may override the device the VGA
->> arbiter picked.
+On 08/10/2017 05:27 PM, Heiko Stuebner wrote:
+> Hi Shawn,
 >
-> This quirk only runs on VGA class devices.  If there's more than one
-> VGA device in the system, and we assume that firmware only enables
-> PCI_COMMAND_IO or PCI_COMMAND_MEMORY on "the one initialized by
-> firmware", which seems reasonable to me, I think the existing code
-> does match the commit message.
+> Am Donnerstag, 10. August 2017, 16:21:13 CEST schrieb Shawn Lin:
+>> >With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
+>> >would still access the irq handler registed as a shard irq.
+>> >Per the comment within the function of __free_irq, it says
+>> >"It's a shared IRQ -- the driver ought to be prepared for
+>> >an IRQ event to happen even now it's being freed". However
+>> >when failing to probe the driver, it may disable the clock
+>> >for accessing the register and the following check for shared
+>> >irq state would call the irq handler which accesses the register
+>> >w/o the clk enabled. That will hang the system forever.
+> The key point would be to fix the ordering. So you could also just use
+> devm_add_action to move the clock-disabling into a callback that
+> gets run at the appropriate time, as devm does the shutdown in the
+> exact opposite order this should fix your problem.
 >
-> We set the first VGA device we find to be the default.  Then, if we
-> find another VGA device that's enabled, we make *it* the default
-> instead.
+> So until all clocks could be enabled, you would disable them manually
+> and after that rely on the devm_action to fire at the appropriate time.
 >
->> Instead, set a device as default if there is no default device AND
->> this device decodes.
->> 
->> This will not change behaviour on single-headed systems.
+> ret = clk_prepare_enable(clk1);
+> if (ret < 0 )
+> 	return ret;
 >
-> If there is no enabled VGA device on the system, your new code means
-> there will be no default VGA device.
-
-Ah. Right you are.
-
+> ret = clk_prepare_enable(clk2);
+> if (ret < 0) {
+> 	clk_disable_unprepare(clk1);
+> 	return ret;
+> }
 >
-> It's not clear from this changelog what problem this patch solves.
-> Maybe it's the "some displays not being picked up by the VGA arbiter"
-> you mentioned, but there's not enough detail to connect it with the
-> patch, especially since the patch means we'll set the default device
-> in fewer cases than we did before.
+> devm_add_action_or_reset(dev, rk_pcie_disable_clocks);
+
+right, and we should also move request irq after this, so the devres 
+core can release them in reverse.
+
+and we should double check would those clks be the only thing that irq 
+handler required...
 >
-> With the patch, we only set the default if we find an enabled VGA
-> device.  Previously we also set the default if we found a VGA device
-> that had not been enabled.
-
-My overall problem is not having default devices on some
-machines. Initially, to solve this, I wanted to make this code
-generic. To do that I wanted to make sure it played nice with the vga
-arbiter, so not overriding default devices willy-nilly was a
-requirement. Evidently, I was overly keen and restricted its behaviour
-too much.
-
-Regardless, in this current approach I don't make this powerpc code
-generic after all, so this patch is unnecessary. I will remove it for
-v2, which I will post after further testing.
-
-I document the effects of the new approach for powerpc in more detail in
-patch 3 of this series. If powerpc wants to keep the existing approach
-we can arrange for that too; it's a simple matter of ifdefs.
-
-Regards,
-Daniel
+> The rockchip crypto driver [0] shows how this could be done.
 >
->> Cc: Brian King <brking@linux.vnet.ibm.com>
->> Signed-off-by: Daniel Axtens <dja@axtens.net>
->> 
->> ---
->> 
->> Tested in TCG (the card provided by qemu doesn't automatically
->> register with vgaarb, so the relevant code path has been tested)
->> but I would appreciate any tests on real hardware.
->> 
->> Informal benh ack: https://patchwork.kernel.org/patch/9850235/
->> ---
->>  arch/powerpc/kernel/pci-common.c | 5 ++++-
->>  1 file changed, 4 insertions(+), 1 deletion(-)
->> 
->> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
->> index 341a7469cab8..c95fdda3a2dc 100644
->> --- a/arch/powerpc/kernel/pci-common.c
->> +++ b/arch/powerpc/kernel/pci-common.c
->> @@ -1746,8 +1746,11 @@ static void fixup_vga(struct pci_dev *pdev)
->>  {
->>  	u16 cmd;
->>  
->> +	if (vga_default_device())
->> +		return;
->> +
->>  	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
->> -	if ((cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)) || !vga_default_device())
->> +	if (cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY))
->>  		vga_set_default_device(pdev);
->>  
->>  }
->> -- 
->> 2.11.0
->> 
+>
+> Heiko
+>
+> [0]http://elixir.free-electrons.com/linux/latest/source/drivers/crypto/rockchip/rk3288_crypto.c#L307
+>
