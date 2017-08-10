@@ -1,103 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:37806 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbdHEGi1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 02:38:27 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 01/10] PCI: avoid arch_remove_reservations() for PCI_TEST
-Date: Fri,  4 Aug 2017 23:37:52 -0700
-Message-Id: <20170805063801.15880-2-yinghai@kernel.org>
-In-Reply-To: <20170805063801.15880-1-yinghai@kernel.org>
-References: <20170805063801.15880-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Obka=7M=linux.intel.com=andriy.shevchenko@kernel.org>
+Return-Path: <SRS0=Obka=7M=linux.intel.com=andriy.shevchenko@kernel.org>
+Message-ID: <1502356760.29303.381.camel@linux.intel.com>
+Subject: Re: [PATCH v1] xen/pci: Use acpi_noirq_set() helper
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Thomas
+ Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter
+ Anvin" <hpa@zytor.com>,  x86@kernel.org, Konrad Rzeszutek Wilk
+ <konrad.wilk@oracle.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>
+Date: Thu, 10 Aug 2017 12:19:20 +0300
+In-Reply-To: <20170802214537.GM20308@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170717103907.77308-1-andriy.shevchenko@linux.intel.com>
+	 <20170802214537.GM20308@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-arch_remove_reservations will clip out with e820 from host that kernel
-running, that will cause failure from PCI_TEST from simulated data.
+On Wed, 2017-08-02 at 16:45 -0500, Bjorn Helgaas wrote:
+> On Mon, Jul 17, 2017 at 01:39:07PM +0300, Andy Shevchenko wrote:
+> > No need to keep an #ifdef since we have a helper (in x86 world).
+> > Use it instead.
+> > 
+> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> 
+> Looks reasonable to me, and I assume some non-PCI tree will take it.
 
-PCI_TEST has different iomem resource instead iomem_resource,
-so check if iomem_resource is related to avoid calling
-arch_remove_reservations()
+It seems either TODO list is long, or everyone from x86 is on vacation
+:-)
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
----
- arch/x86/kernel/resource.c | 15 +++++++++++++--
- include/linux/ioport.h     |  3 ++-
- kernel/resource.c          |  5 +++--
- 3 files changed, 18 insertions(+), 5 deletions(-)
+Can't you push this through your tree?
 
-diff --git a/arch/x86/kernel/resource.c b/arch/x86/kernel/resource.c
-index 5ab3895..f19b0f6 100644
---- a/arch/x86/kernel/resource.c
-+++ b/arch/x86/kernel/resource.c
-@@ -35,14 +35,25 @@ static void remove_e820_regions(struct resource *avail)
- 	}
- }
- 
--void arch_remove_reservations(struct resource *avail)
-+static int is_from_iomem_resource(struct resource *root)
-+{
-+	while (root->parent)
-+		root = root->parent;
-+
-+	if (root == &iomem_resource)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+void arch_remove_reservations(struct resource *root, struct resource *avail)
- {
- 	/*
- 	 * Trim out BIOS area (high 2MB) and E820 regions. We do not remove
- 	 * the low 1MB unconditionally, as this area is needed for some ISA
- 	 * cards requiring a memory range, e.g. the i82365 PCMCIA controller.
- 	 */
--	if (avail->flags & IORESOURCE_MEM) {
-+	if ((avail->flags & IORESOURCE_MEM) && is_from_iomem_resource(root)) {
- 		resource_clip(avail, BIOS_ROM_BASE, BIOS_ROM_END);
- 
- 		remove_e820_regions(avail);
-diff --git a/include/linux/ioport.h b/include/linux/ioport.h
-index 6230064..4e9272d 100644
---- a/include/linux/ioport.h
-+++ b/include/linux/ioport.h
-@@ -177,7 +177,8 @@ extern struct resource *insert_resource_conflict(struct resource *parent, struct
- extern int insert_resource(struct resource *parent, struct resource *new);
- extern void insert_resource_expand_to_fit(struct resource *root, struct resource *new);
- extern int remove_resource(struct resource *old);
--extern void arch_remove_reservations(struct resource *avail);
-+extern void arch_remove_reservations(struct resource *root,
-+					struct resource *avail);
- extern int allocate_resource(struct resource *root, struct resource *new,
- 			     resource_size_t size, resource_size_t min,
- 			     resource_size_t max, resource_size_t align,
-diff --git a/kernel/resource.c b/kernel/resource.c
-index 9b5f044..4174020 100644
---- a/kernel/resource.c
-+++ b/kernel/resource.c
-@@ -570,7 +570,8 @@ int region_intersects(resource_size_t start, size_t size, unsigned long flags,
- }
- EXPORT_SYMBOL_GPL(region_intersects);
- 
--void __weak arch_remove_reservations(struct resource *avail)
-+void __weak arch_remove_reservations(struct resource *root,
-+					 struct resource *avail)
- {
- }
- 
-@@ -622,7 +623,7 @@ static int __find_resource(struct resource *root, struct resource *old,
- 			goto next;
- 
- 		resource_clip(&tmp, constraint->min, constraint->max);
--		arch_remove_reservations(&tmp);
-+		arch_remove_reservations(root, &tmp);
- 
- 		/* Check for overflow after ALIGN() */
- 		avail.start = ALIGN(tmp.start, constraint->align);
+> 
+> > ---
+> >  arch/x86/pci/xen.c | 4 +---
+> >  1 file changed, 1 insertion(+), 3 deletions(-)
+> > 
+> > diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
+> > index c4b3646bd04c..9542a746dc50 100644
+> > --- a/arch/x86/pci/xen.c
+> > +++ b/arch/x86/pci/xen.c
+> > @@ -409,10 +409,8 @@ int __init pci_xen_init(void)
+> >  	pcibios_enable_irq = xen_pcifront_enable_irq;
+> >  	pcibios_disable_irq = NULL;
+> >  
+> > -#ifdef CONFIG_ACPI
+> >  	/* Keep ACPI out of the picture */
+> > -	acpi_noirq = 1;
+> > -#endif
+> > +	acpi_noirq_set();
+> >  
+> >  #ifdef CONFIG_PCI_MSI
+> >  	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
+> > -- 
+> > 2.11.0
+> > 
+
 -- 
-2.9.4
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
