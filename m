@@ -1,55 +1,119 @@
-Return-Path: <SRS0=dI8c=7S=linux.ee=mroos@kernel.org>
-Return-Path: <SRS0=dI8c=7S=linux.ee=mroos@kernel.org>
-Date: Wed, 16 Aug 2017 21:39:08 +0300 (EEST)
-From: Meelis Roos <mroos@linux.ee>
-Sender: mroos@math.ut.ee
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-    qla2xxx-upstream@qlogic.com,
-    Linux Kernel list <linux-kernel@vger.kernel.org>,
-    Christoph Hellwig <hch@lst.de>
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-In-Reply-To: <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
-Message-ID: <alpine.LRH.2.20.1708162136220.16834@math.ut.ee>
-References: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee> <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:53675 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751890AbdHJBwI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 9 Aug 2017 21:52:08 -0400
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux ACPI <linux-acpi@vger.kernel.org>
+CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: RE: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs
+ earlier
+Date: Thu, 10 Aug 2017 01:52:05 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF06700@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+ <51836747.M49Hy56X72@aspire.rjw.lan>
+In-Reply-To: <51836747.M49Hy56X72@aspire.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > > I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
-> > > t5120 server: can't allocate MSI-X affinity masks.
-> > > 
-> > > [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-> > > [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-> > > [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
-> > > [   30.816882] scsi host1: qla2xxx
-> > > [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
-> > > [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-> > > [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
-> > > [   31.367083] scsi host1: qla2xxx
-> > > [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
-> > > 
-> > > I do not know if the driver works since nothing is attached to the FC 
-> > > HBA at the moment, but from the error messages it looks like the driver 
-> > > fails to load.
-> > > 
-> > > I booted 4.12 and 4.11 - the red error is not there but the failure 
-> > > seems to be the same error -22:
+Hi, Rafael
+
+For this patch, I have a concern.
+
+> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> Subject: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
 > 
-> 4.10.0 works, 4.11.0 errors out with EINVAL and 4.13-rc4 errorr sout 
-> with more verbose MSI messages. So something between 4.10 and 4.11 has 
-> broken it.
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> Runtime GPEs have corresponding _Lxx/_Exx methods and are enabled
+> automatically during the initialization of the ACPI subsystem through
+> acpi_update_all_gpes() with the assumption that acpi_setup_gpe_for_wake()
+> will be called in advance for all of the GPEs pointed to by _PRW
+> objects in the namespace that may be affected by acpi_update_all_gpes().
+> That is, acpi_ev_initialize_gpe_block() can only be called for a GPE
+> block after acpi_setup_gpe_for_wake() has been called for all of the
+> _PRW (wakeup) GPEs in it.
+> 
+> The platform firmware on some systems, however, expects GPEs to be
+> enabled before the enumeration of devices which is when
+> acpi_setup_gpe_for_wake() is called and that goes against the above
+> assumption.
+> 
+> For this reason, introduce a new flag to be set by
+> acpi_ev_initialize_gpe_block() when automatically enabling a GPE
+> to indicate to acpi_setup_gpe_for_wake() that it needs to drop the
+> reference to the GPE coming from acpi_ev_initialize_gpe_block()
+> and modify acpi_setup_gpe_for_wake() accordingly.  These changes
+> allow acpi_setup_gpe_for_wake() and acpi_ev_initialize_gpe_block()
+> to be invoked in any order.
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/acpica/evgpeblk.c |    2 ++
+>  drivers/acpi/acpica/evxfgpe.c  |    8 ++++++++
+>  include/acpi/actypes.h         |    3 ++-
+>  3 files changed, 12 insertions(+), 1 deletion(-)
+> 
+> Index: linux-pm/drivers/acpi/acpica/evgpeblk.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/acpica/evgpeblk.c
+> +++ linux-pm/drivers/acpi/acpica/evgpeblk.c
+> @@ -496,6 +496,8 @@ acpi_ev_initialize_gpe_block(struct acpi
+>  				continue;
+>  			}
+> 
+> +			gpe_event_info->flags |= ACPI_GPE_AUTO_ENABLED;
+> +
+>  			if (event_status & ACPI_EVENT_FLAG_STATUS_SET) {
+>  				ACPI_INFO(("GPE 0x%02X active on init",
+>  					   gpe_number));
+> Index: linux-pm/include/acpi/actypes.h
+> ===================================================================
+> --- linux-pm.orig/include/acpi/actypes.h
+> +++ linux-pm/include/acpi/actypes.h
+> @@ -783,7 +783,7 @@ typedef u32 acpi_event_status;
+>   *   |  | | |  +-- Type of dispatch:to method, handler, notify, or none
+>   *   |  | | +----- Interrupt type: edge or level triggered
+>   *   |  | +------- Is a Wake GPE
+> - *   |  +--------- Is GPE masked by the software GPE masking mechanism
+> + *   |  +--------- Has been enabled automatically at init time
+>   *   +------------ <Reserved>
+>   */
+>  #define ACPI_GPE_DISPATCH_NONE          (u8) 0x00
+> @@ -799,6 +799,7 @@ typedef u32 acpi_event_status;
+>  #define ACPI_GPE_XRUPT_TYPE_MASK        (u8) 0x08
+> 
+>  #define ACPI_GPE_CAN_WAKE               (u8) 0x10
+> +#define ACPI_GPE_AUTO_ENABLED           (u8) 0x20
+> 
+>  /*
+>   * Flags for GPE and Lock interfaces
+> Index: linux-pm/drivers/acpi/acpica/evxfgpe.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/acpica/evxfgpe.c
+> +++ linux-pm/drivers/acpi/acpica/evxfgpe.c
+> @@ -435,6 +435,14 @@ acpi_setup_gpe_for_wake(acpi_handle wake
+>  		 */
+>  		gpe_event_info->flags =
+>  		    (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
+> +	} else if (gpe_event_info->flags & ACPI_GPE_AUTO_ENABLED) {
+> +		/*
+> +		 * A reference to this GPE has been added during the GPE block
+> +		 * initialization, so drop it now to prevent the GPE from being
+> +		 * permanently enabled and clear its ACPI_GPE_AUTO_ENABLED flag.
+> +		 */
+> +		(void)acpi_ev_remove_gpe_reference(gpe_event_info);
+> +		gpe_event_info->flags &= ~ACPI_GPE_AUTO_ENABLED;
 
-I can not reproduice the older kernels that misbehave. I checked out 
-earlier kernels and recompiled them (old config lost, nothing changed 
-AFAIK), everything works up to 4.12 inclusive.
+The problem is if the GPE is shared, how can we know decrement reference
+once can sufficiently convert it into wakeup dispatcher owned GPE?
 
-> Also, 4.13-rc4 is broken on another sun4v here (T1000). So it seems to 
-> be sun4v interrupt related.
-
-This still holds - 4.13-rc4 has MSI trouble on at least 2 of my sun4v 
-machines.
-
--- 
-Meelis Roos (mroos@linux.ee)
+Thanks and best regards
+Lv
