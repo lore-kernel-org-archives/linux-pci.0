@@ -1,49 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 18 Aug 2017 10:07:17 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
-Message-ID: <20170818170716.GB119461@google.com>
-References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
- <20170817120431.12398-2-jeffy.chen@rock-chips.com>
- <20170818170107.GA119461@google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:15976 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751602AbdHJJzW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Aug 2017 05:55:22 -0400
+Date: Thu, 10 Aug 2017 12:34:41 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Lv Zheng <lv.zheng@intel.com>,
+        Bob Moore <robert.moore@intel.com>
+Subject: Re: [PATCH 0/3] ACPI: Initialize GPEs before the initial namespace
+ scan
+Message-ID: <20170810093441.GQ2369@lahna.fi.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170818170107.GA119461@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, Tony Lindgren <tony@atomide.com>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 18, 2017 at 10:01:07AM -0700, Brian Norris wrote:
-> + Tony
+On Thu, Aug 10, 2017 at 12:29:12AM +0200, Rafael J. Wysocki wrote:
+> Hi,
 > 
-> On Thu, Aug 17, 2017 at 08:04:29PM +0800, Jeffy Chen wrote:
-> > Add support for PCIE_WAKE pin in rockchip pcie driver.
-> > 
-> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> > ---
-> > 
-> > Changes in v2:
-> > Use dev_pm_set_dedicated_wake_irq
-> >         -- Suggested by Brian Norris <briannorris@chromium.com>
+> This is exceptional for at least two reasons.
+> 
+> First, we need it now to work around boot problems on multiple platforms
+> already seen in the field (which are shipping products).
+> 
+> Second, the ACPICA changes in this series are kind of Linux-specific, because
+> they are related to how Linux carries out the initialization of devices, which
+> very well may be different from what the other OSes using ACPICA do.
+> 
+> For these reasons, I'd like to make the following ACPICA changes in Linux
+> only for the time being and then decide whether or not to take them into
+> the upstream.  If there are major concerns about that, please let me know.
+> 
+> The issue at hand is that some platforms with Thunderbolt controllers won't
+> boot if there are any Thunderbolt devices connected to them at boot time (if
+> the devices are connected later, everything works as expected).  That turns
+> out to be related to a complicated sequence of events involving the platform
+> firmware which needs to happen in exactly the right order at the right time
+> for things to work and that requires GPEs to be enabled before enumerating
+> the PCI bus.
+> 
+> The first patch changes ACPICA to check the status of runtime GPEs before
+> enabling them for the first time in order to avoid missing events (that
+> is key for edge-triggered GPEs) and to process them early enough.
+> 
+> The second one makes it possible to change the ordering of initialization
+> between GPEs and devices, and the third one actually changes that ordering.
+> 
+> The patches are based on Mika's work, so kudos to him.
 
-Oops, I forgot you sent a v3. Same questions/comments apply there
-though.
+Thank you for taking care of this! I've tested the series on Intel Skull
+Canyon NUC, Dell XPS 9350, 9550 and 9365, and it fixes the issue on all
+of them.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
