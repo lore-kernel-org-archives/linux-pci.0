@@ -1,52 +1,133 @@
-Return-Path: <SRS0=6tVE=7Y=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=6tVE=7Y=broadcom.com=oza.oza@kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	<helgaas@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Oza Pawandeep <oza.oza@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v3 0/3] PCI hotplug feature
-Date: Tue, 22 Aug 2017 13:40:53 +0530
-Message-Id: <1503389456-27373-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:21023 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752305AbdHJGfL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 02:35:11 -0400
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v4 3/7] PCI: mediatek: Add a structure to abstract the controller generations
+Date: Thu, 10 Aug 2017 14:34:56 +0800
+Message-ID: <e60b42e3830ba65b3b1599fd25880bc244ccb752.1502336769.git.honghui.zhang@mediatek.com>
+In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
+References: <cover.1502336769.git.honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These patches bring in PCI hotplug support for iproc family chipsets.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-It includes DT binding documentation update and, implementation in 
-iproc pcie RC driver.
+Introduce a structure "mtk_pcie_soc" to abstract the differences between
+controller generations, and the .startup() hook is used to encapsulate
+some SoC-dependent related setting. In doing so, the common code which
+will be reused by future chips.
 
-These patch set is made on top of following patches.
-[PATCH v7 2/2] PCI: iproc: add device shutdown for PCI RC
-[PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from EP
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 31 ++++++++++++++++++++++++++-----
+ 1 file changed, 26 insertions(+), 5 deletions(-)
 
-Changes since v2:
-Addressed Rob Herring's comments.
-Changed subject to "dt-bindings: PCI:..."
-Made generic PCI hotplug properties 'slot-pluggable' and 'prsnt-gpios'
-Rebased the patches on top of Lorenzo's patches.
-
-Oza Pawandeep (3):
-  PCI: iproc: Implement PCI hotplug support
-  dt-bindings: PCI: Add PCIe hotplug property
-  PCI: iproc: Implement optional property prsnt-gpios
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  14 ++
- Documentation/devicetree/bindings/pci/pci.txt      |  15 ++
- drivers/pci/host/pcie-iproc-platform.c             |   3 +
- drivers/pci/host/pcie-iproc.c                      | 166 ++++++++++++++++++---
- drivers/pci/host/pcie-iproc.h                      |   7 +
- 5 files changed, 187 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 7d1b7cd..01caa98 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -64,6 +64,18 @@
+ #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
+ #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
+ 
++struct mtk_pcie_port;
++
++/**
++ * struct mtk_pcie_soc - differentiate between host generations
++ * @ops: pointer to configuration access functions
++ * @startup: pointer to controller setting functions
++ */
++struct mtk_pcie_soc {
++	struct pci_ops *ops;
++	int (*startup)(struct mtk_pcie_port *port);
++};
++
+ /**
+  * struct mtk_pcie_port - PCIe port information
+  * @base: IO mapped register base
+@@ -97,6 +109,7 @@ struct mtk_pcie_port {
+  * @busn: bus range
+  * @offset: IO / Memory offset
+  * @ports: pointer to PCIe port information
++ * @soc: pointer to SoC-dependent operations
+  */
+ struct mtk_pcie {
+ 	struct device *dev;
+@@ -112,6 +125,7 @@ struct mtk_pcie {
+ 		resource_size_t io;
+ 	} offset;
+ 	struct list_head ports;
++	const struct mtk_pcie_soc *soc;
+ };
+ 
+ static void mtk_pcie_subsys_powerdown(struct mtk_pcie *pcie)
+@@ -229,7 +243,8 @@ static int mtk_pcie_startup_port(struct mtk_pcie_port *port)
+ 
+ static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
+ {
+-	struct device *dev = port->pcie->dev;
++	struct mtk_pcie *pcie = port->pcie;
++	struct device *dev = pcie->dev;
+ 	int err;
+ 
+ 	err = clk_prepare_enable(port->sys_ck);
+@@ -247,7 +262,7 @@ static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
+ 		goto err_phy_on;
+ 	}
+ 
+-	if (!mtk_pcie_startup_port(port))
++	if (!pcie->soc->startup(port))
+ 		return;
+ 
+ 	dev_info(dev, "Port%d link down\n", port->slot);
+@@ -472,7 +487,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
+ 
+ 	host->busnr = pcie->busn.start;
+ 	host->dev.parent = pcie->dev;
+-	host->ops = &mtk_pcie_ops;
++	host->ops = pcie->soc->ops;
+ 	host->map_irq = of_irq_parse_and_map_pci;
+ 	host->swizzle_irq = pci_common_swizzle;
+ 
+@@ -505,6 +520,7 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	pcie = pci_host_bridge_priv(host);
+ 
+ 	pcie->dev = dev;
++	pcie->soc = of_device_get_match_data(dev);
+ 	platform_set_drvdata(pdev, pcie);
+ 	INIT_LIST_HEAD(&pcie->ports);
+ 
+@@ -529,9 +545,14 @@ static int mtk_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
++static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
++	.ops = &mtk_pcie_ops,
++	.startup = mtk_pcie_startup_port,
++};
++
+ static const struct of_device_id mtk_pcie_ids[] = {
+-	{ .compatible = "mediatek,mt7623-pcie"},
+-	{ .compatible = "mediatek,mt2701-pcie"},
++	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
++	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
+ 	{},
+ };
+ 
 -- 
-1.9.1
+2.6.4
