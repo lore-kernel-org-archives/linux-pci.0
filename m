@@ -1,60 +1,62 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 30 Aug 2017 19:02:06 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Baicar, Tyler" <tbaicar@codeaurora.org>,
-        Tony Luck <tony.luck@intel.com>, rjw@rjwysocki.net,
-        lenb@kernel.org, will.deacon@arm.com, james.morse@arm.com,
-        prarit@redhat.com, punit.agrawal@arm.com, shiju.jose@huawei.com,
-        andriy.shevchenko@linux.intel.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-Message-ID: <20170830170205.wf7q6hfcw4jhbpmu@pd.tnic>
-References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
- <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
- <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
- <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
- <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
- <20170830101617.3m266q7xuew6ctxl@pd.tnic>
- <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
- <20170830151601.ro5qt5272e2msevp@pd.tnic>
- <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.130]:37489 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752159AbdHJJZh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 05:25:37 -0400
+Message-ID: <598C267D.1060105@rock-chips.com>
+Date: Thu, 10 Aug 2017 17:25:17 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Shawn Lin <shawn.lin@rock-chips.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Douglas Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: Re: [RFC PATCH] PCI: rockchip: fix system hang up if activate CONFIG_DEBUG_SHIRQ
+References: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com> <598C1BDF.6010203@rock-chips.com> <d0499138-aa92-a0bb-1032-7112a025257e@rock-chips.com>
+In-Reply-To: <d0499138-aa92-a0bb-1032-7112a025257e@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 11:31:06AM -0400, Sinan Kaya wrote:
-> I see. We should probably try to do something only if GHES_SEV_CORRECTED or
-> GHES_SEV_RECOVERABLE.
-> 
-> If somebody wants to crash the system with GHES_SEV_PANIC, there is no point
-> in doing additional work.
+Hi shawn,
 
-Makes sense.
+On 08/10/2017 05:14 PM, Shawn Lin wrote:
+> Hi Jeffy
+>
+> On 2017/8/10 16:39, jeffy wrote:
+>> Hi shawn,
+>>
+>> On 08/10/2017 04:21 PM, Shawn Lin wrote:
+>>> With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
+>>> would still access the irq handler registed as a shard irq.
+>>> Per the comment within the function of __free_irq, it says
+>>> "It's a shared IRQ -- the driver ought to be prepared for
+>>> an IRQ event to happen even now it's being freed". However
+>>> when failing to probe the driver, it may disable the clock
+>>> for accessing the register and the following check for shared
+>>> irq state would call the irq handler which accesses the register
+>>> w/o the clk enabled. That will hang the system forever.
+>>
+>> i think this extra irq call is to make sure it's safe to get a shared
+>> irq when we are freeing it, and we would not get this irq after freed it.
+>>
+>> so maybe just call devm_free_irq before disable clks(and other
+>> required resources for the irq handler)? and also do it in the
+>> rockchip_pcie_remove.
+>
+> That works since we free it and the following devm_irq_release would
+> bail out early. But I know sure if it is the real intention of  the
+> devm_  irq stuff,  although devm_free_irq should be called to free the
+> IRQ separately if we want. At least that is so explicit that folks will
+> know that, as more from the top view, it seems only a little drivers
+> there call devm_free_irq for this case by looking into some more
+> drivers(Still no any PCIe drivers do that).
+>
+> Not sure if their systems are robust enough that could access the
+> register w/o clk, even without power domain enabled.
 
-Whatever we do, I'd like to have this all nicely documented *why* we're
-doing the recovery policy we're doing.
-
-> Sounds good. Do you still want to do PCIe recovery in the case of
-> GHES_SEV_PANIC or if some FW returns GHES_SEV_NO?
-
-So I read GHES_SEV_PANIC as: we should panic and stop any processing
-whatsoever ASAP in order to avoid further error propagation. So doing
-recovery there might *actually* be a bad idea.
-
-GHES_SEV_NO would map to AER_CORRECTABLE and I think that would mean,
-print the error to let the user know but no need to recover because no
-harm was done.
-
-I *think*.
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+maybe we can use request_irq & free_irq directly?
