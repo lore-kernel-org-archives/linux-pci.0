@@ -1,80 +1,50 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41932 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdHQLVY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 07:21:24 -0400
-From: Varadarajan Narayanan <varada@codeaurora.org>
-To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: Varadarajan Narayanan <varada@codeaurora.org>
-Subject: [PATCH v8 2/3] dt-bindings: pci: qcom: Add support for IPQ8074
-Date: Thu, 17 Aug 2017 16:50:57 +0530
-Message-Id: <1502968858-28090-3-git-send-email-varada@codeaurora.org>
-In-Reply-To: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
-References: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
+Received: from mail.kernel.org ([198.145.29.99]:36420 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752816AbdHJVO5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Aug 2017 17:14:57 -0400
+Date: Thu, 10 Aug 2017 16:14:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Mathias Nyman <mathias.nyman@linux.intel.com>
+Subject: [GIT PULL] PCI fixes for v4.13
+Message-ID: <20170810211455.GA529@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
-lane, two PCIe root complex with support for MSI and legacy interrupts, and
-it conforms to PCI Express Base 2.1 specification.
+PCI fix:
 
-Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
----
- .../devicetree/bindings/pci/qcom,pcie.txt          | 23 ++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+  - work around Renesas uPD72020x 32-bit DMA issue
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-index 9d418b7..b3e36ef 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
-@@ -9,6 +9,7 @@
- 			- "qcom,pcie-apq8084" for apq8084
- 			- "qcom,pcie-msm8996" for msm8996 or apq8096
- 			- "qcom,pcie-ipq4019" for ipq4019
-+			- "qcom,pcie-ipq8074" for ipq8074
- 
- - reg:
- 	Usage: required
-@@ -105,6 +106,16 @@
- 			- "bus_master"	Master AXI clock
- 			- "bus_slave"	Slave AXI clock
- 
-+- clock-names:
-+	Usage: required for ipq8074
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "iface"	PCIe to SysNOC BIU clock
-+			- "axi_m"	AXI Master clock
-+			- "axi_s"	AXI Slave clock
-+			- "ahb"		AHB clock
-+			- "aux"		Auxiliary clock
-+
- - resets:
- 	Usage: required
- 	Value type: <prop-encoded-array>
-@@ -144,6 +155,18 @@
- 			- "ahb"			AHB reset
- 			- "phy_ahb"		PHY AHB reset
- 
-+- reset-names:
-+	Usage: required for ipq8074
-+	Value type: <stringlist>
-+	Definition: Should contain the following entries
-+			- "pipe"		PIPE reset
-+			- "sleep"		Sleep reset
-+			- "sticky"		Core Sticky reset
-+			- "axi_m"		AXI Master reset
-+			- "axi_s"		AXI Slave reset
-+			- "ahb"			AHB Reset
-+			- "axi_m_sticky"	AXI Master Sticky reset
-+
- - power-domains:
- 	Usage: required for apq8084 and msm8996/apq8096
- 	Value type: <prop-encoded-array>
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+The following changes since commit 16f73eb02d7e1765ccab3d2018e0bd98eb93d973:
+
+  Linux 4.13-rc3 (2017-07-30 12:40:36 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-v4.13-fixes-2
+
+for you to fetch changes up to 8466489ef5ba48272ba4fa4ea9f8f403306de4c7:
+
+  xhci: Reset Renesas uPD72020x USB controller for 32-bit DMA issue (2017-08-02 12:05:07 -0500)
+
+----------------------------------------------------------------
+pci-v4.13-fixes-2
+
+----------------------------------------------------------------
+Marc Zyngier (2):
+      PCI: Add pci_reset_function_locked()
+      xhci: Reset Renesas uPD72020x USB controller for 32-bit DMA issue
+
+ drivers/pci/pci.c             | 35 +++++++++++++++++++++++++++++++++++
+ drivers/usb/host/pci-quirks.c | 20 ++++++++++++++++++++
+ drivers/usb/host/pci-quirks.h |  1 +
+ drivers/usb/host/xhci-pci.c   |  7 +++++++
+ include/linux/pci.h           |  1 +
+ 5 files changed, 64 insertions(+)
