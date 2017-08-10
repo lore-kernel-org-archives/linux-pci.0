@@ -1,138 +1,192 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:48513 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751232AbdH1Pas (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 11:30:48 -0400
-From: Jan Luebbe <jlu@pengutronix.de>
-To: Gregory Clement <gregory.clement@free-electrons.com>,
-        Andrew Lunn <andrew@lunn.ch>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Jason Cooper <jason@lakedaemon.net>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-kernel@vger.kernel.org, kernel@pengutronix.de,
-        Jan Luebbe <jlu@pengutronix.de>
-Subject: [RFC] ARM: Orion: Check DRAM window size
-Date: Mon, 28 Aug 2017 17:30:39 +0200
-Message-Id: <20170828153039.27088-1-jlu@pengutronix.de>
-In-Reply-To: <20170828152517.24506-1-jlu@pengutronix.de>
-References: <20170828152517.24506-1-jlu@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Linux ACPI <linux-acpi@vger.kernel.org>
+CC: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: RE: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+Date: Thu, 10 Aug 2017 01:48:58 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF066E6@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+ <46980112.WLPtxWZQ3y@aspire.rjw.lan>
+In-Reply-To: <46980112.WLPtxWZQ3y@aspire.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a corresponding change as "PCI: mvebu: Check DRAM window size" applied
-to the Orion PCIe driver. I don't have the relevant hardware myself, but the
-patch may still be useful for someone who has. This is completely untested.
+Hi, Rafael
 
-Signed-off-by: Jan Luebbe <jlu@pengutronix.de>
----
- arch/arm/mach-dove/pcie.c    |  3 ++-
- arch/arm/mach-mv78xx0/pcie.c |  3 ++-
- arch/arm/mach-orion5x/pci.c  |  3 ++-
- arch/arm/plat-orion/pcie.c   | 19 +++++++++++++++----
- 4 files changed, 21 insertions(+), 7 deletions(-)
+> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> 
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> In some cases GPEs are already active when they are enabled by
+> acpi_ev_initialize_gpe_block() and whatever happens next may depend
+> on the result of handling the events signaled by them, so the
+> events should not be discarded (which is what happens currently) and
+> they should be handled as soon as reasonably possible.
+> 
+> For this reason, modify acpi_ev_initialize_gpe_block() to
+> dispatch GPEs with the status flag set in-band right after
+> enabling them.
 
-diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
-index 91fe97144570..27e4689ee58d 100644
---- a/arch/arm/mach-dove/pcie.c
-+++ b/arch/arm/mach-dove/pcie.c
-@@ -51,7 +51,8 @@ static int __init dove_pcie_setup(int nr, struct pci_sys_data *sys)
- 	 */
- 	orion_pcie_set_local_bus_nr(pp->base, sys->busnr);
+In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
+right after enabling an GPE. So there are 2 conditions related:
+1. GPE is enabled for the first time.
+2. GPE is initialized.
+
+And we need to make sure that before acpi_update_all_gpes() is invoked,
+all GPE EN bits are actually disabled.
+What if we do this in this way:
+
+Index: linux-acpica/drivers/acpi/acpica/evxfgpe.c
+===================================================================
+--- linux-acpica.orig/drivers/acpi/acpica/evxfgpe.c
++++ linux-acpica/drivers/acpi/acpica/evxfgpe.c
+@@ -97,6 +97,14 @@ acpi_status acpi_update_all_gpes(void)
+ unlock_and_exit:
+ 	(void)acpi_ut_release_mutex(ACPI_MTX_EVENTS);
  
--	orion_pcie_setup(pp->base);
-+	if (!orion_pcie_setup(pp->base))
-+		return 0;
- 
- 	if (pp->index == 0)
- 		pci_ioremap_io(sys->busnr * SZ_64K, DOVE_PCIE0_IO_PHYS_BASE);
-diff --git a/arch/arm/mach-mv78xx0/pcie.c b/arch/arm/mach-mv78xx0/pcie.c
-index 81ff4327a962..3d17eeff44bf 100644
---- a/arch/arm/mach-mv78xx0/pcie.c
-+++ b/arch/arm/mach-mv78xx0/pcie.c
-@@ -113,7 +113,8 @@ static int __init mv78xx0_pcie_setup(int nr, struct pci_sys_data *sys)
- 	 * Generic PCIe unit setup.
- 	 */
- 	orion_pcie_set_local_bus_nr(pp->base, sys->busnr);
--	orion_pcie_setup(pp->base);
-+	if (!orion_pcie_setup(pp->base))
-+		return 0;
- 
- 	pci_ioremap_io(nr * SZ_64K, MV78XX0_PCIE_IO_PHYS_BASE(nr));
- 
-diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
-index ecb998e7f8dc..f7f830872cc9 100644
---- a/arch/arm/mach-orion5x/pci.c
-+++ b/arch/arm/mach-orion5x/pci.c
-@@ -147,7 +147,8 @@ static int __init pcie_setup(struct pci_sys_data *sys)
- 	/*
- 	 * Generic PCIe unit setup.
- 	 */
--	orion_pcie_setup(PCIE_BASE);
-+	if (!orion_pcie_setup(PCIE_BASE))
-+		return 0;
- 
- 	/*
- 	 * Check whether to apply Orion-1/Orion-NAS PCIe config
-diff --git a/arch/arm/plat-orion/pcie.c b/arch/arm/plat-orion/pcie.c
-index 8b8c06d2e9c4..07ae382cf48a 100644
---- a/arch/arm/plat-orion/pcie.c
-+++ b/arch/arm/plat-orion/pcie.c
-@@ -120,10 +120,10 @@ void __init orion_pcie_reset(void __iomem *base)
-  * BAR[0,2] -> disabled, BAR[1] -> covers all DRAM banks
-  * WIN[0-3] -> DRAM bank[0-3]
-  */
--static void __init orion_pcie_setup_wins(void __iomem *base)
-+static int __init orion_pcie_setup_wins(void __iomem *base)
- {
- 	const struct mbus_dram_target_info *dram;
--	u32 size;
-+	u64 size;
- 	int i;
- 
- 	dram = mv_mbus_dram_info();
-@@ -170,15 +170,23 @@ static void __init orion_pcie_setup_wins(void __iomem *base)
- 	if ((size & (size - 1)) != 0)
- 		size = 1 << fls(size);
- 
-+	if (size > 0x100000000) {
-+		pr_err("Could not configure DRAM window (too large): 0x%llx\n",
-+		       size);
-+		return 0;
++	/*
++	 * Poll GPEs to handle already triggered events.
++	 * It is not sufficient to trigger edge-triggered GPE with specific
++	 * GPE chips, software need to poll once after enabling.
++	 */
++	if (acpi_gbl_all_gpes_initialized) {
++		acpi_ev_gpe_detect(acpi_gbl_gpe_xrupt_list_head);
 +	}
-+
- 	/*
- 	 * Setup BAR[1] to all DRAM banks.
- 	 */
- 	writel(dram->cs[0].base, base + PCIE_BAR_LO_OFF(1));
- 	writel(0, base + PCIE_BAR_HI_OFF(1));
- 	writel(((size - 1) & 0xffff0000) | 1, base + PCIE_BAR_CTRL_OFF(1));
-+
-+	return 1;
+ 	return_ACPI_STATUS(status);
  }
  
--void __init orion_pcie_setup(void __iomem *base)
-+int __init orion_pcie_setup(void __iomem *base)
- {
- 	u16 cmd;
- 	u32 mask;
-@@ -186,7 +194,8 @@ void __init orion_pcie_setup(void __iomem *base)
- 	/*
- 	 * Point PCIe unit MBUS decode windows to DRAM space.
- 	 */
--	orion_pcie_setup_wins(base);
-+	if (!orion_pcie_setup_wins(base))
-+		return 0;
+@@ -120,6 +128,7 @@ acpi_status acpi_enable_gpe(acpi_handle
+ 	acpi_status status = AE_BAD_PARAMETER;
+ 	struct acpi_gpe_event_info *gpe_event_info;
+ 	acpi_cpu_flags flags;
++	u8 poll_gpes = FALSE;
  
- 	/*
- 	 * Master + slave enable.
-@@ -203,6 +212,8 @@ void __init orion_pcie_setup(void __iomem *base)
- 	mask = readl(base + PCIE_MASK_OFF);
- 	mask |= 0x0f000000;
- 	writel(mask, base + PCIE_MASK_OFF);
+ 	ACPI_FUNCTION_TRACE(acpi_enable_gpe);
+ 
+@@ -135,12 +144,25 @@ acpi_status acpi_enable_gpe(acpi_handle
+ 		if (ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) !=
+ 		    ACPI_GPE_DISPATCH_NONE) {
+ 			status = acpi_ev_add_gpe_reference(gpe_event_info);
++			if (ACPI_SUCCESS(status) &&
++			    gpe_event_info->runtime_count == 1) {
++				poll_gpes = TRUE;
++			}
+ 		} else {
+ 			status = AE_NO_HANDLER;
+ 		}
+ 	}
+ 
+ 	acpi_os_release_lock(acpi_gbl_gpe_lock, flags);
 +
-+	return 1;
++	/*
++	 * Poll GPEs to handle already triggered events.
++	 * It is not sufficient to trigger edge-triggered GPE with specific
++	 * GPE chips, software need to poll once after enabling.
++	 */
++	if (poll_gpes && acpi_gbl_all_gpes_initialized) {
++		acpi_ev_gpe_detect(acpi_gbl_gpe_xrupt_list_head);
++	}
+ 	return_ACPI_STATUS(status);
  }
+ ACPI_EXPORT_SYMBOL(acpi_enable_gpe)
+Index: linux-acpica/drivers/acpi/acpica/utxfinit.c
+===================================================================
+--- linux-acpica.orig/drivers/acpi/acpica/utxfinit.c
++++ linux-acpica/drivers/acpi/acpica/utxfinit.c
+@@ -284,6 +284,13 @@ acpi_status ACPI_INIT_FUNCTION acpi_init
+ 	}
  
- int orion_pcie_rd_conf(void __iomem *base, struct pci_bus *bus,
--- 
-2.11.0
+ 	/*
++	 * Cleanup GPE enabling status to make sure that the GPE settings are
++	 * as what the OSPMs expect. This should be done before enumerating
++	 * ACPI devices and operation region drivers.
++	 */
++	(void)acpi_hw_disable_all_gpes();
++
++	/*
+ 	 * Initialize all device/region objects in the namespace. This runs
+ 	 * the device _STA and _INI methods and region _REG methods.
+ 	 */
+
+Thanks and best regards
+Lv
+
+> 
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/acpica/evgpeblk.c |   28 +++++++++++++++++++---------
+>  1 file changed, 19 insertions(+), 9 deletions(-)
+> 
+> Index: linux-pm/drivers/acpi/acpica/evgpeblk.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/acpica/evgpeblk.c
+> +++ linux-pm/drivers/acpi/acpica/evgpeblk.c
+> @@ -440,9 +440,11 @@ acpi_ev_initialize_gpe_block(struct acpi
+>  			     void *ignored)
+>  {
+>  	acpi_status status;
+> +	acpi_event_status event_status;
+>  	struct acpi_gpe_event_info *gpe_event_info;
+>  	u32 gpe_enabled_count;
+>  	u32 gpe_index;
+> +	u32 gpe_number;
+>  	u32 i;
+>  	u32 j;
+> 
+> @@ -470,30 +472,38 @@ acpi_ev_initialize_gpe_block(struct acpi
+> 
+>  			gpe_index = (i * ACPI_GPE_REGISTER_WIDTH) + j;
+>  			gpe_event_info = &gpe_block->event_info[gpe_index];
+> +			gpe_number = gpe_block->block_base_number + gpe_index;
+> 
+>  			/*
+>  			 * Ignore GPEs that have no corresponding _Lxx/_Exx method
+> -			 * and GPEs that are used to wake the system
+> +			 * and GPEs that are used for wakeup
+>  			 */
+> -			if ((ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) ==
+> -			     ACPI_GPE_DISPATCH_NONE)
+> -			    || (ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) ==
+> -				ACPI_GPE_DISPATCH_HANDLER)
+> -			    || (ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) ==
+> -				ACPI_GPE_DISPATCH_RAW_HANDLER)
+> +			if ((ACPI_GPE_DISPATCH_TYPE(gpe_event_info->flags) !=
+> +			     ACPI_GPE_DISPATCH_METHOD)
+>  			    || (gpe_event_info->flags & ACPI_GPE_CAN_WAKE)) {
+>  				continue;
+>  			}
+> 
+> +			event_status = 0;
+> +			(void)acpi_hw_get_gpe_status(gpe_event_info,
+> +						     &event_status);
+> +
+>  			status = acpi_ev_add_gpe_reference(gpe_event_info);
+>  			if (ACPI_FAILURE(status)) {
+>  				ACPI_EXCEPTION((AE_INFO, status,
+>  					"Could not enable GPE 0x%02X",
+> -					gpe_index +
+> -					gpe_block->block_base_number));
+> +					gpe_number));
+>  				continue;
+>  			}
+> 
+> +			if (event_status & ACPI_EVENT_FLAG_STATUS_SET) {
+> +				ACPI_INFO(("GPE 0x%02X active on init",
+> +					   gpe_number));
+> +				(void)acpi_ev_gpe_dispatch(gpe_block->node,
+> +							   gpe_event_info,
+> +							   gpe_number);
+> +			}
+> +
+>  			gpe_enabled_count++;
+>  		}
+>  	}
+
