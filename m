@@ -1,121 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linuxarm@huawei.com>
-Subject: [PATCH net] pci: fix oops when try to find Root Port for a PCI device
-Date: Tue, 15 Aug 2017 23:19:11 +0800
-Message-ID: <1502810351-8312-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
+        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v4 0/7] PCI: MediaTek: Add host controller support for mt2712 and mt7622
+Date: Thu, 10 Aug 2017 14:34:53 +0800
+Message-ID: <cover.1502336769.git.honghui.zhang@mediatek.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
- Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Eric report a oops when booting the system after applying
-the commit a99b646afa8a ("PCI: Disable PCIe Relaxed..."):
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-[    4.241029] BUG: unable to handle kernel NULL pointer dereference at 0000000000000050
-[    4.247001] IP: pci_find_pcie_root_port+0x62/0x80
-[    4.253011] PGD 0
-[    4.253011] P4D 0
-[    4.253011]
-[    4.258013] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
-[    4.262015] Modules linked in:
-[    4.265005] CPU: 31 PID: 1 Comm: swapper/0 Not tainted 4.13.0-dbx-DEV #316
-[    4.271002] Hardware name: Intel RML,PCH/Iota_QC_19, BIOS 2.40.0 06/22/2016
-[    4.279002] task: ffffa2ee38cfa040 task.stack: ffffa51ec0004000
-[    4.285001] RIP: 0010:pci_find_pcie_root_port+0x62/0x80
-[    4.290012] RSP: 0000:ffffa51ec0007ab8 EFLAGS: 00010246
-[    4.295003] RAX: 0000000000000000 RBX: ffffa2ee36bae000 RCX: 0000000000000006
-[    4.303002] RDX: 000000000000081c RSI: ffffa2ee38cfa8c8 RDI: ffffa2ee36bae000
-[    4.310013] RBP: ffffa51ec0007b58 R08: 0000000000000001 R09: 0000000000000000
-[    4.317001] R10: 0000000000000000 R11: 0000000000000000 R12: ffffa51ec0007ad0
-[    4.324005] R13: ffffa2ee36bae098 R14: 0000000000000002 R15: ffffa2ee37204818
-[    4.331002] FS:  0000000000000000(0000) GS:ffffa2ee3fcc0000(0000) knlGS:0000000000000000
-[    4.339002] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[    4.345001] CR2: 0000000000000050 CR3: 000000401000f000 CR4: 00000000001406e0
-[    4.351002] Call Trace:
-[    4.354012]  ? pci_configure_device+0x19f/0x570
-[    4.359002]  ? pci_conf1_read+0xb8/0xf0
-[    4.363002]  ? raw_pci_read+0x23/0x40
-[    4.366011]  ? pci_read+0x2c/0x30
-[    4.370014]  ? pci_read_config_word+0x67/0x70
-[    4.374012]  pci_device_add+0x28/0x230
-[    4.378012]  ? pci_vpd_f0_read+0x50/0x80
-[    4.382014]  pci_scan_single_device+0x96/0xc0
-[    4.386012]  pci_scan_slot+0x79/0xf0
-[    4.389001]  pci_scan_child_bus+0x31/0x180
-[    4.394014]  acpi_pci_root_create+0x1c6/0x240
-[    4.398013]  pci_acpi_scan_root+0x15f/0x1b0
-[    4.402012]  acpi_pci_root_add+0x2e6/0x400
-[    4.406012]  ? acpi_evaluate_integer+0x37/0x60
-[    4.411002]  acpi_bus_attach+0xdf/0x200
-[    4.415002]  acpi_bus_attach+0x6a/0x200
-[    4.418014]  acpi_bus_attach+0x6a/0x200
-[    4.422013]  acpi_bus_scan+0x38/0x70
-[    4.426011]  acpi_scan_init+0x10c/0x271
-[    4.429001]  acpi_init+0x2fa/0x348
-[    4.433004]  ? acpi_sleep_proc_init+0x2d/0x2d
-[    4.437001]  do_one_initcall+0x43/0x169
-[    4.441001]  kernel_init_freeable+0x1d0/0x258
-[    4.445003]  ? rest_init+0xe0/0xe0
-[    4.449001]  kernel_init+0xe/0x150
+MediaTek's PCIe host controller has two generation HWs, MT2712 and MT7622
+using the new generation HW, which has two root ports. They share most
+probing flow with MT2701/MT7623. But the read/write config space logical
+is different. The per-port registers must be touched for read/write
+configuration space.
 
-====================== cut here =============================
+This patchset abstract the common probing flow, and add support for the
+new generation controller.
 
-It looks like the pci_find_pcie_root_port() was trying to
-find the Root Port for the PCI device which is the Root
-Port already, it will return NULL and trigger the problem,
-so check the highest_pcie_bridge to fix thie problem.
+Changes since v3:
+ - Unify the macro define's names with PCIE_ prefix.
+ - Use lower/upper_32_bits macro and remove AHB2PCIE_BASEL/AHB2PCIE_BASEH.
+ - Factor out mtk_pcie_find_port to eliminate duplicate code.
+ - Use list_for_each_entry instead of list_for_each_entry_safe when search list.
+ - Simplify the mtk_pcie_hw_rd_cfg flow.
+ - Split a new patch to rename the parameter and function names.
+ - Update the subject and changelog to include specific SoC IDs.
 
-Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
-Reported-by: Eric Dumazet <eric.dumazet@gmail.com>
-Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
----
- drivers/pci/pci.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Changes since v2:
+ - Split the Gen2 training change to a separate patch.
+ - Simplify the config_read/write logical and get rid of mtk_pcie_find_port.
+ - Using bus->sysdata to simplify the code.
+ - Rebase to commit 65b83b13204a ("PCI: mediatek: Explicitly request exclusive
+   reset control")[1].
+ - Fix some misspells.
+ - Add review tags in commit message.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..7e2022f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -522,7 +522,8 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
- 		bridge = pci_upstream_bridge(bridge);
- 	}
- 
--	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
-+	if (highest_pcie_bridge &&
-+	    pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
- 		return NULL;
- 
- 	return highest_pcie_bridge;
+Changes since v1:
+ - Fix build warnings in arm arch.
+ - Using SoC specific compatible instead of generic compatible.
+ - Add devicetree binding example for mt7622.
+ - Unified the register define names with PCIE_ prefix.
+ - Cleanup some un-necessary condition determine when starup port.
+ - minor code cleanups.
+
+[1] https://patchwork.kernel.org/patch/9852591/
+
+Honghui Zhang (2):
+  PCI: mediatek: make the parameter and function names more accurate
+  PCI: mediatek: Add a structure to abstract the controller generations
+
+Ryder Lee (5):
+  PCI: mediatek: Using readl_poll_timeout to wait Gen2 training
+  PCI: mediatek: switch to use platform_get_resource_byname()
+  dt-bindings: PCI: rename and cleanup MediaTek binding text
+  PCI: mediatek: Add controller support for mt2712 and mt7622
+  dt-bindings: PCI: add support for mt2712 and mt7622
+
+ .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 -----
+ .../devicetree/bindings/pci/mediatek-pcie.txt      | 284 ++++++++++
+ drivers/pci/host/Kconfig                           |   5 +-
+ drivers/pci/host/pcie-mediatek.c                   | 598 ++++++++++++++++++---
+ 4 files changed, 820 insertions(+), 197 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
+
 -- 
-1.8.3.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.6.4
