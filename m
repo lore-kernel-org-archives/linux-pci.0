@@ -1,82 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:33927 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753214AbdHUPWU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2017 11:22:20 -0400
-Received: by mail-io0-f176.google.com with SMTP id g135so14672300iog.1
-        for <linux-pci@vger.kernel.org>; Mon, 21 Aug 2017 08:22:20 -0700 (PDT)
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:47109 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753157AbdHJQQM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 12:16:12 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Zheng, Lv" <lv.zheng@intel.com>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: Re: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
+Date: Thu, 10 Aug 2017 18:07:53 +0200
+Message-ID: <3742420.ImyUv4XNlU@aspire.rjw.lan>
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF06700@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <51836747.M49Hy56X72@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF06700@SHSMSX101.ccr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <000201d31a90$ddf52640$99df72c0$@gmail.com>
-References: <20170818225638.31563-1-ard.biesheuvel@linaro.org> <000201d31a90$ddf52640$99df72c0$@gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 21 Aug 2017 16:22:19 +0100
-Message-ID: <CAKv+Gu-p0CJqqMWEDiGQ5hk6dKB9K3GOgTNH6GMAbugWPu8oJA@mail.gmail.com>
-Subject: Re: [RFC PATCH] pci: designware: add driver for DWC controller in
- ECAM shift mode
-To: Jingoo Han <jingoohan1@gmail.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21 August 2017 at 16:19, Jingoo Han <jingoohan1@gmail.com> wrote:
-> On Friday, August 18, 2017 6:57 PM, Ard Biesheuvel wrote:
->>
->> Some implementations of the Synopsys Designware PCIe controller implement
->> a so-called ECAM shift mode, which allows a static memory window to be
->> configured that covers the configuration space of the entire bus range.
->>
->> If the firmware performs all the low level configuration that is required
->> to expose this controller in a fully ECAM compatible manner, we can
->> simply describe it as "pci-host-ecam-generic" and be done with it.
->> However, it appears that in some cases (one of which is the Armada 80x0),
->> the IP is synthesized with an ATU window size that does not allow the
->> first bus to be mapped in a way that prevents the device on the
->> downstream port from appearing more than once.
->>
->> So implement a driver that relies on the firmware to perform all low
->> level initialization, and drives the controller in ECAM mode, but
->> overrides the config space accessors to take the above quirk into
->> account.
->>
->> Note that, unlike most drivers for this IP, this driver does not expose
->> a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
->> given that this is not a true bridge, and does not require any windows
->> to be configured in order for the downstream device to operate correctly.
->> Omitting it also prevents the PCI resource allocation routines from
->> handing out BAR space to it unnecessarily.
->>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Jingoo Han <jingoohan1@gmail.com>
->> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
->> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->> ---
->>
->> Posted as RFC for discussion. We have systems booting with UEFI firmware
->
-> (CC'ed Arnd Bergmann)
->
-> Thank you for sharing this patch.
-> I have no objection about this patch.
->
+On Thursday, August 10, 2017 3:52:05 AM CEST Zheng, Lv wrote:
+> Hi, Rafael
+> 
+> For this patch, I have a concern.
+> 
+> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > Subject: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
+> > 
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Runtime GPEs have corresponding _Lxx/_Exx methods and are enabled
+> > automatically during the initialization of the ACPI subsystem through
+> > acpi_update_all_gpes() with the assumption that acpi_setup_gpe_for_wake()
+> > will be called in advance for all of the GPEs pointed to by _PRW
+> > objects in the namespace that may be affected by acpi_update_all_gpes().
+> > That is, acpi_ev_initialize_gpe_block() can only be called for a GPE
+> > block after acpi_setup_gpe_for_wake() has been called for all of the
+> > _PRW (wakeup) GPEs in it.
+> > 
+> > The platform firmware on some systems, however, expects GPEs to be
+> > enabled before the enumeration of devices which is when
+> > acpi_setup_gpe_for_wake() is called and that goes against the above
+> > assumption.
+> > 
+> > For this reason, introduce a new flag to be set by
+> > acpi_ev_initialize_gpe_block() when automatically enabling a GPE
+> > to indicate to acpi_setup_gpe_for_wake() that it needs to drop the
+> > reference to the GPE coming from acpi_ev_initialize_gpe_block()
+> > and modify acpi_setup_gpe_for_wake() accordingly.  These changes
+> > allow acpi_setup_gpe_for_wake() and acpi_ev_initialize_gpe_block()
+> > to be invoked in any order.
+> > 
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/acpi/acpica/evgpeblk.c |    2 ++
+> >  drivers/acpi/acpica/evxfgpe.c  |    8 ++++++++
+> >  include/acpi/actypes.h         |    3 ++-
+> >  3 files changed, 12 insertions(+), 1 deletion(-)
+> > 
+> > Index: linux-pm/drivers/acpi/acpica/evgpeblk.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/acpi/acpica/evgpeblk.c
+> > +++ linux-pm/drivers/acpi/acpica/evgpeblk.c
+> > @@ -496,6 +496,8 @@ acpi_ev_initialize_gpe_block(struct acpi
+> >  				continue;
+> >  			}
+> > 
+> > +			gpe_event_info->flags |= ACPI_GPE_AUTO_ENABLED;
+> > +
+> >  			if (event_status & ACPI_EVENT_FLAG_STATUS_SET) {
+> >  				ACPI_INFO(("GPE 0x%02X active on init",
+> >  					   gpe_number));
+> > Index: linux-pm/include/acpi/actypes.h
+> > ===================================================================
+> > --- linux-pm.orig/include/acpi/actypes.h
+> > +++ linux-pm/include/acpi/actypes.h
+> > @@ -783,7 +783,7 @@ typedef u32 acpi_event_status;
+> >   *   |  | | |  +-- Type of dispatch:to method, handler, notify, or none
+> >   *   |  | | +----- Interrupt type: edge or level triggered
+> >   *   |  | +------- Is a Wake GPE
+> > - *   |  +--------- Is GPE masked by the software GPE masking mechanism
+> > + *   |  +--------- Has been enabled automatically at init time
+> >   *   +------------ <Reserved>
+> >   */
+> >  #define ACPI_GPE_DISPATCH_NONE          (u8) 0x00
+> > @@ -799,6 +799,7 @@ typedef u32 acpi_event_status;
+> >  #define ACPI_GPE_XRUPT_TYPE_MASK        (u8) 0x08
+> > 
+> >  #define ACPI_GPE_CAN_WAKE               (u8) 0x10
+> > +#define ACPI_GPE_AUTO_ENABLED           (u8) 0x20
+> > 
+> >  /*
+> >   * Flags for GPE and Lock interfaces
+> > Index: linux-pm/drivers/acpi/acpica/evxfgpe.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/acpi/acpica/evxfgpe.c
+> > +++ linux-pm/drivers/acpi/acpica/evxfgpe.c
+> > @@ -435,6 +435,14 @@ acpi_setup_gpe_for_wake(acpi_handle wake
+> >  		 */
+> >  		gpe_event_info->flags =
+> >  		    (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
+> > +	} else if (gpe_event_info->flags & ACPI_GPE_AUTO_ENABLED) {
+> > +		/*
+> > +		 * A reference to this GPE has been added during the GPE block
+> > +		 * initialization, so drop it now to prevent the GPE from being
+> > +		 * permanently enabled and clear its ACPI_GPE_AUTO_ENABLED flag.
+> > +		 */
+> > +		(void)acpi_ev_remove_gpe_reference(gpe_event_info);
+> > +		gpe_event_info->flags &= ~ACPI_GPE_AUTO_ENABLED;
+> 
+> The problem is if the GPE is shared, how can we know decrement reference
+> once can sufficiently convert it into wakeup dispatcher owned GPE?
 
-Thanks.
+Even if it is shared, the current code will not enable it if it sees
+ACPI_GPE_CAN_WAKE set.
 
-> I think that this driver is required for ARM-based server system.
-> But, as you wrote above, UEFI should support low-level code for this
-> DesignWare
-> Controller if we want to use this DWC-ECAM driver. So, can we get the UEFI
-> code
-> for this controller?
->
-> If not, can you share your plan about that?
->
+We can change that logic, but that should be a separate patch IMO and
+this is not related to the problem at hand.
 
-Yes, I will share the code via the edk2-platforms tree as soon as we
-are ready to publish support for this particular platform.
+Thanks,
+Rafael
