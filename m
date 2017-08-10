@@ -1,65 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        alex.williamson@redhat.com
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.141]:44692 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751456AbdHJIkW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 04:40:22 -0400
+Message-ID: <598C1BDF.6010203@rock-chips.com>
+Date: Thu, 10 Aug 2017 16:39:59 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
+MIME-Version: 1.0
+To: Shawn Lin <shawn.lin@rock-chips.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V12 1/5] PCI: Don't ignore valid response before CRS timeout
-Date: Wed, 23 Aug 2017 00:56:07 -0400
-Message-Id: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+        Marc Zyngier <marc.zyngier@arm.com>,
+        Thomas Gleixner <tglx@linutronix.de>
+CC: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Douglas Anderson <dianders@chromium.org>,
+        Brian Norris <briannorris@chromium.org>
+Subject: Re: [RFC PATCH] PCI: rockchip: fix system hang up if activate CONFIG_DEBUG_SHIRQ
+References: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Hi shawn,
 
-While waiting for a device to become ready (i.e., to return a non-CRS
-completion to a read of its Vendor ID), if we got a valid response to the
-very last read before timing out, we printed a warning and gave up on the
-device even though it was actually ready.
+On 08/10/2017 04:21 PM, Shawn Lin wrote:
+> With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
+> would still access the irq handler registed as a shard irq.
+> Per the comment within the function of __free_irq, it says
+> "It's a shared IRQ -- the driver ought to be prepared for
+> an IRQ event to happen even now it's being freed". However
+> when failing to probe the driver, it may disable the clock
+> for accessing the register and the following check for shared
+> irq state would call the irq handler which accesses the register
+> w/o the clk enabled. That will hang the system forever.
 
-For a typical 60s timeout, we wait about 65s (it's not exact because of the
-exponential backoff), but we treated devices that became ready between 33s
-and 65s as though they failed.
+i think this extra irq call is to make sure it's safe to get a shared 
+irq when we are freeing it, and we would not get this irq after freed it.
 
-Move the Device ID read later so we check whether the device is ready
-immediately, before checking for a timeout.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-[okaya: reorder reads so that we check device presence after sleep]
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/probe.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310d..2849e0e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1847,17 +1847,18 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 		if (!crs_timeout)
- 			return false;
- 
--		msleep(delay);
--		delay *= 2;
--		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
--			return false;
--		/* Card hasn't responded in 60 seconds?  Must be stuck. */
- 		if (delay > crs_timeout) {
- 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
- 			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
- 			       PCI_FUNC(devfn));
- 			return false;
- 		}
-+
-+		msleep(delay);
-+		delay *= 2;
-+
-+		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-+			return false;
- 	}
- 
- 	return true;
--- 
-1.9.1
+so maybe just call devm_free_irq before disable clks(and other required 
+resources for the irq handler)? and also do it in the rockchip_pcie_remove.
