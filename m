@@ -1,89 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34165 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751198AbdHEGi0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 02:38:26 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 00/10] PCI: pci resource allocation test module
-Date: Fri,  4 Aug 2017 23:37:51 -0700
-Message-Id: <20170805063801.15880-1-yinghai@kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60460 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753126AbdHJQyg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 10 Aug 2017 12:54:36 -0400
+Subject: [PATCH] PCI: Fix and amend express capability sizes
+From: Alex Williamson <alex.williamson@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, eric.auger@redhat.com,
+        linux-kernel@vger.kernel.org
+Date: Thu, 10 Aug 2017 10:54:31 -0600
+Message-ID: <20170810165403.2968.49940.stgit@gimli.home>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Read from data file and mask file, to build simulated data structure, and
-have pci_ops to use them.
+PCI_CAP_EXP_ENDPOINT_SIZEOF_V1 defines the size of the PCIe express
+capability structure for v1 devices with link, but we also have a need
+in the vfio code for sizing the capability for devices without link,
+such as root complex endpoints.  Create a separate define for this
+ending the structure before the link fields.
 
-Extract calling for pci_create_root_bus, scan_child_bus, resource survey
-and resource assign ... to see if those functions work as expected with
-simulated data.
+Additionally, this reveals that PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 is
+currently incorrect, ending the capability length before the v2 link
+fields.  Rename this to specify an RC endpoint (no link) capability
+length and move PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 to include the link
+fields as we have for the v1 version.
 
-mask is with rw bits on pci registers, so we can make pci BAR sizing working.
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+---
+ include/uapi/linux/pci_regs.h |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-It also support bus number assign-all.
-
-Only tested on x86 64bit arch.
-
-  # insmod pci_test.ko data_file=pci_test_data.txt mask_file=pci_test_mask.txt
-  # lspci -tv
-  # cat /proc/ioports_test
-  # cat /proc/iomem_test
-  # rmmod pci_test
-
-also in git://git.kernel.org/pub/scm/linux/kernel/git/yinghai/linux-yinghai.git for_pci_v4.14_pci_next
-
-Thanks
-
-Yinghai
-
-Yinghai Lu (10):
-  PCI: avoid arch_remove_reservations() for PCI_TEST
-  PCI: introduce ioport_res/iomem_res for PCI_TEST
-  PCI: export symbol for PCI_TEST module
-  PCI: extend pci device match_driver state
-  PCI: Add PCI_TEST module for resource allocation
-  PCI: PCI_TEST simple data
-  PCI: PCI_TEST data from x5-8
-  PCI: PCI_TEST data from x5-8 with zeroed bus number
-  PCI: PCI_TEST data from x2-8
-  PCI: PCI_TEST data from x2-8 with zeroed bus number
-
- arch/x86/kernel/resource.c             |    15 +-
- arch/x86/pci/i386.c                    |     1 +
- drivers/iommu/amd_iommu_init.c         |     2 +-
- drivers/pci/Kconfig                    |     6 +
- drivers/pci/Makefile                   |     2 +
- drivers/pci/bus.c                      |     3 +-
- drivers/pci/pci-driver.c               |     2 +-
- drivers/pci/pci_test.c                 |  1281 ++
- drivers/pci/pci_test_data.txt          |    24 +
- drivers/pci/pci_test_data_x2-8.txt     | 22818 +++++++++++++++++++++++++++++++
- drivers/pci/pci_test_data_x2-8_bus.txt | 22818 +++++++++++++++++++++++++++++++
- drivers/pci/pci_test_data_x5-8.txt     |  5656 ++++++++
- drivers/pci/pci_test_data_x5-8_bus.txt |  5656 ++++++++
- drivers/pci/pci_test_mask.txt          |     5 +
- drivers/pci/pci_test_mask_x2-8.txt     |   319 +
- drivers/pci/pci_test_mask_x5-8.txt     |   176 +
- drivers/pci/probe.c                    |     4 +-
- drivers/pci/quirks.c                   |     2 +-
- drivers/pci/setup-bus.c                |     3 +-
- drivers/pci/setup-res.c                |     4 +-
- include/linux/ioport.h                 |     3 +-
- include/linux/pci.h                    |    15 +-
- kernel/resource.c                      |     7 +-
- 23 files changed, 58808 insertions(+), 14 deletions(-)
- create mode 100644 drivers/pci/pci_test.c
- create mode 100644 drivers/pci/pci_test_data.txt
- create mode 100644 drivers/pci/pci_test_data_x2-8.txt
- create mode 100644 drivers/pci/pci_test_data_x2-8_bus.txt
- create mode 100644 drivers/pci/pci_test_data_x5-8.txt
- create mode 100644 drivers/pci/pci_test_data_x5-8_bus.txt
- create mode 100644 drivers/pci/pci_test_mask.txt
- create mode 100644 drivers/pci/pci_test_mask_x2-8.txt
- create mode 100644 drivers/pci/pci_test_mask_x5-8.txt
-
--- 
-2.9.4
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index c22d3ebaca20..7439821214d1 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -513,6 +513,7 @@
+ #define  PCI_EXP_DEVSTA_URD	0x0008	/* Unsupported Request Detected */
+ #define  PCI_EXP_DEVSTA_AUXPD	0x0010	/* AUX Power Detected */
+ #define  PCI_EXP_DEVSTA_TRPND	0x0020	/* Transactions Pending */
++#define PCI_CAP_EXP_RC_ENDPOINT_SIZEOF_V1	12	/* v1 endpoints without link end here */
+ #define PCI_EXP_LNKCAP		12	/* Link Capabilities */
+ #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
+ #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
+@@ -556,7 +557,7 @@
+ #define  PCI_EXP_LNKSTA_DLLLA	0x2000	/* Data Link Layer Link Active */
+ #define  PCI_EXP_LNKSTA_LBMS	0x4000	/* Link Bandwidth Management Status */
+ #define  PCI_EXP_LNKSTA_LABS	0x8000	/* Link Autonomous Bandwidth Status */
+-#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V1	20	/* v1 endpoints end here */
++#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V1	20	/* v1 endpoints with link end here */
+ #define PCI_EXP_SLTCAP		20	/* Slot Capabilities */
+ #define  PCI_EXP_SLTCAP_ABP	0x00000001 /* Attention Button Present */
+ #define  PCI_EXP_SLTCAP_PCP	0x00000002 /* Power Controller Present */
+@@ -639,7 +640,7 @@
+ #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
+ #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
+ #define PCI_EXP_DEVSTA2		42	/* Device Status 2 */
+-#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
++#define PCI_CAP_EXP_RC ENDPOINT_SIZEOF_V2	44	/* v2 endpoints without link end here */
+ #define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
+ #define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
+ #define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5.0GT/s */
+@@ -647,6 +648,7 @@
+ #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
+ #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
+ #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
++#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	52	/* v2 endpoints with link end here */
+ #define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
+ #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
+ #define PCI_EXP_SLTSTA2		58	/* Slot Status 2 */
