@@ -1,76 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Aug 2017 13:44:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Meelis Roos <mroos@linux.ee>
-Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
-        qla2xxx-upstream@qlogic.com,
-        Linux Kernel list <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-Message-ID: <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com>
-References: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee>
+Return-Path: <SRS0=sgHu=7N=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=sgHu=7N=intel.com=keith.busch@kernel.org>
+Date: Fri, 11 Aug 2017 15:32:50 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Scott Bauer <scott.bauer@intel.com>, linux-pci@vger.kernel.org,
+	jonathan.derrick@intel.com, david.fugate@intel.com,
+	bhelgaas@google.com
+Subject: Re: [RESEND] PCI: vmd: Free up IRQs on suspend path
+Message-ID: <20170811193250.GD7233@localhost.localdomain>
+References: <20170811180949.26923-1-scott.bauer@intel.com>
+ <20170811184924.GE17039@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170811184924.GE17039@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Christoph]
+On Fri, Aug 11, 2017 at 01:49:24PM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 11, 2017 at 12:09:49PM -0600, Scott Bauer wrote:
+> > This patch frees up the IRQs we request on the suspend path,
+> > and reallocates them on the resume path.
+> > 
+> > Fixes:
+> > [  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
+> > [  559.966824] Error taking CPU111 down: -34
+> > [  559.966825] Non-boot CPUs are not disabled
+> > [  559.966826] Enabling non-boot CPUs ...
+> 
+> From the "RESEND", I assume this is identical to the original posting.
+> 
+> I disposed of the original as "changes requested" because of Jon's
+> comments.  Keith subsequently chimed in saying he thought it was OK
+> as-is.  Keith, can I convert that to a formal ack from you?
 
-On Tue, Aug 15, 2017 at 05:54:27PM +0300, Meelis Roos wrote:
-> I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
-> t5120 server: can't allocate MSI-X affinity masks.
-> 
-> [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-> [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-> [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
-> [   30.816882] scsi host1: qla2xxx
-> [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
-> [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-> [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
-> [   31.367083] scsi host1: qla2xxx
-> [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
-> 
-> I do not know if the driver works since nothing is attached to the FC 
-> HBA at the moment, but from the error messages it looks like the driver 
-> fails to load.
-> 
-> I booted 4.12 and 4.11 - the red error is not there but the failure 
-> seems to be the same error -22:
+Yes, I'm okay with this patch.
 
--22 is -EINVAL, so not very specific.  Many failures probably use this
-code.
+Acked-by: Keith Busch <keith.busch@intel.com>
 
-There were several IRQ affinity changes between v4.12 and v4.13; it'll
-probably be obvious to Christoph.
-
-> [2478900.385223] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 9.00.00.00-k.
-> [2478900.385610] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
-> [2478900.930517] scsi host1: qla2xxx
-> [2478900.990939] qla2xxx: probe of 0000:10:00.0 failed with error -22
-> [2478900.991222] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
-> [2478901.510715] scsi host1: qla2xxx
-> [2478901.581106] qla2xxx: probe of 0000:10:00.1 failed with error -22
-> 
-> Will try older kernels too if it is useful for bisection.
-> 
-> On an older sparc64 (t1-200) with 4.13.0-rc4, qla2xxx loads fine (nothing is attached there either):
-> 
-> [   30.590064] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
-> [   30.699053] PCI: Enabling device: (0000:02:05.0), cmd 3
-> [   30.699122] qla2xxx [0000:02:05.0]-001d: : Found an ISP2200 irq 12 iobase 0x000001ff0000a000.
-> [   52.463403] scsi host2: qla2xxx
-> [   52.545973] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
-> [   52.627163] qla2xxx [0000:02:05.0]-00fb:2: QLogic QLA22xx - .
-> [   52.705428] qla2xxx [0000:02:05.0]-00fc:2: ISP2200: PCI (33 MHz) @ 0000:02:05.0 hdma- host#=2 fw=2.02.08 TP.
-> [   53.503221] qla2xxx [0000:02:05.0]-480f:2: Loop resync scheduled.
-> [   73.796964] qla2xxx [0000:02:05.0]-8038:2: Cable is unplugged...
-> [   73.876036] qla2xxx [0000:02:05.0]-883a:2: fw_state=4 (ffff, ffff, ffff, ffff ffff) curr time=ffffa61d.
-> [   73.999845] qla2xxx [0000:02:05.0]-286c:2: qla2x00_loop_resync *** FAILED ***.
-> [   74.094861] qla2xxx [0000:02:05.0]-4810:2: Loop resync end.
-> [   74.168188] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
-> 
-> 
-> -- 
-> Meelis Roos (mroos@linux.ee)
+ 
+> > Signed-off-by: Scott Bauer <scott.bauer@intel.com>
+> > ---
+> >  drivers/pci/host/vmd.c | 17 +++++++++++++++++
+> >  1 file changed, 17 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> > index 7e967a8784b2..ac643a3d0bf3 100644
+> > --- a/drivers/pci/host/vmd.c
+> > +++ b/drivers/pci/host/vmd.c
+> > @@ -763,15 +763,32 @@ static void vmd_remove(struct pci_dev *dev)
+> >  static int vmd_suspend(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> > +	int i;
+> > +
+> > +	for (i = 0; i < vmd->msix_count; i++)
+> > +                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
+> >  
+> >  	pci_save_state(pdev);
+> > +	pci_disable_device(pdev);
+> >  	return 0;
+> >  }
+> >  
+> >  static int vmd_resume(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> > +	int err, i;
+> > +
+> > +	for (i = 0; i < vmd->msix_count; i++) {
+> > +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+> > +				       vmd_irq, IRQF_NO_THREAD,
+> > +				       "vmd", &vmd->irqs[i]);
+> > +		if (err)
+> > +			return err;
+> > +	}
+> >  
+> > +	pcim_enable_device(pdev);
+> >  	pci_restore_state(pdev);
+> >  	return 0;
+> >  }
+> > -- 
+> > 2.11.0
+> > 
