@@ -1,49 +1,132 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50662 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751107AbdHQQeQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Aug 2017 12:34:16 -0400
-Date: Thu, 17 Aug 2017 11:34:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
-        gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
-        linuxarm@huawei.com
-Subject: Re: [PATCH V3 1/2] PCI/DPC: Add local struct device
-Message-ID: <20170817163414.GG28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <1502970505-89777-1-git-send-email-liudongdong3@huawei.com>
- <1502970505-89777-2-git-send-email-liudongdong3@huawei.com>
- <20170817153221.GM7233@localhost.localdomain>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: RE: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs
+ earlier
+Date: Fri, 11 Aug 2017 06:13:07 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF0A0C5@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+ <51836747.M49Hy56X72@aspire.rjw.lan>
+ <1AE640813FDE7649BE1B193DEA596E886CF06700@SHSMSX101.ccr.corp.intel.com>
+ <3742420.ImyUv4XNlU@aspire.rjw.lan>
+In-Reply-To: <3742420.ImyUv4XNlU@aspire.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170817153221.GM7233@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 17, 2017 at 11:32:21AM -0400, Keith Busch wrote:
-> On Thu, Aug 17, 2017 at 07:48:24PM +0800, Dongdong Liu wrote:
-> > Use a local "struct device *dev" for brevity and consistency in DPC driver.
-> > No functional change intended.
-> 
-> I think there is a functional change here:
-> 
-> > @@ -119,10 +120,11 @@ static int dpc_probe(struct pcie_device *dev)
-> >  {
-> >  	struct dpc_dev *dpc;
-> >  	struct pci_dev *pdev = dev->port;
-> > +	struct device *device = &pdev->dev;
-> >  	int status;
-> >  	u16 ctl, cap;
-> >  
-> > -	dpc = devm_kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
-> > +	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
-> >  	if (!dpc)
-> >  		return -ENOMEM;
-> 
-> We were using the pcie_device's device for the devres API, but now it's
-> the pci_dev's. That will change the lifetime of memory allocations. I'm
-> not sure that it matters at th emoment, but it's certainly different.
+Hi,
 
-Yep.  I'll drop this rev.  When you repost it, please make the
-cosmetic change last in the series so the important thing is easier to
-backport.
+> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> Subject: Re: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
+> 
+> On Thursday, August 10, 2017 3:52:05 AM CEST Zheng, Lv wrote:
+> > Hi, Rafael
+> >
+> > For this patch, I have a concern.
+> >
+> > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > Subject: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
+> > >
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > >
+> > > Runtime GPEs have corresponding _Lxx/_Exx methods and are enabled
+> > > automatically during the initialization of the ACPI subsystem through
+> > > acpi_update_all_gpes() with the assumption that acpi_setup_gpe_for_wake()
+> > > will be called in advance for all of the GPEs pointed to by _PRW
+> > > objects in the namespace that may be affected by acpi_update_all_gpes().
+> > > That is, acpi_ev_initialize_gpe_block() can only be called for a GPE
+> > > block after acpi_setup_gpe_for_wake() has been called for all of the
+> > > _PRW (wakeup) GPEs in it.
+> > >
+> > > The platform firmware on some systems, however, expects GPEs to be
+> > > enabled before the enumeration of devices which is when
+> > > acpi_setup_gpe_for_wake() is called and that goes against the above
+> > > assumption.
+> > >
+> > > For this reason, introduce a new flag to be set by
+> > > acpi_ev_initialize_gpe_block() when automatically enabling a GPE
+> > > to indicate to acpi_setup_gpe_for_wake() that it needs to drop the
+> > > reference to the GPE coming from acpi_ev_initialize_gpe_block()
+> > > and modify acpi_setup_gpe_for_wake() accordingly.  These changes
+> > > allow acpi_setup_gpe_for_wake() and acpi_ev_initialize_gpe_block()
+> > > to be invoked in any order.
+> > >
+> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > ---
+> > >  drivers/acpi/acpica/evgpeblk.c |    2 ++
+> > >  drivers/acpi/acpica/evxfgpe.c  |    8 ++++++++
+> > >  include/acpi/actypes.h         |    3 ++-
+> > >  3 files changed, 12 insertions(+), 1 deletion(-)
+> > >
+> > > Index: linux-pm/drivers/acpi/acpica/evgpeblk.c
+> > > ===================================================================
+> > > --- linux-pm.orig/drivers/acpi/acpica/evgpeblk.c
+> > > +++ linux-pm/drivers/acpi/acpica/evgpeblk.c
+> > > @@ -496,6 +496,8 @@ acpi_ev_initialize_gpe_block(struct acpi
+> > >  				continue;
+> > >  			}
+> > >
+> > > +			gpe_event_info->flags |= ACPI_GPE_AUTO_ENABLED;
+> > > +
+> > >  			if (event_status & ACPI_EVENT_FLAG_STATUS_SET) {
+> > >  				ACPI_INFO(("GPE 0x%02X active on init",
+> > >  					   gpe_number));
+> > > Index: linux-pm/include/acpi/actypes.h
+> > > ===================================================================
+> > > --- linux-pm.orig/include/acpi/actypes.h
+> > > +++ linux-pm/include/acpi/actypes.h
+> > > @@ -783,7 +783,7 @@ typedef u32 acpi_event_status;
+> > >   *   |  | | |  +-- Type of dispatch:to method, handler, notify, or none
+> > >   *   |  | | +----- Interrupt type: edge or level triggered
+> > >   *   |  | +------- Is a Wake GPE
+> > > - *   |  +--------- Is GPE masked by the software GPE masking mechanism
+> > > + *   |  +--------- Has been enabled automatically at init time
+> > >   *   +------------ <Reserved>
+> > >   */
+> > >  #define ACPI_GPE_DISPATCH_NONE          (u8) 0x00
+> > > @@ -799,6 +799,7 @@ typedef u32 acpi_event_status;
+> > >  #define ACPI_GPE_XRUPT_TYPE_MASK        (u8) 0x08
+> > >
+> > >  #define ACPI_GPE_CAN_WAKE               (u8) 0x10
+> > > +#define ACPI_GPE_AUTO_ENABLED           (u8) 0x20
+> > >
+> > >  /*
+> > >   * Flags for GPE and Lock interfaces
+> > > Index: linux-pm/drivers/acpi/acpica/evxfgpe.c
+> > > ===================================================================
+> > > --- linux-pm.orig/drivers/acpi/acpica/evxfgpe.c
+> > > +++ linux-pm/drivers/acpi/acpica/evxfgpe.c
+> > > @@ -435,6 +435,14 @@ acpi_setup_gpe_for_wake(acpi_handle wake
+> > >  		 */
+> > >  		gpe_event_info->flags =
+> > >  		    (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
+> > > +	} else if (gpe_event_info->flags & ACPI_GPE_AUTO_ENABLED) {
+> > > +		/*
+> > > +		 * A reference to this GPE has been added during the GPE block
+> > > +		 * initialization, so drop it now to prevent the GPE from being
+> > > +		 * permanently enabled and clear its ACPI_GPE_AUTO_ENABLED flag.
+> > > +		 */
+> > > +		(void)acpi_ev_remove_gpe_reference(gpe_event_info);
+> > > +		gpe_event_info->flags &= ~ACPI_GPE_AUTO_ENABLED;
+> >
+> > The problem is if the GPE is shared, how can we know decrement reference
+> > once can sufficiently convert it into wakeup dispatcher owned GPE?
+> 
+> Even if it is shared, the current code will not enable it if it sees
+> ACPI_GPE_CAN_WAKE set.
+> 
+> We can change that logic, but that should be a separate patch IMO and
+> this is not related to the problem at hand.
+
+OK, I see.
+We can enhance that on top of these fixes.
+
+Thanks,
+Lv
