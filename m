@@ -1,158 +1,73 @@
-Return-Path: <SRS0=GmMG=7X=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=GmMG=7X=broadcom.com=oza.oza@kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	<helgaas@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Oza Pawandeep <oza.oza@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v7 2/2] PCI: iproc: add device shutdown for PCI RC
-Date: Mon, 21 Aug 2017 21:28:44 +0530
-Message-Id: <1503331124-25029-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
-References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:62376 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751818AbdHKG3r (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Aug 2017 02:29:47 -0400
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        valmiki <valmikibow@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+CC: "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lan, Tianyu" <tianyu.lan@intel.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
+Subject: RE: Support SVM without PASID
+Date: Fri, 11 Aug 2017 06:29:43 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D6ED70@SHSMSX101.ccr.corp.intel.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+ <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D190D57191@SHSMSX101.ccr.corp.intel.com>
+ <b973c557-1b4a-18d2-a05e-28680a49daf9@arm.com>
+In-Reply-To: <b973c557-1b4a-18d2-a05e-28680a49daf9@arm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PERST must be asserted around ~500ms before the reboot is applied.
-
-During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
-LCPLL clock and PERST both goes off simultaneously.
-This will cause certain Endpoints Intel NVMe not get detected, upon
-next boot sequence.
-
-This is specifically happening with Intel P3700 400GB series.
-Endpoint is expecting the clock for some amount of time after PERST is
-asserted, which is not happening in Stingray (iproc based SOC).
-This causes NVMe to behave in undefined way.
-
-On the contrary, Intel x86 boards will have ref clock running, so we
-do not see this behavior there.
-
-Besides, PCI spec does not stipulate about such timings.
-In-fact it does not tell us, whether PCIe device should consider
-refclk to be available or not to be.
-
-It is completely up to vendor to design their EP the way they want
-with respect to ref clock availability.
-
-500ms is just based on the observation and taken as safe margin.
-This patch adds platform shutdown where it should be
-called in device_shutdown while reboot command is issued.
-So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-followed by RC shutdown, which issues safe PERST assertion.
-
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index 2253119..a5073a9 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -134,6 +134,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	return iproc_pcie_remove(pcie);
- }
- 
-+static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-+{
-+	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	iproc_pcie_shutdown(pcie);
-+}
-+
- static struct platform_driver iproc_pcie_pltfm_driver = {
- 	.driver = {
- 		.name = "iproc-pcie",
-@@ -141,6 +148,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	},
- 	.probe = iproc_pcie_pltfm_probe,
- 	.remove = iproc_pcie_pltfm_remove,
-+	.shutdown = iproc_pcie_pltfm_shutdown,
- };
- module_platform_driver(iproc_pcie_pltfm_driver);
- 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index a3edae4..7c1b809 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -659,7 +659,7 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	.write = iproc_pcie_config_write32,
- };
- 
--static void iproc_pcie_reset(struct iproc_pcie *pcie)
-+static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
- {
- 	u32 val;
- 
-@@ -671,19 +671,26 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
- 	if (pcie->ep_is_internal)
- 		return;
- 
--	/*
--	 * Select perst_b signal as reset source. Put the device into reset,
--	 * and then bring it out of reset
--	 */
--	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
--	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
--		~RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	udelay(250);
--
--	val |= RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	msleep(100);
-+	if (assert) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-+			~RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(250);
-+	} else {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val |= RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		msleep(100);
-+	}
-+}
-+
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-+{
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	msleep(500);
-+
-+	return 0;
- }
- 
- static int iproc_pcie_check_link(struct iproc_pcie *pcie)
-@@ -1365,7 +1372,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		goto err_exit_phy;
- 	}
- 
--	iproc_pcie_reset(pcie);
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	iproc_pcie_perst_ctrl(pcie, false);
- 
- 	if (pcie->need_ob_cfg) {
- 		ret = iproc_pcie_map_ranges(pcie, res);
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 0bbe2ea..a6b55ce 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -110,6 +110,7 @@ struct iproc_pcie {
- 
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie);
- 
- #ifdef CONFIG_PCIE_IPROC_MSI
- int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
--- 
-1.9.1
+PiBGcm9tOiBKZWFuLVBoaWxpcHBlIEJydWNrZXIgW21haWx0bzpqZWFuLXBoaWxpcHBlLmJydWNr
+ZXJAYXJtLmNvbV0NCj4gU2VudDogRnJpZGF5LCBBdWd1c3QgNCwgMjAxNyA1OjQzIFBNDQo+IA0K
+PiBIaSBLZXZpbiwNCj4gDQo+IE9uIDA0LzA4LzE3IDAyOjQ5LCBUaWFuLCBLZXZpbiB3cm90ZToN
+Cj4gPj4gRnJvbTogSmVhbi1QaGlsaXBwZSBCcnVja2VyDQo+ID4+IFNlbnQ6IFR1ZXNkYXksIEF1
+Z3VzdCAxLCAyMDE3IDQ6MjYgUE0NCj4gPj4NCj4gPj4gSXQgZGVwZW5kcyB3aGF0IHR5cGUgeW91
+IHVzZSB3aGVuIHJlZ2lzdGVyaW5nIHRoZSBJT01NVSB3aXRoDQo+ID4+IFZGSU9fU0VUX0lPTU1V
+Og0KPiA+Pg0KPiA+PiAqIElmIHRoZSB0eXBlIGlzIFZGSU9fVFlQRTF2Ml9JT01NVSwgdGhlbg0K
+PiA+PiBWRklPX0lPTU1VX01BUC9VTk1BUF9ETUENCj4gPj4gICBhZmZlY3RzIHRoZSBzdGFnZS0x
+IG5vbi1QQVNJRCBjb250ZXh0IChhbHJlYWR5IHRoZSBjYXNlIGluIG1haW5saW5lKS4NCj4gPj4g
+ICBJbiBhZGRpdGlvbiwgd2l0aCBteSBwYXRjaCB0aGUgQklORCBpb2N0bCB3aWxsIGFmZmVjdCBz
+dGFnZS0xIFBBU0lEDQo+ID4+ICAgY29udGV4dHMsIGFuZCBiaW5kIHByb2Nlc3MgcGFnZSBkaXJl
+Y3RvcmllcyB0byB0aGUgZGV2aWNlIChob3N0IFNWTSkuDQo+ID4+DQo+ID4+ICogSWYgdGhlIHR5
+cGUgaXMgVkZJT19UWVBFMV9ORVNUSU5HX0lPTU1VLCB0aGVuDQo+ID4+IFZGSU9fSU9NTVVfTUFQ
+L1VOTUFQX0RNQQ0KPiA+PiAgIHdpbGwgYWZmZWN0IHN0YWdlLTIgbWFwcGluZ3MgKGFscmVhZHkg
+aW4gbWFpbmxpbmUpLg0KPiA+PiAgIFdpdGggbXkgU01NVSBwYXRjaCBzZXJpZXMsIHRoZSBCSU5E
+IGlvY3RsIGlzIG5vdCBzdXBwb3J0ZWQgaW4gdGhpcyBtb2RlLg0KPiA+PiAgIEJ1dCBpbiB0aGUg
+ZnV0dXJlLCBCSU5EIHdvdWxkIGFsbG93IHRvIG1hbmFnZSBzdGFnZS0xIGFzIHdlbGw6DQo+ID4+
+ICAgLSBiaW5kIGEgcHJvY2VzcyBwYWdlIGRpcmVjdG9yeSAoaG9zdCBTVk0gd2l0aCBhZGRlZCBz
+dGFnZS0yKSwgb3INCj4gPg0KPiA+IEkgdGhvdWdodCBob3N0IFNWTSB3aWxsIG9ubHkgZ28gdGhy
+b3VnaCBWRklPX1RZUEUxdjJfSU9NTVUsDQo+ID4gc2luY2UgeW91IHNhaWQgc3RhZ2UtMiBpbiBB
+Uk0gU01NVSBpcyBvbmx5IGZvciBHUEEtPkhQQSB1c2FnZQ0KPiA+IGluIHByZXZpb3VzIGV4cGxh
+bmF0aW9uLiB0aGVuIHdoYXQgZG9lcyAiaG9zdCBTVk0gd2l0aCBhZGRlZA0KPiA+IHN0YWdlLTIi
+IG1lYW4gaGVyZT8NCj4gDQo+IEFoLCB0aGF0J3MganVzdCBhIGNyYXp5IGlkZWEgSSBoYWQuIEkn
+bSBub3Qgc3VyZSBpdCBpcyB1c2VmdWwgb3Igd29ydGgNCj4gaW1wbGVtZW50aW5nLCBidXQgaXQg
+aXMgb25lIG9mIHRoZSBwb3NzaWJpbGl0eSBvZmZlcmVkIGJ5IG5lc3RlZCB0cmFuc2xhdGlvbi4N
+Cj4gDQo+IENvbnNpZGVyIHRoZSBzaXR1YXRpb24gd2hlcmUgYSB1c2Vyc3BhY2UgZHJpdmVyIChu
+byB2aXJ0dWFsaXphdGlvbikgaXMNCj4gYnVpbHQgaW4gYSBjbGllbnQtc2VydmVyIGZhc2hpb246
+IHRoZSBzZXJ2ZXIgY29udHJvbHMgYSBkZXZpY2UgYW5kIHNwYXducw0KPiBuZXcgcHJvY2Vzc2Vz
+IChjbGllbnRzKSwgZWFjaCBzaGFyaW5nIGEgY29udGV4dCB3aXRoIHRoZSBkZXZpY2UgdXNpbmcg
+aXRzDQo+IG93biBQQVNJRC4gSWYgdGhlIHNlcnZlciB3YW50cyB0byBoaWRlIHBhcnRzIG9mIHRo
+ZSBjbGllbnQgYWRkcmVzcyBzcGFjZQ0KPiBmcm9tIHRoZSBkZXZpY2UgKGUuZy4gLnRleHQpLCB0
+aGVuIGl0IGNvdWxkIGNvbnRyb2wgc3RhZ2UtMiB2aWEgTUFQL1VOTUFQDQo+IHRvIHJlc3RyaWN0
+IHRoZSBhZGRyZXNzIHNwYWNlLg0KDQpzdGFnZS0xIGlzIGxpbmtlZCB0byBDUFUgcGFnZSB0YWJs
+ZSAoVkEtPlBBKSBmb3IgU1ZNLCB3aGlsZSBwaHlzaWNhbCANCm1lbW9yeSBpcyBtYW5hZ2VkIGJ5
+IGtlcm5lbC4gSSBkaWRuJ3QgY29tZSB1cCBhIGdvb2QgcmVhc29uIHdoeSANCnNlcnZlciBhcHBs
+aWNhdGlvbiBuZWVkcyBvciBoYXMga25vd2xlZGdlIHRvIGhpZGUgc29tZSByZXNvdXJjZSANCndo
+aWNoIGlzIG5vdCBtYW5hZ2VkIGJ5IGl0c2VsZi4uLg0KDQo+IA0KPiBJdCB3b3VsZCB1c2UgZGlm
+ZmVyZW50IHNlbWFudGljcyBvZiBNQVAvVU5NQVAgdGhvdWdoLCBhcyB0aGUgaW9jdGwgd291bGQN
+Cj4gb25seSBiZSB1c2VkIHRvIGRlZmluZSAxOjEgdHJhbnNsYXRpb24gd2luZG93cywgbm90IHBp
+biBtZW1vcnkuDQo+IA0KPiBUaGFua3MsDQo+IEplYW4NCg==
