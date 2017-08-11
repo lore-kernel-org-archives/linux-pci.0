@@ -1,161 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:3519 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753064AbdHODYC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Aug 2017 23:24:02 -0400
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>,
-        <robin.murphy@arm.com>, <davem@davemloft.net>,
-        <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v11 1/5] PCI: Disable PCIe Relaxed Ordering if unsupported
-Date: Tue, 15 Aug 2017 11:23:23 +0800
-Message-ID: <1502767407-6812-2-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
-References: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: RE: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+Date: Fri, 11 Aug 2017 05:40:56 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF09085@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+ <46980112.WLPtxWZQ3y@aspire.rjw.lan>
+ <1AE640813FDE7649BE1B193DEA596E886CF066E6@SHSMSX101.ccr.corp.intel.com>
+ <5185778.X36DhrMnGV@aspire.rjw.lan>
+In-Reply-To: <5185778.X36DhrMnGV@aspire.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When bit4 is set in the PCIe Device Control register, it indicates
-whether the device is permitted to use relaxed ordering.
-On some platforms using relaxed ordering can have performance issues or
-due to erratum can cause data-corruption. In such cases devices must avoid
-using relaxed ordering.
+Hi, Rafael
 
-The patch adds a new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING to indicate that
-Relaxed Ordering (RO) attribute should not be used for Transaction Layer
-Packets (TLP) targeted towards these affected root complexes.
+> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> 
+> On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
+> > Hi, Rafael
+> >
+> > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > >
+> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > >
+> > > In some cases GPEs are already active when they are enabled by
+> > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
+> > > on the result of handling the events signaled by them, so the
+> > > events should not be discarded (which is what happens currently) and
+> > > they should be handled as soon as reasonably possible.
+> > >
+> > > For this reason, modify acpi_ev_initialize_gpe_block() to
+> > > dispatch GPEs with the status flag set in-band right after
+> > > enabling them.
+> >
+> > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
+> > right after enabling an GPE. So there are 2 conditions related:
+> > 1. GPE is enabled for the first time.
+> > 2. GPE is initialized.
+> >
+> > And we need to make sure that before acpi_update_all_gpes() is invoked,
+> > all GPE EN bits are actually disabled.
+> 
+> But we don't do it today, do we?
 
-This patch checks if there is any node in the hierarchy that indicates that
-using relaxed ordering is not safe. In such cases the patch turns off the
-relaxed ordering by clearing the capability for this device.
+We don't do that.
 
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Acked-by: Ashok Raj <ashok.raj@intel.com>
-Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-Acked-by: Casey Leedom <leedom@chelsio.com>
----
- drivers/pci/probe.c  | 43 +++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/quirks.c | 11 +++++++++++
- include/linux/pci.h  |  3 +++
- 3 files changed, 57 insertions(+)
+> 
+> And still calling _dispatch() should not be incorrect even if the GPE
+> has been enabled already at this point.  Worst case it just will
+> queue up the execution of _Lxx/_Exx which may or may not do anything
+> useful.
+> 
+> And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
+> will block on it if run concurrently and we've checked the status, so
+> we know that the GPE *should* be dispatched, so I sort of fail to see
+> the problem.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310d..779e646 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1762,6 +1762,48 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- }
- 
-+/**
-+ * pcie_relaxed_ordering_enabled - Probe for PCIe relaxed ordering enable
-+ * @dev: PCI device to query
-+ *
-+ * Returns true if the device has enabled relaxed ordering attribute.
-+ */
-+bool pcie_relaxed_ordering_enabled(struct pci_dev *dev)
-+{
-+	u16 v;
-+
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-+
-+	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-+}
-+EXPORT_SYMBOL(pcie_relaxed_ordering_enabled);
-+
-+static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-+{
-+	struct pci_dev *root;
-+
-+	/* PCI_EXP_DEVICE_RELAX_EN is RsvdP in VFs */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (!pcie_relaxed_ordering_enabled(dev))
-+		return;
-+
-+	/*
-+	 * For now, we only deal with Relaxed Ordering issues with Root
-+	 * Ports. Peer-to-Peer DMA is another can of worms.
-+	 */
-+	root = pci_find_pcie_root_port(dev);
-+	if (!root)
-+		return;
-+
-+	if (root->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
-+		pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-+					   PCI_EXP_DEVCTL_RELAX_EN);
-+		dev_info(&dev->dev, "Disable Relaxed Ordering because the Root Port didn't support it\n");
-+	}
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
- 	struct hotplug_params hpp;
-@@ -1769,6 +1811,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev);
-+	pci_configure_relaxed_ordering(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b..61b59bf 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4016,6 +4016,17 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
- 			      quirk_tw686x_class);
- 
- /*
-+ * Some devices have problems with Transaction Layer Packets with the Relaxed
-+ * Ordering Attribute set.  Such devices should mark themselves and other
-+ * Device Drivers should check before sending TLPs with RO set.
-+ */
-+static void quirk_relaxedordering_disable(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
-+	dev_info(&dev->dev, "Disable Relaxed Ordering Attributes to avoid PCIe Completion erratum\n");
-+}
-+
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4869e66..29606fb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -188,6 +188,8 @@ enum pci_dev_flags {
- 	 * the direct_complete optimization.
- 	 */
- 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-+	/* Don't use Relaxed Ordering for TLPs directed at this device */
-+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
- };
- 
- enum pci_irq_reroute_variant {
-@@ -1125,6 +1127,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
-+bool pcie_relaxed_ordering_enabled(struct pci_dev *dev);
- 
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
--- 
-1.8.3.1
+There is another problem related:
+ACPICA clears GPEs before enabling it.
+This is proven to be wrong, and we have to fix it:
+https://bugzilla.kernel.org/show_bug.cgi?id=196249
+
+without fixing this issue, in this solution, we surely need to save the
+GPE STS bit before incrementing GPE reference count, and poll it according
+to the saved STS bit. Because if we poll it after enabling, STS bit will
+be wrongly cleared.
+
+So if we can do this on top of the "GPE clear" fix, things can be done
+in a simpler way - invoke acpi_ev_gpe_detect() after fully initializing
+GPEs (as what I pasted).
+
+However I should say - merging "GPE clear" fix might be risky.
+So this patch can be in upstream prior than the simpler solution to leave
+us a stable base line.
+
+I'll send out the simpler solution along with the "GPE clear" fix.
+Maybe you can consider to ship it after merging this patch.
+
+Thanks and best regards
+Lv
