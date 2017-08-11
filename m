@@ -1,54 +1,64 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42212 "EHLO mail.kernel.org"
+Received: from mga05.intel.com ([192.55.52.43]:22370 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751161AbdHBVpk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:45:40 -0400
-Date: Wed, 2 Aug 2017 16:45:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH v1] xen/pci: Use acpi_noirq_set() helper
-Message-ID: <20170802214537.GM20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170717103907.77308-1-andriy.shevchenko@linux.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170717103907.77308-1-andriy.shevchenko@linux.intel.com>
+        id S1753256AbdHKVLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Aug 2017 17:11:22 -0400
+From: Scott Bauer <scott.bauer@intel.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
+        jonathan.derrick@intel.com, Scott Bauer <scott.bauer@intel.com>
+Subject: [PATCH] PCI: vmd: Free up IRQs on suspend path
+Date: Fri, 11 Aug 2017 14:54:32 -0600
+Message-Id: <20170811205432.29612-1-scott.bauer@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 17, 2017 at 01:39:07PM +0300, Andy Shevchenko wrote:
-> No need to keep an #ifdef since we have a helper (in x86 world).
-> Use it instead.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+This patch frees up the IRQs we request on the suspend path,
+and reallocates them on the resume path.
 
-Looks reasonable to me, and I assume some non-PCI tree will take it.
+Fixes:
+[  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
+[  559.966824] Error taking CPU111 down: -34
+[  559.966825] Non-boot CPUs are not disabled
+[  559.966826] Enabling non-boot CPUs ...
 
-> ---
->  arch/x86/pci/xen.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index c4b3646bd04c..9542a746dc50 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -409,10 +409,8 @@ int __init pci_xen_init(void)
->  	pcibios_enable_irq = xen_pcifront_enable_irq;
->  	pcibios_disable_irq = NULL;
->  
-> -#ifdef CONFIG_ACPI
->  	/* Keep ACPI out of the picture */
-> -	acpi_noirq = 1;
-> -#endif
-> +	acpi_noirq_set();
->  
->  #ifdef CONFIG_PCI_MSI
->  	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
-> -- 
-> 2.11.0
-> 
+Signed-off-by: Scott Bauer <scott.bauer@intel.com>
+---
+ drivers/pci/host/vmd.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index 7e967a8784b2..4fe1756af010 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -763,6 +763,11 @@ static void vmd_remove(struct pci_dev *dev)
+ static int vmd_suspend(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
++	struct vmd_dev *vmd = pci_get_drvdata(pdev);
++	int i;
++
++	for (i = 0; i < vmd->msix_count; i++)
++                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
+ 
+ 	pci_save_state(pdev);
+ 	return 0;
+@@ -771,6 +776,16 @@ static int vmd_suspend(struct device *dev)
+ static int vmd_resume(struct device *dev)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
++	struct vmd_dev *vmd = pci_get_drvdata(pdev);
++	int err, i;
++
++	for (i = 0; i < vmd->msix_count; i++) {
++		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
++				       vmd_irq, IRQF_NO_THREAD,
++				       "vmd", &vmd->irqs[i]);
++		if (err)
++			return err;
++	}
+ 
+ 	pci_restore_state(pdev);
+ 	return 0;
+-- 
+2.11.0
