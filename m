@@ -1,171 +1,183 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:58506 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:34192 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752408AbdHNW0J (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 18:26:09 -0400
-Date: Mon, 14 Aug 2017 17:26:06 -0500
+        id S1753295AbdHKVPA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Aug 2017 17:15:00 -0400
+Date: Fri, 11 Aug 2017 16:14:58 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        minghuan.lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: Re: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-Message-ID: <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Lorenzo@bhelgaas-glaptop.roam.corp.google.com
+Message-ID: <20170811211458.GG17039@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Stanimir, Niklas, Jesper]
+Pieralisi <lorenzo.pieralisi@arm.com>
+Bcc: 
+Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
+ it from DT
+Reply-To: 
+In-Reply-To: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
 
-On Mon, Aug 14, 2017 at 04:38:24PM -0500, Bjorn Helgaas wrote:
-> On Thu, Aug 03, 2017 at 04:23:38PM +0800, Zhiqiang Hou wrote:
-> > From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > 
-> > Make the ls1021a's host_init reuse layerscape platform's common
-> > host_init function.
-> > 
-> > Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> > ---
-> > V2:
-> >  - Removed the disable outbound windows code and the remove duplicate class code
-> >    fixup code from this patch.
-> > 
-> >  drivers/pci/dwc/pci-layerscape.c | 54 ++++++++++++++++++++--------------------
-> >  1 file changed, 27 insertions(+), 27 deletions(-)
-> > 
-> > diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-> > index 09056a6..3533a8c 100644
-> > --- a/drivers/pci/dwc/pci-layerscape.c
-> > +++ b/drivers/pci/dwc/pci-layerscape.c
-> > @@ -107,33 +107,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
-> >  	return 1;
-> >  }
-> >  
-> > -static void ls1021_pcie_host_init(struct pcie_port *pp)
-> > -{
-> > -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > -	struct ls_pcie *pcie = to_ls_pcie(pci);
-> > -	struct device *dev = pci->dev;
-> > -	u32 index[2];
-> > -
-> > -	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> > -						     "fsl,pcie-scfg");
-> > -	if (IS_ERR(pcie->scfg)) {
-> > -		dev_err(dev, "No syscfg phandle specified\n");
-> > -		pcie->scfg = NULL;
-> > -		return;
-> > -	}
-> > -
-> > -	if (of_property_read_u32_array(dev->of_node,
-> > -				       "fsl,pcie-scfg", index, 2)) {
-> > -		pcie->scfg = NULL;
-> > -		return;
-> > -	}
-> > -	pcie->index = index[1];
-> > -
-> > -	dw_pcie_setup_rc(pp);
-> > -
-> > -	ls_pcie_drop_msg_tlp(pcie);
-> > -}
-> > -
-> >  static int ls_pcie_link_up(struct dw_pcie *pci)
-> >  {
-> >  	struct ls_pcie *pcie = to_ls_pcie(pci);
-> > @@ -160,6 +133,33 @@ static void ls_pcie_host_init(struct pcie_port *pp)
-> >  	dw_pcie_dbi_ro_wr_dis(pci);
-> >  
-> >  	ls_pcie_drop_msg_tlp(pcie);
-> > +
-> > +	dw_pcie_setup_rc(pp);
-> > +}
-> > +
-> > +static void ls1021_pcie_host_init(struct pcie_port *pp)
-> > +{
-> > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > +	struct ls_pcie *pcie = to_ls_pcie(pci);
-> > +	struct device *dev = pci->dev;
-> > +	u32 index[2];
-> > +
-> > +	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> > +						     "fsl,pcie-scfg");
-> > +	if (IS_ERR(pcie->scfg)) {
-> > +		dev_err(dev, "No syscfg phandle specified\n");
-> > +		pcie->scfg = NULL;
-> > +		return;
-> > +	}
-> > +
-> > +	if (of_property_read_u32_array(dev->of_node,
-> > +				       "fsl,pcie-scfg", index, 2)) {
-> > +		pcie->scfg = NULL;
-> > +		return;
-> > +	}
-> > +	pcie->index = index[1];
-> > +
-> > +	ls_pcie_host_init(pp);
+[+cc Lorenzo]
+
+On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
+> If not getting domain number from DT, the domain number will
+> keep increasing once doing unbind/bind RC drivers. This could
+> introduce pointless tree view of lspci as shows below:
 > 
-> The changelog suggests that this is a simple refactoring that doesn't
-> fix anything.
+> -+-[0001:00]---00.0-[01]----00.0
+>   \-[0000:00]-
 > 
-> But because ls1021_pcie_host_init() now calls ls_pcie_host_init(), it
-> now calls:
+> The more test we do, the lengthier it would be. The more serious
+> issue is that if attaching two hierarchies for two different domains
+> belonging to two root bridges, so when doing unbind/bind test for one
+> of them and keep the other, then the domain number would finally
+> overflow and make the two hierarchies of devices share the some domain
+> number but actually they shouldn't. So it looks like we need to invent
+> a new indexing ID mechanism to manage domain number. This patch
+> introduces idr to achieve our purpose.
 > 
->   dw_pcie_dbi_ro_wr_en(pci);
->   ls_pcie_fix_class(pcie);
->   ls_pcie_clear_multifunction(pcie);
->   dw_pcie_dbi_ro_wr_dis(pci);
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
+obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
+Lorenzo's excellent work, the time is ripe for moving the domain
+number from arch-specific places into struct pci_host_bridge.
+
+I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
+CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
+enable some simplification of of_pci_bus_find_domain_nr() as well,
+which in turn, might make *this* patch simpler.
+
+This isn't that big a patch to begin with, so I could apply it as-is
+and we could do more domain cleanup later.  It's just that it's
+intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
+opportunity to make this story more readable if those are out of the
+way.  Any thoughts?
+
+One trivial nit below, which I've already fixed up on my local
+branch.
+
+> ---
 > 
-> when it did not call them before.
+> Changes in v5:
+> - fix Bjorn's comments for v3 as actually I didn't address his comments
+>   for v3 when posted my v4.
+>   v3: https://patchwork.kernel.org/patch/9742003/
+>   For ACPI case, we never use DT or IDA to get domain numbers and
+>   acpi_pci_bus_find_domain_nr would return the proper value we need
+>   whether _SEG exist or not. For DT or IDA, we hope bridges use one of
+>   them consistently, and this is actually what the pre-existing code
+>   did. So I remove ida_domain now since it complicated the logic of the
+>   code and we could just make use_dt_domains global instead to slightly
+>   achieve our purpose.
 > 
-> It's fine with me if you want to do that, but it should be mentioned
-> in the changelog.
+> Changes in v4:
+> - make domain_nr depends on CONFIG_PCI_DOMAINS instead of
+> CONFIG_PCI_DOMAINS_GENERIC.
+> 
+> Changes in v3:
+> - make ida_domain a system-wide property and check it in the code to
+> combine with use_dt_domains. Also update the comment there.
+> 
+> Changes in v2:
+> - add a remove wrapper
+> - rename use_dt_domains to ida_domain and set this bit
+> in pci_get_new_domain_nr and test it in the remove wrapper.
+> 
+>  drivers/pci/pci.c    | 13 ++++++++++---
+>  drivers/pci/remove.c |  2 ++
+>  include/linux/pci.h  |  7 +++++--
+>  3 files changed, 17 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index b58a6b3..9953eaf 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -11,6 +11,7 @@
+>  #include <linux/kernel.h>
+>  #include <linux/delay.h>
+>  #include <linux/dmi.h>
+> +#include <linux/idr.h>
+>  #include <linux/init.h>
+>  #include <linux/of.h>
+>  #include <linux/of_pci.h>
+> @@ -5305,17 +5306,23 @@ static void pci_no_domains(void)
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS
+> -static atomic_t __domain_nr = ATOMIC_INIT(-1);
+> +static DEFINE_IDA(__domain_nr);
+>  
+>  int pci_get_new_domain_nr(void)
+>  {
+> -	return atomic_inc_return(&__domain_nr);
+> +	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
+> +}
+> +
+> +static int use_dt_domains = -1;
+> +void pci_put_domain_nr(struct pci_bus *bus)
+> +{
+> +	if (acpi_disabled && use_dt_domains != 1)
+> +		ida_simple_remove(&__domain_nr, bus->domain_nr);
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  static int of_pci_bus_find_domain_nr(struct device *parent)
+>  {
+> -	static int use_dt_domains = -1;
+>  	int domain = -1;
+>  
+>  	if (parent)
+> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> index 73a03d3..01dd1b4 100644
+> --- a/drivers/pci/remove.c
+> +++ b/drivers/pci/remove.c
+> @@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
+>  	list_for_each_entry_safe(child, tmp,
+>  				 &bus->devices, bus_list)
+>  		pci_remove_bus_device(child);
+> +
+> +	pci_put_domain_nr(bus);
+>  	pci_remove_bus(bus);
+>  	host_bridge->bus = NULL;
+>  
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 18cc70a..d6be9596 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -523,7 +523,7 @@ struct pci_bus {
+>  	unsigned char	primary;	/* number of primary bridge */
+>  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> +#ifdef CONFIG_PCI_DOMAINS
+>  	int		domain_nr;
+>  #endif
+>  
+> @@ -1466,11 +1466,14 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+>  #ifdef CONFIG_PCI_DOMAINS
+>  extern int pci_domains_supported;
+>  int pci_get_new_domain_nr(void);
+> +void pci_put_domain_nr(struct pci_bus *bus);
+>  #else
+>  enum { pci_domains_supported = 0 };
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+> +static inline int pci_get_new_domain_nr(void)
+> +{ return -ENOSYS; }
 
-The order of this series is screwed up, which makes it hard to follow.
+This looks liks a spurious change.
 
-5192ec7b24dd ("PCI: layerscape: Add support for LS1043a and LS2080a")
-added ls_pcie_host_init(), which didn't call dw_pcie_setup_rc().  I
-think that was a bug, and you should fix that first.
-
-Then:
-
-  - Rebase on pci/host-designware because it conflicts with patches
-    I've already applied
-    (https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/log/?h=pci/host-designware)
-
-  - Make ls_pcie_host_init() call dw_pcie_setup_rc() (fixes
-    5192ec7b24dd)
-
-  - Refactor ls1021_pcie_host_init() to make it call
-    ls_pcie_host_init() (this will now be no functional change)
-
-  - Disable outbound ATUs in ls_pcie_host_init() (bugfix for all
-    layerscape devices)
-
-  - Add DBI write permission accessors and use them in layerscape.
-    This will make it obvious that PCIE_MISC_CONTROL_1_OFF is moving
-    from layerscape to designware and that we're actually using these
-    new interfaces (this will be no functional change).
-
-  - Enable write permission in dw_pcie_setup_rc() and remove class
-    code update from ls_pcie_host_init()  This will make it obvious
-    that fixing dw_pcie_setup_rc() makes ls_pcie_fix_class() obsolete.
-
-Does this dw_pcie_setup_rc() fix mean we can also get rid of the
-device class check in qcom_pcie_rd_own_conf()?
-
-I suspect it also means we can drop the write enable in
-artpec6_pcie_establish_link().
-
-> >  }
-> >  
-> >  static int ls_pcie_msi_host_init(struct pcie_port *pp,
-> > -- 
-> > 2.1.0.27.g96db324
-> > 
+> +static inline void pci_put_domain_nr(struct pci_bus *bus) { }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>  
+>  /*
+> -- 
+> 1.9.1
+> 
+> 
