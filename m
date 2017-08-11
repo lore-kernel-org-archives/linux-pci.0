@@ -1,80 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:46146 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751736AbdHCVtO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 17:49:14 -0400
-Date: Thu, 3 Aug 2017 16:49:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Roland Dreier <roland@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        netdev@vger.kernel.org, Emil Tantilov <emil.s.tantilov@intel.com>
-Subject: Re: [PATCH] PCI: Update ACS quirk for more Intel 10G NICs
-Message-ID: <20170803214911.GG20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170720214101.7449-1-roland@kernel.org>
+Return-Path: <SRS0=sI7x=7N=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=sI7x=7N=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V9 1/2] PCI: handle CRS returned by device after FLR
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+References: <1502240245-11714-1-git-send-email-okaya@codeaurora.org>
+ <20170810215937.GR16580@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <31155fef-1deb-aad7-ee9d-dc5250214e99@codeaurora.org>
+Date: Thu, 10 Aug 2017 23:06:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170720214101.7449-1-roland@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170810215937.GR16580@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 20, 2017 at 02:41:01PM -0700, Roland Dreier wrote:
-> From: Roland Dreier <roland@purestorage.com>
+On 8/10/2017 5:59 PM, Bjorn Helgaas wrote:
+> On Tue, Aug 08, 2017 at 08:57:24PM -0400, Sinan Kaya wrote:
+>> Sporadic reset issues have been observed with Intel 750 NVMe drive by
+>> writing to the reset file in sysfs in a loop. The sequence of events
+>> observed is as follows:
+>>
+>> - perform a Function Level Reset (FLR)
+>> - sleep up to 1000ms total
+>> - read ~0 from PCI_COMMAND
+>> - warn that the device didn't return from FLR
+>> - touch the device before it's ready
+>>
+>> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+>> following a FLR request to indicate that it is not ready to accept new
+>> requests. CRS is defined in PCIe r3.1, sec 2.3.1. Request Handling Rules
+>> and CRS usage in FLR context is mentioned in PCIe r3.1a, sec 6.6.2.
+>> Function-Level Reset.
 > 
-> Add one more variant of the 82599 plus the device IDs for X540 and X550
-> variants.  Intel has confirmed that none of these devices does peer-to-peer
-> between functions.  The X540 and X550 have added ACS capabilities in their
-> PCI config space, but the ACS control register is hard-wired to 0 for both
-> devices, so we still need the quirk for IOMMU grouping to allow assignment
-> of individual SR-IOV functions.
+> Don't we have a similar issue for other types of reset?  I would think
+> conventional reset, e.g., using secondary bus reset, hotplug slot
+> power, power management, etc., would have the same situation where a
+> device might return CRS status.
 > 
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
 
-I haven't seen a real conclusion to the discussion yet, so I'm waiting on
-that and hopefully an ack from Alex.  Can you please repost with that,
-since I'm dropping it from patchwork for now?
+Yes, same issue exists on secondary bus reset. V1-V3 of this series tried to
+address this but I couldn't find a solution that is not intrusive. 
 
-> ---
->  drivers/pci/quirks.c | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6967c6b4cf6b..b939db671326 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4335,12 +4335,33 @@ static const struct pci_dev_acs_enabled {
->  	{ PCI_VENDOR_ID_INTEL, 0x1507, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1514, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x151C, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1528, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1529, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x154A, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x152A, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x154D, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x154F, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1551, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x1558, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1560, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x1563, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AA, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AC, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AD, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AE, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15B0, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15AB, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C2, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C3, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C4, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C6, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C7, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15C8, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15CE, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15E4, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15E5, pci_quirk_mf_endpoint_acs },
-> +	{ PCI_VENDOR_ID_INTEL, 0x15D1, pci_quirk_mf_endpoint_acs },
->  	/* 82580 */
->  	{ PCI_VENDOR_ID_INTEL, 0x1509, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x150E, pci_quirk_mf_endpoint_acs },
-> -- 
-> 2.11.0
-> 
+I was told that hot reset is a broadcast message. Therefore, we need to handle
+CRS for every single device in the tree following a bus reset.
+
+Hotplug code is calling the vendor id read function after power on so it doesn't
+have this issue.
+
+I picked up this issue between v4..v9 due to an actual bug reported during our
+internal testing. Otherwise, this issue was in rest waiting for review feedback.
+
+CRS handling in hot reset is still open. We can move onto that issue once
+we close the FLR.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
