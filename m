@@ -1,71 +1,110 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sun, 20 Aug 2017 16:54:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
-Message-ID: <20170820215449.GZ28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170817113028.16853-1-dja@axtens.net>
- <20170817113028.16853-2-dja@axtens.net>
- <20170819154753.GQ28977@bhelgaas-glaptop.roam.corp.google.com>
- <1503256100.12059.13.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:59787 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752703AbdHKMbU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Aug 2017 08:31:20 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Zheng, Lv" <lv.zheng@intel.com>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+Date: Fri, 11 Aug 2017 14:23:00 +0200
+Message-ID: <3677056.OS19FbOdkF@aspire.rjw.lan>
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF09085@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <5185778.X36DhrMnGV@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF09085@SHSMSX101.ccr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1503256100.12059.13.camel@kernel.crashing.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: gabriele.paoloni@huawei.com, airlied@linux.ie, linux-pci@vger.kernel.org,
- will.deacon@arm.com, dri-devel@lists.freedesktop.org,
- z.liuxinliang@hisilicon.com, zourongrong@gmail.com, alex.williamson@redhat.com,
- lukas@wunner.de, catalin.marinas@arm.com, bhelgaas@google.com,
- daniel.vetter@intel.com, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org, Daniel Axtens <dja@axtens.net>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 20, 2017 at 12:08:20PM -0700, Benjamin Herrenschmidt wrote:
-> On Sat, 2017-08-19 at 10:47 -0500, Bjorn Helgaas wrote:
-> > So if ARM64 doesn't have these PCI legacy resources, does that mean an
-> > ARM64 host bridge cannot generate these legacy addresses on PCI?  That
-> > is, there's no host bridge window that maps to those PCI addresses?
-> > That seems like a curious restriction on host bridges, but I guess it
-> > would be possible.
+On Friday, August 11, 2017 7:40:56 AM CEST Zheng, Lv wrote:
+> Hi, Rafael
 > 
-> It's rather common. For example on POWER8:
-
-I'm just trying to tease out which things are required by PCI and
-which things are required by the arch.  It doesn't surprise me at all
-that some platforms (on any arch) don't provide access to legacy
-resources.  That's totally outside the PCI area.  Do Power and ARM64
-actively *prohibit* platforms from using legacy resources?  I can
-believe current platforms don't use them, but I can still conceive of
-possible systems that could.
-
-I think removing the "(e.g. ARM64)" from the original changelog would
-have avoided my questions.  That example suggests that ARM64 is
-special in some way and *cannot* use PCI legacy resources.  It's easy
-to conceive of a system of any arch that can't use them, simply
-because it chose to use a host bridge that can't generate PCI
-transactions to the VGA frame buffer or to I/O space.
-
->  - There is no IO space at all
+> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > 
+> > On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
+> > > Hi, Rafael
+> > >
+> > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > > >
+> > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > >
+> > > > In some cases GPEs are already active when they are enabled by
+> > > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
+> > > > on the result of handling the events signaled by them, so the
+> > > > events should not be discarded (which is what happens currently) and
+> > > > they should be handled as soon as reasonably possible.
+> > > >
+> > > > For this reason, modify acpi_ev_initialize_gpe_block() to
+> > > > dispatch GPEs with the status flag set in-band right after
+> > > > enabling them.
+> > >
+> > > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
+> > > right after enabling an GPE. So there are 2 conditions related:
+> > > 1. GPE is enabled for the first time.
+> > > 2. GPE is initialized.
+> > >
+> > > And we need to make sure that before acpi_update_all_gpes() is invoked,
+> > > all GPE EN bits are actually disabled.
+> > 
+> > But we don't do it today, do we?
 > 
->  - We configure the 32-bit MMIO window to be around 3..4G (to avoid
-> overlapping with DMA space below it).
+> We don't do that.
 > 
-> So we effectively have no path to the legacy areas, and that hasn't
-> been a problem so far.
+> > 
+> > And still calling _dispatch() should not be incorrect even if the GPE
+> > has been enabled already at this point.  Worst case it just will
+> > queue up the execution of _Lxx/_Exx which may or may not do anything
+> > useful.
+> > 
+> > And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
+> > will block on it if run concurrently and we've checked the status, so
+> > we know that the GPE *should* be dispatched, so I sort of fail to see
+> > the problem.
+> 
+> There is another problem related:
+> ACPICA clears GPEs before enabling it.
+> This is proven to be wrong, and we have to fix it:
+> https://bugzilla.kernel.org/show_bug.cgi?id=196249
+> 
+> without fixing this issue, in this solution, we surely need to save the
+> GPE STS bit before incrementing GPE reference count, and poll it according
+> to the saved STS bit. Because if we poll it after enabling, STS bit will
+> be wrongly cleared.
 
-I assume vga16fb.c and similar things don't work (which isn't a
-problem as long as that's what everybody expects).
+I'm not sure if I understand you correctly, but why would we poll it?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+In the $subject patch the status is checked and then
+acpi_ev_add_gpe_reference() is called to add a reference to the GPE.
+
+If this is the first reference (which will be the case in the majority
+of cases), acpi_ev_enable_gpe() will be called and that will clear the
+status.
+
+Then, acpi_ev_gpe_dispatch() is called if the status was set and that
+itself doesn't check the status.  It disables the GPE upfront (so the
+status doesn't matter from now on until the GPE is enabled again) and
+clears the status unconditionally if the GPE is edge-triggered.  This
+means that for edge-triggered GPEs the clearing of the status by
+acpi_ev_enable_gpe() doesn't matter here.
+
+For level-triggered GPEs the status is not cleared by acpi_ev_gpe_dispatch()
+itself, but _Lxx is executed (again, without checking the status) and
+finally the status is cleared by acpi_ev_finish_gpe() anyway, so we
+end up with cleared status no matter what (and that before re-enabling
+the GPE).  End even if _Lxx itself checked the status (but honestly why
+would it?), then this is a level-triggered GPE, so it will re-trigger
+anyway if not handled this time.
+
+So it looks like the fact that acpi_ev_enable_gpe() clears the status before
+enabling the GPE doesn't matter for this patch, although it may matter in
+general, but that is a different (and somewhat related) issue.
+
+Thanks,
+Rafael
