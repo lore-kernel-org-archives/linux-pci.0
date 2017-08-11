@@ -1,191 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:25681 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752172AbdHRO6k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:58:40 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Subject: [PATCH 04/18] PCI: endpoint: pci-epc-mem: Add support for configurable page size
-Date: Fri, 18 Aug 2017 20:27:56 +0530
-Message-ID: <20170818145810.17649-5-kishon@ti.com>
-In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
-References: <20170818145810.17649-1-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 11 Aug 2017 17:05:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH 0/4] Allow non-legacy cards to be vgaarb default
+Message-ID: <20170811220527.GJ17039@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170719012839.20124-1-dja@axtens.net>
+ <CAKv+Gu-SgeLXVEj_VtZHchaNmOwWO+GmfTg5CYcnOF43AJZGnA@mail.gmail.com>
+ <87pocusm2x.fsf@linkitivity.dja.id.au>
+ <CAKv+Gu-O7cyJSgDrqSNi6F_n9eBnFEgz==aqowMqhy+81YK=CQ@mail.gmail.com>
+ <87r2x6vj7t.fsf@linkitivity.dja.id.au>
+ <a61222c6-e548-1e3b-f6f7-63952b90ac13@redhat.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40B76A1A@FRAEML521-MBX.china.huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40B76A1A@FRAEML521-MBX.china.huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>, David Airlie <airlied@linux.ie>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Hans de Goede <hdegoede@redhat.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Zou Rongrong <zourongrong@gmail.com>,
+ "daniel.vetter@intel.com" <daniel.vetter@intel.com>,
+ Laszlo Ersek <lersek@redhat.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Daniel Axtens <dja@axtens.net>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci-epc-mem uses a page size equal to *PAGE_SIZE* (usually 4KB) to
-manage the address space. However certain platforms like TI's K2G
-has a restriction that this address space should be either divided
-into 1MB/2MB/4MB or 8MB sizes (Ref: 11.14.4.9.1 Outbound Address
-Translation in K2G TRM SPRUHY8F January 2016 – Revised May 2017).
-Add support to handle different page sizes here.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/endpoint/pci-epc-mem.c | 59 ++++++++++++++++++++++++++++++++------
- include/linux/pci-epc.h            |  8 +++++-
- 2 files changed, 57 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/pci/endpoint/pci-epc-mem.c b/drivers/pci/endpoint/pci-epc-mem.c
-index 3a94cc1caf22..83b7d5d3fc3e 100644
---- a/drivers/pci/endpoint/pci-epc-mem.c
-+++ b/drivers/pci/endpoint/pci-epc-mem.c
-@@ -24,21 +24,54 @@
- #include <linux/pci-epc.h>
- 
- /**
-- * pci_epc_mem_init() - initialize the pci_epc_mem structure
-+ * pci_epc_mem_get_order() - determine the allocation order of a memory size
-+ * @mem: address space of the endpoint controller
-+ * @size: the size for which to get the order
-+ *
-+ * Reimplement get_order() for mem->page_size since the generic get_order
-+ * always gets order with a constant PAGE_SIZE.
-+ */
-+static int pci_epc_mem_get_order(struct pci_epc_mem *mem, size_t size)
-+{
-+	int order;
-+	unsigned int page_shift = ilog2(mem->page_size);
-+
-+	size--;
-+	size >>= page_shift;
-+#if BITS_PER_LONG == 32
-+	order = fls(size);
-+#else
-+	order = fls64(size);
-+#endif
-+	return order;
-+}
-+
-+/**
-+ * __pci_epc_mem_init() - initialize the pci_epc_mem structure
-  * @epc: the EPC device that invoked pci_epc_mem_init
-  * @phys_base: the physical address of the base
-  * @size: the size of the address space
-+ * @page_size: size of each page
-  *
-  * Invoke to initialize the pci_epc_mem structure used by the
-  * endpoint functions to allocate mapped PCI address.
-  */
--int pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size)
-+int __pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size,
-+		       size_t page_size)
- {
- 	int ret;
- 	struct pci_epc_mem *mem;
- 	unsigned long *bitmap;
--	int pages = size >> PAGE_SHIFT;
--	int bitmap_size = BITS_TO_LONGS(pages) * sizeof(long);
-+	unsigned int page_shift;
-+	int pages;
-+	int bitmap_size;
-+
-+	if (page_size < PAGE_SIZE)
-+		page_size = PAGE_SIZE;
-+
-+	page_shift = ilog2(page_size);
-+	pages = size >> page_shift;
-+	bitmap_size = BITS_TO_LONGS(pages) * sizeof(long);
- 
- 	mem = kzalloc(sizeof(*mem), GFP_KERNEL);
- 	if (!mem) {
-@@ -54,6 +87,7 @@ int pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size)
- 
- 	mem->bitmap = bitmap;
- 	mem->phys_base = phys_base;
-+	mem->page_size = page_size;
- 	mem->pages = pages;
- 	mem->size = size;
- 
-@@ -67,7 +101,7 @@ int pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size)
- err:
- return ret;
- }
--EXPORT_SYMBOL_GPL(pci_epc_mem_init);
-+EXPORT_SYMBOL_GPL(__pci_epc_mem_init);
- 
- /**
-  * pci_epc_mem_exit() - cleanup the pci_epc_mem structure
-@@ -101,13 +135,17 @@ void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 	int pageno;
- 	void __iomem *virt_addr;
- 	struct pci_epc_mem *mem = epc->mem;
--	int order = get_order(size);
-+	unsigned int page_shift = ilog2(mem->page_size);
-+	int order;
-+
-+	size = ALIGN(size, mem->page_size);
-+	order = pci_epc_mem_get_order(mem, size);
- 
- 	pageno = bitmap_find_free_region(mem->bitmap, mem->pages, order);
- 	if (pageno < 0)
- 		return NULL;
- 
--	*phys_addr = mem->phys_base + (pageno << PAGE_SHIFT);
-+	*phys_addr = mem->phys_base + (pageno << page_shift);
- 	virt_addr = ioremap(*phys_addr, size);
- 	if (!virt_addr)
- 		bitmap_release_region(mem->bitmap, pageno, order);
-@@ -129,11 +167,14 @@ void pci_epc_mem_free_addr(struct pci_epc *epc, phys_addr_t phys_addr,
- 			   void __iomem *virt_addr, size_t size)
- {
- 	int pageno;
--	int order = get_order(size);
- 	struct pci_epc_mem *mem = epc->mem;
-+	unsigned int page_shift = ilog2(mem->page_size);
-+	int order;
- 
- 	iounmap(virt_addr);
--	pageno = (phys_addr - mem->phys_base) >> PAGE_SHIFT;
-+	pageno = (phys_addr - mem->phys_base) >> page_shift;
-+	size = ALIGN(size, mem->page_size);
-+	order = pci_epc_mem_get_order(mem, size);
- 	bitmap_release_region(mem->bitmap, pageno, order);
- }
- EXPORT_SYMBOL_GPL(pci_epc_mem_free_addr);
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index af5edbf3eea3..f7a04e1af112 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -62,11 +62,13 @@ struct pci_epc_ops {
-  * @size: the size of the PCI address space
-  * @bitmap: bitmap to manage the PCI address space
-  * @pages: number of bits representing the address region
-+ * @page_size: size of each page
-  */
- struct pci_epc_mem {
- 	phys_addr_t	phys_base;
- 	size_t		size;
- 	unsigned long	*bitmap;
-+	size_t		page_size;
- 	int		pages;
- };
- 
-@@ -98,6 +100,9 @@ struct pci_epc {
- #define devm_pci_epc_create(dev, ops)    \
- 		__devm_pci_epc_create((dev), (ops), THIS_MODULE)
- 
-+#define pci_epc_mem_init(epc, phys_addr, size)	\
-+		__pci_epc_mem_init((epc), (phys_addr), (size), PAGE_SIZE)
-+
- static inline void epc_set_drvdata(struct pci_epc *epc, void *data)
- {
- 	dev_set_drvdata(&epc->dev, data);
-@@ -135,7 +140,8 @@ void pci_epc_stop(struct pci_epc *epc);
- struct pci_epc *pci_epc_get(const char *epc_name);
- void pci_epc_put(struct pci_epc *epc);
- 
--int pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_addr, size_t size);
-+int __pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_addr, size_t size,
-+		       size_t page_size);
- void pci_epc_mem_exit(struct pci_epc *epc);
- void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
- 				     phys_addr_t *phys_addr, size_t size);
--- 
-2.11.0
+T24gVHVlLCBKdWwgMjUsIDIwMTcgYXQgMDM6NTY6MjBQTSArMDAwMCwgR2FicmllbGUgUGFvbG9u
+aSB3cm90ZToKPiA+IEhhdmluZyBwcmFjdGljYWxseSB6ZXJvIGJhY2tncm91bmQgaW4gZ2Z4IGRl
+dmVsb3BtZW50IChlaXRoZXIga2VybmVsIG9yCj4gPiBYb3JnKSwgSSB0aGluayB0aGUgcHJvYmxl
+bSBpcyB0aGF0IHZnYV9kZWZhdWx0X2RldmljZSgpIC8KPiA+IHZnYV9zZXRfZGVmYXVsdF9kZXZp
+Y2UoKSwgd2hpY2ggLS0gYXBwYXJlbnRseSAtLSAiYm9vdF92Z2EiIGlzIGJhc2VkCj4gPiB1cG9u
+LCBjb21lIGZyb20gImRyaXZlcnMvZ3B1L3ZnYS92Z2FhcmIuYyIuIE5hbWVseSwgdGhlIGNvbmNl
+cHQgb2YKPiA+ICJwcmltYXJ5IC8gYm9vdCBkaXNwbGF5IGRldmljZSIgaXMgdGllZCB0byB0aGUg
+VkdBIGFyYml0ZXIsIHBsdXMgb25seSBhCj4gPiBQQ0kgZGV2aWNlIGNhbiBjdXJyZW50bHkgYmUg
+bWFya2VkIGFzIHByaW1hcnkvYm9vdCBkaXNwbGF5IGRldmljZS4KPiA+IAo+ID4gQ2FuIHRoZXNl
+IGNvbmNlcHRzIGJlIHNwbGl0IGZyb20gZWFjaCBvdGhlcj8gKEkgY2FuIGZ1bGx5IGltYWdpbmUg
+dGhhdAo+ID4gdGhpcyB3b3VsZCByZXN1bHQgaW4gYSB1c2Vyc3BhY2UgdmlzaWJsZSBpbnRlcmZh
+Y2UgY2hhbmdlIChvcgo+ID4gYWRkaXRpb24pLAo+ID4gc28gdGhhdCBlLmcuICIvc3lzL2Rldmlj
+ZXMvKiovYm9vdF9ncHUiIHdvdWxkIGhhdmUgdG8gYmUgY29uc3VsdGVkIGJ5Cj4gPiBkaXNwbGF5
+IHNlcnZlcnMuKQo+ID4gCj4gPiAoU29ycnkgaWYgSSdtIHRvdGFsbHkgd3JvbmcuKQo+ID4gCj4g
+PiAuLi4gSG0sIHJlYWRpbmcgdGhlIHRocmVhZCBzdGFydGVyIGF0Cj4gPiA8aHR0cHM6Ly93d3cu
+bWFpbC1hcmNoaXZlLmNvbS9saW51eHBwYy0KPiA+IGRldkBsaXN0cy5vemxhYnMub3JnL21zZzEy
+MDg1MS5odG1sPiwKPiA+IGFuZCB0aGUgcmVmZXJlbmNlcyB3aXRoaW4uLi4gSXQgbG9va3MgbGlr
+ZSB0aGlzIHdvcmsgaXMgbW90aXZhdGVkIGJ5Cj4gPiBoYXJkd2FyZSB0aGF0IGlzIHN1cHBvc2Vk
+IHRvIGJlIFBDSSwgYnV0IGFjdHVhbGx5IGJyZWFrcyB0aGUgc3BlY3MuIElzCj4gPiB0aGF0IGNv
+cnJlY3Q/IElmIHNvLCB0aGVuIEkgZG9uJ3QgdGhpbmsgSSBjYW4gc3VnZ2VzdCBhbnl0aGluZyB1
+c2VmdWwuCj4gCj4gTXkgdW5kZXJzdGFuZGluZyBpcyB0aGF0IHRoZSBjdXJyZW50IFBDSWUgSFcg
+aXMgc3BlY3MgY29tcGxpYW50IGJ1dCB0aGUKPiB2Z2FhcmIsIGluIG9yZGVyIHRvIG1ha2UgYSBW
+R0EgZGV2aWNlIHRoZSBkZWZhdWx0IG9uZSwgcmVxdWlyZXMgYWxsIHRoZQo+IGJyaWRnZXMgb24g
+dG9wIG9mIHN1Y2ggZGV2aWNlIHRvIGhhdmUgdGhlICJWR0EgRW5hYmxlIiBiaXQgc2V0IChvcHRp
+b25hbAo+IGJpdCBpbiB0aGUgUENJIEV4cHJlc3PihKIgdG8gUENJL1BDSS1YIEJyaWRnZSBTcGVj
+KS4gSS5lLiBhbGwgdGhlIGJyaWRnZXMKPiBvbiB0b3AgaGF2ZSB0byBzdXBwb3J0IGxlZ2FjeSBW
+R0EgZGV2aWNlczsgYW5kIHRoaXMgaXMgbm90IG1hbmRhdG9yeQo+IGZyb20gdGhlIHNwZWNzLi4u
+cmlnaHQ/CgpQZXIgdGhlIFBDSWUtdG8tUENJIEJyaWRnZSBzcGVjIHIxLjAsIHNlYyA1LjEuMi4x
+MywgdGhlIFZHQSBFbmFibGUgYml0CmlzIG9wdGlvbmFsLCBhcyB5b3Ugc2F5LiAgVGhlIFBDSS10
+by1QQ0kgQnJpZGdlIHNwZWMgcjEuMiwgc2VjCjMuMi41LjE4LCBkb2Vzbid0IHNheSBWR0EgRW5h
+YmxlIGlzIG9wdGlvbmFsLCAqYnV0KiBzZWMgNC41IHNheXMKYnJpZGdlcyBuZWVkIG5vdCBzdXBw
+b3J0IFZHQS4gIEkgbmFpdmVseSBhc3N1bWUgb25lIHdvdWxkIGRpc2NvdmVyCnRoYXQgYnkgZmlu
+ZGluZyBWR0EgRW5hYmxlIHRvIGJlIFJPIHplcm8uCgpPZiBjb3Vyc2UsIGluIGFueSBjYXNlLCBJ
+IGFsc28gYXNzdW1lIHRoYXQgKGEpIHRoZXJlIGV4aXN0IFZHQSBjYXJkcwp0aGF0IHJlcXVpcmUg
+bGVnYWN5IFZHQSByZXNvdXJjZXMsIGUuZy4sIG1lbW9yeSAweGEwMDAwLTB4YmZmZmYsIGFuZAoo
+Yikgc3VjaCBjYXJkcyB3aWxsIG5vdCB3b3JrIGJlaGluZCBicmlkZ2VzIHdpdGhvdXQgVkdBIHN1
+cHBvcnQuCgpJIGhhdmUgbm8gaWRlYSB3aGF0IGlmIGFueXRoaW5nIHRoZSBWR0EgYXJiaXRlciBz
+aG91bGQgZG8gYWJvdXQKYnJpZGdlcyBsaWtlIHRoaXMgb3IgVkdBIGRldmljZXMgYmVoaW5kIHRo
+ZW0sIGJ1dCBpdCBkb2VzIHNvdW5kIGxpa2UKdGhlIGFyYml0ZXIgbWlnaHQgbmVlZCB0byBiZWNv
+bWUgc21hcnRlci4KCkJqb3JuCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
