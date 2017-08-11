@@ -1,74 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 2/3] dt-bindings: PCI: rockchip: Add support for pcie
- wake irq
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-References: <20170816075224.31734-1-jeffy.chen@rock-chips.com>
- <20170816075224.31734-3-jeffy.chen@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <35487e90-74f2-3a66-70d3-d0780b0b6e26@rock-chips.com>
-Date: Wed, 16 Aug 2017 16:35:24 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:48806 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752724AbdHKRRw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Aug 2017 13:17:52 -0400
+Date: Fri, 11 Aug 2017 12:17:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        David Woodhouse <dwmw2@infradead.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>,
+        David Fugate <david.fugate@intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/3] iommu: prevent VMD child devices from being
+ remapping targets
+Message-ID: <20170811171750.GC17039@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+ <20170807195713.10963-3-jonathan.derrick@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170816075224.31734-3-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, briannorris@chromium.org,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170807195713.10963-3-jonathan.derrick@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Jeffy
-
-On 2017/8/16 15:52, Jeffy Chen wrote:
-> Add an optional interrupt for PCIE_WAKE pin.
+On Mon, Aug 07, 2017 at 01:57:13PM -0600, Jon Derrick wrote:
+> VMD child devices must use the VMD endpoint's ID as the DMA source.
+> Because of this, there needs to be a way to link the parent VMD
+> endpoint's DMAR domain to the VMD child devices' DMAR domain such that
+> attaching and detaching child devices modify the endpoint's DMAR mapping
+> and prevents early detaching.
 > 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> This is outside the scope of VMD, so disable binding child devices to
+> prevent unforeseen issues. This functionality may be implemented in the
+> future.
+> 
+> This patch prevents VMD child devices from returning an IOMMU, which
+> prevents it from exposing iommu_group sysfs directories and subsequent
+> binding by userspace-access drivers such as VFIO.
+> 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
 > ---
+>  drivers/iommu/intel-iommu.c | 5 +++++
+>  1 file changed, 5 insertions(+)
 > 
->   Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 11 +++++++----
->   1 file changed, 7 insertions(+), 4 deletions(-)
+> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+> index 687f18f..651a6cd 100644
+> --- a/drivers/iommu/intel-iommu.c
+> +++ b/drivers/iommu/intel-iommu.c
+> @@ -905,6 +905,11 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
+>  		 * the PF instead to find the IOMMU. */
+>  		pf_pdev = pci_physfn(pdev);
+>  		dev = &pf_pdev->dev;
+> +
+> +		/* VMD child devices currently cannot be handled individually */
+> +		if (pci_bus_is_vmd(pdev->bus))
+
+Aah, this is the bigger reason why you want a general "is VMD" thing.
+But this is still basically x86-specific code (I do see the ia64 in
+Kconfig, so I guess maybe ia64 as well).
+
+But pci_bus_is_vmd() doesn't feel like a generally useful concept.  I
+see why you need things like this quirk, but it's not clear what
+useful things other code could do with pci_bus_is_vmd() because we
+don't have a generic concept of how VMD buses are different than other
+PCI buses.
+
+> +			return NULL;
+> +
+>  		segment = pci_domain_nr(pdev->bus);
+>  	} else if (has_acpi_companion(dev))
+>  		dev = &ACPI_COMPANION(dev)->dev;
+> -- 
+> 2.9.4
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> index 1453a734c2f5..6ef9903567db 100644
-> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -22,10 +22,13 @@ Required properties:
->   - phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
->   - phy-names:  MUST be "pcie-phy".
->   - interrupts: Three interrupt entries must be specified.
-> -- interrupt-names: Must include the following names
-> -	- "sys"
-> -	- "legacy"
-> -	- "client"
-> +- interrupt-names: Include the following names
-> +	Required:
-> +		- "sys"
-> +		- "legacy"
-> +		- "client"
-> +	Optional:
-> +		- "wake"
-
-It would be better to introduce interrupts-extended and show a example
-here. :)
-
->   - resets: Must contain seven entries for each entry in reset-names.
->   	   See ../reset/reset.txt for details.
->   - reset-names: Must include the following names
-> 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
