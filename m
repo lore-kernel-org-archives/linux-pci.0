@@ -1,66 +1,78 @@
-Return-Path: <SRS0=Fnf9=7Z=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=Fnf9=7Z=broadcom.com=oza.oza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:47730 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753256AbdHKUZl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Aug 2017 16:25:41 -0400
+Date: Fri, 11 Aug 2017 15:25:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Scott Bauer <scott.bauer@intel.com>
+Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
+        jonathan.derrick@intel.com, david.fugate@intel.com,
+        bhelgaas@google.com
+Subject: Re: [RESEND] PCI: vmd: Free up IRQs on suspend path
+Message-ID: <20170811202540.GF17039@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170811180949.26923-1-scott.bauer@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <eb01a01b-ee8a-1c51-69ba-838bfe94b6f6@codeaurora.org>
-References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
- <1503331124-25029-2-git-send-email-oza.oza@broadcom.com> <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
- <20170823135140.GA8498@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPf5c2=zO81-7TEidOHbB8K0L3T2_wV4+9Gem5DB6rHWFw@mail.gmail.com> <eb01a01b-ee8a-1c51-69ba-838bfe94b6f6@codeaurora.org>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Wed, 23 Aug 2017 21:32:06 +0530
-Message-ID: <CAMSpPPenUvGVwTf9ZKJoK08fm6L-0c=anPUaRRZdkHBzhGO-dA@mail.gmail.com>
-Subject: Re: [PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from EP
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
-	Timur Tabi <timur@codeaurora.org>, Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170811180949.26923-1-scott.bauer@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 23, 2017 at 9:22 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Hi Oza,
->
->> In working Enumuration case I get following:
->> [    9.125976] pci 0000:00:00.0: bridge configuration invalid ([bus
->> 00-00]), re-configuring
->> [    9.134267] where=0x0 val=0xffff0001
->> [    9.146946] where=0x0 val=0xffff0001
->> [    9.158943] where=0x0 val=0xffff0001
->> [    9.170945] where=0x0 val=0xffff0001
->> [    9.186945] where=0x0 val=0xffff0001
->> [    9.210944] where=0x0 val=0xffff0001
->> [    9.250943] where=0x0 val=0xffff0001
->> [    9.322942] where=0x0 val=0xffff0001
->> [    9.458943] where=0x0 val=0xffff0001
->> [    9.726942] where=0x0 val=0x9538086    >> actual vendor and device id.
->>
->> so I think I have to retry in RC driver, so the old code still holds good.
->> except that I have to do factoring out
-> You need to return 0xFFFF0001 for vendor ID register and return 0xFFFFFFFF for
-> other registers like COMMAND register during the CRS period.
->
+On Fri, Aug 11, 2017 at 12:09:49PM -0600, Scott Bauer wrote:
+> This patch frees up the IRQs we request on the suspend path,
+> and reallocates them on the resume path.
+> 
+> Fixes:
+> [  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
+> [  559.966824] Error taking CPU111 down: -34
+> [  559.966825] Non-boot CPUs are not disabled
+> [  559.966826] Enabling non-boot CPUs ...
+> 
+> Signed-off-by: Scott Bauer <scott.bauer@intel.com>
 
-Hi Sinan,
+Applied with Keith's ack to pci/host-vmd for v4.14, thanks!
 
-Although I don't disagree entirely with your suggestion, but at the same time,
-I am not sure, in RC driver I should have special case for vendor id
-and device id, and have another case for rest of the configuration
-access.
-my thinking is, the RC driver should closely reflect the PCI iproc HW
-behaviour (in a generic way, rather than handling vendor/device id
-case separately)
-
-Bjorn, please comment as how do you see it being handled.
-
-Regards,
-Oza.
-
->>
->> please let me know If I missed anything, or you want me to try anything else.
->
-> Sinan
+> ---
+>  drivers/pci/host/vmd.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+> 
+> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> index 7e967a8784b2..ac643a3d0bf3 100644
+> --- a/drivers/pci/host/vmd.c
+> +++ b/drivers/pci/host/vmd.c
+> @@ -763,15 +763,32 @@ static void vmd_remove(struct pci_dev *dev)
+>  static int vmd_suspend(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> +	int i;
+> +
+> +	for (i = 0; i < vmd->msix_count; i++)
+> +                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
+>  
+>  	pci_save_state(pdev);
+> +	pci_disable_device(pdev);
+>  	return 0;
+>  }
+>  
+>  static int vmd_resume(struct device *dev)
+>  {
+>  	struct pci_dev *pdev = to_pci_dev(dev);
+> +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> +	int err, i;
+> +
+> +	for (i = 0; i < vmd->msix_count; i++) {
+> +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+> +				       vmd_irq, IRQF_NO_THREAD,
+> +				       "vmd", &vmd->irqs[i]);
+> +		if (err)
+> +			return err;
+> +	}
+>  
+> +	pcim_enable_device(pdev);
+>  	pci_restore_state(pdev);
+>  	return 0;
+>  }
+> -- 
+> 2.11.0
+> 
