@@ -1,106 +1,99 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-To: Borislav Petkov <bp@suse.de>
-Cc: "Baicar, Tyler" <tbaicar@codeaurora.org>,
-        Tony Luck <tony.luck@intel.com>, rjw@rjwysocki.net,
-        lenb@kernel.org, will.deacon@arm.com, james.morse@arm.com,
-        prarit@redhat.com, punit.agrawal@arm.com, shiju.jose@huawei.com,
-        andriy.shevchenko@linux.intel.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
- <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
- <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
- <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
- <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
- <20170830101617.3m266q7xuew6ctxl@pd.tnic>
- <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
- <20170830151601.ro5qt5272e2msevp@pd.tnic>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41050 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753251AbdHKQ4q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 11 Aug 2017 12:56:46 -0400
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
-Date: Wed, 30 Aug 2017 11:31:06 -0400
-MIME-Version: 1.0
-In-Reply-To: <20170830151601.ro5qt5272e2msevp@pd.tnic>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V10 2/3] PCI: handle CRS returned by device after FLR
+Date: Fri, 11 Aug 2017 12:56:35 -0400
+Message-Id: <1502470596-4112-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
+References: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/30/2017 11:16 AM, Borislav Petkov wrote:
-> On Wed, Aug 30, 2017 at 10:05:44AM -0400, Sinan Kaya wrote:
->> Link reset is not the only recovery mechanism. In the case of nonfatal
->> errors, it is assumed that the endpoint CSR is still reachable.
->> Error is propagated the PCIe endpoint driver. Endpoint driver does a
->> re-initialization, we are back in business.
-> 
-> I'm assuming that's broadcast_error_message()'s job.
-> 
+Sporadic reset issues have been observed with Intel 750 NVMe drive while
+assigning the physical function to the guest machine. The sequence of
+events observed is as follows:
 
-That's right. Each driver provides an err_handler hook. broadcast function
-calls these. 
+- perform a Function Level Reset (FLR)
+- sleep up to 1000ms total
+- read ~0 from PCI_COMMAND
+- warn that the device didn't return from FLR
+- touch the device before it's ready
+- drop register read and writes performing register settings restore
+- incomplete reset operation and partial register restoration
+- second time device probe fails in the guest machine as HW is left in
+limbo.
 
-static struct pci_driver e1000_driver = {
-	..
-	.err_handler = &e1000_err_handler
-};
+An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+following a FLR request to indicate that it is not ready to accept new
+requests. CRS is defined in PCIe r3.1, sec 2.3.1. Request Handling Rules
+and CRS usage in FLR context is mentioned in PCIe r3.1, sec 6.6.2.
+Function-Level Reset.
 
-struct pci_error_handlers {
-	...
-	pci_ers_result_t (*error_detected)(struct pci_dev *dev,
-					   enum pci_channel_state error);
-}
+A CRS indication will only be given if the address to be read is vendor ID
+register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
+0xFFFF0001 value and will continue polling until a value other than
+0xFFFF0001 is returned within a given timeout.
 
+Try to discover device presence via CRS first. If device is not found, fall
+through to old behavior.
 
->> That's not true. The GHES code is changing the severity here before posting
->> to the AER driver in ghes_do_proc().
->>
->> 	if (gdata->flags & CPER_SEC_RESET)
->> 		aer_severity = AER_FATAL;
-> 
-> You're missing the point that we would walk into that if branch *only* for
-> 
->                         if (sev == GHES_SEV_RECOVERABLE &&
->                             sec_sev == GHES_SEV_RECOVERABLE
-> 
-> severities. So if you have an AER_FATAL error but ghes severities are
-> not GHES_SEV_RECOVERABLE, nothing happens.
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pci.c | 23 +++++++++++++++++++++--
+ 1 file changed, 21 insertions(+), 2 deletions(-)
 
-I see. We should probably try to do something only if GHES_SEV_CORRECTED or
-GHES_SEV_RECOVERABLE.
-
-If somebody wants to crash the system with GHES_SEV_PANIC, there is no point
-in doing additional work.
-
-> 
->> No, AER ISR is not set up if firmware first is enabled.
-> 
-> So then this is a major suckage. We do AER recovery on FF systems only
-> for GHES_SEV_RECOVERABLE severity.
-> 
->> The behavior should match non firmware-first case ideally.
->>
->> 1. Print all correctable errors.
->> 2. Go to do_recovery for all uncorrectable errors including fatal and
->> non-fatal. 
->>
->> This is also what AER driver does in the absence of firmware first via
->> handle_error_source().
-> 
-> Yes, that makes sense.
-> 
-> Which would mean that we'd call aer_recover_queue() regardless of GHES
-> severity but we'd do recovery only if GHES_SEV_RECOVERABLE is set
-> or CPER_SEC_RESET. I.e., we can communicate all that by setting the
-> correct AER severity before calling aer_recover_queue(). And then call
-> do_recovery() based on AER severity.
-> 
-> Hmmm?
-> 
-
-Sounds good. Do you still want to do PCIe recovery in the case of
-GHES_SEV_PANIC or if some FW returns GHES_SEV_NO?
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..c853551 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3821,17 +3821,36 @@ static void pci_flr_wait(struct pci_dev *dev)
+ {
+ 	int i = 0;
+ 	u32 id;
++	bool ret;
++
++	/*
++	 * Don't touch the HW before waiting 100ms. HW has to finish
++	 * within 100ms according to PCI Express Base Specification
++	 * Revision 3.1 Section 6.6.2: Function-Level Reset (FLR).
++	 */
++	msleep(100);
++
++	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID,
++				      &id))
++		return;
++
++	/* See if we can find a device via CRS first. */
++	if ((id & 0xffff) == 0x0001) {
++		ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
++		if (ret)
++			return;
++	}
+ 
+ 	do {
+ 		msleep(100);
+ 		pci_read_config_dword(dev, PCI_COMMAND, &id);
+-	} while (i++ < 10 && id == ~0);
++	} while (i++ < 9 && id == ~0);
+ 
+ 	if (id == ~0)
+ 		dev_warn(&dev->dev, "Failed to return from FLR\n");
+ 	else if (i > 1)
+ 		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+-			 (i - 1) * 100);
++			 i * 100);
+ }
+ 
+ /**
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.9.1
