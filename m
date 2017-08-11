@@ -1,172 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:38455 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752909AbdHXSnr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2017 14:43:47 -0400
-Received: by mail-wm0-f44.google.com with SMTP id z132so1890329wmg.1
-        for <linux-pci@vger.kernel.org>; Thu, 24 Aug 2017 11:43:46 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-pci@vger.kernel.org
-Cc: mw@semihalf.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: [PATCH v2 1/3] pci: designware: add driver for DWC controller in ECAM shift mode
-Date: Thu, 24 Aug 2017 19:43:19 +0100
-Message-Id: <20170824184321.19432-2-ard.biesheuvel@linaro.org>
-In-Reply-To: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
-References: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
+Received: from mail.kernel.org ([198.145.29.99]:44624 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753219AbdHKRDV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 11 Aug 2017 13:03:21 -0400
+Date: Fri, 11 Aug 2017 12:03:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+        David Woodhouse <dwmw2@infradead.org>,
+        Keith Busch <keith.busch@intel.com>,
+        Scott Bauer <scott.bauer@intel.com>,
+        David Fugate <david.fugate@intel.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] pci: Generalize is_vmd behavior
+Message-ID: <20170811170319.GB17039@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+ <20170807195713.10963-2-jonathan.derrick@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170807195713.10963-2-jonathan.derrick@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some implementations of the Synopsys Designware PCIe controller implement
-a so-called ECAM shift mode, which allows a static memory window to be
-configured that covers the configuration space of the entire bus range.
+On Mon, Aug 07, 2017 at 01:57:12PM -0600, Jon Derrick wrote:
+> Generalize is_vmd behavior to remove dependency on domain number
+> checking in pci quirks.
+> 
+> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+> ---
+>  arch/x86/include/asm/pci.h | 8 +++-----
+>  arch/x86/pci/common.c      | 2 +-
+>  drivers/pci/quirks.c       | 2 +-
+>  include/linux/pci.h        | 4 ++++
+>  4 files changed, 9 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 473a729..5c5d54a 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -60,16 +60,14 @@ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
+>  #define pci_root_bus_fwnode	_pci_root_bus_fwnode
+>  #endif
+>  
+> -static inline bool is_vmd(struct pci_bus *bus)
+> -{
+>  #if IS_ENABLED(CONFIG_VMD)
+> +static inline bool pci_bus_is_vmd(struct pci_bus *bus)
+> +{
+>  	struct pci_sysdata *sd = bus->sysdata;
+>  
+>  	return sd->vmd_domain;
+> -#else
+> -	return false;
+> -#endif
+>  }
+> +#endif
+>  
+>  /* Can be used to override the logic in pci_scan_bus for skipping
+>     already-configured bus numbers - to be used for buggy BIOSes
+> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+> index dbe2132..18b2277 100644
+> --- a/arch/x86/pci/common.c
+> +++ b/arch/x86/pci/common.c
+> @@ -662,7 +662,7 @@ static void set_dma_domain_ops(struct pci_dev *pdev) {}
+>  
+>  static void set_dev_domain_options(struct pci_dev *pdev)
+>  {
+> -	if (is_vmd(pdev->bus))
+> +	if (pci_bus_is_vmd(pdev->bus))
+>  		pdev->hotplug_user_indicators = 1;
+>  }
+>  
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6967c6b..ba47995 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4666,7 +4666,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+>  static void quirk_no_aersid(struct pci_dev *pdev)
+>  {
+>  	/* VMD Domain */
+> -	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
+> +	if (pci_bus_is_vmd(pdev->bus))
 
-If the firmware performs all the low level configuration that is required
-to expose this controller in a fully ECAM compatible manner, we can
-simply describe it as "pci-host-ecam-generic" and be done with it.
-However, it appears that in some cases (one of which is the Armada 80x0),
-the IP is synthesized with an ATU window size that does not allow the
-first bus to be mapped in a way that prevents the device on the
-downstream port from appearing more than once.
+I like this part ...
 
-So implement a driver that relies on the firmware to perform all low
-level initialization, and drives the controller in ECAM mode, but
-overrides the config space accessors to take the above quirk into
-account.
+>  		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
+>  }
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 4869e66..0299d8b 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1471,6 +1471,10 @@ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+>  static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+>  #endif /* CONFIG_PCI_DOMAINS */
+>  
+> +#if !IS_ENABLED(CONFIG_VMD)
+> +static inline bool pci_bus_is_vmd(struct pci_bus *bus) { return false; }
+> +#endif
 
-Note that, unlike most drivers for this IP, this driver does not expose
-a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
-given that this is not a true bridge, and does not require any windows
-to be configured in order for the downstream device to operate correctly.
-Omitting it also prevents the PCI resource allocation routines from
-handing out BAR space to it unnecessarily.
+But not so much this part.  VMD is (AFAIK) still fundamentally an
+x86-only thing, so I'd like it better if this could all be within
+arch/x86.  Could this be done by moving quirk_no_aersid() to
+arch/x86/pci/fixup.c?
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
- drivers/pci/dwc/Kconfig                | 11 +++
- drivers/pci/dwc/Makefile               |  1 +
- drivers/pci/dwc/pcie-designware-ecam.c | 75 ++++++++++++++++++++
- 3 files changed, 87 insertions(+)
+BTW, CONFIG_VMD in drivers/pci/host/Kconfig is currently "depends on
+SRCU".  I'm not a Kconfig expert, but that doesn't seem like an
+intuitive connection.  And it's the only such dependency on SRCU in
+the tree -- most other places use "select SRCU", which makes more
+sense to me.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index d275aadc47ee..477576d07911 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -169,4 +169,15 @@ config PCIE_KIRIN
- 	  Say Y here if you want PCIe controller support
- 	  on HiSilicon Kirin series SoCs.
- 
-+config PCIE_DW_HOST_ECAM
-+	bool "Synopsys DesignWare PCIe controller in ECAM mode"
-+	depends on OF && PCI
-+	select PCI_HOST_COMMON
-+	select IRQ_DOMAIN
-+	help
-+	  Add support for Synopsys DesignWare PCIe controllers configured
-+	  by the firmware into ECAM shift mode. In some cases, these are
-+	  fully ECAM compliant, in which case the pci-host-generic driver
-+	  may be used instead.
-+
- endmenu
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index c61be9738cce..7d5a23e5b767 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -1,5 +1,6 @@
- obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
-+obj-$(CONFIG_PCIE_DW_HOST_ECAM) += pcie-designware-ecam.o
- obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
-diff --git a/drivers/pci/dwc/pcie-designware-ecam.c b/drivers/pci/dwc/pcie-designware-ecam.c
-new file mode 100644
-index 000000000000..0f495bd2e33e
---- /dev/null
-+++ b/drivers/pci/dwc/pcie-designware-ecam.c
-@@ -0,0 +1,75 @@
-+/*
-+ * Driver for mostly ECAM compatible Synopsys dw PCIe controllers
-+ * configured by the firmware into RC mode
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ *
-+ * Copyright (C) 2014 ARM Limited
-+ * Copyright (C) 2017 Linaro Limited
-+ *
-+ * Authors: Will Deacon <will.deacon@arm.com>
-+ *          Ard Biesheuvel <ard.biesheuvel@linaro.org>
-+ */
-+
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/of_address.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci-ecam.h>
-+#include <linux/platform_device.h>
-+
-+static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
-+				   int size, u32 *val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+
-+	/*
-+	 * The Synopsys dw PCIe controller in RC mode will not filter type 0
-+	 * config TLPs sent to devices 1 and up on its downstream port,
-+	 * resulting in devices appearing multiple times on bus 0 unless we
-+	 * filter them here.
-+	 */
-+	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0) {
-+		*val = 0xffffffff;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+	return pci_generic_config_read(bus, devfn, where, size, val);
-+}
-+
-+static int pci_dw_ecam_config_write(struct pci_bus *bus, u32 devfn, int where,
-+				    int size, u32 val)
-+{
-+	struct pci_config_window *cfg = bus->sysdata;
-+
-+	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	return pci_generic_config_write(bus, devfn, where, size, val);
-+}
-+
-+static struct pci_ecam_ops pci_dw_ecam_bus_ops = {
-+	.pci_ops.map_bus		= pci_ecam_map_bus,
-+	.pci_ops.read			= pci_dw_ecam_config_read,
-+	.pci_ops.write			= pci_dw_ecam_config_write,
-+	.bus_shift			= 20,
-+};
-+
-+static const struct of_device_id pci_dw_ecam_of_match[] = {
-+	{ .compatible = "snps,dw-pcie-ecam" },
-+	{ },
-+};
-+
-+static int pci_dw_ecam_probe(struct platform_device *pdev)
-+{
-+	return pci_host_common_probe(pdev, &pci_dw_ecam_bus_ops);
-+}
-+
-+static struct platform_driver pci_dw_ecam_driver = {
-+	.driver.name			= "pcie-designware-ecam",
-+	.driver.of_match_table		= pci_dw_ecam_of_match,
-+	.driver.suppress_bind_attrs	= true,
-+	.probe				= pci_dw_ecam_probe,
-+};
-+builtin_platform_driver(pci_dw_ecam_driver);
--- 
-2.11.0
+>  /*
+>   * Generic implementation for PCI domain support. If your
+>   * architecture does not need custom management of PCI
+> -- 
+> 2.9.4
+> 
