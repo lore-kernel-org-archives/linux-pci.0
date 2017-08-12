@@ -1,39 +1,45 @@
-Return-Path: <SRS0=YMQt=7Y=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=YMQt=7Y=davemloft.net=davem@kernel.org>
-Date: Tue, 22 Aug 2017 09:45:57 -0700 (PDT)
-Message-Id: <20170822.094557.1690177202348153731.davem@davemloft.net>
-To: mroos@linux.ee
-Cc: hch@lst.de, helgaas@kernel.org, sparclinux@vger.kernel.org,
- linux-pci@vger.kernel.org, qla2xxx-upstream@qlogic.com,
- linux-kernel@vger.kernel.org
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
- vectors
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <alpine.LRH.2.20.1708221932490.23061@math.ut.ee>
-References: <20170822063505.GA6721@lst.de>
-	<20170822.093139.473720171751670244.davem@davemloft.net>
-	<alpine.LRH.2.20.1708221932490.23061@math.ut.ee>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:39103
+        "EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750762AbdHLIAe (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2017 04:00:34 -0400
+Date: Sat, 12 Aug 2017 10:00:27 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Christoph Hellwig <hch@infradead.org>
+cc: linux-scsi@vger.kernel.org, bhumirks@gmail.com,
+        kernel-janitors@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/6] constify pci_error_handlers structures
+In-Reply-To: <20170812075616.GA14976@infradead.org>
+Message-ID: <alpine.DEB.2.20.1708120959540.2001@hadrien>
+References: <1502516674-8918-1-git-send-email-Julia.Lawall@lip6.fr> <20170812074451.GA3589@infradead.org> <alpine.DEB.2.20.1708120946590.2001@hadrien> <20170812075616.GA14976@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Meelis Roos <mroos@linux.ee>
-Date: Tue, 22 Aug 2017 19:33:55 +0300 (EEST)
 
->> > On Mon, Aug 21, 2017 at 01:35:49PM -0700, David Miller wrote:
->> >> I ask because the commit log message indicates that this failure is
->> >> not expected to ever happen on SMP.
->> > 
->> > I fear my commit message (but not the code) might be wrong.
->> > irq_create_affinity_masks can return NULL any time we don't have any
->> > affinity masks.  I've already had a discussion about this elsewhere
->> > with Bjorn, and I suspect we need to kill the warning or move it
->> > to irq_create_affinity_masks only for genuine failure cases.
->> 
->> This is a rather large machine with 64 or more cpus and several NUMA
->> nodes.  Why wouldn't there be any affinity masks available?
-> 
-> T5120 with 1 slot and 32 threads total. I have not configured any NUM on 
-> it is there any reason for that?
 
-Ok 32 cpus and 1 NUMA node, my bad :-)
+On Sat, 12 Aug 2017, Christoph Hellwig wrote:
+
+> On Sat, Aug 12, 2017 at 09:52:28AM +0200, Julia Lawall wrote:
+> > OK, sure.  So to be precise, you want the fields error_detected,
+> > mmio_enabled, etc to be added as new fields to the pci_driver structure?
+>
+> Yes.
+>
+> > They both have a resume field, though.  What should the pci_error_handlers
+> > resume function be renamed to?  Would resume_after_error be too much?
+>
+> error_resume maybe?
+
+OK
+
+>
+> FYI, I already killed it for the PCIe port drivers a while ago:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/aer&id=c5dc3c69f17a7e77359f10c342d1816390bc8846
+
+Thanks for the pointer.
+
+julia
