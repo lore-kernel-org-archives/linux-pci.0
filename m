@@ -1,92 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:34159 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752013AbdHSI1J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 04:27:09 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 13/15] scsi: make device_type const
-Date: Sat, 19 Aug 2017 13:52:24 +0530
-Message-Id: <1503130946-2854-14-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:42335 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750726AbdHLH4R (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 12 Aug 2017 03:56:17 -0400
+Date: Sat, 12 Aug 2017 00:56:16 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org,
+        bhumirks@gmail.com, kernel-janitors@vger.kernel.org,
+        MPT-FusionLinux.pdl@broadcom.com, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH 0/6] constify pci_error_handlers structures
+Message-ID: <20170812075616.GA14976@infradead.org>
+References: <1502516674-8918-1-git-send-email-Julia.Lawall@lip6.fr>
+ <20170812074451.GA3589@infradead.org>
+ <alpine.DEB.2.20.1708120946590.2001@hadrien>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1708120946590.2001@hadrien>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make these const as they are only stored in the type field of a device
-structure, which is const.
-Done using Coccinelle.
+On Sat, Aug 12, 2017 at 09:52:28AM +0200, Julia Lawall wrote:
+> OK, sure.  So to be precise, you want the fields error_detected,
+> mmio_enabled, etc to be added as new fields to the pci_driver structure?
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/scsi/fcoe/fcoe_sysfs.c      | 4 ++--
- drivers/scsi/scsi_transport_iscsi.c | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Yes.
 
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 9cf3d56..5c8310b 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -659,13 +659,13 @@ static void fcoe_fcf_device_release(struct device *dev)
- 	kfree(fcf);
- }
- 
--static struct device_type fcoe_ctlr_device_type = {
-+static const struct device_type fcoe_ctlr_device_type = {
- 	.name = "fcoe_ctlr",
- 	.groups = fcoe_ctlr_attr_groups,
- 	.release = fcoe_ctlr_device_release,
- };
- 
--static struct device_type fcoe_fcf_device_type = {
-+static const struct device_type fcoe_fcf_device_type = {
- 	.name = "fcoe_fcf",
- 	.groups = fcoe_fcf_attr_groups,
- 	.release = fcoe_fcf_device_release,
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index a424eae..b9513f8 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1009,7 +1009,7 @@ static void iscsi_flashnode_sess_release(struct device *dev)
- 	kfree(fnode_sess);
- }
- 
--static struct device_type iscsi_flashnode_sess_dev_type = {
-+static const struct device_type iscsi_flashnode_sess_dev_type = {
- 	.name = "iscsi_flashnode_sess_dev_type",
- 	.groups = iscsi_flashnode_sess_attr_groups,
- 	.release = iscsi_flashnode_sess_release,
-@@ -1195,7 +1195,7 @@ static void iscsi_flashnode_conn_release(struct device *dev)
- 	kfree(fnode_conn);
- }
- 
--static struct device_type iscsi_flashnode_conn_dev_type = {
-+static const struct device_type iscsi_flashnode_conn_dev_type = {
- 	.name = "iscsi_flashnode_conn_dev_type",
- 	.groups = iscsi_flashnode_conn_attr_groups,
- 	.release = iscsi_flashnode_conn_release,
--- 
-1.9.1
+> They both have a resume field, though.  What should the pci_error_handlers
+> resume function be renamed to?  Would resume_after_error be too much?
+
+error_resume maybe?
+
+FYI, I already killed it for the PCIe port drivers a while ago:
+
+https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/commit/?h=pci/aer&id=c5dc3c69f17a7e77359f10c342d1816390bc8846
