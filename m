@@ -1,58 +1,66 @@
-Return-Path: <SRS0=RmmH=7Z=sigmadesigns.com=marc_gonzalez@kernel.org>
-Return-Path: <SRS0=RmmH=7Z=sigmadesigns.com=marc_gonzalez@kernel.org>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci <linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, Mason <slash.tmp@free.fr>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
-Message-ID: <e32f8446-bd0b-0bc8-55b4-8dbebaeba101@sigmadesigns.com>
-Date: Wed, 23 Aug 2017 14:59:42 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:50508 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751030AbdHNUd6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Aug 2017 16:33:58 -0400
+Date: Mon, 14 Aug 2017 15:33:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: don't try to apply MSI(-X) affinity for single
+ vectors
+Message-ID: <20170814203355.GE32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170726201741.4842-1-hch@lst.de>
+ <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/08/2017 16:56, Marc Gonzalez wrote:
+On Wed, Aug 02, 2017 at 01:24:58PM -0500, Bjorn Helgaas wrote:
+> On Wed, Jul 26, 2017 at 10:17:41PM +0200, Christoph Hellwig wrote:
+> > We'll always get NULL back in that case, so skip the call and the
+> > resulting warning.
+> ...
 
-> @@ -76,7 +234,9 @@ static int tango_pcie_probe(struct platform_device *pd=
-ev)
->  =09struct device *dev =3D &pdev->dev;
->  =09struct tango_pcie *pcie;
->  =09struct resource *res;
-> -=09int ret;
-> +=09struct irq_domain *msi_dom, *irq_dom;
-> +=09struct fwnode_handle *fwnode =3D of_node_to_fwnode(dev->of_node);
-> +=09int ret, reg, virq;
-> =20
->  =09dev_warn(dev, "simultaneous PCI config and MMIO accesses may cause da=
-ta corruption\n");
->  =09add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
+> 2. The patch makes sense in that if we're only allocating a single
+> vector, there's nothing to spread around and there's no need to
+> allocate a cpumask.  But I haven't figured out why we get a warning.
+> I assume it's because we're getting NULL back when we call
+> irq_create_affinity_masks() with nvecs==1, but that only happens if
+> affv==0 or the zalloc fails, and I don't see why either would be the
+> case.
 
-  CC      drivers/pci/host/pcie-tango.o
-drivers/pci/host/pcie-tango.c: In function 'tango_pcie_probe':
-drivers/pci/host/pcie-tango.c:257:6: warning: unused variable 'ret' [-Wunus=
-ed-variable]
-  int ret, reg, virq;
-      ^~~
+Waiting for clarification on this question...
 
-Hmmm, dunno how I managed to miss that...
-Is the kbuild test robot enjoying a well-deserved vacation?
-
-Bjorn, if/when you take the patch, can you first apply this fixup:
-
-@@ -254,7 +254,7 @@ static int tango_pcie_probe(struct platform_device *pde=
-v)
-        struct resource *res;
-        struct irq_domain *msi_dom, *irq_dom;
-        struct fwnode_handle *fwnode =3D of_node_to_fwnode(dev->of_node);
--       int ret, reg, virq;
-+       int reg, virq;
-=20
-        dev_warn(dev, "simultaneous PCI config and MMIO accesses may cause =
-data corruption\n");
-        add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
-
-
-Regards.
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  drivers/pci/msi.c | 4 ++--
+> >  1 file changed, 2 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 253d92409bb3..19653e5cb68f 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -538,7 +538,7 @@ msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
+> >  	struct msi_desc *entry;
+> >  	u16 control;
+> >  
+> > -	if (affd) {
+> > +	if (affd && nvec > 1) {
+> >  		masks = irq_create_affinity_masks(nvec, affd);
+> >  		if (!masks)
+> >  			dev_err(&dev->dev, "can't allocate MSI affinity masks for %d vectors\n",
+> > @@ -679,7 +679,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+> >  	struct msi_desc *entry;
+> >  	int ret, i;
+> >  
+> > -	if (affd) {
+> > +	if (affd && nvec > 1) {
+> >  		masks = irq_create_affinity_masks(nvec, affd);
+> >  		if (!masks)
+> >  			dev_err(&dev->dev, "can't allocate MSI-X affinity masks for %d vectors\n",
+> > -- 
+> > 2.11.0
+> > 
