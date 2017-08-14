@@ -1,70 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0086.outbound.protection.outlook.com ([104.47.41.86]:15360
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751234AbdH1LKc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Aug 2017 07:10:32 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv5 8/9] PCI: designware: enable write permission before updating DBI RO registers
-Date: Mon, 28 Aug 2017 18:53:00 +0800
-Message-ID: <20170828105301.8511-9-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:32808 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751552AbdHNJEw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Aug 2017 05:04:52 -0400
+Subject: Re: Support SVM without PASID
+To: "Tian, Kevin" <kevin.tian@intel.com>,
+        "Raj, Ashok" <ashok.raj@intel.com>
+Cc: valmiki <valmikibow@gmail.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Lan, Tianyu" <tianyu.lan@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+ <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+ <AADFC41AFE54684AB9EE6CBC0274A5D190D57191@SHSMSX101.ccr.corp.intel.com>
+ <b973c557-1b4a-18d2-a05e-28680a49daf9@arm.com>
+ <20170811162506.GB41059@otc-nc-03>
+ <AADFC41AFE54684AB9EE6CBC0274A5D190D716A4@SHSMSX101.ccr.corp.intel.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <2a8c13cb-ecca-1138-71c9-f923eaf08641@arm.com>
+Date: Mon, 14 Aug 2017 10:07:12 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <AADFC41AFE54684AB9EE6CBC0274A5D190D716A4@SHSMSX101.ccr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On 14/08/17 09:00, Tian, Kevin wrote:
+>> From: Raj, Ashok
+>> Sent: Saturday, August 12, 2017 12:25 AM
+>>
+>> On Fri, Aug 04, 2017 at 10:42:41AM +0100, Jean-Philippe Brucker wrote:
+>>> Hi Kevin,
+>>>
+>>>
+>>> Consider the situation where a userspace driver (no virtualization) is
+>>> built in a client-server fashion: the server controls a device and spawns
+>>> new processes (clients), each sharing a context with the device using its
+>>> own PASID. If the server wants to hide parts of the client address space
+>>
+>> Just to be sure, you are't expecting the PASID's to be duplicated or
+>> recreated after a new process is spawned. I would expect each process to
+>> get its own PASID by doing a bind. Threads of the same process would be
+>> sharing the same PASID since they all share the same first level
+>> mappings.
+>>
+>>
+>>> from the device (e.g. .text), then it could control stage-2 via MAP/UNMAP
+>>> to restrict the address space.
+>>
+>> I'm confused.. maybe this is different from Intel IOMMU. the first level
+>> requiring a second level is only true when virtualization is in play.
+>>
+>> First level is gVA->gPA, and second level is gPA->hPA (sort of the cloned
+>> EPT map that is setup via VFIO to set up second level)
+>>
+>> When you are in native user application, there is no nesting between first
+>> and second level. The first level is directly VA->hPA. There is no need
+>> for a nested walk in this case?
+>>
+> 
+> Strictly speaking nesting is just a hardware capability while 
+> virtualization is an use case using that capability. As long as 
+> some software entity (not hypervisor) can setup two level 
+> page tables, it should just work regardless of how the 
+> intermediate address is called.
 
-The existing fix doesn't actually work because the Class register and
-interrupt PIN register are read-only, so it must enable the write
-permission before writing the correct value to these registers.
+Yes, nested translation is just a tool, it doesn't have to be dedicated to
+virtualization.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
-Acked-by: Roy Zang <tie-fei.zang@freescale.com>
----
-V5:
- - No change
+> I think Jean is trying to come up a non-virtualization usage
+> using nesting. Of course current example that he illustrated 
+> is not very meaningful (as I replied in another mail). :-)
 
- drivers/pci/dwc/pcie-designware-host.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+I also can't come up with a convincing API for setting up the second stage
+from userspace. Hopefully we can ignore this case for the moment :)
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 157621175147..582f5cc3cd96 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -597,10 +597,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
- 
- 	/* setup interrupt pins */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
- 	val &= 0xffff00ff;
- 	val |= 0x00000100;
- 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	/* setup bus numbers */
- 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
-@@ -637,8 +639,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 
- 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
- 
-+	/* Enable write permission for the DBI read-only register */
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	/* program correct class for RC */
- 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-+	/* Better disable write permission right after the update */
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
- 	val |= PORT_LOGIC_SPEED_CHANGE;
--- 
-2.14.1
+Thanks,
+Jean
