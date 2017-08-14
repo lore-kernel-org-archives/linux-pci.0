@@ -1,45 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:44599 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751463AbdHJL0p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 07:26:45 -0400
-From: Faiz Abbas <faiz_abbas@ti.com>
-To: <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Faiz Abbas <faiz_abbas@ti.com>
-Subject: [PATCH] pci: dwc: Clear MSI interrupt status after it is handled
-Date: Thu, 10 Aug 2017 16:54:55 +0530
-Message-ID: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
+Received: from mail.kernel.org ([198.145.29.99]:38928 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751196AbdHNSJO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Aug 2017 14:09:14 -0400
+Date: Mon, 14 Aug 2017 13:09:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Niklas Cassel <niklass@axis.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/2] PCI: dwc: spear13xx: utilize
+ dw_pcie_readX_dbi/dw_pcie_writeX_dbi macros
+Message-ID: <20170814180912.GB32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170714120735.11993-1-niklas.cassel@axis.com>
+ <20170714120735.11993-3-niklas.cassel@axis.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170714120735.11993-3-niklas.cassel@axis.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the interrupt status is cleared before it is handled, it is possible
-that another interrupt will trigger while servicing the previous one.
-This is causing timeouts in some wireless lan cards which use pcie.
-Therefore, clear MSI interrupt status after it gets serviced instead
-of before calling generic_handler.
+On Fri, Jul 14, 2017 at 02:07:35PM +0200, Niklas Cassel wrote:
+> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
 
-Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Pratyush, are you OK with this?
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 28ed32b..78b2584 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -71,9 +71,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
- 		while ((pos = find_next_bit((unsigned long *) &val, 32,
- 					    pos)) != 32) {
- 			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-+			generic_handle_irq(irq);
- 			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
- 					    4, 1 << pos);
--			generic_handle_irq(irq);
- 			pos++;
- 		}
- 	}
--- 
-2.7.4
+> ---
+>  drivers/pci/dwc/pcie-spear13xx.c | 22 ++++++++++------------
+>  1 file changed, 10 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
+> index 80897291e0fb..7ebfbf6086fe 100644
+> --- a/drivers/pci/dwc/pcie-spear13xx.c
+> +++ b/drivers/pci/dwc/pcie-spear13xx.c
+> @@ -92,34 +92,32 @@ static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx_pcie)
+>  	 * default value in capability register is 512 bytes. So force
+>  	 * it to 128 here.
+>  	 */
+> -	dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
+> +	val = dw_pcie_readw_dbi(pci, exp_cap_off + PCI_EXP_DEVCTL);
+>  	val &= ~PCI_EXP_DEVCTL_READRQ;
+> -	dw_pcie_write(pci->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
+> +	dw_pcie_writew_dbi(pci, exp_cap_off + PCI_EXP_DEVCTL, val);
+>  
+> -	dw_pcie_write(pci->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
+> -	dw_pcie_write(pci->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
+> +	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, 0x104A);
+> +	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, 0xCD80);
+>  
+>  	/*
+>  	 * if is_gen1 is set then handle it, so that some buggy card
+>  	 * also works
+>  	 */
+>  	if (spear13xx_pcie->is_gen1) {
+> -		dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
+> -			     4, &val);
+> +		val = dw_pcie_readl_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP);
+>  		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+>  			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+>  			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+> -			dw_pcie_write(pci->dbi_base + exp_cap_off +
+> -				      PCI_EXP_LNKCAP, 4, val);
+> +			dw_pcie_writel_dbi(pci, exp_cap_off + PCI_EXP_LNKCAP,
+> +					   val);
+>  		}
+>  
+> -		dw_pcie_read(pci->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
+> -			     2, &val);
+> +		val = dw_pcie_readw_dbi(pci, exp_cap_off + PCI_EXP_LNKCTL2);
+>  		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
+>  			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
+>  			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
+> -			dw_pcie_write(pci->dbi_base + exp_cap_off +
+> -				      PCI_EXP_LNKCTL2, 2, val);
+> +			dw_pcie_writew_dbi(pci, exp_cap_off + PCI_EXP_LNKCTL2,
+> +					   val);
+>  		}
+>  	}
+>  
+> -- 
+> 2.11.0
+> 
