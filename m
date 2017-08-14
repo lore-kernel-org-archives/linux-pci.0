@@ -1,174 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34884 "EHLO mail.kernel.org"
+Received: from mga03.intel.com ([134.134.136.65]:30146 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753256AbdHKVRk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Aug 2017 17:17:40 -0400
-Date: Fri, 11 Aug 2017 16:17:38 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
- it from DT
-Message-ID: <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
-References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
+        id S1751567AbdHNHuC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Aug 2017 03:50:02 -0400
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: valmiki <valmikibow@gmail.com>,
+        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
+        Alex Williamson <alex.williamson@redhat.com>
+CC: "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lan, Tianyu" <tianyu.lan@intel.com>,
+        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
+Subject: RE: Support SVM without PASID
+Date: Mon, 14 Aug 2017 07:49:56 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D71673@SHSMSX101.ccr.corp.intel.com>
+References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
+ <20170708140257.2de02d63@w520.home>
+ <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
+ <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
+ <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
+ <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
+ <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
+ <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
+ <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
+ <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
+ <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
+ <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
+ <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
+In-Reply-To: <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
+> From: valmiki [mailto:valmikibow@gmail.com]
+> Sent: Saturday, August 12, 2017 8:11 PM
+> 
+> On 8/7/2017 4:01 PM, Jean-Philippe Brucker wrote:
+> > On 05/08/17 06:14, valmiki wrote:
+> > [...]
+> >> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
+> >> documentation we fill vaddr and iova in struct
+> vfio_iommu_type1_dma_map
+> >> and pass them to VFIO. But if we use dynamic allocation in application
+> >> (say malloc), do we need to use dma API to get iova and then call
+> >> VFIO_IOMMU_MAP ioctl ?
+> >> If application needs multiple such dynamic allocations, then it need to
+> >> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and
+> then
+> >> manage rest allocations requirements from this buffer ?
+> >
+> > Yes, without SVM, the application allocates large buffers, allocates IOVAs
+> > itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely
+> on the
+> > DMA API at all, it manages IOVAs as it wants. Sizes passed to
+> > VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page
+> granularity
+> > (that is at least 4kB), and both iova and vaddr have to be aligned on that
+> > granularity as well. So malloc isn't really suitable in this case, you'll
+> > need mmap. The application can then implement a small allocator to
+> manage
+> > the DMA pool created with VFIO_IOMMU_MAP.
+> 
+> Thanks Jean, I have a confusion allocate IOVA's in userspace means, how
+> can user application decide IOVA address, can user application pick any
+> random IOVA address ?
+> 
 
-On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
-> If not getting domain number from DT, the domain number will
-> keep increasing once doing unbind/bind RC drivers. This could
-> introduce pointless tree view of lspci as shows below:
-> 
-> -+-[0001:00]---00.0-[01]----00.0
->   \-[0000:00]-
-> 
-> The more test we do, the lengthier it would be. The more serious
-> issue is that if attaching two hierarchies for two different domains
-> belonging to two root bridges, so when doing unbind/bind test for one
-> of them and keep the other, then the domain number would finally
-> overflow and make the two hierarchies of devices share the some domain
-> number but actually they shouldn't. So it looks like we need to invent
-> a new indexing ID mechanism to manage domain number. This patch
-> introduces idr to achieve our purpose.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+yes, any address. In this mode the whole IOVA address space is owned
+by application, which just needs to use VFIO_IOMMU_MAP to setup
+IOVA->PA mapping in IOMMU (As Jean pointed out, input paramters
+are iova and vaddr. VFIO will figure out pa corresponding to vaddr).
 
-The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
-obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
-Lorenzo's excellent work, the time is ripe for moving the domain
-number from arch-specific places into struct pci_host_bridge.
-
-I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
-CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
-enable some simplification of of_pci_bus_find_domain_nr() as well,
-which in turn, might make *this* patch simpler.
-
-This isn't that big a patch to begin with, so I could apply it as-is
-and we could do more domain cleanup later.  It's just that it's
-intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
-opportunity to make this story more readable if those are out of the
-way.  Any thoughts?
-
-> ---
-> 
-> Changes in v5:
-> - fix Bjorn's comments for v3 as actually I didn't address his comments
->   for v3 when posted my v4.
->   v3: https://patchwork.kernel.org/patch/9742003/
->   For ACPI case, we never use DT or IDA to get domain numbers and
->   acpi_pci_bus_find_domain_nr would return the proper value we need
->   whether _SEG exist or not. For DT or IDA, we hope bridges use one of
->   them consistently, and this is actually what the pre-existing code
->   did. So I remove ida_domain now since it complicated the logic of the
->   code and we could just make use_dt_domains global instead to slightly
->   achieve our purpose.
-> 
-> Changes in v4:
-> - make domain_nr depends on CONFIG_PCI_DOMAINS instead of
-> CONFIG_PCI_DOMAINS_GENERIC.
-> 
-> Changes in v3:
-> - make ida_domain a system-wide property and check it in the code to
-> combine with use_dt_domains. Also update the comment there.
-> 
-> Changes in v2:
-> - add a remove wrapper
-> - rename use_dt_domains to ida_domain and set this bit
-> in pci_get_new_domain_nr and test it in the remove wrapper.
-> 
->  drivers/pci/pci.c    | 13 ++++++++++---
->  drivers/pci/remove.c |  2 ++
->  include/linux/pci.h  |  7 +++++--
->  3 files changed, 17 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index b58a6b3..9953eaf 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/delay.h>
->  #include <linux/dmi.h>
-> +#include <linux/idr.h>
->  #include <linux/init.h>
->  #include <linux/of.h>
->  #include <linux/of_pci.h>
-> @@ -5305,17 +5306,23 @@ static void pci_no_domains(void)
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS
-> -static atomic_t __domain_nr = ATOMIC_INIT(-1);
-> +static DEFINE_IDA(__domain_nr);
->  
->  int pci_get_new_domain_nr(void)
->  {
-> -	return atomic_inc_return(&__domain_nr);
-> +	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
-> +}
-> +
-> +static int use_dt_domains = -1;
-> +void pci_put_domain_nr(struct pci_bus *bus)
-> +{
-> +	if (acpi_disabled && use_dt_domains != 1)
-> +		ida_simple_remove(&__domain_nr, bus->domain_nr);
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
->  static int of_pci_bus_find_domain_nr(struct device *parent)
->  {
-> -	static int use_dt_domains = -1;
->  	int domain = -1;
->  
->  	if (parent)
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 73a03d3..01dd1b4 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	list_for_each_entry_safe(child, tmp,
->  				 &bus->devices, bus_list)
->  		pci_remove_bus_device(child);
-> +
-> +	pci_put_domain_nr(bus);
->  	pci_remove_bus(bus);
->  	host_bridge->bus = NULL;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 18cc70a..d6be9596 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -523,7 +523,7 @@ struct pci_bus {
->  	unsigned char	primary;	/* number of primary bridge */
->  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
->  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
-> -#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +#ifdef CONFIG_PCI_DOMAINS
->  	int		domain_nr;
->  #endif
->  
-> @@ -1466,11 +1466,14 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
->  #ifdef CONFIG_PCI_DOMAINS
->  extern int pci_domains_supported;
->  int pci_get_new_domain_nr(void);
-> +void pci_put_domain_nr(struct pci_bus *bus);
->  #else
->  enum { pci_domains_supported = 0 };
->  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
->  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
-> -static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-> +static inline int pci_get_new_domain_nr(void)
-> +{ return -ENOSYS; }
-> +static inline void pci_put_domain_nr(struct pci_bus *bus) { }
->  #endif /* CONFIG_PCI_DOMAINS */
->  
->  /*
-> -- 
-> 1.9.1
-> 
-> 
+Thanks
+Kevin
