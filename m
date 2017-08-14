@@ -1,17 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
- <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
- <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
- <86efs3wesi.fsf@arm.com>
- <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
-Date: Thu, 24 Aug 2017 19:51:16 +0200
+From: Casey Leedom <leedom@chelsio.com>
+To: "Raj, Ashok" <ashok.raj@intel.com>, Ding Tianhong <dingtianhong@huawei.com>
+Subject: Re: [PATCH v10 3/5] PCI: Disable Relaxed Ordering Attributes for AMD
+ A1100
+Date: Mon, 14 Aug 2017 18:07:51 +0000
+Message-ID: <MWHPR12MB1600654CA840BC47AFC06127C88C0@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
+ <1502725499-11276-4-git-send-email-dingtianhong@huawei.com>,
+ <20170814171937.GA52656@otc-nc-03>
+In-Reply-To: <20170814171937.GA52656@otc-nc-03>
 MIME-Version: 1.0
-In-Reply-To: <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,60 +18,65 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>, Mason <slash.tmp@free.fr>
-Content-Type: text/plain; charset="us-ascii"
+Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
+ "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
+ "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
+ "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "linuxarm@huawei.com" <linuxarm@huawei.com>,
+ "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+ "amira@mellanox.com" <amira@mellanox.com>,
+ "helgaas@kernel.org" <helgaas@kernel.org>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ganesh GR <ganeshgr@chelsio.com>, "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
+ "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ Michael Werner <werner@chelsio.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "David.Laight@aculab.com" <David.Laight@aculab.com>,
+ "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "l.stach@pengutronix.de" <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24/08/2017 19:04, Bjorn Helgaas wrote:
-> On Tue, Aug 22, 2017 at 09:03:41PM +0100, Marc Zyngier wrote:
->> Marc Gonzalez wrote:
->>> On 22/08/2017 18:29, Marc Zyngier wrote:
->>>> On 22/08/17 15:56, Marc Gonzalez wrote:
->>>>
->>>>>  #define SMP8759_MUX		0x48
->>>>>  #define SMP8759_TEST_OUT	0x74
->>>>> +#define SMP8759_STATUS		0x80
->>>>> +#define SMP8759_ENABLE		0xa0
->>>>> +#define SMP8759_DOORBELL	0xa002e07c
->>>>
->>>> Why is this hardcoded and not coming from the device-tree, just like any
->>>> other address property?
->>>
->>> Since this bus address is software-configurable, I didn't think
->>> it belonged in the DT. Also, I didn't see anything similar in
->>> other binding docs, especially
->>>
->>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
->>
->> If that's software configurable, how on Earth did you pick the address?
->> How do you ensure that it doesn't conflict with DMA? How is it
->> configured into the RC?
-> 
-> But we *do* need to resolve this.  This does seem like an address that
-> shouldn't be hard-coded into the driver.  Since this driver is
-> programming the address into an MSI message, but not into the receiver
-> of that message, there's a coordination issue between this driver and
-> whatever other software does that receiver configuration.
+| From: Raj, Ashok <ashok.raj@intel.com>
+| Sent: Monday, August 14, 2017 10:19 AM
+| =A0   =
 
-OK. I'll move the doorbell address to the DT for v11.
+| On Mon, Aug 14, 2017 at 11:44:57PM +0800, Ding Tianhong wrote:
+| > Casey reported that the AMD ARM A1100 SoC has a bug in its PCIe
+| > Root Port where Upstream Transaction Layer Packets with the Relaxed
+| > Ordering Attribute clear are allowed to bypass earlier TLPs with
+| > Relaxed Ordering set, it would cause Data Corruption, so we need
+| > to disable Relaxed Ordering Attribute when Upstream TLPs to the
+| > Root Port.
+| > =
 
-What property should be used for this address?
+| > Signed-off-by: Casey Leedom <leedom@chelsio.com>
+| > Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+| > Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+| > Acked-by: Ashok Raj <ashok.raj@intel.com>
+| =
 
-sigma,doorbell ?
+| I can't ack this patch :-).. must be someone from AMD. Please remove my
+| signature from this.
 
-Or maybe I can put it in reg, since I have a 1:1 mapping
-between bus and cpu addresses?
+  You can go ahead and leave my name on since I'm the person who found and =
+diagnosed the problem (with help from others inside Chelsio).
 
-git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
-returns nothing.
+  If anyone on the Linux PCI List knows anyone at AMD who'd be willing to r=
+espond it would be great, but as I noted earlier, I think that AMD has effe=
+ctively abandoned the A1100 ("Seattle") ARM SoC, so I doubt if we'll get an=
+yone from AMD to even comment now.
 
-Regards.
-
-
+Casey
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
