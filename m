@@ -1,111 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: "Raj, Ashok" <ashok.raj@intel.com>
-Subject: Re: [PATCH v7 2/3] PCI: Enable PCIe Relaxed Ordering if supported
-Date: Fri, 4 Aug 2017 20:48:34 +0000
-Message-ID: <MWHPR12MB160086C4B4FA8F3B2EC1D5F9C8B60@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <67be791f-e0cf-8284-9229-17174dc741ef@codeaurora.org>
- <5f9b8bfb-41a8-a17c-6fea-581aec1d5573@huawei.com>
- <20170724090516.2e0f0d2a@w520.home>
- <MWHPR12MB1600065968964410EDFBDA3BC8B90@MWHPR12MB1600.namprd12.prod.outlook.com>
- <75213fca-4522-2297-3cb8-338e643d3552@huawei.com>
- <CAKgT0UcqdRCwDDxD=22Q_jLuqz8KVHwH1-V45Aq-1WzQw=agcA@mail.gmail.com>
- <14218972-553d-eb60-0207-460ac7f4b064@huawei.com>
- <MWHPR12MB1600A6986E4AD13D302F2DC9C8B00@MWHPR12MB1600.namprd12.prod.outlook.com>
- <20170803083153.GB4883@otc-nc-03>
- <MWHPR12MB1600400EC7DEE92E4A3ADC5BC8B60@MWHPR12MB1600.namprd12.prod.outlook.com>,
- <20170804202141.GA39054@otc-nc-03>
-In-Reply-To: <20170804202141.GA39054@otc-nc-03>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:52606 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752536AbdHNU7v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Aug 2017 16:59:51 -0400
+Date: Mon, 14 Aug 2017 15:59:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>
+Subject: Re: [PATCH] pciehp: Fix infinite interupt handler loop
+Message-ID: <20170814205948.GF32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501571512-8362-1-git-send-email-keith.busch@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "mark.rutland@arm.com" <mark.rutland@arm.com>,
- "gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
- "asit.k.mallick@intel.com" <asit.k.mallick@intel.com>,
- "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "linuxarm@huawei.com" <linuxarm@huawei.com>,
- Alexander Duyck <alexander.duyck@gmail.com>, Sinan Kaya <okaya@codeaurora.org>,
- "amira@mellanox.com" <amira@mellanox.com>,
- "helgaas@kernel.org" <helgaas@kernel.org>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- Ding Tianhong <dingtianhong@huawei.com>, Ganesh GR <ganeshgr@chelsio.com>,
- "Bob.Shaw@amd.com" <Bob.Shaw@amd.com>,
- "patrick.j.cramer@intel.com" <patrick.j.cramer@intel.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>, Michael
- Werner <werner@chelsio.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "David.Laight@aculab.com" <David.Laight@aculab.com>,
- "Suravee.Suthikulpanit@amd.com" <Suravee.Suthikulpanit@amd.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "l.stach@pengutronix.de" <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1501571512-8362-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-| From: Raj, Ashok <ashok.raj@intel.com>
-| Sent: Friday, August 4, 2017 1:21 PM
-|
-| On Fri, Aug 04, 2017 at 08:20:37PM +0000, Casey Leedom wrote:
-| > ...
-| > As I've noted a number of times, it would be great if the Intel Hardware
-| > Engineers who attempted to implement the Relaxed Ordering semantics in the
-| > current generation of Root Complexes had left the ability to turn off the
-| > logic which is obviously not working.  If there was a way to disable the
-| > logic via an undocumented register, then we could have the Linux PCI Quirk
-| > do that.  Since Relaxed Ordering is just a hint, it's completely legitimate
-| > to completely ignore it.
-|
-| Suppose you are looking for the existence of a chicken bit to instruct the
-| port to ignore RO traffic. So all we would do is turn the chicken bit on
-| but would permit p2p traffic to be allowed since we won't turn off the
-| capability as currently proposed.
-|
-| Let me look into that keep you posted.
+On Tue, Aug 01, 2017 at 03:11:52AM -0400, Keith Busch wrote:
+> We've encountered a particular platform that under some circumstances
+> always has the power fault detected status raised. The pciehp irq handler
+> would loop forever because it thinks it is handling new events when in
+> fact the power fault is not new. This patch fixes that by masking off
+> the power fault status from new events if the driver hasn't seen the
+> power fault clear from the previous handling attempt.
 
-Huh, I'd never heard it called a "chicken bit" before, but yes, that's what
-I'm talking about.
+Can you say which platform this is?  If this is a hardware defect,
+it'd be interesting to know where it happens.
 
-Whenever our Hardware Designers implement new functionality in our hardware,
-they almost always put in A. several "knobs" which can control fundamental
-parameters of the new Hardware Feature, and B.  a mechanism of completely
-disabling it if necessary.  This stems from the incredibly long Design ->
-Deployment cyle for Hardware (as opposed to the edit->compile->run cycle for s!
+But I'm not sure we handle PCI_EXP_SLTSTA correctly.  We basically
+have this:
 
-It's obvious that handling Relaxed Ordering is a new Hardware Feature for
-Intel's Root Complexes since previous versions simply ignored it (because
-that's legal[1]).  If I was a Hardware Engineer tasked with implementing
-Relaxed Ordering semantics for a device, I would certainly have also
-implemented a switch to turn it off in case there were unintended
-consequences (performance in this case).
+  pciehp_isr()
+  {
+    pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
+    events = status & (<events we care about>);
+    pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
+    <queue event handling>
+  }
 
-And if there is such a mechanism to simply disable processing of Relaxed
-Ordering semantics in the Root Complex, that would be a far easier "fix" for
-this problem ... and leave the code in place to continue sending Relaxed
-Ordering TLPs for a future Root Complex implementation which got it right ...
+The write to PCI_EXP_SLTSTA clears PCI_EXP_SLTSTA_PFD because it's
+RW1C.  But we haven't done anything that would actually change the
+situation that caused a power fault, so I don't think it would be
+surprising if the hardware immediately reasserted it.
 
-Casey
+So maybe this continual assertion of power fault is really a software
+bug, not a hardware problem?
 
-[1] One can't ~quite~ just ignore the Relaxed Ordering Attribute on an
-    incoming Transaction Layer Packet Request: PCIe completion rules (see
-    section 2.2.9 of the PCIe 3.0 specificatin) require that the Relaxed
-    Ordering and No Snoop Attributes in a Request TLP be reflected back
-    verbatim in any corresponding Response TLP.  (The rules for ID-Based
-    Ordering are more complex.)
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Fixes: fad214b0aa72 ("PCI: pciehp: Process all hotplug events before looking for new ones")
+> 
+> Cc: <stable@vger.kernel.org> # 4.9+
+> Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> ---
+> Resending due to send-email setup error; this patch may appear twice
+> for some.
+> 
+>  drivers/pci/hotplug/pciehp_hpc.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 026830a..8ecbc13 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -583,7 +583,9 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
+>  	 * Slot Status contains plain status bits as well as event
+>  	 * notification bits; right now we only want the event bits.
+>  	 */
+> -	events = status & (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
+> +	events = status & (PCI_EXP_SLTSTA_ABP |
+> +			  (ctrl->power_fault_detected ?
+> +				0 : PCI_EXP_SLTSTA_PFD) |
+>  			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
+>  			   PCI_EXP_SLTSTA_DLLSC);
+>  	if (!events)
+> -- 
+> 2.5.5
+> 
