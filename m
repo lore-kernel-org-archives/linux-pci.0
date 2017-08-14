@@ -1,176 +1,176 @@
-Return-Path: <SRS0=zv1j=7G=linux.intel.com=andriy.shevchenko@kernel.org>
-Return-Path: <SRS0=zv1j=7G=linux.intel.com=andriy.shevchenko@kernel.org>
-Message-ID: <1501848579.29303.375.camel@linux.intel.com>
-Subject: Re: [PATCH v1] x86/platform/intel-mid: Make IRQ allocation a bit
- more flexible
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>, x86@kernel.org, Ingo Molnar
-	 <mingo@redhat.com>, "H. Peter Anvin" <hpa@zytor.com>,
-	linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org
-Date: Fri, 04 Aug 2017 15:09:39 +0300
-In-Reply-To: <20170803220804.GK20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170724173402.12939-1-andriy.shevchenko@linux.intel.com>
-	 <20170803220804.GK20308@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 14 Aug 2017 19:15:03 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Khuong Dinh <kdinh@apm.com>
+Subject: Re: [PATCH v3 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in
+ ACPI boot for X-Gene v1
+Message-ID: <20170814181503.GA3093@red-moon>
+References: <1502496173-6017-1-git-send-email-kdinh@apm.com>
+MIME-Version: 1.0
+In-Reply-To: <1502496173-6017-1-git-send-email-kdinh@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: marc.zyngier@arm.com, linux-pci@vger.kernel.org, msalter@redhat.com,
+ rjw@rjwysocki.net, linux-kernel@vger.kernel.org, patches@apm.com,
+ jcm@redhat.com, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-08-03 at 17:08 -0500, Bjorn Helgaas wrote:
-> On Mon, Jul 24, 2017 at 08:34:02PM +0300, Andy Shevchenko wrote:
-> > In the future we would use dynamic allocation for IRQ which brings
-> > non-1:1 mapping for IOAPIC domain. Thus, we need to respect return
-> > value
-> > of mp_map_gsi_to_irq() and assign it back to the device structure.
-> > 
-> > Besides that we need to read GSI from interrupt pin register to
-> > avoid
-> > cases when some drivers will try to initialize PCI device twice in a
-> > row
-> > which will call pcibios_enable_irq() twice as well.
+On Fri, Aug 11, 2017 at 06:02:53PM -0600, Khuong Dinh wrote:
+> This patch makes pci-xgene-msi driver ACPI-aware and provides
+> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
 > 
-> This seems sort of suspect.  It doesn't seem robust to rely on the
-> value of PCI_INTERRUPT_LINE being zero before pcibios_enable_irq().
+> Signed-off-by: Khuong Dinh <kdinh@apm.com>
+>         [Take over from Duc Dang]
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+> v3:
+>  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
+>  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
+> v2:
+>  - Verify with BIOS version 3.06.25 and 3.07.09
+> v1:
+>  - Initial version
+> ---
+>  drivers/acpi/Makefile            |    2 +-
+>  drivers/acpi/acpi_msi.c          |   74 ++++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/internal.h          |    1 +
+>  drivers/acpi/scan.c              |    1 +
+>  drivers/pci/host/pci-xgene-msi.c |   36 +++++++++++++++++--
+>  5 files changed, 110 insertions(+), 4 deletions(-)
+>  create mode 100644 drivers/acpi/acpi_msi.c
+> 
+> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+> index b1aacfc..c15f5cd 100644
+> --- a/drivers/acpi/Makefile
+> +++ b/drivers/acpi/Makefile
+> @@ -40,7 +40,7 @@ acpi-y				+= ec.o
+>  acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
+>  acpi-y				+= pci_root.o pci_link.o pci_irq.o
+>  obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
+> -acpi-y				+= acpi_lpss.o acpi_apd.o
+> +acpi-y				+= acpi_lpss.o acpi_apd.o acpi_msi.o
+>  acpi-y				+= acpi_platform.o
+>  acpi-y				+= acpi_pnp.o
+>  acpi-$(CONFIG_ARM_AMBA)	+= acpi_amba.o
+> diff --git a/drivers/acpi/acpi_msi.c b/drivers/acpi/acpi_msi.c
+> new file mode 100644
+> index 0000000..c2f8d26
+> --- /dev/null
+> +++ b/drivers/acpi/acpi_msi.c
+> @@ -0,0 +1,74 @@
+> +/*
+> + * Enforce MSI driver loaded by PCIe controller driver
+> + *
+> + * Copyright (c) 2017, MACOM Technology Solutions Corporation
+> + * Author: Khuong Dinh <kdinh@apm.com>
+> + *
+> + * This program is free software; you can redistribute  it and/or modify it
+> + * under  the terms of  the GNU General  Public License as published by the
+> + * Free Software Foundation;  either version 2 of the  License, or (at your
+> + * option) any later version.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + */
+> +
+> +#include <linux/acpi.h>
+> +#include "internal.h"
+> +
+> +static acpi_status acpi_create_msi_device(acpi_handle handle, u32 Level,
+> +					void *context, void **retval)
+> +{
+> +	struct acpi_device *device = NULL;
+> +	int type = ACPI_BUS_TYPE_DEVICE;
+> +	unsigned long long sta;
+> +	acpi_status status;
+> +	int ret = 0;
+> +
+> +	acpi_bus_get_device(handle, &device);
+> +	status = acpi_bus_get_status_handle(handle, &sta);
+> +	if (ACPI_FAILURE(status))
+> +		sta = 0;
+> +
+> +	device = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
+> +	if (!device)
+> +		return -ENOMEM;
+> +
+> +	acpi_init_device_object(device, handle, type, sta);
+> +	ret = acpi_device_add(device, NULL);
+> +	if (ret)
+> +		return ret;
+> +	device->parent = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
+> +	INIT_LIST_HEAD(&device->parent->physical_node_list);
+> +
+> +	acpi_device_add_finalize(device);
+> +
+> +	ret = device_attach(&device->dev);
+> +	if (ret < 0)
+> +		return ret;
+> +
+> +	acpi_create_platform_device(device, NULL);
+> +	acpi_device_set_enumerated(device);
+> +
+> +	return ret;
+> +}
 
-So, you are telling that it's possible to get pcibios_enable_irq()
-called with PCI_INTERRUPT_LINE == 0?
+Can't this be implemented through acpi_bus_scan(handle) ?
 
-> Can't we make pcibios_enable_irq() idempotent?  I guess I don't
-> understand the real problem here.
+(where handle is your MSI controller acpi_handle ?)
 
-Currently there is no problem here.
+[...]
 
-Firmware assigns IRQ line and wrote this to the configuration space.
-Intel MID uses 1:1 mapping (IRQ domain is STRICT), so, it just allocates
-a vector inside kernel with the very same number.
+>  static int xgene_msi_probe(struct platform_device *pdev)
+>  {
+>  	struct resource *res;
+> @@ -469,7 +487,18 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  		goto error;
+>  	}
+>  	xgene_msi->msi_addr = res->start;
+> -	xgene_msi->node = pdev->dev.of_node;
+> +
+> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +	if (!xgene_msi->fwnode) {
+> +		xgene_msi->fwnode =
+> +			irq_domain_alloc_fwnode((void *)xgene_msi->msi_addr);
+> +		if (!xgene_msi->fwnode) {
+> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
+> +			rc = ENOMEM;
+> +			goto error;
+> +		}
+> +	}
+> +
+>  	xgene_msi->num_cpus = num_possible_cpus();
+>  
+>  	rc = xgene_msi_init_allocator(xgene_msi);
+> @@ -540,6 +569,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  	.driver = {
+>  		.name = "xgene-msi",
+>  		.of_match_table = xgene_msi_match_table,
+> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>  	},
+>  	.probe = xgene_msi_probe,
+>  	.remove = xgene_msi_remove,
 
-But...
+AFAIK you still have not solved the link ordering problem, creating
+the platform device before scanning the PCI root bridge is not enough,
+because you are not guaranteed to probe the MSI driver first, there
+has to be way for registering your driver from the ACPI scan hook.
 
-If we switch to dynamic allocation (it's a default for ACPI case), _on
-this platform_ we will get wrong allocation in the IOAPIC since mapping
-is not 1:1 anymore.
+Thanks,
+Lorenzo
 
-That's what I'm trying to avoid (dev->irq after this patch points
-correctly to dynamically allocated number).
-
-For old SFI enabled platforms it will not make any change.
-
-Note, there is no legacy PIC on this platform (as same case as for ACPI
-HW reduced platforms), just IOAPIC.
-
-> Is this really two separate patches that could be separated?
-
-I didn't get this, what separation you see might be applied here?
-
-> > 	serial 0000:00:04.1: Mapped GSI28 to IRQ5
-> > 	serial 0000:00:04.2: Mapped GSI29 to IRQ5
-> > 	serial 0000:00:04.3: Mapped GSI54 to IRQ5
-> > 	8250_mid 0000:00:04.1: Mapped GSI28 to IRQ5
-> > 	8250_mid 0000:00:04.2: Mapped GSI29 to IRQ6
-> > 	8250_mid 0000:00:04.3: Mapped GSI54 to IRQ7
-> > 
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > ---
-> >  arch/x86/pci/intel_mid_pci.c                                 | 12
-> > ++++++++++--
-> >  arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c |  6
-> > +++---
-> >  2 files changed, 13 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/arch/x86/pci/intel_mid_pci.c
-> > b/arch/x86/pci/intel_mid_pci.c
-> > index 5a18aedcb341..b901ece278dd 100644
-> > --- a/arch/x86/pci/intel_mid_pci.c
-> > +++ b/arch/x86/pci/intel_mid_pci.c
-> > @@ -215,16 +215,23 @@ static int intel_mid_pci_irq_enable(struct
-> > pci_dev *dev)
-> >  	struct irq_alloc_info info;
-> >  	int polarity;
-> >  	int ret;
-> > +	u8 gsi;
-> >  
-> >  	if (dev->irq_managed && dev->irq > 0)
-> >  		return 0;
-> >  
-> > +	ret = pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &gsi);
-> > +	if (ret < 0) {
-> > +		dev_warn(&dev->dev, "Failed to read interrupt line:
-> > %d\n", ret);
-> > +		return ret;
-> > +	}
-> > +
-> >  	switch (intel_mid_identify_cpu()) {
-> >  	case INTEL_MID_CPU_CHIP_TANGIER:
-> >  		polarity = IOAPIC_POL_HIGH;
-> >  
-> >  		/* Special treatment for IRQ0 */
-> > -		if (dev->irq == 0) {
-> > +		if (gsi == 0) {
-> >  			/*
-> >  			 * Skip HS UART common registers device
-> > since it has
-> >  			 * IRQ0 assigned and not used by the
-> > kernel.
-> > @@ -253,10 +260,11 @@ static int intel_mid_pci_irq_enable(struct
-> > pci_dev *dev)
-> >  	 * MRST only have IOAPIC, the PCI irq lines are 1:1 mapped
-> > to
-> >  	 * IOAPIC RTE entries, so we just enable RTE for the
-> > device.
-> >  	 */
-> > -	ret = mp_map_gsi_to_irq(dev->irq, IOAPIC_MAP_ALLOC, &info);
-> > +	ret = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
-> >  	if (ret < 0)
-> >  		return ret;
-> >  
-> > +	dev->irq = ret;
-> >  	dev->irq_managed = 1;
-> >  
-> >  	return 0;
-> > diff --git a/arch/x86/platform/intel-
-> > mid/device_libs/platform_mrfld_wdt.c b/arch/x86/platform/intel-
-> > mid/device_libs/platform_mrfld_wdt.c
-> > index 9e304e2ea4f5..4f5fa65a1011 100644
-> > --- a/arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c
-> > +++ b/arch/x86/platform/intel-mid/device_libs/platform_mrfld_wdt.c
-> > @@ -30,13 +30,13 @@ static int tangier_probe(struct platform_device
-> > *pdev)
-> >  {
-> >  	struct irq_alloc_info info;
-> >  	struct intel_mid_wdt_pdata *pdata = pdev-
-> > >dev.platform_data;
-> > -	int gsi, irq;
-> > +	int gsi = TANGIER_EXT_TIMER0_MSI;
-> > +	int irq;
-> >  
-> >  	if (!pdata)
-> >  		return -EINVAL;
-> >  
-> >  	/* IOAPIC builds identity mapping between GSI and IRQ on
-> > MID */
-> > -	gsi = pdata->irq;
-> >  	ioapic_set_alloc_attr(&info, cpu_to_node(0), 1, 0);
-> >  	irq = mp_map_gsi_to_irq(gsi, IOAPIC_MAP_ALLOC, &info);
-> >  	if (irq < 0) {
-> > @@ -44,11 +44,11 @@ static int tangier_probe(struct platform_device
-> > *pdev)
-> >  		return irq;
-> >  	}
-> >  
-> > +	pdata->irq = irq;
-> >  	return 0;
-> >  }
-> >  
-> >  static struct intel_mid_wdt_pdata tangier_pdata = {
-> > -	.irq = TANGIER_EXT_TIMER0_MSI,
-> >  	.probe = tangier_probe,
-> >  };
-> >  
-> > -- 
-> > 2.13.2
-> > 
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
