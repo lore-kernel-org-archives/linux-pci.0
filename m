@@ -1,136 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr40085.outbound.protection.outlook.com ([40.107.4.85]:36129
-        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753025AbdHODVL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 23:21:11 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        "Niklas Cassel" <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: RE: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-Date: Tue, 15 Aug 2017 03:21:07 +0000
-Message-ID: <AM5PR0402MB277123D5DFB763519A2F647F848D0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
- <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v10 4/5] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Mon, 14 Aug 2017 23:44:58 +0800
+Message-ID: <1502725499-11276-5-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
+References: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIxNcjVIDY6MjYNCj4gVG86IFoucS4gSG91
-IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
-IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
-QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
-a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
-bT47IFN0YW5pbWlyIFZhcmJhbm92IDxzdmFyYmFub3ZAbW0tc29sLmNvbT47IE5pa2xhcw0KPiBD
-YXNzZWwgPG5pa2xhcy5jYXNzZWxAYXhpcy5jb20+OyBKZXNwZXIgTmlsc3NvbiA8amVzcGVyLm5p
-bHNzb25AYXhpcy5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0h2MiA0LzZdIFBDSTogbGF5ZXJz
-Y2FwZTogcmVmYWN0b3IgdGhlIGhvc3RfaW5pdCBmdW5jdGlvbg0KPiANCj4gWytjYyBTdGFuaW1p
-ciwgTmlrbGFzLCBKZXNwZXJdDQo+IA0KPiBPbiBNb24sIEF1ZyAxNCwgMjAxNyBhdCAwNDozODoy
-NFBNIC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+IE9uIFRodSwgQXVnIDAzLCAyMDE3
-IGF0IDA0OjIzOjM4UE0gKzA4MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4gPiA+IEZyb206IEhv
-dSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4gPg0KPiA+ID4gTWFrZSB0aGUg
-bHMxMDIxYSdzIGhvc3RfaW5pdCByZXVzZSBsYXllcnNjYXBlIHBsYXRmb3JtJ3MgY29tbW9uDQo+
-ID4gPiBob3N0X2luaXQgZnVuY3Rpb24uDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogSG91
-IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gVjI6DQo+
-ID4gPiAgLSBSZW1vdmVkIHRoZSBkaXNhYmxlIG91dGJvdW5kIHdpbmRvd3MgY29kZSBhbmQgdGhl
-IHJlbW92ZSBkdXBsaWNhdGUNCj4gY2xhc3MgY29kZQ0KPiA+ID4gICAgZml4dXAgY29kZSBmcm9t
-IHRoaXMgcGF0Y2guDQo+ID4gPg0KPiA+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
-ZS5jIHwgNTQNCj4gPiA+ICsrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0N
-Cj4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwgMjcgZGVsZXRpb25zKC0p
-DQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
-ZS5jDQo+ID4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gPiBpbmRl
-eCAwOTA1NmE2Li4zNTMzYThjIDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3Bj
-aS1sYXllcnNjYXBlLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
-ZS5jDQo+ID4gPiBAQCAtMTA3LDMzICsxMDcsNiBAQCBzdGF0aWMgaW50IGxzMTAyMV9wY2llX2xp
-bmtfdXAoc3RydWN0IGR3X3BjaWUNCj4gKnBjaSkNCj4gPiA+ICAJcmV0dXJuIDE7DQo+ID4gPiAg
-fQ0KPiA+ID4NCj4gPiA+IC1zdGF0aWMgdm9pZCBsczEwMjFfcGNpZV9ob3N0X2luaXQoc3RydWN0
-IHBjaWVfcG9ydCAqcHApIC17DQo+ID4gPiAtCXN0cnVjdCBkd19wY2llICpwY2kgPSB0b19kd19w
-Y2llX2Zyb21fcHAocHApOw0KPiA+ID4gLQlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3Bj
-aWUocGNpKTsNCj4gPiA+IC0Jc3RydWN0IGRldmljZSAqZGV2ID0gcGNpLT5kZXY7DQo+ID4gPiAt
-CXUzMiBpbmRleFsyXTsNCj4gPiA+IC0NCj4gPiA+IC0JcGNpZS0+c2NmZyA9IHN5c2Nvbl9yZWdt
-YXBfbG9va3VwX2J5X3BoYW5kbGUoZGV2LT5vZl9ub2RlLA0KPiA+ID4gLQkJCQkJCSAgICAgImZz
-bCxwY2llLXNjZmciKTsNCj4gPiA+IC0JaWYgKElTX0VSUihwY2llLT5zY2ZnKSkgew0KPiA+ID4g
-LQkJZGV2X2VycihkZXYsICJObyBzeXNjZmcgcGhhbmRsZSBzcGVjaWZpZWRcbiIpOw0KPiA+ID4g
-LQkJcGNpZS0+c2NmZyA9IE5VTEw7DQo+ID4gPiAtCQlyZXR1cm47DQo+ID4gPiAtCX0NCj4gPiA+
-IC0NCj4gPiA+IC0JaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyX2FycmF5KGRldi0+b2Zfbm9kZSwN
-Cj4gPiA+IC0JCQkJICAgICAgICJmc2wscGNpZS1zY2ZnIiwgaW5kZXgsIDIpKSB7DQo+ID4gPiAt
-CQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiA+IC0JCXJldHVybjsNCj4gPiA+IC0JfQ0KPiA+ID4g
-LQlwY2llLT5pbmRleCA9IGluZGV4WzFdOw0KPiA+ID4gLQ0KPiA+ID4gLQlkd19wY2llX3NldHVw
-X3JjKHBwKTsNCj4gPiA+IC0NCj4gPiA+IC0JbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+
-ID4gPiAtfQ0KPiA+ID4gLQ0KPiA+ID4gIHN0YXRpYyBpbnQgbHNfcGNpZV9saW5rX3VwKHN0cnVj
-dCBkd19wY2llICpwY2kpICB7DQo+ID4gPiAgCXN0cnVjdCBsc19wY2llICpwY2llID0gdG9fbHNf
-cGNpZShwY2kpOyBAQCAtMTYwLDYgKzEzMywzMyBAQA0KPiA+ID4gc3RhdGljIHZvaWQgbHNfcGNp
-ZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gPiAgCWR3X3BjaWVfZGJpX3Jv
-X3dyX2RpcyhwY2kpOw0KPiA+ID4NCj4gPiA+ICAJbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7
-DQo+ID4gPiArDQo+ID4gPiArCWR3X3BjaWVfc2V0dXBfcmMocHApOw0KPiA+ID4gK30NCj4gPiA+
-ICsNCj4gPiA+ICtzdGF0aWMgdm9pZCBsczEwMjFfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVf
-cG9ydCAqcHApIHsNCj4gPiA+ICsJc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJv
-bV9wcChwcCk7DQo+ID4gPiArCXN0cnVjdCBsc19wY2llICpwY2llID0gdG9fbHNfcGNpZShwY2kp
-Ow0KPiA+ID4gKwlzdHJ1Y3QgZGV2aWNlICpkZXYgPSBwY2ktPmRldjsNCj4gPiA+ICsJdTMyIGlu
-ZGV4WzJdOw0KPiA+ID4gKw0KPiA+ID4gKwlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29r
-dXBfYnlfcGhhbmRsZShkZXYtPm9mX25vZGUsDQo+ID4gPiArCQkJCQkJICAgICAiZnNsLHBjaWUt
-c2NmZyIpOw0KPiA+ID4gKwlpZiAoSVNfRVJSKHBjaWUtPnNjZmcpKSB7DQo+ID4gPiArCQlkZXZf
-ZXJyKGRldiwgIk5vIHN5c2NmZyBwaGFuZGxlIHNwZWNpZmllZFxuIik7DQo+ID4gPiArCQlwY2ll
-LT5zY2ZnID0gTlVMTDsNCj4gPiA+ICsJCXJldHVybjsNCj4gPiA+ICsJfQ0KPiA+ID4gKw0KPiA+
-ID4gKwlpZiAob2ZfcHJvcGVydHlfcmVhZF91MzJfYXJyYXkoZGV2LT5vZl9ub2RlLA0KPiA+ID4g
-KwkJCQkgICAgICAgImZzbCxwY2llLXNjZmciLCBpbmRleCwgMikpIHsNCj4gPiA+ICsJCXBjaWUt
-PnNjZmcgPSBOVUxMOw0KPiA+ID4gKwkJcmV0dXJuOw0KPiA+ID4gKwl9DQo+ID4gPiArCXBjaWUt
-PmluZGV4ID0gaW5kZXhbMV07DQo+ID4gPiArDQo+ID4gPiArCWxzX3BjaWVfaG9zdF9pbml0KHBw
-KTsNCj4gPg0KPiA+IFRoZSBjaGFuZ2Vsb2cgc3VnZ2VzdHMgdGhhdCB0aGlzIGlzIGEgc2ltcGxl
-IHJlZmFjdG9yaW5nIHRoYXQgZG9lc24ndA0KPiA+IGZpeCBhbnl0aGluZy4NCj4gPg0KPiA+IEJ1
-dCBiZWNhdXNlIGxzMTAyMV9wY2llX2hvc3RfaW5pdCgpIG5vdyBjYWxscyBsc19wY2llX2hvc3Rf
-aW5pdCgpLCBpdA0KPiA+IG5vdyBjYWxsczoNCj4gPg0KPiA+ICAgZHdfcGNpZV9kYmlfcm9fd3Jf
-ZW4ocGNpKTsNCj4gPiAgIGxzX3BjaWVfZml4X2NsYXNzKHBjaWUpOw0KPiA+ICAgbHNfcGNpZV9j
-bGVhcl9tdWx0aWZ1bmN0aW9uKHBjaWUpOw0KPiA+ICAgZHdfcGNpZV9kYmlfcm9fd3JfZGlzKHBj
-aSk7DQo+ID4NCj4gPiB3aGVuIGl0IGRpZCBub3QgY2FsbCB0aGVtIGJlZm9yZS4NCj4gPg0KPiA+
-IEl0J3MgZmluZSB3aXRoIG1lIGlmIHlvdSB3YW50IHRvIGRvIHRoYXQsIGJ1dCBpdCBzaG91bGQg
-YmUgbWVudGlvbmVkDQo+ID4gaW4gdGhlIGNoYW5nZWxvZy4NCj4gDQo+IFRoZSBvcmRlciBvZiB0
-aGlzIHNlcmllcyBpcyBzY3Jld2VkIHVwLCB3aGljaCBtYWtlcyBpdCBoYXJkIHRvIGZvbGxvdy4N
-Cj4gDQo+IDUxOTJlYzdiMjRkZCAoIlBDSTogbGF5ZXJzY2FwZTogQWRkIHN1cHBvcnQgZm9yIExT
-MTA0M2EgYW5kIExTMjA4MGEiKQ0KPiBhZGRlZCBsc19wY2llX2hvc3RfaW5pdCgpLCB3aGljaCBk
-aWRuJ3QgY2FsbCBkd19wY2llX3NldHVwX3JjKCkuICBJIHRoaW5rIHRoYXQNCj4gd2FzIGEgYnVn
-LCBhbmQgeW91IHNob3VsZCBmaXggdGhhdCBmaXJzdC4NCg0KWWVzLCBpdCBpcyBhIGJ1ZywgdGhl
-IHJlYXNvbiB0aGF0IHRoZSBsc19wY2llX2hvc3RfaW5pdCgpIGRvZXNuJ3QgY2FsbCBkd19wY2ll
-X3NldHVwX3JjKCkgaXMgaXQgdXNlcyB0aGUgc2V0dXBzIGJ5IHUtYm9vdCwgc28gSSBzdWJtaXR0
-ZWQgdGhlc2UgcGF0Y2hlcyB0byByZXNvbHZlIHRoZSBkZXBlbmRlbmN5IGFuZCBtYWtlIGl0IHJv
-YnVzdC4NCg0KPiBUaGVuOg0KPiANCj4gICAtIFJlYmFzZSBvbiBwY2kvaG9zdC1kZXNpZ253YXJl
-IGJlY2F1c2UgaXQgY29uZmxpY3RzIHdpdGggcGF0Y2hlcw0KPiAgICAgSSd2ZSBhbHJlYWR5IGFw
-cGxpZWQNCj4gDQo+IChodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVs
-L2dpdC9oZWxnYWFzL3BjaS5naXQvbG9nLz9oPXBjaS9obw0KPiBzdC1kZXNpZ253YXJlKQ0KPiAN
-Cj4gICAtIE1ha2UgbHNfcGNpZV9ob3N0X2luaXQoKSBjYWxsIGR3X3BjaWVfc2V0dXBfcmMoKSAo
-Zml4ZXMNCj4gICAgIDUxOTJlYzdiMjRkZCkNCj4gDQo+ICAgLSBSZWZhY3RvciBsczEwMjFfcGNp
-ZV9ob3N0X2luaXQoKSB0byBtYWtlIGl0IGNhbGwNCj4gICAgIGxzX3BjaWVfaG9zdF9pbml0KCkg
-KHRoaXMgd2lsbCBub3cgYmUgbm8gZnVuY3Rpb25hbCBjaGFuZ2UpDQo+IA0KPiAgIC0gRGlzYWJs
-ZSBvdXRib3VuZCBBVFVzIGluIGxzX3BjaWVfaG9zdF9pbml0KCkgKGJ1Z2ZpeCBmb3IgYWxsDQo+
-ICAgICBsYXllcnNjYXBlIGRldmljZXMpDQo+IA0KPiAgIC0gQWRkIERCSSB3cml0ZSBwZXJtaXNz
-aW9uIGFjY2Vzc29ycyBhbmQgdXNlIHRoZW0gaW4gbGF5ZXJzY2FwZS4NCj4gICAgIFRoaXMgd2ls
-bCBtYWtlIGl0IG9idmlvdXMgdGhhdCBQQ0lFX01JU0NfQ09OVFJPTF8xX09GRiBpcyBtb3ZpbmcN
-Cj4gICAgIGZyb20gbGF5ZXJzY2FwZSB0byBkZXNpZ253YXJlIGFuZCB0aGF0IHdlJ3JlIGFjdHVh
-bGx5IHVzaW5nIHRoZXNlDQo+ICAgICBuZXcgaW50ZXJmYWNlcyAodGhpcyB3aWxsIGJlIG5vIGZ1
-bmN0aW9uYWwgY2hhbmdlKS4NCj4gDQo+ICAgLSBFbmFibGUgd3JpdGUgcGVybWlzc2lvbiBpbiBk
-d19wY2llX3NldHVwX3JjKCkgYW5kIHJlbW92ZSBjbGFzcw0KPiAgICAgY29kZSB1cGRhdGUgZnJv
-bSBsc19wY2llX2hvc3RfaW5pdCgpICBUaGlzIHdpbGwgbWFrZSBpdCBvYnZpb3VzDQo+ICAgICB0
-aGF0IGZpeGluZyBkd19wY2llX3NldHVwX3JjKCkgbWFrZXMgbHNfcGNpZV9maXhfY2xhc3MoKSBv
-YnNvbGV0ZS4NCj4gDQo+IERvZXMgdGhpcyBkd19wY2llX3NldHVwX3JjKCkgZml4IG1lYW4gd2Ug
-Y2FuIGFsc28gZ2V0IHJpZCBvZiB0aGUgZGV2aWNlIGNsYXNzDQo+IGNoZWNrIGluIHFjb21fcGNp
-ZV9yZF9vd25fY29uZigpPw0KDQpZZXMsIEkgdGhpbmsgc28uDQoNCj4gSSBzdXNwZWN0IGl0IGFs
-c28gbWVhbnMgd2UgY2FuIGRyb3AgdGhlIHdyaXRlIGVuYWJsZSBpbg0KPiBhcnRwZWM2X3BjaWVf
-ZXN0YWJsaXNoX2xpbmsoKS4NCg0KWWVzLCB5b3UncmUgcmlnaHQsIHRoYW5rcyBmb3IgeW91ciBz
-dWdnZXN0aW9uIGFuZCBJIHdpbGwgcmVmb3JtIHRoZXNlIHBhdGNoZXMgd2l0aCB0aGlzIG9yZGVy
-Lg0KDQo+IA0KPiA+ID4gIH0NCj4gPiA+DQo+ID4gPiAgc3RhdGljIGludCBsc19wY2llX21zaV9o
-b3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAsDQo+ID4gPiAtLQ0KPiA+ID4gMi4xLjAuMjcu
-Zzk2ZGIzMjQNCj4gPiA+IA0KDQpUaGFua3MsDQpaaGlxaWFuZw0K
+From: Casey Leedom <leedom@chelsio.com>
+
+cxgb4 Ethernet driver now queries PCIe configuration space to determine
+if it can send TLPs to it with the Relaxed Ordering Attribute set.
+
+Remove the enable_pcie_relaxed_ordering() to avoid enable PCIe Capability
+Device Control[Relaxed Ordering Enable] at probe routine, to make sure
+the driver will not send the Relaxed Ordering TLPs to the Root Complex which
+could not deal the Relaxed Ordering TLPs.
+
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Reviewed-by: Casey Leedom <leedom@chelsio.com>
+---
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 23 +++++++++++++++++------
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+ 3 files changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+index ef4be78..09ea62e 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+@@ -529,6 +529,7 @@ enum {                                 /* adapter flags */
+ 	USING_SOFT_PARAMS  = (1 << 6),
+ 	MASTER_PF          = (1 << 7),
+ 	FW_OFLD_CONN       = (1 << 9),
++	ROOT_NO_RELAXED_ORDERING = (1 << 10),
+ };
+ 
+ enum {
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index e403fa1..33bb867 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -4654,11 +4654,6 @@ static void print_port_info(const struct net_device *dev)
+ 		    dev->name, adap->params.vpd.id, adap->name, buf);
+ }
+ 
+-static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
+-{
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
+-}
+-
+ /*
+  * Free the following resources:
+  * - memory used for tables
+@@ -4908,7 +4903,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 
+ 	pci_enable_pcie_error_reporting(pdev);
+-	enable_pcie_relaxed_ordering(pdev);
+ 	pci_set_master(pdev);
+ 	pci_save_state(pdev);
+ 
+@@ -4947,6 +4941,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	adapter->msg_enable = DFLT_MSG_ENABLE;
+ 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+ 
++	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
++	 * Ingress Packet Data to Free List Buffers in order to allow for
++	 * chipset performance optimizations between the Root Complex and
++	 * Memory Controllers.  (Messages to the associated Ingress Queue
++	 * notifying new Packet Placement in the Free Lists Buffers will be
++	 * send without the Relaxed Ordering Attribute thus guaranteeing that
++	 * all preceding PCIe Transaction Layer Packets will be processed
++	 * first.)  But some Root Complexes have various issues with Upstream
++	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
++	 * The PCIe devices which under the Root Complexes will be cleared the
++	 * Relaxed Ordering bit in the configuration space, So we check our
++	 * PCIe configuration space to see if it's flagged with advice against
++	 * using Relaxed Ordering.
++	 */
++	if (!pcie_relaxed_ordering_enabled(pdev))
++		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
++
+ 	spin_lock_init(&adapter->stats_lock);
+ 	spin_lock_init(&adapter->tid_release_lock);
+ 	spin_lock_init(&adapter->win0_lock);
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+index ede1220..4ef68f6 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+@@ -2719,6 +2719,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 	struct fw_iq_cmd c;
+ 	struct sge *s = &adap->sge;
+ 	struct port_info *pi = netdev_priv(dev);
++	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+ 
+ 	/* Size needs to be multiple of 16, including status entry. */
+ 	iq->size = roundup(iq->size, 16);
+@@ -2772,8 +2773,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 
+ 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+ 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+-					     FW_IQ_CMD_FL0FETCHRO_F |
+-					     FW_IQ_CMD_FL0DATARO_F |
++					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
++					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
+ 					     FW_IQ_CMD_FL0PADEN_F);
+ 		if (cong >= 0)
+ 			c.iqns_to_fl0congen |=
+-- 
+1.8.3.1
