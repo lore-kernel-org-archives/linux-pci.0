@@ -1,109 +1,77 @@
-Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 15 Aug 2017 18:50:17 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Return-Path: <SRS0=f3i4=7Q=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=f3i4=7Q=intel.com=keith.busch@kernel.org>
+Date: Mon, 14 Aug 2017 14:15:47 -0400
+From: Keith Busch <keith.busch@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
- it from DT
-Message-ID: <20170815175017.GA28308@red-moon>
-References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
- <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
- <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
- <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
- <20170815122330.GA16904@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Scott Bauer <scott.bauer@intel.com>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org, jonathan.derrick@intel.com
+Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
+Message-ID: <20170814181547.GF7233@localhost.localdomain>
+References: <20170811205432.29612-1-scott.bauer@intel.com>
+ <20170814180652.GA32525@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170815122330.GA16904@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170814180652.GA32525@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 07:23:30AM -0500, Bjorn Helgaas wrote:
-> On Tue, Aug 15, 2017 at 12:43:16PM +0100, Lorenzo Pieralisi wrote:
-> > On Tue, Aug 15, 2017 at 03:01:48PM +0800, Shawn Lin wrote:
-> > > Hi Bjorn,
-> > > 
-> > > On 2017/8/12 5:17, Bjorn Helgaas wrote:
-> > > >[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
-> > > >
-> > > >On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
-> > > >>If not getting domain number from DT, the domain number will
-> > > >>keep increasing once doing unbind/bind RC drivers. This could
-> > > >>introduce pointless tree view of lspci as shows below:
-> > > >>
-> > > >>-+-[0001:00]---00.0-[01]----00.0
-> > > >>   \-[0000:00]-
-> > > >>
-> > > >>The more test we do, the lengthier it would be. The more serious
-> > > >>issue is that if attaching two hierarchies for two different domains
-> > > >>belonging to two root bridges, so when doing unbind/bind test for one
-> > > >>of them and keep the other, then the domain number would finally
-> > > >>overflow and make the two hierarchies of devices share the some domain
-> > > >>number but actually they shouldn't. So it looks like we need to invent
-> > > >>a new indexing ID mechanism to manage domain number. This patch
-> > > >>introduces idr to achieve our purpose.
-> > > >>
-> > > >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> > > >
-> > > >The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
-> > > >obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
-> > > >Lorenzo's excellent work, the time is ripe for moving the domain
-> > > >number from arch-specific places into struct pci_host_bridge.
-> > > >
-> > > >I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
-> > > >CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
-> > > >enable some simplification of of_pci_bus_find_domain_nr() as well,
-> > > >which in turn, might make *this* patch simpler.
-> > > >
-> > > >This isn't that big a patch to begin with, so I could apply it as-is
-> > > >and we could do more domain cleanup later.  It's just that it's
-> > > >intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
-> > > >opportunity to make this story more readable if those are out of the
-> > > >way.  Any thoughts?
-> > > 
-> > > That sounds good to me that aftering add IDA domain, we could start
-> > > considering moving domain number from arch-specific places into the
-> > > bridge code and may be could also finally remove the macro
-> > > CONFIG_PCI_DOMAIN* both?
+On Mon, Aug 14, 2017 at 01:06:52PM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 11, 2017 at 02:54:32PM -0600, Scott Bauer wrote:
+> > This patch frees up the IRQs we request on the suspend path,
+> > and reallocates them on the resume path.
 > > 
-> > I need to see how this can be implemented (another hook in
-> > pci_host_bridge ?) but I suspect we can't get away with arch
-> > specific bits - or maybe you are referring to having one single
-> > place where the domain is _assigned_ using an arch specific hook
-> > (in pci_host_bridge) ? I have to have a look into this, certainly
-> > this patch should be considered because that atomic counter deserved
-> > more thought, yes.
+> > Fixes:
+> > [  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
+> > [  559.966824] Error taking CPU111 down: -34
+> > [  559.966825] Non-boot CPUs are not disabled
+> > [  559.966826] Enabling non-boot CPUs ...
+> > 
+> > Signed-off-by: Scott Bauer <scott.bauer@intel.com>
 > 
-> What I was hoping (and I haven't thought this all through) was that we
-> could: 
-> 
->   - add "domain" to struct pci_host_bridge
-> 
->   - have callers of pci_scan_root_bus_bridge() assign bridge->domain
->     alongside their existing bridge->busnr, bridge->ops, etc.
->     assignments.  This would pull a little of the messiness of
->     pci_bus_find_domain_nr() into the bridge drivers, but they would
->     know a priori whether to use ACPI or DT, so we wouldn't need quite
->     as much guesswork.
-> 
->   - replace the pci_bus_find_domain_nr() call in
->     pci_register_host_bridge() with "bus->domain_nr = bridge->domain"
-> 
->   - replace the arch-specific pci_domain_nr() implementations with a
->     generic one
-> 
->   - add IDA alloc to the DT domain number alloc path
+> Keith acked the previous version (which contained the enable/disable),
+> but since this is different, I'll wait for his ack again.
 
-Yes, if we accept that arch code has to play a role in setting the
-domain number I think that's doable but I have to have a look into ACPI
-for this to work since this means that I have to convert x86/ia64 (and
-powerpc, not sure about this) to the new bus scanning API.
+Thanks for checking. This is actually the patch that was intended for
+submission.
 
-For the DT host bridges and arches I have already converted that should
-be relatively easy (well, another big series), I have to have a proper
-look into it.
-
-Yes, overall it makes perfect sense.
-
-Thanks,
-Lorenzo
+Acked-by: Keith Busch <keith.busch@intel.com>
+ 
+> > ---
+> >  drivers/pci/host/vmd.c | 15 +++++++++++++++
+> >  1 file changed, 15 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> > index 7e967a8784b2..4fe1756af010 100644
+> > --- a/drivers/pci/host/vmd.c
+> > +++ b/drivers/pci/host/vmd.c
+> > @@ -763,6 +763,11 @@ static void vmd_remove(struct pci_dev *dev)
+> >  static int vmd_suspend(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> > +	int i;
+> > +
+> > +	for (i = 0; i < vmd->msix_count; i++)
+> > +                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
+> >  
+> >  	pci_save_state(pdev);
+> >  	return 0;
+> > @@ -771,6 +776,16 @@ static int vmd_suspend(struct device *dev)
+> >  static int vmd_resume(struct device *dev)
+> >  {
+> >  	struct pci_dev *pdev = to_pci_dev(dev);
+> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
+> > +	int err, i;
+> > +
+> > +	for (i = 0; i < vmd->msix_count; i++) {
+> > +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
+> > +				       vmd_irq, IRQF_NO_THREAD,
+> > +				       "vmd", &vmd->irqs[i]);
+> > +		if (err)
+> > +			return err;
+> > +	}
+> >  
+> >  	pci_restore_state(pdev);
+> >  	return 0;
+> > -- 
+> > 2.11.0
+> > 
