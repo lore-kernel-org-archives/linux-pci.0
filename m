@@ -1,264 +1,329 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  3 Aug 2017 12:19:49 -0600
-Message-Id: <20170803181954.4154-11-logang@deltatee.com>
-In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
-Subject: [PATCH v4 10/15] NTB: switchtec_ntb: Add skeleton NTB driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <141326ed-178b-d4dd-d45d-9c2ea57ca8b7@arm.com>
+References: <1502496173-6017-1-git-send-email-kdinh@apm.com>
+ <141326ed-178b-d4dd-d45d-9c2ea57ca8b7@arm.com>
+From: Khuong Dinh <kdinh@apm.com>
+Date: Mon, 14 Aug 2017 16:10:46 -0700
+Message-ID: <CAAsHzqt++3Yck9ESo4mb35XLrvJRJxNQPsFZ7vfW25h-XGNhOQ@mail.gmail.com>
+Subject: Re: [PATCH v3 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
+ boot for X-Gene v1
+To: Marc Zyngier <marc.zyngier@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: rjw@rjwysocki.net, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-pci@vger.kernel.org, msalter@redhat.com, patches <patches@apm.com>,
+ linux-kernel@vger.kernel.org, jcm@redhat.com,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a skeleton NTB driver which will be filled out in subsequent patches.
+Hi Marc,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Stephen Bates <sbates@raithlin.com>
-Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
----
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 148 ++++++++++++++++++++++++++++++++-
- include/linux/ntb.h                    |   3 +
- 2 files changed, 150 insertions(+), 1 deletion(-)
+On Mon, Aug 14, 2017 at 1:21 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On 12/08/17 01:02, Khuong Dinh wrote:
+>> This patch makes pci-xgene-msi driver ACPI-aware and provides
+>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+>>
+>> Signed-off-by: Khuong Dinh <kdinh@apm.com>
+>>         [Take over from Duc Dang]
+>> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+>
+> Given that the patch has changed very substantially, this Ack is no
+> longer valid.
 
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index 175ac0baa7a0..158ed310cbaf 100644
---- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -18,6 +18,7 @@
- #include <linux/delay.h>
- #include <linux/kthread.h>
- #include <linux/interrupt.h>
-+#include <linux/ntb.h>
- 
- MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
- MODULE_VERSION("0.1");
-@@ -71,6 +72,7 @@ struct shared_mw {
- #define LUT_SIZE SZ_64K
- 
- struct switchtec_ntb {
-+	struct ntb_dev ntb;
- 	struct switchtec_dev *stdev;
- 
- 	int self_partition;
-@@ -161,10 +163,148 @@ static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
- 	return -EIO;
- }
- 
-+static int switchtec_ntb_mw_count(struct ntb_dev *ntb, int pidx)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_mw_get_align(struct ntb_dev *ntb, int pidx,
-+				      int widx, resource_size_t *addr_align,
-+				      resource_size_t *size_align,
-+				      resource_size_t *size_max)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_mw_set_trans(struct ntb_dev *ntb, int pidx, int widx,
-+				      dma_addr_t addr, resource_size_t size)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_mw_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_mw_get_addr(struct ntb_dev *ntb, int idx,
-+					  phys_addr_t *base,
-+					  resource_size_t *size)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_link_is_up(struct ntb_dev *ntb,
-+				    enum ntb_speed *speed,
-+				    enum ntb_width *width)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_link_enable(struct ntb_dev *ntb,
-+				     enum ntb_speed max_speed,
-+				     enum ntb_width max_width)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_link_disable(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_valid_mask(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_vector_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_vector_mask(struct ntb_dev *ntb, int db_vector)
-+{
-+	return 0;
-+}
-+
-+static u64 switchtec_ntb_db_read(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_clear(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_set_mask(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_db_clear_mask(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_db_set(struct ntb_dev *ntb, u64 db_bits)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_spad_count(struct ntb_dev *ntb)
-+{
-+	return 0;
-+}
-+
-+static u32 switchtec_ntb_spad_read(struct ntb_dev *ntb, int idx)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_spad_write(struct ntb_dev *ntb, int idx, u32 val)
-+{
-+	return 0;
-+}
-+
-+static int switchtec_ntb_peer_spad_write(struct ntb_dev *ntb, int pidx,
-+					 int sidx, u32 val)
-+{
-+	return 0;
-+}
-+
-+static const struct ntb_dev_ops switchtec_ntb_ops = {
-+	.mw_count		= switchtec_ntb_mw_count,
-+	.mw_get_align		= switchtec_ntb_mw_get_align,
-+	.mw_set_trans		= switchtec_ntb_mw_set_trans,
-+	.peer_mw_count		= switchtec_ntb_peer_mw_count,
-+	.peer_mw_get_addr	= switchtec_ntb_peer_mw_get_addr,
-+	.link_is_up		= switchtec_ntb_link_is_up,
-+	.link_enable		= switchtec_ntb_link_enable,
-+	.link_disable		= switchtec_ntb_link_disable,
-+	.db_valid_mask		= switchtec_ntb_db_valid_mask,
-+	.db_vector_count	= switchtec_ntb_db_vector_count,
-+	.db_vector_mask		= switchtec_ntb_db_vector_mask,
-+	.db_read		= switchtec_ntb_db_read,
-+	.db_clear		= switchtec_ntb_db_clear,
-+	.db_set_mask		= switchtec_ntb_db_set_mask,
-+	.db_clear_mask		= switchtec_ntb_db_clear_mask,
-+	.peer_db_set		= switchtec_ntb_peer_db_set,
-+	.spad_count		= switchtec_ntb_spad_count,
-+	.spad_read		= switchtec_ntb_spad_read,
-+	.spad_write		= switchtec_ntb_spad_write,
-+	.peer_spad_write	= switchtec_ntb_peer_spad_write,
-+};
-+
- static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
- {
- 	u64 part_map;
- 
-+	sndev->ntb.pdev = sndev->stdev->pdev;
-+	sndev->ntb.topo = NTB_TOPO_SWITCH;
-+	sndev->ntb.ops = &switchtec_ntb_ops;
-+
- 	sndev->self_partition = sndev->stdev->partition;
- 
- 	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-@@ -517,7 +657,6 @@ static int switchtec_ntb_add(struct device *dev,
- 		return -ENOMEM;
- 
- 	sndev->stdev = stdev;
--
- 	switchtec_ntb_init_sndev(sndev);
- 	switchtec_ntb_init_mw(sndev);
- 	switchtec_ntb_init_db(sndev);
-@@ -535,11 +674,17 @@ static int switchtec_ntb_add(struct device *dev,
- 	if (rc)
- 		goto deinit_shared_and_exit;
- 
-+	rc = ntb_register_device(&sndev->ntb);
-+	if (rc)
-+		goto deinit_and_exit;
-+
- 	stdev->sndev = sndev;
- 	dev_info(dev, "NTB device registered");
- 
- 	return 0;
- 
-+deinit_and_exit:
-+	switchtec_ntb_deinit_db_msg_irq(sndev);
- deinit_shared_and_exit:
- 	switchtec_ntb_deinit_shared_mw(sndev);
- free_and_exit:
-@@ -558,6 +703,7 @@ void switchtec_ntb_remove(struct device *dev,
- 		return;
- 
- 	stdev->sndev = NULL;
-+	ntb_unregister_device(&sndev->ntb);
- 	switchtec_ntb_deinit_db_msg_irq(sndev);
- 	switchtec_ntb_deinit_shared_mw(sndev);
- 	kfree(sndev);
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 47f2966cfd7f..c308964777eb 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -70,6 +70,7 @@ struct pci_dev;
-  * @NTB_TOPO_SEC:	On secondary side of remote ntb.
-  * @NTB_TOPO_B2B_USD:	On primary side of local ntb upstream of remote ntb.
-  * @NTB_TOPO_B2B_DSD:	On primary side of local ntb downstream of remote ntb.
-+ * @NTB_TOPO_SWITCH:	Connected via a switch which supports ntb.
-  */
- enum ntb_topo {
- 	NTB_TOPO_NONE = -1,
-@@ -77,6 +78,7 @@ enum ntb_topo {
- 	NTB_TOPO_SEC,
- 	NTB_TOPO_B2B_USD,
- 	NTB_TOPO_B2B_DSD,
-+	NTB_TOPO_SWITCH,
- };
- 
- static inline int ntb_topo_is_b2b(enum ntb_topo topo)
-@@ -97,6 +99,7 @@ static inline char *ntb_topo_string(enum ntb_topo topo)
- 	case NTB_TOPO_SEC:	return "NTB_TOPO_SEC";
- 	case NTB_TOPO_B2B_USD:	return "NTB_TOPO_B2B_USD";
- 	case NTB_TOPO_B2B_DSD:	return "NTB_TOPO_B2B_DSD";
-+	case NTB_TOPO_SWITCH:	return "NTB_TOPO_SWITCH";
- 	}
- 	return "NTB_TOPO_INVALID";
- }
--- 
-2.11.0
+Yes, I'll remove it.
+
+>> ---
+>> v3:
+>>  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
+>>  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
+>> v2:
+>>  - Verify with BIOS version 3.06.25 and 3.07.09
+>> v1:
+>>  - Initial version
+>> ---
+>>  drivers/acpi/Makefile            |    2 +-
+>>  drivers/acpi/acpi_msi.c          |   74 ++++++++++++++++++++++++++++++++++++++
+>>  drivers/acpi/internal.h          |    1 +
+>>  drivers/acpi/scan.c              |    1 +
+>>  drivers/pci/host/pci-xgene-msi.c |   36 +++++++++++++++++--
+>>  5 files changed, 110 insertions(+), 4 deletions(-)
+>>  create mode 100644 drivers/acpi/acpi_msi.c
+>>
+>> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+>> index b1aacfc..c15f5cd 100644
+>> --- a/drivers/acpi/Makefile
+>> +++ b/drivers/acpi/Makefile
+>> @@ -40,7 +40,7 @@ acpi-y                              += ec.o
+>>  acpi-$(CONFIG_ACPI_DOCK)     += dock.o
+>>  acpi-y                               += pci_root.o pci_link.o pci_irq.o
+>>  obj-$(CONFIG_ACPI_MCFG)              += pci_mcfg.o
+>> -acpi-y                               += acpi_lpss.o acpi_apd.o
+>> +acpi-y                               += acpi_lpss.o acpi_apd.o acpi_msi.o
+>>  acpi-y                               += acpi_platform.o
+>>  acpi-y                               += acpi_pnp.o
+>>  acpi-$(CONFIG_ARM_AMBA)      += acpi_amba.o
+>> diff --git a/drivers/acpi/acpi_msi.c b/drivers/acpi/acpi_msi.c
+>> new file mode 100644
+>> index 0000000..c2f8d26
+>> --- /dev/null
+>> +++ b/drivers/acpi/acpi_msi.c
+>> @@ -0,0 +1,74 @@
+>> +/*
+>> + * Enforce MSI driver loaded by PCIe controller driver
+>> + *
+>> + * Copyright (c) 2017, MACOM Technology Solutions Corporation
+>> + * Author: Khuong Dinh <kdinh@apm.com>
+>> + *
+>> + * This program is free software; you can redistribute  it and/or modify it
+>> + * under  the terms of  the GNU General  Public License as published by the
+>> + * Free Software Foundation;  either version 2 of the  License, or (at your
+>> + * option) any later version.
+>> + *
+>> + * This program is distributed in the hope that it will be useful,
+>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>> + * GNU General Public License for more details.
+>> + */
+>> +
+>> +#include <linux/acpi.h>
+>> +#include "internal.h"
+>> +
+>> +static acpi_status acpi_create_msi_device(acpi_handle handle, u32 Level,
+>> +                                     void *context, void **retval)
+>> +{
+>> +     struct acpi_device *device = NULL;
+>> +     int type = ACPI_BUS_TYPE_DEVICE;
+>> +     unsigned long long sta;
+>> +     acpi_status status;
+>> +     int ret = 0;
+>> +
+>> +     acpi_bus_get_device(handle, &device);
+>> +     status = acpi_bus_get_status_handle(handle, &sta);
+>> +     if (ACPI_FAILURE(status))
+>> +             sta = 0;
+>> +
+>> +     device = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
+>> +     if (!device)
+>> +             return -ENOMEM;
+>> +
+>> +     acpi_init_device_object(device, handle, type, sta);
+>> +     ret = acpi_device_add(device, NULL);
+>> +     if (ret)
+>> +             return ret;
+>
+> Hello, memory leak.
+
+I'll update the code to release the memory when the error happens.
+
+>> +     device->parent = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
+>> +     INIT_LIST_HEAD(&device->parent->physical_node_list);
+>> +
+>> +     acpi_device_add_finalize(device);
+>> +
+>> +     ret = device_attach(&device->dev);
+>> +     if (ret < 0)
+>> +             return ret;
+>
+> And another one.
+
+I'll update the code to release the memory when the error happens.
+
+>> +
+>> +     acpi_create_platform_device(device, NULL);
+>> +     acpi_device_set_enumerated(device);
+>> +
+>> +     return ret;
+>> +}
+>> +
+>> +static const struct acpi_device_id acpi_msi_device_ids[] = {
+>> +     {"APMC0D0E", 0},
+>
+> Isn't this an APM-specific thing? Is that supposed to be populated by
+> all MSI controller drivers? If so, this would better be served by a
+> separate linker section.
+
+The code is generic for MSI controller drivers.
+It will walk through the HID to get the MSI device and enforce it
+happens before acpi_bus_scan.
+This mechanism will help to avoid MSI driver from relying on ACPI
+device nodes ordering.
+For now, it just supports for APM X-Gene v1.
+
+>> +     { }
+>> +};
+>> +
+>> +int __init acpi_msi_init(void)
+>> +{
+>> +     acpi_status status;
+>> +     int ret = 0;
+>> +
+>> +     status = acpi_get_devices(acpi_msi_device_ids[0].id,
+>> +                     acpi_create_msi_device, NULL, NULL);
+>> +     if (ACPI_FAILURE(status))
+>> +             ret = -ENODEV;
+>> +
+>> +     return ret;
+>> +}
+>
+> Overall, this part should be a separate patch, and you should start by
+> explaining what it does exactly. Because so far, all I can see is that
+> it pre-populates random ACPI device structures, and that definitely seem
+> fishy to me.
+
+I'm still following Lorenzo's approach to resolve the general ACPI
+dependence issue.
+As soon as it's fine, I'll re-visit my prior suggestion to separate
+the original patch to enable ACPI support for PCIe MSI and the general
+ACPI dependence issue.
+The patch is to add a hook in drivers/acpi/scan.c to enforce MSI
+driver to be initialized and registered before acpi_bus_scan happens,
+so that MSI driver will not rely on ACPI device nodes ordering.
+It will walk through the HID to get the MSI device (e.g:
+acip_get_devices). When the device is found, the callback will be
+called and we will initialize MSI device by its handle, start to
+attach MSI device to a driver, create ACPI platform device for MSI
+APCI device node and marked it as visited.
+In result, it will happen on top of acpi_bus_scan.
+
+>> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+>> index 58dd7ab..3da50d3 100644
+>> --- a/drivers/acpi/internal.h
+>> +++ b/drivers/acpi/internal.h
+>> @@ -80,6 +80,7 @@ int acpi_scan_add_handler_with_hotplug(struct acpi_scan_handler *handler,
+>>  void acpi_lpss_init(void);
+>>
+>>  void acpi_apd_init(void);
+>> +int acpi_msi_init(void);
+>>
+>>  acpi_status acpi_hotplug_schedule(struct acpi_device *adev, u32 src);
+>>  bool acpi_queue_hotplug_work(struct work_struct *work);
+>> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+>> index 3389729..8ec4d39 100644
+>> --- a/drivers/acpi/scan.c
+>> +++ b/drivers/acpi/scan.c
+>> @@ -2029,6 +2029,7 @@ int __init acpi_scan_init(void)
+>>       acpi_status status;
+>>       struct acpi_table_stao *stao_ptr;
+>>
+>> +     acpi_msi_init();
+>>       acpi_pci_root_init();
+>>       acpi_pci_link_init();
+>>       acpi_processor_init();
+>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+>> index f1b633b..b1768a1 100644
+>> --- a/drivers/pci/host/pci-xgene-msi.c
+>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>> @@ -24,6 +24,7 @@
+>>  #include <linux/pci.h>
+>>  #include <linux/platform_device.h>
+>>  #include <linux/of_pci.h>
+>> +#include <linux/acpi.h>
+>>
+>>  #define MSI_IR0                      0x000000
+>>  #define MSI_INT0             0x800000
+>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>>  };
+>>
+>>  struct xgene_msi {
+>> -     struct device_node      *node;
+>> +     struct fwnode_handle    *fwnode;
+>>       struct irq_domain       *inner_domain;
+>>       struct irq_domain       *msi_domain;
+>>       u64                     msi_addr;
+>> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
+>>       .free   = xgene_irq_domain_free,
+>>  };
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+>> +{
+>> +     return xgene_msi_ctrl.fwnode;
+>> +}
+>> +#endif
+>> +
+>>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>>  {
+>>       msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>       if (!msi->inner_domain)
+>>               return -ENOMEM;
+>>
+>> -     msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+>> +     msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>>                                                   &xgene_msi_domain_info,
+>>                                                   msi->inner_domain);
+>>
+>> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>               return -ENOMEM;
+>>       }
+>>
+>> +#ifdef CONFIG_ACPI
+>> +     pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
+>> +#endif
+>>       return 0;
+>>  }
+>>
+>> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
+>>       {},
+>>  };
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
+>> +     {"APMC0D0E", 0},
+>> +     { },
+>> +};
+>> +#endif
+>> +
+>>  static int xgene_msi_probe(struct platform_device *pdev)
+>>  {
+>>       struct resource *res;
+>> @@ -469,7 +487,18 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>>               goto error;
+>>       }
+>>       xgene_msi->msi_addr = res->start;
+>> -     xgene_msi->node = pdev->dev.of_node;
+>> +
+>> +     xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+>> +     if (!xgene_msi->fwnode) {
+>> +             xgene_msi->fwnode =
+>> +                     irq_domain_alloc_fwnode((void *)xgene_msi->msi_addr);
+>> +             if (!xgene_msi->fwnode) {
+>> +                     dev_err(&pdev->dev, "Failed to create fwnode\n");
+>> +                     rc = ENOMEM;
+>> +                     goto error;
+>> +             }
+>> +     }
+>> +
+>>       xgene_msi->num_cpus = num_possible_cpus();
+>>
+>>       rc = xgene_msi_init_allocator(xgene_msi);
+>> @@ -540,6 +569,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>>       .driver = {
+>>               .name = "xgene-msi",
+>>               .of_match_table = xgene_msi_match_table,
+>> +             .acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>>       },
+>>       .probe = xgene_msi_probe,
+>>       .remove = xgene_msi_remove,
+>>
+>
+> Thanks,
+>
+>         M.
+> --
+> Jazz is not dead. It just smells funny...
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
