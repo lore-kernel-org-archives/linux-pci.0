@@ -1,81 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 28 Aug 2017 14:17:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v8 2/3] PCI: iproc: retry request when CRS returned from EP
-Message-ID: <20170828191708.GJ8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
- <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
+Return-Path: <SRS0=7cMG=7Q=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=7cMG=7Q=intel.com=ashok.raj@kernel.org>
+Date: Mon, 14 Aug 2017 10:19:38 -0700
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Ding Tianhong <dingtianhong@huawei.com>
+Cc: leedom@chelsio.com, bhelgaas@google.com, helgaas@kernel.org,
+	werner@chelsio.com, ganeshgr@chelsio.com, asit.k.mallick@intel.com,
+	patrick.j.cramer@intel.com, Suravee.Suthikulpanit@amd.com,
+	Bob.Shaw@amd.com, l.stach@pengutronix.de, amira@mellanox.com,
+	gabriele.paoloni@huawei.com, David.Laight@aculab.com,
+	jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com,
+	will.deacon@arm.com, mark.rutland@arm.com, robin.murphy@arm.com,
+	davem@davemloft.net, alexander.duyck@gmail.com,
+	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxarm@huawei.com, ashok.raj@intel.com
+Subject: Re: [PATCH v10 3/5] PCI: Disable Relaxed Ordering Attributes for AMD
+ A1100
+Message-ID: <20170814171937.GA52656@otc-nc-03>
+References: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
+ <1502725499-11276-4-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Andy Gospodarek <gospo@broadcom.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1502725499-11276-4-git-send-email-dingtianhong@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVGh1LCBBdWcgMjQsIDIwMTcgYXQgMTA6MzQ6MjVBTSArMDUzMCwgT3phIFBhd2FuZGVlcCB3
-cm90ZToKPiBQQ0llIHNwZWMgcjMuMSwgc2VjIDIuMy4yCj4gSWYgQ1JTIHNvZnR3YXJlIHZpc2li
-aWxpdHkgaXMgbm90IGVuYWJsZWQsIHRoZSBSQyBtdXN0IHJlaXNzdWUgdGhlCj4gY29uZmlnIHJl
-cXVlc3QgYXMgYSBuZXcgcmVxdWVzdC4KPiAKPiAtIElmIENSUyBzb2Z0d2FyZSB2aXNpYmlsaXR5
-IGlzIGVuYWJsZWQsCj4gLSBmb3IgYSBjb25maWcgcmVhZCBvZiBWZW5kb3IgSUQsIHRoZSBSQyBt
-dXN0IHJldHVybiAweDAwMDEgZGF0YQo+IC0gZm9yIGFsbCBvdGhlciBjb25maWcgcmVhZHMvd3Jp
-dGVzLCB0aGUgUkMgbXVzdCByZWlzc3VlIHRoZQo+ICAgcmVxdWVzdAo+IAo+IGlwcm9jIFBDSWUg
-Q29udHJvbGxlciBzcGVjOgo+IDQuNy4zLjMuIFJldHJ5IFN0YXR1cyBPbiBDb25maWd1cmF0aW9u
-IEN5Y2xlCj4gRW5kcG9pbnRzIGFyZSBhbGxvd2VkIHRvIGdlbmVyYXRlIHJldHJ5IHN0YXR1cyBv
-biBjb25maWd1cmF0aW9uCj4gY3ljbGVzLiBJbiB0aGlzIGNhc2UsIHRoZSBSQyBuZWVkcyB0byBy
-ZS1pc3N1ZSB0aGUgcmVxdWVzdC4gVGhlIElQCj4gZG9lcyBub3QgaGFuZGxlIHRoaXMgYmVjYXVz
-ZSB0aGUgbnVtYmVyIG9mIGNvbmZpZ3VyYXRpb24gY3ljbGVzIG5lZWRlZAo+IHdpbGwgcHJvYmFi
-bHkgYmUgbGVzcyB0aGFuIHRoZSB0b3RhbCBudW1iZXIgb2Ygbm9uLXBvc3RlZCBvcGVyYXRpb25z
-Cj4gbmVlZGVkLgo+IAo+IFdoZW4gYSByZXRyeSBzdGF0dXMgaXMgcmVjZWl2ZWQgb24gdGhlIFVz
-ZXIgUlggaW50ZXJmYWNlIGZvciBhCj4gY29uZmlndXJhdGlvbiByZXF1ZXN0IHRoYXQgd2FzIHNl
-bnQgb24gdGhlIFVzZXIgVFggaW50ZXJmYWNlLAo+IGl0IHdpbGwgYmUgaW5kaWNhdGVkIHdpdGgg
-YSBjb21wbGV0aW9uIHdpdGggdGhlIENNUExfU1RBVFVTIGZpZWxkIHNldAo+IHRvIDI9Q1JTLCBh
-bmQgdGhlIHVzZXIgd2lsbCBoYXZlIHRvIGZpbmQgdGhlIGFkZHJlc3MgYW5kIGRhdGEgdmFsdWVz
-Cj4gYW5kIHNlbmQgYSBuZXcgdHJhbnNhY3Rpb24gb24gdGhlIFVzZXIgVFggaW50ZXJmYWNlLgo+
-IFdoZW4gdGhlIGludGVybmFsIGNvbmZpZ3VyYXRpb24gc3BhY2UgcmV0dXJucyBhIHJldHJ5IHN0
-YXR1cyBkdXJpbmcgYQo+IGNvbmZpZ3VyYXRpb24gY3ljbGUgKHVzZXJfY3NjZmcgPSAxKSBvbiB0
-aGUgQ29tbWFuZC9TdGF0dXMgaW50ZXJmYWNlLAo+IHRoZSBwY2llX2NzY3JzIHdpbGwgYXNzZXJ0
-IHdpdGggdGhlIHBjaWVfY3NhY2sgc2lnbmFsIHRvIGluZGljYXRlIHRoZQo+IENSUyBzdGF0dXMu
-Cj4gV2hlbiB0aGUgQ1JTIFNvZnR3YXJlIFZpc2liaWxpdHkgRW5hYmxlIHJlZ2lzdGVyIGluIHRo
-ZSBSb290IENvbnRyb2wKPiByZWdpc3RlciBpcyBlbmFibGVkLCB0aGUgSVAgd2lsbCByZXR1cm4g
-dGhlIGRhdGEgdmFsdWUgdG8gMHgwMDAxIGZvcgo+IHRoZSBWZW5kb3IgSUQgdmFsdWUgYW5kIDB4
-ZmZmZiAgKGFsbCAx4oCZcykgZm9yIHRoZSByZXN0IG9mIHRoZSBkYXRhIGluCj4gdGhlIHJlcXVl
-c3QgZm9yIHJlYWRzIG9mIG9mZnNldCAwIHRoYXQgcmV0dXJuIHdpdGggQ1JTIHN0YXR1cy4gIFRo
-aXMKPiBpcyB0cnVlIGZvciBib3RoIHRoZSBVc2VyIFJYIEludGVyZmFjZSBhbmQgZm9yIHRoZSBD
-b21tYW5kL1N0YXR1cwo+IGludGVyZmFjZS4gIFdoZW4gQ1JTIFNvZnR3YXJlIFZpc2liaWxpdHkg
-aXMgZW5hYmxlZCwgdGhlIENNUExfU1RBVFVTCj4gZmllbGQgb2YgdGhlIGNvbXBsZXRpb24gb24g
-dGhlIFVzZXIgUlggSW50ZXJmYWNlIHdpbGwgbm90IGJlIDI9Q1JTIGFuZAo+IHRoZSBwY2llX2Nz
-Y3JzIHNpZ25hbCB3aWxsIG5vdCBhc3NlcnQgb24gdGhlIENvbW1hbmQvU3RhdHVzIGludGVyZmFj
-ZS4KPiAKPiBQZXIgUENJZSByMy4xLCBzZWMgMi4zLjIsIGNvbmZpZyByZXF1ZXN0cyB0aGF0IHJl
-Y2VpdmUgY29tcGxldGlvbnMKPiB3aXRoIENvbmZpZ3VyYXRpb24gUmVxdWVzdCBSZXRyeSBTdGF0
-dXMgKENSUykgc2hvdWxkIGJlIHJlaXNzdWVkIGJ5Cj4gdGhlIGhhcmR3YXJlIGV4Y2VwdCByZWFk
-cyBvZiB0aGUgVmVuZG9yIElEIHdoZW4gQ1JTIFNvZnR3YXJlCj4gVmlzaWJpbGl0eSBpcyBlbmFi
-bGVkLgo+IAo+IFRoaXMgaGFyZHdhcmUgbmV2ZXIgcmVpc3N1ZXMgY29uZmlndXJhdGlvbiByZXF1
-ZXN0cyB3aGVuIGl0IHJlY2VpdmVzCj4gQ1JTIGNvbXBsZXRpb25zLgo+IE5vdGUgdGhhdCwgbmVp
-dGhlciBQQ0llIGhvc3QgYnJpZGdlIG5vciBQQ0llIGNvcmUgcmUtaXNzdWVzIHRoZQo+IHJlcXVl
-c3QgZm9yIGFueSBjb25maWd1cmF0aW9uIG9mZnNldC4KPiAKPiBGb3IgY29uZmlnIHJlYWRzLCB0
-aGlzIGhhcmR3YXJlIHJldHVybnMgQ0ZHX1JFVFJZX1NUQVRVUyBkYXRhIHdoZW4KPiBpdCByZWNl
-aXZlcyBhIENSUyBjb21wbGV0aW9uIGZvciBhIGNvbmZpZyByZWFkLCByZWdhcmRsZXNzIG9mIHRo
-ZQo+IGFkZHJlc3Mgb2YgdGhlIHJlYWQgb3IgdGhlIENSUyBTb2Z0d2FyZSBWaXNpYmlsaXR5IEVu
-YWJsZSBiaXQuCgpJIGNhbid0IHJlbWVtYmVyIGhvdyBTdGluZ3JheSBoYW5kbGVzIHRoZSBDUlMg
-U29mdHdhcmUgVmlzaWJpbGl0eSBFbmFibGUKYml0LiAgSXMgaXQgYSByZWFkLW9ubHkgemVybz8g
-IElzIGl0IHdyaXRhYmxlPyAgRG9lcyB0aGUgaGFyZHdhcmUgbG9vayBhdAppdCBhbGwgKEkgdGhp
-bmsgbm90KT8KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5m
-cmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xp
-bnV4LWFybS1rZXJuZWwK
+On Mon, Aug 14, 2017 at 11:44:57PM +0800, Ding Tianhong wrote:
+> Casey reported that the AMD ARM A1100 SoC has a bug in its PCIe
+> Root Port where Upstream Transaction Layer Packets with the Relaxed
+> Ordering Attribute clear are allowed to bypass earlier TLPs with
+> Relaxed Ordering set, it would cause Data Corruption, so we need
+> to disable Relaxed Ordering Attribute when Upstream TLPs to the
+> Root Port.
+> 
+> Signed-off-by: Casey Leedom <leedom@chelsio.com>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+> Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+> Acked-by: Ashok Raj <ashok.raj@intel.com>
+
+I can't ack this patch :-).. must be someone from AMD. Please remove my
+signature from this.
+
+> ---
+>  drivers/pci/quirks.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 1272f7e..1407604 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4089,6 +4089,22 @@ static void quirk_relaxedordering_disable(struct pci_dev *dev)
+>  			      quirk_relaxedordering_disable);
+>  
+>  /*
+> + * The AMD ARM A1100 (AKA "SEATTLE") SoC has a bug in its PCIe Root Complex
+> + * where Upstream Transaction Layer Packets with the Relaxed Ordering
+> + * Attribute clear are allowed to bypass earlier TLPs with Relaxed Ordering
+> + * set.  This is a violation of the PCIe 3.0 Transaction Ordering Rules
+> + * outlined in Section 2.4.1 (PCI Express(r) Base Specification Revision 3.0
+> + * November 10, 2010).  As a result, on this platform we can't use Relaxed
+> + * Ordering for Upstream TLPs.
+> + */
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a00, PCI_CLASS_NOT_DEFINED, 8,
+> +			      quirk_relaxedordering_disable);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a01, PCI_CLASS_NOT_DEFINED, 8,
+> +			      quirk_relaxedordering_disable);
+> +DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_AMD, 0x1a02, PCI_CLASS_NOT_DEFINED, 8,
+> +			      quirk_relaxedordering_disable);
+> +
+> +/*
+>   * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+>   * values for the Attribute as were supplied in the header of the
+>   * corresponding Request, except as explicitly allowed when IDO is used."
+> -- 
+> 1.8.3.1
+> 
+> 
