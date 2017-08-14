@@ -1,53 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f182.google.com ([209.85.128.182]:38887 "EHLO
-        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752797AbdHOFz4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 01:55:56 -0400
-Received: by mail-wr0-f182.google.com with SMTP id m57so91862wrm.5
-        for <linux-pci@vger.kernel.org>; Mon, 14 Aug 2017 22:55:56 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v2 0/3] PCI hotplug feature
-Date: Tue, 15 Aug 2017 11:25:44 +0530
-Message-Id: <1502776547-30542-1-git-send-email-oza.oza@broadcom.com>
+Received: from mailgw01.mediatek.com ([210.61.82.183]:14357 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752893AbdHNNEm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 14 Aug 2017 09:04:42 -0400
+From: <honghui.zhang@mediatek.com>
+To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+        <ryder.lee@mediatek.com>
+CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
+        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
+        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+        <xinping.qian@mediatek.com>
+Subject: [PATCH v2 2/3] PCI: mediatek: take use of bus->sysdata to get host private data
+Date: Mon, 14 Aug 2017 21:04:27 +0800
+Message-ID: <1502715868-17651-3-git-send-email-honghui.zhang@mediatek.com>
+In-Reply-To: <1502715868-17651-1-git-send-email-honghui.zhang@mediatek.com>
+References: <1502715868-17651-1-git-send-email-honghui.zhang@mediatek.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These patches bring in PCI hotplug support for iproc family chipsets.
+From: Honghui Zhang <honghui.zhang@mediatek.com>
 
-It includes DT binding documentation update and, implementation in
-iproc pcie RC driver.
+Commit ae02a6dda285 ("PCI: mediatek: Add controller support for MT2712 and
+MT7622") has put the mtk_pcie * into bus->sysdata, take advantage of that
+to get the private data and simplify the code.
 
-These patch set is made on top of following patches.
-[PATCH v6 2/2] PCI: iproc: add device shutdown for PCI RC
-[PATCH v6 1/2] PCI: iproc: Retry request when CRS returned from EP
+Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+---
+ drivers/pci/host/pcie-mediatek.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Changes since v2:
-Addressed Rob Herring's comments.
-Made generic PCI hotplug properties 'slot-pluggable' and 'prsnt-gpios'
-
-Oza Pawandeep (3):
-  PCI: iproc: Implement PCI hotplug support
-  Documentation/devicetree: Add PCIe hotplug property
-  PCI: iproc: Implement optional property prsnt-gpios
-
- .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  14 +++
- Documentation/devicetree/bindings/pci/pci.txt      |  15 +++
- drivers/pci/host/pcie-iproc-platform.c             |   3 +
- drivers/pci/host/pcie-iproc.c                      | 130 ++++++++++++++++++++-
- drivers/pci/host/pcie-iproc.h                      |   7 ++
- 5 files changed, 163 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 946c056..acc2e28 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -511,8 +511,7 @@ static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
+ static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
+ 				      unsigned int devfn, int where)
+ {
+-	struct pci_host_bridge *host = pci_find_host_bridge(bus);
+-	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
++	struct mtk_pcie *pcie = bus->sysdata;
+ 
+ 	writel(PCIE_CONF_ADDR(where, PCI_FUNC(devfn), PCI_SLOT(devfn),
+ 			      bus->number), pcie->base + PCIE_CFG_ADDR);
 -- 
-1.9.1
+2.6.4
