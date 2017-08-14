@@ -1,487 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:37138 "EHLO
-        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751877AbdHASzJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 14:55:09 -0400
-Received: by mail-qt0-f195.google.com with SMTP id d10so2472821qtb.4
-        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 11:55:09 -0700 (PDT)
-Date: Tue, 1 Aug 2017 14:55:06 -0400
-From: Jon Mason <jdmason@kudzu.us>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: Re: [PATCH v3 09/16] switchtec_ntb: initialize hardware for memory
- windows
-Message-ID: <20170801185505.GH4186@kudzu.us>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-10-logang@deltatee.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+ <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linuxarm@huawei.com>
+Subject: [PATCH v10 2/5] PCI: Disable Relaxed Ordering for some Intel
+ processors
+Date: Mon, 14 Aug 2017 23:44:56 +0800
+Message-ID: <1502725499-11276-3-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
+References: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170725205753.4735-10-logang@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jul 25, 2017 at 02:57:46PM -0600, Logan Gunthorpe wrote:
-> Add the code to initialize the memory windows in the hardware.
-> This includes setting up the requester ID table, and figuring out
-> which bar corresponds to which memory window. (Seeing the switch
-> can be configured with any number of bars.)
-> 
-> Also, seeing the device doesn't have hardware for scratchpads or
-> determining the link status, we create a shared memory window that has
-> these features. A magic number with a version copmonent will be used
-> to determine if the otherside's driver is actually up.
+According to the Intel spec section 3.9.1 said:
 
-Using shared memory for SPADS is kind of hacky.  We should probably
-rework the transport to not need SPADs.  I'm fine with this being done
-after this series, assuming you are willing to do so.
+    3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
+          and Toward MMIO Regions (P2P)
 
-More comments below
+    In order to maximize performance for PCIe devices in the processors
+    listed in Table 3-6 below, the soft- ware should determine whether the
+    accesses are toward coherent memory (system memory) or toward MMIO
+    regions (P2P access to other devices). If the access is toward MMIO
+    region, then software can command HW to set the RO bit in the TLP
+    header, as this would allow hardware to achieve maximum throughput for
+    these types of accesses. For accesses toward coherent memory, software
+    can command HW to clear the RO bit in the TLP header (no RO), as this
+    would allow hardware to achieve maximum throughput for these types of
+    accesses.
 
-> 
-> The shared memory window also informs the other side of the
-> size and count of the local memory windows.
-> 
-> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-> Reviewed-by: Stephen Bates <sbates@raithlin.com>
-> Reviewed-by: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-> ---
->  drivers/ntb/hw/mscc/switchtec_ntb.c | 355 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 355 insertions(+)
-> 
-> diff --git a/drivers/ntb/hw/mscc/switchtec_ntb.c b/drivers/ntb/hw/mscc/switchtec_ntb.c
-> index 253efba72275..1596757413f5 100644
-> --- a/drivers/ntb/hw/mscc/switchtec_ntb.c
-> +++ b/drivers/ntb/hw/mscc/switchtec_ntb.c
-> @@ -15,37 +15,391 @@
->  
->  #include <linux/switchtec.h>
->  #include <linux/module.h>
-> +#include <linux/delay.h>
-> +#include <linux/kthread.h>
->  
->  MODULE_DESCRIPTION("Microsemi Switchtec(tm) NTB Driver");
->  MODULE_VERSION("0.1");
->  MODULE_LICENSE("GPL");
->  MODULE_AUTHOR("Microsemi Corporation");
->  
-> +static bool use_lut_mws;
-> +module_param(use_lut_mws, bool, 0644);
-> +MODULE_PARM_DESC(use_lut_mws,
-> +		 "Enable the use of the LUT based memory windows");
-> +
-> +#ifndef ioread64
-> +#ifdef readq
-> +#define ioread64 readq
-> +#else
-> +#define ioread64 _ioread64
-> +static inline u64 _ioread64(void __iomem *mmio)
-> +{
-> +	u64 low, high;
-> +
-> +	low = ioread32(mmio);
-> +	high = ioread32(mmio + sizeof(u32));
-> +	return low | (high << 32);
-> +}
-> +#endif
-> +#endif
-> +
-> +#ifndef iowrite64
-> +#ifdef writeq
-> +#define iowrite64 writeq
-> +#else
-> +#define iowrite64 _iowrite64
-> +static inline void _iowrite64(u64 val, void __iomem *mmio)
-> +{
-> +	iowrite32(val, mmio);
-> +	iowrite32(val >> 32, mmio + sizeof(u32));
-> +}
-> +#endif
-> +#endif
-> +
-> +#define SWITCHTEC_NTB_MAGIC 0x45CC0001
-> +#define MAX_MWS     128
-> +
-> +struct shared_mw {
-> +	u32 magic;
-> +	u32 partition_id;
-> +	u64 mw_sizes[MAX_MWS];
-> +};
-> +
-> +#define MAX_DIRECT_MW ARRAY_SIZE(((struct ntb_ctrl_regs *)(0))->bar_entry)
-> +#define LUT_SIZE SZ_64K
-> +
->  struct switchtec_ntb {
->  	struct switchtec_dev *stdev;
-> +
-> +	int self_partition;
-> +	int peer_partition;
-> +
-> +	struct ntb_info_regs __iomem *mmio_ntb;
-> +	struct ntb_ctrl_regs __iomem *mmio_ctrl;
-> +	struct ntb_dbmsg_regs __iomem *mmio_dbmsg;
-> +	struct ntb_ctrl_regs __iomem *mmio_self_ctrl;
-> +	struct ntb_ctrl_regs __iomem *mmio_peer_ctrl;
-> +	struct ntb_dbmsg_regs __iomem *mmio_self_dbmsg;
-> +
-> +	struct shared_mw *self_shared;
-> +	struct shared_mw __iomem *peer_shared;
-> +	dma_addr_t self_shared_dma;
-> +
-> +	int nr_direct_mw;
-> +	int nr_lut_mw;
-> +	int direct_mw_to_bar[MAX_DIRECT_MW];
-> +
-> +	int peer_nr_direct_mw;
-> +	int peer_nr_lut_mw;
-> +	int peer_direct_mw_to_bar[MAX_DIRECT_MW];
->  };
->  
-> +static int switchtec_ntb_part_op(struct switchtec_ntb *sndev,
-> +				 struct ntb_ctrl_regs __iomem *ctl,
-> +				 u32 op, int wait_status)
-> +{
-> +	static const char * const op_text[] = {
-> +		[NTB_CTRL_PART_OP_LOCK] = "lock",
-> +		[NTB_CTRL_PART_OP_CFG] = "configure",
-> +		[NTB_CTRL_PART_OP_RESET] = "reset",
-> +	};
-> +
-> +	int i;
-> +	u32 ps;
-> +	int status;
-> +
-> +	switch (op) {
-> +	case NTB_CTRL_PART_OP_LOCK:
-> +		status = NTB_CTRL_PART_STATUS_LOCKING;
-> +		break;
-> +	case NTB_CTRL_PART_OP_CFG:
-> +		status = NTB_CTRL_PART_STATUS_CONFIGURING;
-> +		break;
-> +	case NTB_CTRL_PART_OP_RESET:
-> +		status = NTB_CTRL_PART_STATUS_RESETTING;
-> +		break;
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +
-> +	iowrite32(op, &ctl->partition_op);
-> +
-> +	for (i = 0; i < 1000; i++) {
-> +		if (msleep_interruptible(50) != 0) {
-> +			iowrite32(NTB_CTRL_PART_OP_RESET, &ctl->partition_op);
-> +			return -EINTR;
-> +		}
-> +
-> +		ps = ioread32(&ctl->partition_status) & 0xFFFF;
-> +
-> +		if (ps != status)
-> +			break;
-> +	}
-> +
-> +	if (ps == wait_status)
-> +		return 0;
-> +
-> +	if (ps == status) {
-> +		dev_err(&sndev->stdev->dev,
-> +			"Timed out while peforming %s (%d). (%08x)",
-> +			op_text[op], op,
-> +			ioread32(&ctl->partition_status));
-> +
-> +		return -ETIMEDOUT;
-> +	}
-> +
-> +	return -EIO;
-> +}
-> +
-> +static void switchtec_ntb_init_sndev(struct switchtec_ntb *sndev)
-> +{
-> +	u64 part_map;
-> +
-> +	sndev->self_partition = sndev->stdev->partition;
-> +
-> +	sndev->mmio_ntb = sndev->stdev->mmio_ntb;
-> +	part_map = ioread64(&sndev->mmio_ntb->ep_map);
-> +	part_map &= ~(1 << sndev->self_partition);
-> +	sndev->peer_partition = ffs(part_map) - 1;
-> +
-> +	dev_dbg(&sndev->stdev->dev, "Partition ID %d of %d (%llx)",
-> +		sndev->self_partition, sndev->stdev->partition_count,
-> +		part_map);
-> +
-> +	sndev->mmio_ctrl = (void * __iomem)sndev->mmio_ntb +
-> +		SWITCHTEC_NTB_REG_CTRL_OFFSET;
-> +	sndev->mmio_dbmsg = (void * __iomem)sndev->mmio_ntb +
-> +		SWITCHTEC_NTB_REG_DBMSG_OFFSET;
-> +
-> +	sndev->mmio_self_ctrl = &sndev->mmio_ctrl[sndev->self_partition];
-> +	sndev->mmio_peer_ctrl = &sndev->mmio_ctrl[sndev->peer_partition];
-> +	sndev->mmio_self_dbmsg = &sndev->mmio_dbmsg[sndev->self_partition];
-> +}
-> +
-> +static int map_bars(int *map, struct ntb_ctrl_regs __iomem *ctrl)
-> +{
-> +	int i;
-> +	int cnt = 0;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(ctrl->bar_entry); i++) {
-> +		u32 r = ioread32(&ctrl->bar_entry[i].ctl);
-> +
-> +		if (r & NTB_CTRL_BAR_VALID)
-> +			map[cnt++] = i;
-> +	}
-> +
-> +	return cnt;
-> +}
-> +
-> +static void switchtec_ntb_init_mw(struct switchtec_ntb *sndev)
-> +{
-> +	sndev->nr_direct_mw = map_bars(sndev->direct_mw_to_bar,
-> +				       sndev->mmio_self_ctrl);
-> +
-> +	sndev->nr_lut_mw = ioread16(&sndev->mmio_self_ctrl->lut_table_entries);
-> +	sndev->nr_lut_mw = rounddown_pow_of_two(sndev->nr_lut_mw);
-> +
-> +	dev_dbg(&sndev->stdev->dev, "MWs: %d direct, %d lut",
-> +		sndev->nr_direct_mw, sndev->nr_lut_mw);
-> +
-> +	sndev->peer_nr_direct_mw = map_bars(sndev->peer_direct_mw_to_bar,
-> +					    sndev->mmio_peer_ctrl);
-> +
-> +	sndev->peer_nr_lut_mw =
-> +		ioread16(&sndev->mmio_peer_ctrl->lut_table_entries);
-> +	sndev->peer_nr_lut_mw = rounddown_pow_of_two(sndev->peer_nr_lut_mw);
-> +
-> +	dev_dbg(&sndev->stdev->dev, "Peer MWs: %d direct, %d lut",
-> +		sndev->peer_nr_direct_mw, sndev->peer_nr_lut_mw);
-> +
-> +}
-> +
-> +static int switchtec_ntb_init_req_id_table(struct switchtec_ntb *sndev)
-> +{
-> +	int rc = 0;
-> +	u16 req_id = ioread16(&sndev->mmio_ntb->requester_id);
+    Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
+               PCIe Performance
 
-Nit, please don't do function calls in the variable declaration.  If
-this doesn't violate Linux coding style, then it should :)
+    Processor                            CPU RP Device IDs
 
-> +	u32 error;
-> +
-> +	if (ioread32(&sndev->mmio_self_ctrl->req_id_table_size) < 2) {
-> +		dev_err(&sndev->stdev->dev,
-> +			"Not enough requester IDs available.");
-> +		return -EFAULT;
-> +	}
-> +
-> +	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-> +				   NTB_CTRL_PART_OP_LOCK,
-> +				   NTB_CTRL_PART_STATUS_LOCKED);
-> +	if (rc)
-> +		return rc;
-> +
-> +	iowrite32(NTB_PART_CTRL_ID_PROT_DIS,
-> +		  &sndev->mmio_self_ctrl->partition_ctrl);
-> +
-> +	// Root Complex Requester ID
+    Intel Xeon processors based on       6F01H-6F0EH
+    Broadwell microarchitecture
 
-Please use standard /**/ comments (same for below)
+    Intel Xeon processors based on       2F01H-2F0EH
+    Haswell microarchitecture
 
-> +	iowrite32(0 << 16 | NTB_CTRL_REQ_ID_EN,
+It means some Intel processors has performance issue when use the Relaxed
+Ordering Attribute, so disable Relaxed Ordering for these root port.
 
-0? A comment here on 0 might be needed.
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
+Acked-by: Ashok Raj <ashok.raj@intel.com>
+---
+ drivers/pci/quirks.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
 
-> +		  &sndev->mmio_self_ctrl->req_id_table[0]);
-> +
-> +	// Host Bridge Requester ID
-> +	iowrite32(req_id << 16 | NTB_CTRL_REQ_ID_EN,
-> +		  &sndev->mmio_self_ctrl->req_id_table[1]);
-> +
-> +	rc = switchtec_ntb_part_op(sndev, sndev->mmio_self_ctrl,
-> +				   NTB_CTRL_PART_OP_CFG,
-> +				   NTB_CTRL_PART_STATUS_NORMAL);
-> +
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 61b59bf..1272f7e 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4027,6 +4027,68 @@ static void quirk_relaxedordering_disable(struct pci_dev *dev)
+ }
+ 
+ /*
++ * Intel Xeon processors based on Broadwell/Haswell microarchitecture Root
++ * Complex has a Flow Control Credit issue which can cause performance
++ * problems with Upstream Transaction Layer Packets with Relaxed Ordering set.
++ */
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f03, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f05, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f06, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f07, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f09, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0a, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0b, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0c, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0d, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0e, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f01, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f02, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f03, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f04, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f05, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f06, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f07, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f08, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f09, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0a, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0b, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0c, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0d, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0e, PCI_CLASS_NOT_DEFINED, 8,
++			      quirk_relaxedordering_disable);
++
++/*
+  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
+  * values for the Attribute as were supplied in the header of the
+  * corresponding Request, except as explicitly allowed when IDO is used."
+-- 
+1.8.3.1
 
-nit, remove this new line
 
-> +	if (rc == -EIO) {
-> +		error = ioread32(&sndev->mmio_self_ctrl->req_id_error);
-> +		dev_err(&sndev->stdev->dev,
-> +			"Error setting up the requester ID table: %08x",
-> +			error);
-> +	}
-> +
-> +	return rc;
-> +}
-> +
-> +static void switchtec_ntb_init_shared(struct switchtec_ntb *sndev)
-> +{
-> +	int i;
-> +
-> +	memset(sndev->self_shared, 0, LUT_SIZE);
-> +	sndev->self_shared->magic = SWITCHTEC_NTB_MAGIC;
-> +	sndev->self_shared->partition_id = sndev->stdev->partition;
-> +
-> +	for (i = 0; i < sndev->nr_direct_mw; i++) {
-> +		int bar = sndev->direct_mw_to_bar[i];
-> +		resource_size_t sz = pci_resource_len(sndev->stdev->pdev, bar);
-> +
-> +		if (i == 0)
-> +			sz = min_t(resource_size_t, sz,
-> +				   LUT_SIZE * sndev->nr_lut_mw);
-> +
-> +		sndev->self_shared->mw_sizes[i] = sz;
-> +	}
-> +
-> +	for (i = 0; i < sndev->nr_lut_mw; i++) {
-> +		int idx = sndev->nr_direct_mw + i;
-> +
-> +		sndev->self_shared->mw_sizes[idx] = LUT_SIZE;
-> +	}
-> +}
-> +
-> +static int switchtec_ntb_init_shared_mw(struct switchtec_ntb *sndev)
-> +{
-> +	struct ntb_ctrl_regs __iomem *ctl = sndev->mmio_peer_ctrl;
-> +	int bar = sndev->direct_mw_to_bar[0];
-> +	u32 ctl_val;
-> +	int rc;
-> +
-> +	sndev->self_shared = dma_zalloc_coherent(&sndev->stdev->pdev->dev,
-> +						 LUT_SIZE,
-> +						 &sndev->self_shared_dma,
-> +						 GFP_KERNEL);
-> +	if (!sndev->self_shared) {
-> +		dev_err(&sndev->stdev->dev,
-> +			"unable to allocate memory for shared mw");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	switchtec_ntb_init_shared(sndev);
-> +
-> +	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_LOCK,
-> +				   NTB_CTRL_PART_STATUS_LOCKED);
-> +	if (rc)
-> +		goto unalloc_and_exit;
-> +
-> +	ctl_val = ioread32(&ctl->bar_entry[bar].ctl);
-> +	ctl_val |= NTB_CTRL_BAR_LUT_WIN_EN;
-> +	ctl_val &= 0xFF;
 
-This seems odd ordering.  Don't you want to clear the unnecessary bits
-before adding new ones?  If so, maybe flip the 2 lines above.
-
-> +	ctl_val |= ilog2(LUT_SIZE) << 8;
-> +	ctl_val |= (sndev->nr_lut_mw - 1) << 14;
-> +	iowrite32(ctl_val, &ctl->bar_entry[bar].ctl);
-> +
-> +	iowrite64((NTB_CTRL_LUT_EN | (sndev->self_partition << 1) |
-> +		   sndev->self_shared_dma),
-> +		  &ctl->lut_entry[0]);
-> +
-> +	rc = switchtec_ntb_part_op(sndev, ctl, NTB_CTRL_PART_OP_CFG,
-> +				   NTB_CTRL_PART_STATUS_NORMAL);
-> +	if (rc) {
-> +		u32 bar_error, lut_error;
-> +
-> +		bar_error = ioread32(&ctl->bar_error);
-> +		lut_error = ioread32(&ctl->lut_error);
-> +		dev_err(&sndev->stdev->dev,
-> +			"Error setting up shared MW: %08x / %08x",
-> +			bar_error, lut_error);
-> +		goto unalloc_and_exit;
-> +	}
-> +
-> +	sndev->peer_shared = pci_iomap(sndev->stdev->pdev, bar, LUT_SIZE);
-> +	if (!sndev->peer_shared) {
-> +		rc = -ENOMEM;
-> +		goto unalloc_and_exit;
-> +	}
-> +
-> +	dev_dbg(&sndev->stdev->dev, "Shared MW Ready");
-> +	return 0;
-> +
-> +unalloc_and_exit:
-> +	dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-> +			  sndev->self_shared, sndev->self_shared_dma);
-> +
-> +	return rc;
-> +}
-> +
-> +static void switchtec_ntb_deinit_shared_mw(struct switchtec_ntb *sndev)
-> +{
-> +	if (sndev->peer_shared)
-> +		pci_iounmap(sndev->stdev->pdev, sndev->peer_shared);
-> +
-> +	if (sndev->self_shared)
-> +		dma_free_coherent(&sndev->stdev->pdev->dev, LUT_SIZE,
-> +				  sndev->self_shared,
-> +				  sndev->self_shared_dma);
-> +}
-> +
->  static int switchtec_ntb_add(struct device *dev,
->  			     struct class_interface *class_intf)
->  {
->  	struct switchtec_dev *stdev = to_stdev(dev);
->  	struct switchtec_ntb *sndev;
-> +	int rc;
->  
->  	stdev->sndev = NULL;
->  
->  	if (stdev->pdev->class != MICROSEMI_NTB_CLASSCODE)
->  		return -ENODEV;
->  
-> +	if (stdev->partition_count != 2)
-> +		dev_warn(dev, "ntb driver only supports 2 partitions");
-> +
->  	sndev = kzalloc_node(sizeof(*sndev), GFP_KERNEL, dev_to_node(dev));
->  	if (!sndev)
->  		return -ENOMEM;
->  
->  	sndev->stdev = stdev;
->  
-> +	switchtec_ntb_init_sndev(sndev);
-> +	switchtec_ntb_init_mw(sndev);
-> +
-> +	rc = switchtec_ntb_init_req_id_table(sndev);
-> +	if (rc)
-> +		goto free_and_exit;
-> +
-> +	rc = switchtec_ntb_init_shared_mw(sndev);
-> +	if (rc)
-> +		goto free_and_exit;
-> +
->  	stdev->sndev = sndev;
->  	dev_info(dev, "NTB device registered");
->  
->  	return 0;
-> +
-> +free_and_exit:
-> +	kfree(sndev);
-> +	dev_err(dev, "failed to register ntb device: %d", rc);
-> +	return rc;
->  }
->  
->  void switchtec_ntb_remove(struct device *dev,
-> @@ -58,6 +412,7 @@ void switchtec_ntb_remove(struct device *dev,
->  		return;
->  
->  	stdev->sndev = NULL;
-> +	switchtec_ntb_deinit_shared_mw(sndev);
->  	kfree(sndev);
->  	dev_info(dev, "ntb device unregistered");
->  }
-> -- 
-> 2.11.0
-> 
-> -- 
-> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
-> To post to this group, send email to linux-ntb@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/20170725205753.4735-10-logang%40deltatee.com.
-> For more options, visit https://groups.google.com/d/optout.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
