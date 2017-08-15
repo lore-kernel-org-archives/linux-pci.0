@@ -1,50 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:49660 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753378AbdHKRUj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Aug 2017 13:20:39 -0400
-Date: Fri, 11 Aug 2017 12:20:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Scott Bauer <scott.bauer@intel.com>,
-        David Fugate <david.fugate@intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] MAINTAINERS: Add Jonathan Derrick as VMD maintainer
-Message-ID: <20170811172037.GD17039@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:58254 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbdHOTMR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:12:17 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v7 2/3] PCI: xilinx: Don't enable config completion interrupts
+Date: Tue, 15 Aug 2017 12:11:16 -0700
+Message-ID: <20170815191117.19882-3-paul.burton@imgtec.com>
+In-Reply-To: <20170815191117.19882-1-paul.burton@imgtec.com>
+References: <20170815191117.19882-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170807195713.10963-1-jonathan.derrick@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 07, 2017 at 01:57:11PM -0600, Jon Derrick wrote:
-> Add myself as VMD maintainer
-> 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+The Xilinx AXI bridge for PCI Express device provides interrupts
+indicating the completion of config space accesses. We have previously
+enabled/unmasked them but do nothing with them besides acknowledge them.
 
-Keith, I'm looking for an ack from you since you're currently
-listed in MAINTAINERS.
+Leave the interrupts masked in order to avoid servicing a large number
+of pointless interrupts during boot.
 
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index f66488d..3ec39df 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -10090,6 +10090,7 @@ F:	drivers/pci/dwc/*imx6*
->  
->  PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
->  M:	Keith Busch <keith.busch@intel.com>
-> +M:	Jonathan Derrick <jonathan.derrick@intel.com>
->  L:	linux-pci@vger.kernel.org
->  S:	Supported
->  F:	drivers/pci/host/vmd.c
-> -- 
-> 2.9.4
-> 
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+---
+
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-xilinx.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index a7880bed56fc..f30d03309c7f 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -60,6 +60,7 @@
+ #define XILINX_PCIE_INTR_MST_SLVERR	BIT(27)
+ #define XILINX_PCIE_INTR_MST_ERRP	BIT(28)
+ #define XILINX_PCIE_IMR_ALL_MASK	0x1FF30FED
++#define XILINX_PCIE_IMR_ENABLE_MASK	0x1FF30F0D
+ #define XILINX_PCIE_IDR_ALL_MASK	0xFFFFFFFF
+ 
+ /* Root Port Error FIFO Read Register definitions */
+@@ -554,8 +555,8 @@ static void xilinx_pcie_init_port(struct xilinx_pcie_port *port)
+ 			 XILINX_PCIE_IMR_ALL_MASK,
+ 		   XILINX_PCIE_REG_IDR);
+ 
+-	/* Enable all interrupts */
+-	pcie_write(port, XILINX_PCIE_IMR_ALL_MASK, XILINX_PCIE_REG_IMR);
++	/* Enable all interrupts we handle */
++	pcie_write(port, XILINX_PCIE_IMR_ENABLE_MASK, XILINX_PCIE_REG_IMR);
+ 
+ 	/* Enable the Bridge enable bit */
+ 	pcie_write(port, pcie_read(port, XILINX_PCIE_REG_RPSC) |
+-- 
+2.14.1
