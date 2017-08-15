@@ -1,72 +1,136 @@
-Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
-Return-Path: <SRS0=Bk9x=AA=linuxfoundation.org=gregkh@kernel.org>
-Date: Wed, 30 Aug 2017 11:22:01 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Mason <slash.tmp@free.fr>, Lukas Wunner <lukas@wunner.de>,
-	Mathias Nyman <mathias.nyman@linux.intel.com>,
-	Felipe Balbi <felipe.balbi@linux.intel.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	linux-usb <linux-usb@vger.kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Alan Stern <stern@rowland.harvard.edu>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: Possible regression between 4.9 and 4.13
-Message-ID: <20170830092201.GB16835@kroah.com>
-References: <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
- <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
- <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
- <59A3D6BF.7010400@linux.intel.com>
- <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
- <59A56C15.2000403@linux.intel.com>
- <20170829235310.GA20214@wunner.de>
- <20170830060237.GA2782@kroah.com>
- <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
- <CAKv+Gu8QSWO8jYc1L6eJyMg58gtVsoa9zYuymSc-PdEm60HzxA@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr40085.outbound.protection.outlook.com ([40.107.4.85]:36129
+        "EHLO EUR03-DB5-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753025AbdHODVL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 14 Aug 2017 23:21:11 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
+        "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        "Niklas Cassel" <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>
+Subject: RE: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
+Date: Tue, 15 Aug 2017 03:21:07 +0000
+Message-ID: <AM5PR0402MB277123D5DFB763519A2F647F848D0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
+ <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
+ <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170814222605.GK32525@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu8QSWO8jYc1L6eJyMg58gtVsoa9zYuymSc-PdEm60HzxA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 10:07:59AM +0100, Ard Biesheuvel wrote:
-> On 30 August 2017 at 09:55, Mason <slash.tmp@free.fr> wrote:
-> > On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
-> >
-> >> To get back to the original issue here, the hardware seems to have died,
-> >> the driver stops talking to it, and all is good.  The "regression" here
-> >> is that we now properly can determine that the hardware is crap.
-> >
-> > Before 4.12, when I unplugged my USB3 Flash drive, Linux would
-> > detect a few "Uncorrected Non-Fatal errors" via AER, but it was
-> > still possible to plug the drive back in.
-> >
-> > Since 4.12, once I unplug the drive, the whole USB3 card is marked
-> > as dead (all 4 ports), and I can no longer plug anything in (not even
-> > the USB2 drive that didn't have any issues, IIRC).
-> >
-> > It seems a bit premature to "mark as dead" something that remains
-> > functional, doesn't it?
-> >
-> > Disclaimer, there are many variables in this setup, and I've only
-> > tested a small fraction of the problem space: only one system,
-> > only one USB3 board, only one USB3 Flash drive.
-> >
-> 
-> Please don't forget to mention that this is quirky hardware that
-> depends on BROKEN because it multiplexes MMIO and config space
-> accesses in the same memory window without any locking whatsoever
-> (which would be difficult to do in the first place because we don't
-> use accessors for MMIO in the kernel).
-> 
-> So how likely is it that you are attempting to read from the xhci BAR
-> window while a config space access is in progress? Any way to
-> instrument this in your driver?
-
-Seriously?  Ok, that's crap hardware, sorry, I don't feel bad at all
-here.  You are going to have worse problems than just a single USB
-controller issue if that's your hardware design, go kick some hardware
-engineers for me please.
-
-good luck, you are on your own :(
-
-greg k-h
+SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
+aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
+c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIxNcjVIDY6MjYNCj4gVG86IFoucS4gSG91
+IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
+IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
+QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
+a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
+bT47IFN0YW5pbWlyIFZhcmJhbm92IDxzdmFyYmFub3ZAbW0tc29sLmNvbT47IE5pa2xhcw0KPiBD
+YXNzZWwgPG5pa2xhcy5jYXNzZWxAYXhpcy5jb20+OyBKZXNwZXIgTmlsc3NvbiA8amVzcGVyLm5p
+bHNzb25AYXhpcy5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0h2MiA0LzZdIFBDSTogbGF5ZXJz
+Y2FwZTogcmVmYWN0b3IgdGhlIGhvc3RfaW5pdCBmdW5jdGlvbg0KPiANCj4gWytjYyBTdGFuaW1p
+ciwgTmlrbGFzLCBKZXNwZXJdDQo+IA0KPiBPbiBNb24sIEF1ZyAxNCwgMjAxNyBhdCAwNDozODoy
+NFBNIC0wNTAwLCBCam9ybiBIZWxnYWFzIHdyb3RlOg0KPiA+IE9uIFRodSwgQXVnIDAzLCAyMDE3
+IGF0IDA0OjIzOjM4UE0gKzA4MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4gPiA+IEZyb206IEhv
+dSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4gPg0KPiA+ID4gTWFrZSB0aGUg
+bHMxMDIxYSdzIGhvc3RfaW5pdCByZXVzZSBsYXllcnNjYXBlIHBsYXRmb3JtJ3MgY29tbW9uDQo+
+ID4gPiBob3N0X2luaXQgZnVuY3Rpb24uDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogSG91
+IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiA+IC0tLQ0KPiA+ID4gVjI6DQo+
+ID4gPiAgLSBSZW1vdmVkIHRoZSBkaXNhYmxlIG91dGJvdW5kIHdpbmRvd3MgY29kZSBhbmQgdGhl
+IHJlbW92ZSBkdXBsaWNhdGUNCj4gY2xhc3MgY29kZQ0KPiA+ID4gICAgZml4dXAgY29kZSBmcm9t
+IHRoaXMgcGF0Y2guDQo+ID4gPg0KPiA+ID4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
+ZS5jIHwgNTQNCj4gPiA+ICsrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0N
+Cj4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgMjcgaW5zZXJ0aW9ucygrKSwgMjcgZGVsZXRpb25zKC0p
+DQo+ID4gPg0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
+ZS5jDQo+ID4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gPiBpbmRl
+eCAwOTA1NmE2Li4zNTMzYThjIDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3Bj
+aS1sYXllcnNjYXBlLmMNCj4gPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2Fw
+ZS5jDQo+ID4gPiBAQCAtMTA3LDMzICsxMDcsNiBAQCBzdGF0aWMgaW50IGxzMTAyMV9wY2llX2xp
+bmtfdXAoc3RydWN0IGR3X3BjaWUNCj4gKnBjaSkNCj4gPiA+ICAJcmV0dXJuIDE7DQo+ID4gPiAg
+fQ0KPiA+ID4NCj4gPiA+IC1zdGF0aWMgdm9pZCBsczEwMjFfcGNpZV9ob3N0X2luaXQoc3RydWN0
+IHBjaWVfcG9ydCAqcHApIC17DQo+ID4gPiAtCXN0cnVjdCBkd19wY2llICpwY2kgPSB0b19kd19w
+Y2llX2Zyb21fcHAocHApOw0KPiA+ID4gLQlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3Bj
+aWUocGNpKTsNCj4gPiA+IC0Jc3RydWN0IGRldmljZSAqZGV2ID0gcGNpLT5kZXY7DQo+ID4gPiAt
+CXUzMiBpbmRleFsyXTsNCj4gPiA+IC0NCj4gPiA+IC0JcGNpZS0+c2NmZyA9IHN5c2Nvbl9yZWdt
+YXBfbG9va3VwX2J5X3BoYW5kbGUoZGV2LT5vZl9ub2RlLA0KPiA+ID4gLQkJCQkJCSAgICAgImZz
+bCxwY2llLXNjZmciKTsNCj4gPiA+IC0JaWYgKElTX0VSUihwY2llLT5zY2ZnKSkgew0KPiA+ID4g
+LQkJZGV2X2VycihkZXYsICJObyBzeXNjZmcgcGhhbmRsZSBzcGVjaWZpZWRcbiIpOw0KPiA+ID4g
+LQkJcGNpZS0+c2NmZyA9IE5VTEw7DQo+ID4gPiAtCQlyZXR1cm47DQo+ID4gPiAtCX0NCj4gPiA+
+IC0NCj4gPiA+IC0JaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyX2FycmF5KGRldi0+b2Zfbm9kZSwN
+Cj4gPiA+IC0JCQkJICAgICAgICJmc2wscGNpZS1zY2ZnIiwgaW5kZXgsIDIpKSB7DQo+ID4gPiAt
+CQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiA+IC0JCXJldHVybjsNCj4gPiA+IC0JfQ0KPiA+ID4g
+LQlwY2llLT5pbmRleCA9IGluZGV4WzFdOw0KPiA+ID4gLQ0KPiA+ID4gLQlkd19wY2llX3NldHVw
+X3JjKHBwKTsNCj4gPiA+IC0NCj4gPiA+IC0JbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+
+ID4gPiAtfQ0KPiA+ID4gLQ0KPiA+ID4gIHN0YXRpYyBpbnQgbHNfcGNpZV9saW5rX3VwKHN0cnVj
+dCBkd19wY2llICpwY2kpICB7DQo+ID4gPiAgCXN0cnVjdCBsc19wY2llICpwY2llID0gdG9fbHNf
+cGNpZShwY2kpOyBAQCAtMTYwLDYgKzEzMywzMyBAQA0KPiA+ID4gc3RhdGljIHZvaWQgbHNfcGNp
+ZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gPiAgCWR3X3BjaWVfZGJpX3Jv
+X3dyX2RpcyhwY2kpOw0KPiA+ID4NCj4gPiA+ICAJbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7
+DQo+ID4gPiArDQo+ID4gPiArCWR3X3BjaWVfc2V0dXBfcmMocHApOw0KPiA+ID4gK30NCj4gPiA+
+ICsNCj4gPiA+ICtzdGF0aWMgdm9pZCBsczEwMjFfcGNpZV9ob3N0X2luaXQoc3RydWN0IHBjaWVf
+cG9ydCAqcHApIHsNCj4gPiA+ICsJc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJv
+bV9wcChwcCk7DQo+ID4gPiArCXN0cnVjdCBsc19wY2llICpwY2llID0gdG9fbHNfcGNpZShwY2kp
+Ow0KPiA+ID4gKwlzdHJ1Y3QgZGV2aWNlICpkZXYgPSBwY2ktPmRldjsNCj4gPiA+ICsJdTMyIGlu
+ZGV4WzJdOw0KPiA+ID4gKw0KPiA+ID4gKwlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29r
+dXBfYnlfcGhhbmRsZShkZXYtPm9mX25vZGUsDQo+ID4gPiArCQkJCQkJICAgICAiZnNsLHBjaWUt
+c2NmZyIpOw0KPiA+ID4gKwlpZiAoSVNfRVJSKHBjaWUtPnNjZmcpKSB7DQo+ID4gPiArCQlkZXZf
+ZXJyKGRldiwgIk5vIHN5c2NmZyBwaGFuZGxlIHNwZWNpZmllZFxuIik7DQo+ID4gPiArCQlwY2ll
+LT5zY2ZnID0gTlVMTDsNCj4gPiA+ICsJCXJldHVybjsNCj4gPiA+ICsJfQ0KPiA+ID4gKw0KPiA+
+ID4gKwlpZiAob2ZfcHJvcGVydHlfcmVhZF91MzJfYXJyYXkoZGV2LT5vZl9ub2RlLA0KPiA+ID4g
+KwkJCQkgICAgICAgImZzbCxwY2llLXNjZmciLCBpbmRleCwgMikpIHsNCj4gPiA+ICsJCXBjaWUt
+PnNjZmcgPSBOVUxMOw0KPiA+ID4gKwkJcmV0dXJuOw0KPiA+ID4gKwl9DQo+ID4gPiArCXBjaWUt
+PmluZGV4ID0gaW5kZXhbMV07DQo+ID4gPiArDQo+ID4gPiArCWxzX3BjaWVfaG9zdF9pbml0KHBw
+KTsNCj4gPg0KPiA+IFRoZSBjaGFuZ2Vsb2cgc3VnZ2VzdHMgdGhhdCB0aGlzIGlzIGEgc2ltcGxl
+IHJlZmFjdG9yaW5nIHRoYXQgZG9lc24ndA0KPiA+IGZpeCBhbnl0aGluZy4NCj4gPg0KPiA+IEJ1
+dCBiZWNhdXNlIGxzMTAyMV9wY2llX2hvc3RfaW5pdCgpIG5vdyBjYWxscyBsc19wY2llX2hvc3Rf
+aW5pdCgpLCBpdA0KPiA+IG5vdyBjYWxsczoNCj4gPg0KPiA+ICAgZHdfcGNpZV9kYmlfcm9fd3Jf
+ZW4ocGNpKTsNCj4gPiAgIGxzX3BjaWVfZml4X2NsYXNzKHBjaWUpOw0KPiA+ICAgbHNfcGNpZV9j
+bGVhcl9tdWx0aWZ1bmN0aW9uKHBjaWUpOw0KPiA+ICAgZHdfcGNpZV9kYmlfcm9fd3JfZGlzKHBj
+aSk7DQo+ID4NCj4gPiB3aGVuIGl0IGRpZCBub3QgY2FsbCB0aGVtIGJlZm9yZS4NCj4gPg0KPiA+
+IEl0J3MgZmluZSB3aXRoIG1lIGlmIHlvdSB3YW50IHRvIGRvIHRoYXQsIGJ1dCBpdCBzaG91bGQg
+YmUgbWVudGlvbmVkDQo+ID4gaW4gdGhlIGNoYW5nZWxvZy4NCj4gDQo+IFRoZSBvcmRlciBvZiB0
+aGlzIHNlcmllcyBpcyBzY3Jld2VkIHVwLCB3aGljaCBtYWtlcyBpdCBoYXJkIHRvIGZvbGxvdy4N
+Cj4gDQo+IDUxOTJlYzdiMjRkZCAoIlBDSTogbGF5ZXJzY2FwZTogQWRkIHN1cHBvcnQgZm9yIExT
+MTA0M2EgYW5kIExTMjA4MGEiKQ0KPiBhZGRlZCBsc19wY2llX2hvc3RfaW5pdCgpLCB3aGljaCBk
+aWRuJ3QgY2FsbCBkd19wY2llX3NldHVwX3JjKCkuICBJIHRoaW5rIHRoYXQNCj4gd2FzIGEgYnVn
+LCBhbmQgeW91IHNob3VsZCBmaXggdGhhdCBmaXJzdC4NCg0KWWVzLCBpdCBpcyBhIGJ1ZywgdGhl
+IHJlYXNvbiB0aGF0IHRoZSBsc19wY2llX2hvc3RfaW5pdCgpIGRvZXNuJ3QgY2FsbCBkd19wY2ll
+X3NldHVwX3JjKCkgaXMgaXQgdXNlcyB0aGUgc2V0dXBzIGJ5IHUtYm9vdCwgc28gSSBzdWJtaXR0
+ZWQgdGhlc2UgcGF0Y2hlcyB0byByZXNvbHZlIHRoZSBkZXBlbmRlbmN5IGFuZCBtYWtlIGl0IHJv
+YnVzdC4NCg0KPiBUaGVuOg0KPiANCj4gICAtIFJlYmFzZSBvbiBwY2kvaG9zdC1kZXNpZ253YXJl
+IGJlY2F1c2UgaXQgY29uZmxpY3RzIHdpdGggcGF0Y2hlcw0KPiAgICAgSSd2ZSBhbHJlYWR5IGFw
+cGxpZWQNCj4gDQo+IChodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVs
+L2dpdC9oZWxnYWFzL3BjaS5naXQvbG9nLz9oPXBjaS9obw0KPiBzdC1kZXNpZ253YXJlKQ0KPiAN
+Cj4gICAtIE1ha2UgbHNfcGNpZV9ob3N0X2luaXQoKSBjYWxsIGR3X3BjaWVfc2V0dXBfcmMoKSAo
+Zml4ZXMNCj4gICAgIDUxOTJlYzdiMjRkZCkNCj4gDQo+ICAgLSBSZWZhY3RvciBsczEwMjFfcGNp
+ZV9ob3N0X2luaXQoKSB0byBtYWtlIGl0IGNhbGwNCj4gICAgIGxzX3BjaWVfaG9zdF9pbml0KCkg
+KHRoaXMgd2lsbCBub3cgYmUgbm8gZnVuY3Rpb25hbCBjaGFuZ2UpDQo+IA0KPiAgIC0gRGlzYWJs
+ZSBvdXRib3VuZCBBVFVzIGluIGxzX3BjaWVfaG9zdF9pbml0KCkgKGJ1Z2ZpeCBmb3IgYWxsDQo+
+ICAgICBsYXllcnNjYXBlIGRldmljZXMpDQo+IA0KPiAgIC0gQWRkIERCSSB3cml0ZSBwZXJtaXNz
+aW9uIGFjY2Vzc29ycyBhbmQgdXNlIHRoZW0gaW4gbGF5ZXJzY2FwZS4NCj4gICAgIFRoaXMgd2ls
+bCBtYWtlIGl0IG9idmlvdXMgdGhhdCBQQ0lFX01JU0NfQ09OVFJPTF8xX09GRiBpcyBtb3ZpbmcN
+Cj4gICAgIGZyb20gbGF5ZXJzY2FwZSB0byBkZXNpZ253YXJlIGFuZCB0aGF0IHdlJ3JlIGFjdHVh
+bGx5IHVzaW5nIHRoZXNlDQo+ICAgICBuZXcgaW50ZXJmYWNlcyAodGhpcyB3aWxsIGJlIG5vIGZ1
+bmN0aW9uYWwgY2hhbmdlKS4NCj4gDQo+ICAgLSBFbmFibGUgd3JpdGUgcGVybWlzc2lvbiBpbiBk
+d19wY2llX3NldHVwX3JjKCkgYW5kIHJlbW92ZSBjbGFzcw0KPiAgICAgY29kZSB1cGRhdGUgZnJv
+bSBsc19wY2llX2hvc3RfaW5pdCgpICBUaGlzIHdpbGwgbWFrZSBpdCBvYnZpb3VzDQo+ICAgICB0
+aGF0IGZpeGluZyBkd19wY2llX3NldHVwX3JjKCkgbWFrZXMgbHNfcGNpZV9maXhfY2xhc3MoKSBv
+YnNvbGV0ZS4NCj4gDQo+IERvZXMgdGhpcyBkd19wY2llX3NldHVwX3JjKCkgZml4IG1lYW4gd2Ug
+Y2FuIGFsc28gZ2V0IHJpZCBvZiB0aGUgZGV2aWNlIGNsYXNzDQo+IGNoZWNrIGluIHFjb21fcGNp
+ZV9yZF9vd25fY29uZigpPw0KDQpZZXMsIEkgdGhpbmsgc28uDQoNCj4gSSBzdXNwZWN0IGl0IGFs
+c28gbWVhbnMgd2UgY2FuIGRyb3AgdGhlIHdyaXRlIGVuYWJsZSBpbg0KPiBhcnRwZWM2X3BjaWVf
+ZXN0YWJsaXNoX2xpbmsoKS4NCg0KWWVzLCB5b3UncmUgcmlnaHQsIHRoYW5rcyBmb3IgeW91ciBz
+dWdnZXN0aW9uIGFuZCBJIHdpbGwgcmVmb3JtIHRoZXNlIHBhdGNoZXMgd2l0aCB0aGlzIG9yZGVy
+Lg0KDQo+IA0KPiA+ID4gIH0NCj4gPiA+DQo+ID4gPiAgc3RhdGljIGludCBsc19wY2llX21zaV9o
+b3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAsDQo+ID4gPiAtLQ0KPiA+ID4gMi4xLjAuMjcu
+Zzk2ZGIzMjQNCj4gPiA+IA0KDQpUaGFua3MsDQpaaGlxaWFuZw0K
