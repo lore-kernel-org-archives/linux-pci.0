@@ -1,104 +1,146 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52948 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752437AbdHJRws (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 10 Aug 2017 13:52:48 -0400
-Date: Thu, 10 Aug 2017 12:52:46 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Paul Burton <paul.burton@imgtec.com>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Chris Metcalf <cmetcalf@mellanox.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Matthew Minter <matt@masarand.com>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Guan Xuetao <gxt@mprc.pku.edu.cn>
-Subject: [PATCH] PCI: Inline and remove pcibios_update_irq()
-Message-ID: <20170810175246.GB18397@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Zheng, Lv" <lv.zheng@intel.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+CC: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: RE: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+Date: Tue, 15 Aug 2017 09:59:00 +0000
+Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF0B3F2@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
+ <5185778.X36DhrMnGV@aspire.rjw.lan>
+ <1AE640813FDE7649BE1B193DEA596E886CF09085@SHSMSX101.ccr.corp.intel.com>
+ <3677056.OS19FbOdkF@aspire.rjw.lan>
+In-Reply-To: <3677056.OS19FbOdkF@aspire.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170731163757.22629-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 31, 2017 at 05:37:48PM +0100, Lorenzo Pieralisi wrote:
-> The pci_fixup_irqs() function allocates IRQs for all PCI devices present
-> in a system; those PCI devices possibly belong to different PCI bus trees
-> (and possibly rooted at different host bridges) and may well be enabled
-> (ie probed and bound to a driver) by the time pci_fixup_irqs() is called
-> when probing a given host bridge driver.
+Hi,
+
+> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
 > 
-> Furthermore, current kernel code relying on pci_fixup_irqs() to
-> assign legacy PCI IRQs to devices does not work at all for
-> hotplugged devices in that the code carrying out the IRQ fixup
-> is called at host bridge driver probe time, which just cannot take
-> into account devices hotplugged after system has booted.
+> On Friday, August 11, 2017 7:40:56 AM CEST Zheng, Lv wrote:
+> > Hi, Rafael
+> >
+> > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > >
+> > > On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
+> > > > Hi, Rafael
+> > > >
+> > > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > > > >
+> > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > >
+> > > > > In some cases GPEs are already active when they are enabled by
+> > > > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
+> > > > > on the result of handling the events signaled by them, so the
+> > > > > events should not be discarded (which is what happens currently) and
+> > > > > they should be handled as soon as reasonably possible.
+> > > > >
+> > > > > For this reason, modify acpi_ev_initialize_gpe_block() to
+> > > > > dispatch GPEs with the status flag set in-band right after
+> > > > > enabling them.
+> > > >
+> > > > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
+> > > > right after enabling an GPE. So there are 2 conditions related:
+> > > > 1. GPE is enabled for the first time.
+> > > > 2. GPE is initialized.
+> > > >
+> > > > And we need to make sure that before acpi_update_all_gpes() is invoked,
+> > > > all GPE EN bits are actually disabled.
+> > >
+> > > But we don't do it today, do we?
+> >
+> > We don't do that.
+> >
+> > >
+> > > And still calling _dispatch() should not be incorrect even if the GPE
+> > > has been enabled already at this point.  Worst case it just will
+> > > queue up the execution of _Lxx/_Exx which may or may not do anything
+> > > useful.
+> > >
+> > > And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
+> > > will block on it if run concurrently and we've checked the status, so
+> > > we know that the GPE *should* be dispatched, so I sort of fail to see
+> > > the problem.
+> >
+> > There is another problem related:
+> > ACPICA clears GPEs before enabling it.
+> > This is proven to be wrong, and we have to fix it:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=196249
+> >
+> > without fixing this issue, in this solution, we surely need to save the
+> > GPE STS bit before incrementing GPE reference count, and poll it according
+> > to the saved STS bit. Because if we poll it after enabling, STS bit will
+> > be wrongly cleared.
 > 
-> The introduction of map/swizzle functions hook in struct pci_host_bridge
-> allows to define per-bridge map/swizzle functions, that can be used at
-> device probe time in PCI core code to allocate IRQs for a given device
-> (through pci_assign_irq()).
+> I'm not sure if I understand you correctly, but why would we poll it?
 > 
-> This series converts all arches still relying on pci_fixup_irqs() to
-> the new pci_scan_root_bus_bridge() API and consequently remove
-> pci_fixup_irqs() from the kernel in that it is not used anymore.
+> In the $subject patch the status is checked and then
+> acpi_ev_add_gpe_reference() is called to add a reference to the GPE.
+> 
+> If this is the first reference (which will be the case in the majority
+> of cases), acpi_ev_enable_gpe() will be called and that will clear the
+> status.
+> 
+> Then, acpi_ev_gpe_dispatch() is called if the status was set and that
+> itself doesn't check the status.  It disables the GPE upfront (so the
+> status doesn't matter from now on until the GPE is enabled again) and
+> clears the status unconditionally if the GPE is edge-triggered.  This
+> means that for edge-triggered GPEs the clearing of the status by
+> acpi_ev_enable_gpe() doesn't matter here.
 
-I tentatively applied the following patch on top of this series on
-pci/irq-fixups for v4.14.  Any comments welcome.
+No problem, I understood.
+And was thinking thought this patch [edge GPE dispatch fix] should be
+correct and good for current Linux upstream.
 
-commit 606799cc5049ae4ccb51ba3242365ca2d411da13
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Thu Aug 10 12:49:57 2017 -0500
+What I meant is:
+PATCH [edge GPE clear fix] https://patchwork.kernel.org/patch/9894983/
+is a fix we need for upstream as it is the only possible fix for the
+issue fixed by it.
+On top of that, when acpi_ev_enable_gpe() is called, GPE won't be cleared.
+and then things can be done in a simpler way:
+PATCH [edge GPE enable fix] https://patchwork.kernel.org/patch/9894989/
 
-    PCI: Inline and remove pcibios_update_irq()
-    
-    pcibios_update_irq() was a weak function with only one trivial
-    implementation.  Inline it and remove the weak function.
-    
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+As [edge GPE clear fix] is risky, I think [edge GPE dispatch fix] is OK
+for Linux upstream.
 
-diff --git a/drivers/pci/setup-irq.c b/drivers/pci/setup-irq.c
-index 69e3b56c32a4..86106c44ce94 100644
---- a/drivers/pci/setup-irq.c
-+++ b/drivers/pci/setup-irq.c
-@@ -17,12 +17,6 @@
- #include <linux/cache.h>
- #include "pci.h"
- 
--void __weak pcibios_update_irq(struct pci_dev *dev, int irq)
--{
--	dev_dbg(&dev->dev, "assigning IRQ %02d\n", irq);
--	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
--}
--
- void pci_assign_irq(struct pci_dev *dev)
- {
- 	u8 pin;
-@@ -65,5 +59,5 @@ void pci_assign_irq(struct pci_dev *dev)
- 
- 	/* Always tell the device, so the driver knows what is
- 	   the real IRQ to use; the device does not use it. */
--	pcibios_update_irq(dev, irq);
-+	pci_write_config_byte(dev, PCI_INTERRUPT_LINE, irq);
- }
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 69034ab8a68e..a9e8d2f3bd91 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -844,7 +844,6 @@ char *pcibios_setup(char *str);
- resource_size_t pcibios_align_resource(void *, const struct resource *,
- 				resource_size_t,
- 				resource_size_t);
--void pcibios_update_irq(struct pci_dev *, int irq);
- 
- /* Weak but can be overriden by arch */
- void pci_fixup_cardbus(struct pci_bus *);
+So we can have 2 processes:
+1. Merge [edge GPE dispatch fix] and let [edge GPE clear fix] and
+   [edge GPE enable fix] released from ACPICA upstream so that:
+   1. We can enhance them in ACPICA upstream.
+   2. It will be regression safer for us to merge [edge GPE clear fix].
+2. Merge [edge GPE clear fix] and [edge GPE enable fix] without
+   merging [edge GPE dispatch fix].
+
+What I meant is:
+It's up to you to decide which process we should take. :)
+
+> 
+> For level-triggered GPEs the status is not cleared by acpi_ev_gpe_dispatch()
+> itself, but _Lxx is executed (again, without checking the status) and
+> finally the status is cleared by acpi_ev_finish_gpe() anyway, so we
+> end up with cleared status no matter what (and that before re-enabling
+> the GPE).  End even if _Lxx itself checked the status (but honestly why
+> would it?), then this is a level-triggered GPE, so it will re-trigger
+> anyway if not handled this time.
+
+Let's skip level-triggered GPE case.
+
+> 
+> So it looks like the fact that acpi_ev_enable_gpe() clears the status before
+> enabling the GPE doesn't matter for this patch, although it may matter in
+> general, but that is a different (and somewhat related) issue.
+
+I agreed.
+
+Thanks and best regards
+Lv
