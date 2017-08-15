@@ -1,54 +1,280 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0085.outbound.protection.outlook.com ([104.47.34.85]:62697
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751172AbdH1LKL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Aug 2017 07:10:11 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv5 2/9] PCI: layerscape: move STRFMR1 access out from the DBI write-enable bracket
-Date: Mon, 28 Aug 2017 18:52:54 +0800
-Message-ID: <20170828105301.8511-3-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:36228 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753094AbdHOF4D (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 01:56:03 -0400
+Received: by mail-wm0-f52.google.com with SMTP id t201so2161791wmt.1
+        for <linux-pci@vger.kernel.org>; Mon, 14 Aug 2017 22:56:03 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v2 1/3] PCI: iproc: Implement PCI hotplug support
+Date: Tue, 15 Aug 2017 11:25:45 +0530
+Message-Id: <1502776547-30542-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1502776547-30542-1-git-send-email-oza.oza@broadcom.com>
+References: <1502776547-30542-1-git-send-email-oza.oza@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+This patch implements PCI hotplug support for iproc family chipsets.
 
-The STRFMR1 is not a DBI read-only register, so move it out from the
-write-enable bracket.
+iproc based SOC (e.g. Stingray) does not have hotplug controller
+integrated.
+Hence, standard PCI hotplug framework hooks can-not be used.
+e.g. controlled power up/down of slot.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Roy Zang <tie-fei.zang@freescale.com>
----
-V5:
- - No change
+The mechanism, for e.g. Stingray has adopted for PCI hotplug is as
+follows:
+PCI present lines are input to GPIOs depending on the type of
+connector (x2, x4, x8).
 
- drivers/pci/dwc/pci-layerscape.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+The implementation essentially takes care of following:
+> Initializing hotplug irq thread.
+> Detecting the endpoint device based on link state.
+> Handling PERST and detecting the plugged devices.
+> Ordered Hot plug-out, where User is expected
+  to write 1 to /sys/bus/pci/devices/<pci_dev>/remove
+> Handling spurious interrupt
+> Handling multiple interrupts and makes sure that card is
+  enumerated only once.
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index aebefb42377a..c16940044ed6 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -162,9 +162,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
- 	ls_pcie_fix_class(pcie);
- 	ls_pcie_clear_multifunction(pcie);
--	ls_pcie_drop_msg_tlp(pcie);
- 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 9512960..e1eb141 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -89,6 +89,9 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
+ 		pcie->need_ob_cfg = true;
+ 	}
  
-+	ls_pcie_drop_msg_tlp(pcie);
++	if (of_property_read_bool(np, "slot-pluggable"))
++		pcie->enable_hotplug = true;
 +
- 	dw_pcie_setup_rc(pp);
+ 	/* PHY use is optional */
+ 	pcie->phy = devm_phy_get(dev, "pcie-phy");
+ 	if (IS_ERR(pcie->phy)) {
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index ee40651..eb919f7 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -28,6 +28,7 @@
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/phy/phy.h>
++#include <linux/gpio.h>
  
+ #include "pcie-iproc.h"
+ 
+@@ -65,6 +66,17 @@
+ #define PCIE_DL_ACTIVE_SHIFT         2
+ #define PCIE_DL_ACTIVE               BIT(PCIE_DL_ACTIVE_SHIFT)
+ 
++#define CFG_RC_LTSSM                 0x1cf8
++#define CFG_RC_PHY_CTL               0x1804
++#define CFG_RC_LTSSM_TIMEOUT         1000
++#define CFG_RC_LTSSM_STATE_MASK      0xff
++#define CFG_RC_LTSSM_STATE_L1        0x1
++
++#define CFG_RC_CLR_LTSSM_HIST_SHIFT  29
++#define CFG_RC_CLR_LTSSM_HIST_MASK   BIT(CFG_RC_CLR_LTSSM_HIST_SHIFT)
++#define CFG_RC_CLR_RECOV_HIST_SHIFT  31
++#define CFG_RC_CLR_RECOV_HIST_MASK   BIT(CFG_RC_CLR_RECOV_HIST_SHIFT)
++
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
+@@ -1306,12 +1318,106 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
  	return 0;
+ }
+ 
++static bool iproc_pci_hp_check_ltssm(struct iproc_pcie *pcie)
++{
++	struct pci_bus *bus = pcie->root_bus;
++	u32 val, timeout = CFG_RC_LTSSM_TIMEOUT;
++
++	/* Clear LTSSM history. */
++	pci_bus_read_config_dword(pcie->root_bus, 0,
++				  CFG_RC_PHY_CTL, &val);
++	pci_bus_write_config_dword(bus, 0, CFG_RC_PHY_CTL,
++				   val | CFG_RC_CLR_RECOV_HIST_MASK |
++				   CFG_RC_CLR_LTSSM_HIST_MASK);
++	/* write back the origional value. */
++	pci_bus_write_config_dword(bus, 0, CFG_RC_PHY_CTL, val);
++
++	do {
++		pci_bus_read_config_dword(pcie->root_bus, 0,
++					  CFG_RC_LTSSM, &val);
++		/* check link state to see if link moved to L1 state. */
++		if ((val & CFG_RC_LTSSM_STATE_MASK) ==
++		     CFG_RC_LTSSM_STATE_L1)
++			return true;
++		timeout--;
++		usleep_range(500, 1000);
++	} while (timeout);
++
++	return false;
++}
++
++static irqreturn_t iproc_pci_hotplug_thread(int irq, void *data)
++{
++	struct iproc_pcie *pcie = data;
++	struct pci_bus *bus = pcie->root_bus, *child;
++	bool link_status;
++
++	iproc_pcie_perst_ctrl(pcie, true);
++	iproc_pcie_perst_ctrl(pcie, false);
++
++	link_status = iproc_pci_hp_check_ltssm(pcie);
++
++	if (link_status &&
++	    !iproc_pcie_check_link(pcie, bus) &&
++	    !pcie->ep_is_present) {
++		pci_rescan_bus(bus);
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
++		pcie->ep_is_present = true;
++		dev_info(pcie->dev,
++			 "PCI Hotplug: <device detected and enumerated>\n");
++	} else if (link_status && pcie->ep_is_present)
++		/*
++		 * ep_is_present makes sure, enumuration done only once.
++		 * So it can handle spurious intrrupts, and also if we
++		 * get multiple interrupts for all the implemented pins,
++		 * we handle it only once.
++		 */
++		dev_info(pcie->dev,
++			 "PCI Hotplug: <device already present>\n");
++	else {
++		iproc_pcie_perst_ctrl(pcie, true);
++		pcie->ep_is_present = false;
++		dev_info(pcie->dev,
++			 "PCI Hotplug: <device removed>\n");
++	}
++	return IRQ_HANDLED;
++}
++
++static int iproc_pci_hp_gpio_irq_get(struct iproc_pcie *pcie)
++{
++	struct gpio_descs *hp_gpiod;
++	struct device *dev = pcie->dev;
++	int i;
++
++	hp_gpiod = devm_gpiod_get_array(dev, "prsnt", GPIOD_IN);
++	if (PTR_ERR(hp_gpiod) == -EPROBE_DEFER)
++		return -EPROBE_DEFER;
++
++	if (!IS_ERR(hp_gpiod) && (hp_gpiod->ndescs > 0)) {
++		for (i = 0; i < hp_gpiod->ndescs; ++i) {
++			gpiod_direction_input(hp_gpiod->desc[i]);
++			if (request_threaded_irq(gpiod_to_irq
++						 (hp_gpiod->desc[i]),
++						 NULL, iproc_pci_hotplug_thread,
++						 IRQF_TRIGGER_FALLING,
++						 "PCI-hotplug", pcie))
++				dev_err(dev,
++					"PCI hotplug prsnt: request irq failed\n");
++			}
++	}
++	pcie->ep_is_present = false;
++
++	return 0;
++}
++
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ {
+ 	struct device *dev;
+ 	int ret;
+ 	void *sysdata;
+ 	struct pci_bus *bus, *child;
++	bool is_link_active;
+ 
+ 	dev = pcie->dev;
+ 
+@@ -1337,6 +1443,12 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
++	if (pcie->enable_hotplug) {
++		ret = iproc_pci_hp_gpio_irq_get(pcie);
++		if (ret < 0)
++			return ret;
++	}
++
+ 	iproc_pcie_perst_ctrl(pcie, true);
+ 	iproc_pcie_perst_ctrl(pcie, false);
+ 
+@@ -1367,8 +1479,11 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 	}
+ 	pcie->root_bus = bus;
+ 
+-	ret = iproc_pcie_check_link(pcie, bus);
+-	if (ret) {
++	is_link_active = iproc_pcie_check_link(pcie, bus);
++	if (is_link_active && pcie->enable_hotplug) {
++		dev_err(dev, "no PCIe EP device detected\n");
++		iproc_pcie_perst_ctrl(pcie, true);
++	} else if (is_link_active) {
+ 		dev_err(dev, "no PCIe EP device detected\n");
+ 		goto err_rm_root_bus;
+ 	}
+@@ -1379,14 +1494,17 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		if (iproc_pcie_msi_enable(pcie))
+ 			dev_info(dev, "not using iProc MSI\n");
+ 
+-	pci_scan_child_bus(bus);
+-	pci_assign_unassigned_bus_resources(bus);
++	if (!is_link_active) {
++		pci_scan_child_bus(bus);
++		pci_assign_unassigned_bus_resources(bus);
++	}
+ 
+ 	if (pcie->map_irq)
+ 		pci_fixup_irqs(pci_common_swizzle, pcie->map_irq);
+ 
+-	list_for_each_entry(child, &bus->children, node)
+-		pcie_bus_configure_settings(child);
++	if (!is_link_active)
++		list_for_each_entry(child, &bus->children, node)
++			pcie_bus_configure_settings(child);
+ 
+ 	pci_bus_add_devices(bus);
+ 
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index a6b55ce..e5d0cd4 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -77,6 +77,10 @@ struct iproc_pcie_ib {
+  * @ib: inbound mapping related parameters
+  * @ib_map: outbound mapping region related parameters
+  *
++ * @enable_hotplug: indicates PCI hotplug feature is enabled
++ * @ep_is_present: when PCIe hotplug is enabled, this flag is used to
++ * indicate whether or not the endpoint device is present
++ *
+  * @need_msi_steer: indicates additional configuration of the iProc PCIe
+  * controller is required to steer MSI writes to external interrupt controller
+  * @msi: MSI data
+@@ -104,6 +108,9 @@ struct iproc_pcie {
+ 	struct iproc_pcie_ib ib;
+ 	const struct iproc_pcie_ib_map *ib_map;
+ 
++	bool enable_hotplug;
++	bool ep_is_present;
++
+ 	bool need_msi_steer;
+ 	struct iproc_msi *msi;
+ };
 -- 
-2.14.1
+1.9.1
