@@ -1,110 +1,99 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
-Subject: [PATCH V12 4/5] PCI: Handle CRS ("device not ready") returned by
- device after FLR
-Date: Wed, 23 Aug 2017 00:56:10 -0400
-Message-Id: <1503464171-6471-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
-References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:46866 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751129AbdHOMXd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Aug 2017 08:23:33 -0400
+Date: Tue, 15 Aug 2017 07:23:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
+ it from DT
+Message-ID: <20170815122330.GA16904@bhelgaas-glaptop.roam.corp.google.com>
+References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
+ <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
+ <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Sporadic reset issues have been observed with Intel 750 NVMe drive while
-assigning the physical function to the guest machine.  The sequence of
-events observed is as follows:
+On Tue, Aug 15, 2017 at 12:43:16PM +0100, Lorenzo Pieralisi wrote:
+> On Tue, Aug 15, 2017 at 03:01:48PM +0800, Shawn Lin wrote:
+> > Hi Bjorn,
+> > 
+> > On 2017/8/12 5:17, Bjorn Helgaas wrote:
+> > >[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
+> > >
+> > >On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
+> > >>If not getting domain number from DT, the domain number will
+> > >>keep increasing once doing unbind/bind RC drivers. This could
+> > >>introduce pointless tree view of lspci as shows below:
+> > >>
+> > >>-+-[0001:00]---00.0-[01]----00.0
+> > >>   \-[0000:00]-
+> > >>
+> > >>The more test we do, the lengthier it would be. The more serious
+> > >>issue is that if attaching two hierarchies for two different domains
+> > >>belonging to two root bridges, so when doing unbind/bind test for one
+> > >>of them and keep the other, then the domain number would finally
+> > >>overflow and make the two hierarchies of devices share the some domain
+> > >>number but actually they shouldn't. So it looks like we need to invent
+> > >>a new indexing ID mechanism to manage domain number. This patch
+> > >>introduces idr to achieve our purpose.
+> > >>
+> > >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> > >
+> > >The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
+> > >obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
+> > >Lorenzo's excellent work, the time is ripe for moving the domain
+> > >number from arch-specific places into struct pci_host_bridge.
+> > >
+> > >I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
+> > >CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
+> > >enable some simplification of of_pci_bus_find_domain_nr() as well,
+> > >which in turn, might make *this* patch simpler.
+> > >
+> > >This isn't that big a patch to begin with, so I could apply it as-is
+> > >and we could do more domain cleanup later.  It's just that it's
+> > >intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
+> > >opportunity to make this story more readable if those are out of the
+> > >way.  Any thoughts?
+> > 
+> > That sounds good to me that aftering add IDA domain, we could start
+> > considering moving domain number from arch-specific places into the
+> > bridge code and may be could also finally remove the macro
+> > CONFIG_PCI_DOMAIN* both?
+> 
+> I need to see how this can be implemented (another hook in
+> pci_host_bridge ?) but I suspect we can't get away with arch
+> specific bits - or maybe you are referring to having one single
+> place where the domain is _assigned_ using an arch specific hook
+> (in pci_host_bridge) ? I have to have a look into this, certainly
+> this patch should be considered because that atomic counter deserved
+> more thought, yes.
 
-  - perform a Function Level Reset (FLR)
-  - sleep up to 1000ms total
-  - read ~0 from PCI_COMMAND
-  - warn that the device didn't return from FLR
-  - touch the device before it's ready
-  - device drops config writes when we restore register settings
-  - incomplete register restore leaves device in inconsistent state
-  - device probe fails because device is in inconsistent state
+What I was hoping (and I haven't thought this all through) was that we
+could: 
 
-After reset, an endpoint may respond to config requests with Configuration
-Request Retry Status (CRS) to indicate that it is not ready to accept new
-requests.  See PCIe r3.1, sec 2.3.1 and 6.6.2.
+  - add "domain" to struct pci_host_bridge
 
-After an FLR, read the Vendor ID and use pci_bus_wait_crs() to wait for a
-value that indicates the device is ready only if CRS visibility is
-supported and device is responding with 0x0001.
+  - have callers of pci_scan_root_bus_bridge() assign bridge->domain
+    alongside their existing bridge->busnr, bridge->ops, etc.
+    assignments.  This would pull a little of the messiness of
+    pci_bus_find_domain_nr() into the bridge drivers, but they would
+    know a priori whether to use ACPI or DT, so we wouldn't need quite
+    as much guesswork.
 
-If pci_bus_wait_crs() fails, i.e., the device has responded with CRS status
-for at least the timeout interval, fall back to the old behavior of reading
-the Command register until it is not ~0.
+  - replace the pci_bus_find_domain_nr() call in
+    pci_register_host_bridge() with "bus->domain_nr = bridge->domain"
 
-Also increase the timeout value from 1 second to 60 seconds to have
-consistent behavior for root ports that do and do not support CRS
-visibility.
+  - replace the arch-specific pci_domain_nr() implementations with a
+    generic one
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+  - add IDA alloc to the DT domain number alloc path
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..5980ab3 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3819,19 +3819,35 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
-  */
- static void pci_flr_wait(struct pci_dev *dev)
- {
-+	int timeout_ms = 60000;
- 	int i = 0;
- 	u32 id;
- 
-+	/*
-+	 * Per PCIe r3.1, sec 6.6.2, the device should finish FLR within
-+	 * 100ms, but even after that, it may respond to config requests
-+	 * with CRS status if it requires more time.
-+	 */
-+	msleep(100);
-+
-+	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID, &id))
-+		return;
-+
-+	if (pci_bus_crs_visibility_pending(id) &&
-+		pci_bus_wait_crs(dev->bus, dev->devfn, id, timeout_ms))
-+		return;
-+
-+	timeout_ms -= 100;
- 	do {
- 		msleep(100);
- 		pci_read_config_dword(dev, PCI_COMMAND, &id);
--	} while (i++ < 10 && id == ~0);
-+	} while (i++ < (timeout_ms / 100) && id == ~0);
- 
- 	if (id == ~0)
- 		dev_warn(&dev->dev, "Failed to return from FLR\n");
- 	else if (i > 1)
- 		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
--			 (i - 1) * 100);
-+			 i * 100);
- }
- 
- /**
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
