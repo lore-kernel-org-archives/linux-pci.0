@@ -1,65 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-CC: <kishon@ti.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 10/10] ARM: dts: dra71-evm: Add pinmux configuration for MMC
-Date: Wed, 16 Aug 2017 19:15:08 +0530
-Message-ID: <20170816134508.8887-11-kishon@ti.com>
-In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
-References: <20170816134508.8887-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39126 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751068AbdHOVh1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Aug 2017 17:37:27 -0400
+Subject: [PATCH] PCI: keystone: Use PCI_NUM_INTX
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: linux-pci@vger.kernel.org, Paul Burton <paul.burton@imgtec.com>
+Date: Tue, 15 Aug 2017 16:37:24 -0500
+Message-ID: <20170815213724.8111.96859.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Include dra72x-mmc-iodelay.dtsi which has pinmux and IODelay
-configuration values for the various MMC modes for dra72 SoC
-and use it in the pinctrl properties of MMC devicetree
-nodes present in dra71-evm.dts.
+Switch from using a custom MAX_LEGACY_IRQS macro to the generic
+PCI_NUM_INTX definition for the number of INTx interrupts.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
 ---
- arch/arm/boot/dts/dra71-evm.dts | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/pci/dwc/pci-keystone-dw.c |    4 ++--
+ drivers/pci/dwc/pci-keystone.h    |    1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm/boot/dts/dra71-evm.dts b/arch/arm/boot/dts/dra71-evm.dts
-index 49e3c76bcf97..41c9132eb550 100644
---- a/arch/arm/boot/dts/dra71-evm.dts
-+++ b/arch/arm/boot/dts/dra71-evm.dts
-@@ -7,6 +7,7 @@
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index df60f48716d9..3b0f206590f9 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -251,7 +251,7 @@ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < MAX_LEGACY_IRQS; i++)
++	for (i = 0; i < PCI_NUM_INTX; i++)
+ 		ks_dw_app_writel(ks_pcie, IRQ_ENABLE_SET + (i << 4), 0x1);
+ }
+ 
+@@ -557,7 +557,7 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 	/* Create legacy IRQ domain */
+ 	ks_pcie->legacy_irq_domain =
+ 			irq_domain_add_linear(ks_pcie->legacy_intc_np,
+-					MAX_LEGACY_IRQS,
++					PCI_NUM_INTX,
+ 					&ks_dw_pcie_legacy_irq_domain_ops,
+ 					NULL);
+ 	if (!ks_pcie->legacy_irq_domain) {
+diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+index 74c5825882df..69fc60129f45 100644
+--- a/drivers/pci/dwc/pci-keystone.h
++++ b/drivers/pci/dwc/pci-keystone.h
+@@ -12,7 +12,6 @@
+  * published by the Free Software Foundation.
   */
  
- #include "dra72-evm-common.dtsi"
-+#include "dra72x-mmc-iodelay.dtsi"
- #include <dt-bindings/net/ti-dp83867.h>
+-#define MAX_LEGACY_IRQS			4
+ #define MAX_MSI_HOST_IRQS		8
+ #define MAX_LEGACY_HOST_IRQS		4
  
- / {
-@@ -172,10 +173,23 @@
- };
- 
- &mmc1 {
-+	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50", "sdr104";
-+	pinctrl-0 = <&mmc1_pins_default>;
-+	pinctrl-1 = <&mmc1_pins_hs>;
-+	pinctrl-2 = <&mmc1_pins_sdr12>;
-+	pinctrl-3 = <&mmc1_pins_sdr25>;
-+	pinctrl-4 = <&mmc1_pins_sdr50>;
-+	pinctrl-5 = <&mmc1_pins_ddr50_rev20 &mmc1_iodelay_ddr50_conf>;
-+	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev20_conf>;
- 	vqmmc-supply = <&vpo_sd_1v8_3v3>;
- };
- 
- &mmc2 {
-+	pinctrl-names = "default", "hs", "ddr_1_8v", "hs200_1_8v";
-+	pinctrl-0 = <&mmc2_pins_default>;
-+	pinctrl-1 = <&mmc2_pins_hs>;
-+	pinctrl-2 = <&mmc2_pins_ddr_rev20 &mmc2_iodelay_ddr_conf>;
-+	pinctrl-3 = <&mmc2_pins_hs200 &mmc2_iodelay_hs200_rev20_conf>;
- 	vmmc-supply = <&evm_1v8_sw>;
- };
- 
--- 
-2.11.0
