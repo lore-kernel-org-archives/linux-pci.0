@@ -1,67 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 22 Aug 2017 15:55:17 +0300
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org,
-        linux-tegra@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 15/15] usb: make device_type const
-Message-ID: <20170822125517.GA27604@kuha.fi.intel.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
- <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:39402 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752203AbdHOVoc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Aug 2017 17:44:32 -0400
+Date: Tue, 15 Aug 2017 16:44:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>, linux-pci@vger.kernel.org,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: Re: [PATCH] PCI: keystone: Use PCI_NUM_INTX
+Message-ID: <20170815214430.GO32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170815213724.8111.96859.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170815213724.8111.96859.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 19, 2017 at 01:52:26PM +0530, Bhumika Goyal wrote:
-> Make this const as it is only stored in the type field of a device
-> structure, which is const.
-> Done using Coccinelle.
+On Tue, Aug 15, 2017 at 04:37:24PM -0500, Bjorn Helgaas wrote:
+> Switch from using a custom MAX_LEGACY_IRQS macro to the generic
+> PCI_NUM_INTX definition for the number of INTx interrupts.
 > 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-
-Acked-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Murali Karicheri <m-karicheri2@ti.com>
 > ---
->  drivers/usb/common/ulpi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/dwc/pci-keystone-dw.c |    4 ++--
+>  drivers/pci/dwc/pci-keystone.h    |    1 -
+>  2 files changed, 2 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/usb/common/ulpi.c b/drivers/usb/common/ulpi.c
-> index 930e8f3..4aa5195 100644
-> --- a/drivers/usb/common/ulpi.c
-> +++ b/drivers/usb/common/ulpi.c
-> @@ -135,7 +135,7 @@ static void ulpi_dev_release(struct device *dev)
->  	kfree(to_ulpi_dev(dev));
+> diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+> index df60f48716d9..3b0f206590f9 100644
+> --- a/drivers/pci/dwc/pci-keystone-dw.c
+> +++ b/drivers/pci/dwc/pci-keystone-dw.c
+> @@ -251,7 +251,7 @@ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+>  {
+>  	int i;
+>  
+> -	for (i = 0; i < MAX_LEGACY_IRQS; i++)
+> +	for (i = 0; i < PCI_NUM_INTX; i++)
+>  		ks_dw_app_writel(ks_pcie, IRQ_ENABLE_SET + (i << 4), 0x1);
 >  }
 >  
-> -static struct device_type ulpi_dev_type = {
-> +static const struct device_type ulpi_dev_type = {
->  	.name = "ulpi_device",
->  	.groups = ulpi_dev_attr_groups,
->  	.release = ulpi_dev_release,
+> @@ -557,7 +557,7 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+>  	/* Create legacy IRQ domain */
+>  	ks_pcie->legacy_irq_domain =
+>  			irq_domain_add_linear(ks_pcie->legacy_intc_np,
+> -					MAX_LEGACY_IRQS,
+> +					PCI_NUM_INTX,
+>  					&ks_dw_pcie_legacy_irq_domain_ops,
+>  					NULL);
+>  	if (!ks_pcie->legacy_irq_domain) {
+> diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+> index 74c5825882df..69fc60129f45 100644
+> --- a/drivers/pci/dwc/pci-keystone.h
+> +++ b/drivers/pci/dwc/pci-keystone.h
+> @@ -12,7 +12,6 @@
+>   * published by the Free Software Foundation.
+>   */
+>  
+> -#define MAX_LEGACY_IRQS			4
+>  #define MAX_MSI_HOST_IRQS		8
+>  #define MAX_LEGACY_HOST_IRQS		4
 
-Thanks,
+BTW, Murali, what is MAX_LEGACY_HOST_IRQS?  Is that something we can
+replace by PCI_NUM_INTX also?
 
--- 
-heikki
+(PCI_NUM_INTX is a new definition in include/linux/pci.h for the
+number of INTx interrupts: INTA, INTB, INTC, INTD).
