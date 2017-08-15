@@ -1,99 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:33130 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750820AbdHIFWt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 01:22:49 -0400
-Received: by mail-pg0-f50.google.com with SMTP id u5so23711955pgn.0
-        for <linux-pci@vger.kernel.org>; Tue, 08 Aug 2017 22:22:49 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 15 Aug 2017 11:13:38 +0200
+From: Jan Glauber <jan.glauber@caviumnetworks.com>
+To: Will Deacon <will.deacon@arm.com>
+Subject: Re: [PATCH v8 1/3] perf: cavium: Support memory controller PMU
+ counters
+Message-ID: <20170815091338.GA3317@hc>
+References: <20170726163049.GG28875@nazgul.tnic>
+ <20170726173353.GB21705@kroah.com>
+ <1a2eedea-040d-c746-eaf0-1d8085b3f2bf@gmail.com>
+ <20170726200802.GA17722@kroah.com>
+ <b27cda60-8bf8-47a1-15b5-bf8b3a83fc45@gmail.com>
+ <20170727051157.GA4525@nazgul.tnic> <20170727090856.GB15784@hc>
+ <20170727131515.GC28548@nazgul.tnic>
+ <20170728231233.GA29240@kroah.com> <20170808132509.GJ13355@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqL3dWA-0Sq-_8ufa-cwXZEbFQBJHCK-5wLp_xw5NrTHKw@mail.gmail.com>
-References: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com>
- <1502167455-10516-3-git-send-email-oza.oza@broadcom.com> <CAL_JsqL3dWA-0Sq-_8ufa-cwXZEbFQBJHCK-5wLp_xw5NrTHKw@mail.gmail.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Wed, 9 Aug 2017 10:52:48 +0530
-Message-ID: <CAMSpPPfjxbjaScqovegcRG6GBhkUutqgj3Ly1B+0_BnZN2Ewug@mail.gmail.com>
-Subject: Re: [PATCH 2/2] PCI: iproc: Add optional brcm,pci-hotplug
-To: Rob Herring <robh+dt@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        "bcm-kernel-feedback-list@broadcom.com"
-        <bcm-kernel-feedback-list@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170808132509.GJ13355@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Suzuki K Poulose <Suzuki.Poulose@arm.com>,
+ Greg KH <gregkh@linuxfoundation.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Borislav Petkov <bp@alien8.de>, David Daney <ddaney.cavm@gmail.com>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 8, 2017 at 7:50 PM, Rob Herring <robh+dt@kernel.org> wrote:
-> Please send bindings to DT list.
+On Tue, Aug 08, 2017 at 02:25:10PM +0100, Will Deacon wrote:
+> On Fri, Jul 28, 2017 at 04:12:33PM -0700, Greg KH wrote:
+> > On Thu, Jul 27, 2017 at 03:15:15PM +0200, Borislav Petkov wrote:
+> > > On Thu, Jul 27, 2017 at 11:08:56AM +0200, Jan Glauber wrote:
+> > > > OK. As fixing the firmware will take quite some time I'll go for the memory
+> > > > controller driver that starts EDAC / PMU depending on their CONFIG_.
+> > > > 
+> > > > What would be the proper location for the multiplexer?
+> > > > drivers/soc/cavium or drivers/misc?
+> > > 
+> > > Uff, no idea. Greg? You're the special drivers guy. :-)
+> > 
+> > Start out in misc/ and let's see the code to determine if it should be
+> > moved elsewhere.
+> 
+> Jan, are you ok making this change, or are you waiting for anything else
+> from us? (Mark and I are just going through the pending PMU patches and
+> we're not clear on the status of this one).
 
-Sure, will do that.
+Hi Will,
+it's my turn but I was on vacation. It was not completely trivial (well,
+to me) to get the multiplexing working with modules but I'll look at it
+again this week.
 
->
-> On Mon, Aug 7, 2017 at 11:44 PM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
->> Add description for optional device tree property
->> 'brcm,pci-hotplug' for PCI hotplug feature.
->>
->> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
->> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
->>
->> diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> index b8e48b4..a3bad24 100644
->> --- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
->> @@ -72,6 +72,29 @@ Optional properties:
->>  - brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
->>  require the interrupt enable registers to be set explicitly to enable MSI
->>
->> +Optional properties:
->> +- brcm,pci-hotplug: PCI hotplug feature is supported.
->
-> I think we should make this a common property. We already have
-> "ibm,slot-pluggable", so I'd propose "slot-pluggable".
->
-> There's also "hotpluggable" for memory nodes defined, so we could
-> reuse that here.
->
+Cheers,
+Jan
 
-ok I will rename this to
-brcm,slot-pluggable
-
->> +
->> +If the brcm,pcie-hotplug property is present, the following properties become
->> +effective:
->> +
->> +- brcm,prsnt-gpio: Array of gpios, needs to be present if Hotplug is supported.
->
-> prsnt-gpios
-
-will take care.
-
->
->> +
->> +PCI hotplug implementation is SOC/Board specific, and also it depends on
->> +how add-in card is designed (e.g. how many present pins are implemented).
->> +
->> +If x8 card is connected, then it might be possible that all the
->> +3 present pins could go low, or at least one pin goes low.
->> +
->> +If x4 card is connected, then it might be possible that 2 present
->> +pins go low, or at least one pin goes low.
->> +
->> +Example:
->> +brcm,prsnt-gpio: <&pca9505 32 1>, <&pca9505 33 1>;
->> +This is x4 connector: monitoring max 2 present lines.
->> +brcm,prsnt-gpio: <&pca9505 32 1>, <&pca9505 33 1>, <&pca9505 34 1>;
->> +This is x8 connector: monitoring max 3 present lines.
->> +
->>  Example:
->>         pcie0: pcie@18012000 {
->>                 compatible = "brcm,iproc-pcie";
->> --
->> 1.9.1
->>
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
