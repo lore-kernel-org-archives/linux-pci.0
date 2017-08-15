@@ -1,78 +1,129 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-Subject: [PATCH v2 06/10] ARM: dts: am571x-idk: Add pinmux configuration for
- MMC
-Date: Wed, 16 Aug 2017 19:15:04 +0530
-Message-ID: <20170816134508.8887-7-kishon@ti.com>
-In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
-References: <20170816134508.8887-1-kishon@ti.com>
+Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v11 4/5] net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Tue, 15 Aug 2017 11:23:26 +0800
+Message-ID: <1502767407-6812-5-git-send-email-dingtianhong@huawei.com>
+In-Reply-To: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
+References: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Include dra72x-mmc-iodelay.dtsi which has pinmux and IODelay
-configuration values for the various MMC modes for dra72 SoC
-and use it in the pinctrl properties of MMC devicetree
-nodes present in am571x-idk.dts.
+From: Casey Leedom <leedom@chelsio.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+cxgb4 Ethernet driver now queries PCIe configuration space to determine
+if it can send TLPs to it with the Relaxed Ordering Attribute set.
+
+Remove the enable_pcie_relaxed_ordering() to avoid enable PCIe Capability
+Device Control[Relaxed Ordering Enable] at probe routine, to make sure
+the driver will not send the Relaxed Ordering TLPs to the Root Complex which
+could not deal the Relaxed Ordering TLPs.
+
+Signed-off-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Reviewed-by: Casey Leedom <leedom@chelsio.com>
 ---
- arch/arm/boot/dts/am571x-idk.dts | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 23 +++++++++++++++++------
+ drivers/net/ethernet/chelsio/cxgb4/sge.c        |  5 +++--
+ 3 files changed, 21 insertions(+), 8 deletions(-)
 
-diff --git a/arch/arm/boot/dts/am571x-idk.dts b/arch/arm/boot/dts/am571x-idk.dts
-index 78c5c7462fcc..debf9464403e 100644
---- a/arch/arm/boot/dts/am571x-idk.dts
-+++ b/arch/arm/boot/dts/am571x-idk.dts
-@@ -11,6 +11,7 @@
- #include <dt-bindings/gpio/gpio.h>
- #include <dt-bindings/interrupt-controller/irq.h>
- #include "am57xx-idk-common.dtsi"
-+#include "dra72x-mmc-iodelay.dtsi"
- 
- / {
- 	model = "TI AM5718 IDK";
-@@ -98,3 +99,21 @@
- &pcie1_ep {
- 	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+index ef4be78..09ea62e 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
+@@ -529,6 +529,7 @@ enum {                                 /* adapter flags */
+ 	USING_SOFT_PARAMS  = (1 << 6),
+ 	MASTER_PF          = (1 << 7),
+ 	FW_OFLD_CONN       = (1 << 9),
++	ROOT_NO_RELAXED_ORDERING = (1 << 10),
  };
+ 
+ enum {
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+index e403fa1..33bb867 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
+@@ -4654,11 +4654,6 @@ static void print_port_info(const struct net_device *dev)
+ 		    dev->name, adap->params.vpd.id, adap->name, buf);
+ }
+ 
+-static void enable_pcie_relaxed_ordering(struct pci_dev *dev)
+-{
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_RELAX_EN);
+-}
+-
+ /*
+  * Free the following resources:
+  * - memory used for tables
+@@ -4908,7 +4903,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 
+ 	pci_enable_pcie_error_reporting(pdev);
+-	enable_pcie_relaxed_ordering(pdev);
+ 	pci_set_master(pdev);
+ 	pci_save_state(pdev);
+ 
+@@ -4947,6 +4941,23 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	adapter->msg_enable = DFLT_MSG_ENABLE;
+ 	memset(adapter->chan_map, 0xff, sizeof(adapter->chan_map));
+ 
++	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
++	 * Ingress Packet Data to Free List Buffers in order to allow for
++	 * chipset performance optimizations between the Root Complex and
++	 * Memory Controllers.  (Messages to the associated Ingress Queue
++	 * notifying new Packet Placement in the Free Lists Buffers will be
++	 * send without the Relaxed Ordering Attribute thus guaranteeing that
++	 * all preceding PCIe Transaction Layer Packets will be processed
++	 * first.)  But some Root Complexes have various issues with Upstream
++	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
++	 * The PCIe devices which under the Root Complexes will be cleared the
++	 * Relaxed Ordering bit in the configuration space, So we check our
++	 * PCIe configuration space to see if it's flagged with advice against
++	 * using Relaxed Ordering.
++	 */
++	if (!pcie_relaxed_ordering_enabled(pdev))
++		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
 +
-+&mmc1 {
-+	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50", "sdr104";
-+	pinctrl-0 = <&mmc1_pins_default>;
-+	pinctrl-1 = <&mmc1_pins_hs>;
-+	pinctrl-2 = <&mmc1_pins_sdr12>;
-+	pinctrl-3 = <&mmc1_pins_sdr25>;
-+	pinctrl-4 = <&mmc1_pins_sdr50>;
-+	pinctrl-5 = <&mmc1_pins_ddr50_rev20 &mmc1_iodelay_ddr50_conf>;
-+	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev20_conf>;
-+};
-+
-+&mmc2 {
-+	pinctrl-names = "default", "hs", "ddr_1_8v";
-+	pinctrl-0 = <&mmc2_pins_default>;
-+	pinctrl-1 = <&mmc2_pins_hs>;
-+	pinctrl-2 = <&mmc2_pins_ddr_rev20 &mmc2_iodelay_ddr_conf>;
-+};
+ 	spin_lock_init(&adapter->stats_lock);
+ 	spin_lock_init(&adapter->tid_release_lock);
+ 	spin_lock_init(&adapter->win0_lock);
+diff --git a/drivers/net/ethernet/chelsio/cxgb4/sge.c b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+index ede1220..4ef68f6 100644
+--- a/drivers/net/ethernet/chelsio/cxgb4/sge.c
++++ b/drivers/net/ethernet/chelsio/cxgb4/sge.c
+@@ -2719,6 +2719,7 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 	struct fw_iq_cmd c;
+ 	struct sge *s = &adap->sge;
+ 	struct port_info *pi = netdev_priv(dev);
++	int relaxed = !(adap->flags & ROOT_NO_RELAXED_ORDERING);
+ 
+ 	/* Size needs to be multiple of 16, including status entry. */
+ 	iq->size = roundup(iq->size, 16);
+@@ -2772,8 +2773,8 @@ int t4_sge_alloc_rxq(struct adapter *adap, struct sge_rspq *iq, bool fwevtq,
+ 
+ 		flsz = fl->size / 8 + s->stat_len / sizeof(struct tx_desc);
+ 		c.iqns_to_fl0congen |= htonl(FW_IQ_CMD_FL0PACKEN_F |
+-					     FW_IQ_CMD_FL0FETCHRO_F |
+-					     FW_IQ_CMD_FL0DATARO_F |
++					     FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
++					     FW_IQ_CMD_FL0DATARO_V(relaxed) |
+ 					     FW_IQ_CMD_FL0PADEN_F);
+ 		if (cong >= 0)
+ 			c.iqns_to_fl0congen |=
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.8.3.1
