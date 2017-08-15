@@ -1,122 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-db5eur01on0046.outbound.protection.outlook.com ([104.47.2.46]:1984
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752101AbdHCDRb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 23:17:31 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>
-Subject: RE: [PATCH 3/3] PCI: layerscape: refactor the host_init function
-Date: Thu, 3 Aug 2017 03:17:28 +0000
-Message-ID: <AM5PR0402MB27714350B8DD9E1FD7CFE72584B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1499322829-23018-3-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170802211137.GG20308@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170802211137.GG20308@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Received: from mailapp01.imgtec.com ([195.59.15.196]:18917 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752453AbdHOTDu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:03:50 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Paul Burton <paul.burton@imgtec.com>,
+        Ley Foon Tan <lftan@altera.com>, <rfi@lists.rocketboards.org>
+Subject: [PATCH v7 3/8] PCI: altera: Use size=4 IRQ domain for legacy INTx
+Date: Tue, 15 Aug 2017 12:02:18 -0700
+Message-ID: <20170815190223.18807-4-paul.burton@imgtec.com>
+In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
+References: <20170815190223.18807-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIzyNUgNToxMg0KPiBUbzogWi5xLiBIb3Ug
-PHpoaXFpYW5nLmhvdUBueHAuY29tPg0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsg
-YmhlbGdhYXNAZ29vZ2xlLmNvbTsNCj4gamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9A
-c3lub3BzeXMuY29tOyBNLmguIExpYW4NCj4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT4NCj4gU3Vi
-amVjdDogUmU6IFtQQVRDSCAzLzNdIFBDSTogbGF5ZXJzY2FwZTogcmVmYWN0b3IgdGhlIGhvc3Rf
-aW5pdCBmdW5jdGlvbg0KPiANCj4gT24gVGh1LCBKdWwgMDYsIDIwMTcgYXQgMDI6MzM6NDlQTSAr
-MDgwMCwgWmhpcWlhbmcgSG91IHdyb3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlh
-bmcuSG91QG54cC5jb20+DQo+ID4NCj4gPiBNYWluIGNoYW5nZXM6DQo+ID4gLSBNYWtlIHRoZSBs
-czEwMjFhJ3MgaG9zdF9pbml0IHJldXNlIGxheWVyc2NhcGUgcGxhdGZvcm0ncyBjb21tb24NCj4g
-PiAgIGhvc3RfaW5pdCBmdW5jdGlvbi4NCj4gPiAtIFdpbGwgbm90IHVzZSB0aGUgb3V0Ym91bmQg
-d2luZG93cyBjb25maWd1cmVkIGJ5IGJvb3Rsb2FkZXIsIGJ1dA0KPiA+ICAgaW50cm9kdWNlIERX
-QyBjb21tb24gc2V0dXAgZnVuY3Rpb24gZHdfcGNpZV9zZXR1cF9yYyBhbmQgZGlzYWJsZQ0KPiA+
-ICAgdGhlIGJvb3Rsb2FkZXIgY29uZmlndXJlZCBvdXRib3VuZCB3aW5kb3dzLiBBbmQgcmVtb3Zl
-IHRoZSBkdXBsaWNhdGUNCj4gPiAgIGNsYXNzIGZpZWxkIGZpeCBjb2RlLg0KPiANCj4gVGhpcyBz
-ZWVtcyB0byBoYXZlIHR3byBvciBldmVuIHRocmVlIGRpc3RpbmN0IGNoYW5nZXMgbWl4ZWQgdG9n
-ZXRoZXIuDQo+IFBsZWFzZSBzcGxpdCB0aGVtIGludG8gc2VwYXJhdGUgcGF0Y2hlcy4gIEluIHBh
-cnRpY3VsYXIsIHlvdSBtZW50aW9uIGEgY2xhc3MNCj4gY29kZSBmaXggLS0gdGhhdCBzaG91bGQg
-YmUgaXRzIG93biBzZXBhcmF0ZSBwYXRjaC4NCg0KWWVzLCB3aWxsIHNwbGl0IHRoaXMgcGF0Y2gu
-DQoNCj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29t
-Pg0KPiA+IFNpZ25lZC1vZmYtYnk6IE1pbmdodWFuIExpYW4gPE1pbmdodWFuLkxpYW5AbnhwLmNv
-bT4NCj4gPiAtLS0NCj4gPiAgZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMgfCA4NQ0K
-PiA+ICsrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0NCj4gPiAgMSBmaWxl
-IGNoYW5nZWQsIDQ2IGluc2VydGlvbnMoKyksIDM5IGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJzY2FwZS5jDQo+ID4gYi9kcml2ZXJz
-L3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IGluZGV4IGZkODYxMjguLjliZWQzY2QgMTAw
-NjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiArKysg
-Yi9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+IEBAIC0zMyw3ICszMyw4IEBA
-DQo+ID4NCj4gPiAgLyogUEVYIEludGVybmFsIENvbmZpZ3VyYXRpb24gUmVnaXN0ZXJzICovDQo+
-ID4gICNkZWZpbmUgUENJRV9TVFJGTVIxCQkweDcxYyAvKiBTeW1ib2wgVGltZXIgJiBGaWx0ZXIg
-TWFzaw0KPiBSZWdpc3RlcjEgKi8NCj4gPiAtI2RlZmluZSBQQ0lFX0RCSV9ST19XUl9FTgkweDhi
-YyAvKiBEQkkgUmVhZC1Pbmx5IFdyaXRlIEVuYWJsZQ0KPiBSZWdpc3RlciAqLw0KPiA+ICsNCj4g
-PiArI2RlZmluZSBQQ0lFX0lBVFVfTlVNCQk2DQo+ID4NCj4gPiAgc3RydWN0IGxzX3BjaWVfZHJ2
-ZGF0YSB7DQo+ID4gIAl1MzIgbHV0X29mZnNldDsNCj4gPiBAQCAtNjksMTUgKzcwLDkgQEAgc3Rh
-dGljIHZvaWQgbHNfcGNpZV9jbGVhcl9tdWx0aWZ1bmN0aW9uKHN0cnVjdA0KPiA+IGxzX3BjaWUg
-KnBjaWUpICB7DQo+ID4gIAlzdHJ1Y3QgZHdfcGNpZSAqcGNpID0gcGNpZS0+cGNpOw0KPiA+DQo+
-ID4gKwlkd19wY2llX2RiaV9yb193cl9lbihwY2kpOw0KPiA+ICAJaW93cml0ZTgoUENJX0hFQURF
-Ul9UWVBFX0JSSURHRSwgcGNpLT5kYmlfYmFzZSArDQo+IFBDSV9IRUFERVJfVFlQRSk7DQo+ID4g
-LX0NCj4gPiAtDQo+ID4gLS8qIEZpeCBjbGFzcyB2YWx1ZSAqLw0KPiA+IC1zdGF0aWMgdm9pZCBs
-c19wY2llX2ZpeF9jbGFzcyhzdHJ1Y3QgbHNfcGNpZSAqcGNpZSkgLXsNCj4gPiAtCXN0cnVjdCBk
-d19wY2llICpwY2kgPSBwY2llLT5wY2k7DQo+ID4gLQ0KPiA+IC0JaW93cml0ZTE2KFBDSV9DTEFT
-U19CUklER0VfUENJLCBwY2ktPmRiaV9iYXNlICsgUENJX0NMQVNTX0RFVklDRSk7DQo+ID4gKwlk
-d19wY2llX2RiaV9yb193cl9kaXMocGNpKTsNCj4gPiAgfQ0KPiA+DQo+ID4gIC8qIERyb3AgTVNH
-IFRMUCBleGNlcHQgZm9yIFZlbmRvciBNU0cgKi8gQEAgLTkxLDYgKzg2LDE0IEBAIHN0YXRpYw0K
-PiA+IHZvaWQgbHNfcGNpZV9kcm9wX21zZ190bHAoc3RydWN0IGxzX3BjaWUgKnBjaWUpDQo+ID4g
-IAlpb3dyaXRlMzIodmFsLCBwY2ktPmRiaV9iYXNlICsgUENJRV9TVFJGTVIxKTsgIH0NCj4gPg0K
-PiA+ICtzdGF0aWMgdm9pZCBsc19wY2llX2Rpc2FibGVfb3V0Ym91bmRfYXR1cyhzdHJ1Y3QgbHNf
-cGNpZSAqcGNpZSkgew0KPiA+ICsJaW50IGk7DQo+ID4gKw0KPiA+ICsJZm9yIChpID0gMDsgaSA8
-IFBDSUVfSUFUVV9OVU07IGkrKykNCj4gPiArCQlkd19wY2llX2Rpc2FibGVfYXR1KHBjaWUtPnBj
-aSwgRFdfUENJRV9SRUdJT05fT1VUQk9VTkQsIGkpOyB9DQo+ID4gKw0KPiA+ICBzdGF0aWMgaW50
-IGxzMTAyMV9wY2llX2xpbmtfdXAoc3RydWN0IGR3X3BjaWUgKnBjaSkgIHsNCj4gPiAgCXUzMiBz
-dGF0ZTsNCj4gPiBAQCAtMTA4LDMzICsxMTEsNiBAQCBzdGF0aWMgaW50IGxzMTAyMV9wY2llX2xp
-bmtfdXAoc3RydWN0IGR3X3BjaWUgKnBjaSkNCj4gPiAgCXJldHVybiAxOw0KPiA+ICB9DQo+ID4N
-Cj4gPiAtc3RhdGljIHZvaWQgbHMxMDIxX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQg
-KnBwKSAtew0KPiA+IC0Jc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChw
-cCk7DQo+ID4gLQlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPiAt
-CXN0cnVjdCBkZXZpY2UgKmRldiA9IHBjaS0+ZGV2Ow0KPiA+IC0JdTMyIGluZGV4WzJdOw0KPiA+
-IC0NCj4gPiAtCXBjaWUtPnNjZmcgPSBzeXNjb25fcmVnbWFwX2xvb2t1cF9ieV9waGFuZGxlKGRl
-di0+b2Zfbm9kZSwNCj4gPiAtCQkJCQkJICAgICAiZnNsLHBjaWUtc2NmZyIpOw0KPiA+IC0JaWYg
-KElTX0VSUihwY2llLT5zY2ZnKSkgew0KPiA+IC0JCWRldl9lcnIoZGV2LCAiTm8gc3lzY2ZnIHBo
-YW5kbGUgc3BlY2lmaWVkXG4iKTsNCj4gPiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQly
-ZXR1cm47DQo+ID4gLQl9DQo+ID4gLQ0KPiA+IC0JaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyX2Fy
-cmF5KGRldi0+b2Zfbm9kZSwNCj4gPiAtCQkJCSAgICAgICAiZnNsLHBjaWUtc2NmZyIsIGluZGV4
-LCAyKSkgew0KPiA+IC0JCXBjaWUtPnNjZmcgPSBOVUxMOw0KPiA+IC0JCXJldHVybjsNCj4gPiAt
-CX0NCj4gPiAtCXBjaWUtPmluZGV4ID0gaW5kZXhbMV07DQo+ID4gLQ0KPiA+IC0JZHdfcGNpZV9z
-ZXR1cF9yYyhwcCk7DQo+ID4gLQ0KPiA+IC0JbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+
-ID4gLX0NCj4gPiAtDQo+ID4gIHN0YXRpYyBpbnQgbHNfcGNpZV9saW5rX3VwKHN0cnVjdCBkd19w
-Y2llICpwY2kpICB7DQo+ID4gIAlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNp
-KTsgQEAgLTE1NSwxMSArMTMxLDQyIEBAIHN0YXRpYw0KPiA+IHZvaWQgbHNfcGNpZV9ob3N0X2lu
-aXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gIAlzdHJ1Y3QgZHdfcGNpZSAqcGNpID0gdG9f
-ZHdfcGNpZV9mcm9tX3BwKHBwKTsNCj4gPiAgCXN0cnVjdCBsc19wY2llICpwY2llID0gdG9fbHNf
-cGNpZShwY2kpOw0KPiA+DQo+ID4gLQlpb3dyaXRlMzIoMSwgcGNpLT5kYmlfYmFzZSArIFBDSUVf
-REJJX1JPX1dSX0VOKTsNCj4gPiAtCWxzX3BjaWVfZml4X2NsYXNzKHBjaWUpOw0KPiA+ICsJLyoN
-Cj4gPiArCSAqIERpc2FibGUgdGhlIG91dGJvdW5kIHdpbmRvd3MgY29uZmlndXJlZCBieSBib290
-bG9hZGVyIHRvIGF2b2lkDQo+ID4gKwkgKiBvbmUgdHJhbnNhY3Rpb24gaGl0dGluZyBtdWx0aXBs
-ZSBvdXRib3VuZCB3aW5kb3dzIGFuZCB0aGUgZnVuY3Rpb24NCj4gPiArCSAqIGR3X3BjaWVfc2V0
-dXBfcmMgd2lsbCByZS1jb25maWd1cmUgdGhlIG91dGJvdW5kIHdpbmRvd3MuDQo+ID4gKwkgKi8N
-Cj4gPiArCWxzX3BjaWVfZGlzYWJsZV9vdXRib3VuZF9hdHVzKHBjaWUpOw0KPiA+ICsNCj4gPiAg
-CWxzX3BjaWVfY2xlYXJfbXVsdGlmdW5jdGlvbihwY2llKTsNCj4gPiAgCWxzX3BjaWVfZHJvcF9t
-c2dfdGxwKHBjaWUpOw0KPiA+IC0JaW93cml0ZTMyKDAsIHBjaS0+ZGJpX2Jhc2UgKyBQQ0lFX0RC
-SV9ST19XUl9FTik7DQo+ID4gKw0KPiA+ICsJZHdfcGNpZV9zZXR1cF9yYyhwcCk7DQo+ID4gK30N
-Cj4gPiArDQo+ID4gK3N0YXRpYyB2b2lkIGxzMTAyMV9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNp
-ZV9wb3J0ICpwcCkgew0KPiA+ICsJc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJv
-bV9wcChwcCk7DQo+ID4gKwlzdHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNpKTsN
-Cj4gPiArCXN0cnVjdCBkZXZpY2UgKmRldiA9IHBjaS0+ZGV2Ow0KPiA+ICsJdTMyIGluZGV4WzJd
-Ow0KPiA+ICsNCj4gPiArCXBjaWUtPnNjZmcgPSBzeXNjb25fcmVnbWFwX2xvb2t1cF9ieV9waGFu
-ZGxlKGRldi0+b2Zfbm9kZSwNCj4gPiArCQkJCQkJICAgICAiZnNsLHBjaWUtc2NmZyIpOw0KPiA+
-ICsJaWYgKElTX0VSUihwY2llLT5zY2ZnKSkgew0KPiA+ICsJCWRldl9lcnIoZGV2LCAiTm8gc3lz
-Y2ZnIHBoYW5kbGUgc3BlY2lmaWVkXG4iKTsNCj4gPiArCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4g
-PiArCQlyZXR1cm47DQo+ID4gKwl9DQo+ID4gKw0KPiA+ICsJaWYgKG9mX3Byb3BlcnR5X3JlYWRf
-dTMyX2FycmF5KGRldi0+b2Zfbm9kZSwNCj4gPiArCQkJCSAgICAgICAiZnNsLHBjaWUtc2NmZyIs
-IGluZGV4LCAyKSkgew0KPiA+ICsJCXBjaWUtPnNjZmcgPSBOVUxMOw0KPiA+ICsJCXJldHVybjsN
-Cj4gPiArCX0NCj4gPiArCXBjaWUtPmluZGV4ID0gaW5kZXhbMV07DQo+ID4gKw0KPiA+ICsJbHNf
-cGNpZV9ob3N0X2luaXQocHApOw0KPiA+ICB9DQo+ID4NCj4gPiAgc3RhdGljIGludCBsc19wY2ll
-X21zaV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHAsDQo+ID4gLS0NCj4gPiAyLjEuMC4y
-Ny5nOTZkYjMyNA0KPiA+DQoNClRoYW5rcywNClpoaXFpYW5nDQo=
+The devicetree binding documentation for the Altera PCIe controller
+shows an example which uses an interrupt-map property to map PCI INTx
+interrupts to hardware IRQ numbers 1-4. The driver creates an IRQ domain
+with size 5 in order to cover this range, with hwirq=0 left unused.
+
+This patch cleans up this wasted IRQ domain entry, modifying the driver
+to use an IRQ domain of size 4 which matches the actual number of PCI
+INTx interrupts. Since the hwirq numbers 1-4 are part of the devicetree
+binding, and this is considered ABI, we cannot simply change the
+interrupt-map property to use the range 0-3. Instead we make use of the
+pci_irqd_intx_xlate() helper function to translate the range 1-4 used at
+the DT level into the range 0-3 which is now used within the driver, and
+stop adding 1 to decoded hwirq numbers in altera_pcie_isr().
+
+Whilst cleaning up INTx handling we make use of the new PCI_NUM_INTX
+macro & drop the custom INTX_NUM definition.
+
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ley Foon Tan <lftan@altera.com>
+Cc: linux-pci@vger.kernel.org
+Cc: rfi@lists.rocketboards.org
+
+---
+I have only build tested this.
+
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-altera.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 4ea4f8f5dc77..6fced590eb87 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -76,8 +76,6 @@
+ #define LINK_UP_TIMEOUT			HZ
+ #define LINK_RETRAIN_TIMEOUT		HZ
+ 
+-#define INTX_NUM			4
+-
+ #define DWORD_MASK			3
+ 
+ struct altera_pcie {
+@@ -464,6 +462,7 @@ static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+ 
+ static const struct irq_domain_ops intx_domain_ops = {
+ 	.map = altera_pcie_intx_map,
++	.xlate = pci_irqd_intx_xlate,
+ };
+ 
+ static void altera_pcie_isr(struct irq_desc *desc)
+@@ -481,11 +480,11 @@ static void altera_pcie_isr(struct irq_desc *desc)
+ 
+ 	while ((status = cra_readl(pcie, P2A_INT_STATUS)
+ 		& P2A_INT_STS_ALL) != 0) {
+-		for_each_set_bit(bit, &status, INTX_NUM) {
++		for_each_set_bit(bit, &status, PCI_NUM_INTX) {
+ 			/* clear interrupts */
+ 			cra_writel(pcie, 1 << bit, P2A_INT_STATUS);
+ 
+-			virq = irq_find_mapping(pcie->irq_domain, bit + 1);
++			virq = irq_find_mapping(pcie->irq_domain, bit);
+ 			if (virq)
+ 				generic_handle_irq(virq);
+ 			else
+@@ -536,7 +535,7 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
+ 	struct device_node *node = dev->of_node;
+ 
+ 	/* Setup INTx */
+-	pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM + 1,
++	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
+ 					&intx_domain_ops, pcie);
+ 	if (!pcie->irq_domain) {
+ 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+-- 
+2.14.1
