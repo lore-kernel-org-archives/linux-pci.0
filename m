@@ -1,72 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 11 Aug 2017 10:56:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH] PCI: Convert to using %pOF instead of full_name
-Message-ID: <20170811155658.GA17039@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170718214339.7774-41-robh@kernel.org>
- <20170802223928.GQ20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAL_JsqLznQdnWw+A2T8V8CTktYaPDF_800jGHAVa=G-Yhxyn+Q@mail.gmail.com>
+Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 15 Aug 2017 18:50:17 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
+ it from DT
+Message-ID: <20170815175017.GA28308@red-moon>
+References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
+ <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
+ <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
+ <20170815122330.GA16904@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqLznQdnWw+A2T8V8CTktYaPDF_800jGHAVa=G-Yhxyn+Q@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Jason Cooper <jason@lakedaemon.net>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jonathan Hunter <jonathanh@nvidia.com>,
- "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>,
- Thierry Reding <thierry.reding@gmail.com>, Paul Mackerras <paulus@samba.org>,
- Tyrel Datwyler <tyreld@linux.vnet.ibm.com>,
- Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <bhelgaas@google.com>,
- linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170815122330.GA16904@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Tyrel]
-
-On Wed, Aug 09, 2017 at 05:04:43PM -0500, Rob Herring wrote:
-> On Wed, Aug 2, 2017 at 5:39 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Tue, Jul 18, 2017 at 04:43:21PM -0500, Rob Herring wrote:
-> >> Now that we have a custom printf format specifier, convert users of
-> >> full_name to use %pOF instead. This is preparation to remove storing
-> >> of the full path string for each node.
-> >>
-> >> Signed-off-by: Rob Herring <robh@kernel.org>
-> >> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> >> Cc: Jason Cooper <jason@lakedaemon.net>
-> >> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> >> Cc: Thierry Reding <thierry.reding@gmail.com>
-> >> Cc: Jonathan Hunter <jonathanh@nvidia.com>
-> >> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >> Cc: Paul Mackerras <paulus@samba.org>
-> >> Cc: Michael Ellerman <mpe@ellerman.id.au>
-> >> Cc: linux-pci@vger.kernel.org
-> >> Cc: linux-arm-kernel@lists.infradead.org
-> >> Cc: linux-tegra@vger.kernel.org
-> >> Cc: linuxppc-dev@lists.ozlabs.org
-> >
-> > Applied to pci/misc for v4.14, thanks!
+On Tue, Aug 15, 2017 at 07:23:30AM -0500, Bjorn Helgaas wrote:
+> On Tue, Aug 15, 2017 at 12:43:16PM +0100, Lorenzo Pieralisi wrote:
+> > On Tue, Aug 15, 2017 at 03:01:48PM +0800, Shawn Lin wrote:
+> > > Hi Bjorn,
+> > > 
+> > > On 2017/8/12 5:17, Bjorn Helgaas wrote:
+> > > >[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
+> > > >
+> > > >On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
+> > > >>If not getting domain number from DT, the domain number will
+> > > >>keep increasing once doing unbind/bind RC drivers. This could
+> > > >>introduce pointless tree view of lspci as shows below:
+> > > >>
+> > > >>-+-[0001:00]---00.0-[01]----00.0
+> > > >>   \-[0000:00]-
+> > > >>
+> > > >>The more test we do, the lengthier it would be. The more serious
+> > > >>issue is that if attaching two hierarchies for two different domains
+> > > >>belonging to two root bridges, so when doing unbind/bind test for one
+> > > >>of them and keep the other, then the domain number would finally
+> > > >>overflow and make the two hierarchies of devices share the some domain
+> > > >>number but actually they shouldn't. So it looks like we need to invent
+> > > >>a new indexing ID mechanism to manage domain number. This patch
+> > > >>introduces idr to achieve our purpose.
+> > > >>
+> > > >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> > > >
+> > > >The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
+> > > >obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
+> > > >Lorenzo's excellent work, the time is ripe for moving the domain
+> > > >number from arch-specific places into struct pci_host_bridge.
+> > > >
+> > > >I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
+> > > >CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
+> > > >enable some simplification of of_pci_bus_find_domain_nr() as well,
+> > > >which in turn, might make *this* patch simpler.
+> > > >
+> > > >This isn't that big a patch to begin with, so I could apply it as-is
+> > > >and we could do more domain cleanup later.  It's just that it's
+> > > >intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
+> > > >opportunity to make this story more readable if those are out of the
+> > > >way.  Any thoughts?
+> > > 
+> > > That sounds good to me that aftering add IDA domain, we could start
+> > > considering moving domain number from arch-specific places into the
+> > > bridge code and may be could also finally remove the macro
+> > > CONFIG_PCI_DOMAIN* both?
+> > 
+> > I need to see how this can be implemented (another hook in
+> > pci_host_bridge ?) but I suspect we can't get away with arch
+> > specific bits - or maybe you are referring to having one single
+> > place where the domain is _assigned_ using an arch specific hook
+> > (in pci_host_bridge) ? I have to have a look into this, certainly
+> > this patch should be considered because that atomic counter deserved
+> > more thought, yes.
 > 
-> This hasn't shown up in -next.
+> What I was hoping (and I haven't thought this all through) was that we
+> could: 
+> 
+>   - add "domain" to struct pci_host_bridge
+> 
+>   - have callers of pci_scan_root_bus_bridge() assign bridge->domain
+>     alongside their existing bridge->busnr, bridge->ops, etc.
+>     assignments.  This would pull a little of the messiness of
+>     pci_bus_find_domain_nr() into the bridge drivers, but they would
+>     know a priori whether to use ACPI or DT, so we wouldn't need quite
+>     as much guesswork.
+> 
+>   - replace the pci_bus_find_domain_nr() call in
+>     pci_register_host_bridge() with "bus->domain_nr = bridge->domain"
+> 
+>   - replace the arch-specific pci_domain_nr() implementations with a
+>     generic one
+> 
+>   - add IDA alloc to the DT domain number alloc path
 
-Thanks, it should be in next-20170811.
+Yes, if we accept that arch code has to play a role in setting the
+domain number I think that's doable but I have to have a look into ACPI
+for this to work since this means that I have to convert x86/ia64 (and
+powerpc, not sure about this) to the new bus scanning API.
 
-I updated it to add Tyrel's reviewed-by, but that's not in -next yet.
+For the DT host bridges and arches I have already converted that should
+be relatively easy (well, another big series), I have to have a proper
+look into it.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes, overall it makes perfect sense.
+
+Thanks,
+Lorenzo
