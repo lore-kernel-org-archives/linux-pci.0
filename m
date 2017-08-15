@@ -1,90 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:51771 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751859AbdH1OXN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 10:23:13 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Tim Harvey <tharvey@gateworks.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Shawn Guo <shawnguo@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        patchwork-lst@pengutronix.de, kernel@pengutronix.de
-Subject: [PATCH 2/3] PCI: imx6: allow MSI irq to be absent
-Date: Mon, 28 Aug 2017 16:23:06 +0200
-Message-Id: <20170828142307.30061-3-l.stach@pengutronix.de>
-In-Reply-To: <20170828142307.30061-1-l.stach@pengutronix.de>
-References: <20170828142307.30061-1-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 15 Aug 2017 13:44:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+        qla2xxx-upstream@qlogic.com,
+        Linux Kernel list <linux-kernel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
+ vectors
+Message-ID: <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The host can fall back to PCIe legacy IRQ only operation if the MSI irq is
-missing, thus allowing systems to work with peripherals that don't support
-MSI irqs.
+[+cc Christoph]
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  8 ++++----
- drivers/pci/dwc/pci-imx6.c                         | 23 +++++++++++-----------
- 2 files changed, 15 insertions(+), 16 deletions(-)
+On Tue, Aug 15, 2017 at 05:54:27PM +0300, Meelis Roos wrote:
+> I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
+> t5120 server: can't allocate MSI-X affinity masks.
+> 
+> [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
+> [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
+> [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
+> [   30.816882] scsi host1: qla2xxx
+> [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
+> [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
+> [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
+> [   31.367083] scsi host1: qla2xxx
+> [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
+> 
+> I do not know if the driver works since nothing is attached to the FC 
+> HBA at the moment, but from the error messages it looks like the driver 
+> fails to load.
+> 
+> I booted 4.12 and 4.11 - the red error is not there but the failure 
+> seems to be the same error -22:
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index cf92d3ba5a26..d85db21503f4 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -10,14 +10,14 @@ Required properties:
- 	- "fsl,imx6qp-pcie"
- 	- "fsl,imx7d-pcie"
- - reg: base address and length of the PCIe controller
--- interrupts: A list of interrupt outputs of the controller. Must contain an
--  entry for each entry in the interrupt-names property.
--- interrupt-names: Must include the following entries:
--	- "msi": The interrupt that is asserted when an MSI is received
- - clock-names: Must include the following additional entries:
- 	- "pcie_phy"
- 
- Optional properties:
-+- interrupts: A list of interrupt outputs of the controller. Must contain an
-+  entry for each entry in the interrupt-names property.
-+- interrupt-names: Must include the following entries:
-+        - "msi": The interrupt that is asserted when an MSI is received
- - fsl,tx-deemph-gen1: Gen1 De-emphasis value. Default: 0
- - fsl,tx-deemph-gen2-3p5db: Gen2 (3.5db) De-emphasis value. Default: 0
- - fsl,tx-deemph-gen2-6db: Gen2 (6db) De-emphasis value. Default: 20
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index bf5c3616e344..d2507272b3ab 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -671,18 +671,17 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
- 		pp->msi_irq = platform_get_irq_byname(pdev, "msi");
--		if (pp->msi_irq <= 0) {
--			dev_err(dev, "failed to get MSI irq\n");
--			return -ENODEV;
--		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       imx6_pcie_msi_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "mx6-pcie-msi", imx6_pcie);
--		if (ret) {
--			dev_err(dev, "failed to request MSI irq\n");
--			return ret;
-+		if (pp->msi_irq > 0) {
-+			ret = devm_request_irq(dev, pp->msi_irq,
-+					       imx6_pcie_msi_handler,
-+					       IRQF_SHARED | IRQF_NO_THREAD,
-+					       "mx6-pcie-msi", imx6_pcie);
-+			if (ret) {
-+				dev_err(dev, "failed to request MSI irq\n");
-+				return ret;
-+			}
-+		} else {
-+			dev_info(dev, "missing MSI irq, MSI support unavailable\n");
- 		}
- 	}
- 
--- 
-2.11.0
+-22 is -EINVAL, so not very specific.  Many failures probably use this
+code.
+
+There were several IRQ affinity changes between v4.12 and v4.13; it'll
+probably be obvious to Christoph.
+
+> [2478900.385223] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 9.00.00.00-k.
+> [2478900.385610] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
+> [2478900.930517] scsi host1: qla2xxx
+> [2478900.990939] qla2xxx: probe of 0000:10:00.0 failed with error -22
+> [2478900.991222] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
+> [2478901.510715] scsi host1: qla2xxx
+> [2478901.581106] qla2xxx: probe of 0000:10:00.1 failed with error -22
+> 
+> Will try older kernels too if it is useful for bisection.
+> 
+> On an older sparc64 (t1-200) with 4.13.0-rc4, qla2xxx loads fine (nothing is attached there either):
+> 
+> [   30.590064] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
+> [   30.699053] PCI: Enabling device: (0000:02:05.0), cmd 3
+> [   30.699122] qla2xxx [0000:02:05.0]-001d: : Found an ISP2200 irq 12 iobase 0x000001ff0000a000.
+> [   52.463403] scsi host2: qla2xxx
+> [   52.545973] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
+> [   52.627163] qla2xxx [0000:02:05.0]-00fb:2: QLogic QLA22xx - .
+> [   52.705428] qla2xxx [0000:02:05.0]-00fc:2: ISP2200: PCI (33 MHz) @ 0000:02:05.0 hdma- host#=2 fw=2.02.08 TP.
+> [   53.503221] qla2xxx [0000:02:05.0]-480f:2: Loop resync scheduled.
+> [   73.796964] qla2xxx [0000:02:05.0]-8038:2: Cable is unplugged...
+> [   73.876036] qla2xxx [0000:02:05.0]-883a:2: fw_state=4 (ffff, ffff, ffff, ffff ffff) curr time=ffffa61d.
+> [   73.999845] qla2xxx [0000:02:05.0]-286c:2: qla2x00_loop_resync *** FAILED ***.
+> [   74.094861] qla2xxx [0000:02:05.0]-4810:2: Loop resync end.
+> [   74.168188] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
+> 
+> 
+> -- 
+> Meelis Roos (mroos@linux.ee)
