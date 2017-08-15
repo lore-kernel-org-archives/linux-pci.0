@@ -1,110 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:34096 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751455AbdHJIWA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 04:22:00 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC PATCH] PCI: rockchip: fix system hang up if activate CONFIG_DEBUG_SHIRQ
-Date: Thu, 10 Aug 2017 16:21:13 +0800
-Message-Id: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=mKNp=7R=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 15 Aug 2017 12:43:16 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v5] PCI: use IDA to manage domain number if not getting
+ it from DT
+Message-ID: <20170815114316.GA25758@e107981-lin.cambridge.arm.com>
+References: <1498523473-157373-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170811211738.GH17039@bhelgaas-glaptop.roam.corp.google.com>
+ <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <10d14bca-660a-4d0b-1885-c873c4725028@rock-chips.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
-would still access the irq handler registed as a shard irq.
-Per the comment within the function of __free_irq, it says
-"It's a shared IRQ -- the driver ought to be prepared for
-an IRQ event to happen even now it's being freed". However
-when failing to probe the driver, it may disable the clock
-for accessing the register and the following check for shared
-irq state would call the irq handler which accesses the register
-w/o the clk enabled. That will hang the system forever.
+On Tue, Aug 15, 2017 at 03:01:48PM +0800, Shawn Lin wrote:
+> Hi Bjorn,
+> 
+> On 2017/8/12 5:17, Bjorn Helgaas wrote:
+> >[+cc Lorenzo, resending because I fat-fingered the cc line and subject]
+> >
+> >On Tue, Jun 27, 2017 at 08:31:13AM +0800, Shawn Lin wrote:
+> >>If not getting domain number from DT, the domain number will
+> >>keep increasing once doing unbind/bind RC drivers. This could
+> >>introduce pointless tree view of lspci as shows below:
+> >>
+> >>-+-[0001:00]---00.0-[01]----00.0
+> >>   \-[0000:00]-
+> >>
+> >>The more test we do, the lengthier it would be. The more serious
+> >>issue is that if attaching two hierarchies for two different domains
+> >>belonging to two root bridges, so when doing unbind/bind test for one
+> >>of them and keep the other, then the domain number would finally
+> >>overflow and make the two hierarchies of devices share the some domain
+> >>number but actually they shouldn't. So it looks like we need to invent
+> >>a new indexing ID mechanism to manage domain number. This patch
+> >>introduces idr to achieve our purpose.
+> >>
+> >>Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> >
+> >The "use_dt_domains" logic in of_pci_bus_find_domain_nr() is fairly
+> >obtuse.  I *think*, now that we have pci_scan_root_bus_bridge() due to
+> >Lorenzo's excellent work, the time is ripe for moving the domain
+> >number from arch-specific places into struct pci_host_bridge.
+> >
+> >I suspect that will end up simplifying the CONFIG_PCI_DOMAINS vs
+> >CONFIG_PCI_DOMAINS_GENERIC situation, and I wonder whether it might
+> >enable some simplification of of_pci_bus_find_domain_nr() as well,
+> >which in turn, might make *this* patch simpler.
+> >
+> >This isn't that big a patch to begin with, so I could apply it as-is
+> >and we could do more domain cleanup later.  It's just that it's
+> >intertwined with the PCI_DOMAINS #ifdefs and maybe there's an
+> >opportunity to make this story more readable if those are out of the
+> >way.  Any thoughts?
+> 
+> That sounds good to me that aftering add IDA domain, we could start
+> considering moving domain number from arch-specific places into the
+> bridge code and may be could also finally remove the macro
+> CONFIG_PCI_DOMAIN* both?
 
-With adding some dump_stack we could see how that happened.
+I need to see how this can be implemented (another hook in
+pci_host_bridge ?) but I suspect we can't get away with arch
+specific bits - or maybe you are referring to having one single
+place where the domain is _assigned_ using an arch specific hook
+(in pci_host_bridge) ? I have to have a look into this, certainly
+this patch should be considered because that atomic counter deserved
+more thought, yes.
 
-calling  rockchip_pcie_driver_init+0x0/0x28 @ 1
-rockchip-pcie f8000000.pcie: no vpcie3v3 regulator found
-rockchip-pcie f8000000.pcie: no vpcie1v8 regulator found
-rockchip-pcie f8000000.pcie: no vpcie0v9 regulator found
-rockchip-pcie f8000000.pcie: PCIe link training gen1 timeout!
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted
-4.13.0-rc3-next-20170807-ARCH+ #189
-Hardware name: Firefly-RK3399 Board (DT)
-Call trace:
-[<ffff000008089bf0>] dump_backtrace+0x0/0x250
-[<ffff000008089eb0>] show_stack+0x20/0x28
-[<ffff000008c3313c>] dump_stack+0x90/0xb0
-[<ffff000008632ad4>] rockchip_pcie_read.isra.11+0x54/0x58
-[<ffff0000086334fc>] rockchip_pcie_client_irq_handler+0x30/0x1a0
-[<ffff00000813ce98>] __free_irq+0x1c8/0x2dc
-[<ffff00000813d044>] free_irq+0x44/0x74
-[<ffff0000081415fc>] devm_irq_release+0x24/0x2c
-[<ffff00000877429c>] release_nodes+0x1d8/0x30c
-[<ffff000008774838>] devres_release_all+0x3c/0x5c
-[<ffff00000876f19c>] driver_probe_device+0x244/0x494
-[<ffff00000876f50c>] __driver_attach+0x120/0x124
-[<ffff00000876cb80>] bus_for_each_dev+0x6c/0xac
-[<ffff00000876e984>] driver_attach+0x2c/0x34
-[<ffff00000876e3a4>] bus_add_driver+0x244/0x2b0
-[<ffff000008770264>] driver_register+0x70/0x110
-[<ffff0000087718b4>] platform_driver_register+0x60/0x6c
-[<ffff0000091eb108>] rockchip_pcie_driver_init+0x20/0x28
-[<ffff000008083a2c>] do_one_initcall+0xc8/0x130
-[<ffff0000091a0ea8>] kernel_init_freeable+0x1a0/0x238
-[<ffff000008c461cc>] kernel_init+0x18/0x108
-[<ffff0000080836c0>] ret_from_fork+0x10/0x50
+Thanks,
+Lorenzo
 
-In order to fix this, we check the clk state before accessing the
-pcie register in rockchip_pcie_read, but don't touch rockchip_pcie_write
-as no case to trigger that from write routine.
-
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
----
-Hi Bjorn, Thomas and Marc,
-
-This fix looks more like a hack, but I don't know the legit way to
-deal with that case. Just quick look into the drivers/pci/host, and
-I see almost all drivers register shard irq and also disable the clk
-in their probe's error handle path. So I guess this is NOT pcie-rockchip
-specified even not pcie host drivers specified, but folks just luckily didn't
-trip over it.
-
-Could you give some suggestion on this?
-
- drivers/pci/host/pcie-rockchip.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 39aafe2..daaa868b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -17,6 +17,7 @@
- 
- #include <linux/bitrev.h>
- #include <linux/clk.h>
-+#include <linux/clk-provider.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
- #include <linux/init.h>
-@@ -252,6 +253,9 @@ struct rockchip_pcie {
- 
- static u32 rockchip_pcie_read(struct rockchip_pcie *rockchip, u32 reg)
- {
-+	if (!__clk_is_enabled(rockchip->hclk_pcie))
-+		return 0;
-+
- 	return readl(rockchip->apb_base + reg);
- }
- 
--- 
-1.9.1
+> >>Changes in v5:
+> >>- fix Bjorn's comments for v3 as actually I didn't address his comments
+> >>   for v3 when posted my v4.
+> >>   v3: https://patchwork.kernel.org/patch/9742003/
+> >>   For ACPI case, we never use DT or IDA to get domain numbers and
+> >>   acpi_pci_bus_find_domain_nr would return the proper value we need
+> >>   whether _SEG exist or not. For DT or IDA, we hope bridges use one of
+> >>   them consistently, and this is actually what the pre-existing code
+> >>   did. So I remove ida_domain now since it complicated the logic of the
+> >>   code and we could just make use_dt_domains global instead to slightly
+> >>   achieve our purpose.
+> >>
+> >>Changes in v4:
+> >>- make domain_nr depends on CONFIG_PCI_DOMAINS instead of
+> >>CONFIG_PCI_DOMAINS_GENERIC.
+> >>
+> >>Changes in v3:
+> >>- make ida_domain a system-wide property and check it in the code to
+> >>combine with use_dt_domains. Also update the comment there.
+> >>
+> >>Changes in v2:
+> >>- add a remove wrapper
+> >>- rename use_dt_domains to ida_domain and set this bit
+> >>in pci_get_new_domain_nr and test it in the remove wrapper.
+> >>
+> >>  drivers/pci/pci.c    | 13 ++++++++++---
+> >>  drivers/pci/remove.c |  2 ++
+> >>  include/linux/pci.h  |  7 +++++--
+> >>  3 files changed, 17 insertions(+), 5 deletions(-)
+> >>
+> >>diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> >>index b58a6b3..9953eaf 100644
+> >>--- a/drivers/pci/pci.c
+> >>+++ b/drivers/pci/pci.c
+> >>@@ -11,6 +11,7 @@
+> >>  #include <linux/kernel.h>
+> >>  #include <linux/delay.h>
+> >>  #include <linux/dmi.h>
+> >>+#include <linux/idr.h>
+> >>  #include <linux/init.h>
+> >>  #include <linux/of.h>
+> >>  #include <linux/of_pci.h>
+> >>@@ -5305,17 +5306,23 @@ static void pci_no_domains(void)
+> >>  }
+> >>  #ifdef CONFIG_PCI_DOMAINS
+> >>-static atomic_t __domain_nr = ATOMIC_INIT(-1);
+> >>+static DEFINE_IDA(__domain_nr);
+> >>  int pci_get_new_domain_nr(void)
+> >>  {
+> >>-	return atomic_inc_return(&__domain_nr);
+> >>+	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
+> >>+}
+> >>+
+> >>+static int use_dt_domains = -1;
+> >>+void pci_put_domain_nr(struct pci_bus *bus)
+> >>+{
+> >>+	if (acpi_disabled && use_dt_domains != 1)
+> >>+		ida_simple_remove(&__domain_nr, bus->domain_nr);
+> >>  }
+> >>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+> >>  static int of_pci_bus_find_domain_nr(struct device *parent)
+> >>  {
+> >>-	static int use_dt_domains = -1;
+> >>  	int domain = -1;
+> >>  	if (parent)
+> >>diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+> >>index 73a03d3..01dd1b4 100644
+> >>--- a/drivers/pci/remove.c
+> >>+++ b/drivers/pci/remove.c
+> >>@@ -157,6 +157,8 @@ void pci_remove_root_bus(struct pci_bus *bus)
+> >>  	list_for_each_entry_safe(child, tmp,
+> >>  				 &bus->devices, bus_list)
+> >>  		pci_remove_bus_device(child);
+> >>+
+> >>+	pci_put_domain_nr(bus);
+> >>  	pci_remove_bus(bus);
+> >>  	host_bridge->bus = NULL;
+> >>diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >>index 18cc70a..d6be9596 100644
+> >>--- a/include/linux/pci.h
+> >>+++ b/include/linux/pci.h
+> >>@@ -523,7 +523,7 @@ struct pci_bus {
+> >>  	unsigned char	primary;	/* number of primary bridge */
+> >>  	unsigned char	max_bus_speed;	/* enum pci_bus_speed */
+> >>  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
+> >>-#ifdef CONFIG_PCI_DOMAINS_GENERIC
+> >>+#ifdef CONFIG_PCI_DOMAINS
+> >>  	int		domain_nr;
+> >>  #endif
+> >>@@ -1466,11 +1466,14 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+> >>  #ifdef CONFIG_PCI_DOMAINS
+> >>  extern int pci_domains_supported;
+> >>  int pci_get_new_domain_nr(void);
+> >>+void pci_put_domain_nr(struct pci_bus *bus);
+> >>  #else
+> >>  enum { pci_domains_supported = 0 };
+> >>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+> >>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+> >>-static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+> >>+static inline int pci_get_new_domain_nr(void)
+> >>+{ return -ENOSYS; }
+> >>+static inline void pci_put_domain_nr(struct pci_bus *bus) { }
+> >>  #endif /* CONFIG_PCI_DOMAINS */
+> >>  /*
+> >>-- 
+> >>1.9.1
+> >>
+> >>
+> >
+> >
+> >
+> 
