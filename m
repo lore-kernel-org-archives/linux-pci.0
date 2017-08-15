@@ -1,101 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:18917 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdHOTDu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:03:50 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Paul Burton <paul.burton@imgtec.com>,
-        Ley Foon Tan <lftan@altera.com>, <rfi@lists.rocketboards.org>
-Subject: [PATCH v7 3/8] PCI: altera: Use size=4 IRQ domain for legacy INTx
-Date: Tue, 15 Aug 2017 12:02:18 -0700
-Message-ID: <20170815190223.18807-4-paul.burton@imgtec.com>
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 15 Aug 2017 17:54:27 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+To: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+        qla2xxx-upstream@qlogic.com,
+        Linux Kernel list <linux-kernel@vger.kernel.org>
+Subject: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
+ vectors
+Message-ID: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The devicetree binding documentation for the Altera PCIe controller
-shows an example which uses an interrupt-map property to map PCI INTx
-interrupts to hardware IRQ numbers 1-4. The driver creates an IRQ domain
-with size 5 in order to cover this range, with hwirq=0 left unused.
+I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
+t5120 server: can't allocate MSI-X affinity masks.
 
-This patch cleans up this wasted IRQ domain entry, modifying the driver
-to use an IRQ domain of size 4 which matches the actual number of PCI
-INTx interrupts. Since the hwirq numbers 1-4 are part of the devicetree
-binding, and this is considered ABI, we cannot simply change the
-interrupt-map property to use the range 0-3. Instead we make use of the
-pci_irqd_intx_xlate() helper function to translate the range 1-4 used at
-the DT level into the range 0-3 which is now used within the driver, and
-stop adding 1 to decoded hwirq numbers in altera_pcie_isr().
+[   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
+[   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
+[   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
+[   30.816882] scsi host1: qla2xxx
+[   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
+[   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
+[   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
+[   31.367083] scsi host1: qla2xxx
+[   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
 
-Whilst cleaning up INTx handling we make use of the new PCI_NUM_INTX
-macro & drop the custom INTX_NUM definition.
+I do not know if the driver works since nothing is attached to the FC 
+HBA at the moment, but from the error messages it looks like the driver 
+fails to load.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ley Foon Tan <lftan@altera.com>
-Cc: linux-pci@vger.kernel.org
-Cc: rfi@lists.rocketboards.org
+I booted 4.12 and 4.11 - the red error is not there but the failure 
+seems to be the same error -22:
 
----
-I have only build tested this.
+[2478900.385223] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 9.00.00.00-k.
+[2478900.385610] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
+[2478900.930517] scsi host1: qla2xxx
+[2478900.990939] qla2xxx: probe of 0000:10:00.0 failed with error -22
+[2478900.991222] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
+[2478901.510715] scsi host1: qla2xxx
+[2478901.581106] qla2xxx: probe of 0000:10:00.1 failed with error -22
 
-Changes in v7: None
-Changes in v6: None
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+Will try older kernels too if it is useful for bisection.
 
- drivers/pci/host/pcie-altera.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+On an older sparc64 (t1-200) with 4.13.0-rc4, qla2xxx loads fine (nothing is attached there either):
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 4ea4f8f5dc77..6fced590eb87 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -76,8 +76,6 @@
- #define LINK_UP_TIMEOUT			HZ
- #define LINK_RETRAIN_TIMEOUT		HZ
- 
--#define INTX_NUM			4
--
- #define DWORD_MASK			3
- 
- struct altera_pcie {
-@@ -464,6 +462,7 @@ static int altera_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- 
- static const struct irq_domain_ops intx_domain_ops = {
- 	.map = altera_pcie_intx_map,
-+	.xlate = pci_irqd_intx_xlate,
- };
- 
- static void altera_pcie_isr(struct irq_desc *desc)
-@@ -481,11 +480,11 @@ static void altera_pcie_isr(struct irq_desc *desc)
- 
- 	while ((status = cra_readl(pcie, P2A_INT_STATUS)
- 		& P2A_INT_STS_ALL) != 0) {
--		for_each_set_bit(bit, &status, INTX_NUM) {
-+		for_each_set_bit(bit, &status, PCI_NUM_INTX) {
- 			/* clear interrupts */
- 			cra_writel(pcie, 1 << bit, P2A_INT_STATUS);
- 
--			virq = irq_find_mapping(pcie->irq_domain, bit + 1);
-+			virq = irq_find_mapping(pcie->irq_domain, bit);
- 			if (virq)
- 				generic_handle_irq(virq);
- 			else
-@@ -536,7 +535,7 @@ static int altera_pcie_init_irq_domain(struct altera_pcie *pcie)
- 	struct device_node *node = dev->of_node;
- 
- 	/* Setup INTx */
--	pcie->irq_domain = irq_domain_add_linear(node, INTX_NUM + 1,
-+	pcie->irq_domain = irq_domain_add_linear(node, PCI_NUM_INTX,
- 					&intx_domain_ops, pcie);
- 	if (!pcie->irq_domain) {
- 		dev_err(dev, "Failed to get a INTx IRQ domain\n");
+[   30.590064] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
+[   30.699053] PCI: Enabling device: (0000:02:05.0), cmd 3
+[   30.699122] qla2xxx [0000:02:05.0]-001d: : Found an ISP2200 irq 12 iobase 0x000001ff0000a000.
+[   52.463403] scsi host2: qla2xxx
+[   52.545973] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
+[   52.627163] qla2xxx [0000:02:05.0]-00fb:2: QLogic QLA22xx - .
+[   52.705428] qla2xxx [0000:02:05.0]-00fc:2: ISP2200: PCI (33 MHz) @ 0000:02:05.0 hdma- host#=2 fw=2.02.08 TP.
+[   53.503221] qla2xxx [0000:02:05.0]-480f:2: Loop resync scheduled.
+[   73.796964] qla2xxx [0000:02:05.0]-8038:2: Cable is unplugged...
+[   73.876036] qla2xxx [0000:02:05.0]-883a:2: fw_state=4 (ffff, ffff, ffff, ffff ffff) curr time=ffffa61d.
+[   73.999845] qla2xxx [0000:02:05.0]-286c:2: qla2x00_loop_resync *** FAILED ***.
+[   74.094861] qla2xxx [0000:02:05.0]-4810:2: Loop resync end.
+[   74.168188] qla2xxx [0000:02:05.0]-4800:2: DPC handler sleeping.
+
+
 -- 
-2.14.1
+Meelis Roos (mroos@linux.ee)
