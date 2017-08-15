@@ -1,69 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:38171 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752100AbdHHEoe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2017 00:44:34 -0400
-Received: by mail-qk0-f174.google.com with SMTP id x191so13694283qka.5
-        for <linux-pci@vger.kernel.org>; Mon, 07 Aug 2017 21:44:34 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.oza@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH 2/2] PCI: iproc: Add optional brcm,pci-hotplug
-Date: Tue,  8 Aug 2017 10:14:15 +0530
-Message-Id: <1502167455-10516-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com>
-References: <1502167455-10516-1-git-send-email-oza.oza@broadcom.com>
+Received: from mail.kernel.org ([198.145.29.99]:38934 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751848AbdHOVdS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 15 Aug 2017 17:33:18 -0400
+Date: Tue, 15 Aug 2017 16:33:15 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v7 0/8] PCI: INTx interrupt fixes & cleanup
+Message-ID: <20170815213315.GM32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170815190223.18807-1-paul.burton@imgtec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add description for optional device tree property
-'brcm,pci-hotplug' for PCI hotplug feature.
+On Tue, Aug 15, 2017 at 12:02:15PM -0700, Paul Burton wrote:
+> This series fixes our handling of the PCI INTD interrupts in both Xilinx
+> PCIe controller drivers, and cleans up a wasted IRQ domain entry in the
+> Altera PCIe controller driver. It also adds a common PCI_INTX_NUM
+> definition which all relevant drivers under drivers/pci/host/ are
+> adjusted to make use of.
+> 
+> - Patch 1 moves enum pci_interrupt_pin to somewhere we can use it from
+>   PCI host code.
+> 
+> - Patch 2 introduces a helper function to translate 1-4 INTx ranges into
+>   the 0-3 range, by using it as a struct irq_domain's xlate callback.
+> 
+> - Patches 3 adjusts the Altera driver to avoid wasting an IRQ domain
+>   entry.
+> 
+> - Patches 4 & 5 fix the INTD interrupt for Xilinx PCIe drivers.
+> 
+> - Patches 6-8 make use of PCI_NUM_INTX to replace custom definitions or
+>   magic numbers in drivers.
+> 
+> The series versioning is continuing on from that of my "PCI: xilinx:
+> Fixes, optimisation & MIPS support" series which some of the earlier
+> patches were originally a part of, in order to prevent individual
+> patches from jumping backwards in versioning.
+> 
+> Applies atop v4.13-rc5.
+> 
+> Paul Burton (8):
+>   PCI: Move enum pci_interrupt_pin to linux/pci.h
+>   PCI: Introduce pci_irqd_intx_xlate()
+>   PCI: altera: Use size=4 IRQ domain for legacy INTx
+>   PCI: xilinx: Translate INTx range to hwirqs 0-3
+>   PCI: xilinx-nwl: Translate INTx range to hwirqs 0-3
+>   PCI: aardvark: Use PCI_NUM_INTX
+>   PCI: ftpci100: Use PCI_NUM_INTX
+>   PCI: rockchip: Use PCI_NUM_INTX
+> 
+>  drivers/pci/host/pci-aardvark.c    |  5 ++--
+>  drivers/pci/host/pci-ftpci100.c    |  2 +-
+>  drivers/pci/host/pcie-altera.c     |  9 +++----
+>  drivers/pci/host/pcie-rockchip.c   |  2 +-
+>  drivers/pci/host/pcie-xilinx-nwl.c |  9 +++----
+>  drivers/pci/host/pcie-xilinx.c     |  7 ++---
+>  include/linux/pci-epf.h            |  9 +------
+>  include/linux/pci.h                | 54 ++++++++++++++++++++++++++++++++++++++
+>  8 files changed, 71 insertions(+), 26 deletions(-)
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Thanks for updating these, Paul.  I applied them on pci/irq-intx and the
+individual driver branches.  I added Thomas' reviewed-by for Aardvark, and
+I expect we'll get more for the others.
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-index b8e48b4..a3bad24 100644
---- a/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/brcm,iproc-pcie.txt
-@@ -72,6 +72,29 @@ Optional properties:
- - brcm,pcie-msi-inten: Needs to be present for some older iProc platforms that
- require the interrupt enable registers to be set explicitly to enable MSI
- 
-+Optional properties:
-+- brcm,pci-hotplug: PCI hotplug feature is supported.
-+
-+If the brcm,pcie-hotplug property is present, the following properties become
-+effective:
-+
-+- brcm,prsnt-gpio: Array of gpios, needs to be present if Hotplug is supported.
-+
-+PCI hotplug implementation is SOC/Board specific, and also it depends on
-+how add-in card is designed (e.g. how many present pins are implemented).
-+
-+If x8 card is connected, then it might be possible that all the
-+3 present pins could go low, or at least one pin goes low.
-+
-+If x4 card is connected, then it might be possible that 2 present
-+pins go low, or at least one pin goes low.
-+
-+Example:
-+brcm,prsnt-gpio: <&pca9505 32 1>, <&pca9505 33 1>;
-+This is x4 connector: monitoring max 2 present lines.
-+brcm,prsnt-gpio: <&pca9505 32 1>, <&pca9505 33 1>, <&pca9505 34 1>;
-+This is x8 connector: monitoring max 3 present lines.
-+
- Example:
- 	pcie0: pcie@18012000 {
- 		compatible = "brcm,iproc-pcie";
--- 
-1.9.1
+I found two more places we can use PCI_NUM_INTX; I'll post those in a
+minute.
+
+Thanks for all your work on this!
