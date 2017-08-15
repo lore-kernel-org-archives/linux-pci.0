@@ -1,176 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 14 Aug 2017 19:15:03 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Khuong Dinh <kdinh@apm.com>
-Subject: Re: [PATCH v3 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in
- ACPI boot for X-Gene v1
-Message-ID: <20170814181503.GA3093@red-moon>
-References: <1502496173-6017-1-git-send-email-kdinh@apm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:2949 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752453AbdHOTDb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:03:31 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v7 2/8] PCI: Introduce pci_irqd_intx_xlate()
+Date: Tue, 15 Aug 2017 12:02:17 -0700
+Message-ID: <20170815190223.18807-3-paul.burton@imgtec.com>
+In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
+References: <20170815190223.18807-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
-In-Reply-To: <1502496173-6017-1-git-send-email-kdinh@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: marc.zyngier@arm.com, linux-pci@vger.kernel.org, msalter@redhat.com,
- rjw@rjwysocki.net, linux-kernel@vger.kernel.org, patches@apm.com,
- jcm@redhat.com, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 11, 2017 at 06:02:53PM -0600, Khuong Dinh wrote:
-> This patch makes pci-xgene-msi driver ACPI-aware and provides
-> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
-> 
-> Signed-off-by: Khuong Dinh <kdinh@apm.com>
->         [Take over from Duc Dang]
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
-> v3:
->  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
->  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
-> v2:
->  - Verify with BIOS version 3.06.25 and 3.07.09
-> v1:
->  - Initial version
-> ---
->  drivers/acpi/Makefile            |    2 +-
->  drivers/acpi/acpi_msi.c          |   74 ++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/internal.h          |    1 +
->  drivers/acpi/scan.c              |    1 +
->  drivers/pci/host/pci-xgene-msi.c |   36 +++++++++++++++++--
->  5 files changed, 110 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/acpi/acpi_msi.c
-> 
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index b1aacfc..c15f5cd 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -40,7 +40,7 @@ acpi-y				+= ec.o
->  acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
->  acpi-y				+= pci_root.o pci_link.o pci_irq.o
->  obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
-> -acpi-y				+= acpi_lpss.o acpi_apd.o
-> +acpi-y				+= acpi_lpss.o acpi_apd.o acpi_msi.o
->  acpi-y				+= acpi_platform.o
->  acpi-y				+= acpi_pnp.o
->  acpi-$(CONFIG_ARM_AMBA)	+= acpi_amba.o
-> diff --git a/drivers/acpi/acpi_msi.c b/drivers/acpi/acpi_msi.c
-> new file mode 100644
-> index 0000000..c2f8d26
-> --- /dev/null
-> +++ b/drivers/acpi/acpi_msi.c
-> @@ -0,0 +1,74 @@
-> +/*
-> + * Enforce MSI driver loaded by PCIe controller driver
-> + *
-> + * Copyright (c) 2017, MACOM Technology Solutions Corporation
-> + * Author: Khuong Dinh <kdinh@apm.com>
-> + *
-> + * This program is free software; you can redistribute  it and/or modify it
-> + * under  the terms of  the GNU General  Public License as published by the
-> + * Free Software Foundation;  either version 2 of the  License, or (at your
-> + * option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + */
-> +
-> +#include <linux/acpi.h>
-> +#include "internal.h"
-> +
-> +static acpi_status acpi_create_msi_device(acpi_handle handle, u32 Level,
-> +					void *context, void **retval)
-> +{
-> +	struct acpi_device *device = NULL;
-> +	int type = ACPI_BUS_TYPE_DEVICE;
-> +	unsigned long long sta;
-> +	acpi_status status;
-> +	int ret = 0;
-> +
-> +	acpi_bus_get_device(handle, &device);
-> +	status = acpi_bus_get_status_handle(handle, &sta);
-> +	if (ACPI_FAILURE(status))
-> +		sta = 0;
-> +
-> +	device = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
-> +	if (!device)
-> +		return -ENOMEM;
-> +
-> +	acpi_init_device_object(device, handle, type, sta);
-> +	ret = acpi_device_add(device, NULL);
-> +	if (ret)
-> +		return ret;
-> +	device->parent = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
-> +	INIT_LIST_HEAD(&device->parent->physical_node_list);
-> +
-> +	acpi_device_add_finalize(device);
-> +
-> +	ret = device_attach(&device->dev);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	acpi_create_platform_device(device, NULL);
-> +	acpi_device_set_enumerated(device);
-> +
-> +	return ret;
-> +}
+Legacy PCI INTx interrupts are represented in the PCI_INTERRUPT_PIN
+register using the range 1-4, which matches our enum pci_interrupt_pin.
+This is however not ideal for an IRQ domain, where with 4 interrupts we
+would ideally have a domain of size 4 & hwirq numbers in the range 0-3.
 
-Can't this be implemented through acpi_bus_scan(handle) ?
+Different PCI host controller drivers have handled this in different
+ways. Of those under drivers/pci/ which register an INTx IRQ domain, we
+have:
 
-(where handle is your MSI controller acpi_handle ?)
+- pcie-altera uses the range 1-4 in device trees and an IRQ domain of
+  size 5 to cover that range, with entry 0 wasted.
 
-[...]
+- pcie-xilinx & pcie-xilinx-nwl use the range 1-4 in device trees but
+  register an IRQ domain of size 4, which doesn't cover the hwirq=4/INTD
+  case leading to that interrupt being broken.
 
->  static int xgene_msi_probe(struct platform_device *pdev)
->  {
->  	struct resource *res;
-> @@ -469,7 +487,18 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  		goto error;
->  	}
->  	xgene_msi->msi_addr = res->start;
-> -	xgene_msi->node = pdev->dev.of_node;
-> +
-> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +	if (!xgene_msi->fwnode) {
-> +		xgene_msi->fwnode =
-> +			irq_domain_alloc_fwnode((void *)xgene_msi->msi_addr);
-> +		if (!xgene_msi->fwnode) {
-> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
-> +			rc = ENOMEM;
-> +			goto error;
-> +		}
-> +	}
-> +
->  	xgene_msi->num_cpus = num_possible_cpus();
->  
->  	rc = xgene_msi_init_allocator(xgene_msi);
-> @@ -540,6 +569,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  	.driver = {
->  		.name = "xgene-msi",
->  		.of_match_table = xgene_msi_match_table,
-> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
->  	},
->  	.probe = xgene_msi_probe,
->  	.remove = xgene_msi_remove,
+- pci-ftpci100 & pci-aardvark use the range 0-3 in both device trees &
+  as hwirq numbering in the driver & IRQ domain.
 
-AFAIK you still have not solved the link ordering problem, creating
-the platform device before scanning the PCI root bridge is not enough,
-because you are not guaranteed to probe the MSI driver first, there
-has to be way for registering your driver from the ACPI scan hook.
+In order to introduce some level of consistency in at least the hwirq
+numbering used by the drivers & IRQ domains, this patch introduces a new
+pci_irqd_intx_xlate() helper function which drivers using the 1-4 range
+in device trees can assign as the xlate callback for their INTx IRQ
+domain. This translates the 1-4 range into a 0-3 range, allowing us to
+use an IRQ domain of size 4 & avoid a wasted entry. Further patches will
+make use of this in drivers to allow them to use an IRQ domain of size 4
+for legacy INTx interrupts without breaking INTD.
 
-Thanks,
-Lorenzo
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+---
+
+Changes in v7:
+- Rewrite the commit message.
+
+Changes in v6:
+- New patch.
+
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ include/linux/pci.h | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
+
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 8098c438d88a..e97ce5d1bbb6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1417,6 +1417,38 @@ enum pci_interrupt_pin {
+ /* The number of legacy PCI INTx interrupts */
+ #define PCI_NUM_INTX	4
+ 
++/**
++ * pci_irqd_intx_xlate() - Translate PCI INTx value to an IRQ domain hwirq
++ * @d: the INTx IRQ domain
++ * @node: the DT node for the device whose interrupt we're translating
++ * @intspec: the interrupt specifier data from the DT
++ * @intsize: the number of entries in @intspec
++ * @out_hwirq: pointer at which to write the hwirq number
++ * @out_type: pointer at which to write the interrupt type
++ *
++ * Translate a PCI INTx interrupt number from device tree in the range 1-4, as
++ * stored in the standard PCI_INTERRUPT_PIN register, to a value in the range
++ * 0-3 suitable for use in a 4 entry IRQ domain. That is, subtract one from the
++ * INTx value to obtain the hwirq number.
++ *
++ * Returns 0 on success, or -EINVAL if the interrupt specifier is out of range.
++ */
++static inline int pci_irqd_intx_xlate(struct irq_domain *d,
++				      struct device_node *node,
++				      const u32 *intspec,
++				      unsigned int intsize,
++				      unsigned long *out_hwirq,
++				      unsigned int *out_type)
++{
++	const u32 intx = intspec[0];
++
++	if (intx < PCI_INTERRUPT_INTA || intx > PCI_INTERRUPT_INTD)
++		return -EINVAL;
++
++	*out_hwirq = intx - PCI_INTERRUPT_INTA;
++	return 0;
++}
++
+ #ifdef CONFIG_PCIEPORTBUS
+ extern bool pcie_ports_disabled;
+ extern bool pcie_ports_auto;
+-- 
+2.14.1
