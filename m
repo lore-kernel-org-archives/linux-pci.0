@@ -1,97 +1,135 @@
-Return-Path: <SRS0=h2C8=7L=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=h2C8=7L=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH v9 2/4] PCI: Disable PCIe Relaxed Ordering if unsupported
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
- <1501917313-9812-3-git-send-email-dingtianhong@huawei.com>
- <20170809022239.GP16580@bhelgaas-glaptop.roam.corp.google.com>
- <20170809032503.GB7191@bhelgaas-glaptop.roam.corp.google.com>
-CC: <mark.rutland@arm.com>, <gabriele.paoloni@huawei.com>,
-        <asit.k.mallick@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <linuxarm@huawei.com>,
-        <alexander.duyck@gmail.com>, <ashok.raj@intel.com>,
-        <jeffrey.t.kirsher@intel.com>, <linux-pci@vger.kernel.org>,
-        <ganeshgr@chelsio.com>, <Bob.Shaw@amd.com>, <leedom@chelsio.com>,
-        <patrick.j.cramer@intel.com>, <bhelgaas@google.com>,
-        <werner@chelsio.com>, <linux-arm-kernel@lists.infradead.org>,
-        <amira@mellanox.com>, <netdev@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <David.Laight@aculab.com>,
-        <Suravee.Suthikulpanit@amd.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <l.stach@pengutronix.de>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <6a5b848d-1647-aa03-6af2-015b3a379adb@huawei.com>
-Date: Wed, 9 Aug 2017 21:42:48 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:44381 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751542AbdHOM3z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 08:29:55 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "Zheng, Lv" <lv.zheng@intel.com>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        "Moore, Robert" <robert.moore@intel.com>
+Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+Date: Tue, 15 Aug 2017 14:21:30 +0200
+Message-ID: <1635689.qJin4YfZ5x@aspire.rjw.lan>
+In-Reply-To: <1AE640813FDE7649BE1B193DEA596E886CF0B3F2@SHSMSX101.ccr.corp.intel.com>
+References: <12346760.yAFCnkEgf6@aspire.rjw.lan> <3677056.OS19FbOdkF@aspire.rjw.lan> <1AE640813FDE7649BE1B193DEA596E886CF0B3F2@SHSMSX101.ccr.corp.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170809032503.GB7191@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/8/9 11:25, Bjorn Helgaas wrote:
-> On Tue, Aug 08, 2017 at 09:22:39PM -0500, Bjorn Helgaas wrote:
->> On Sat, Aug 05, 2017 at 03:15:11PM +0800, Ding Tianhong wrote:
->>> When bit4 is set in the PCIe Device Control register, it indicates
+On Tuesday, August 15, 2017 11:59:00 AM CEST Zheng, Lv wrote:
+> Hi,
+> 
+> > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > 
+> > On Friday, August 11, 2017 7:40:56 AM CEST Zheng, Lv wrote:
+> > > Hi, Rafael
+> > >
+> > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > > >
+> > > > On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
+> > > > > Hi, Rafael
+> > > > >
+> > > > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> > > > > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
+> > > > > >
+> > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > >
+> > > > > > In some cases GPEs are already active when they are enabled by
+> > > > > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
+> > > > > > on the result of handling the events signaled by them, so the
+> > > > > > events should not be discarded (which is what happens currently) and
+> > > > > > they should be handled as soon as reasonably possible.
+> > > > > >
+> > > > > > For this reason, modify acpi_ev_initialize_gpe_block() to
+> > > > > > dispatch GPEs with the status flag set in-band right after
+> > > > > > enabling them.
+> > > > >
+> > > > > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
+> > > > > right after enabling an GPE. So there are 2 conditions related:
+> > > > > 1. GPE is enabled for the first time.
+> > > > > 2. GPE is initialized.
+> > > > >
+> > > > > And we need to make sure that before acpi_update_all_gpes() is invoked,
+> > > > > all GPE EN bits are actually disabled.
+> > > >
+> > > > But we don't do it today, do we?
+> > >
+> > > We don't do that.
+> > >
+> > > >
+> > > > And still calling _dispatch() should not be incorrect even if the GPE
+> > > > has been enabled already at this point.  Worst case it just will
+> > > > queue up the execution of _Lxx/_Exx which may or may not do anything
+> > > > useful.
+> > > >
+> > > > And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
+> > > > will block on it if run concurrently and we've checked the status, so
+> > > > we know that the GPE *should* be dispatched, so I sort of fail to see
+> > > > the problem.
+> > >
+> > > There is another problem related:
+> > > ACPICA clears GPEs before enabling it.
+> > > This is proven to be wrong, and we have to fix it:
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=196249
+> > >
+> > > without fixing this issue, in this solution, we surely need to save the
+> > > GPE STS bit before incrementing GPE reference count, and poll it according
+> > > to the saved STS bit. Because if we poll it after enabling, STS bit will
+> > > be wrongly cleared.
+> > 
+> > I'm not sure if I understand you correctly, but why would we poll it?
+> > 
+> > In the $subject patch the status is checked and then
+> > acpi_ev_add_gpe_reference() is called to add a reference to the GPE.
+> > 
+> > If this is the first reference (which will be the case in the majority
+> > of cases), acpi_ev_enable_gpe() will be called and that will clear the
+> > status.
+> > 
+> > Then, acpi_ev_gpe_dispatch() is called if the status was set and that
+> > itself doesn't check the status.  It disables the GPE upfront (so the
+> > status doesn't matter from now on until the GPE is enabled again) and
+> > clears the status unconditionally if the GPE is edge-triggered.  This
+> > means that for edge-triggered GPEs the clearing of the status by
+> > acpi_ev_enable_gpe() doesn't matter here.
+> 
+> No problem, I understood.
+> And was thinking thought this patch [edge GPE dispatch fix] should be
+> correct and good for current Linux upstream.
+> 
+> What I meant is:
+> PATCH [edge GPE clear fix] https://patchwork.kernel.org/patch/9894983/
+> is a fix we need for upstream as it is the only possible fix for the
+> issue fixed by it.
+> On top of that, when acpi_ev_enable_gpe() is called, GPE won't be cleared.
+> and then things can be done in a simpler way:
+> PATCH [edge GPE enable fix] https://patchwork.kernel.org/patch/9894989/
+> 
+> As [edge GPE clear fix] is risky, I think [edge GPE dispatch fix] is OK
+> for Linux upstream.
+> 
+> So we can have 2 processes:
+> 1. Merge [edge GPE dispatch fix] and let [edge GPE clear fix] and
+>    [edge GPE enable fix] released from ACPICA upstream so that:
+>    1. We can enhance them in ACPICA upstream.
+>    2. It will be regression safer for us to merge [edge GPE clear fix].
+> 2. Merge [edge GPE clear fix] and [edge GPE enable fix] without
+>    merging [edge GPE dispatch fix].
+> 
+> What I meant is:
+> It's up to you to decide which process we should take. :)
 
-> After looking at the driver, I wonder if it would be simpler like
-> this:
-> 
->   int pcie_relaxed_ordering_enabled(struct pci_dev *dev)
->   {
->     u16 ctl;
-> 
->     pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
->     return ctl & PCI_EXP_DEVCTL_RELAX_EN;
->   }
->   EXPORT_SYMBOL(pcie_relaxed_ordering_enabled);
-> 
->   static void pci_configure_relaxed_ordering(struct pci_dev *dev)
->   {
->     struct pci_dev *root;
-> 
->     if (dev->is_virtfn)
->       return;  /* PCI_EXP_DEVCTL_RELAX_EN is RsvdP in VFs */
-> 
->     if (!pcie_relaxed_ordering_enabled(dev))
->       return;
-> 
->     /*
->      * For now, we only deal with Relaxed Ordering issues with Root
->      * Ports.  Peer-to-peer DMA is another can of worms.
->      */
->     root = pci_find_pcie_root_port(dev);
->     if (!root)
->       return;
-> 
->     if (root->relaxed_ordering_broken)
->       pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
->                                  PCI_EXP_DEVCTL_RELAX_EN);
->   }
-> 
-> This doesn't check every intervening switch, but I don't think we know
-> about any issues except with root ports.
-> 
+OK
 
-Yes
+So I would go with what is already there in my tree.  Please work on top of
+that.
 
-> And the driver could do:
-> 
->   if (!pcie_relaxed_ordering_enabled(pdev))
->     adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-> 
-> The driver code wouldn't show anything about coherent memory vs.
-> peer-to-peer, but we really don't have a clue about how to handle that
-> yet anyway.
-> 
-> I guess this is back to exactly what you proposed, except that I
-> changed the name of pcie_relaxed_ordering_supported() to
-> pcie_relaxed_ordering_enabled(), which I think is slightly more
-> specific from the device's point of view.
-> 
-
-OK, looks like we reach a consensus finally, I will follow your new opinion and resend, thanks.
-
-Ding
-
-> Bjorn
-> 
-> .
-> 
+Thanks,
+Rafael
