@@ -1,48 +1,65 @@
-Return-Path: <SRS0=5FVt=AA=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=5FVt=AA=intel.com=keith.busch@kernel.org>
-Date: Wed, 30 Aug 2017 17:50:02 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Derrick, Jonathan" <jonathan.derrick@intel.com>,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] vmd: Remove IRQ affinity
-Message-ID: <20170830215002.GB17331@localhost.localdomain>
-References: <1504109704-17033-1-git-send-email-keith.busch@intel.com>
- <20170830164020.GC18250@bhelgaas-glaptop.roam.corp.google.com>
- <20170830202340.GA17331@localhost.localdomain>
- <20170830214139.GY8154@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailapp01.imgtec.com ([195.59.15.196]:30318 "EHLO
+        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753144AbdHOTMj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:12:39 -0400
+From: Paul Burton <paul.burton@imgtec.com>
+To: <linux-pci@vger.kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Bharat Kumar Gogada <bharatku@xilinx.com>,
+        Ravikiran Gummaluri <rgummal@xilinx.com>,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: [PATCH v7 3/3] PCI: xilinx: Allow build on MIPS platforms
+Date: Tue, 15 Aug 2017 12:11:17 -0700
+Message-ID: <20170815191117.19882-4-paul.burton@imgtec.com>
+In-Reply-To: <20170815191117.19882-1-paul.burton@imgtec.com>
+References: <20170815191117.19882-1-paul.burton@imgtec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170830214139.GY8154@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 04:41:39PM -0500, Bjorn Helgaas wrote:
-> I added some breadcrumbs to the changelog about this connection
-> between affinity and limiting the number of IRQs.  Did I get this
-> right?
-> 
-> This is on pci/host-vmd for v4.14.
+Allow the xilinx-pcie driver to be built on MIPS platforms which make
+use of generic PCI drivers rather than legacy MIPS-specific interfaces.
+This is used on the MIPS Boston development board.
 
-Awesome, sounds good to me! 
+Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
+Cc: linux-pci@vger.kernel.org
+
+---
+
+Changes in v7: None
+Changes in v6: None
+Changes in v5: None
+
+Changes in v4:
+- Depend on PCI_DRIVERS_GENERIC, which the driver won't work on MIPS without.
+
+Changes in v3:
+- Split out from Boston patchset.
+
+Changes in v2: None
+
+ drivers/pci/host/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 89d61c2cbfaa..eb8c30828011 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -71,7 +71,7 @@ config PCI_HOST_GENERIC
  
-> commit be85af02e1b00d49cd678d8f2ea6f391bdbaca19
-> Author: Keith Busch <keith.busch@intel.com>
-> Date:   Wed Aug 30 12:15:04 2017 -0400
-> 
->     PCI: vmd: Remove IRQ affinity so we can allocate more IRQs
->     
->     VMD hardware has to share its vectors among child devices in its PCI
->     domain so we should allocate as many as possible rather than just ones
->     that can be affinitized.
->     
->     pci_alloc_irq_vectors_affinity() limits the number of affinitized IRQs to
->     the number of present CPUs (see irq_calc_affinity_vectors()).  But we'd
->     prefer to have more vectors, even if they aren't distributed across the
->     CPUs, so use pci_alloc_irq_vectors() instead.
->     
->     Reported-by: Brad Goodman <Bradley.Goodman@dell.com>
->     Signed-off-by: Keith Busch <keith.busch@intel.com>
->     [bhelgaas: add irq_calc_affinity_vectors() reference to changelog]
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+ config PCIE_XILINX
+ 	bool "Xilinx AXI PCIe host bridge support"
+-	depends on ARCH_ZYNQ || MICROBLAZE
++	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC)
+ 	help
+ 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
+ 	  Host Bridge driver.
+-- 
+2.14.1
