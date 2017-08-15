@@ -1,64 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31008 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751888AbdHXKh6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 24 Aug 2017 06:37:58 -0400
-Date: Thu, 24 Aug 2017 13:37:42 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: kishon@ti.com
-Cc: linux-pci@vger.kernel.org
-Subject: [bug report] PCI: endpoint: Add EP core layer to enable EP
- controller and EP functions
-Message-ID: <20170824103742.ik3tcfa2fcgcdza4@mwanda>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 15 Aug 2017 21:46:01 +0200
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Paul Burton <paul.burton@imgtec.com>
+Subject: Re: [PATCH v7 6/8] PCI: aardvark: Use PCI_NUM_INTX
+Message-ID: <20170815214601.6913e004@windsurf>
+In-Reply-To: <20170815190223.18807-7-paul.burton@imgtec.com>
+References: <20170815190223.18807-1-paul.burton@imgtec.com>
+ <20170815190223.18807-7-paul.burton@imgtec.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Kishon Vijay Abraham I,
+Hello,
 
-The patch 5e8cb4033807: "PCI: endpoint: Add EP core layer to enable
-EP controller and EP functions" from Apr 10, 2017, leads to the
-following static checker warning:
+On Tue, 15 Aug 2017 12:02:21 -0700, Paul Burton wrote:
+> Switch from using a custom LEGACY_IRQ_NUM macro to the generic
+> PCI_NUM_INTX definition for the number of INTx interrupts.
+> 
+> Signed-off-by: Paul Burton <paul.burton@imgtec.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-pci@vger.kernel.org
 
-	drivers/pci/endpoint/pci-epc-core.c:379 pci_epc_add_epf()
-	warn: 'epc' isn't an ERR_PTR
+Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-drivers/pci/endpoint/pci-epc-core.c
-   370   */
-   371  int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
-   372  {
-   373          unsigned long flags;
-   374          struct device *dev = epc->dev.parent;
-                                     ^^^^^^^^^^^^^^^
-Dereference.
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
 
-   375  
-   376          if (epf->epc)
-   377                  return -EBUSY;
-   378  
-   379          if (IS_ERR(epc))
-                    ^^^^^^^^^^^
-Can't be an error pointer or we would already have Oopsed.
-
-   380                  return -EINVAL;
-   381  
-   382          if (epf->func_no > epc->max_functions - 1)
-   383                  return -EINVAL;
-   384  
-   385          epf->epc = epc;
-   386          if (dev->of_node) {
-   387                  of_dma_configure(&epf->dev, dev->of_node);
-   388          } else {
-   389                  dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
-   390                  epf->dev.dma_mask = epc->dev.dma_mask;
-   391          }
-   392  
-   393          spin_lock_irqsave(&epc->lock, flags);
-   394          list_add_tail(&epf->list, &epc->pci_epf);
-   395          spin_unlock_irqrestore(&epc->lock, flags);
-   396  
-   397          return 0;
-
-regards,
-dan carpenter
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
