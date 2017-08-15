@@ -1,70 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  3 Aug 2017 12:19:45 -0600
-Message-Id: <20170803181954.4154-7-logang@deltatee.com>
-In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
-References: <20170803181954.4154-1-logang@deltatee.com>
-Subject: [PATCH v4 06/15] NTB: Add check and comment for link up to mw_count() and mw_get_align()
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f182.google.com ([209.85.128.182]:38887 "EHLO
+        mail-wr0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752797AbdHOFz4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 01:55:56 -0400
+Received: by mail-wr0-f182.google.com with SMTP id m57so91862wrm.5
+        for <linux-pci@vger.kernel.org>; Mon, 14 Aug 2017 22:55:56 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.oza@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v2 0/3] PCI hotplug feature
+Date: Tue, 15 Aug 2017 11:25:44 +0530
+Message-Id: <1502776547-30542-1-git-send-email-oza.oza@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds a comment and a check to ntb_mw_get_align() so that it always fails
-if the function is called before the link is up.
+These patches bring in PCI hotplug support for iproc family chipsets.
 
-Also adds a comment to ntb_mw_count() to note that it may return 0 if
-it is called before the link is up.
+It includes DT binding documentation update and, implementation in
+iproc pcie RC driver.
 
-This is to prevent accidental mis-use in clients that are testing
-on hardware that this doesn't matter for.
+These patch set is made on top of following patches.
+[PATCH v6 2/2] PCI: iproc: add device shutdown for PCI RC
+[PATCH v6 1/2] PCI: iproc: Retry request when CRS returned from EP
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Acked-by: Allen Hubbe <Allen.Hubbe@dell.com>
----
- include/linux/ntb.h | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Changes since v2:
+Addressed Rob Herring's comments.
+Made generic PCI hotplug properties 'slot-pluggable' and 'prsnt-gpios'
 
-diff --git a/include/linux/ntb.h b/include/linux/ntb.h
-index 609e232c00da..47f2966cfd7f 100644
---- a/include/linux/ntb.h
-+++ b/include/linux/ntb.h
-@@ -730,7 +730,8 @@ static inline int ntb_link_disable(struct ntb_dev *ntb)
-  * Hardware and topology may support a different number of memory windows.
-  * Moreover different peer devices can support different number of memory
-  * windows. Simply speaking this method returns the number of possible inbound
-- * memory windows to share with specified peer device.
-+ * memory windows to share with specified peer device. Note: this may return
-+ * zero if the link is not up yet.
-  *
-  * Return: the number of memory windows.
-  */
-@@ -751,7 +752,7 @@ static inline int ntb_mw_count(struct ntb_dev *ntb, int pidx)
-  * Get the alignments of an inbound memory window with specified index.
-  * NULL may be given for any output parameter if the value is not needed.
-  * The alignment and size parameters may be used for allocation of proper
-- * shared memory.
-+ * shared memory. Note: this must only be called when the link is up.
-  *
-  * Return: Zero on success, otherwise a negative error number.
-  */
-@@ -760,6 +761,9 @@ static inline int ntb_mw_get_align(struct ntb_dev *ntb, int pidx, int widx,
- 				   resource_size_t *size_align,
- 				   resource_size_t *size_max)
- {
-+	if (!(ntb_link_is_up(ntb, NULL, NULL) & (1 << pidx)))
-+		return -ENOTCONN;
-+
- 	return ntb->ops->mw_get_align(ntb, pidx, widx, addr_align, size_align,
- 				      size_max);
- }
+Oza Pawandeep (3):
+  PCI: iproc: Implement PCI hotplug support
+  Documentation/devicetree: Add PCIe hotplug property
+  PCI: iproc: Implement optional property prsnt-gpios
+
+ .../devicetree/bindings/pci/brcm,iproc-pcie.txt    |  14 +++
+ Documentation/devicetree/bindings/pci/pci.txt      |  15 +++
+ drivers/pci/host/pcie-iproc-platform.c             |   3 +
+ drivers/pci/host/pcie-iproc.c                      | 130 ++++++++++++++++++++-
+ drivers/pci/host/pcie-iproc.h                      |   7 ++
+ 5 files changed, 163 insertions(+), 6 deletions(-)
+
 -- 
-2.11.0
+1.9.1
