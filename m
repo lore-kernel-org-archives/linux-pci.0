@@ -1,54 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:57141 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750808AbdHRLni (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 07:43:38 -0400
-Subject: Re: [PATCH] pci: dwc: Clear MSI interrupt status after it is handled
-To: Faiz Abbas <faiz_abbas@ti.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <d2cc42c1-21eb-56b3-8253-6ce37ed55f05@synopsys.com>
-Date: Fri, 18 Aug 2017 12:43:05 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+ <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+ <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+ <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+ <l.stach@pengutronix.de>, <amira@mellanox.com>,
+ <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+ <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+ <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+ <eric.dumazet@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+ <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
+Subject: [PATCH net RESEND] PCI: fix oops when try to find Root Port for a PCI
+ device
+Date: Tue, 15 Aug 2017 23:24:48 +0800
+Message-ID: <1502810688-12420-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ding Tianhong <dingtianhong@huawei.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Eric report a oops when booting the system after applying
+the commit a99b646afa8a ("PCI: Disable PCIe Relaxed..."):
 
-Às 12:24 PM de 8/10/2017, Faiz Abbas escreveu:
-> If the interrupt status is cleared before it is handled, it is possible
-> that another interrupt will trigger while servicing the previous one.
-> This is causing timeouts in some wireless lan cards which use pcie.
-> Therefore, clear MSI interrupt status after it gets serviced instead
-> of before calling generic_handler.
-> 
-> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 28ed32b..78b2584 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -71,9 +71,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  		while ((pos = find_next_bit((unsigned long *) &val, 32,
->  					    pos)) != 32) {
->  			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
-> +			generic_handle_irq(irq);
->  			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
->  					    4, 1 << pos);
-> -			generic_handle_irq(irq);
->  			pos++;
->  		}
->  	}
-> 
+[    4.241029] BUG: unable to handle kernel NULL pointer dereference at 0000000000000050
+[    4.247001] IP: pci_find_pcie_root_port+0x62/0x80
+[    4.253011] PGD 0
+[    4.253011] P4D 0
+[    4.253011]
+[    4.258013] Oops: 0000 [#1] SMP DEBUG_PAGEALLOC
+[    4.262015] Modules linked in:
+[    4.265005] CPU: 31 PID: 1 Comm: swapper/0 Not tainted 4.13.0-dbx-DEV #316
+[    4.271002] Hardware name: Intel RML,PCH/Iota_QC_19, BIOS 2.40.0 06/22/2016
+[    4.279002] task: ffffa2ee38cfa040 task.stack: ffffa51ec0004000
+[    4.285001] RIP: 0010:pci_find_pcie_root_port+0x62/0x80
+[    4.290012] RSP: 0000:ffffa51ec0007ab8 EFLAGS: 00010246
+[    4.295003] RAX: 0000000000000000 RBX: ffffa2ee36bae000 RCX: 0000000000000006
+[    4.303002] RDX: 000000000000081c RSI: ffffa2ee38cfa8c8 RDI: ffffa2ee36bae000
+[    4.310013] RBP: ffffa51ec0007b58 R08: 0000000000000001 R09: 0000000000000000
+[    4.317001] R10: 0000000000000000 R11: 0000000000000000 R12: ffffa51ec0007ad0
+[    4.324005] R13: ffffa2ee36bae098 R14: 0000000000000002 R15: ffffa2ee37204818
+[    4.331002] FS:  0000000000000000(0000) GS:ffffa2ee3fcc0000(0000) knlGS:0000000000000000
+[    4.339002] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    4.345001] CR2: 0000000000000050 CR3: 000000401000f000 CR4: 00000000001406e0
+[    4.351002] Call Trace:
+[    4.354012]  ? pci_configure_device+0x19f/0x570
+[    4.359002]  ? pci_conf1_read+0xb8/0xf0
+[    4.363002]  ? raw_pci_read+0x23/0x40
+[    4.366011]  ? pci_read+0x2c/0x30
+[    4.370014]  ? pci_read_config_word+0x67/0x70
+[    4.374012]  pci_device_add+0x28/0x230
+[    4.378012]  ? pci_vpd_f0_read+0x50/0x80
+[    4.382014]  pci_scan_single_device+0x96/0xc0
+[    4.386012]  pci_scan_slot+0x79/0xf0
+[    4.389001]  pci_scan_child_bus+0x31/0x180
+[    4.394014]  acpi_pci_root_create+0x1c6/0x240
+[    4.398013]  pci_acpi_scan_root+0x15f/0x1b0
+[    4.402012]  acpi_pci_root_add+0x2e6/0x400
+[    4.406012]  ? acpi_evaluate_integer+0x37/0x60
+[    4.411002]  acpi_bus_attach+0xdf/0x200
+[    4.415002]  acpi_bus_attach+0x6a/0x200
+[    4.418014]  acpi_bus_attach+0x6a/0x200
+[    4.422013]  acpi_bus_scan+0x38/0x70
+[    4.426011]  acpi_scan_init+0x10c/0x271
+[    4.429001]  acpi_init+0x2fa/0x348
+[    4.433004]  ? acpi_sleep_proc_init+0x2d/0x2d
+[    4.437001]  do_one_initcall+0x43/0x169
+[    4.441001]  kernel_init_freeable+0x1d0/0x258
+[    4.445003]  ? rest_init+0xe0/0xe0
+[    4.449001]  kernel_init+0xe/0x150
 
-It makes sense.
+====================== cut here =============================
 
-Acked-By: Joao Pinto <jpinto@synopsys.com>
+It looks like the pci_find_pcie_root_port() was trying to
+find the Root Port for the PCI device which is the Root
+Port already, it will return NULL and trigger the problem,
+so check the highest_pcie_bridge to fix thie problem.
+
+Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
+Reported-by: Eric Dumazet <eric.dumazet@gmail.com>
+Signed-off-by: Eric Dumazet <eric.dumazet@gmail.com>
+Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+---
+ drivers/pci/pci.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc34..7e2022f 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -522,7 +522,8 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
+ 		bridge = pci_upstream_bridge(bridge);
+ 	}
+ 
+-	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
++	if (highest_pcie_bridge &&
++	    pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
+ 		return NULL;
+ 
+ 	return highest_pcie_bridge;
+-- 
+1.8.3.1
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
