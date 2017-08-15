@@ -1,121 +1,37 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
- <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
- <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
- <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
- <l.stach@pengutronix.de>, <amira@mellanox.com>,
- <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
- <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
- <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
- <davem@davemloft.net>, <alexander.duyck@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linuxarm@huawei.com>
-Subject: [PATCH v8 4/4] net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING
- flag
-Date: Thu, 3 Aug 2017 21:44:49 +0800
-Message-ID: <1501767889-7772-5-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
-References: <1501767889-7772-1-git-send-email-dingtianhong@huawei.com>
+Return-Path: <SRS0=rgPv=7R=verge.net.au=horms@kernel.org>
+Return-Path: <SRS0=rgPv=7R=verge.net.au=horms@kernel.org>
+Date: Tue, 15 Aug 2017 17:56:35 +0200
+From: Simon Horman <horms@verge.net.au>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>,
+	bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/2] PCI: rcar-pcie: Fix memory leak
+Message-ID: <20170815155634.GA21763@verge.net.au>
+References: <20170804033255.27171-1-harunobu.kurokawa.dn@renesas.com>
+ <20170814211114.GH32525@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ding Tianhong <dingtianhong@huawei.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170814211114.GH32525@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Casey Leedom <leedom@chelsio.com>
+On Mon, Aug 14, 2017 at 04:11:14PM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 04, 2017 at 12:32:53PM +0900, Harunobu Kurokawa wrote:
+> > When no PCIe card is inserted, there is a memory leak as
+> > pci_free_resource_list is not called before returning.
+> > 
+> > v2:
+> >  separate the patch to two files.
+> > 
+> > Harunobu Kurokawa (1):
+> >   PCI: rcar-pcie: Fix memory leak when no PCIe card is inserted
+> > 
+> > Lorenzo Pieralisi (1):
+> >   PCI: rcar: Fix error exit path
+> > 
+> >  drivers/pci/host/pcie-rcar.c | 12 ++++++------
+> >  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> Waiting for Simon's ack...
 
-cxgb4vf Ethernet driver now queries PCIe configuration space to
-determine if it can send TLPs to it with the Relaxed Ordering
-Attribute set, just like the pf did.
-
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Reviewed-by: Casey Leedom <leedom@chelsio.com>
----
- drivers/net/ethernet/chelsio/cxgb4vf/adapter.h      |  1 +
- drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c | 18 ++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4vf/sge.c          |  3 +++
- 3 files changed, 22 insertions(+)
-
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-index 109bc63..08c6ddb 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/adapter.h
-@@ -408,6 +408,7 @@ enum { /* adapter flags */
- 	USING_MSI          = (1UL << 1),
- 	USING_MSIX         = (1UL << 2),
- 	QUEUES_BOUND       = (1UL << 3),
-+	ROOT_NO_RELAXED_ORDERING = (1UL << 4),
- };
- 
- /*
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-index ac7a150..59e7639 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c
-@@ -2888,6 +2888,24 @@ static int cxgb4vf_pci_probe(struct pci_dev *pdev,
- 	 */
- 	adapter->name = pci_name(pdev);
- 	adapter->msg_enable = DFLT_MSG_ENABLE;
-+
-+	/* If possible, we use PCIe Relaxed Ordering Attribute to deliver
-+	 * Ingress Packet Data to Free List Buffers in order to allow for
-+	 * chipset performance optimizations between the Root Complex and
-+	 * Memory Controllers.  (Messages to the associated Ingress Queue
-+	 * notifying new Packet Placement in the Free Lists Buffers will be
-+	 * send without the Relaxed Ordering Attribute thus guaranteeing that
-+	 * all preceding PCIe Transaction Layer Packets will be processed
-+	 * first.)  But some Root Complexes have various issues with Upstream
-+	 * Transaction Layer Packets with the Relaxed Ordering Attribute set.
-+	 * The PCIe devices which under the Root Complexes will be cleared the
-+	 * Relaxed Ordering bit in the configuration space, So we check our
-+	 * PCIe configuration space to see if it's flagged with advice against
-+	 * using Relaxed Ordering.
-+	 */
-+	if (!pcie_relaxed_ordering_supported(pdev))
-+		adapter->flags |= ROOT_NO_RELAXED_ORDERING;
-+
- 	err = adap_init0(adapter);
- 	if (err)
- 		goto err_unmap_bar;
-diff --git a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-index e37dde2..05498e7 100644
---- a/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4vf/sge.c
-@@ -2205,6 +2205,7 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 	struct port_info *pi = netdev_priv(dev);
- 	struct fw_iq_cmd cmd, rpl;
- 	int ret, iqandst, flsz = 0;
-+	int relaxed = !(adapter->flags & ROOT_NO_RELAXED_ORDERING);
- 
- 	/*
- 	 * If we're using MSI interrupts and we're not initializing the
-@@ -2300,6 +2301,8 @@ int t4vf_sge_alloc_rxq(struct adapter *adapter, struct sge_rspq *rspq,
- 			cpu_to_be32(
- 				FW_IQ_CMD_FL0HOSTFCMODE_V(SGE_HOSTFCMODE_NONE) |
- 				FW_IQ_CMD_FL0PACKEN_F |
-+				FW_IQ_CMD_FL0FETCHRO_V(relaxed) |
-+				FW_IQ_CMD_FL0DATARO_V(relaxed) |
- 				FW_IQ_CMD_FL0PADEN_F);
- 
- 		/* In T6, for egress queue type FL there is internal overhead
--- 
-1.8.3.1
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
