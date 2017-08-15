@@ -1,132 +1,131 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Zheng, Lv" <lv.zheng@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: RE: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs
- earlier
-Date: Fri, 11 Aug 2017 06:13:07 +0000
-Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF0A0C5@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
- <51836747.M49Hy56X72@aspire.rjw.lan>
- <1AE640813FDE7649BE1B193DEA596E886CF06700@SHSMSX101.ccr.corp.intel.com>
- <3742420.ImyUv4XNlU@aspire.rjw.lan>
-In-Reply-To: <3742420.ImyUv4XNlU@aspire.rjw.lan>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
+From: Ding Tianhong <dingtianhong@huawei.com>
+To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>
+CC: Ding Tianhong <dingtianhong@huawei.com>
+Subject: [PATCH v11 0/5] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+Date: Tue, 15 Aug 2017 11:23:22 +0800
+Message-ID: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Some devices have problems with Transaction Layer Packets with the Relaxed
+Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+devices with Relaxed Ordering issues, and a use of this new flag by the
+cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+Ports.
 
-> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> Subject: Re: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
-> 
-> On Thursday, August 10, 2017 3:52:05 AM CEST Zheng, Lv wrote:
-> > Hi, Rafael
-> >
-> > For this patch, I have a concern.
-> >
-> > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > Subject: [PATCH 2/3] ACPICA: Make it possible to enable runtime GPEs earlier
-> > >
-> > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > >
-> > > Runtime GPEs have corresponding _Lxx/_Exx methods and are enabled
-> > > automatically during the initialization of the ACPI subsystem through
-> > > acpi_update_all_gpes() with the assumption that acpi_setup_gpe_for_wake()
-> > > will be called in advance for all of the GPEs pointed to by _PRW
-> > > objects in the namespace that may be affected by acpi_update_all_gpes().
-> > > That is, acpi_ev_initialize_gpe_block() can only be called for a GPE
-> > > block after acpi_setup_gpe_for_wake() has been called for all of the
-> > > _PRW (wakeup) GPEs in it.
-> > >
-> > > The platform firmware on some systems, however, expects GPEs to be
-> > > enabled before the enumeration of devices which is when
-> > > acpi_setup_gpe_for_wake() is called and that goes against the above
-> > > assumption.
-> > >
-> > > For this reason, introduce a new flag to be set by
-> > > acpi_ev_initialize_gpe_block() when automatically enabling a GPE
-> > > to indicate to acpi_setup_gpe_for_wake() that it needs to drop the
-> > > reference to the GPE coming from acpi_ev_initialize_gpe_block()
-> > > and modify acpi_setup_gpe_for_wake() accordingly.  These changes
-> > > allow acpi_setup_gpe_for_wake() and acpi_ev_initialize_gpe_block()
-> > > to be invoked in any order.
-> > >
-> > > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > ---
-> > >  drivers/acpi/acpica/evgpeblk.c |    2 ++
-> > >  drivers/acpi/acpica/evxfgpe.c  |    8 ++++++++
-> > >  include/acpi/actypes.h         |    3 ++-
-> > >  3 files changed, 12 insertions(+), 1 deletion(-)
-> > >
-> > > Index: linux-pm/drivers/acpi/acpica/evgpeblk.c
-> > > ===================================================================
-> > > --- linux-pm.orig/drivers/acpi/acpica/evgpeblk.c
-> > > +++ linux-pm/drivers/acpi/acpica/evgpeblk.c
-> > > @@ -496,6 +496,8 @@ acpi_ev_initialize_gpe_block(struct acpi
-> > >  				continue;
-> > >  			}
-> > >
-> > > +			gpe_event_info->flags |= ACPI_GPE_AUTO_ENABLED;
-> > > +
-> > >  			if (event_status & ACPI_EVENT_FLAG_STATUS_SET) {
-> > >  				ACPI_INFO(("GPE 0x%02X active on init",
-> > >  					   gpe_number));
-> > > Index: linux-pm/include/acpi/actypes.h
-> > > ===================================================================
-> > > --- linux-pm.orig/include/acpi/actypes.h
-> > > +++ linux-pm/include/acpi/actypes.h
-> > > @@ -783,7 +783,7 @@ typedef u32 acpi_event_status;
-> > >   *   |  | | |  +-- Type of dispatch:to method, handler, notify, or none
-> > >   *   |  | | +----- Interrupt type: edge or level triggered
-> > >   *   |  | +------- Is a Wake GPE
-> > > - *   |  +--------- Is GPE masked by the software GPE masking mechanism
-> > > + *   |  +--------- Has been enabled automatically at init time
-> > >   *   +------------ <Reserved>
-> > >   */
-> > >  #define ACPI_GPE_DISPATCH_NONE          (u8) 0x00
-> > > @@ -799,6 +799,7 @@ typedef u32 acpi_event_status;
-> > >  #define ACPI_GPE_XRUPT_TYPE_MASK        (u8) 0x08
-> > >
-> > >  #define ACPI_GPE_CAN_WAKE               (u8) 0x10
-> > > +#define ACPI_GPE_AUTO_ENABLED           (u8) 0x20
-> > >
-> > >  /*
-> > >   * Flags for GPE and Lock interfaces
-> > > Index: linux-pm/drivers/acpi/acpica/evxfgpe.c
-> > > ===================================================================
-> > > --- linux-pm.orig/drivers/acpi/acpica/evxfgpe.c
-> > > +++ linux-pm/drivers/acpi/acpica/evxfgpe.c
-> > > @@ -435,6 +435,14 @@ acpi_setup_gpe_for_wake(acpi_handle wake
-> > >  		 */
-> > >  		gpe_event_info->flags =
-> > >  		    (ACPI_GPE_DISPATCH_NOTIFY | ACPI_GPE_LEVEL_TRIGGERED);
-> > > +	} else if (gpe_event_info->flags & ACPI_GPE_AUTO_ENABLED) {
-> > > +		/*
-> > > +		 * A reference to this GPE has been added during the GPE block
-> > > +		 * initialization, so drop it now to prevent the GPE from being
-> > > +		 * permanently enabled and clear its ACPI_GPE_AUTO_ENABLED flag.
-> > > +		 */
-> > > +		(void)acpi_ev_remove_gpe_reference(gpe_event_info);
-> > > +		gpe_event_info->flags &= ~ACPI_GPE_AUTO_ENABLED;
-> >
-> > The problem is if the GPE is shared, how can we know decrement reference
-> > once can sufficiently convert it into wakeup dispatcher owned GPE?
-> 
-> Even if it is shared, the current code will not enable it if it sees
-> ACPI_GPE_CAN_WAKE set.
-> 
-> We can change that logic, but that should be a separate patch IMO and
-> this is not related to the problem at hand.
+It's been years since I've submitted kernel.org patches, I appolgise for the
+almost certain submission errors.
 
-OK, I see.
-We can enhance that on top of these fixes.
+v2: Alexander point out that the v1 was only a part of the whole solution,
+    some platform which has some issues could use the new flag to indicate
+    that it is not safe to enable relaxed ordering attribute, then we need
+    to clear the relaxed ordering enable bits in the PCI configuration when
+    initializing the device. So add a new second patch to modify the PCI
+    initialization code to clear the relaxed ordering enable bit in the
+    event that the root complex doesn't want relaxed ordering enabled.
 
-Thanks,
-Lv
+    The third patch was base on the v1's second patch and only be changed
+    to query the relaxed ordering enable bit in the PCI configuration space
+    to allow the Chelsio NIC to send TLPs with the relaxed ordering attributes
+    set.
+
+    This version didn't plan to drop the defines for Intel Drivers to use the
+    new checking way to enable relaxed ordering because it is not the hardest
+    part of the moment, we could fix it in next patchset when this patches
+    reach the goal.
+
+v3: Redesigned the logic for pci_configure_relaxed_ordering when configuration,
+    If a PCIe device didn't enable the relaxed ordering attribute default,
+    we should not do anything in the PCIe configuration, otherwise we
+    should check if any of the devices above us do not support relaxed
+    ordering by the PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag, then base on
+    the result if we get a return that indicate that the relaxed ordering
+    is not supported we should update our device to disable relaxed ordering
+    in configuration space. If the device above us doesn't exist or isn't
+    the PCIe device, we shouldn't do anything and skip updating relaxed ordering
+    because we are probably running in a guest.
+
+v4: Rename the functions pcie_get_relaxed_ordering and pcie_disable_relaxed_ordering
+    according John's suggestion, and modify the description, use the true/false
+    as the return value.
+
+    We shouldn't enable relaxed ordering attribute by the setting in the root
+    complex configuration space for PCIe device, so fix it for cxgb4.
+
+    Fix some format issues.
+
+v5: Removed the unnecessary code for some function which only return the bool
+    value, and add the check for VF device.
+
+    Make this patch set base on 4.12-rc5.
+
+v6: Fix the logic error in the need to enable the relaxed ordering attribute for cxgb4.
+
+v7: The cxgb4 drivers will enable the PCIe Capability Device Control[Relaxed
+    Ordering Enable] in PCI Probe() routine, this will break our current
+    solution for some platform which has problematic when enable the relaxed
+    ordering attribute. According to the latest recommendations, remove the
+    enable_pcie_relaxed_ordering(), although it could not cover the Peer-to-Peer
+    scene, but we agree to leave this problem until we really trigger it.
+
+    Make this patch set base on 4.12 release version.
+
+v8: Change the second patch title and description to make it more reasonable,
+    add the acked-by from Alex and Ashok.
+
+    Add a new patch to enable the Relaxed Ordering Attribute for cxgb4vf driver.
+
+    Make this patch set base on 4.13-rc2.
+
+v9: The document (https://software.intel.com/sites/default/files/managed/9e/
+    bc/64-ia-32-architectures-optimization-manual.pdf) indicate that the Xeon
+    processors based on Broadwell/Haswell microarchitecture has the problem
+    with Relaxed Ordering Attribute enabled, so add the whole list Device ID
+    from Intel to the patch.
+
+v10: Significant rework based on Bjorn's feedback, reorganize the first 2 patches,
+     now the Intel and AMD erratum soc has been divided to the different patches,
+     rename the pcie_relaxed_ordering_supported() to pcie_relaxed_ordering_enabled(),
+     and no need to check every intervening switch except the root ports, update
+     some commits.
+
+v11: We shouldn't let the Intel engineer to acked the AMD's erratum patch, fix the
+     funny mistake.
+
+Casey Leedom (2):
+  net/cxgb4: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+  net/cxgb4vf: Use new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+
+Ding Tianhong (3):
+  PCI: Disable PCIe Relaxed Ordering if unsupported
+  PCI: Disable Relaxed Ordering for some Intel processors
+  PCI: Disable Relaxed Ordering Attributes for AMD A1100
+
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h         |  1 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c    | 23 ++++--
+ drivers/net/ethernet/chelsio/cxgb4/sge.c           |  5 +-
+ drivers/net/ethernet/chelsio/cxgb4vf/adapter.h     |  1 +
+ .../net/ethernet/chelsio/cxgb4vf/cxgb4vf_main.c    | 18 +++++
+ drivers/net/ethernet/chelsio/cxgb4vf/sge.c         |  3 +
+ drivers/pci/probe.c                                | 43 +++++++++++
+ drivers/pci/quirks.c                               | 89 ++++++++++++++++++++++
+ include/linux/pci.h                                |  3 +
+ 9 files changed, 178 insertions(+), 8 deletions(-)
+
+-- 
+1.8.3.1
