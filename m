@@ -1,77 +1,57 @@
-Return-Path: <SRS0=xbkj=AA=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=xbkj=AA=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH] PCI/portdrv: Fix MSI/MSI-X bug for PCIe port service
- drivers
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1503654642-59977-1-git-send-email-liudongdong3@huawei.com>
- <20170829201631.GO8154@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <014021d0-51e1-1169-e4b5-2a347ca12598@huawei.com>
-Date: Wed, 30 Aug 2017 18:35:37 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170829201631.GO8154@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Return-Path: <SRS0=sh19=7R=gmail.com=eric.dumazet@kernel.org>
+Return-Path: <SRS0=sh19=7R=gmail.com=eric.dumazet@kernel.org>
+Message-ID: <1502805534.4936.73.camel@edumazet-glaptop3.roam.corp.google.com>
+Subject: Re: [PATCH v11 0/5] Add new PCI_DEV_FLAGS_NO_RELAXED_ORDERING flag
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: David Miller <davem@davemloft.net>
+Cc: dingtianhong@huawei.com, leedom@chelsio.com, ashok.raj@intel.com,
+ bhelgaas@google.com, helgaas@kernel.org, werner@chelsio.com,
+ ganeshgr@chelsio.com,  asit.k.mallick@intel.com,
+ patrick.j.cramer@intel.com,  Suravee.Suthikulpanit@amd.com,
+ Bob.Shaw@amd.com, l.stach@pengutronix.de,  amira@mellanox.com,
+ gabriele.paoloni@huawei.com, David.Laight@aculab.com,
+ jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com, will.deacon@arm.com,
+ mark.rutland@arm.com, robin.murphy@arm.com, alexander.duyck@gmail.com,
+ linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linuxarm@huawei.com
+Date: Tue, 15 Aug 2017 06:58:54 -0700
+In-Reply-To: <20170814.221512.1430356980828045690.davem@davemloft.net>
+References: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
+	 <20170814.221512.1430356980828045690.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+On Mon, 2017-08-14 at 22:15 -0700, David Miller wrote:
+> From: Ding Tianhong <dingtianhong@huawei.com>
+> Date: Tue, 15 Aug 2017 11:23:22 +0800
+> 
+> > Some devices have problems with Transaction Layer Packets with the Relaxed
+> > Ordering Attribute set.  This patch set adds a new PCIe Device Flag,
+> > PCI_DEV_FLAGS_NO_RELAXED_ORDERING, a set of PCI Quirks to catch some known
+> > devices with Relaxed Ordering issues, and a use of this new flag by the
+> > cxgb4 driver to avoid using Relaxed Ordering with problematic Root Complex
+> > Ports.
+>  ...
+> 
+> Series applied, thanks.
 
-Many thanks for your review.
+I got a NULL deref in pci_find_pcie_root_port()
 
-e( 2017/8/30 4:16, Bjorn Helgaas ei:
-> On Fri, Aug 25, 2017 at 05:50:42PM +0800, Dongdong Liu wrote:
->> Current code is broken as calling pci_free_irq_vectors()
->> invalidates the IRQ numbers returned before by pci_irq_vectors();
->> so we need to move all the assignment of the Linux IRQ numbers at
->> the bottom of the function.
->>
->> After removing and adding back the PCI root port device,
->> we see the PCIe port service drivers request irq failed.
->>
->> root@(none)$ lspci -tv
->> -[0000:00]-+-00.0-[01]----00.0  Device 19e5:0123
->>            \-08.0-[02-03]--+-00.0  Device 8086:10fb
->>                            \-00.1  Device 8086:10fb
->
-> It doesn't look like the hierarchy *below* the root port is relevant.
-OK, will delete.
->
->> root@(none)$ echo 1 > /sys/devices/pci0000\:00/0000\:00\:00.0/remove
->> iommu: Removing device 0000:00:00.0 from group 2
->> root@(none)$ echo 1 > /sys/devices/pci0000\:00/pci_bus/0000\:00/rescan
->> pci 0000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it
->> with 'pcie_aspm=force'
->> pci 0000:00:00.0: BAR 14: assigned [mem 0xe0100000-0xe03fffff]
->> pci 0000:00:00.0: BAR 15: assigned [mem 0x80000e00000-0x80000ffffff 64bit
->> pref]
->> pci 0000:00:00.0: BAR 13: assigned [io  0x1000-0x1fff]
->> pci 0000:01:00.0: BAR 0: assigned [mem 0xe0100000-0xe013ffff 64bit]
->> pci 0000:01:00.0: BAR 6: assigned [mem 0xe0140000-0xe015ffff pref]
->> pci 0000:00:00.0: PCI bridge to [bus 01]
->> pci 0000:00:00.0:   bridge window [io  0x1000-0x1fff]
->> pci 0000:00:00.0:   bridge window [mem 0xe0100000-0xe03fffff]
->> pci 0000:00:00.0:   bridge window [mem 0x80000e00000-0x80000ffffff 64bit
->> pref]
->> iommu: Adding device 0000:00:00.0 to group 2
->> pcie_pme: probe of 0000:00:00.0:pcie001 failed with error -22
->> aer: probe of 0000:00:00.0:pcie002 failed with error -22
->> pciehp 0000:00:00.0:pcie004: Slot #0 AttnBtn- PwrCtrl- MRL- AttnInd-
->> PwrInd- HotPlug+ Surprise+ Interlock- NoCompl- LLActRep+
->> pciehp 0000:00:00.0:pcie004: Cannot get irq 20 for the hotplug controller
->> pciehp 0000:00:00.0:pcie004: Notification initialization failed (-1)
->> dpc 0000:00:00.0:pcie010: request IRQ22 failed: -22
->> dpc: probe of 0000:00:00.0:pcie010 failed with error -22
->
-> I think the ASPM, iommu, BAR, and window message are irrelevant to this issue.
-> If so, please remove them so they aren't distractions.
-OK, I will remove them in PATCH V2.
->
-> This looks like it might be a fix for a regression.  Can you add any
-> relevant Fixes: tags and possibly stable tags?
+Was it expected ?
 
-Sure, I will add in PATCH V2.
-Fixes: 3674cc4 ("PCI/portdrv: Use pci_irq_alloc_vectors()")
+This local hack seems to fix the issue.
 
-Thanks
-Dongdong
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index af0cc3456dc1b48b1325c06c5edd2ca8cc22a640..cfd8eb5a3d0ba8347d44952ffab28d9c761044d3 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -522,7 +522,7 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
+                bridge = pci_upstream_bridge(bridge);
+        }
+ 
+-       if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
++       if (highest_pcie_bridge && pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
+                return NULL;
+ 
+        return highest_pcie_bridge;
