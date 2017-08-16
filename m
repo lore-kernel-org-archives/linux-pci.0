@@ -1,80 +1,79 @@
-Return-Path: <SRS0=OR4n=7H=mediatek.com=ryder.lee@kernel.org>
-Return-Path: <SRS0=OR4n=7H=mediatek.com=ryder.lee@kernel.org>
-Message-ID: <1501908763.8298.11.camel@mtkswgap22>
-Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
- support
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Honghui Zhang <honghui.zhang@mediatek.com>, <bhelgaas@google.com>,
-	<robh@kerenl.org>, <robh+dt@kernel.org>, <matthias.bgg@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
-	<eddie.huang@mediatek.com>, <hongkun.cao@mediatek.com>,
-	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Date: Sat, 5 Aug 2017 12:52:43 +0800
-In-Reply-To: <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
-	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
-	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
-	 <1501835976.24341.21.camel@mtksdaap41>
-	 <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+Subject: [PATCH v2 09/10] ARM: dts: dra72-evm-revc: Add pinmux configuration
+ for MMC
+Date: Wed, 16 Aug 2017 19:15:07 +0530
+Message-ID: <20170816134508.8887-10-kishon@ti.com>
+In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
+References: <20170816134508.8887-1-kishon@ti.com>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Honghui, Bjorn,
+Include dra72x-mmc-iodelay.dtsi which has pinmux and IODelay
+configuration values for the various MMC modes for dra72 SoC
+and use it in the pinctrl properties of MMC devicetree
+nodes present in dra72-evm-revc.dts.
 
-On Fri, 2017-08-04 at 08:18 -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
-> > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
-> > > > +
-> > > > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
-> > > > +						struct pci_bus *bus, int devfn)
-> > > > +{
-> > > > +	struct pci_dev *dev;
-> > > > +	struct pci_bus *pbus;
-> > > > +	struct mtk_pcie_port *port, *tmp;
-> > > > +
-> > > > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > > > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
-> > > > +			return port;
-> > > > +		} else if (bus->number != 0) {
-> > > > +			pbus = bus;
-> > > > +			do {
-> > > > +				dev = pbus->self;
-> > > > +				if (port->index == PCI_SLOT(dev->devfn))
-> > > > +					return port;
-> > > > +				pbus = dev->bus;
-> > > > +			} while (dev->bus->number != 0);
-> > > > +		}
-> > > > +	}
-> > > > +
-> > > > +	return NULL;
-> > > 
-> > > You should be able to use sysdata to avoid searching the list.
-> > > See drivers/pci/host/pci-aardvark.c, for example.
-> > > 
-> > 
-> > I could put the mtk_pcie * in sysdata, but still need to searching the
-> > list to get the mtk_pcie_port *, how about:
-> > 
-> > 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > 		if (port->index == PCI_SLOT(devfn))
-> > 			return port;
-> > 	}
-> 
-> No.  Other drivers don't need to search the list.  Please take a look
-> at them and see how they solve this problem.  I don't think your
-> hardware is fundamentally different in a way that means you need to
-> search when the others don't.
-> 
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra72-evm-revc.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-I'm not directly involved in this generation, but I guess the main reason why Honghui need to do that is just because this hardware access configuration space via per-port registers, not just for the guard.  
-Currently, We had a host bridge with two ports (two subnodes in binding text), thus he tried to tells them apart so that he can get the correct registers.
+diff --git a/arch/arm/boot/dts/dra72-evm-revc.dts b/arch/arm/boot/dts/dra72-evm-revc.dts
+index 9b439851ff79..bf588d00728d 100644
+--- a/arch/arm/boot/dts/dra72-evm-revc.dts
++++ b/arch/arm/boot/dts/dra72-evm-revc.dts
+@@ -6,6 +6,7 @@
+  * published by the Free Software Foundation.
+  */
+ #include "dra72-evm-common.dtsi"
++#include "dra72x-mmc-iodelay.dtsi"
+ #include <dt-bindings/net/ti-dp83867.h>
+ 
+ / {
+@@ -96,9 +97,22 @@
+ };
+ 
+ &mmc1 {
++	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50", "sdr104";
++	pinctrl-0 = <&mmc1_pins_default>;
++	pinctrl-1 = <&mmc1_pins_hs>;
++	pinctrl-2 = <&mmc1_pins_sdr12>;
++	pinctrl-3 = <&mmc1_pins_sdr25>;
++	pinctrl-4 = <&mmc1_pins_sdr50>;
++	pinctrl-5 = <&mmc1_pins_ddr50_rev20 &mmc1_iodelay_ddr50_conf>;
++	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev20_conf>;
+ 	vqmmc-supply = <&ldo1_reg>;
+ };
+ 
+ &mmc2 {
++	pinctrl-names = "default", "hs", "ddr_1_8v", "hs200_1_8v";
++	pinctrl-0 = <&mmc2_pins_default>;
++	pinctrl-1 = <&mmc2_pins_hs>;
++	pinctrl-2 = <&mmc2_pins_ddr_rev20 &mmc2_iodelay_ddr_conf>;
++	pinctrl-3 = <&mmc2_pins_hs200 &mmc2_iodelay_hs200_rev20_conf>;
+ 	vmmc-supply = <&evm_1v8_sw>;
+ };
+-- 
+2.11.0
 
-Some platforms don't need to do that since they just have a single port (no more subnodes), the others might have specific/shared registers to access configuration space. (e.g. Tegra, MTK legacy IP block).
-Or, he can split them into two independent nodes, but it will break common probing flow by doing so. (I'd prefer to use subnodes.)
 
-Ryder
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
