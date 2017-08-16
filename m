@@ -1,69 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-fw-4101.amazon.com ([72.21.198.25]:16001 "EHLO
-        smtp-fw-4101.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751349AbdH1Njk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 28 Aug 2017 09:39:40 -0400
-From: Filippo Sironi <sironi@amazon.de>
-To: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Filippo Sironi <sironi@amazon.de>
-Subject: [PATCH 1/2] pci: Cache the VF device ID in the SR-IOV structure
-Date: Mon, 28 Aug 2017 15:38:49 +0200
-Message-Id: <1503927530-26076-1-git-send-email-sironi@amazon.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: <kishon@ti.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 10/10] ARM: dts: dra71-evm: Add pinmux configuration for MMC
+Date: Wed, 16 Aug 2017 19:15:08 +0530
+Message-ID: <20170816134508.8887-11-kishon@ti.com>
+In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
+References: <20170816134508.8887-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-... and use it instead of reading it over and over from the PF config
-space capability.
+Include dra72x-mmc-iodelay.dtsi which has pinmux and IODelay
+configuration values for the various MMC modes for dra72 SoC
+and use it in the pinctrl properties of MMC devicetree
+nodes present in dra71-evm.dts.
 
-Signed-off-by: Filippo Sironi <sironi@amazon.de>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/iov.c | 5 +++--
- drivers/pci/pci.h | 1 +
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/dra71-evm.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 120485d6f352..e8f7eafaba6a 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -134,7 +134,7 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id, int reset)
+diff --git a/arch/arm/boot/dts/dra71-evm.dts b/arch/arm/boot/dts/dra71-evm.dts
+index 49e3c76bcf97..41c9132eb550 100644
+--- a/arch/arm/boot/dts/dra71-evm.dts
++++ b/arch/arm/boot/dts/dra71-evm.dts
+@@ -7,6 +7,7 @@
+  */
  
- 	virtfn->devfn = pci_iov_virtfn_devfn(dev, id);
- 	virtfn->vendor = dev->vendor;
--	pci_read_config_word(dev, iov->pos + PCI_SRIOV_VF_DID, &virtfn->device);
-+	virtfn->device = iov->vf_did;
- 	rc = pci_setup_device(virtfn);
- 	if (rc)
- 		goto failed0;
-@@ -448,6 +448,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	iov->nres = nres;
- 	iov->ctrl = ctrl;
- 	iov->total_VFs = total;
-+	pci_read_config_word(dev, pos + PCI_SRIOV_VF_DID, &iov->vf_did);
- 	iov->pgsz = pgsz;
- 	iov->self = dev;
- 	iov->drivers_autoprobe = true;
-@@ -723,7 +724,7 @@ int pci_vfs_assigned(struct pci_dev *dev)
- 	 * determine the device ID for the VFs, the vendor ID will be the
- 	 * same as the PF so there is no need to check for that one
- 	 */
--	pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_VF_DID, &dev_id);
-+	dev_id = dev->sriov->vf_did;
+ #include "dra72-evm-common.dtsi"
++#include "dra72x-mmc-iodelay.dtsi"
+ #include <dt-bindings/net/ti-dp83867.h>
  
- 	/* loop through all the VFs to see if we own any that are assigned */
- 	vfdev = pci_get_device(dev->vendor, dev_id, NULL);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 22e061738c6f..a7270e11e1ef 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -262,6 +262,7 @@ struct pci_sriov {
- 	u16 num_VFs;		/* number of VFs available */
- 	u16 offset;		/* first VF Routing ID offset */
- 	u16 stride;		/* following VF stride */
-+	u16 vf_did;		/* VF device ID */
- 	u32 pgsz;		/* page size for BAR alignment */
- 	u8 link;		/* Function Dependency Link */
- 	u8 max_VF_buses;	/* max buses consumed by VFs */
+ / {
+@@ -172,10 +173,23 @@
+ };
+ 
+ &mmc1 {
++	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50", "sdr104";
++	pinctrl-0 = <&mmc1_pins_default>;
++	pinctrl-1 = <&mmc1_pins_hs>;
++	pinctrl-2 = <&mmc1_pins_sdr12>;
++	pinctrl-3 = <&mmc1_pins_sdr25>;
++	pinctrl-4 = <&mmc1_pins_sdr50>;
++	pinctrl-5 = <&mmc1_pins_ddr50_rev20 &mmc1_iodelay_ddr50_conf>;
++	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev20_conf>;
+ 	vqmmc-supply = <&vpo_sd_1v8_3v3>;
+ };
+ 
+ &mmc2 {
++	pinctrl-names = "default", "hs", "ddr_1_8v", "hs200_1_8v";
++	pinctrl-0 = <&mmc2_pins_default>;
++	pinctrl-1 = <&mmc2_pins_hs>;
++	pinctrl-2 = <&mmc2_pins_ddr_rev20 &mmc2_iodelay_ddr_conf>;
++	pinctrl-3 = <&mmc2_pins_hs200 &mmc2_iodelay_hs200_rev20_conf>;
+ 	vmmc-supply = <&evm_1v8_sw>;
+ };
+ 
 -- 
-2.7.4
+2.11.0
