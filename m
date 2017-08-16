@@ -1,56 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:46458 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752766AbdHGK3i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Aug 2017 06:29:38 -0400
-Subject: Re: Support SVM without PASID
-To: valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
-        kevin.tian@intel.com, jacob.jun.pan@intel.com
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
- <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
- <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
-Date: Mon, 7 Aug 2017 11:31:38 +0100
+Received: from mail-sn1nam01on0067.outbound.protection.outlook.com ([104.47.32.67]:39183
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750912AbdHPFOW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 01:14:22 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv3 8/9] PCI: designware: enable write permission before updating DBI RO registers
+Date: Wed, 16 Aug 2017 12:56:58 +0800
+Message-ID: <1502859419-33696-9-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/08/17 06:14, valmiki wrote:
-[...]
-> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
-> documentation we fill vaddr and iova in struct vfio_iommu_type1_dma_map
-> and pass them to VFIO. But if we use dynamic allocation in application
-> (say malloc), do we need to use dma API to get iova and then call
-> VFIO_IOMMU_MAP ioctl ?
-> If application needs multiple such dynamic allocations, then it need to
-> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and then
-> manage rest allocations requirements from this buffer ?
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Yes, without SVM, the application allocates large buffers, allocates IOVAs
-itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely on the
-DMA API at all, it manages IOVAs as it wants. Sizes passed to
-VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page granularity
-(that is at least 4kB), and both iova and vaddr have to be aligned on that
-granularity as well. So malloc isn't really suitable in this case, you'll
-need mmap. The application can then implement a small allocator to manage
-the DMA pool created with VFIO_IOMMU_MAP.
+The existing fix doesn't actually work because the Class register and
+interrupt PIN register are read-only, so it must enable the write
+permission before writing the correct value to these registers.
 
-With SVM the application binds its address space to the device, and then
-uses malloc for all DMA buffers, no need for VFIO_IOMMU_MAP.
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V3:
+ - Add the same fixup for interrupt pin code.
 
-Thanks,
-Jean
+ drivers/pci/dwc/pcie-designware-host.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 1576211..582f5cc 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -597,10 +597,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
+ 
+ 	/* setup interrupt pins */
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
+ 	val &= 0xffff00ff;
+ 	val |= 0x00000100;
+ 	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	/* setup bus numbers */
+ 	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
+@@ -637,8 +639,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
+ 
+ 	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
+ 
++	/* Enable write permission for the DBI read-only register */
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	/* program correct class for RC */
+ 	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
++	/* Better disable write permission right after the update */
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
+ 	val |= PORT_LOGIC_SPEED_CHANGE;
+-- 
+2.1.0.27.g96db324
