@@ -1,148 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:29991 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751490AbdHQCYs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 22:24:48 -0400
-From: "Zheng, Lv" <lv.zheng@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-CC: Linux ACPI <linux-acpi@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        "Moore, Robert" <robert.moore@intel.com>
-Subject: RE: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-Date: Thu, 17 Aug 2017 02:24:45 +0000
-Message-ID: <1AE640813FDE7649BE1B193DEA596E886CF0BC5A@SHSMSX101.ccr.corp.intel.com>
-References: <12346760.yAFCnkEgf6@aspire.rjw.lan>
- <3677056.OS19FbOdkF@aspire.rjw.lan>
- <1AE640813FDE7649BE1B193DEA596E886CF0B3F2@SHSMSX101.ccr.corp.intel.com>
- <1635689.qJin4YfZ5x@aspire.rjw.lan>
-In-Reply-To: <1635689.qJin4YfZ5x@aspire.rjw.lan>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+Subject: [PATCH v2 00/10] ARM: dts: Add iodelay data for MMC
+Date: Wed, 16 Aug 2017 19:14:58 +0530
+Message-ID: <20170816134508.8887-1-kishon@ti.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+This series only adds data and it won't be used until
+the next series which adds UHS support to omap_hsmmc/sdhci driver.
 
-> From: linux-acpi-owner@vger.kernel.org [mailto:linux-acpi-owner@vger.kernel.org] On Behalf Of Rafael J.
-> Wysocki
-> Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> 
-> On Tuesday, August 15, 2017 11:59:00 AM CEST Zheng, Lv wrote:
-> > Hi,
-> >
-> > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > >
-> > > On Friday, August 11, 2017 7:40:56 AM CEST Zheng, Lv wrote:
-> > > > Hi, Rafael
-> > > >
-> > > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > > > Subject: Re: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > > > >
-> > > > > On Thursday, August 10, 2017 3:48:58 AM CEST Zheng, Lv wrote:
-> > > > > > Hi, Rafael
-> > > > > >
-> > > > > > > From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> > > > > > > Subject: [PATCH 1/3] ACPICA: Dispatch active GPEs at init time
-> > > > > > >
-> > > > > > > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > > > > >
-> > > > > > > In some cases GPEs are already active when they are enabled by
-> > > > > > > acpi_ev_initialize_gpe_block() and whatever happens next may depend
-> > > > > > > on the result of handling the events signaled by them, so the
-> > > > > > > events should not be discarded (which is what happens currently) and
-> > > > > > > they should be handled as soon as reasonably possible.
-> > > > > > >
-> > > > > > > For this reason, modify acpi_ev_initialize_gpe_block() to
-> > > > > > > dispatch GPEs with the status flag set in-band right after
-> > > > > > > enabling them.
-> > > > > >
-> > > > > > In fact, what we need seems to be invoking acpi_ev_gpe_dispatch()
-> > > > > > right after enabling an GPE. So there are 2 conditions related:
-> > > > > > 1. GPE is enabled for the first time.
-> > > > > > 2. GPE is initialized.
-> > > > > >
-> > > > > > And we need to make sure that before acpi_update_all_gpes() is invoked,
-> > > > > > all GPE EN bits are actually disabled.
-> > > > >
-> > > > > But we don't do it today, do we?
-> > > >
-> > > > We don't do that.
-> > > >
-> > > > >
-> > > > > And still calling _dispatch() should not be incorrect even if the GPE
-> > > > > has been enabled already at this point.  Worst case it just will
-> > > > > queue up the execution of _Lxx/_Exx which may or may not do anything
-> > > > > useful.
-> > > > >
-> > > > > And BTW this is all done under acpi_gbl_gpe_lock so acpi_ev_gpe_detect()
-> > > > > will block on it if run concurrently and we've checked the status, so
-> > > > > we know that the GPE *should* be dispatched, so I sort of fail to see
-> > > > > the problem.
-> > > >
-> > > > There is another problem related:
-> > > > ACPICA clears GPEs before enabling it.
-> > > > This is proven to be wrong, and we have to fix it:
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=196249
-> > > >
-> > > > without fixing this issue, in this solution, we surely need to save the
-> > > > GPE STS bit before incrementing GPE reference count, and poll it according
-> > > > to the saved STS bit. Because if we poll it after enabling, STS bit will
-> > > > be wrongly cleared.
-> > >
-> > > I'm not sure if I understand you correctly, but why would we poll it?
-> > >
-> > > In the $subject patch the status is checked and then
-> > > acpi_ev_add_gpe_reference() is called to add a reference to the GPE.
-> > >
-> > > If this is the first reference (which will be the case in the majority
-> > > of cases), acpi_ev_enable_gpe() will be called and that will clear the
-> > > status.
-> > >
-> > > Then, acpi_ev_gpe_dispatch() is called if the status was set and that
-> > > itself doesn't check the status.  It disables the GPE upfront (so the
-> > > status doesn't matter from now on until the GPE is enabled again) and
-> > > clears the status unconditionally if the GPE is edge-triggered.  This
-> > > means that for edge-triggered GPEs the clearing of the status by
-> > > acpi_ev_enable_gpe() doesn't matter here.
-> >
-> > No problem, I understood.
-> > And was thinking thought this patch [edge GPE dispatch fix] should be
-> > correct and good for current Linux upstream.
-> >
-> > What I meant is:
-> > PATCH [edge GPE clear fix] https://patchwork.kernel.org/patch/9894983/
-> > is a fix we need for upstream as it is the only possible fix for the
-> > issue fixed by it.
-> > On top of that, when acpi_ev_enable_gpe() is called, GPE won't be cleared.
-> > and then things can be done in a simpler way:
-> > PATCH [edge GPE enable fix] https://patchwork.kernel.org/patch/9894989/
-> >
-> > As [edge GPE clear fix] is risky, I think [edge GPE dispatch fix] is OK
-> > for Linux upstream.
-> >
-> > So we can have 2 processes:
-> > 1. Merge [edge GPE dispatch fix] and let [edge GPE clear fix] and
-> >    [edge GPE enable fix] released from ACPICA upstream so that:
-> >    1. We can enhance them in ACPICA upstream.
-> >    2. It will be regression safer for us to merge [edge GPE clear fix].
-> > 2. Merge [edge GPE clear fix] and [edge GPE enable fix] without
-> >    merging [edge GPE dispatch fix].
-> >
-> > What I meant is:
-> > It's up to you to decide which process we should take. :)
-> 
-> OK
-> 
-> So I would go with what is already there in my tree.  Please work on top of
-> that.
+Changes from v1:
+*) Add missing Signed-off-by in a couple of patches
+*) Fixed Author of "Move common MMC/SD properties to common file" patch.
 
-OK.
-Then I'll do that from ACPICA upstream to have more eyes on the enhancements
-and more time to create the stable baseline for the [edge GPE clear fix].
+Kishon Vijay Abraham I (7):
+  ARM: dts: dra7-evm: Add pinmux configuration for MMC
+  ARM: dts: am57xx-beagle-x15: Add pinmux configuration for MMC
+  ARM: dts: am571x-idk: Add pinmux configuration for MMC
+  ARM: dts: am572x-idk: Add pinmux configuration for MMC
+  ARM: dts: dra72-evm: Add pinmux configuration for MMC
+  ARM: dts: dra72-evm-revc: Add pinmux configuration for MMC
+  ARM: dts: dra71-evm: Add pinmux configuration for MMC
 
-Best regards,
-Lv
+Sekhar Nori (3):
+  ARM: dts: dra72x: Create a common file with MMC/SD IOdelay data
+  ARM: dts: dra74x: Create a common file with MMC/SD IOdelay data
+  ARM: dts: am57xx-idk: Move common MMC/SD properties to common file
+
+ arch/arm/boot/dts/am571x-idk.dts                |  26 +-
+ arch/arm/boot/dts/am572x-idk.dts                |  27 +-
+ arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi |  29 +-
+ arch/arm/boot/dts/am57xx-beagle-x15-revb1.dts   |  15 +
+ arch/arm/boot/dts/am57xx-beagle-x15.dts         |  11 +
+ arch/arm/boot/dts/am57xx-idk-common.dtsi        |   8 +
+ arch/arm/boot/dts/dra7-evm.dts                  |  22 +-
+ arch/arm/boot/dts/dra71-evm.dts                 |  14 +
+ arch/arm/boot/dts/dra72-evm-revc.dts            |  14 +
+ arch/arm/boot/dts/dra72-evm.dts                 |  14 +
+ arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi       | 350 +++++++++++++
+ arch/arm/boot/dts/dra74x-mmc-iodelay.dtsi       | 647 ++++++++++++++++++++++++
+ 12 files changed, 1130 insertions(+), 47 deletions(-)
+ create mode 100644 arch/arm/boot/dts/dra72x-mmc-iodelay.dtsi
+ create mode 100644 arch/arm/boot/dts/dra74x-mmc-iodelay.dtsi
+
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
