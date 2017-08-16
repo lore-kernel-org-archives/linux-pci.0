@@ -1,129 +1,184 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 24 Aug 2017 11:51:36 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:40222 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751611AbdHPSl4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 14:41:56 -0400
+Date: Wed, 16 Aug 2017 13:41:54 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v4 2/4] PCI: rockchip: Add support for pcie wake irq
-Message-ID: <20170824165136.GK31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
- <20170822031934.8675-3-jeffy.chen@rock-chips.com>
+To: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Paul Burton <paul.burton@imgtec.com>
+Subject: Re: [PATCH] PCI: keystone: Use PCI_NUM_INTX
+Message-ID: <20170816184154.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170815213724.8111.96859.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170815214430.GO32525@bhelgaas-glaptop.roam.corp.google.com>
+ <59948A0F.4010304@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170822031934.8675-3-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, briannorris@chromium.org,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <59948A0F.4010304@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 22, 2017 at 11:19:32AM +0800, Jeffy Chen wrote:
-> Add support for PCIE_WAKE pin in rockchip pcie driver.
+On Wed, Aug 16, 2017 at 02:08:15PM -0400, Murali Karicheri wrote:
+> On 08/15/2017 05:44 PM, Bjorn Helgaas wrote:
+> > On Tue, Aug 15, 2017 at 04:37:24PM -0500, Bjorn Helgaas wrote:
+> >> Switch from using a custom MAX_LEGACY_IRQS macro to the generic
+> >> PCI_NUM_INTX definition for the number of INTx interrupts.
+> >>
+> >> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >> Cc: Murali Karicheri <m-karicheri2@ti.com>
+> >> ---
+> >>  drivers/pci/dwc/pci-keystone-dw.c |    4 ++--
+> >>  drivers/pci/dwc/pci-keystone.h    |    1 -
+> >>  2 files changed, 2 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+> >> index df60f48716d9..3b0f206590f9 100644
+> >> --- a/drivers/pci/dwc/pci-keystone-dw.c
+> >> +++ b/drivers/pci/dwc/pci-keystone-dw.c
+> >> @@ -251,7 +251,7 @@ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+> >>  {
+> >>  	int i;
+> >>  
+> >> -	for (i = 0; i < MAX_LEGACY_IRQS; i++)
+> >> +	for (i = 0; i < PCI_NUM_INTX; i++)
+> >>  		ks_dw_app_writel(ks_pcie, IRQ_ENABLE_SET + (i << 4), 0x1);
+> >>  }
+> >>  
+> >> @@ -557,7 +557,7 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+> >>  	/* Create legacy IRQ domain */
+> >>  	ks_pcie->legacy_irq_domain =
+> >>  			irq_domain_add_linear(ks_pcie->legacy_intc_np,
+> >> -					MAX_LEGACY_IRQS,
+> >> +					PCI_NUM_INTX,
+> >>  					&ks_dw_pcie_legacy_irq_domain_ops,
+> >>  					NULL);
+> >>  	if (!ks_pcie->legacy_irq_domain) {
+> >> diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+> >> index 74c5825882df..69fc60129f45 100644
+> >> --- a/drivers/pci/dwc/pci-keystone.h
+> >> +++ b/drivers/pci/dwc/pci-keystone.h
+> >> @@ -12,7 +12,6 @@
+> >>   * published by the Free Software Foundation.
+> >>   */
+> >>  
+> >> -#define MAX_LEGACY_IRQS			4
+> >>  #define MAX_MSI_HOST_IRQS		8
+> >>  #define MAX_LEGACY_HOST_IRQS		4
+> > 
+> > BTW, Murali, what is MAX_LEGACY_HOST_IRQS?  Is that something we can
+> > replace by PCI_NUM_INTX also?
+> > 
+> 
+> It is the number of interrupts going to the ARM GIC controller for Legacy
+> PCI interrupts. Corresponding for MSI is MAX_MSI_HOST_IRQS.  MAX_LEGACY_IRQS
+> is for number of PCI Legacy irq line one PCI bus. In keystone case, it is
+> 1 to 1. So it can be changed. 
 
-Changelog should include a hint about what DT property this PCIE_WAKE
-support depends on.
+Thanks, Murali.  I have the following patches on pci/host-keystone.  I
+added one to remove duplicate definitions from pci-keystone.h and
+pci-keystone.c.
 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v4: None
-> Changes in v3:
-> Fix error handling
-> 
-> Changes in v2:
-> Use dev_pm_set_dedicated_wake_irq
->         -- Suggested by Brian Norris <briannorris@chromium.com>
-> 
->  drivers/pci/host/pcie-rockchip.c | 21 +++++++++++++++++++--
->  1 file changed, 19 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 5d85ec2e2fb0..a0f7267984da 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -37,6 +37,7 @@
->  #include <linux/pci_ids.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
-> +#include <linux/pm_wakeirq.h>
->  #include <linux/reset.h>
->  #include <linux/regmap.h>
->  
-> @@ -1111,6 +1112,15 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
->  		return err;
->  	}
->  
-> +	/* Must init wakeup before setting dedicated wake irq. */
-> +	device_init_wakeup(dev, true);
-> +	irq = platform_get_irq_byname(pdev, "wake");
-> +	if (irq >= 0) {
-> +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
-> +		if (err)
-> +			dev_err(dev, "failed to setup PCIe wake IRQ\n");
 
-Error message could include the IRQ #.
+commit 44b5557a13bdc04fda582b6fdfa3819792fbfe94
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Aug 16 13:32:34 2017 -0500
 
-> +	}
-> +
->  	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
->  	if (IS_ERR(rockchip->vpcie12v)) {
->  		if (PTR_ERR(rockchip->vpcie12v) == -EPROBE_DEFER)
-> @@ -1493,12 +1503,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  
->  	err = rockchip_pcie_parse_dt(rockchip);
->  	if (err)
-> -		return err;
-> +		/* It's safe to disable wake even not enabled */
-> +		goto err_disable_wake;
->  
->  	err = clk_prepare_enable(rockchip->aclk_pcie);
->  	if (err) {
->  		dev_err(dev, "unable to enable aclk_pcie clock\n");
-> -		return err;
-> +		goto err_disable_wake;
->  	}
->  
->  	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
-> @@ -1633,6 +1644,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->  	clk_disable_unprepare(rockchip->aclk_perf_pcie);
->  err_disable_aclk_pcie:
->  	clk_disable_unprepare(rockchip->aclk_pcie);
-> +err_disable_wake:
-> +	dev_pm_clear_wake_irq(dev);
-> +	device_init_wakeup(dev, false);
->  	return err;
->  }
->  
-> @@ -1662,6 +1676,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
->  	if (!IS_ERR(rockchip->vpcie12v))
->  		regulator_disable(rockchip->vpcie12v);
->  
-> +	dev_pm_clear_wake_irq(dev);
-> +	device_init_wakeup(dev, false);
-> +
->  	return 0;
->  }
->  
-> -- 
-> 2.11.0
-> 
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    PCI: keystone: Remove duplicate MAX_*_IRQS defs
+    
+    MAX_MSI_HOST_IRQS and MAX_LEGACY_HOST_IRQS are defined in both
+    pci-keystone.h (which is included by pci-keystone.c) and in pci-keystone.c
+    itself.
+    
+    Remove the duplicate definitions from pci-keystone.c.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Cc: Murali Karicheri <m-karicheri2@ti.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index 4783cec1f78d..fb8504690923 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -32,10 +32,6 @@
+ 
+ #define DRIVER_NAME	"keystone-pcie"
+ 
+-/* driver specific constants */
+-#define MAX_MSI_HOST_IRQS		8
+-#define MAX_LEGACY_HOST_IRQS		4
+-
+ /* DEV_STAT_CTRL */
+ #define PCIE_CAP_BASE		0x70
+ 
+
+commit da4c4be36dc347b9b7eb0760054caa53e31abcc0
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Tue Aug 15 16:27:57 2017 -0500
+
+    PCI: keystone: Use PCI_NUM_INTX
+    
+    Switch from using custom MAX_LEGACY_IRQS and MAX_LEGACY_HOST_IRQS macros to
+    the generic PCI_NUM_INTX definition for the number of INTx interrupts.
+    
+    Based-on-similar-patches-by: Paul Burton <paul.burton@imgtec.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Cc: Murali Karicheri <m-karicheri2@ti.com>
+
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index df60f48716d9..3b0f206590f9 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -251,7 +251,7 @@ void ks_dw_pcie_enable_legacy_irqs(struct keystone_pcie *ks_pcie)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < MAX_LEGACY_IRQS; i++)
++	for (i = 0; i < PCI_NUM_INTX; i++)
+ 		ks_dw_app_writel(ks_pcie, IRQ_ENABLE_SET + (i << 4), 0x1);
+ }
+ 
+@@ -557,7 +557,7 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 	/* Create legacy IRQ domain */
+ 	ks_pcie->legacy_irq_domain =
+ 			irq_domain_add_linear(ks_pcie->legacy_intc_np,
+-					MAX_LEGACY_IRQS,
++					PCI_NUM_INTX,
+ 					&ks_dw_pcie_legacy_irq_domain_ops,
+ 					NULL);
+ 	if (!ks_pcie->legacy_irq_domain) {
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index fb8504690923..9256b04e0c50 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -169,7 +169,7 @@ static int ks_pcie_get_irq_controller_info(struct keystone_pcie *ks_pcie,
+ 
+ 	if (legacy) {
+ 		np_temp = &ks_pcie->legacy_intc_np;
+-		max_host_irqs = MAX_LEGACY_HOST_IRQS;
++		max_host_irqs = PCI_NUM_INTX;
+ 		host_irqs = &ks_pcie->legacy_host_irqs[0];
+ 	} else {
+ 		np_temp = &ks_pcie->msi_intc_np;
+diff --git a/drivers/pci/dwc/pci-keystone.h b/drivers/pci/dwc/pci-keystone.h
+index 74c5825882df..30b7bc2ac380 100644
+--- a/drivers/pci/dwc/pci-keystone.h
++++ b/drivers/pci/dwc/pci-keystone.h
+@@ -12,9 +12,7 @@
+  * published by the Free Software Foundation.
+  */
+ 
+-#define MAX_LEGACY_IRQS			4
+ #define MAX_MSI_HOST_IRQS		8
+-#define MAX_LEGACY_HOST_IRQS		4
+ 
+ struct keystone_pcie {
+ 	struct dw_pcie		*pci;
+@@ -22,7 +20,7 @@ struct keystone_pcie {
+ 	/* PCI Device ID */
+ 	u32			device_id;
+ 	int			num_legacy_host_irqs;
+-	int			legacy_host_irqs[MAX_LEGACY_HOST_IRQS];
++	int			legacy_host_irqs[PCI_NUM_INTX];
+ 	struct			device_node *legacy_intc_np;
+ 
+ 	int			num_msi_host_irqs;
