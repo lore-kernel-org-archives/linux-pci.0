@@ -1,48 +1,315 @@
-Return-Path: <robh@kernel.org>
-Return-Path: <robh@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170802223928.GQ20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170718214339.7774-41-robh@kernel.org> <20170802223928.GQ20308@bhelgaas-glaptop.roam.corp.google.com>
-From: Rob Herring <robh@kernel.org>
-Date: Wed, 9 Aug 2017 17:04:43 -0500
-Message-ID: <CAL_JsqLznQdnWw+A2T8V8CTktYaPDF_800jGHAVa=G-Yhxyn+Q@mail.gmail.com>
-Subject: Re: [PATCH] PCI: Convert to using %pOF instead of full_name
+Return-Path: <SRS0=pWib=7S=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=pWib=7S=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V2] PCI/DPC: Add eDPC support
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>,
-	Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter <jonathanh@nvidia.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Content-Type: text/plain; charset="UTF-8"
+References: <1500716399-85612-1-git-send-email-liudongdong3@huawei.com>
+ <20170814201649.GC32525@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>,
+        Keith Busch
+	<keith.busch@intel.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <c55dc155-f17b-3598-b962-f32c1c909a7b@huawei.com>
+Date: Wed, 16 Aug 2017 15:22:58 +0800
+MIME-Version: 1.0
+In-Reply-To: <20170814201649.GC32525@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 2, 2017 at 5:39 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Tue, Jul 18, 2017 at 04:43:21PM -0500, Rob Herring wrote:
->> Now that we have a custom printf format specifier, convert users of
->> full_name to use %pOF instead. This is preparation to remove storing
->> of the full path string for each node.
->>
->> Signed-off-by: Rob Herring <robh@kernel.org>
->> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
->> Cc: Jason Cooper <jason@lakedaemon.net>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Thierry Reding <thierry.reding@gmail.com>
->> Cc: Jonathan Hunter <jonathanh@nvidia.com>
->> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
->> Cc: Paul Mackerras <paulus@samba.org>
->> Cc: Michael Ellerman <mpe@ellerman.id.au>
->> Cc: linux-pci@vger.kernel.org
->> Cc: linux-arm-kernel@lists.infradead.org
->> Cc: linux-tegra@vger.kernel.org
->> Cc: linuxppc-dev@lists.ozlabs.org
+Hi Bjron
+
+Many thanks for your review.
+
+在 2017/8/15 4:16, Bjorn Helgaas 写道:
+> [+cc Keith]
 >
-> Applied to pci/misc for v4.14, thanks!
+> Keith, any comments on this?  I have a few minor ones below.
+>
+> On Sat, Jul 22, 2017 at 05:39:59PM +0800, Dongdong Liu wrote:
+>> This code is to add eDPC support. Get and print the RP PIO error
+>> information when the trigger condition is RP PIO error.
+>>
+>> For more information on eDPC, view the PCI-SIG eDPC ECN here:
+>> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
+>
+> The ECN link is nice because I think it's available to anyone, but we
+> should include the PCIe spec references as well, since this ECN was
+> incorporated into PCIe r3.1, and for people who have the spec, that's
+> easier than chasing down each ECN separately.
 
-This hasn't shown up in -next.
+Ok, change it as below.
+For more information on eDPC, please see PCI Express Base Specification
+Revision 3.1, section 6.2.10.3, or view the PCI-SIG eDPC ECN here:
+https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
 
-Rob
+>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> ---
+>> v1-->v2: Use a stack local variable instead of the allocated memory for
+>> 	 collecting RP PIO information.
+>> 	 Fix the condition of RP PIO error.
+>> 	 rebase on v4.13-rc1
+>> ---
+>>  drivers/pci/pcie/pcie-dpc.c   | 160 ++++++++++++++++++++++++++++++++++++++++++
+>>  include/uapi/linux/pci_regs.h |  10 +++
+>>  2 files changed, 170 insertions(+)
+>>
+>> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+>> index c39f32e..724c548 100644
+>> --- a/drivers/pci/pcie/pcie-dpc.c
+>> +++ b/drivers/pci/pcie/pcie-dpc.c
+>> @@ -16,11 +16,55 @@
+>>  #include <linux/pcieport_if.h>
+>>  #include "../pci.h"
+>>
+>> +struct rp_pio_header_log_regs {
+>> +	u32 dw0;
+>> +	u32 dw1;
+>> +	u32 dw2;
+>> +	u32 dw3;
+>> +};
+>> +
+>> +struct dpc_rp_pio_regs {
+>> +	u32 status;
+>> +	u32 mask;
+>> +	u32 severity;
+>> +	u32 syserror;
+>> +	u32 exception;
+>> +
+>> +	struct rp_pio_header_log_regs header_log;
+>> +	u32 impspec_log;
+>> +	u32 tlp_prefix_log[4];
+>> +	u32 log_size;
+>> +	u16 first_error;
+>> +};
+>> +
+>>  struct dpc_dev {
+>>  	struct pcie_device	*dev;
+>>  	struct work_struct	work;
+>>  	int			cap_pos;
+>>  	bool			rp;
+>> +	u32			rp_pio_status;
+>> +};
+>> +
+>> +static const char * const rp_pio_error_string[] = {
+>> +	"Configuration Request received UR Completion",	 /* Bit Position 0  */
+>> +	"Configuration Request received CA Completion",	 /* Bit Position 1  */
+>> +	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
+>> +	NULL,
+>> +	NULL,
+>> +	NULL,
+>> +	NULL,
+>> +	NULL,
+>> +	"I/O Request received UR Completion",		 /* Bit Position 8  */
+>> +	"I/O Request received CA Completion",		 /* Bit Position 9  */
+>> +	"I/O Request Completion Timeout",		 /* Bit Position 10 */
+>> +	NULL,
+>> +	NULL,
+>> +	NULL,
+>> +	NULL,
+>> +	NULL,
+>> +	"Memory Request received UR Completion",	 /* Bit Position 16 */
+>> +	"Memory Request received CA Completion",	 /* Bit Position 17 */
+>> +	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+>>  };
+>>
+>>  static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+>> @@ -79,10 +123,121 @@ static void interrupt_event_handler(struct work_struct *work)
+>>  	dpc_wait_link_inactive(pdev);
+>>  	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+>>  		return;
+>> +	if (dpc->rp && dpc->rp_pio_status)
+>> +		pci_write_config_dword(pdev,
+>> +				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+>> +				      dpc->rp_pio_status);
+>> +
+>>  	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+>>  		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+>>  }
+>>
+>> +static void dpc_rp_pio_print_tlp_header(struct pci_dev *dev,
+>> +					struct rp_pio_header_log_regs *t)
+>> +{
+>> +	dev_err(&dev->dev, "TLP Header: %08x %08x %08x %08x\n",
+>> +		t->dw0, t->dw1, t->dw2, t->dw3);
+>> +}
+>> +
+>> +static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
+>> +				   struct dpc_rp_pio_regs *rp_pio)
+>> +{
+>> +	struct pci_dev *pdev = dpc->dev->port;
+>
+>   struct device *dev = &pdev->dev;
+>
+> as in 7d630aaaa27f ("PCI: versatile: Add local struct device
+> pointers").
+
+Ok, I will fix it in PATCH V3.
+
+>
+> The existing code (before this patch) sometimes uses &pdev->dev and
+> sometimes &dpc->dev->device.  I'm not sure why the difference and I
+> wish they were all consistent.
+
+I investigate current port service drivers.
+AER and PME driver xxx_probe() use &dev->port->dev (&pdev->dev)
+But DPC and HP xxx_probe() use &dev->device (&dpc->dev->device)
+So should we need to modify them to keep consistent?
+It is better to write a seperate patch if need.
+
+>
+>> +	int i;
+>> +	u32 status;
+>> +
+>> +	dev_err(&pdev->dev, "rp_pio_status: 0x%08x, rp_pio_mask: 0x%08x\n",
+>> +			    rp_pio->status, rp_pio->mask);
+>
+>> +
+>> +	dev_err(&pdev->dev, "RP PIO severity=0x%08x, syserror=0x%08x, exception=0x%08x\n",
+>
+> Nit: use %#010x as in rest of the file.
+
+will fix.
+>
+>> +		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
+>> +
+>> +	status = (rp_pio->status & ~rp_pio->mask);
+>> +
+>> +	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
+>> +		if (!(status & (1 << i)))
+>> +			continue;
+>> +
+>> +		dev_err(&pdev->dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
+>> +			rp_pio->first_error == i ? " (First)" : "");
+>> +	}
+>> +
+>> +	dpc_rp_pio_print_tlp_header(pdev, &rp_pio->header_log);
+>> +	if (rp_pio->log_size == 4)
+>> +		return;
+>> +	dev_err(&pdev->dev, "RP PIO ImpSpec Log %08x\n", rp_pio->impspec_log);
+>
+> Ditto.
+will fix.
+>
+>> +
+>> +	for (i = 0; i < rp_pio->log_size - 5; i++)
+>> +		dev_err(&pdev->dev, "TLP Prefix Header: dw%d, %08x\n", i,
+>> +			rp_pio->tlp_prefix_log[i]);
+>> +}
+>> +
+>> +static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
+>> +				struct dpc_rp_pio_regs *rp_pio)
+>> +{
+>> +	struct pci_dev *pdev = dpc->dev->port;
+>> +	int i;
+>> +	u16 cap;
+>> +	u16 status;
+>> +
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
+>> +			      &rp_pio->status);
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
+>> +			      &rp_pio->mask);
+>> +
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
+>> +			      &rp_pio->severity);
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
+>> +			      &rp_pio->syserror);
+>> +	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
+>> +			      &rp_pio->exception);
+>> +
+>> +	/* Get First Error Pointer */
+>> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
+>> +	rp_pio->first_error = (status & 0x1f00) >> 8;
+>> +
+>> +	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+>> +	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
+>> +	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
+>> +		dev_err(&pdev->dev, "RP PIO log size %u is invaild\n",
+>
+> s/invaild/invalid/
+
+Sorry, spell error, will fix.
+
+>
+>> +			rp_pio->log_size);
+>> +		return;
+>> +	}
+>> +
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
+>> +			      &rp_pio->header_log.dw0);
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
+>> +			      &rp_pio->header_log.dw1);
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
+>> +			      &rp_pio->header_log.dw2);
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
+>> +			      &rp_pio->header_log.dw3);
+>> +	if (rp_pio->log_size == 4)
+>> +		return;
+>> +
+>> +	pci_read_config_dword(pdev,
+>> +			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
+>> +			      &rp_pio->impspec_log);
+>> +	for (i = 0; i < rp_pio->log_size - 5; i++)
+>> +		pci_read_config_dword(pdev,
+>> +			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
+>> +			&rp_pio->tlp_prefix_log[i]);
+>> +}
+>> +
+>> +static void dpc_precess_rp_pio_error(struct dpc_dev *dpc)
+>
+> s/precess/process/
+will fix.
+
+>
+>> +{
+>> +	struct dpc_rp_pio_regs rp_pio_regs;
+>
+> Is there value in defining the struct dpc_rp_pio_regs, reading all the
+> info into it with one function, then having a second function to print
+> the info?
+Yes, that is the function do.
+
+>
+> It seems like you could have a single function that prints the info as
+> it reads it, without having to define a new struct.
+
+It seems to have too many lines if having a single function,
+and struct dpc_rp_pio_regs rp_pio_regs is a stack local variable.
+So I think current code is ok.
+
+>
+>> +	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
+>> +	dpc_rp_pio_print_error(dpc, &rp_pio_regs);
+>> +
+>> +	dpc->rp_pio_status = rp_pio_regs.status;
+>> +}
+>> +
+>>  static irqreturn_t dpc_irq(int irq, void *context)
+>>  {
+>>  	struct dpc_dev *dpc = (struct dpc_dev *)context;
+>> @@ -109,6 +264,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+>>  			 (ext_reason == 0) ? "RP PIO error" :
+>>  			 (ext_reason == 1) ? "software trigger" :
+>>  					     "reserved error");
+>> +		/* show RP PIO error detail information */
+>> +		if (reason == 3 && ext_reason == 0)
+>> +			dpc_precess_rp_pio_error(dpc);
+>> +
+>>  		schedule_work(&dpc->work);
+>>  	}
+>>  	return IRQ_HANDLED;
+>> @@ -144,6 +303,7 @@ static int dpc_probe(struct pcie_device *dev)
+>>
+>>  	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+>>
+>> +
+>
+> Spurious whitespace addition.
+will delete the whitespace.
+
+Thanks,
+Dongdong
