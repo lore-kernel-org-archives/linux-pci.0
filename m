@@ -1,112 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:35624 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:40260 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751632AbdHAIY3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 1 Aug 2017 04:24:29 -0400
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: Support SVM without PASID
-To: valmiki <valmikibow@gmail.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Cc: iommu@lists.linux-foundation.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, tianyu.lan@intel.com,
-        kevin.tian@intel.com, jacob.jun.pan@intel.com
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
-Message-ID: <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
-Date: Tue, 1 Aug 2017 09:26:14 +0100
+        id S1752360AbdHPOHr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 10:07:47 -0400
+Date: Wed, 16 Aug 2017 09:07:45 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
+        charles.chenxin@huawei.com, linuxarm@huawei.com
+Subject: Re: [PATCH] PCIe AER: report non fatal errors only to the functions
+ of the same device
+Message-ID: <20170816140744.GW32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501813106-89672-1-git-send-email-liudongdong3@huawei.com>
+ <20170815225007.GS32525@bhelgaas-glaptop.roam.corp.google.com>
+ <025ad3e8-7411-6e97-29ba-6e5cfa7665eb@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <025ad3e8-7411-6e97-29ba-6e5cfa7665eb@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Valmiki,
-
-Sorry for the delay, I was away last week.
-
-On 22/07/17 03:05, valmiki wrote:
-> On 7/12/2017 10:18 PM, Jean-Philippe Brucker wrote:
->> On 12/07/17 17:27, valmiki wrote:
->>> On 7/11/2017 4:26 PM, Jean-Philippe Brucker wrote:
->>>> Hi Valmiki,
->>>>
->>>> On 09/07/17 04:15, valmiki wrote:
->>>>>>> Hi,
->>>>>>>
->>>>>>> In SMMUv3 architecture document i see "PASIDs are optional,
->>>>>>> configurable, and of a size determined by the minimum
->>>>>>> of the endpoint".
->>>>>>>
->>>>>>> So if PASID's are optional and not supported by PCIe end point, how
->>>>>>> SVM
->>>>>>> can be achieved ?
->>>>>>
->>>>>> It cannot be inferred from that statement that PASID support is not
->>>>>> required for SVM.  AIUI, SVM is a software feature enabled by numerous
->>>>>> "optional" hardware features, including PASID.  Features that are
->>>>>> optional per the hardware specification may be required for specific
->>>>>> software features.  Thanks,
->>>>>>
->>>>> Thanks for the information Alex. Suppose if an End point doesn't support
->>>>> PASID, is it still possible to achieve SVM ?
->>>>> Are there any such features in SMMUv3 with which we can achieve it ?
->>>>
->>>> Not really, we don't plan to share the non-PASID context with a process.
->>>>
->>>> In theory you could achieve something resembling SVM by assigning the
->>>> entire endpoint to userspace using VFIO, then use ATS+PRI capabilities
->>>> with a bind ioctl. If your device can do SR-IOV, then you can bind one
->>>> process per virtual function.
->>>>
->>>> Unless we end up seeing lots of endpoints that implement PRI but not
->>>> PASID, I don't plan to add this to VFIO or SMMUv3.
->>>>
->>>> For a PCIe endpoint, the requirements for SVM are ATS, PRI and PASID
->>>> enabled. In addition, the SMMU should support DVM (broadcast TLB
->>>> maintenance) and must be compatible with the MMU (page sizes, output
->>>> address size, ASID bits...)
->>>>
->>> Thanks Jean.
->>> In SMMU document it was quoted as follows
->>> "When STE.S1DSS==0b10, a transaction without a SubstreamID is accepted and
->>> uses the CD of Substream 0. Under this configuration, transactions that
->>> arrive with SubstreamID 0 are aborted and an event recorded."
->>>
->>> Is this mode supported in your previous series of SMMUv3 patches ?
->>> If it is supported is it achieved through VFIO ?
->>
->> Yes, STE.S1DSS==0b10 is the only supported mode with my patches. And in
->> VFIO, the non-PASID context (CD 0) is managed with
->> VFIO_IOMMU_MAP/UNMAP_DMA ioctls, mirroring the current behavior for
->> devices that don't support PASID. All other CDs, with PASID > 0, are
->> managed via the new BIND ioctl.
+On Wed, Aug 16, 2017 at 04:50:16PM +0800, Dongdong Liu wrote:
+> Hi Bjorn
 > 
-> Thanks Jean, this helps a lot.
-> So i digged through your patches and i understood that using BIND ioctls
-> satge-1 translations are setup in SMMU for an application.
-> If we use VFIO_IOMMU_MAP/UNMAP_DMA ioctls they are setting up stage-2
-> translations in SMMU.
-> So without PASID support we can only work with stage-2 translations ?
+> 在 2017/8/16 6:50, Bjorn Helgaas 写道:
+> >On Fri, Aug 04, 2017 at 10:18:26AM +0800, Dongdong Liu wrote:
+> >>From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >>
+> >>Currently if an uncorrectable error is reported by an EP the AER
+> >>driver walks over all the devices connected to the upstream port
+> >>bus and in turns call the report_error_detected() callback.
+> >>If any of the devices connected to the bus does not implement
+> >>dev->driver->err_handler->error_detected() do_recovery() will fail.
+> >>
+> >>However for non fatal errors the PCIe link should not be considered
+> >>compromised, therefore it makes sense to report the error only to
+> >>all the functions of a multifunction device.
+> >>This patch implements this new behaviour for non fatal errors.
+> >
+> >Why do we bother even with other functions in the same multifunction
+> >device?  PCIe r3.1, sec 6.2.2.2.2, says non-fatal errors only affect a
+> >particular transaction, and "devices not associated with the
+> >transaction in error are not impacted."
+> >
+> >A transaction is only associated with one function, so other functions
+> >in the same device shouldn't be affected, should they?
+> 
+> PCIe r3.1, sec 6.2.4 Error Logging
+> PCI Express errors are not Function-specific.  "Software is
+> responsible for scanning all Functions in a multi-Function device
+> when it detects one of those errors"
 
-It depends what type you use when registering the IOMMU with VFIO_SET_IOMMU:
+The previous text basically says that if a multi-function device
+should generate at most one error reporting message, even if several
+functions have logged an error of the same severity.  I think that
+single message corresponds to a single interrupt.
 
-* If the type is VFIO_TYPE1v2_IOMMU, then VFIO_IOMMU_MAP/UNMAP_DMA
-  affects the stage-1 non-PASID context (already the case in mainline).
-  In addition, with my patch the BIND ioctl will affect stage-1 PASID
-  contexts, and bind process page directories to the device (host SVM).
+So when it says "software is responsible for scanning all Functions in
+a multi-Function device," I think the point is that software should
+read the error reporting registers of all functions in case several of
+them have logged errors.
 
-* If the type is VFIO_TYPE1_NESTING_IOMMU, then VFIO_IOMMU_MAP/UNMAP_DMA
-  will affect stage-2 mappings (already in mainline).
-  With my SMMU patch series, the BIND ioctl is not supported in this mode.
-  But in the future, BIND would allow to manage stage-1 as well:
-  - bind a process page directory (host SVM with added stage-2), or
-  - bind a guest page directory (viommu), or
-  - bind the full stage-1 context table (viommu).
+But IIUC, this patch has nothing to do with reading the error CSRs
+(which should be done in the PCI/AER core).  This patch merely changes
+the set of devices for which we call the driver's error reporting
+interfaces.
 
-Thanks,
-Jean
+If this is fixing a problem, maybe it would help clarify things if you
+could include the concrete details of what's going wrong.
+
+Bjorn
+
+> >>Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >>Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> >>---
+> >> drivers/pci/bus.c                  | 38 ++++++++++++++++++++++++++++++++++++++
+> >> drivers/pci/pcie/aer/aerdrv_core.c | 13 ++++++++++++-
+> >> include/linux/pci.h                |  3 ++-
+> >> 3 files changed, 52 insertions(+), 2 deletions(-)
+> >>
+> >>diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+> >>index bc56cf1..bc8f8b2 100644
+> >>--- a/drivers/pci/bus.c
+> >>+++ b/drivers/pci/bus.c
+> >>@@ -364,6 +364,44 @@ void pci_bus_add_devices(const struct pci_bus *bus)
+> >> }
+> >> EXPORT_SYMBOL(pci_bus_add_devices);
+> >>
+> >>+/** pci_walk_mf_dev - walk all functions of a multi-function
+> >>+ *  device calling callback.
+> >>+ *  @dev      a function in a multi-function device
+> >>+ *  @cb       callback to be called for each device found
+> >>+ *  @userdata arbitrary pointer to be passed to callback.
+> >>+ *
+> >>+ *  Walk, on a given bus, only the adjacent functions of a
+> >>+ *  multi-function device. Call the provided callback on each
+> >>+ *  device found.
+> >>+ *
+> >>+ *  We check the return of @cb each time. If it returns anything
+> >>+ *  other than 0, we break out.
+> >>+ *
+> >>+ */
+> >>+void pci_walk_mf_dev(struct pci_dev *dev, int (*cb)(struct pci_dev *, void *),
+> >>+		  void *userdata)
+> >>+{
+> >>+	int retval;
+> >>+	struct pci_bus *bus;
+> >>+	struct pci_dev *pdev;
+> >>+	int ndev;
+> >>+
+> >>+	bus = dev->bus;
+> >>+	ndev = PCI_SLOT(dev->devfn);
+> >>+
+> >>+	down_read(&pci_bus_sem);
+> >>+	/* call cb for all the functions of the mf device */
+> >>+	list_for_each_entry(pdev, &bus->devices, bus_list) {
+> >>+		if (PCI_SLOT(pdev->devfn) == ndev) {
+> >>+			retval = cb(pdev, userdata);
+> >>+			if (retval)
+> >>+				break;
+> >>+		}
+> >>+	}
+> >>+	up_read(&pci_bus_sem);
+> >>+}
+> >>+EXPORT_SYMBOL_GPL(pci_walk_mf_dev);
+> >>+
+> >> /** pci_walk_bus - walk devices on/under bus, calling callback.
+> >>  *  @top      bus whose devices should be walked
+> >>  *  @cb       callback to be called for each device found
+> >>diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+> >>index b1303b3..67c3dc0 100644
+> >>--- a/drivers/pci/pcie/aer/aerdrv_core.c
+> >>+++ b/drivers/pci/pcie/aer/aerdrv_core.c
+> >>@@ -390,7 +390,18 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+> >> 		 * If the error is reported by an end point, we think this
+> >> 		 * error is related to the upstream link of the end point.
+> >> 		 */
+> >>-		pci_walk_bus(dev->bus, cb, &result_data);
+> >>+		if ((state == pci_channel_io_normal) &&
+> >>+				(!pci_ari_enabled(dev->bus)))
+> >>+			/*
+> >>+			 * the error is non fatal so the bus is ok, just walk
+> >>+			 * through all the functions in a multifunction device.
+> >>+			 * if ARI is enabled on the bus then there can be only
+> >>+			 * one device under that bus (so walk all the functions
+> >>+			 * under the bus).
+> >>+			 */
+> >>+			pci_walk_mf_dev(dev, cb, &result_data);
+> >>+		else
+> >>+			pci_walk_bus(dev->bus, cb, &result_data);
+> >> 	}
+> >>
+> >> 	return result_data.result;
+> >>diff --git a/include/linux/pci.h b/include/linux/pci.h
+> >>index 4869e66..69e77bb 100644
+> >>--- a/include/linux/pci.h
+> >>+++ b/include/linux/pci.h
+> >>@@ -1269,7 +1269,8 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
+> >> 					 struct pci_dev *dev);
+> >> int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+> >> 		    int pass);
+> >>-
+> >>+void pci_walk_mf_dev(struct pci_dev *dev, int (*cb)(struct pci_dev *, void *),
+> >>+		  void *userdata);
+> >> void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+> >> 		  void *userdata);
+> >> int pci_cfg_space_size(struct pci_dev *dev);
+> >>--
+> >>1.9.1
+> >>
+> >
+> >.
+> >
+> 
