@@ -1,44 +1,56 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:40522 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751219AbdHFAEO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 20:04:14 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v6 0/6] PCI: xilinx: Fixes, optimisation & MIPS support
-Date: Sat, 5 Aug 2017 17:03:45 -0700
-Message-ID: <20170806000351.17952-1-paul.burton@imgtec.com>
+Received: from mail.kernel.org ([198.145.29.99]:58580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751588AbdHPQV3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 12:21:29 -0400
+Date: Wed, 16 Aug 2017 11:21:27 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, gabriele.paoloni@huawei.com,
+        charles.chenxin@huawei.com, linuxarm@huawei.com,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH V2] PCI/DPC: Add eDPC support
+Message-ID: <20170816162127.GA28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <1500716399-85612-1-git-send-email-liudongdong3@huawei.com>
+ <20170814201649.GC32525@bhelgaas-glaptop.roam.corp.google.com>
+ <c55dc155-f17b-3598-b962-f32c1c909a7b@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <c55dc155-f17b-3598-b962-f32c1c909a7b@huawei.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series fixes an issue found using INTx interrupts with the Xilinx
-AXI PCIe Host Bridge IP on the Imagination Technologies MIPS Boston
-development board, performs a couple of optimisations to interrupt
-handling & allows the driver to be used on MIPS systems.
+On Wed, Aug 16, 2017 at 03:22:58PM +0800, Dongdong Liu wrote:
+> 在 2017/8/15 4:16, Bjorn Helgaas 写道:
 
-Applies atop v4.13-rc3.
+> >The existing code (before this patch) sometimes uses &pdev->dev and
+> >sometimes &dpc->dev->device.  I'm not sure why the difference and I
+> >wish they were all consistent.
+> 
+> I investigate current port service drivers.
+> AER and PME driver xxx_probe() use &dev->port->dev (&pdev->dev)
+> But DPC and HP xxx_probe() use &dev->device (&dpc->dev->device)
+> So should we need to modify them to keep consistent?
+> It is better to write a seperate patch if need.
 
-Paul Burton (6):
-  PCI: Move enum pci_interrupt_pin to a new common header
-  PCI: Introduce pci_irqd_intx_xlate()
-  PCI: xilinx: Translate INTx range to hwirqs 0-3
-  PCI: xilinx: Unify INTx & MSI interrupt decode
-  PCI: xilinx: Don't enable config completion interrupts
-  PCI: xilinx: Allow build on MIPS platforms
+My first complaint is that even within DPC we aren't consistent.  We
+should fix that first.  And yes, this should be a separate patch.  
 
- drivers/pci/host/Kconfig       |  2 +-
- drivers/pci/host/pcie-xilinx.c | 58 +++++++++++++++---------------------------
- include/linux/pci-common.h     | 31 ++++++++++++++++++++++
- include/linux/pci-epf.h        |  9 +------
- include/linux/pci.h            | 33 ++++++++++++++++++++++++
- 5 files changed, 87 insertions(+), 46 deletions(-)
- create mode 100644 include/linux/pci-common.h
+It'd be nice if AER/PME/DPC/HP were also all consistent, but we can
+defer that.
 
--- 
-2.13.4
+> >Is there value in defining the struct dpc_rp_pio_regs, reading all the
+> >info into it with one function, then having a second function to print
+> >the info?
+> Yes, that is the function do.
+> 
+> >It seems like you could have a single function that prints the info as
+> >it reads it, without having to define a new struct.
+> 
+> It seems to have too many lines if having a single function,
+> and struct dpc_rp_pio_regs rp_pio_regs is a stack local variable.
+> So I think current code is ok.
+
+OK.
+
+Bjorn
