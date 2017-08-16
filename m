@@ -1,142 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:33314 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754249AbdHYBW6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 21:22:58 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: <kishon@ti.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 05/10] ARM: dts: am57xx-idk: Move common MMC/SD properties to common file
+Date: Wed, 16 Aug 2017 19:15:03 +0530
+Message-ID: <20170816134508.8887-6-kishon@ti.com>
+In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
+References: <20170816134508.8887-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu-ho_ipsuAViyaDY6=m+NO7Y-hpZ2TEz=7WgVJP-i+eAw@mail.gmail.com>
-References: <20170824184321.19432-1-ard.biesheuvel@linaro.org>
- <20170824184321.19432-4-ard.biesheuvel@linaro.org> <CAL_JsqJTGeLv-c0wXCvMZggU4yzo__s-pD7qEZ7Q3w8=uUuu4Q@mail.gmail.com>
- <CAKv+Gu-D0tgygJ84iGEoEU9OcjUwrtvS2Z2wrOHAZ9kO_kE_rA@mail.gmail.com>
- <CAL_JsqJkDmT3_Umhi+y9e6qML+Ei=ee7G7EohpoMJacBeecirQ@mail.gmail.com> <CAKv+Gu-ho_ipsuAViyaDY6=m+NO7Y-hpZ2TEz=7WgVJP-i+eAw@mail.gmail.com>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 24 Aug 2017 20:22:36 -0500
-Message-ID: <CAL_JsqJz9THQ4jnZQJCNmk96-jvG2MKgcp9oiPT4=R36PW-=+A@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] dt-bindings: designware: add binding for
- Designware PCIe in ECAM mode
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Marcin Wojtas <mw@semihalf.com>,
-        Leif Lindholm <leif.lindholm@linaro.org>,
-        Graeme Gregory <graeme.gregory@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 5:37 PM, Ard Biesheuvel
-<ard.biesheuvel@linaro.org> wrote:
-> On 24 August 2017 at 23:12, Rob Herring <robh@kernel.org> wrote:
->> On Thu, Aug 24, 2017 at 3:12 PM, Ard Biesheuvel
->> <ard.biesheuvel@linaro.org> wrote:
->>> On 24 August 2017 at 21:02, Rob Herring <robh@kernel.org> wrote:
->>>> Cc the DT list for bindings please.
->>>>
->>>> On Thu, Aug 24, 2017 at 1:43 PM, Ard Biesheuvel
->>>> <ard.biesheuvel@linaro.org> wrote:
->>>>> Describe the binding for firmware-configured instances of the Synopsys
->>>>> Designware PCIe controller in RC mode.
->>>>>
->>>>> Cc: Rob Herring <robh@kernel.org>
->>>>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->>>>> ---
->>>>>  Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
->>>>>  1 file changed, 56 insertions(+)
->>>>>
->>>>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
->>>>> new file mode 100644
->>>>> index 000000000000..b8127b19c220
->>>>> --- /dev/null
->>>>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
->>>>> @@ -0,0 +1,56 @@
->>>>> +* Synopsys Designware PCIe root complex in ECAM mode
->>>>> +
->>>>> +In some cases, firmware may already have configured the Synopsys Designware
->>>>> +PCIe controller in RC mode with static ATU window mappings that cover all
->>>>> +config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
->>>>> +In this case, there is no need for the OS to perform any low level setup
->>>>> +of clocks or device registers, nor is there any reason for the driver to
->>>>> +reconfigure ATU windows for config and/or IO space accesses at runtime.
->>>>> +
->>>>> +Such hardware configurations should be described as "pci-host-ecam-generic"
->>>>> +if they are truly ECAM compatible. Configurations that require no low-level
->>>>> +setup by the OS nor any ATU window reconfiguration at runtime, but do
->>>>> +require special handling for type 0 config TLPs may instead be described as
->>>>> +"snps,dw-pcie-ecam".
->>>>
->>>> Humm, what happens when we have the next exception that's SoC specific
->>>> or another vendor?
->>>
->>> This is not SoC specific, but IP specific. We are working with two
->>> different SoCs from completely different vendors that both synthesized
->>> this IP with a 64 KB ATU window size, not expecting this to break ECAM
->>> compatibility.
->>
->> This case is not SoC specific, but quirks/bugs show up in both places.
->> Plus "dw-pcie" is fairly meaningless because the IP is both
->> configurable and has multiple releases.
->>
->>>> Seems like perhaps "firmware initialized" should
->>>> have been a separate property flag for bootloaders to add rather than
->>>> a compatible string.
->>>>
->>>
->>> Yes, but then you still have 10 different drivers that all retain the
->>> low-level bits that are all different between SoCs. That is exactly
->>> what I want to get rid of, and usually we can do that with existing
->>> bindings, because we simply expose it as pci-host-ecam-generic. Only
->>> in this particular case, that doesn't fly due to the quirk.
->>
->> You can expose it as "vendor,soc-pcie", "pci-host-ecam-generic" and
->> then the kernel can decide. Then you can use: the default ecam driver,
->> the ecam driver but match on "vendor,soc-pcie" for quirks, or a vendor
->> specific driver. The only thing that wouldn't work would be having
->> both quirks in the ecam driver and a vendor driver which IMO we just
->> shouldn't support anyway.
->>
->> Now if you have 10 SoCs all needing this same quirk, then maybe adding
->> "snps,dw-pcie-ecam" addtionally to the above makes sense. But that
->> only saves you match strings.
->>
->
-> Exposing this as "pci-host-ecam-generic" doesn't work, or we wouldn't
-> be having this discussion.
+From: Sekhar Nori <nsekhar@ti.com>
 
-Exposing it *alone* won't work, but you could match on it for the
-driver and then in the probe function have an:
+AM572x IDK and AM571x IDK boards have equivalent
+design of how SD card and eMMC are connected.
 
-if (of_device_is_compatible(np, "marvell,armada8k-pcie-ecam"))
-  // handle device quirk
+The two EVMs mainly differ in IOdelay configuration
+needed (because of difference in SoC used).
 
-I haven't looked at what exactly you need to handle though. I don't
-have the rest of the series.
+Move the common properties to am57xx-idk-common.dtsi
+file which is common for both EVMs.
 
-But since you already know the problem, you could just drop
-"pci-host-ecam-generic" in this case.
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/am571x-idk.dts         | 7 -------
+ arch/arm/boot/dts/am572x-idk.dts         | 8 --------
+ arch/arm/boot/dts/am57xx-idk-common.dtsi | 8 ++++++++
+ 3 files changed, 8 insertions(+), 15 deletions(-)
 
->
-> So if I understand you correctly, you would rather have
->
-> marvell,armada8k-pcie-ecam
-> socionext,synquacer-pcie-ecam
->
-> and add more of those to the list if needed, and update the
-> binding+driver to use those and drop the generic identifier?
-
-Yes, but dropping the generic identifier depends if you know you have
-some problem up front. You do here, but that's not always the case.
-
-The other part is that "pci-host-ecam-generic" alone should not be
-considered valid other than for VM guests. But I can't really enforce
-that.
-
-> I take it
-> that applies to the description of the MSI frame as well?
-
-Probably so. Is there something special about it, too?
-
-Rob
+diff --git a/arch/arm/boot/dts/am571x-idk.dts b/arch/arm/boot/dts/am571x-idk.dts
+index 0c0bb4e93f25..78c5c7462fcc 100644
+--- a/arch/arm/boot/dts/am571x-idk.dts
++++ b/arch/arm/boot/dts/am571x-idk.dts
+@@ -64,13 +64,6 @@
+ 	};
+ };
+ 
+-&mmc1 {
+-	status = "okay";
+-	vmmc-supply = <&ldo1_reg>;
+-	bus-width = <4>;
+-	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
+-};
+-
+ &omap_dwc3_2 {
+ 	extcon = <&extcon_usb2>;
+ };
+diff --git a/arch/arm/boot/dts/am572x-idk.dts b/arch/arm/boot/dts/am572x-idk.dts
+index 604d52554eda..5b22944fedad 100644
+--- a/arch/arm/boot/dts/am572x-idk.dts
++++ b/arch/arm/boot/dts/am572x-idk.dts
+@@ -76,14 +76,6 @@
+ 	vbus-gpio = <&gpio3 26 GPIO_ACTIVE_HIGH>;
+ };
+ 
+-&mmc1 {
+-	status = "okay";
+-	vmmc-supply = <&v3_3d>;
+-	vqmmc-supply = <&ldo1_reg>;
+-	bus-width = <4>;
+-	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
+-};
+-
+ &sn65hvs882 {
+ 	load-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>;
+ };
+diff --git a/arch/arm/boot/dts/am57xx-idk-common.dtsi b/arch/arm/boot/dts/am57xx-idk-common.dtsi
+index c536b2f5389f..97aa8e6a56da 100644
+--- a/arch/arm/boot/dts/am57xx-idk-common.dtsi
++++ b/arch/arm/boot/dts/am57xx-idk-common.dtsi
+@@ -399,6 +399,14 @@
+ 	dr_mode = "peripheral";
+ };
+ 
++&mmc1 {
++	status = "okay";
++	vmmc-supply = <&v3_3d>;
++	vqmmc-supply = <&ldo1_reg>;
++	bus-width = <4>;
++	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>; /* gpio 219 */
++};
++
+ &mmc2 {
+ 	status = "okay";
+ 	vmmc-supply = <&v3_3d>;
+-- 
+2.11.0
