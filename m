@@ -1,58 +1,53 @@
-Return-Path: <SRS0=rMw/=7Z=bombadil.srs.infradead.org=BATV+08196f5b2bd262a84b8d+5113+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=rMw/=7Z=bombadil.srs.infradead.org=BATV+08196f5b2bd262a84b8d+5113+infradead.org+hch@kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: helgaas@kernel.org
-Cc: davem@davemloft.net,
-	mroos@linux.ee,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] PCI/msi: don't warn on irq_create_affinity_masks NULL return
-Date: Wed, 23 Aug 2017 13:54:59 +0200
-Message-Id: <20170823115459.2058-1-hch@lst.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0059.outbound.protection.outlook.com ([104.47.40.59]:61422
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750912AbdHPFOA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 01:14:00 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv3 2/9] PCI: layerscape: move STRFMR1 access out from the DBI write-enable bracket
+Date: Wed, 16 Aug 2017 12:56:52 +0800
+Message-ID: <1502859419-33696-3-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-irq_create_affinity_masks can easily return NULL when there are not
-enough "free" vectors available to spread, while the memory allocation
-failure for the CPU masks not only is unlikely, but also relatively
-harmless as the system will work just fine except for non-optimally
-spread vectors.  Thus remove the warnings.
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The STRFMR1 is not a DBI read-only register, so move it out from the
+write-enable bracket.
+
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 ---
- drivers/pci/msi.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
+V3:
+ - New patch separated from 3/6 patch set v2.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 253d92409bb3..2225afc1cbbb 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -538,12 +538,9 @@ msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
- 	struct msi_desc *entry;
- 	u16 control;
+ drivers/pci/dwc/pci-layerscape.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index aebefb4..c169400 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -162,9 +162,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-	ls_pcie_drop_msg_tlp(pcie);
+ 	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
  
--	if (affd) {
-+	if (affd)
- 		masks = irq_create_affinity_masks(nvec, affd);
--		if (!masks)
--			dev_err(&dev->dev, "can't allocate MSI affinity masks for %d vectors\n",
--				nvec);
--	}
++	ls_pcie_drop_msg_tlp(pcie);
 +
+ 	dw_pcie_setup_rc(pp);
  
- 	/* MSI Entry Initialization */
- 	entry = alloc_msi_entry(&dev->dev, nvec, masks);
-@@ -679,12 +676,8 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
- 	struct msi_desc *entry;
- 	int ret, i;
- 
--	if (affd) {
-+	if (affd)
- 		masks = irq_create_affinity_masks(nvec, affd);
--		if (!masks)
--			dev_err(&dev->dev, "can't allocate MSI-X affinity masks for %d vectors\n",
--				nvec);
--	}
- 
- 	for (i = 0, curmsk = masks; i < nvec; i++) {
- 		entry = alloc_msi_entry(&dev->dev, 1, curmsk);
+ 	return 0;
 -- 
-2.11.0
+2.1.0.27.g96db324
