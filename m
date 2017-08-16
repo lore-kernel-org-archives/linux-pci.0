@@ -1,74 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.141]:49865 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932143AbdHVDUV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2017 23:20:21 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org, bhelgaas@google.com
-Cc: shawn.lin@rock-chips.com, briannorris@chromium.org,
-        dianders@chromium.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie wake irq
-Date: Tue, 22 Aug 2017 11:19:33 +0800
-Message-Id: <20170822031934.8675-4-jeffy.chen@rock-chips.com>
-In-Reply-To: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+Subject: [PATCH v2 06/10] ARM: dts: am571x-idk: Add pinmux configuration for
+ MMC
+Date: Wed, 16 Aug 2017 19:15:04 +0530
+Message-ID: <20170816134508.8887-7-kishon@ti.com>
+In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
+References: <20170816134508.8887-1-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add an optional interrupt for PCIE_WAKE pin.
+Include dra72x-mmc-iodelay.dtsi which has pinmux and IODelay
+configuration values for the various MMC modes for dra72 SoC
+and use it in the pinctrl properties of MMC devicetree
+nodes present in am571x-idk.dts.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
+ arch/arm/boot/dts/am571x-idk.dts | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
- 1 file changed, 12 insertions(+), 8 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-index 5678be82530d..9f6504129e80 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-@@ -20,10 +20,13 @@ Required properties:
- - msi-map: Maps a Requester ID to an MSI controller and associated
- 	msi-specifier data. See ./pci-msi.txt
- - interrupts: Three interrupt entries must be specified.
--- interrupt-names: Must include the following names
--	- "sys"
--	- "legacy"
--	- "client"
-+- interrupt-names: Include the following names
-+	Required:
-+		- "sys"
-+		- "legacy"
-+		- "client"
-+	Optional:
-+		- "wake"
- - resets: Must contain seven entries for each entry in reset-names.
- 	   See ../reset/reset.txt for details.
- - reset-names: Must include the following names
-@@ -87,10 +90,11 @@ pcie0: pcie@f8000000 {
- 	clock-names = "aclk", "aclk-perf",
- 		      "hclk", "pm";
- 	bus-range = <0x0 0x1>;
--	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
--		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
--		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
--	interrupt-names = "sys", "legacy", "client";
-+	interrupts-extended = <&gic GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
-+			      <&gic GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
-+			      <&gic GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>,
-+			      <&gpio0 8 IRQ_TYPE_LEVEL_LOW>;
-+	interrupt-names = "sys", "legacy", "client", "wake";
- 	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
- 	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
- 	assigned-clock-rates = <100000000>;
+diff --git a/arch/arm/boot/dts/am571x-idk.dts b/arch/arm/boot/dts/am571x-idk.dts
+index 78c5c7462fcc..debf9464403e 100644
+--- a/arch/arm/boot/dts/am571x-idk.dts
++++ b/arch/arm/boot/dts/am571x-idk.dts
+@@ -11,6 +11,7 @@
+ #include <dt-bindings/gpio/gpio.h>
+ #include <dt-bindings/interrupt-controller/irq.h>
+ #include "am57xx-idk-common.dtsi"
++#include "dra72x-mmc-iodelay.dtsi"
+ 
+ / {
+ 	model = "TI AM5718 IDK";
+@@ -98,3 +99,21 @@
+ &pcie1_ep {
+ 	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
+ };
++
++&mmc1 {
++	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50", "sdr104";
++	pinctrl-0 = <&mmc1_pins_default>;
++	pinctrl-1 = <&mmc1_pins_hs>;
++	pinctrl-2 = <&mmc1_pins_sdr12>;
++	pinctrl-3 = <&mmc1_pins_sdr25>;
++	pinctrl-4 = <&mmc1_pins_sdr50>;
++	pinctrl-5 = <&mmc1_pins_ddr50_rev20 &mmc1_iodelay_ddr50_conf>;
++	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev20_conf>;
++};
++
++&mmc2 {
++	pinctrl-names = "default", "hs", "ddr_1_8v";
++	pinctrl-0 = <&mmc2_pins_default>;
++	pinctrl-1 = <&mmc2_pins_hs>;
++	pinctrl-2 = <&mmc2_pins_ddr_rev20 &mmc2_iodelay_ddr_conf>;
++};
 -- 
 2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
