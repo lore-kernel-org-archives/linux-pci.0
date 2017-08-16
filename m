@@ -1,132 +1,215 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:22066 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751819AbdHOTEL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 15 Aug 2017 15:04:11 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Paul Burton <paul.burton@imgtec.com>,
-        Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>
-Subject: [PATCH v7 4/8] PCI: xilinx: Translate INTx range to hwirqs 0-3
-Date: Tue, 15 Aug 2017 12:02:19 -0700
-Message-ID: <20170815190223.18807-5-paul.burton@imgtec.com>
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=1zbT=7S=broadcom.com=srinath.mannam@kernel.org>
+Return-Path: <SRS0=1zbT=7S=broadcom.com=srinath.mannam@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com> <20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com>
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+Date: Wed, 16 Aug 2017 22:33:12 +0530
+Message-ID: <CABe79T4ip3m4U_i4k-8hBcONONLXyy83v-BeWk7Rq24CD9Z-9w@mail.gmail.com>
+Subject: Re: [RFC PATCH v3] pci: Concurrency issue during pci enable bridge
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-The pcie-xilinx driver creates an IRQ domain of size 4 for legacy PCI
-INTx interrupts, which at first glance seems reasonable since there are
-4 possible such interrupts. Unfortunately the driver then proceeds to
-use the range 1-4 as the hwirq numbers for INTA-INTD, causing warnings &
-broken interrupts when attempting to use INTD/hwirq=4 due to it being
-beyond the range of the IRQ domain:
+Hi Bjorn,
 
-  WARNING: CPU: 0 PID: 1 at kernel/irq/irqdomain.c:365
-      irq_domain_associate+0x170/0x220
-  error: hwirq 0x4 is too large for dummy
-  Modules linked in:
-  CPU: 0 PID: 1 Comm: swapper/0 Tainted: G        W
-      4.12.0-rc5-00126-g19e1b3a10aad-dirty #427
-  Stack : 0000000000000000 0000000000000004 0000000000000006 ffffffff8092c78a
-          0000000000000061 ffffffff8018bf60 0000000000000000 0000000000000000
-          ffffffff8088c287 ffffffff80811d18 a8000000ffc60000 ffffffff80926678
-          0000000000000001 0000000000000000 ffffffff80887880 ffffffff80960000
-          ffffffff80920000 ffffffff801e6744 ffffffff80887880 a8000000ffc4f8f8
-          000000000000089c ffffffff8018d260 0000000000010000 ffffffff80811d18
-          0000000000000000 0000000000000001 0000000000000000 0000000000000000
-          0000000000000000 a8000000ffc4f840 0000000000000000 ffffffff8042cf34
-          0000000000000000 0000000000000000 0000000000000000 0000000000040c00
-          0000000000000000 ffffffff8010d1c8 0000000000000000 ffffffff8042cf34
-          ...
-  Call Trace:
-  [<ffffffff8010d1c8>] show_stack+0x80/0xa0
-  [<ffffffff8042cf34>] dump_stack+0xd4/0x110
-  [<ffffffff8013ea98>] __warn+0xf0/0x108
-  [<ffffffff8013eb14>] warn_slowpath_fmt+0x3c/0x48
-  [<ffffffff80196528>] irq_domain_associate+0x170/0x220
-  [<ffffffff80196bf0>] irq_create_mapping+0x88/0x118
-  [<ffffffff801976a8>] irq_create_fwspec_mapping+0xb8/0x320
-  [<ffffffff80197970>] irq_create_of_mapping+0x60/0x70
-  [<ffffffff805d1318>] of_irq_parse_and_map_pci+0x20/0x38
-  [<ffffffff8049c210>] pci_fixup_irqs+0x60/0xe0
-  [<ffffffff8049cd64>] xilinx_pcie_probe+0x28c/0x478
-  [<ffffffff804e8ca8>] platform_drv_probe+0x50/0xd0
-  [<ffffffff804e73a4>] driver_probe_device+0x2c4/0x3a0
-  [<ffffffff804e7544>] __driver_attach+0xc4/0xd0
-  [<ffffffff804e5254>] bus_for_each_dev+0x64/0xa8
-  [<ffffffff804e5e40>] bus_add_driver+0x1f0/0x268
-  [<ffffffff804e8000>] driver_register+0x68/0x118
-  [<ffffffff801001a4>] do_one_initcall+0x4c/0x178
-  [<ffffffff808d3ca8>] kernel_init_freeable+0x204/0x2b0
-  [<ffffffff80730b68>] kernel_init+0x10/0xf8
-  [<ffffffff80106218>] ret_from_kernel_thread+0x14/0x1c
+Thank you for the feedback.
 
-Fix this by making use of the new pci_irqd_intx_xlate() helper to
-translate the INTx 1-4 range into the 0-3 range suitable for the IRQ
-domain of size 4, and stop adding 1 to the hwirq number decoded from the
-interrupt FIFO which is already in the range 0-3.
+My comments are in lined.
 
-Whilst we're here we switch to using PCI_NUM_INTX rather than the magic
-number 4, making it clearer what the 4 means.
+On Wed, Aug 16, 2017 at 7:13 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Fri, Aug 04, 2017 at 08:27:28PM +0530, Srinath Mannam wrote:
+>> Concurrency issue is observed during pci enable bridge called
+>> for multiple pci devices initialization in SMP system.
+>>
+>> Setup details:
+>>  - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+>>  - Two EPs are connected to PCIe RC through bridge as shown
+>>    in the below figure.
+>>
+>>                    [RC]
+>>                     |
+>>                  [BRIDGE]
+>>                     |
+>>                -----------
+>>               |           |
+>>              [EP]        [EP]
+>>
+>> Issue description:
+>> After PCIe enumeration completed EP driver probe function called
+>> for both the devices from two CPUS simultaneously.
+>> From EP probe function, pci_enable_device_mem called for both the EPs.
+>> This function called pci_enable_bridge enable for all the bridges
+>> recursively in the path of EP to RC.
+>>
+>> Inside pci_enable_bridge function, at two places concurrency issue is
+>> observed.
+>>
+>> Place 1:
+>>   CPU 0:
+>>     1. Done Atomic increment dev->enable_cnt
+>>        in pci_enable_device_flags
+>>     2. Inside pci_enable_resources
+>>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+>>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>   CPU 1:
+>>     1. Check pci_is_enabled in function pci_enable_bridge
+>>        and it is true
+>>     2. Check (!dev->is_busmaster) also true
+>>     3. Gone into pci_set_master
+>>     4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+>>     5. Ready to set PCI_COMMAND_MASTER (0x4) in
+>>        pci_write_config_word(dev, PCI_COMMAND, cmd)
+>>
+>> By the time of last point for both the CPUs are read value 0 and
+>> ready to write 2 and 4.
+>> After last point final value in PCI_COMMAND register is 4 instead of 6.
+>>
+>> Place 2:
+>>   CPU 0:
+>>     1. Done Atomic increment dev->enable_cnt in
+>>        pci_enable_device_flags
+>>
+>> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+>> ---
+>>  drivers/pci/pci.c | 8 ++++++--
+>>  1 file changed, 6 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index af0cc34..12721df 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -52,6 +52,7 @@ static void pci_pme_list_scan(struct work_struct *work);
+>>  static LIST_HEAD(pci_pme_list);
+>>  static DEFINE_MUTEX(pci_pme_list_mutex);
+>>  static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
+>> +static DEFINE_MUTEX(pci_bridge_mutex);
+>>
+>>  struct pci_pme_device {
+>>       struct list_head list;
+>> @@ -1348,10 +1349,11 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>>       if (bridge)
+>>               pci_enable_bridge(bridge);
+>>
+>> +     mutex_lock(&pci_bridge_mutex);
+>>       if (pci_is_enabled(dev)) {
+>>               if (!dev->is_busmaster)
+>>                       pci_set_master(dev);
+>> -             return;
+>> +             goto end;
+>>       }
+>>
+>>       retval = pci_enable_device(dev);
+>> @@ -1359,6 +1361,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>>               dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+>>                       retval);
+>>       pci_set_master(dev);
+>> +end:
+>> +     mutex_unlock(&pci_bridge_mutex);
+>
+> I think this will deadlock because we're holding pci_bridge_mutex
+> while we call pci_enable_device(), which may recursively call
+> pci_enable_bridge(), which would try to acquire pci_bridge_mutex
+> again.  My original suggestion of a mutex in the host bridge would
+> have the same problem.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
+This extra check "if (bridge && !pci_is_enabled(bridge))" will resolve
+the deadlock in the present patch.
+>
+> We talked about using device_lock() earlier.  You found some problems
+> with that, and I'd like to understand them better.  You said:
+>
+>> But the pci_enable_bridge is called in the context of the driver
+>> probe function, we will have nexted lock problem.
+>
+> The driver core does hold device_lock() while calling the driver probe
+> function, in this path:
+>
+>   device_initial_probe
+>     __device_attach
+>       device_lock(dev)                # <-- lock
+>       __device_attach_driver
+>         ...
+>           pci_device_probe
+>             ...
+>               ->probe                 # driver probe function
+>       device_unlock(dev)              # <-- unlock
+>
+> I didn't see your patch using device_lock(), but what I had in mind
+> was something like the patch below, where pci_enable_bridge() acquires
+> the device_lock() of the bridge.
+>
+> For the sake of argument, assume a hierarchy:
+>
+>   bridge A -> bridge B -> endpoint C
+>
+> Here's what I think will happen:
+>
+>   device_lock(C)                         # driver core
+>     ...
+>       ->probe(C)                         # driver probe function
+>         pci_enable_device_flags(C)
+>           pci_enable_bridge(B)           # enable C's upstream bridge
+>             device_lock(B)
+>             pci_enable_bridge(A)         # enable B's upstream bridge
+>               device_lock(A)             # A has no upstream bridge
+>               pci_enable_device(A)
+>                 do_pci_enable_device(A)  # update A PCI_COMMAND
+>               pci_set_master(A)          # update A PCI_COMMAND
+>               device_unlock(A)
+>             pci_enable_device(B)         # update B PCI_COMMAND
+>             pci_set_master(B)            # update B PCI_COMMAND
+>             device_unlock(B)
+>           do_pci_enable_device(C)        # update C PCI_COMMAND
+>   device_unlock(C)
+>
+> I don't see a nested lock problem here.  What am I missing?
+>From the probe call device_lock will taken to that endpoint and also
+for the bus. In this order
 
----
+pci register driver(C)              #(driver_register())
+device_lock(B);                       # lock for parent (__driver_attach())
+device_lock(C)                       # lock for endpoint (__driver_attach())
+driver probe(C)
+pci_enable_bridge()
+device_lock(B);  # here we see the deadlock.because of parent device lock
 
-Changes in v7: None
-
-Changes in v6:
-- New patch, replacing "PCI: xilinx: Create legacy IRQ domain with size 5".
-
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/host/pcie-xilinx.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index f63fa5e0278c..9a8d5ad1dd70 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -369,6 +369,7 @@ static int xilinx_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
- /* INTx IRQ Domain operations */
- static const struct irq_domain_ops intx_domain_ops = {
- 	.map = xilinx_pcie_intx_map,
-+	.xlate = pci_irqd_intx_xlate,
- };
- 
- /* PCIe HW Functions */
-@@ -440,8 +441,8 @@ static irqreturn_t xilinx_pcie_intr_handler(int irq, void *data)
- 				   XILINX_PCIE_REG_RPIFR1);
- 
- 			/* Handle INTx Interrupt */
--			val = ((val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
--				XILINX_PCIE_RPIFR1_INTR_SHIFT) + 1;
-+			val = (val & XILINX_PCIE_RPIFR1_INTR_MASK) >>
-+				XILINX_PCIE_RPIFR1_INTR_SHIFT;
- 			generic_handle_irq(irq_find_mapping(port->leg_domain,
- 							    val));
- 		}
-@@ -524,7 +525,7 @@ static int xilinx_pcie_init_irq_domain(struct xilinx_pcie_port *port)
- 		return -ENODEV;
- 	}
- 
--	port->leg_domain = irq_domain_add_linear(pcie_intc_node, 4,
-+	port->leg_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
- 						 &intx_domain_ops,
- 						 port);
- 	if (!port->leg_domain) {
--- 
-2.14.1
+>
+> Bjorn
+>
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e8e40dea2842..38154ba628a9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1344,6 +1344,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>         struct pci_dev *bridge;
+>         int retval;
+>
+> +       device_lock(&dev->dev);
+>         bridge = pci_upstream_bridge(dev);
+>         if (bridge)
+>                 pci_enable_bridge(bridge);
+> @@ -1351,7 +1352,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>         if (pci_is_enabled(dev)) {
+>                 if (!dev->is_busmaster)
+>                         pci_set_master(dev);
+> -               return;
+> +               goto out;
+>         }
+>
+>         retval = pci_enable_device(dev);
+> @@ -1359,6 +1360,9 @@ static void pci_enable_bridge(struct pci_dev *dev)
+>                 dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+>                         retval);
+>         pci_set_master(dev);
+> +
+> +out:
+> +       device_unlock(&dev->dev);
+>  }
+>
+>  static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
