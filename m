@@ -1,117 +1,68 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-To: Sinan Kaya <okaya@codeaurora.org>, Borislav Petkov <bp@suse.de>
-Cc: Tony Luck <tony.luck@intel.com>, rjw@rjwysocki.net,
-        lenb@kernel.org, will.deacon@arm.com, james.morse@arm.com,
-        prarit@redhat.com, punit.agrawal@arm.com, shiju.jose@huawei.com,
-        andriy.shevchenko@linux.intel.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
- <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
- <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
- <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
- <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
- <20170830101617.3m266q7xuew6ctxl@pd.tnic>
- <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
- <20170830151601.ro5qt5272e2msevp@pd.tnic>
- <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
-From: "Baicar, Tyler" <tbaicar@codeaurora.org>
-Message-ID: <a074792e-ad43-d4f5-6f99-8fcf8349c7ad@codeaurora.org>
-Date: Wed, 30 Aug 2017 09:42:08 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:33447 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752330AbdHPNqL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2017 09:46:11 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: <kishon@ti.com>, <nsekhar@ti.com>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2 08/10] ARM: dts: dra72-evm: Add pinmux configuration for MMC
+Date: Wed, 16 Aug 2017 19:15:06 +0530
+Message-ID: <20170816134508.8887-9-kishon@ti.com>
+In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
+References: <20170816134508.8887-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <af5dc902-faca-a7a1-6781-95ff82d5d8fd@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 8/30/2017 9:31 AM, Sinan Kaya wrote:
-> On 8/30/2017 11:16 AM, Borislav Petkov wrote:
->> On Wed, Aug 30, 2017 at 10:05:44AM -0400, Sinan Kaya wrote:
->>> Link reset is not the only recovery mechanism. In the case of nonfatal
->>> errors, it is assumed that the endpoint CSR is still reachable.
->>> Error is propagated the PCIe endpoint driver. Endpoint driver does a
->>> re-initialization, we are back in business.
->> I'm assuming that's broadcast_error_message()'s job.
->>
-> That's right. Each driver provides an err_handler hook. broadcast function
-> calls these.
->
-> static struct pci_driver e1000_driver = {
-> 	..
-> 	.err_handler = &e1000_err_handler
-> };
->
-> struct pci_error_handlers {
-> 	...
-> 	pci_ers_result_t (*error_detected)(struct pci_dev *dev,
-> 					   enum pci_channel_state error);
-> }
->
->
->>> That's not true. The GHES code is changing the severity here before posting
->>> to the AER driver in ghes_do_proc().
->>>
->>> 	if (gdata->flags & CPER_SEC_RESET)
->>> 		aer_severity = AER_FATAL;
->> You're missing the point that we would walk into that if branch *only* for
->>
->>                          if (sev == GHES_SEV_RECOVERABLE &&
->>                              sec_sev == GHES_SEV_RECOVERABLE
->>
->> severities. So if you have an AER_FATAL error but ghes severities are
->> not GHES_SEV_RECOVERABLE, nothing happens.
-> I see. We should probably try to do something only if GHES_SEV_CORRECTED or
-> GHES_SEV_RECOVERABLE.
->
-> If somebody wants to crash the system with GHES_SEV_PANIC, there is no point
-> in doing additional work.
-See below.
->>> No, AER ISR is not set up if firmware first is enabled.
->> So then this is a major suckage. We do AER recovery on FF systems only
->> for GHES_SEV_RECOVERABLE severity.
->>
->>> The behavior should match non firmware-first case ideally.
->>>
->>> 1. Print all correctable errors.
->>> 2. Go to do_recovery for all uncorrectable errors including fatal and
->>> non-fatal.
->>>
->>> This is also what AER driver does in the absence of firmware first via
->>> handle_error_source().
->> Yes, that makes sense.
->>
->> Which would mean that we'd call aer_recover_queue() regardless of GHES
->> severity but we'd do recovery only if GHES_SEV_RECOVERABLE is set
->> or CPER_SEC_RESET. I.e., we can communicate all that by setting the
->> correct AER severity before calling aer_recover_queue(). And then call
->> do_recovery() based on AER severity.
->>
->> Hmmm?
->>
-> Sounds good. Do you still want to do PCIe recovery in the case of
-> GHES_SEV_PANIC or if some FW returns GHES_SEV_NO?
->
-We do not need to worry about the GHES_SEV_PANIC case. Those get sent to 
-__ghes_panic() in ghes_proc() without even making it to ghes_do_proc(). 
-Those errors are just printed and then the kernel panics.
+Include dra72x-mmc-iodelay.dtsi which has pinmux and IODelay
+configuration values for the various MMC modes for dra72 SoC
+and use it in the pinctrl properties of MMC devicetree
+nodes present in dra72-evm.dts.
 
-I think with my two patches we will have the desired functionality:
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra72-evm.dts | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-GHES_SEV_CORRECTABLE -> AER_CORRECTABLE -> Print AER info, but do not 
-call do_recovery
-
-GHES_SEV_RECOVERABLE -> AER_NONFATAL -> Print AER info and do_recovery
-
-GHES_RECOVERABLE and CPER_SEC_RESET -> AER_FATAL -> Print AER info and 
-do_recover
-
-Thanks,
-Tyler
-
+diff --git a/arch/arm/boot/dts/dra72-evm.dts b/arch/arm/boot/dts/dra72-evm.dts
+index 99fdb3d8445b..c572693b1665 100644
+--- a/arch/arm/boot/dts/dra72-evm.dts
++++ b/arch/arm/boot/dts/dra72-evm.dts
+@@ -6,6 +6,7 @@
+  * published by the Free Software Foundation.
+  */
+ #include "dra72-evm-common.dtsi"
++#include "dra72x-mmc-iodelay.dtsi"
+ / {
+ 	model = "TI DRA722";
+ 
+@@ -55,9 +56,22 @@
+ };
+ 
+ &mmc1 {
++	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50", "sdr104";
++	pinctrl-0 = <&mmc1_pins_default>;
++	pinctrl-1 = <&mmc1_pins_hs>;
++	pinctrl-2 = <&mmc1_pins_sdr12>;
++	pinctrl-3 = <&mmc1_pins_sdr25>;
++	pinctrl-4 = <&mmc1_pins_sdr50>;
++	pinctrl-5 = <&mmc1_pins_ddr50_rev10>;
++	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev10_conf>;
+ 	vqmmc-supply = <&ldo1_reg>;
+ };
+ 
+ &mmc2 {
++	pinctrl-names = "default", "hs", "ddr_1_8v", "hs200_1_8v";
++	pinctrl-0 = <&mmc2_pins_default>;
++	pinctrl-1 = <&mmc2_pins_hs>;
++	pinctrl-2 = <&mmc2_pins_ddr_rev10>;
++	pinctrl-3 = <&mmc2_pins_hs200 &mmc2_iodelay_hs200_rev10_conf>;
+ 	vmmc-supply = <&evm_1v8_sw>;
+ };
 -- 
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project.
-
+2.11.0
