@@ -1,80 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v4 0/7] PCI: MediaTek: Add host controller support for mt2712 and mt7622
-Date: Thu, 10 Aug 2017 14:34:53 +0800
-Message-ID: <cover.1502336769.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Tony Lindgren <tony@atomide.com>
+Subject: [PATCH v2 03/10] ARM: dts: dra7-evm: Add pinmux configuration for MMC
+Date: Wed, 16 Aug 2017 19:15:01 +0530
+Message-ID: <20170816134508.8887-4-kishon@ti.com>
+In-Reply-To: <20170816134508.8887-1-kishon@ti.com>
+References: <20170816134508.8887-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Include dra74x-mmc-iodelay.dtsi which has pinmux and IODelay
+configuration values for the various MMC modes for dra74 SoC
+and use it in the pinctrl properties of MMC devicetree
+nodes present in dra7-evm.
 
-MediaTek's PCIe host controller has two generation HWs, MT2712 and MT7622
-using the new generation HW, which has two root ports. They share most
-probing flow with MT2701/MT7623. But the read/write config space logical
-is different. The per-port registers must be touched for read/write
-configuration space.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ arch/arm/boot/dts/dra7-evm.dts | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-This patchset abstract the common probing flow, and add support for the
-new generation controller.
-
-Changes since v3:
- - Unify the macro define's names with PCIE_ prefix.
- - Use lower/upper_32_bits macro and remove AHB2PCIE_BASEL/AHB2PCIE_BASEH.
- - Factor out mtk_pcie_find_port to eliminate duplicate code.
- - Use list_for_each_entry instead of list_for_each_entry_safe when search list.
- - Simplify the mtk_pcie_hw_rd_cfg flow.
- - Split a new patch to rename the parameter and function names.
- - Update the subject and changelog to include specific SoC IDs.
-
-Changes since v2:
- - Split the Gen2 training change to a separate patch.
- - Simplify the config_read/write logical and get rid of mtk_pcie_find_port.
- - Using bus->sysdata to simplify the code.
- - Rebase to commit 65b83b13204a ("PCI: mediatek: Explicitly request exclusive
-   reset control")[1].
- - Fix some misspells.
- - Add review tags in commit message.
-
-Changes since v1:
- - Fix build warnings in arm arch.
- - Using SoC specific compatible instead of generic compatible.
- - Add devicetree binding example for mt7622.
- - Unified the register define names with PCIE_ prefix.
- - Cleanup some un-necessary condition determine when starup port.
- - minor code cleanups.
-
-[1] https://patchwork.kernel.org/patch/9852591/
-
-Honghui Zhang (2):
-  PCI: mediatek: make the parameter and function names more accurate
-  PCI: mediatek: Add a structure to abstract the controller generations
-
-Ryder Lee (5):
-  PCI: mediatek: Using readl_poll_timeout to wait Gen2 training
-  PCI: mediatek: switch to use platform_get_resource_byname()
-  dt-bindings: PCI: rename and cleanup MediaTek binding text
-  PCI: mediatek: Add controller support for mt2712 and mt7622
-  dt-bindings: PCI: add support for mt2712 and mt7622
-
- .../bindings/pci/mediatek,mt7623-pcie.txt          | 130 -----
- .../devicetree/bindings/pci/mediatek-pcie.txt      | 284 ++++++++++
- drivers/pci/host/Kconfig                           |   5 +-
- drivers/pci/host/pcie-mediatek.c                   | 598 ++++++++++++++++++---
- 4 files changed, 820 insertions(+), 197 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-
+diff --git a/arch/arm/boot/dts/dra7-evm.dts b/arch/arm/boot/dts/dra7-evm.dts
+index 5e3f9ba861f0..aa426dabb6c3 100644
+--- a/arch/arm/boot/dts/dra7-evm.dts
++++ b/arch/arm/boot/dts/dra7-evm.dts
+@@ -9,6 +9,7 @@
+ 
+ #include "dra74x.dtsi"
+ #include "dra7-evm-common.dtsi"
++#include "dra74x-mmc-iodelay.dtsi"
+ 
+ / {
+ 	model = "TI DRA742";
+@@ -326,8 +327,6 @@
+ 
+ &mmc1 {
+ 	status = "okay";
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&mmc1_pins_default>;
+ 	vmmc-supply = <&evm_3v3_sd>;
+ 	vqmmc-supply = <&ldo1_reg>;
+ 	bus-width = <4>;
+@@ -336,14 +335,29 @@
+ 	 * is always hardwired.
+ 	 */
+ 	cd-gpios = <&gpio6 27 GPIO_ACTIVE_LOW>;
++	pinctrl-names = "default", "hs", "sdr12", "sdr25", "sdr50", "ddr50-rev11", "sdr104-rev11", "ddr50", "sdr104";
++	pinctrl-0 = <&mmc1_pins_default>;
++	pinctrl-1 = <&mmc1_pins_hs>;
++	pinctrl-2 = <&mmc1_pins_sdr12>;
++	pinctrl-3 = <&mmc1_pins_sdr25>;
++	pinctrl-4 = <&mmc1_pins_sdr50>;
++	pinctrl-5 = <&mmc1_pins_ddr50 &mmc1_iodelay_ddr_rev11_conf>;
++	pinctrl-6 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev11_conf>;
++	pinctrl-7 = <&mmc1_pins_ddr50 &mmc1_iodelay_ddr_rev20_conf>;
++	pinctrl-8 = <&mmc1_pins_sdr104 &mmc1_iodelay_sdr104_rev20_conf>;
+ };
+ 
+ &mmc2 {
+ 	status = "okay";
+-	pinctrl-names = "default";
+-	pinctrl-0 = <&mmc2_pins_default>;
+ 	vmmc-supply = <&evm_1v8_sw>;
+ 	bus-width = <8>;
++	pinctrl-names = "default", "hs", "ddr_1_8v-rev11", "ddr_1_8v", "hs200_1_8v-rev11", "hs200_1_8v";
++	pinctrl-0 = <&mmc2_pins_default>;
++	pinctrl-1 = <&mmc2_pins_hs>;
++	pinctrl-2 = <&mmc2_pins_ddr_1_8v_rev11 &mmc2_iodelay_ddr_1_8v_rev11_conf>;
++	pinctrl-3 = <&mmc2_pins_ddr_rev20>;
++	pinctrl-4 = <&mmc2_pins_hs200 &mmc2_iodelay_hs200_rev11_conf>;
++	pinctrl-5 = <&mmc2_pins_hs200 &mmc2_iodelay_hs200_rev20_conf>;
+ };
+ 
+ &cpu0 {
 -- 
-2.6.4
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
