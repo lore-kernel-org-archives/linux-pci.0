@@ -1,85 +1,44 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1504057498.10964.13.camel@mhfsdcap03>
-Subject: Re: [PATCH] PCI: mediatek: take use of PCI_NUM_INTX
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>
-Date: Wed, 30 Aug 2017 09:44:58 +0800
-In-Reply-To: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
-References: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:45907 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751461AbdHPOWg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 16 Aug 2017 10:22:36 -0400
+Subject: Re: [PATCH] tools/pci: Add a missing option help line
+To: Stan Drozd <drozdziak1@gmail.com>, <linux-pci@vger.kernel.org>
+References: <20170816101702.GA22874@gmail.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <5fb4580a-ef27-1732-769d-9c34745d9e09@ti.com>
+Date: Wed, 16 Aug 2017 19:52:33 +0530
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, yt.shen@mediatek.com,
- linux-mediatek@lists.infradead.org, yong.wu@mediatek.com,
- matthias.bgg@gmail.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170816101702.GA22874@gmail.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-08-30 at 09:19 +0800, honghui.zhang@mediatek.com wrote:
-> From: Honghui Zhang <honghui.zhang@mediatek.com>
-> 
-> Switch from using a custom NUM_INTX macro to the generic PCI_NUM_INTX
-> definition for the number of INTx interrupts.
-> 
-> Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+
+
+On Wednesday 16 August 2017 03:47 PM, Stan Drozd wrote:
+> Signed-off-by: Stan Drozd <drozdziak1@gmail.com>
+
+Thank you for the patch. I'll let you know once I queue it.
+
+Thanks
+Kishon
+
 > ---
->  drivers/pci/host/pcie-mediatek.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
+>  tools/pci/pcitest.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-
-Hi, Bjorn, Ryder,
-	this patch is based on Paul's v7 version of patch[1]("Move enum
-pci_interrupt_pin to linux/pci.h").
-[1]http://www.spinics.net/lists/linux-pci/msg63891.html
-
-Thanks.
-
-> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> index c567996..5c0ce9b 100644
-> --- a/drivers/pci/host/pcie-mediatek.c
-> +++ b/drivers/pci/host/pcie-mediatek.c
-> @@ -77,7 +77,6 @@
->  #define PCIE_INT_MASK		0x420
->  #define INTX_MASK		GENMASK(19, 16)
->  #define INTX_SHIFT		16
-> -#define INTX_NUM		4
->  #define PCIE_INT_STATUS		0x424
->  #define MSI_STATUS		BIT(23)
->  #define PCIE_IMSI_STATUS	0x42c
-> @@ -576,7 +575,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
->  		return -ENODEV;
->  	}
->  
-> -	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-> +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
->  						 &intx_domain_ops, port);
->  	if (!port->irq_domain) {
->  		dev_err(dev, "failed to get INTx IRQ domain\n");
-> @@ -594,7 +593,7 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
->  	u32 bit = INTX_SHIFT;
->  
->  	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
-> -		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
-> +		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
->  			/* Clear the INTx */
->  			writel(1 << bit, port->base + PCIE_INT_STATUS);
->  			virq = irq_find_mapping(port->irq_domain,
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+> index ad54a58d7dda..eece9d1124b6 100644
+> --- a/tools/pci/pcitest.c
+> +++ b/tools/pci/pcitest.c
+> @@ -173,6 +173,7 @@ int main(int argc, char **argv)
+>  			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
+>  			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
+>  			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
+> +			"\t-l 			Legacy irq test\n"
+>  			"\t-r			Read buffer test\n"
+>  			"\t-w			Write buffer test\n"
+>  			"\t-c			Copy buffer test\n"
+> 
