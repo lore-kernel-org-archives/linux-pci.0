@@ -1,40 +1,55 @@
-Return-Path: <SRS0=j+1X=73=rock-chips.com=jeffy.chen@kernel.org>
-Return-Path: <SRS0=j+1X=73=rock-chips.com=jeffy.chen@kernel.org>
-Message-ID: <599F7433.4070606@rock-chips.com>
-Date: Fri, 25 Aug 2017 08:49:55 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
+Return-Path: <SRS0=dI8c=7S=linux.ee=mroos@kernel.org>
+Return-Path: <SRS0=dI8c=7S=linux.ee=mroos@kernel.org>
+Date: Wed, 16 Aug 2017 21:39:08 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+Sender: mroos@math.ut.ee
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-kernel@vger.kernel.org, bhelgaas@google.com,
- Mark Rutland <mark.rutland@arm.com>,
- devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
- briannorris@chromium.org, Will Deacon <will.deacon@arm.com>,
- dianders@chromium.org, Rob Herring <robh+dt@kernel.org>,
- linux-rockchip@lists.infradead.org, Matthias Kaehlcke <mka@chromium.org>,
- Klaus Goger <klaus.goger@theobroma-systems.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- linux-arm-kernel@lists.infradead.org, Caesar Wang <wxt@rock-chips.com>
-Subject: Re: [PATCH v4 0/4] PCI: rockchip: Move PCIE_WAKE handling into rockchip
- pcie driver
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com> <20170824165505.GM31858@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170824165505.GM31858@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+cc: sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+    qla2xxx-upstream@qlogic.com,
+    Linux Kernel list <linux-kernel@vger.kernel.org>,
+    Christoph Hellwig <hch@lst.de>
+Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
+ vectors
+In-Reply-To: <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
+Message-ID: <alpine.LRH.2.20.1708162136220.16834@math.ut.ee>
+References: <alpine.LRH.2.20.1708151742360.29628@math.ut.ee> <20170815184403.GB4099@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+> > > I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
+> > > t5120 server: can't allocate MSI-X affinity masks.
+> > > 
+> > > [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
+> > > [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
+> > > [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
+> > > [   30.816882] scsi host1: qla2xxx
+> > > [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
+> > > [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
+> > > [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
+> > > [   31.367083] scsi host1: qla2xxx
+> > > [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
+> > > 
+> > > I do not know if the driver works since nothing is attached to the FC 
+> > > HBA at the moment, but from the error messages it looks like the driver 
+> > > fails to load.
+> > > 
+> > > I booted 4.12 and 4.11 - the red error is not there but the failure 
+> > > seems to be the same error -22:
+> 
+> 4.10.0 works, 4.11.0 errors out with EINVAL and 4.13-rc4 errorr sout 
+> with more verbose MSI messages. So something between 4.10 and 4.11 has 
+> broken it.
 
-On 08/25/2017 12:55 AM, Bjorn Helgaas wrote:
-> Looking for acks from Shawn and Rob...
->
-> And I'm not sure about the DT wake IRQ description.  That seems like it
-> could potentially be generic than this Rockchip-specific proposal.
->
->
-it looks like shawn already take the error handling patch into his 
-series, so i'll remove that one in my next version.
+I can not reproduice the older kernels that misbehave. I checked out 
+earlier kernels and recompiled them (old config lost, nothing changed 
+AFAIK), everything works up to 4.12 inclusive.
 
-i'll wait for those error handling patches to land, then rebase and 
-resend this wake irq patches, thanks:)
+> Also, 4.13-rc4 is broken on another sun4v here (T1000). So it seems to 
+> be sun4v interrupt related.
 
->
+This still holds - 4.13-rc4 has MSI trouble on at least 2 of my sun4v 
+machines.
+
+-- 
+Meelis Roos (mroos@linux.ee)
