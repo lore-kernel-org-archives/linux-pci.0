@@ -1,53 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:53200 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751295AbdHCJYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 05:24:21 -0400
-Subject: Re: [PATCH 2/3] PCI: qcom: Don't unroll init if init fails
-To: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: "open list:PCIE DRIVER FOR QUALCOMM MSM" <linux-pci@vger.kernel.org>,
-        "open list:PCIE DRIVER FOR QUALCOMM MSM"
-        <linux-arm-msm@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <20170716063947.3272-1-bjorn.andersson@linaro.org>
- <20170716063947.3272-2-bjorn.andersson@linaro.org>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <f882d2eb-b531-966f-04ce-06b722faee92@mm-sol.com>
-Date: Thu, 3 Aug 2017 12:24:19 +0300
+Received: from mail-by2nam03on0051.outbound.protection.outlook.com ([104.47.42.51]:53979
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750912AbdHPFOL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 01:14:11 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv3 5/9] PCI: layerscape: Disable the outbound windows configured by bootloader
+Date: Wed, 16 Aug 2017 12:56:55 +0800
+Message-ID: <1502859419-33696-6-git-send-email-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20170716063947.3272-2-bjorn.andersson@linaro.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-The patch looks correct.
+Disable all the outbound windows to avoid one transaction hitting
+multiple outbound windows, because the function dw_pcie_setup_rc
+will re-configure the outbound windows which maybe confict with
+the bootloader configured.
 
-On 07/16/2017 09:39 AM, Bjorn Andersson wrote:
-> When the init op fails it will restore the state of the resources, so we
-> should not disable them one more time when this happens.
-> 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-> ---
->  drivers/pci/dwc/pcie-qcom.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V3:
+ - No change
 
-Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
+ drivers/pci/dwc/pci-layerscape.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-> 
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index d15657dc3990..7b703741a3fd 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -901,7 +901,7 @@ static int qcom_pcie_host_init(struct pcie_port *pp)
->  
->  	ret = pcie->ops->init(pcie);
->  	if (ret)
-> -		goto err_deinit;
-> +		return ret;
->  
->  	ret = phy_power_on(pcie->phy);
->  	if (ret)
-> 
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 57b86a0..44a603d 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -35,6 +35,8 @@
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+ #define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+ 
++#define PCIE_IATU_NUM		6
++
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+ 	u32 ltssm_shift;
+@@ -91,6 +93,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+ 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+ }
+ 
++static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
++{
++	int i;
++
++	for (i = 0; i < PCIE_IATU_NUM; i++)
++		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++}
++
+ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	u32 state;
+@@ -128,6 +138,13 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
++	/*
++	 * Disable the outbound windows configured by bootloader to avoid
++	 * one transaction hitting multiple outbound windows and the function
++	 * dw_pcie_setup_rc will re-configure the outbound windows.
++	 */
++	ls_pcie_disable_outbound_atus(pcie);
++
+ 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-- 
+2.1.0.27.g96db324
