@@ -1,70 +1,36 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
-Subject: [PATCH V6 1/2] PCI: limit FLR wait time to 100ms maximum
-Date: Wed,  2 Aug 2017 13:18:23 -0400
-Message-Id: <1501694304-16554-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=5vDt=7S=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=5vDt=7S=davemloft.net=davem@kernel.org>
+Date: Wed, 16 Aug 2017 13:59:52 -0700 (PDT)
+Message-Id: <20170816.135952.1915098012719012810.davem@davemloft.net>
+To: helgaas@kernel.org
+Cc: thierry.reding@gmail.com, dingtianhong@huawei.com,
+ mark.rutland@arm.com, gabriele.paoloni@huawei.com,
+ asit.k.mallick@intel.com, catalin.marinas@arm.com, will.deacon@arm.com,
+ linuxarm@huawei.com, alexander.duyck@gmail.com, ashok.raj@intel.com,
+ eric.dumazet@gmail.com, jeffrey.t.kirsher@intel.com,
+ linux-pci@vger.kernel.org, ganeshgr@chelsio.com, Bob.Shaw@amd.com,
+ leedom@chelsio.com, patrick.j.cramer@intel.com, bhelgaas@google.com,
+ werner@chelsio.com, linux-arm-kernel@lists.infradead.org,
+ amira@mellanox.com, netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+ David.Laight@aculab.com, Suravee.Suthikulpanit@amd.com,
+ robin.murphy@arm.com, l.stach@pengutronix.de
+Subject: Re: [PATCH net RESEND] PCI: fix oops when try to find Root Port
+ for a PCI device
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170816200237.GE28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170815170331.GA4099@bhelgaas-glaptop.roam.corp.google.com>
+	<20170816193303.GA14147@ulmo>
+	<20170816200237.GE28977@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-Code is currently allowing PCIe devices to extend polling time up to 1
-second. Reducing the wait time for virtual functions to 100ms maximum to
-satisfy spec requirement mentioned in PCIe r3.1, sec 6.6.2. Function-Level
-Reset (FLR).
+From: Bjorn Helgaas <helgaas@kernel.org>
+Date: Wed, 16 Aug 2017 15:02:37 -0500
 
-SR-IOV r1.1, sec 2.2.2 also mentions that the virtual function's presence
-from configuration space is not affected from FLR. There is no point in
-polling the command register since it should always return success.
+> Your fix looks right to me.
 
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pci.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+Someone please submit this fix formally because this change is now in
+Linus's tree.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..2ed604a 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3812,7 +3812,7 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
- EXPORT_SYMBOL(pci_wait_for_pending_transaction);
- 
- /*
-- * We should only need to wait 100ms after FLR, but some devices take longer.
-+ * We should only need to wait 100ms after FLR for virtual functions.
-  * Wait for up to 1000ms for config space to return something other than -1.
-  * Intel IGD requires this when an LCD panel is attached.  We read the 2nd
-  * dword because VFs don't implement the 1st dword.
-@@ -3822,6 +3822,11 @@ static void pci_flr_wait(struct pci_dev *dev)
- 	int i = 0;
- 	u32 id;
- 
-+	if (dev->is_virtfn) {
-+		msleep(100);
-+		return;
-+	}
-+
- 	do {
- 		msleep(100);
- 		pci_read_config_dword(dev, PCI_COMMAND, &id);
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thank you.
