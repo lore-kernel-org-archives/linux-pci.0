@@ -1,156 +1,343 @@
-Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=m010=7Q=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v10 1/5] PCI: Disable PCIe Relaxed Ordering if unsupported
-Date: Mon, 14 Aug 2017 23:44:55 +0800
-Message-ID: <1502725499-11276-2-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
-References: <1502725499-11276-1-git-send-email-dingtianhong@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41540 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751671AbdHQLVT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 07:21:19 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v8 1/3] PCI: dwc: qcom: Use block IP version for operations
+Date: Thu, 17 Aug 2017 16:50:56 +0530
+Message-Id: <1502968858-28090-2-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
+References: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When bit4 is set in the PCIe Device Control register, it indicates
-whether the device is permitted to use relaxed ordering.
-On some platforms using relaxed ordering can have performance issues or
-due to erratum can cause data-corruption. In such cases devices must avoid
-using relaxed ordering.
+Presently, when support for a new SoC is added, the driver ops
+structures and functions are versioned with plain 1, 2, 3 etc.
+Instead use the block IP version number.
 
-The patch adds a new flag PCI_DEV_FLAGS_NO_RELAXED_ORDERING to indicate that
-Relaxed Ordering (RO) attribute should not be used for Transaction Layer
-Packets (TLP) targeted towards these affected root complexes.
-
-This patch checks if there is any node in the hierarchy that indicates that
-using relaxed ordering is not safe. In such cases the patch turns off the
-relaxed ordering by clearing the capability for this device.
-
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Acked-by: Ashok Raj <ashok.raj@intel.com>
-Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-Acked-by: Casey Leedom <leedom@chelsio.com>
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 ---
- drivers/pci/probe.c  | 43 +++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/quirks.c | 11 +++++++++++
- include/linux/pci.h  |  3 +++
- 3 files changed, 57 insertions(+)
+ drivers/pci/dwc/pcie-qcom.c | 132 +++++++++++++++++++++++---------------------
+ 1 file changed, 68 insertions(+), 64 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310d..779e646 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1762,6 +1762,48 @@ static void pci_configure_extended_tags(struct pci_dev *dev)
- 					 PCI_EXP_DEVCTL_EXT_TAG);
- }
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index d15657d..c4cd039 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -61,7 +61,7 @@
  
-+/**
-+ * pcie_relaxed_ordering_enabled - Probe for PCIe relaxed ordering enable
-+ * @dev: PCI device to query
-+ *
-+ * Returns true if the device has enabled relaxed ordering attribute.
-+ */
-+bool pcie_relaxed_ordering_enabled(struct pci_dev *dev)
-+{
-+	u16 v;
-+
-+	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &v);
-+
-+	return !!(v & PCI_EXP_DEVCTL_RELAX_EN);
-+}
-+EXPORT_SYMBOL(pcie_relaxed_ordering_enabled);
-+
-+static void pci_configure_relaxed_ordering(struct pci_dev *dev)
-+{
-+	struct pci_dev *root;
-+
-+	/* PCI_EXP_DEVICE_RELAX_EN is RsvdP in VFs */
-+	if (dev->is_virtfn)
-+		return;
-+
-+	if (!pcie_relaxed_ordering_enabled(dev))
-+		return;
-+
-+	/*
-+	 * For now, we only deal with Relaxed Ordering issues with Root
-+	 * Ports. Peer-to-Peer DMA is another can of worms.
-+	 */
-+	root = pci_find_pcie_root_port(dev);
-+	if (!root)
-+		return;
-+
-+	if (root->dev_flags & PCI_DEV_FLAGS_NO_RELAXED_ORDERING) {
-+		pcie_capability_clear_word(dev, PCI_EXP_DEVCTL,
-+					   PCI_EXP_DEVCTL_RELAX_EN);
-+		dev_info(&dev->dev, "Disable Relaxed Ordering because the Root Port didn't support it\n");
-+	}
-+}
-+
- static void pci_configure_device(struct pci_dev *dev)
- {
- 	struct hotplug_params hpp;
-@@ -1769,6 +1811,7 @@ static void pci_configure_device(struct pci_dev *dev)
+ #define PERST_DELAY_US				1000
  
- 	pci_configure_mps(dev);
- 	pci_configure_extended_tags(dev);
-+	pci_configure_relaxed_ordering(dev);
- 
- 	memset(&hpp, 0, sizeof(hpp));
- 	ret = pci_get_hp_params(dev, &hpp);
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b..61b59bf 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4016,6 +4016,17 @@ static void quirk_tw686x_class(struct pci_dev *pdev)
- 			      quirk_tw686x_class);
- 
- /*
-+ * Some devices have problems with Transaction Layer Packets with the Relaxed
-+ * Ordering Attribute set.  Such devices should mark themselves and other
-+ * Device Drivers should check before sending TLPs with RO set.
-+ */
-+static void quirk_relaxedordering_disable(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_RELAXED_ORDERING;
-+	dev_info(&dev->dev, "Disable Relaxed Ordering Attributes to avoid PCIe Completion erratum\n");
-+}
-+
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4869e66..29606fb 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -188,6 +188,8 @@ enum pci_dev_flags {
- 	 * the direct_complete optimization.
- 	 */
- 	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 11),
-+	/* Don't use Relaxed Ordering for TLPs directed at this device */
-+	PCI_DEV_FLAGS_NO_RELAXED_ORDERING = (__force pci_dev_flags_t) (1 << 12),
+-struct qcom_pcie_resources_v0 {
++struct qcom_pcie_resources_2_1_0 {
+ 	struct clk *iface_clk;
+ 	struct clk *core_clk;
+ 	struct clk *phy_clk;
+@@ -75,7 +75,7 @@ struct qcom_pcie_resources_v0 {
+ 	struct regulator *vdda_refclk;
  };
  
- enum pci_irq_reroute_variant {
-@@ -1125,6 +1127,7 @@ int pci_add_ext_cap_save_buffer(struct pci_dev *dev,
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
-+bool pcie_relaxed_ordering_enabled(struct pci_dev *dev);
+-struct qcom_pcie_resources_v1 {
++struct qcom_pcie_resources_1_0_0 {
+ 	struct clk *iface;
+ 	struct clk *aux;
+ 	struct clk *master_bus;
+@@ -84,7 +84,7 @@ struct qcom_pcie_resources_v1 {
+ 	struct regulator *vdda;
+ };
  
- /* PCI Virtual Channel */
- int pci_save_vc_state(struct pci_dev *dev);
+-struct qcom_pcie_resources_v2 {
++struct qcom_pcie_resources_2_3_2 {
+ 	struct clk *aux_clk;
+ 	struct clk *master_clk;
+ 	struct clk *slave_clk;
+@@ -92,7 +92,7 @@ struct qcom_pcie_resources_v2 {
+ 	struct clk *pipe_clk;
+ };
+ 
+-struct qcom_pcie_resources_v3 {
++struct qcom_pcie_resources_2_4_0 {
+ 	struct clk *aux_clk;
+ 	struct clk *master_clk;
+ 	struct clk *slave_clk;
+@@ -111,10 +111,10 @@ struct qcom_pcie_resources_v3 {
+ };
+ 
+ union qcom_pcie_resources {
+-	struct qcom_pcie_resources_v0 v0;
+-	struct qcom_pcie_resources_v1 v1;
+-	struct qcom_pcie_resources_v2 v2;
+-	struct qcom_pcie_resources_v3 v3;
++	struct qcom_pcie_resources_1_0_0 v1_0_0;
++	struct qcom_pcie_resources_2_1_0 v2_1_0;
++	struct qcom_pcie_resources_2_3_2 v2_3_2;
++	struct qcom_pcie_resources_2_4_0 v2_4_0;
+ };
+ 
+ struct qcom_pcie;
+@@ -172,7 +172,7 @@ static int qcom_pcie_establish_link(struct qcom_pcie *pcie)
+ 	return dw_pcie_wait_for_link(pci);
+ }
+ 
+-static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
++static void qcom_pcie_2_1_0_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+ 
+@@ -182,9 +182,9 @@ static void qcom_pcie_v0_v1_ltssm_enable(struct qcom_pcie *pcie)
+ 	writel(val, pcie->elbi + PCIE20_ELBI_SYS_CTRL);
+ }
+ 
+-static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -232,9 +232,9 @@ static int qcom_pcie_get_resources_v0(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->phy_reset);
+ }
+ 
+-static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 
+ 	reset_control_assert(res->pci_reset);
+ 	reset_control_assert(res->axi_reset);
+@@ -249,9 +249,9 @@ static void qcom_pcie_deinit_v0(struct qcom_pcie *pcie)
+ 	regulator_disable(res->vdda_refclk);
+ }
+ 
+-static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_1_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v0 *res = &pcie->res.v0;
++	struct qcom_pcie_resources_2_1_0 *res = &pcie->res.v2_1_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -367,9 +367,9 @@ static int qcom_pcie_init_v0(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -397,9 +397,9 @@ static int qcom_pcie_get_resources_v1(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->core);
+ }
+ 
+-static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 
+ 	reset_control_assert(res->core);
+ 	clk_disable_unprepare(res->slave_bus);
+@@ -409,9 +409,9 @@ static void qcom_pcie_deinit_v1(struct qcom_pcie *pcie)
+ 	regulator_disable(res->vdda);
+ }
+ 
+-static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
++static int qcom_pcie_init_1_0_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v1 *res = &pcie->res.v1;
++	struct qcom_pcie_resources_1_0_0 *res = &pcie->res.v1_0_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
+@@ -477,7 +477,7 @@ static int qcom_pcie_init_v1(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
++static void qcom_pcie_2_3_2_ltssm_enable(struct qcom_pcie *pcie)
+ {
+ 	u32 val;
+ 
+@@ -487,9 +487,9 @@ static void qcom_pcie_v2_ltssm_enable(struct qcom_pcie *pcie)
+ 	writel(val, pcie->parf + PCIE20_PARF_LTSSM);
+ }
+ 
+-static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -513,9 +513,9 @@ static int qcom_pcie_get_resources_v2(struct qcom_pcie *pcie)
+ 	return PTR_ERR_OR_ZERO(res->pipe_clk);
+ }
+ 
+-static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 
+ 	clk_disable_unprepare(res->pipe_clk);
+ 	clk_disable_unprepare(res->slave_clk);
+@@ -524,9 +524,9 @@ static void qcom_pcie_deinit_v2(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->aux_clk);
+ }
+ 
+-static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -589,9 +589,9 @@ static int qcom_pcie_init_v2(struct qcom_pcie *pcie)
+ 	return ret;
+ }
+ 
+-static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
++static int qcom_pcie_post_init_2_3_2(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v2 *res = &pcie->res.v2;
++	struct qcom_pcie_resources_2_3_2 *res = &pcie->res.v2_3_2;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	int ret;
+@@ -605,9 +605,9 @@ static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
++static int qcom_pcie_get_resources_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 
+@@ -674,9 +674,9 @@ static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
++static void qcom_pcie_deinit_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 
+ 	reset_control_assert(res->axi_m_reset);
+ 	reset_control_assert(res->axi_s_reset);
+@@ -692,9 +692,9 @@ static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
+ 	clk_disable_unprepare(res->slave_clk);
+ }
+ 
+-static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
++static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+ {
+-	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct qcom_pcie_resources_2_4_0 *res = &pcie->res.v2_4_0;
+ 	struct dw_pcie *pci = pcie->pci;
+ 	struct device *dev = pci->dev;
+ 	u32 val;
+@@ -952,37 +952,41 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+ 	.rd_own_conf = qcom_pcie_rd_own_conf,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v0 = {
+-	.get_resources = qcom_pcie_get_resources_v0,
+-	.init = qcom_pcie_init_v0,
+-	.deinit = qcom_pcie_deinit_v0,
+-	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++/* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
++static const struct qcom_pcie_ops ops_2_1_0 = {
++	.get_resources = qcom_pcie_get_resources_2_1_0,
++	.init = qcom_pcie_init_2_1_0,
++	.deinit = qcom_pcie_deinit_2_1_0,
++	.ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v1 = {
+-	.get_resources = qcom_pcie_get_resources_v1,
+-	.init = qcom_pcie_init_v1,
+-	.deinit = qcom_pcie_deinit_v1,
+-	.ltssm_enable = qcom_pcie_v0_v1_ltssm_enable,
++/* Qcom IP rev.: 1.0.0	Synopsys IP rev.: 4.11a */
++static const struct qcom_pcie_ops ops_1_0_0 = {
++	.get_resources = qcom_pcie_get_resources_1_0_0,
++	.init = qcom_pcie_init_1_0_0,
++	.deinit = qcom_pcie_deinit_1_0_0,
++	.ltssm_enable = qcom_pcie_2_1_0_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v2 = {
+-	.get_resources = qcom_pcie_get_resources_v2,
+-	.init = qcom_pcie_init_v2,
+-	.post_init = qcom_pcie_post_init_v2,
+-	.deinit = qcom_pcie_deinit_v2,
+-	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++/* Qcom IP rev.: 2.3.2	Synopsys IP rev.: 4.21a */
++static const struct qcom_pcie_ops ops_2_3_2 = {
++	.get_resources = qcom_pcie_get_resources_2_3_2,
++	.init = qcom_pcie_init_2_3_2,
++	.post_init = qcom_pcie_post_init_2_3_2,
++	.deinit = qcom_pcie_deinit_2_3_2,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
+-static const struct dw_pcie_ops dw_pcie_ops = {
+-	.link_up = qcom_pcie_link_up,
++/* Qcom IP rev.: 2.4.0	Synopsys IP rev.: 4.20a */
++static const struct qcom_pcie_ops ops_2_4_0 = {
++	.get_resources = qcom_pcie_get_resources_2_4_0,
++	.init = qcom_pcie_init_2_4_0,
++	.deinit = qcom_pcie_deinit_2_4_0,
++	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
+ 
+-static const struct qcom_pcie_ops ops_v3 = {
+-	.get_resources = qcom_pcie_get_resources_v3,
+-	.init = qcom_pcie_init_v3,
+-	.deinit = qcom_pcie_deinit_v3,
+-	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.link_up = qcom_pcie_link_up,
+ };
+ 
+ static int qcom_pcie_probe(struct platform_device *pdev)
+@@ -1071,11 +1075,11 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ }
+ 
+ static const struct of_device_id qcom_pcie_match[] = {
+-	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_v0 },
+-	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+-	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
+-	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
+-	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_v3 },
++	{ .compatible = "qcom,pcie-ipq8064", .data = &ops_2_1_0 },
++	{ .compatible = "qcom,pcie-apq8064", .data = &ops_2_1_0 },
++	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
++	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
++	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
+ 	{ }
+ };
+ 
 -- 
-1.8.3.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
