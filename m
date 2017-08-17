@@ -1,42 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.141]:44692 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751456AbdHJIkW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 04:40:22 -0400
-Message-ID: <598C1BDF.6010203@rock-chips.com>
-Date: Thu, 10 Aug 2017 16:39:59 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <59953510.8000509@rock-chips.com>
+Date: Thu, 17 Aug 2017 14:17:52 +0800
 From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-To: Shawn Lin <shawn.lin@rock-chips.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-CC: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [RFC PATCH] PCI: rockchip: fix system hang up if activate CONFIG_DEBUG_SHIRQ
-References: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1502353273-123788-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Subject: Re: [RFC PATCH 2/3] dt-bindings: PCI: rockchip: Add support for pcie
+ wake irq
+References: <20170816075224.31734-1-jeffy.chen@rock-chips.com>
+ <20170816075224.31734-3-jeffy.chen@rock-chips.com>
+ <35487e90-74f2-3a66-70d3-d0780b0b6e26@rock-chips.com>
+In-Reply-To: <35487e90-74f2-3a66-70d3-d0780b0b6e26@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ briannorris@chromium.org, linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi shawn,
+Hi Shawn,
 
-On 08/10/2017 04:21 PM, Shawn Lin wrote:
-> With CONFIG_DEBUG_SHIRQ enabled, the irq tear down routine
-> would still access the irq handler registed as a shard irq.
-> Per the comment within the function of __free_irq, it says
-> "It's a shared IRQ -- the driver ought to be prepared for
-> an IRQ event to happen even now it's being freed". However
-> when failing to probe the driver, it may disable the clock
-> for accessing the register and the following check for shared
-> irq state would call the irq handler which accesses the register
-> w/o the clk enabled. That will hang the system forever.
+On 08/16/2017 04:35 PM, Shawn Lin wrote:
+> Hi Jeffy
+>
+> On 2017/8/16 15:52, Jeffy Chen wrote:
+>> Add an optional interrupt for PCIE_WAKE pin.
+>>
+>> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> ---
+>>
+>>   Documentation/devicetree/bindings/pci/rockchip-pcie.txt | 11
+>> +++++++----
+>>   1 file changed, 7 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> index 1453a734c2f5..6ef9903567db 100644
+>> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+>> @@ -22,10 +22,13 @@ Required properties:
+>>   - phys: From PHY bindings: Phandle for the Generic PHY for PCIe.
+>>   - phy-names:  MUST be "pcie-phy".
+>>   - interrupts: Three interrupt entries must be specified.
+>> -- interrupt-names: Must include the following names
+>> -    - "sys"
+>> -    - "legacy"
+>> -    - "client"
+>> +- interrupt-names: Include the following names
+>> +    Required:
+>> +        - "sys"
+>> +        - "legacy"
+>> +        - "client"
+>> +    Optional:
+>> +        - "wake"
+>
+> It would be better to introduce interrupts-extended and show a example
+> here. :)
+ok, will add it in next version
+>
+>>   - resets: Must contain seven entries for each entry in reset-names.
+>>          See ../reset/reset.txt for details.
+>>   - reset-names: Must include the following names
+>>
+>
+>
+>
 
-i think this extra irq call is to make sure it's safe to get a shared 
-irq when we are freeing it, and we would not get this irq after freed it.
 
-so maybe just call devm_free_irq before disable clks(and other required 
-resources for the irq handler)? and also do it in the rockchip_pcie_remove.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
