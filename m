@@ -1,90 +1,80 @@
-Return-Path: <SRS0=VNiN=7R=hisilicon.com=xuwei5@kernel.org>
-Return-Path: <SRS0=VNiN=7R=hisilicon.com=xuwei5@kernel.org>
-Subject: Re: [PATCH v11 0/3]add PCIe driver for Kirin PCIe
-To: Guodong Xu <guodong.xu@linaro.org>
-References: <20170619102349.50652-1-songxiaowei@hisilicon.com>
- <20170702233657.GA13507@bhelgaas-glaptop.roam.corp.google.com>
- <20170703104727.GB1573@arm.com>
- <CAFGCpxx+92PSs1VaryFOXau7CjBYEP4H6wT-o=bNMwkSznjQuw@mail.gmail.com>
- <595A4768.20404@hisilicon.com>
- <CAFGCpxy-Rn4aeRs6GwGu7kaXvk5ftQxSpho8D2kQ4OG5MgCA8w@mail.gmail.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>,
-        Xiaowei Song
-	<songxiaowei@hisilicon.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, Rob Herring
-	<robh+dt@kernel.org>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        linux-pci
-	<linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Catalin
- Marinas" <catalin.marinas@arm.com>,
-        linux-arm-kernel
-	<linux-arm-kernel@lists.infradead.org>,
-        Will Deacon <will.deacon@arm.com>
-From: Wei Xu <xuwei5@hisilicon.com>
-Message-ID: <5992F6E4.10505@hisilicon.com>
-Date: Tue, 15 Aug 2017 14:28:04 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAFGCpxy-Rn4aeRs6GwGu7kaXvk5ftQxSpho8D2kQ4OG5MgCA8w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:41932 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752453AbdHQLVY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 07:21:24 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v8 2/3] dt-bindings: pci: qcom: Add support for IPQ8074
+Date: Thu, 17 Aug 2017 16:50:57 +0530
+Message-Id: <1502968858-28090-3-git-send-email-varada@codeaurora.org>
+In-Reply-To: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
+References: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Guodong,
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports Gen 1/2, one
+lane, two PCIe root complex with support for MSI and legacy interrupts, and
+it conforms to PCI Express Base 2.1 specification.
 
-On 2017/7/4 3:03, Guodong Xu wrote:
-> On Mon, Jul 3, 2017 at 9:32 PM, Wei Xu <xuwei5@hisilicon.com> wrote:
->> Hi Guodong,
->>
->> On 2017/7/3 14:04, Guodong Xu wrote:
->>> Hi, Xu Wei
->>>
->>>
->>>
->>> On Mon, Jul 3, 2017 at 6:47 PM, Will Deacon <will.deacon@arm.com> wrote:
->>>> On Sun, Jul 02, 2017 at 06:36:57PM -0500, Bjorn Helgaas wrote:
->>>>> [+cc Catalin, Will, linux-arm-kernel]
->>>>>
->>>>> Applied patches 2 & 3 to pci/host-kirin for v4.13.
->>>>>
->>>>> I would like a MAINTAINERS update, too.  If you send me that, I'll
->>>>> squash it into the driver patch.
->>>>>
->>>>> Catalin, Will, how do you want to handle the
->>>>> arch/arm64/configs/defconfig change (patch 3)?  It's currently on my
->>>>> branch, but I'm happy to drop it if another route is better.
->>>>
->>>> defconfig updates usually go through arm-soc, via the relevant platform
->>>> maintainer, so it would be best to follow that route here too otherwise
->>>> you'll probably see conflicts in -next.
->>>>
->>>
->>> Is it ok for you to pick up the arch/arm64/configs/defconfig change (patch 3)?
->>
->> Since it is already 4.12-rc7, I will pick up it and queue for the v4.14.
->> Are you fine about that?
->> Thanks!
-> 
-> Sure.
+Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          | 23 ++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-Applied the patch 3 into the hisilicon defconfig tree.
-
-BR,
-Wei
-
-> 
->>
->> Best Regards,
->> Wei
->>
->>>
->>> -Guodong
->>>
->>>> Will
->>>
->>> .
->>>
->>
-> 
-> .
-> 
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index 9d418b7..b3e36ef 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -9,6 +9,7 @@
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
+ 			- "qcom,pcie-ipq4019" for ipq4019
++			- "qcom,pcie-ipq8074" for ipq8074
+ 
+ - reg:
+ 	Usage: required
+@@ -105,6 +106,16 @@
+ 			- "bus_master"	Master AXI clock
+ 			- "bus_slave"	Slave AXI clock
+ 
++- clock-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "iface"	PCIe to SysNOC BIU clock
++			- "axi_m"	AXI Master clock
++			- "axi_s"	AXI Slave clock
++			- "ahb"		AHB clock
++			- "aux"		Auxiliary clock
++
+ - resets:
+ 	Usage: required
+ 	Value type: <prop-encoded-array>
+@@ -144,6 +155,18 @@
+ 			- "ahb"			AHB reset
+ 			- "phy_ahb"		PHY AHB reset
+ 
++- reset-names:
++	Usage: required for ipq8074
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "pipe"		PIPE reset
++			- "sleep"		Sleep reset
++			- "sticky"		Core Sticky reset
++			- "axi_m"		AXI Master reset
++			- "axi_s"		AXI Slave reset
++			- "ahb"			AHB Reset
++			- "axi_m_sticky"	AXI Master Sticky reset
++
+ - power-domains:
+ 	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
