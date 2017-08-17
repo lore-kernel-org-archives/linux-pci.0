@@ -1,22 +1,85 @@
-Return-Path: <SRS0=Kuf8=7X=lst.de=hch@kernel.org>
-Return-Path: <SRS0=Kuf8=7X=lst.de=hch@kernel.org>
-Date: Mon, 21 Aug 2017 20:34:58 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: David Miller <davem@davemloft.net>
-Cc: helgaas@kernel.org, mroos@linux.ee, sparclinux@vger.kernel.org,
-	linux-pci@vger.kernel.org, qla2xxx-upstream@qlogic.com,
-	linux-kernel@vger.kernel.org, hch@lst.de
-Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
-	vectors
-Message-ID: <20170821183458.GA23205@lst.de>
-References: <alpine.LRH.2.20.1708152321150.11510@math.ut.ee> <alpine.LRH.2.20.1708162136220.16834@math.ut.ee> <20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com> <20170821.112747.1532639515902173100.davem@davemloft.net>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve1eur01on0078.outbound.protection.outlook.com ([104.47.1.78]:57220
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751780AbdHQDDi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 16 Aug 2017 23:03:38 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+CC: "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+Subject: RE: [PATCHv3 6/9] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+Date: Thu, 17 Aug 2017 03:03:33 +0000
+Message-ID: <VI1PR0402MB278292DAC81D4A49964FEC1B84830@VI1PR0402MB2782.eurprd04.prod.outlook.com>
+References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
+ <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
+In-Reply-To: <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170821.112747.1532639515902173100.davem@davemloft.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I think with this patch from -rc6 the symptoms should be cured:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=c005390374957baacbc38eef96ea360559510aa7
-
-if that theory is right.
+SGkgU3RhbmltaXIsDQoNClRoYW5rcyBmb3IgeW91ciBmZWVkYmFjayENCg0KPiAtLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBTdGFuaW1pciBWYXJiYW5vdiBbbWFpbHRvOnN2YXJi
+YW5vdkBtbS1zb2wuY29tXQ0KPiBTZW50OiAyMDE35bm0OOaciDE25pelIDE5OjM0DQo+IFRvOiBa
+LnEuIEhvdSA8emhpcWlhbmcuaG91QG54cC5jb20+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
+Ow0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBqaW5nb29oYW4xQGdtYWlsLmNvbTsgSm9hby5QaW50
+b0BzeW5vcHN5cy5jb20NCj4gQ2M6IE0uaC4gTGlhbiA8bWluZ2h1YW4ubGlhbkBueHAuY29tPjsg
+TWluZ2thaSBIdSA8bWluZ2thaS5odUBueHAuY29tPjsNCj4gUm95IFphbmcgPHJveS56YW5nQG54
+cC5jb20+OyBuaWtsYXMuY2Fzc2VsQGF4aXMuY29tOw0KPiBqZXNwZXIubmlsc3NvbkBheGlzLmNv
+bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjMgNi85XSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nl
+c3NvcnMgZm9yIHdyaXRlDQo+IHBlcm1pc3Npb24gb2YgREJJIHJlYWQtb25seSByZWdpc3RlcnMN
+Cj4gDQo+IEhpLA0KPiANCj4gT24gMDgvMTYvMjAxNyAwNzo1NiBBTSwgWmhpcWlhbmcgSG91IHdy
+b3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4N
+Cj4gPiBUaGUgcmVhZC1vbmx5IERCSSByZWdpc3RlcnMgY2FuIGJlIHdyaXR0ZW4gb3ZlciB0aGUg
+REJJIHdoZW4gc2V0IHRoZQ0KPiA+ICJXcml0ZSB0byBSTyBSZWdpc3RlcnMgVXNpbmcgREJJIiAo
+REJJX1JPX1dSX0VOKSBmaWVsZCBvZiB0aGUNCj4gPiBNSVNDX0NPTlRST0xfMV9PRkYgcmVnaXN0
+ZXIuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBu
+eHAuY29tPg0KPiA+IC0tLQ0KPiA+IFYzOg0KPiA+ICAtIE5vIGNoYW5nZQ0KPiA+DQo+ID4gIGRy
+aXZlcnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysr
+KysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBiL2RyaXZl
+cnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUuaA0KPiA+IGluZGV4IDczNjZjODEuLjBjNWY4NzQg
+MTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4g
+KysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gQEAgLTc2LDYgKzc2
+LDkgQEANCj4gPiAgI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwgMTYp
+DQo+ID4gICNkZWZpbmUgUENJRV9BVFVfVVBQRVJfVEFSR0VUCQkweDkxQw0KPiA+DQo+ID4gKyNk
+ZWZpbmUgUENJRV9NSVNDX0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4gKyNkZWZpbmUgUENJRV9E
+QklfUk9fV1JfRU4JCSgweDEgPDwgMCkNCj4gDQo+IERvZXMgdGhvc2UgcmVnaXN0ZXJzIGV4aXN0
+IGZvciBkd2MgdmVyc2lvbiA0LjAxYT8NCg0KSm9hbywgY2FuIHlvdSBoZWxwIHRvIGNoZWNrIHRo
+aXM/DQpJIHJlZmVycmVkIHRvIERlc2lnbldhcmUgY29yZXMgUENJIEV4cHJlc3MgY29udHJvbGxl
+ciBkYXRhYm9vayB2ZXJzaW9uIDQuMjFhLg0KVGhlIEZyZWVzY2FsZSBMYXllcnNjYXBlIGltcGxl
+bWVudCBkb2VzIG5vdCBleHBvcnQgdGhlIHZlcnNpb24gb2YgZGVzaWdud2FyZSBQQ0llIGNvbnRy
+b2xsZXIsIEkgZG9uJ3Qga25vdyB3aGljaCB2ZXJzaW9ucyBoYXZlIHRob3NlIHJlZ2lzdGVycywg
+aWYgaXQgZG9lcyBub3Qgd29yayBvbiBxY29tIHBsYXRmb3JtLCBJIHdpbGwgcmVtb3ZlIHRoZSBx
+Y29tIHJlbGF0ZWQgY2hhbmdlcy4NCg0KPiANCj4gSSBtYW5hZ2VkIHRvIHRlc3QgNi85LCA4Lzkg
+YW5kIDkvOSBvbiBxY29tIHBsYXRmb3JtIChhcHE4MDY0KSB3aGljaCBoYXMNCj4gNC4wMWEgdmVy
+c2lvbiBhbmQgaXQgZG9lc24ndCB3b3JrLCBpLmUuIHRoZSBQQ0lfQ0xBU1NfQlJJREdFX1BDSSBp
+cyBub3QNCj4gcmV0dXJuZWQgd2hlbiByZWFkIFBDSV9DTEFTU19ERVZJQ0Ugb2Zmc2V0Lg0KPiAN
+Cj4gPiArDQo+ID4gIC8qDQo+ID4gICAqIGlBVFUgVW5yb2xsLXNwZWNpZmljIHJlZ2lzdGVyIGRl
+ZmluaXRpb25zDQo+ID4gICAqIEZyb20gNC44MCBjb3JlIHZlcnNpb24gdGhlIGFkZHJlc3MgdHJh
+bnNsYXRpb24gd2lsbCBiZSBtYWRlIGJ5DQo+ID4gdW5yb2xsIEBAIC0yNzksNiArMjgyLDI4IEBA
+IHN0YXRpYyBpbmxpbmUgdTMyIGR3X3BjaWVfcmVhZGxfZGJpMihzdHJ1Y3QNCj4gZHdfcGNpZSAq
+cGNpLCB1MzIgcmVnKQ0KPiA+ICAJcmV0dXJuIF9fZHdfcGNpZV9yZWFkX2RiaShwY2ksIHBjaS0+
+ZGJpX2Jhc2UyLCByZWcsIDB4NCk7ICB9DQo+ID4NCj4gPiArc3RhdGljIGlubGluZSB2b2lkIGR3
+X3BjaWVfZGJpX3JvX3dyX2VuKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiArCXUzMiByZWc7
+DQo+ID4gKwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19DT05UUk9MXzFf
+T0ZGOw0KPiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0KPiA+ICsJdmFs
+IHw9IFBDSUVfREJJX1JPX1dSX0VOOw0KPiA+ICsJZHdfcGNpZV93cml0ZWxfZGJpKHBjaSwgcmVn
+LCB2YWwpOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQgZHdfcGNpZV9k
+Ymlfcm9fd3JfZGlzKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiArCXUzMiByZWc7DQo+ID4g
+Kwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19DT05UUk9MXzFfT0ZGOw0K
+PiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0KPiA+ICsJdmFsICY9IH5Q
+Q0lFX0RCSV9ST19XUl9FTjsNCj4gPiArCWR3X3BjaWVfd3JpdGVsX2RiaShwY2ksIHJlZywgdmFs
+KTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgI2lmZGVmIENPTkZJR19QQ0lFX0RXX0hPU1QNCj4gPiAg
+aXJxcmV0dXJuX3QgZHdfaGFuZGxlX21zaV9pcnEoc3RydWN0IHBjaWVfcG9ydCAqcHApOyAgdm9p
+ZA0KPiA+IGR3X3BjaWVfbXNpX2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApOw0KPiA+DQoNClRo
+YW5rcywNClpoaXFpYW5nDQo=
