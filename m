@@ -1,47 +1,66 @@
-Return-Path: <SRS0=8Dp6=72=gmail.com=airlied@kernel.org>
-Return-Path: <SRS0=8Dp6=72=gmail.com=airlied@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jan Glauber <jglauber@cavium.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>
+Subject: [PATCH v2 2/3] PCI: Avoid bus reset for Cavium cn8xxx root ports
+Date: Thu, 17 Aug 2017 10:14:22 +0200
+Message-Id: <1502957663-5527-3-git-send-email-jglauber@cavium.com>
+In-Reply-To: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, Jon Masters <jcm@redhat.com>,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jan Glauber <jglauber@cavium.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20170823135734.GB8498@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170817113028.16853-1-dja@axtens.net> <20170817113028.16853-2-dja@axtens.net>
- <20170821105300.GB23287@e107981-lin.cambridge.arm.com> <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu-FCkV9Dv=yn_CNC9orj8Roiabb75jX34w3mMziWVZaeA@mail.gmail.com> <20170823135734.GB8498@bhelgaas-glaptop.roam.corp.google.com>
-From: Dave Airlie <airlied@gmail.com>
-Date: Thu, 24 Aug 2017 10:57:26 +1000
-Message-ID: <CAPM=9tzhzGEY_-FhGNECQ8QkxPtXxhojwPeVQT43Rcgf6X0Lww@mail.gmail.com>
-Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Will Deacon <will.deacon@arm.com>, dri-devel <dri-devel@lists.freedesktop.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>, Catalin Marinas <catalin.marinas@arm.com>,
-	Zou Rongrong <zourongrong@gmail.com>, "Vetter, Daniel" <daniel.vetter@intel.com>,
-	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Daniel Axtens <dja@axtens.net>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> Yeah, maybe it's time to disconnect the "default display device" idea
-> from the VGA arbiter.  I have no idea what (if any) dependencies X has
-> on the legacy VGA resources.  I assume X works fine on power, where it
-> sounds like those resources are rarely or never available.
+From: David Daney <david.daney@cavium.com>
 
-The question on non-x86 archs, is what is the correct device to default to.
+Root ports of cn8xxx do not function after bus reset when used with
+some e1000e and LSI HBA devices. Add a quirk to prevent bus reset on
+these root ports.
 
-On x86 we use the legacy VGA resources as a pointer, as this is the device
-the BIOS appeared on at boot so hopefully should be one you can see stuff on.
+Signed-off-by: David Daney <david.daney@cavium.com>
+[jglauber@cavium.com: fixed typo and whitespaces]
+Signed-off-by: Jan Glauber <jglauber@cavium.com>
+---
+ drivers/pci/quirks.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-On non-x86 I've no idea how to decide if there are multiple devices, maybe the
-firmware needs to tag something for the kernel if there are. Otherwise
-you'd just
-be picking something in probe order.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6967c6b..85191b8 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3364,6 +3364,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0032, quirk_no_bus_reset);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003c, quirk_no_bus_reset);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x0033, quirk_no_bus_reset);
+ 
++/*
++ * Root port on some Cavium CN8xxx chips do not successfully complete
++ * a bus reset when used with certain types of child devices. Config
++ * space access to the child may quit responding. Flag the root port
++ * as not supporting bus reset.
++ */
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
++
+ static void quirk_no_pm_reset(struct pci_dev *dev)
+ {
+ 	/*
+-- 
+2.9.0.rc0.21.g7777322
 
-I think the idea of these patches is to separate default display
-device from the arbiter.
 
-X uses the arbiter on x86 if required (it's horrible, and it's rare we
-have to nowadays),
-but for finding the default device it justs uses the sysfs boot_vga flag.
-
-Dave.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
