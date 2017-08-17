@@ -1,176 +1,128 @@
-Return-Path: <SRS0=nKW4=7G=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=nKW4=7G=broadcom.com=oza.oza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:51338 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753124AbdHQQsI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Aug 2017 12:48:08 -0400
+Date: Thu, 17 Aug 2017 11:48:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "liudongdong (C)" <liudongdong3@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Chenxin (Charles)" <charles.chenxin@huawei.com>,
+        Linuxarm <linuxarm@huawei.com>
+Subject: Re: [PATCH] PCIe AER: report non fatal errors only to the functions
+ of the same device
+Message-ID: <20170817164806.GH28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <1501813106-89672-1-git-send-email-liudongdong3@huawei.com>
+ <20170815225007.GS32525@bhelgaas-glaptop.roam.corp.google.com>
+ <025ad3e8-7411-6e97-29ba-6e5cfa7665eb@huawei.com>
+ <20170816140744.GW32525@bhelgaas-glaptop.roam.corp.google.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E40BC1D5B@FRAEML521-MBX.china.huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <20170804133753.GD16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
- <1499310582-21193-2-git-send-email-oza.oza@broadcom.com> <20170802210455.GF20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPcfUFmjg471qmzqQmayNYzfq8Wo7yfHeiEKrj7hkWF=zg@mail.gmail.com>
- <20170803185713.GV20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPcbnVefeVVh3HJd1M+8co+4VMj8HU2zmXMv4K5VGcdjVg@mail.gmail.com> <20170804133753.GD16580@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Fri, 4 Aug 2017 20:04:20 +0530
-Message-ID: <CAMSpPPdxiqwZoUmpL3eyD=SJin8_Wa=4Q0ncXJpsf7kbwqZNsQ@mail.gmail.com>
-Subject: Re: [PATCH v5 1/2] PCI: iproc: Retry request when CRS returned from EP
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E40BC1D5B@FRAEML521-MBX.china.huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 4, 2017 at 7:07 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Aug 04, 2017 at 11:29:29AM +0530, Oza Oza wrote:
->> On Fri, Aug 4, 2017 at 12:27 AM, Bjorn Helgaas <helgaas@kernel.org> wrot=
-e:
->> > On Thu, Aug 03, 2017 at 01:50:29PM +0530, Oza Oza wrote:
->> >> On Thu, Aug 3, 2017 at 2:34 AM, Bjorn Helgaas <helgaas@kernel.org> wr=
-ote:
->> >> > On Thu, Jul 06, 2017 at 08:39:41AM +0530, Oza Pawandeep wrote:
->
->> >> this is documented in our PCIe core hw manual.
->> >> >>
->> >> 4.7.3.3. Retry Status On Configuration Cycle
->> >> Endpoints are allowed to generate retry status on configuration
->> >> cycles.  In this case, the RC needs to re-issue the request.  The IP
->> >> does not handle this because the number of configuration cycles neede=
-d
->> >> will probably be less
->> >> than the total number of non-posted operations needed.   When a retry=
- status
->> >> is received on the User RX interface for a configuration request that
->> >> was sent on the User TX interface, it will be indicated with a
->> >> completion with the CMPL_STATUS field set to 2=3DCRS, and the user wi=
-ll
->> >> have to find the address and data values and send a new transaction o=
-n
->> >> the User TX interface.
->> >> When the internal configuration space returns a retry status during a
->> >> configuration cycle (user_cscfg =3D 1) on the Command/Status interfac=
-e,
->> >> the pcie_cscrs will assert with the pcie_csack signal to indicate the
->> >> CRS status.
->> >> When the CRS Software Visibility Enable register in the Root Control
->> >> register is enabled, the IP will return the data value to 0x0001 for
->> >> the Vendor ID value and 0xffff  (all 1=E2=80=99s) for the rest of the=
- data in
->> >> the request for reads of offset 0 that return with CRS status.  This
->> >> is true for both the User RX Interface and for the Command/Status
->> >> interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
->> >> field of the completion on the User RX Interface will not be 2=3DCRS =
-and
->> >> the pcie_cscrs signal will not assert on the Command/Status interface=
-.
->> >> >>
->> >> Broadcom does not sell PCIe core IP, so above information is not
->> >> publicly available in terms of hardware erratum or any similar note.
->> >>
->> >>
->> >> >
->> >> >> As a result of the fact, PCIe RC driver (sw) should take care of C=
-RS.
->> >> >> This patch fixes the problem, and attempts to read config space ag=
-ain in
->> >> >> case of PCIe code forwarding the CRS back to CPU.
->> >> >> It implements iproc_pcie_config_read which gets called for Stingra=
-y,
->> >> >> Otherwise it falls back to PCI generic APIs.
-> ...
->
->> >> >> +static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
->> >> >> +{
->> >> >> +     int timeout =3D CFG_RETRY_STATUS_TIMEOUT_US;
->> >> >> +     unsigned int ret;
->> >> >> +
->> >> >> +     /*
->> >> >> +      * As per PCI spec, CRS Software Visibility only
->> >> >> +      * affects config read of the Vendor ID.
->> >> >> +      * For config write or any other config read the Root must
->> >> >> +      * automatically re-issue configuration request again as a
->> >> >> +      * new request. Iproc based PCIe RC (hw) does not retry
->> >> >> +      * request on its own, so handle it here.
->> >> >> +      */
->> >> >> +     do {
->> >> >> +             ret =3D readl(cfg_data_p);
->> >> >> +             if (ret =3D=3D CFG_RETRY_STATUS)
->> >> >> +                     udelay(1);
->> >> >> +             else
->> >> >> +                     return PCIBIOS_SUCCESSFUL;
->> >> >> +     } while (timeout--);
->> >> >
->> >> > Shouldn't this check *where* in config space we're reading?
->> >> >
->> >> No, we do not require, because with SPDK it was reading BAR space
->> >> which points to MSI-x table.
->> >> what I mean is, it could be anywhere.
->> >
->> > The documentation above says the IP returns data of 0x0001 for *reads
->> > of offset 0*.  Your current code reissues the read if *any* read
->> > anywhere returns data that happens to match CFG_RETRY_STATUS.  That
->> > may be a perfectly valid register value for some device's config
->> > space.  In that case, you do not want to reissue the read and you do
->> > not want to timeout.
->>
->> ok, so the documentation is about PCIe core IP,
->> It is not about the host bridge. (PCI to AXI bridge)
->>
->> PCIe core forwards 0x0001 return code to host bridge, and converts it
->> into 0xffff0001.
->> which is hard wired.
->> we have another HW layer on top of PCIe core which implements lots of
->> logic. (host bridge)
->>
->> I agree with you that, it could be valid data, but our ASIC conveyed
->> that they have chosen the code
->> such that this data is unlikely to be valid.
->
-> Hehe.  I think it's more likely that they chose this value because
-> it's mentioned in the spec for CRS.  I doubt it has anything to do
-> with it being "unlikely".  Or maybe it really is just a coincidence :)
->
-> In any event, your documentation says this data is only fabricated for
-> reads at offset 0.  So why do you check for it for *all* reads?
+On Thu, Aug 17, 2017 at 01:06:32PM +0000, Gabriele Paoloni wrote:
+> Hi Bjorn
+> 
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: 16 August 2017 15:08
+> > To: liudongdong (C)
+> > Cc: linux-pci@vger.kernel.org; Gabriele Paoloni; Chenxin (Charles);
+> > Linuxarm
+> > Subject: Re: [PATCH] PCIe AER: report non fatal errors only to the
+> > functions of the same device
+> > 
+> > On Wed, Aug 16, 2017 at 04:50:16PM +0800, Dongdong Liu wrote:
+> > > Hi Bjorn
+> > >
+> > > 在 2017/8/16 6:50, Bjorn Helgaas 写道:
+> > > >On Fri, Aug 04, 2017 at 10:18:26AM +0800, Dongdong Liu wrote:
+> > > >>From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > > >>
+> > > >>Currently if an uncorrectable error is reported by an EP the AER
+> > > >>driver walks over all the devices connected to the upstream port
+> > > >>bus and in turns call the report_error_detected() callback.
+> > > >>If any of the devices connected to the bus does not implement
+> > > >>dev->driver->err_handler->error_detected() do_recovery() will fail.
+> > > >>
+> > > >>However for non fatal errors the PCIe link should not be considered
+> > > >>compromised, therefore it makes sense to report the error only to
+> > > >>all the functions of a multifunction device.
+> > > >>This patch implements this new behaviour for non fatal errors.
+> > > >
+> > > >Why do we bother even with other functions in the same multifunction
+> > > >device?  PCIe r3.1, sec 6.2.2.2.2, says non-fatal errors only affect
+> > a
+> > > >particular transaction, and "devices not associated with the
+> > > >transaction in error are not impacted."
+> > > >
+> > > >A transaction is only associated with one function, so other
+> > functions
+> > > >in the same device shouldn't be affected, should they?
+> > >
+> > > PCIe r3.1, sec 6.2.4 Error Logging
+> > > PCI Express errors are not Function-specific.  "Software is
+> > > responsible for scanning all Functions in a multi-Function device
+> > > when it detects one of those errors"
+> > 
+> > The previous text basically says that if a multi-function device
+> > should generate at most one error reporting message, even if several
+> > functions have logged an error of the same severity.  I think that
+> > single message corresponds to a single interrupt.
+> > 
+> > So when it says "software is responsible for scanning all Functions in
+> > a multi-Function device," I think the point is that software should
+> > read the error reporting registers of all functions in case several of
+> > them have logged errors.
+> 
+> Right, looking again at the AER core it seems that find_source_device()
+> would look for the error sources by walking the PCIe hierarchy starting
+> from the RP that reported the error (however from AER_MAX_MULTI_ERR_DEVICES
+> max 5 devices can log an error on a single AER interrupt...).
+> 
+> Anyway as it is now, and assuming that we have no more than 5 functions
+> in a multi-function device, AER core should call handle_error_source()
+> for each function that logged an error, right?
+> 
+> > 
+> > But IIUC, this patch has nothing to do with reading the error CSRs
+> > (which should be done in the PCI/AER core).  This patch merely changes
+> > the set of devices for which we call the driver's error reporting
+> > interfaces.
+> 
+> Correct. From our point of view if a fatal AER is reported by a function
+> then we need to call the driver callbacks also on all the function under
+> the same bus as the reporting device (as the link is compromised).
+> 
+> We thought that for non-fatal errors this is not necessary as the bus 
+> link should not be considered compromised, but we thought that for MF
+> devices maybe it would have been appropriate to call the driver callbacks
+> on the other functions of the same device. However after your consideration
+> above and after double checking the AER core it seems that also this is
+> not necessary (in fact for a MF device handle_error_source() will be called
+> for each function that logged the error)
+> 
+> > 
+> > If this is fixing a problem, maybe it would help clarify things if you
+> > could include the concrete details of what's going wrong.
+> 
+> In Hi1620 we have some integrated controllers that appear as PCIe EPs
+> under the same bus. Some of these controllers (e.g. the SATA 
+> controller) are missing the err_handler callbacks.
+> 
+> If one device reports a non-fatal uncorrectable error with the current
+> AER core code the callbacks for all the devices under the same bus will
+> be called and, if any of the devices is missing the callback all the
+> devices in the subtree are left in error state without recovery... 
+> This patch is needed to sort out a situation like this one.
+> 
+> Anyway I think that after the considerations above on the MF device
+> I can modify this patch to just call the callback for the reporting
+> function...?
 
-sorry, missed to clarify your question:
-
-the Documentation mentioned offset 0, but that is not the case.
-it is true for every single configuration access.
-so yes, the iproc PCIe core, will not re-issue any request for any offset
-in configuration space.
-
->
->> however I have found one case where this data is valid.
->> which is; BAR exposing 64-bit IO memory, which seems legacy and is rare =
-as well.
->>
->> however in our next chip revision, ASIC will give us separate CRS
->> register in our host-bridge.
->> We will be retrying on that register instead of this code. but that
->> will be the minor code change.
->
-> It would be a lot better if your next chip revision handled CRS in
-> hardware.  It's not clear this can be done correctly in software and
-> even if it can, you're always going to be the exception, which means
-> it's likely to continue to be a source of bugs.
->
->> > The PCIe spec says that if CRS software visibility is enabled and we
->> > get a CRS completion for a config read of the Vendor ID at offset 0,
->> > the read should not be retried, and the read should return 0x0001.
->> > For example, pci_bus_read_dev_vendor_id() should see that 0x0001
->> > value.
->> >
->> > That's not what this code does.  If the readl() returns
->> > CFG_RETRY_STATUS, you do the delay and reissue the read.  You never
->> > return 0x0001 to the caller of pci_bus_read_config_word().
->> >
->>
->> As far as I understand, PCI config access APIs do not check for RETRY.
->> Also caller of them such as __pci_read_base, do not check for retry.
->
-> Of course not.  PCIe r3.1, sec 2.3.2, says the CRS status is only
-> visible to software if (1) CRS software visibility is enabled and
-> (2) we're reading the Vendor ID.  In all other cases, the Root
-> Complex must reissue the request, which is invisible to software.
->
-> Bjorn
+Sounds like a reasonable approach.  I'll compare the patch with the
+spec in more detail when you post it.
