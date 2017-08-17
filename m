@@ -1,62 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:48770 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752459AbdHGIxg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 7 Aug 2017 04:53:36 -0400
-Cc: shawn.lin@rock-chips.com
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [RFC] what should we report for the failure of pcie_set_mps?
-Message-ID: <1729fb86-b9be-0ba6-4b65-33bb5a3527f9@rock-chips.com>
-Date: Mon, 7 Aug 2017 16:53:25 +0800
+Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45700 "EHLO
+        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750857AbdHQIVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Aug 2017 04:21:32 -0400
+Subject: Re: PCIe oops for NULL pointer dereference during next-20170807 and
+ next-20170815
+To: Joerg Roedel <joro@8bytes.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        iommu@lists.linux-foundation.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <c6ae57b6-1175-4ba4-b66d-d2f5393d06fc@rock-chips.com>
+ <2ac52f40-c34f-6c31-b8db-868c40a977a3@rock-chips.com>
+ <20170817075825.GR30515@8bytes.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <94b7e141-362d-02f3-1403-af7a1dfc8c4e@arm.com>
+Date: Thu, 17 Aug 2017 09:21:29 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gbk; format=flowed
+In-Reply-To: <20170817075825.GR30515@8bytes.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 17/08/17 08:58, Joerg Roedel wrote:
+> On Thu, Aug 17, 2017 at 03:02:31PM +0800, Shawn Lin wrote:
+>> So should we revert this commit or maybe we could add some checking
+>> into gic-v2m and gic-v3-its to see if the dev is iommu-capable? If not,
+>> we should create another routine to map MSI msg.
+> 
+> Yes, fixing this in gic code is the right approach. I usually don't
+> revert patches to hide problems somewhere else.
+Here's what it would look like:
 
-I notice the log below showing the add-in NVMe failed to set MPS to 256.
-My RC could support up to 256 but the Intel 600P series NVMe could only
-support up to 128. So I am confusing now it's normal to fallback to the
-minimal MPS negotiaged but why it deserve a warning and what should I
-report a bug for?
+diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
+index b47097a3e4b4..5e81ad62c801 100644
+--- a/drivers/irqchip/irq-gic-v3-its.c
++++ b/drivers/irqchip/irq-gic-v3-its.c
+@@ -1125,6 +1125,8 @@ static void its_irq_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
+ {
+ 	struct its_device *its_dev = irq_data_get_irq_chip_data(d);
+ 	struct its_node *its;
++	struct iommu_group *group;
++	struct device *dev;
+ 	u64 addr;
+ 
+ 	its = its_dev->its;
+@@ -1134,7 +1136,12 @@ static void its_irq_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
+ 	msg->address_hi		= upper_32_bits(addr);
+ 	msg->data		= its_get_event_id(d);
+ 
+-	iommu_dma_map_msi_msg(d->irq, msg);
++	dev = msi_desc_to_dev(irq_get_msi_desc(d->irq));
++	group = iommu_group_get(dev);
++	if (group) {
++		iommu_dma_map_msi_msg(d->irq, msg);
++		iommu_group_put(group);
++	}
+ }
+ 
+ static int its_irq_set_irqchip_state(struct irq_data *d,
 
-[    0.694942] pci 0000:01:00.0: can't set Max Payload Size to 256; if 
-necessary, use "pci=pcie_bus_safe" and report a bug
-[    0.706267] pci 0000:00:00.0: BAR 14: assigned [mem 
-0xfa000000-0xfa0fffff]
-[    0.706966] pci 0000:01:00.0: BAR 0: assigned [mem 
-0xfa000000-0xfa003fff 64bit]
-[    0.707736] pci 0000:00:00.0: PCI bridge to [bus 01]
-[    0.708238] pci 0000:00:00.0:   bridge window [mem 0xfa000000-0xfa0fffff]
-[    0.709232] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
-[    0.710674] pcieport 0000:00:00.0: Signaling PME with IRQ 215
-[    0.711654] pcieport 0000:00:00.0: AER enabled with IRQ 215
+I'm not convinced  that playing with the group refcount in an irqchip
+is the right approach...
 
+Thanks,
 
-lspci -vvv
-
-00:00.0 Class 0604: Device 1d87:0100
-	...
-         Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-         Capabilities: [c0] Express (v2) Root Port (Slot+), MSI 00
-                 DevCap: MaxPayload 256 bytes, PhantFunc 0
-                         ExtTag- RBE+
-                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+ 	
-		Unsupported+
-                         RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-                         MaxPayload 256 bytes, MaxReadReq 512 bytes
-
-01:00.0 Class 0108: Device 8086:f1a5 (rev 03) (prog-if 02)
-	...
-	Capabilities: [70] Express (v2) Endpoint, MSI 00
-                 DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
-			unlimited, L1 unlimited
-			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-			SlotPowerLimit 0.000W
-                 DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+
-			Unsupported+ RlxdOrd+ ExtTag- PhantFunc- AuxPwr-
-			NoSnoop- FLReset-
-			MaxPayload 128 bytes, MaxReadReq 512 bytes
+	M.
+-- 
+Jazz is not dead. It just smells funny...
