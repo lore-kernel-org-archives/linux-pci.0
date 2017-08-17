@@ -1,80 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:52606 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752536AbdHNU7v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 16:59:51 -0400
-Date: Mon, 14 Aug 2017 15:59:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>
-Subject: Re: [PATCH] pciehp: Fix infinite interupt handler loop
-Message-ID: <20170814205948.GF32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501571512-8362-1-git-send-email-keith.busch@intel.com>
+Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH net] PCI: fix the return value for the
+ pci_find_pcie_root_port()
+To: Thierry Reding <thierry.reding@gmail.com>
+References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
+ <20170817105156.GA18789@ulmo>
+ <ea83e7a8-39a4-5b94-1148-5bf4ae4ed214@huawei.com>
+ <20170817133012.GC6854@ulmo>
+CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <eric.dumazet@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <7b19e5fe-e6b8-e51d-53a3-0f9ee328a842@huawei.com>
+Date: Thu, 17 Aug 2017 21:38:02 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501571512-8362-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170817133012.GC6854@ulmo>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 01, 2017 at 03:11:52AM -0400, Keith Busch wrote:
-> We've encountered a particular platform that under some circumstances
-> always has the power fault detected status raised. The pciehp irq handler
-> would loop forever because it thinks it is handling new events when in
-> fact the power fault is not new. This patch fixes that by masking off
-> the power fault status from new events if the driver hasn't seen the
-> power fault clear from the previous handling attempt.
 
-Can you say which platform this is?  If this is a hardware defect,
-it'd be interesting to know where it happens.
 
-But I'm not sure we handle PCI_EXP_SLTSTA correctly.  We basically
-have this:
-
-  pciehp_isr()
-  {
-    pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &status);
-    events = status & (<events we care about>);
-    pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, events);
-    <queue event handling>
-  }
-
-The write to PCI_EXP_SLTSTA clears PCI_EXP_SLTSTA_PFD because it's
-RW1C.  But we haven't done anything that would actually change the
-situation that caused a power fault, so I don't think it would be
-surprising if the hardware immediately reasserted it.
-
-So maybe this continual assertion of power fault is really a software
-bug, not a hardware problem?
-
-> Fixes: fad214b0aa72 ("PCI: pciehp: Process all hotplug events before looking for new ones")
+On 2017/8/17 21:30, Thierry Reding wrote:
+> On Thu, Aug 17, 2017 at 08:40:16PM +0800, Ding Tianhong wrote:
+>>
+>>
+>> On 2017/8/17 18:51, Thierry Reding wrote:
+>>> On Thu, Aug 17, 2017 at 10:25:30AM +0800, Ding Tianhong wrote:
+>>>> The pci_find_pcie_root_port() would return NULL if the given
+>>>> dev is already a Root Port, it looks like unfriendly to the
+>>>> PCIe Root Port device, Thierry and Bjorn suggest to let this
+>>>> function return the given dev under this circumstances.
+>>>>
+>>>> Fixes: 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI device")
+>>>> Suggested-by: Thierry Reding <thierry.reding@gmail.com>
+>>>> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+>>>> Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
+>>>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+>>>> ---
+>>>>  drivers/pci/pci.c | 2 +-
+>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>>>> index 7e2022f..352bb53 100644
+>>>> --- a/drivers/pci/pci.c
+>>>> +++ b/drivers/pci/pci.c
+>>>> @@ -514,7 +514,7 @@ struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
+>>>>   */
+>>>>  struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
+>>>>  {
+>>>> -	struct pci_dev *bridge, *highest_pcie_bridge = NULL;
+>>>> +	struct pci_dev *bridge, *highest_pcie_bridge = dev;
+>>>>  
+>>>>  	bridge = pci_upstream_bridge(dev);
+>>>>  	while (bridge && pci_is_pcie(bridge)) {
+>>>
+>>> I think this should actually be this change on top of a revert of commit
+>>> 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI
+>>> device"). After the above change, the previous fix will have a redundant
+>>> check because highest_pcie_bridge will never be NULL.
+>>>
+>>> Let me send out that version to clarify what I mean.
+>>>
+>>
+>> Hi Thierry:
+>>
+>> The patch ("PCI: fix oops when try to find Root Port for a PCI device")
+>> has been merge to the linus mainline tree before you found this deficiencies....
 > 
-> Cc: <stable@vger.kernel.org> # 4.9+
-> Cc: Mayurkumar Patel <mayurkumar.patel@intel.com>
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
-> Resending due to send-email setup error; this patch may appear twice
-> for some.
+> I understand that. I'm just saying that there's no point keeping that
+> change around because it no longer makes sense after we initialize the
+> highest_pcie_bridge variable to dev.
 > 
->  drivers/pci/hotplug/pciehp_hpc.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 026830a..8ecbc13 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -583,7 +583,9 @@ static irqreturn_t pciehp_isr(int irq, void *dev_id)
->  	 * Slot Status contains plain status bits as well as event
->  	 * notification bits; right now we only want the event bits.
->  	 */
-> -	events = status & (PCI_EXP_SLTSTA_ABP | PCI_EXP_SLTSTA_PFD |
-> +	events = status & (PCI_EXP_SLTSTA_ABP |
-> +			  (ctrl->power_fault_detected ?
-> +				0 : PCI_EXP_SLTSTA_PFD) |
->  			   PCI_EXP_SLTSTA_PDC | PCI_EXP_SLTSTA_CC |
->  			   PCI_EXP_SLTSTA_DLLSC);
->  	if (!events)
-> -- 
-> 2.5.5
+
+Ok, NO problem.:)
+
+> Thierry
 > 
