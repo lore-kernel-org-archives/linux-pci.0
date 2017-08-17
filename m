@@ -1,97 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr00055.outbound.protection.outlook.com ([40.107.0.55]:15804
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752326AbdHODFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 23:05:20 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>,
-        "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
-Subject: RE: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-Date: Tue, 15 Aug 2017 03:05:15 +0000
-Message-ID: <AM5PR0402MB2771E4A3FCA2B08592DFD65D848D0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170814213824.GJ32525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 17 Aug 2017 07:00:17 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jan Glauber <jglauber@cavium.com>
+Subject: Re: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
+Message-ID: <20170817070017.1e9c9456@w520.home>
+In-Reply-To: <1502957663-5527-4-git-send-email-jglauber@cavium.com>
+References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+ <1502957663-5527-4-git-send-email-jglauber@cavium.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE3xOo41MIxNcjVIDU6MzgNCj4gVG86IFoucS4gSG91
-IDx6aGlxaWFuZy5ob3VAbnhwLmNvbT4NCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7
-IGJoZWxnYWFzQGdvb2dsZS5jb207DQo+IGppbmdvb2hhbjFAZ21haWwuY29tOyBKb2FvLlBpbnRv
-QHN5bm9wc3lzLmNvbTsgTS5oLiBMaWFuDQo+IDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5n
-a2FpIEh1IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZw0KPiA8cm95LnphbmdAbnhwLmNv
-bT4NCj4gU3ViamVjdDogUmU6IFtQQVRDSHYyIDQvNl0gUENJOiBsYXllcnNjYXBlOiByZWZhY3Rv
-ciB0aGUgaG9zdF9pbml0IGZ1bmN0aW9uDQo+IA0KPiBPbiBUaHUsIEF1ZyAwMywgMjAxNyBhdCAw
-NDoyMzozOFBNICswODAwLCBaaGlxaWFuZyBIb3Ugd3JvdGU6DQo+ID4gRnJvbTogSG91IFpoaXFp
-YW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4gPg0KPiA+IE1ha2UgdGhlIGxzMTAyMWEncyBo
-b3N0X2luaXQgcmV1c2UgbGF5ZXJzY2FwZSBwbGF0Zm9ybSdzIGNvbW1vbg0KPiA+IGhvc3RfaW5p
-dCBmdW5jdGlvbi4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEhvdSBaaGlxaWFuZyA8WmhpcWlh
-bmcuSG91QG54cC5jb20+DQo+ID4gLS0tDQo+ID4gVjI6DQo+ID4gIC0gUmVtb3ZlZCB0aGUgZGlz
-YWJsZSBvdXRib3VuZCB3aW5kb3dzIGNvZGUgYW5kIHRoZSByZW1vdmUgZHVwbGljYXRlDQo+IGNs
-YXNzIGNvZGUNCj4gPiAgICBmaXh1cCBjb2RlIGZyb20gdGhpcyBwYXRjaC4NCj4gPg0KPiA+ICBk
-cml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYyB8IDU0DQo+ID4gKysrKysrKysrKysrKysr
-KysrKystLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMjcgaW5zZXJ0
-aW9ucygrKSwgMjcgZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9w
-Y2kvZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiBiL2RyaXZlcnMvcGNpL2R3Yy9wY2ktbGF5ZXJz
-Y2FwZS5jDQo+ID4gaW5kZXggMDkwNTZhNi4uMzUzM2E4YyAxMDA2NDQNCj4gPiAtLS0gYS9kcml2
-ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0KPiA+ICsrKyBiL2RyaXZlcnMvcGNpL2R3Yy9w
-Y2ktbGF5ZXJzY2FwZS5jDQo+ID4gQEAgLTEwNywzMyArMTA3LDYgQEAgc3RhdGljIGludCBsczEw
-MjFfcGNpZV9saW5rX3VwKHN0cnVjdCBkd19wY2llICpwY2kpDQo+ID4gIAlyZXR1cm4gMTsNCj4g
-PiAgfQ0KPiA+DQo+ID4gLXN0YXRpYyB2b2lkIGxzMTAyMV9wY2llX2hvc3RfaW5pdChzdHJ1Y3Qg
-cGNpZV9wb3J0ICpwcCkgLXsNCj4gPiAtCXN0cnVjdCBkd19wY2llICpwY2kgPSB0b19kd19wY2ll
-X2Zyb21fcHAocHApOw0KPiA+IC0Jc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19sc19wY2llKHBj
-aSk7DQo+ID4gLQlzdHJ1Y3QgZGV2aWNlICpkZXYgPSBwY2ktPmRldjsNCj4gPiAtCXUzMiBpbmRl
-eFsyXTsNCj4gPiAtDQo+ID4gLQlwY2llLT5zY2ZnID0gc3lzY29uX3JlZ21hcF9sb29rdXBfYnlf
-cGhhbmRsZShkZXYtPm9mX25vZGUsDQo+ID4gLQkJCQkJCSAgICAgImZzbCxwY2llLXNjZmciKTsN
-Cj4gPiAtCWlmIChJU19FUlIocGNpZS0+c2NmZykpIHsNCj4gPiAtCQlkZXZfZXJyKGRldiwgIk5v
-IHN5c2NmZyBwaGFuZGxlIHNwZWNpZmllZFxuIik7DQo+ID4gLQkJcGNpZS0+c2NmZyA9IE5VTEw7
-DQo+ID4gLQkJcmV0dXJuOw0KPiA+IC0JfQ0KPiA+IC0NCj4gPiAtCWlmIChvZl9wcm9wZXJ0eV9y
-ZWFkX3UzMl9hcnJheShkZXYtPm9mX25vZGUsDQo+ID4gLQkJCQkgICAgICAgImZzbCxwY2llLXNj
-ZmciLCBpbmRleCwgMikpIHsNCj4gPiAtCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiAtCQlyZXR1
-cm47DQo+ID4gLQl9DQo+ID4gLQlwY2llLT5pbmRleCA9IGluZGV4WzFdOw0KPiA+IC0NCj4gPiAt
-CWR3X3BjaWVfc2V0dXBfcmMocHApOw0KPiA+IC0NCj4gPiAtCWxzX3BjaWVfZHJvcF9tc2dfdGxw
-KHBjaWUpOw0KPiA+IC19DQo+ID4gLQ0KPiA+ICBzdGF0aWMgaW50IGxzX3BjaWVfbGlua191cChz
-dHJ1Y3QgZHdfcGNpZSAqcGNpKSAgew0KPiA+ICAJc3RydWN0IGxzX3BjaWUgKnBjaWUgPSB0b19s
-c19wY2llKHBjaSk7IEBAIC0xNjAsNiArMTMzLDMzIEBAIHN0YXRpYw0KPiA+IHZvaWQgbHNfcGNp
-ZV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApDQo+ID4gIAlkd19wY2llX2RiaV9yb193
-cl9kaXMocGNpKTsNCj4gPg0KPiA+ICAJbHNfcGNpZV9kcm9wX21zZ190bHAocGNpZSk7DQo+ID4g
-Kw0KPiA+ICsJZHdfcGNpZV9zZXR1cF9yYyhwcCk7DQo+ID4gK30NCj4gPiArDQo+ID4gK3N0YXRp
-YyB2b2lkIGxzMTAyMV9wY2llX2hvc3RfaW5pdChzdHJ1Y3QgcGNpZV9wb3J0ICpwcCkgew0KPiA+
-ICsJc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4gKwlz
-dHJ1Y3QgbHNfcGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPiArCXN0cnVjdCBkZXZp
-Y2UgKmRldiA9IHBjaS0+ZGV2Ow0KPiA+ICsJdTMyIGluZGV4WzJdOw0KPiA+ICsNCj4gPiArCXBj
-aWUtPnNjZmcgPSBzeXNjb25fcmVnbWFwX2xvb2t1cF9ieV9waGFuZGxlKGRldi0+b2Zfbm9kZSwN
-Cj4gPiArCQkJCQkJICAgICAiZnNsLHBjaWUtc2NmZyIpOw0KPiA+ICsJaWYgKElTX0VSUihwY2ll
-LT5zY2ZnKSkgew0KPiA+ICsJCWRldl9lcnIoZGV2LCAiTm8gc3lzY2ZnIHBoYW5kbGUgc3BlY2lm
-aWVkXG4iKTsNCj4gPiArCQlwY2llLT5zY2ZnID0gTlVMTDsNCj4gPiArCQlyZXR1cm47DQo+ID4g
-Kwl9DQo+ID4gKw0KPiA+ICsJaWYgKG9mX3Byb3BlcnR5X3JlYWRfdTMyX2FycmF5KGRldi0+b2Zf
-bm9kZSwNCj4gPiArCQkJCSAgICAgICAiZnNsLHBjaWUtc2NmZyIsIGluZGV4LCAyKSkgew0KPiA+
-ICsJCXBjaWUtPnNjZmcgPSBOVUxMOw0KPiA+ICsJCXJldHVybjsNCj4gPiArCX0NCj4gPiArCXBj
-aWUtPmluZGV4ID0gaW5kZXhbMV07DQo+ID4gKw0KPiA+ICsJbHNfcGNpZV9ob3N0X2luaXQocHAp
-Ow0KPiANCj4gVGhlIGNoYW5nZWxvZyBzdWdnZXN0cyB0aGF0IHRoaXMgaXMgYSBzaW1wbGUgcmVm
-YWN0b3JpbmcgdGhhdCBkb2Vzbid0IGZpeA0KPiBhbnl0aGluZy4NCj4gDQo+IEJ1dCBiZWNhdXNl
-IGxzMTAyMV9wY2llX2hvc3RfaW5pdCgpIG5vdyBjYWxscyBsc19wY2llX2hvc3RfaW5pdCgpLCBp
-dCBub3cgY2FsbHM6DQo+IA0KPiAgIGR3X3BjaWVfZGJpX3JvX3dyX2VuKHBjaSk7DQo+ICAgbHNf
-cGNpZV9maXhfY2xhc3MocGNpZSk7DQo+ICAgbHNfcGNpZV9jbGVhcl9tdWx0aWZ1bmN0aW9uKHBj
-aWUpOw0KPiAgIGR3X3BjaWVfZGJpX3JvX3dyX2RpcyhwY2kpOw0KPiANCj4gd2hlbiBpdCBkaWQg
-bm90IGNhbGwgdGhlbSBiZWZvcmUuDQo+IA0KPiBJdCdzIGZpbmUgd2l0aCBtZSBpZiB5b3Ugd2Fu
-dCB0byBkbyB0aGF0LCBidXQgaXQgc2hvdWxkIGJlIG1lbnRpb25lZCBpbiB0aGUNCj4gY2hhbmdl
-bG9nLg0KDQpJIHdpbGwgYWRkIHRoZXNlIHRvIGNoYW5nZWxvZy4NCkFjdHVhbGx5LCB0aGUgbHMx
-MDIxYSB1c2UgdGhlIHNhbWUgUENJZSBJUCBjb3JlIHdpdGggb3RoZXIgTGF5ZXJzY2FwZSBwbGF0
-Zm9ybXMsIGJ1dCB0aGUgbWV0aG9kIHRvIGdldCBMVFNTTSBpcyBpbXBsZW1lbnRlZCBkaWZmZXJl
-bnRseS4gVGhpcyBpcyB0aGUgcmVhc29uLCBJIHRoaW5rLCB0byBzZXBhcmF0ZSBsczEwMjFhIGhv
-c3QgaW5pdCBmdW5jdGlvbiwgdGhlIHJlc2V0IHBhcnRzIG9mIGhvc3QgaW5pdCBmdW5jdGlvbiBz
-aG91bGQgYmUgdGhlIHNhbWUuDQoNCj4gPiAgfQ0KPiA+DQo+ID4gIHN0YXRpYyBpbnQgbHNfcGNp
-ZV9tc2lfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwLA0KPiA+IC0tDQo+ID4gMi4xLjAu
-MjcuZzk2ZGIzMjQNCj4gPg0KDQpUaGFua3MsDQpaaGlxaWFuZw0K
+On Thu, 17 Aug 2017 10:14:23 +0200
+Jan Glauber <jglauber@cavium.com> wrote:
+
+> If a PCI device supports neither function-level reset, nor slot
+> or bus reset then refuse to probe it. A line is printed to inform
+> the user.
+
+But that's not what this does, this requires that the device is on a
+reset-able bus.  This is a massive regression.  With this we could no
+longer assign devices on the root complex or any device which doesn't
+return from bus reset and currently makes use of the NO_BUS_RESET flag
+and works happily otherwise.  Full NAK.  Thanks,
+
+Alex
+ 
+> Without this change starting qemu with a vfio-pci device can lead to
+> a kernel panic on some Cavium cn8xxx systems, depending on the used
+> device.
+> 
+> Signed-off-by: Jan Glauber <jglauber@cavium.com>
+> ---
+>  drivers/vfio/pci/vfio_pci.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+> index 063c1ce..029ba13 100644
+> --- a/drivers/vfio/pci/vfio_pci.c
+> +++ b/drivers/vfio/pci/vfio_pci.c
+> @@ -1196,6 +1196,12 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+>  		return -EINVAL;
+>  
+> +	ret = pci_probe_reset_bus(pdev->bus);
+> +	if (ret) {
+> +		dev_warn(&pdev->dev, "Refusing to probe because reset is not possible.\n");
+> +		return ret;
+> +	}
+> +
+>  	group = vfio_iommu_group_get(&pdev->dev);
+>  	if (!group)
+>  		return -EINVAL;
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
