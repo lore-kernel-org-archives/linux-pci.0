@@ -1,66 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:38174 "EHLO
-        mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751704AbdHIOOm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 9 Aug 2017 10:14:42 -0400
-Received: by mail-lf0-f52.google.com with SMTP id y15so28485008lfd.5
-        for <linux-pci@vger.kernel.org>; Wed, 09 Aug 2017 07:14:42 -0700 (PDT)
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>
-Cc: linux-pci@vger.kernel.org, Linus Walleij <linus.walleij@linaro.org>
-Subject: [PATCH 1/2 v2] PCI: v3: Update the device tree bindings
-Date: Wed,  9 Aug 2017 16:14:30 +0200
-Message-Id: <20170809141431.22146-1-linus.walleij@linaro.org>
+Received: from mail-wr0-f194.google.com ([209.85.128.194]:33201 "EHLO
+        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbdHQIPH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 04:15:07 -0400
+From: Jan Glauber <jglauber@cavium.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-kernel@vger.kernel.org, david.daney@cavium.com,
+        Jon Masters <jcm@redhat.com>,
+        Robert Richter <robert.richter@cavium.com>,
+        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
+        Jan Glauber <jglauber@cavium.com>
+Subject: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
+Date: Thu, 17 Aug 2017 10:14:23 +0200
+Message-Id: <1502957663-5527-4-git-send-email-jglauber@cavium.com>
+In-Reply-To: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
-and predates the more formal format we have adopted for the bindings.
-Update them a bit so it is easier to read, and add the Integrator AP-
-specific compatible so we can detect that we are running on that specific
-platform.
+If a PCI device supports neither function-level reset, nor slot
+or bus reset then refuse to probe it. A line is printed to inform
+the user.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+Without this change starting qemu with a vfio-pci device can lead to
+a kernel panic on some Cavium cn8xxx systems, depending on the used
+device.
+
+Signed-off-by: Jan Glauber <jglauber@cavium.com>
 ---
-ChangeLog v1->v2:
-- Added Rob's ACK.
+ drivers/vfio/pci/vfio_pci.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Bjorn: please merge this when you feel confident with it.
----
- .../devicetree/bindings/pci/v3-v360epc-pci.txt        | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-index 30b364e504ba..bcc5fe2a74cb 100644
---- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
-@@ -2,14 +2,15 @@ V3 Semiconductor V360 EPC PCI bridge
+diff --git a/drivers/vfio/pci/vfio_pci.c b/drivers/vfio/pci/vfio_pci.c
+index 063c1ce..029ba13 100644
+--- a/drivers/vfio/pci/vfio_pci.c
++++ b/drivers/vfio/pci/vfio_pci.c
+@@ -1196,6 +1196,12 @@ static int vfio_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	if (pdev->hdr_type != PCI_HEADER_TYPE_NORMAL)
+ 		return -EINVAL;
  
- This bridge is found in the ARM Integrator/AP (Application Platform)
- 
--Integrator-specific notes:
--
--- syscon: should contain a link to the syscon device node (since
--  on the Integrator, some registers in the syscon are required to
--  operate the V3).
--
--V360 EPC specific notes:
--
--- reg: should contain the base address of the V3 adapter.
-+Required properties:
-+- compatible: should be one of:
-+  "v3,v360epc-pci"
-+  "arm,integrator-ap-pci", "v3,v360epc-pci"
-+- reg: should contain the base address of the V3 host bridge.
- - interrupts: should contain a reference to the V3 error interrupt
-   as routed on the system.
++	ret = pci_probe_reset_bus(pdev->bus);
++	if (ret) {
++		dev_warn(&pdev->dev, "Refusing to probe because reset is not possible.\n");
++		return ret;
++	}
 +
-+Integrator-specific required properties:
-+- syscon: should contain a link to the syscon device node, since
-+  on the Integrator, some registers in the syscon are required to
-+  operate the V3 host bridge.
+ 	group = vfio_iommu_group_get(&pdev->dev);
+ 	if (!group)
+ 		return -EINVAL;
 -- 
-2.9.4
+2.9.0.rc0.21.g7777322
