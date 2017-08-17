@@ -1,72 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 24 Aug 2017 12:01:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-Message-ID: <20170824170147.GN31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
- <e32f8446-bd0b-0bc8-55b4-8dbebaeba101@sigmadesigns.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54668 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751586AbdHQIb1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 04:31:27 -0400
+Date: Thu, 17 Aug 2017 14:01:17 +0530
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        kishon@ti.com, sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
+        fengguang.wu@intel.com, weiyongjun1@huawei.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        smuthayy <smuthayy@codeaurora.org>
+Subject: Re: [PATCH v6 7/7] PCI: dwc: qcom: Add support for IPQ8074 PCIe
+ controller
+Message-ID: <20170817083116.GA9649@codeaurora.org>
+References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
+ <1501482857-14100-8-git-send-email-varada@codeaurora.org>
+ <710f8933-df3a-7666-f5c5-861dd9761dba@mm-sol.com>
 MIME-Version: 1.0
-In-Reply-To: <e32f8446-bd0b-0bc8-55b4-8dbebaeba101@sigmadesigns.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>, Mason <slash.tmp@free.fr>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <710f8933-df3a-7666-f5c5-861dd9761dba@mm-sol.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 23, 2017 at 02:59:42PM +0200, Marc Gonzalez wrote:
-> On 22/08/2017 16:56, Marc Gonzalez wrote:
-> 
-> > @@ -76,7 +234,9 @@ static int tango_pcie_probe(struct platform_device *pdev)
-> >  	struct device *dev = &pdev->dev;
-> >  	struct tango_pcie *pcie;
-> >  	struct resource *res;
-> > -	int ret;
-> > +	struct irq_domain *msi_dom, *irq_dom;
-> > +	struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-> > +	int ret, reg, virq;
-> >  
-> >  	dev_warn(dev, "simultaneous PCI config and MMIO accesses may cause data corruption\n");
-> >  	add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
-> 
->   CC      drivers/pci/host/pcie-tango.o
-> drivers/pci/host/pcie-tango.c: In function 'tango_pcie_probe':
-> drivers/pci/host/pcie-tango.c:257:6: warning: unused variable 'ret' [-Wunused-variable]
->   int ret, reg, virq;
->       ^~~
-> 
-> Hmmm, dunno how I managed to miss that...
-> Is the kbuild test robot enjoying a well-deserved vacation?
-> 
-> Bjorn, if/when you take the patch, can you first apply this fixup:
+Stanimir,
 
-Sure, no problem.
+> Hi,
+>
+> Thanks for the patch.
+>
+> On 31.07.2017 09:34, Varadarajan Narayanan wrote:
+> >Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+> >Gen 1/2, one lane, two PCIe root complex with support for MSI and
+> >legacy interrupts, and it conforms to PCI Express Base 2.1
+> >specification.
+> >
+> >The core init is the similar to the existing SoC, however the
+> >clocks and reset lines differ.
+> >
+> >Signed-off-by: smuthayy <smuthayy@codeaurora.org>
+> >Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
 
-> @@ -254,7 +254,7 @@ static int tango_pcie_probe(struct platform_device *pdev)
->         struct resource *res;
->         struct irq_domain *msi_dom, *irq_dom;
->         struct fwnode_handle *fwnode = of_node_to_fwnode(dev->of_node);
-> -       int ret, reg, virq;
-> +       int reg, virq;
->  
->         dev_warn(dev, "simultaneous PCI config and MMIO accesses may cause data corruption\n");
->         add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
-> 
-> 
-> Regards.
-> 
+<snip>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> >+static int qcom_pcie_2_3_3_reset(struct qcom_pcie *pcie)
+> >+{
+> >+	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+> >+	int i, ret;
+> >+
+> >+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
+> >+		ret = reset_control_assert(res->rst[i]);
+> >+		if (ret) {
+> >+			dev_err(pcie->pci->dev,
+> >+				"%s: reset assert failed for %d\n",
+> >+				__func__, i);
+> >+			return ret;
+> >+		}
+> >+	}
+> >+
+> >+	msleep(20);
+>
+> Could you explain why we need to wait for 20ms.
+>
+> >+
+> >+	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
+> >+		ret = reset_control_deassert(res->rst[i]);
+> >+		if (ret) {
+> >+			dev_err(pcie->pci->dev,
+> >+				"%s: reset deassert failed for %d\n",
+> >+				__func__, i);
+> >+			return ret;
+> >+		}
+> >+	}
+> >+
+> >+	msleep(20);
+>
+> Same comment as above.
+
+<snip>
+
+Sorry about the delay. I tried to contact the hardware folks
+to get more clarity about these delays. However, I haven't
+received any response from them till now. Unfortunately, the
+PCIe link doesn't come up without these delays.
+
+I was able to get the PCIe link with the above delays
+reduced to 2ms. I have posted v7 of these patches addressing
+your other comments and the above delays reduced to 2ms. Can
+you please review and provide your feedback.
+
+If everything else (other than these delays) is ok, can this
+patch be accepted? Meanwhile, I will follow up with the
+hardware folks and based on their response post a patch that
+removes the delay or provides a proper explanation for these
+delays.
+
+Please let me know.
+
+Thanks
+Varada
+
+--
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
