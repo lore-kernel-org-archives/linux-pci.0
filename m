@@ -1,172 +1,118 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39014 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752173AbdHBVLk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:11:40 -0400
-Date: Wed, 2 Aug 2017 16:11:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        Minghuan Lian <Minghuan.Lian@nxp.com>
-Subject: Re: [PATCH 3/3] PCI: layerscape: refactor the host_init function
-Message-ID: <20170802211137.GG20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499322829-23018-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1499322829-23018-3-git-send-email-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1499322829-23018-3-git-send-email-Zhiqiang.Hou@nxp.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40710 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751679AbdHQLVP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 07:21:15 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v8 0/3] Add support for IPQ8074 PCIe phy and controller
+Date: Thu, 17 Aug 2017 16:50:55 +0530
+Message-Id: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 06, 2017 at 02:33:49PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> Main changes:
-> - Make the ls1021a's host_init reuse layerscape platform's common
->   host_init function.
-> - Will not use the outbound windows configured by bootloader, but
->   introduce DWC common setup function dw_pcie_setup_rc and disable
->   the bootloader configured outbound windows. And remove the duplicate
->   class field fix code.
+v8:
+  Incorporate Stanimir's feedback for
+	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
 
-This seems to have two or even three distinct changes mixed together.
-Please split them into separate patches.  In particular, you mention a
-class code fix -- that should be its own separate patch.
+v7:
+  Skip PHY patches as they are already included by Kishon
 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> Signed-off-by: Minghuan Lian <Minghuan.Lian@nxp.com>
-> ---
->  drivers/pci/dwc/pci-layerscape.c | 85 ++++++++++++++++++++++------------------
->  1 file changed, 46 insertions(+), 39 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-> index fd86128..9bed3cd 100644
-> --- a/drivers/pci/dwc/pci-layerscape.c
-> +++ b/drivers/pci/dwc/pci-layerscape.c
-> @@ -33,7 +33,8 @@
->  
->  /* PEX Internal Configuration Registers */
->  #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
-> -#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
-> +
-> +#define PCIE_IATU_NUM		6
->  
->  struct ls_pcie_drvdata {
->  	u32 lut_offset;
-> @@ -69,15 +70,9 @@ static void ls_pcie_clear_multifunction(struct ls_pcie *pcie)
->  {
->  	struct dw_pcie *pci = pcie->pci;
->  
-> +	dw_pcie_dbi_ro_wr_en(pci);
->  	iowrite8(PCI_HEADER_TYPE_BRIDGE, pci->dbi_base + PCI_HEADER_TYPE);
-> -}
-> -
-> -/* Fix class value */
-> -static void ls_pcie_fix_class(struct ls_pcie *pcie)
-> -{
-> -	struct dw_pcie *pci = pcie->pci;
-> -
-> -	iowrite16(PCI_CLASS_BRIDGE_PCI, pci->dbi_base + PCI_CLASS_DEVICE);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
->  }
->  
->  /* Drop MSG TLP except for Vendor MSG */
-> @@ -91,6 +86,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
->  	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
->  }
->  
-> +static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < PCIE_IATU_NUM; i++)
-> +		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
-> +}
-> +
->  static int ls1021_pcie_link_up(struct dw_pcie *pci)
->  {
->  	u32 state;
-> @@ -108,33 +111,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
->  	return 1;
->  }
->  
-> -static void ls1021_pcie_host_init(struct pcie_port *pp)
-> -{
-> -	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> -	struct ls_pcie *pcie = to_ls_pcie(pci);
-> -	struct device *dev = pci->dev;
-> -	u32 index[2];
-> -
-> -	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> -						     "fsl,pcie-scfg");
-> -	if (IS_ERR(pcie->scfg)) {
-> -		dev_err(dev, "No syscfg phandle specified\n");
-> -		pcie->scfg = NULL;
-> -		return;
-> -	}
-> -
-> -	if (of_property_read_u32_array(dev->of_node,
-> -				       "fsl,pcie-scfg", index, 2)) {
-> -		pcie->scfg = NULL;
-> -		return;
-> -	}
-> -	pcie->index = index[1];
-> -
-> -	dw_pcie_setup_rc(pp);
-> -
-> -	ls_pcie_drop_msg_tlp(pcie);
-> -}
-> -
->  static int ls_pcie_link_up(struct dw_pcie *pci)
->  {
->  	struct ls_pcie *pcie = to_ls_pcie(pci);
-> @@ -155,11 +131,42 @@ static void ls_pcie_host_init(struct pcie_port *pp)
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	struct ls_pcie *pcie = to_ls_pcie(pci);
->  
-> -	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-> -	ls_pcie_fix_class(pcie);
-> +	/*
-> +	 * Disable the outbound windows configured by bootloader to avoid
-> +	 * one transaction hitting multiple outbound windows and the function
-> +	 * dw_pcie_setup_rc will re-configure the outbound windows.
-> +	 */
-> +	ls_pcie_disable_outbound_atus(pcie);
-> +
->  	ls_pcie_clear_multifunction(pcie);
->  	ls_pcie_drop_msg_tlp(pcie);
-> -	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-> +
-> +	dw_pcie_setup_rc(pp);
-> +}
-> +
-> +static void ls1021_pcie_host_init(struct pcie_port *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	struct ls_pcie *pcie = to_ls_pcie(pci);
-> +	struct device *dev = pci->dev;
-> +	u32 index[2];
-> +
-> +	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> +						     "fsl,pcie-scfg");
-> +	if (IS_ERR(pcie->scfg)) {
-> +		dev_err(dev, "No syscfg phandle specified\n");
-> +		pcie->scfg = NULL;
-> +		return;
-> +	}
-> +
-> +	if (of_property_read_u32_array(dev->of_node,
-> +				       "fsl,pcie-scfg", index, 2)) {
-> +		pcie->scfg = NULL;
-> +		return;
-> +	}
-> +	pcie->index = index[1];
-> +
-> +	ls_pcie_host_init(pp);
->  }
->  
->  static int ls_pcie_msi_host_init(struct pcie_port *pp,
-> -- 
-> 2.1.0.27.g96db324
-> 
+  Incorporate Stanimir's feedback for the below patches
+	PCI: dwc: qcom: Use block IP version for operations
+	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+v6:
+  Added 'Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>' and fixed
+  white space issues as mentioned by Vivek.
+	phy: qcom-qmp: Fix phy pipe clock name
+	dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+
+v5:
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+        Renamed phy_phy clock as common clock
+
+  phy: qcom-qmp: Fix phy pipe clock name
+        Moved the DT get into the registering function
+
+  phy: qcom-qmp: Add support for IPQ8074
+        Place the IPQ8074 related structs similar to existing SoC.
+        Renamed phy_phy clock as common clock
+v4:
+  phy: qcom-qmp: Fix phy pipe clock name
+	Based on Vivek's comments, return failure only for
+	PCI/USB type of phys.
+	Removed Ack.
+
+  phy: qcom-qmp: Handle unavailable registers
+	Removed this patch.
+	Incorrectly used a block of code that is not applicable
+	to IPQ8074, hence had to avoid an "unavailable" register.
+	Since that is addressed using 'has_phy_com_ctrl' this
+	patch is not needed.
+
+  phy: qcom-qmp: Add support for IPQ8074
+	Set 'has_phy_com_ctrl' to false
+	Remove ipq8074_pciephy_regs_layout
+
+v3:
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incoporate Stan's feedback:-
+	 - Add SoC Wrapper and Synopsys Core IP versions
+
+v2:
+  dt-bindings: phy: qmp: Add output-clock-names
+	Added Rob H's Ack
+
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  phy: qcom-qmp: Fix phy pipe clock name
+	Added Vivek's Ack
+
+  phy: qcom-qmp: Handle unavailable registers
+	No changes
+
+  phy: qcom-qmp: Add support for IPQ8074
+	No changes
+
+  PCI: dwc: qcom: Use block IP version for operations
+	Added new patch to use block IP version instead of v1, v2...
+
+  dt-bindings: pci: qcom: Add support for IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incorporated Bjorn's feedback:-
+	 - Removed reset names, helper function to assert/deassert, helper
+	   function to R/M/W register.
+	 - Renamed sys_noc clock as iface clock
+	 - Added deinit if phy power on fails
+
+v1:
+Add definitions required to enable QMP phy support for IPQ8074.
+
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+Gen 1/2, one lane, two PCIe root complex with support for MSI and
+legacy interrupts, and it conforms to PCI Express Base 2.1
+specification.
+
+Varadarajan Narayanan (3):
+  PCI: dwc: qcom: Use block IP version for operations
+  dt-bindings: pci: qcom: Add support for IPQ8074
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
+ drivers/pci/dwc/pcie-qcom.c                        | 340 +++++++++++++++++----
+ 2 files changed, 299 insertions(+), 64 deletions(-)
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
