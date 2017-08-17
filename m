@@ -1,110 +1,115 @@
-Return-Path: <SRS0=mgv/=AA=gmail.com=thierry.reding@kernel.org>
-Return-Path: <SRS0=mgv/=AA=gmail.com=thierry.reding@kernel.org>
-Date: Wed, 30 Aug 2017 16:25:47 +0200
-From: Thierry Reding <thierry.reding@gmail.com>
+Return-Path: <SRS0=lEde=7T=imgtec.com=Paul.Burton@kernel.org>
+Return-Path: <SRS0=lEde=7T=imgtec.com=Paul.Burton@kernel.org>
+From: Paul Burton <paul.burton@imgtec.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Himanshu Jha <himanshujha199640@gmail.com>, bhelgaas@google.com,
-	jonathanh@nvidia.com, linux-tegra@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: tegra: Use PTR_ERR_OR_ZERO
-Message-ID: <20170830142547.GC1361@ulmo>
-References: <1504013940-16304-1-git-send-email-himanshujha199640@gmail.com>
- <20170829135517.GA30733@ulmo>
- <20170830135931.GA18250@bhelgaas-glaptop.roam.corp.google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v7 0/8] PCI: INTx interrupt fixes & cleanup
+Date: Thu, 17 Aug 2017 15:38:31 -0700
+Message-ID: <19026645.XfjebMKqMa@np-p-burton>
+In-Reply-To: <20170815213315.GM32525@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170815190223.18807-1-paul.burton@imgtec.com> <20170815213315.GM32525@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="w7PDEPdKQumQfZlR"
-In-Reply-To: <20170830135931.GA18250@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; boundary="nextPart2409878.PqcINdASTO";
+	micalg=pgp-sha256; protocol="application/pgp-signature"
 List-ID: <linux-pci.vger.kernel.org>
 
+--nextPart2409878.PqcINdASTO
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
---w7PDEPdKQumQfZlR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Bjorn,
 
-On Wed, Aug 30, 2017 at 08:59:31AM -0500, Bjorn Helgaas wrote:
-> On Tue, Aug 29, 2017 at 03:55:17PM +0200, Thierry Reding wrote:
-> > On Tue, Aug 29, 2017 at 07:09:00PM +0530, Himanshu Jha wrote:
-> > > Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
-> > >=20
-> > > Signed-off-by: Himanshu Jha <himanshujha199640@gmail.com>
-> > > ---
-> > >  drivers/pci/host/pci-tegra.c | 5 +----
-> > >  1 file changed, 1 insertion(+), 4 deletions(-)
-> > >=20
-> > > diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegr=
-a.c
-> > > index 9c40da5..90cda5b 100644
-> > > --- a/drivers/pci/host/pci-tegra.c
-> > > +++ b/drivers/pci/host/pci-tegra.c
-> > > @@ -1156,10 +1156,7 @@ static int tegra_pcie_resets_get(struct tegra_=
-pcie *pcie)
-> > >  		return PTR_ERR(pcie->afi_rst);
-> > > =20
-> > >  	pcie->pcie_xrst =3D devm_reset_control_get_exclusive(dev, "pcie_x");
-> > > -	if (IS_ERR(pcie->pcie_xrst))
-> > > -		return PTR_ERR(pcie->pcie_xrst);
-> > > -
-> > > -	return 0;
-> > > +	return PTR_ERR_OR_ZERO(pcie->pcie_xrst);
-> > >  }
-> >=20
-> > I'm not a big fan of this construct because it's a pain to undo this if
-> > ever we need to add code to this function. But since we do have scripts
-> > that will flag this, I guess this would pop up every now and again. The
-> > driver is unlikely to change in this part, too, so:
->=20
-> Thanks for pointing this out.  Do you know what the benefit of
-> PTR_ERR_OR_ZERO() is?  To me, it makes the following code harder
-> to read because the error tests are no longer parallel:
->=20
->   ...
->   res->ahb_reset =3D devm_reset_control_get(dev, "ahb");
->   if (IS_ERR(res->ahb_reset))
->     return PTR_ERR(res->ahb_reset);
->=20
->   res->por_reset =3D devm_reset_control_get(dev, "por");
->   if (IS_ERR(res->por_reset))
->     return PTR_ERR(res->por_reset);
->=20
->   res->phy_reset =3D devm_reset_control_get(dev, "phy");
->   return PTR_ERR_OR_ZERO(res->phy_reset);
->=20
-> So I'd be inclined to avoid it unless there's some significant benefit.
+On Tuesday, 15 August 2017 14:33:15 PDT Bjorn Helgaas wrote:
+> On Tue, Aug 15, 2017 at 12:02:15PM -0700, Paul Burton wrote:
+> > This series fixes our handling of the PCI INTD interrupts in both Xilinx
+> > PCIe controller drivers, and cleans up a wasted IRQ domain entry in the
+> > Altera PCIe controller driver. It also adds a common PCI_INTX_NUM
+> > definition which all relevant drivers under drivers/pci/host/ are
+> > adjusted to make use of.
+> > 
+> > - Patch 1 moves enum pci_interrupt_pin to somewhere we can use it from
+> > 
+> >   PCI host code.
+> > 
+> > - Patch 2 introduces a helper function to translate 1-4 INTx ranges into
+> > 
+> >   the 0-3 range, by using it as a struct irq_domain's xlate callback.
+> > 
+> > - Patches 3 adjusts the Altera driver to avoid wasting an IRQ domain
+> > 
+> >   entry.
+> > 
+> > - Patches 4 & 5 fix the INTD interrupt for Xilinx PCIe drivers.
+> > 
+> > - Patches 6-8 make use of PCI_NUM_INTX to replace custom definitions or
+> > 
+> >   magic numbers in drivers.
+> > 
+> > The series versioning is continuing on from that of my "PCI: xilinx:
+> > Fixes, optimisation & MIPS support" series which some of the earlier
+> > patches were originally a part of, in order to prevent individual
+> > patches from jumping backwards in versioning.
+> > 
+> > Applies atop v4.13-rc5.
+> > 
+> > Paul Burton (8):
+> >   PCI: Move enum pci_interrupt_pin to linux/pci.h
+> >   PCI: Introduce pci_irqd_intx_xlate()
+> >   PCI: altera: Use size=4 IRQ domain for legacy INTx
+> >   PCI: xilinx: Translate INTx range to hwirqs 0-3
+> >   PCI: xilinx-nwl: Translate INTx range to hwirqs 0-3
+> >   PCI: aardvark: Use PCI_NUM_INTX
+> >   PCI: ftpci100: Use PCI_NUM_INTX
+> >   PCI: rockchip: Use PCI_NUM_INTX
+> >  
+> >  drivers/pci/host/pci-aardvark.c    |  5 ++--
+> >  drivers/pci/host/pci-ftpci100.c    |  2 +-
+> >  drivers/pci/host/pcie-altera.c     |  9 +++----
+> >  drivers/pci/host/pcie-rockchip.c   |  2 +-
+> >  drivers/pci/host/pcie-xilinx-nwl.c |  9 +++----
+> >  drivers/pci/host/pcie-xilinx.c     |  7 ++---
+> >  include/linux/pci-epf.h            |  9 +------
+> >  include/linux/pci.h                | 54
+> >  ++++++++++++++++++++++++++++++++++++++ 8 files changed, 71
+> >  insertions(+), 26 deletions(-)
+> 
+> Thanks for updating these, Paul.  I applied them on pci/irq-intx and the
+> individual driver branches.  I added Thomas' reviewed-by for Aardvark, and
+> I expect we'll get more for the others.
 
-Yeah, I don't like the optics much either. Aside from the fact that it
-reduces the line count, I'm not aware of any benefits that this inline
-function has. It doesn't have any side-effects or anything, just wraps
-the common pattern into a single line.
+Great, thanks :)
 
-Looking at the history of the semantic patch that is the basis for the
-conversions (scripts/coccinelle/api/ptr_ret.cocci), or the static inline
-function itself, no rationale is given for why people prefer this. I've
-certainly seen such patches applied in some cases, but I've also seen
-other maintainers (including myself) reject them because of personal
-preference.
+> I found two more places we can use PCI_NUM_INTX; I'll post those in a
+> minute.
 
-Thierry
+Both look good to me - I'd only looked under drivers/pci/host/ so drivers/pci/
+dwc/ had escaped my gaze.
 
---w7PDEPdKQumQfZlR
+> Thanks for all your work on this!
+
+You're welcome, thanks for merging.
+
+Paul
+--nextPart2409878.PqcINdASTO
 Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAABCAAdFiEEiOrDCAFJzPfAjcif3SOs138+s6EFAlmmyukACgkQ3SOs138+
-s6H6mQ//QN7i0CknRoKAjKehKqxks6wjWHpEaSbHMJSoexeQ+AZ4+6UV/cf9iV6i
-jPuk2Z02OP6AxzHJIiDQhnwGJIHwqOpHzsU7fNQO4vIXlNxzGAwb07dddks/jmjg
-Al6dGTpOuHzar/tgALHpJYU+LJ+K9iji6cR9U6MIzHTsTy5LjHSWS0spyWsBfLlD
-yGWL9kui+g4trwBySDTfqNhIFDgDd+HZjRCKdwWA95GqyLtSyAu4ibrx57+Or6vE
-ewpsbfj6KSmirbm+tb+fc1Y4VE+rVzl+Pn40wMYF0XAWvgcSLL25zkiDeuWH3A7I
-6x06LyGKNa5IE/GRzZ+B0XsYEL2ZeO9TRYUYnZ6bAhX/ZjsE07O2F6Y36/1v1h3t
-ruZXm7lLvuEyz6KhwetvPmLZiec+F1t4qT1FtwCaWpHR1aOCQgLB8SbAsjI2G6ys
-VMA8fdRQ1lpDDmabHOupD7isK7bJTxO7G408Npv+y+P32ExrAFYQRSozvXiJMhtt
-H4GFsV4J7eqoQrs1t3OHg46+na7Va1lNp9EcQynE0x4xE5CAXV03TiipG/3PFftQ
-m+2dX1OEi36A3Ojcl7AW3I9H3PlrdrixqMip3sSnuKoDuKuVJhdCQb8NoHGQzK5E
-40qt767vmvyKprRPI6Zo+hTw9n1EekZs3pTl9Z5JRJ6KdXJH32Q=
-=kz+p
+iQIzBAABCAAdFiEELIGR03D5+Fg+69wPgiDZ+mk8HGUFAlmWGucACgkQgiDZ+mk8
+HGV2ng//dQeWYa0228UEOEHRyZz0Xl0Svc/P/lq5DL05U1skP+X6NcrmthlGdWst
+TR1HtVtgMsWwIpbdc3E3KscZr6jZuAol+oBf/aXQNr6JfXFYSTd/PbsunLfT4qXF
+0tMEOVm1irTHQCU82ooNgz6Nof5GKlHBSk3SrKu0fxxzKh6H+B8T71WrxFky3NN3
+P6NOa3iX2G+7ta82MH5CRVtJRQoRwcTuD6yiRwW5XhtmZzCELvwnB6XHX0YkDrgE
+wlLI+kwTuphiYB6hVtPD/XFRqKTHSgFvbwlH4DoC/t39zrwXHI5gwyY9CtjxT3RK
+inS0xpqD06VQTXxLb1mmY7GPnk+ikDvPdqM4ap303q/E+0CL5psHoEbhvpl6Y38B
+dU+WqI9+TDMUS1goXS8q0aEIzsDTQdOo7yAVUL+U6uYUvMGJAJD9Rm8Ztn4yb41A
+EoPSvi2fSXsBj4E+ArbKC2xM5fZkwW+aOC3Cdwv8m58TrpWSp9z2F5+4ojPm3DAv
+/g45g2tXgJVKcJejyfMeAQo8d7Q++D5jayJGxmf6GVarsQFXfEgGluGY+HcP7lP3
+O0USgbkk3osRrvdAVx2q0ADY9HDlVdiKPzWtIF2Hd5M95zanu0aNv2OUFUAhzfWQ
+5H8usISvZiyEpsdvmMjG7HWj181en/p+1Kr5Saf38v43bdM4cHY=
+=FIID
 -----END PGP SIGNATURE-----
 
---w7PDEPdKQumQfZlR--
+--nextPart2409878.PqcINdASTO--
