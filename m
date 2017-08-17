@@ -1,52 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:41453 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753238AbdHWHEA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:04:00 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 06/10] PCI: rockchip: fix missing phy manipulation for legacy phy
-Date: Wed, 23 Aug 2017 15:02:57 +0800
-Message-Id: <1503471777-73999-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=u5Xu=7T=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=u5Xu=7T=intel.com=keith.busch@kernel.org>
+Date: Thu, 17 Aug 2017 11:32:21 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
+	gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+	linuxarm@huawei.com
+Subject: Re: [PATCH V3 1/2] PCI/DPC: Add local struct device
+Message-ID: <20170817153221.GM7233@localhost.localdomain>
+References: <1502970505-89777-1-git-send-email-liudongdong3@huawei.com>
+ <1502970505-89777-2-git-send-email-liudongdong3@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1502970505-89777-2-git-send-email-liudongdong3@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-For instance, if a EP connect to lane3 and work under lagecy
-phy mode, so struct phy phys[0..2] are all NULL. In this case,
-rockchip->lanes_map & BIT(i) will tell the driver that lane0 is
-already inactive, but what we want actually is to power off
-the phys[0] for legacy phy mode. Fix this by add checking of
-rockchip->legacy_phy for rockchip_pcie_deinit_phys.
+On Thu, Aug 17, 2017 at 07:48:24PM +0800, Dongdong Liu wrote:
+> Use a local "struct device *dev" for brevity and consistency in DPC driver.
+> No functional change intended.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+I think there is a functional change here:
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
+> @@ -119,10 +120,11 @@ static int dpc_probe(struct pcie_device *dev)
+>  {
+>  	struct dpc_dev *dpc;
+>  	struct pci_dev *pdev = dev->port;
+> +	struct device *device = &pdev->dev;
+>  	int status;
+>  	u16 ctl, cap;
+>  
+> -	dpc = devm_kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
+> +	dpc = devm_kzalloc(device, sizeof(*dpc), GFP_KERNEL);
+>  	if (!dpc)
+>  		return -ENOMEM;
 
- drivers/pci/host/pcie-rockchip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 9cd51e0..933e3e9 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -759,7 +759,7 @@ static void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
- 
- 	for (i = 0; i < MAX_LANE_NUM; i++) {
- 		/* inactive lane is already powered off */
--		if (rockchip->lanes_map & BIT(i))
-+		if (rockchip->legacy_phy || rockchip->lanes_map & BIT(i))
- 			phy_power_off(rockchip->phys[i]);
- 		phy_exit(rockchip->phys[i]);
- 	}
--- 
-1.9.1
+We were using the pcie_device's device for the devres API, but now it's
+the pci_dev's. That will change the lifetime of memory allocations. I'm
+not sure that it matters at th emoment, but it's certainly different.
