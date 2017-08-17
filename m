@@ -1,234 +1,226 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:50975 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751219AbdHFCGi (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 22:06:38 -0400
-Message-ID: <1501985190.8058.20.camel@mtkswgap22>
-Subject: Re: [PATCH v3 5/6] PCI: mediatek: Add new generation controller
- support
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: <honghui.zhang@mediatek.com>
-CC: <bhelgaas@google.com>, <robh@kerenl.org>, <matthias.bgg@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
-        <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-        <sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Date: Sun, 6 Aug 2017 10:06:30 +0800
-In-Reply-To: <2adcb5f915eb8bd5817592ea32974eb25da02e4f.1501846816.git.honghui.zhang@mediatek.com>
-References: <cover.1501846816.git.honghui.zhang@mediatek.com>
-         <2adcb5f915eb8bd5817592ea32974eb25da02e4f.1501846816.git.honghui.zhang@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <5995860E.30105@rock-chips.com>
+Date: Thu, 17 Aug 2017 20:03:26 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+To: Brian Norris <briannorris@chromium.org>
+Subject: Re: [RFC PATCH 1/3] PCI: rockchip: Add support for pcie wake irq
+References: <20170816075224.31734-1-jeffy.chen@rock-chips.com>
+ <20170816075224.31734-2-jeffy.chen@rock-chips.com>
+ <20170816174936.GB99323@google.com>
+In-Reply-To: <20170816174936.GB99323@google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Honghui,
+Hi Brian,
 
-If you plan to send next version, then I would suggest some minor
-changes.
+i've tried dev_pm_set_dedicated_wake_irq, it doesn't work well on 
+upstream kernel(for level irq).
 
-On Fri, 2017-08-04 at 20:06 +0800, honghui.zhang@mediatek.com wrote:
-> +#define PCIE_CRSTB		BIT(3)
-> +#define PCIE_PERSTB		BIT(8)
-> +#define PCI_LINKDOWN_RST_EN	GENMASK(15, 13)
 
-PCIE_LINKDOWN_RST_EN
+it looks like we would delay real set trigger type to request irq after 
+this commit:
+1e2a7d78499e irqdomain: Don't set type when mapping an IRQ
 
-> +#define PCIE_LINK_STATUS_V2	0x804
-> +#define PCIE_PORT_LINKUP_V2	BIT(10)
-> +
-> +
-> +static int mtk_pcie_hw_rd_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
-> +			      int where, int size, u32 *val)
-> +{
-> +	int reg, shift = 8 * (where & 3);
+so calling irq_set_status_flags before request irq would lose trigger 
+type setting.
 
-int reg => u32
 
-> +	/* Write PCIe Configuration Transaction Header for cfgrd */
-> +	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_RD_FMT),
-> +	       port->base + PCIE_CFG_HEADER0);
-> +	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
-> +	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-> +	       port->base + PCIE_CFG_HEADER2);
-> +
-> +	/* Trigger h/w to transmit Cfgrd TLP */
-> +	reg = readl(port->base + PCIE_APP_TLP_REQ);
-> +	writel(reg | APP_CFG_REQ, port->base + PCIE_APP_TLP_REQ);
-> +
-> +	/* Check completion status */
-> +	if (mtk_pcie_check_cfg_cpld(port))
-> +		return PCIBIOS_SET_FAILED;
-> +
-> +	/* Read cpld payload of Cfgrd */
-> +	*val = readl(port->base + PCIE_CFG_RDATA);
-> +
-> +	switch (size) {
-> +	case 4:
-> +		break;
-> +	case 3:
-> +		*val = (*val >> shift) & 0xffffff;
-> +		break;
-> +	case 2:
-> +		*val = (*val >> shift) & 0xffff;
-> +		break;
-> +	case 1:
-> +		*val = (*val >> shift) & 0xff;
-> +		break;
-> +	default:
-> +		return PCIBIOS_BAD_REGISTER_NUMBER;
-> +	}
+things work well after reverted that commit, so i will send my patch 
+soon, and ask irq people about it :)
 
-Do we really need case 3? I guess case 1, 2 or 4 should be enough.
 
-> +	return PCIBIOS_SUCCESSFUL;
-> +}
-> +
-> +static int mtk_pcie_hw_wr_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
-> +			      int where, int size, u32 val)
-> +{
-> +	/* Write PCIe Configuration Transaction Header for Cfgwr */
-> +	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_WR_FMT),
-> +	       port->base + PCIE_CFG_HEADER0);
-> +	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
-> +	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-> +	       port->base + PCIE_CFG_HEADER2);
-> +
-> +	/* Write cfgwr data */
-> +	val = val << 8 * (where & 3);
-> +	writel(val, port->base + PCIE_CFG_WDATA);
-> +
-> +	/* Trigger h/w to transmit Cfgwr TLP */
-> +	val = readl(port->base + PCIE_APP_TLP_REQ);
-> +	val |= APP_CFG_REQ;
-> +	writel(val, port->base + PCIE_APP_TLP_REQ);
-> +
-> +	/* Check completion status */
-> +	return mtk_pcie_check_cfg_cpld(port);
-> +}
-> +
-> +static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-> +				int where, int size, u32 *val)
-> +{
-> +	struct mtk_pcie_port *port = NULL, *iter, *tmp;
-> +	struct mtk_pcie *pcie = bus->sysdata;
-> +	u32 bn = bus->number;
-> +	int ret;
-> +
-> +	list_for_each_entry_safe(iter, tmp, &pcie->ports, list)
-> +		if (iter->index == PCI_SLOT(devfn)) {
-> +			port = iter;
-> +			break;
-> +		}
-> +
-> +	if (!port) {
-> +		*val = ~0;
-> +		return PCIBIOS_DEVICE_NOT_FOUND;
-> +	}
+On 08/17/2017 01:49 AM, Brian Norris wrote:
+>  Hi,
+>
+> On Wed, Aug 16, 2017 at 03:52:22PM +0800, Jeffy Chen wrote:
+>> Add support for PCIE_WAKE pin in rockchip pcie driver.
+>>
+>> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+>> ---
+>>
+>>   drivers/pci/host/pcie-rockchip.c | 58 ++++++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 58 insertions(+)
+>>
+>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+>> index 7bb9870f6d8c..f969a6d3cd85 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -38,6 +38,7 @@
+>>   #include <linux/platform_device.h>
+>>   #include <linux/reset.h>
+>>   #include <linux/regmap.h>
+>> +#include <linux/suspend.h>
+>>
+>>   /*
+>>    * The upper 16 bits of PCIE_CLIENT_CONFIG are a write mask for the lower 16
+>> @@ -226,6 +227,8 @@ struct rockchip_pcie {
+>>   	struct	regulator *vpcie1v8; /* 1.8V power supply */
+>>   	struct	regulator *vpcie0v9; /* 0.9V power supply */
+>>   	struct	gpio_desc *ep_gpio;
+>> +	int	wake_irq;
+>> +	bool	wake_by_pcie;
+>>   	u32	lanes;
+>>   	u8	root_bus_nr;
+>>   	int	link_gen;
+>> @@ -853,6 +856,20 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+>>   	chained_irq_exit(chip, desc);
+>>   }
+>>
+>> +static irqreturn_t rockchip_pcie_wake_irq_handler(int irq, void *arg)
+>> +{
+>> +	struct rockchip_pcie *rockchip = arg;
+>> +
+>> +	rockchip->wake_by_pcie = true;
+>> +
+>> +	disable_irq_nosync(rockchip->wake_irq);
+>> +	disable_irq_wake(rockchip->wake_irq);
+>> +
+>> +	pm_wakeup_event(rockchip->dev, 0);
+>> +	pm_system_wakeup();
+>> +
+>> +	return IRQ_HANDLED;
+>> +}
+>>
+>>   /**
+>>    * rockchip_pcie_parse_dt - Parse Device Tree
+>> @@ -868,6 +885,7 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>>   	struct resource *regs;
+>>   	int irq;
+>>   	int err;
+>> +	bool wakeup = 0;
+>
+> '0' should be 'false'.
+right
+>
+>>
+>>   	regs = platform_get_resource_byname(pdev,
+>>   					    IORESOURCE_MEM,
+>> @@ -1018,6 +1036,21 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+>>   		return err;
+>>   	}
+>>
+>> +	rockchip->wake_irq = platform_get_irq_byname(pdev, "wake");
+>> +	if (rockchip->wake_irq >= 0) {
+>> +		err = devm_request_irq(dev, rockchip->wake_irq,
+>> +				       rockchip_pcie_wake_irq_handler,
+>> +				       0, "pcie-wake", rockchip);
+>> +		if (err) {
+>> +			dev_err(dev, "failed to request PCIe wake IRQ\n");
+>> +			return err;
+>> +		}
+>> +
+>> +		disable_irq(rockchip->wake_irq);
+>
+> If you're worried about keeping this disabled at first, you can just use
+> this nifty trick (since this isn't a shared interrupt) -- call this
+> before requesting the IRQ:
+>
+> 	irq_set_status_flags(rockchip->wake_irq, IRQ_NOAUTOEN);
+>
+> You could also consider using dev_pm_set_dedicated_wake_irq() to handle
+> this -- but beware, it still might not quite handle level-triggered
+> interrupt properly. I'm pretty sure Tony Lindgren would be happy to get
+> testing or patches for that though :) He already sent me something a
+> while back but I didn't have time to test it out.
+ok, that seems very handy
+>
+>> +		wakeup = device_property_read_bool(dev, "wakeup-source");
+>> +	}
+>> +	device_init_wakeup(dev, wakeup);
+>
+> Shouldn't you call 'device_init_wakeup(dev, false)' on remove()?
+ok
+>
+>> +
+>>   	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
+>>   	if (IS_ERR(rockchip->vpcie3v3)) {
+>>   		if (PTR_ERR(rockchip->vpcie3v3) == -EPROBE_DEFER)
+>> @@ -1270,6 +1303,30 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
+>>   	return 0;
+>>   }
+>>
+>> +static int __maybe_unused rockchip_pcie_suspend(struct device *dev)
+>
+> Why do this in suspend() instead of suspend_noirq()? You shouldn't
+> really need a separate method here.
+>
+> Note that this should be a level-triggered interrupt which remains
+> asserted, so there should be no chance of "missing" it if you don't
+> enable it in time.
+>
+> And on a related note: if you try the dedicated wake irq approach, this
+> will only occur just before the noirq phase anyway, since
+> device_wakeup_arm_wake_irqs() is called in dpm_suspend_noirq().
+right
+>
+>> +{
+>> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>> +
+>> +	rockchip->wake_by_pcie = false;
+>> +
+>> +	if (device_may_wakeup(dev)) {
+>> +		enable_irq_wake(rockchip->wake_irq);
+>> +		enable_irq(rockchip->wake_irq);
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>> +static int __maybe_unused rockchip_pcie_resume(struct device *dev)
+>> +{
+>> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>> +
+>> +	if (device_may_wakeup(dev) && !rockchip->wake_by_pcie) {
+>
+> The use of 'wake_by_pcie' is racy; an interrupt could be in flight (but
+> not completed), and so it could set 'wake_by_pcie' just after you're
+> reading this. Then, you'll get a double-disable.
+>
+> I believe the safe way to handle this would be to use an atomic
+> test-and-set / test-and-clear approach (either atomic_cmpxchg(), or use
+> a spinlock).
+right, and we don't need these if using dev_pm_set_dedicated_wake_irq
+>
+>> +		disable_irq(rockchip->wake_irq);
+>> +		disable_irq_wake(rockchip->wake_irq);
+>> +	}
+>> +	return 0;
+>> +}
+>> +
+>>   static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+>>   {
+>>   	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>> @@ -1548,6 +1605,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>>   }
+>>
+>>   static const struct dev_pm_ops rockchip_pcie_pm_ops = {
+>> +	SET_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend, rockchip_pcie_resume)
+>>   	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
+>>   				      rockchip_pcie_resume_noirq)
+>>   };
+>
+> Brian
+>
+>
+>
 
-list_for_each_entry(), since you don't really remove or free something.
 
-I know you need to find port->base to write/read configuration space. I
-think it's better to move this part to another function. You can take a
-look at pci-mvebu.c mvebu_pcie_find_portmvebu().
- 
-> +	ret = mtk_pcie_hw_rd_cfg(port, bn, devfn, where, size, val);
-> +	if (ret)
-> +		*val = ~0;
-> +
-> +	return ret;
-> +}
-> +
-> +static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
-> +				 int where, int size, u32 val)
-> +{
-> +	struct mtk_pcie_port *port = NULL, *iter, *tmp;
-> +	struct mtk_pcie *pcie = bus->sysdata;
-> +	u32 bn = bus->number;
-> +
-> +	list_for_each_entry_safe(iter, tmp, &pcie->ports, list)
-> +		if (iter->index == PCI_SLOT(devfn)) {
-> +			port = iter;
-> +			break;
-> +		}
-> +
-> +	if (!port)
-> +		return PCIBIOS_DEVICE_NOT_FOUND;
 
-Ditto.
-
-> +	return mtk_pcie_hw_wr_cfg(port, bn, devfn, where, size, val);
-> +}
-> +
-> +static struct pci_ops mtk_pcie_ops_v2 = {
-> +	.read  = mtk_pcie_config_read,
-> +	.write = mtk_pcie_config_write,
-> +};
-> +
-> +static int mtk_pcie_startup_ports_v2(struct mtk_pcie_port *port)
-> +{
-> +	struct mtk_pcie *pcie = port->pcie;
-> +	struct resource *mem = &pcie->mem;
-> +	u32 val;
-> +	size_t size;
-> +	int err;
-> +
-> +	/* mt7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-> +	if (pcie->base) {
-> +		val = readl(pcie->base + PCIE_SYS_CFG_V2);
-> +		val |= PCIE_CSR_LTSSM_EN(port->index) |
-> +		       PCIE_CSR_ASPM_L1_EN(port->index);
-> +		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-> +	}
-> +
-> +	/* Assert all reset signals */
-> +	writel(0, port->base + PCIE_RST_CTRL);
-> +
-> +	/*
-> +	 * Enable PCIe link down reset, if link status changed from link up to
-> +	 * link down, this will reset MAC control registers and configuration
-> +	 * space.
-> +	 */
-> +	writel(PCI_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-> +
-> +	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
-> +	val = readl(port->base + PCIE_RST_CTRL);
-> +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-> +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-> +	writel(val, port->base + PCIE_RST_CTRL);
-> +
-> +	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
-
-/* 100ms timeout value should be enough for Gen1/2 training */ for
-consistency.
-
-> +	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
-> +				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-> +				 100 * USEC_PER_MSEC);
-> +	if (err)
-> +		return -ETIMEDOUT;
-> +
-> +	/* Set INTx mask */
-> +	val = readl(port->base + PCIE_INT_MASK);
-> +	val &= ~INTX_MASK;
-> +	writel(val, port->base + PCIE_INT_MASK);
-> +
-> +	/* Set AHB to PCIe translation windows */
-> +	size = mem->end - mem->start;
-> +	val = AHB2PCIE_BASEL(mem->start) | AHB2PCIE_SIZE(fls(size));
-> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> +
-> +	val = AHB2PCIE_BASEH(mem->start);
-> +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-> +
-> +	/* Set PCIe to AXI translation memory space.*/
-> +	val = fls(0xffffffff) | WIN_ENABLE;
-> +	writel(val, port->base + PCIE_AXI_WINDOW0);
-> +
-> +	return 0;
-> +}
-
-Ryder
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
