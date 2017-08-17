@@ -1,39 +1,42 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 3 Aug 2017 18:22:40 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: bhelgaas@google.com, scott@spiteful.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 0/5] constify hotplug pci_device_id
-Message-ID: <20170803232240.GV20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
- <20170803225749.GP20308@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170803225749.GP20308@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=zSlN=7T=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=zSlN=7T=davemloft.net=davem@kernel.org>
+Date: Wed, 16 Aug 2017 19:42:35 -0700 (PDT)
+Message-Id: <20170816.194235.391501463422735735.davem@davemloft.net>
+To: dingtianhong@huawei.com
+Cc: leedom@chelsio.com, ashok.raj@intel.com, bhelgaas@google.com,
+ helgaas@kernel.org, werner@chelsio.com, ganeshgr@chelsio.com,
+ asit.k.mallick@intel.com, patrick.j.cramer@intel.com,
+ Suravee.Suthikulpanit@amd.com, Bob.Shaw@amd.com, l.stach@pengutronix.de,
+ amira@mellanox.com, gabriele.paoloni@huawei.com, David.Laight@aculab.com,
+ jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com, will.deacon@arm.com,
+ mark.rutland@arm.com, robin.murphy@arm.com, alexander.duyck@gmail.com,
+ eric.dumazet@gmail.com, linux-arm-kernel@lists.infradead.org,
+ netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linuxarm@huawei.com, thierry.reding@gmail.com
+Subject: Re: [PATCH net] PCI: fix the return value for the
+ pci_find_pcie_root_port()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
+References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 05:57:49PM -0500, Bjorn Helgaas wrote:
-> On Thu, Aug 03, 2017 at 10:39:11PM +0530, Arvind Yadav wrote:
-> > pci_device_id are not supposed to change at runtime. All functions
-> > working with pci_device_id provided by <linux/pci.h> work with
-> > const pci_device_id. So mark the non-const structs as const.
-> > 
-> > Arvind Yadav (5):
-> >   [PATCH 1/5] PCI: hotplug: shpchp: constify pci_device_id.
-> >   [PATCH 2/5] PCI: hotplug: ibmphp: constify pci_device_id.
-> >   [PATCH 3/5] PCI: hotplug: bmphp_ebda: constify pci_device_id.
-> >   [PATCH 4/5] PCI: hotplug: cpcihp_zt5550: constify pci_device_id.
-> >   [PATCH 5/5] PCI: hotplug: cpqphp: constify pci_device_id.
-> > 
-> >  drivers/pci/hotplug/cpcihp_zt5550.c | 2 +-
-> >  drivers/pci/hotplug/cpqphp_core.c   | 2 +-
-> >  drivers/pci/hotplug/ibmphp_core.c   | 2 +-
-> >  drivers/pci/hotplug/ibmphp_ebda.c   | 2 +-
-> >  drivers/pci/hotplug/shpchp_core.c   | 2 +-
-> >  5 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> Applied to pci/hotplug for v4.14, thanks!
+From: Ding Tianhong <dingtianhong@huawei.com>
+Date: Thu, 17 Aug 2017 10:25:30 +0800
 
-I moved this to pci/misc along with the other constify patches.
+> The pci_find_pcie_root_port() would return NULL if the given
+> dev is already a Root Port, it looks like unfriendly to the
+> PCIe Root Port device, Thierry and Bjorn suggest to let this
+> function return the given dev under this circumstances.
+> 
+> Fixes: 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI device")
+> Suggested-by: Thierry Reding <thierry.reding@gmail.com>
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
+> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+
+Bjorn, please review and ACK so Linus doesn't rip my head off again
+:-)
+
+Thanks.
