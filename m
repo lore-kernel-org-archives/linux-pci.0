@@ -1,79 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45924 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751185AbdHXQ0P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 24 Aug 2017 12:26:15 -0400
-Date: Thu, 24 Aug 2017 11:26:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
-        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
-        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
-        tomas.winkler@intel.com, dwmw2@infradead.org,
-        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
-        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
-        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
-        thierry.reding@gmail.com, jonathanh@nvidia.com,
-        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
-        bjorn.andersson@linaro.org, freude@de.ibm.com,
-        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
-        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
-        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
-        elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
-        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH 08/15] PCI: make device_type const
-Message-ID: <20170824162612.GE31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
- <1503130946-2854-9-git-send-email-bhumirks@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Thierry Reding <thierry.reding@gmail.com>
+To: David Miller <davem@davemloft.net>, Bjorn Helgaas <bhelgaas@google.com>,
+ Ding Tianhong <dingtianhong@huawei.com>,
+ Michael Ellerman <mpe@ellerman.id.au>
+Subject: [PATCH] PCI: Allow PCI express root ports to find themselves
+Date: Thu, 17 Aug 2017 13:06:14 +0200
+Message-Id: <20170817110614.11454-1-thierry.reding@gmail.com>
+In-Reply-To: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
+References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
+ catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
+ alexander.duyck@gmail.com, ashok.raj@intel.com, eric.dumazet@gmail.com,
+ jeffrey.t.kirsher@intel.com, linux-pci@vger.kernel.org, ganeshgr@chelsio.com,
+ Bob.Shaw@amd.com, leedom@chelsio.com, patrick.j.cramer@intel.com,
+ werner@chelsio.com, linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
+ netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David.Laight@aculab.com,
+ Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, l.stach@pengutronix.de
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503130946-2854-9-git-send-email-bhumirks@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 19, 2017 at 01:52:19PM +0530, Bhumika Goyal wrote:
-> Make this const as it is only stored in the type field of a device
-> structure, which is const.
-> Done using Coccinelle.
-> 
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+From: Thierry Reding <treding@nvidia.com>
 
-Applied to pci/misc for v4.14, thanks!
+If the pci_find_pcie_root_port() function is called on a root port
+itself, return the root port rather than NULL.
 
-> ---
->  drivers/pci/endpoint/pci-epf-core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-> index 6877d6a..9d0de12 100644
-> --- a/drivers/pci/endpoint/pci-epf-core.c
-> +++ b/drivers/pci/endpoint/pci-epf-core.c
-> @@ -27,7 +27,7 @@
->  #include <linux/pci-ep-cfs.h>
->  
->  static struct bus_type pci_epf_bus_type;
-> -static struct device_type pci_epf_type;
-> +static const struct device_type pci_epf_type;
->  
->  /**
->   * pci_epf_linkup() - Notify the function driver that EPC device has
-> @@ -275,7 +275,7 @@ static void pci_epf_dev_release(struct device *dev)
->  	kfree(epf);
->  }
->  
-> -static struct device_type pci_epf_type = {
-> +static const struct device_type pci_epf_type = {
->  	.release	= pci_epf_dev_release,
->  };
->  
-> -- 
-> 1.9.1
-> 
+This effectively reverts commit 0e405232871d6 ("PCI: fix oops when
+try to find Root Port for a PCI device") which added an extra check
+that would now be redundant.
+
+Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
+Fixes: c56d4450eb68 ("PCI: Turn off Request Attributes to avoid Chelsio T5 Completion erratum")
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+This applies on top of and was tested on next-20170817.
+
+Michael, it'd be great if you could test this one again to clarify
+whether or not the fix that's already in Linus' tree is still needed, or
+whether it's indeed obsoleted by this patch.
+
+ drivers/pci/pci.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b05c587e335a..dd56c1c05614 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -514,7 +514,7 @@ EXPORT_SYMBOL(pci_find_resource);
+  */
+ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
+ {
+-	struct pci_dev *bridge, *highest_pcie_bridge = NULL;
++	struct pci_dev *bridge, *highest_pcie_bridge = dev;
+ 
+ 	bridge = pci_upstream_bridge(dev);
+ 	while (bridge && pci_is_pcie(bridge)) {
+@@ -522,11 +522,10 @@ struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
+ 		bridge = pci_upstream_bridge(bridge);
+ 	}
+ 
+-	if (highest_pcie_bridge &&
+-	    pci_pcie_type(highest_pcie_bridge) == PCI_EXP_TYPE_ROOT_PORT)
+-		return highest_pcie_bridge;
++	if (pci_pcie_type(highest_pcie_bridge) != PCI_EXP_TYPE_ROOT_PORT)
++		return NULL;
+ 
+-	return NULL;
++	return highest_pcie_bridge;
+ }
+ EXPORT_SYMBOL(pci_find_pcie_root_port);
+ 
+-- 
+2.13.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
