@@ -1,102 +1,87 @@
-Return-Path: <SRS0=7NSh=7W=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=7NSh=7W=broadcom.com=oza.oza@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:54010 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751687AbdHQLZs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Aug 2017 07:25:48 -0400
+Subject: Re: [PATCHv3 6/9] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+To: "Z.q. Hou" <zhiqiang.hou@nxp.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
+        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
+Cc: "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
+ <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
+ <VI1PR0402MB278292DAC81D4A49964FEC1B84830@VI1PR0402MB2782.eurprd04.prod.outlook.com>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <6fe4dcd2-4a85-5ccc-292a-8aacca75657d@mm-sol.com>
+Date: Thu, 17 Aug 2017 14:25:41 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170819202616.GA32411@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501861696-25767-1-git-send-email-oza.oza@broadcom.com>
- <1501861696-25767-2-git-send-email-oza.oza@broadcom.com> <20170819182607.GS28977@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPdvKTtCkv76mMBgqpbjf=T7EnSz6KBmVxVrRRSou-oE3g@mail.gmail.com> <20170819202616.GA32411@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Sun, 20 Aug 2017 09:12:41 +0530
-Message-ID: <CAMSpPPci1sd-V8NP0Kbn=WLqg_Oj+WB6bLgtasmOrdS4YnFxKA@mail.gmail.com>
-Subject: Re: [PATCH v6 1/2] PCI: iproc: Retry request when CRS returned from EP
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <VI1PR0402MB278292DAC81D4A49964FEC1B84830@VI1PR0402MB2782.eurprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Aug 20, 2017 at 1:56 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Sun, Aug 20, 2017 at 01:02:09AM +0530, Oza Oza wrote:
->> On Sat, Aug 19, 2017 at 11:56 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->
->> > I think you should do something like this instead so you don't do the
->> > MMIO read any more times than necessary:
->> >
->> >   static u32 iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
->> >   {
->> >     u32 data;
->> >     int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
->> >
->> >     data = readl(cfg_data_p);
->> >     while (data == CFG_RETRY_STATUS && timeout--) {
->> >       udelay(1);
->> >       data = readl(cfg_data_p);
->> >     }
->> >
->> >     if (data == CFG_RETRY_STATUS)
->> >       data = 0xffffffff;
->> >     return data;
->> >   }
->> >
->> >   static int iproc_pcie_config_read(...)
->> >   {
->> >     u32 data;
->> >
->> >     ...
->> >     data = iproc_pcie_cfg_retry(cfg_data_p);
->> >     if (size <= 2)
->> >       *val = (data >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
->> >
->> > In the event of a timeout, this returns PCIBIOS_SUCCESSFUL and
->> > 0xffffffff data.  That's what most other platforms do, and most
->> > callers of the PCI config accessors check for that data instead of
->> > checking the return code to see whether the access was successful.
->> >
->> I see one problem with this.
->> we have Samsung NVMe which exposes 64-bit IO BAR.
->> 0xffff0001.
->>
->> and if you see __pci_read_base which does following in sequence.
->>
->> pci_read_config_dword(dev, pos, &l);
->> pci_write_config_dword(dev, pos, l | mask);
->> pci_read_config_dword(dev, pos, &sz);
->> pci_write_config_dword(dev, pos, l);
->>
->> returning 0xffffffff would not be correct in that case.
->> even if callers retry, they will end up in a loop if caller retries.
->>
->> hence I was returning 0xffff0001, it is upto the upper layer to treat
->> it as data or not.
->
-> In your patch, I don't think the upper layer will ever see 0xffff0001.
-> iproc_pcie_config_read() only updates *data if iproc_pcie_cfg_retry()
-> returns PCIBIOS_SUCCESSFUL.  And iproc_pcie_cfg_retry() only returns
-> PCIBIOS_SUCCESSFUL if it reads something other than 0xffff0001.
->
-> Even if you *did* return 0xffff0001 to upper layers, I think we'd have
-> a problem.  Here's an example scenario.  If we do a Function-Level
-> Reset, pcie_flr() starts the reset, then calls pci_flr_wait() to wait
-> until the device becomes ready again.  pci_flr_wait() thinks that any
-> PCI_COMMAND value other than 0xffffffff means the device is ready.
->
-> If the device returns CRS status and you return 0xffff0001 when
-> pci_flr_wait() reads PCI_COMMAND, it thinks that means the device is
-> ready, but it's not.
->
->> let me know if this sounds like a problem to you as well.
->>
->> so in my opinion returning 0xffffffff is not an option.
->>
->> > For example, pci_flr_wait() assumes that if a read of PCI_COMMAND
->> > returns ~0, it's because the device isn't ready yet, and we should
->> > wait and retry.
+Hi,
 
-yes that will be a problem if I return 0xffff0001.
-ok let me revise the patch by returning 0xffffffff as of now.
+On 08/17/2017 06:03 AM, Z.q. Hou wrote:
+> Hi Stanimir,
+> 
+> Thanks for your feedback!
+> 
+>> -----Original Message-----
+>> From: Stanimir Varbanov [mailto:svarbanov@mm-sol.com]
+>> Sent: 2017年8月16日 19:34
+>> To: Z.q. Hou <zhiqiang.hou@nxp.com>; linux-pci@vger.kernel.org;
+>> bhelgaas@google.com; jingoohan1@gmail.com; Joao.Pinto@synopsys.com
+>> Cc: M.h. Lian <minghuan.lian@nxp.com>; Mingkai Hu <mingkai.hu@nxp.com>;
+>> Roy Zang <roy.zang@nxp.com>; niklas.cassel@axis.com;
+>> jesper.nilsson@axis.com
+>> Subject: Re: [PATCHv3 6/9] PCI: designware: add accessors for write
+>> permission of DBI read-only registers
+>>
+>> Hi,
+>>
+>> On 08/16/2017 07:56 AM, Zhiqiang Hou wrote:
+>>> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>>>
+>>> The read-only DBI registers can be written over the DBI when set the
+>>> "Write to RO Registers Using DBI" (DBI_RO_WR_EN) field of the
+>>> MISC_CONTROL_1_OFF register.
+>>>
+>>> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+>>> ---
+>>> V3:
+>>>  - No change
+>>>
+>>>  drivers/pci/dwc/pcie-designware.h | 25 +++++++++++++++++++++++++
+>>>  1 file changed, 25 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/dwc/pcie-designware.h
+>>> b/drivers/pci/dwc/pcie-designware.h
+>>> index 7366c81..0c5f874 100644
+>>> --- a/drivers/pci/dwc/pcie-designware.h
+>>> +++ b/drivers/pci/dwc/pcie-designware.h
+>>> @@ -76,6 +76,9 @@
+>>>  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
+>>>  #define PCIE_ATU_UPPER_TARGET		0x91C
+>>>
+>>> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
+>>> +#define PCIE_DBI_RO_WR_EN		(0x1 << 0)
+>>
+>> Does those registers exist for dwc version 4.01a?
+> 
+> Joao, can you help to check this?
+> I referred to DesignWare cores PCI Express controller databook version 4.21a.
+> The Freescale Layerscape implement does not export the version of designware PCIe controller, I don't know which versions have those registers, if it does not work on qcom platform, I will remove the qcom related changes.
 
-Regards,
-Oza.
+It won't work on two of the supported SoCs so I'd prefer to drop qcom
+changes for now.
+
+regards,
+Stan
