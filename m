@@ -1,65 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org,
-	bhelgaas@google.com
-Subject: [PATCH v3 0/4] PCI: rockchip: Move PCIE_WAKE handling into rockchip
- pcie driver
-Date: Fri, 18 Aug 2017 16:28:37 +0800
-Message-Id: <20170818082841.22335-1-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
- linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
- Will Deacon <will.deacon@arm.com>, dianders@chromium.org,
- Rob Herring <robh+dt@kernel.org>, linux-rockchip@lists.infradead.org,
- Matthias Kaehlcke <mka@chromium.org>,
- Klaus Goger <klaus.goger@theobroma-systems.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- linux-arm-kernel@lists.infradead.org, Caesar Wang <wxt@rock-chips.com>
+Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
+Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
+Subject: Re: [PATCH net] PCI: fix the return value for the
+ pci_find_pcie_root_port()
+To: Thierry Reding <thierry.reding@gmail.com>
+References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
+ <20170817105156.GA18789@ulmo>
+CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
+        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
+        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
+        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
+        <l.stach@pengutronix.de>, <amira@mellanox.com>,
+        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
+        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
+        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
+        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
+        <eric.dumazet@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
+From: Ding Tianhong <dingtianhong@huawei.com>
+Message-ID: <ea83e7a8-39a4-5b94-1148-5bf4ae4ed214@huawei.com>
+Date: Thu, 17 Aug 2017 20:40:16 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170817105156.GA18789@ulmo>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
 
-Currently we are handling pcie wake in mrvl wifi driver. But Brian
-suggests to move it into rockchip pcie driver.
 
-Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
+On 2017/8/17 18:51, Thierry Reding wrote:
+> On Thu, Aug 17, 2017 at 10:25:30AM +0800, Ding Tianhong wrote:
+>> The pci_find_pcie_root_port() would return NULL if the given
+>> dev is already a Root Port, it looks like unfriendly to the
+>> PCIe Root Port device, Thierry and Bjorn suggest to let this
+>> function return the given dev under this circumstances.
+>>
+>> Fixes: 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI device")
+>> Suggested-by: Thierry Reding <thierry.reding@gmail.com>
+>> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+>> Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
+>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+>> ---
+>>  drivers/pci/pci.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 7e2022f..352bb53 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -514,7 +514,7 @@ struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
+>>   */
+>>  struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
+>>  {
+>> -	struct pci_dev *bridge, *highest_pcie_bridge = NULL;
+>> +	struct pci_dev *bridge, *highest_pcie_bridge = dev;
+>>  
+>>  	bridge = pci_upstream_bridge(dev);
+>>  	while (bridge && pci_is_pcie(bridge)) {
+> 
+> I think this should actually be this change on top of a revert of commit
+> 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI
+> device"). After the above change, the previous fix will have a redundant
+> check because highest_pcie_bridge will never be NULL.
+> 
+> Let me send out that version to clarify what I mean.
+> 
 
+Hi Thierry:
 
-Changes in v3:
-Fix error handling
+The patch ("PCI: fix oops when try to find Root Port for a PCI device")
+has been merge to the linus mainline tree before you found this deficiencies....
 
-Changes in v2:
-Use dev_pm_set_dedicated_wake_irq
-        -- Suggested by Brian Norris <briannorris@chromium.com>
+Regards
+Tianhong
 
-Jeffy Chen (4):
-  PCI: rockchip: Fix error handlings
-  PCI: rockchip: Add support for pcie wake irq
-  dt-bindings: PCI: rockchip: Add support for pcie wake irq
-  arm64: dts: rockchip: Handle pcie wake in pcie driver for Gru
-
- .../devicetree/bindings/pci/rockchip-pcie.txt      |  20 ++--
- arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi       |  15 ++-
- drivers/pci/host/pcie-rockchip.c                   | 122 +++++++++++++--------
- 3 files changed, 96 insertions(+), 61 deletions(-)
-
--- 
-2.11.0
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Thierry
+> 
