@@ -1,77 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:30146 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751567AbdHNHuC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 14 Aug 2017 03:50:02 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: valmiki <valmikibow@gmail.com>,
-        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-CC: "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Lan, Tianyu" <tianyu.lan@intel.com>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
-Subject: RE: Support SVM without PASID
-Date: Mon, 14 Aug 2017 07:49:56 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D71673@SHSMSX101.ccr.corp.intel.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
- <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
- <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
- <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
- <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
-In-Reply-To: <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=NXC0=7T=intel.com=jonathan.derrick@kernel.org>
+Return-Path: <SRS0=NXC0=7T=intel.com=jonathan.derrick@kernel.org>
+From: Jon Derrick <jonathan.derrick@intel.com>
+To: <linux-pci@vger.kernel.org>,
+	<iommu@lists.linux-foundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Keith Busch <keith.busch@intel.com>,
+	Scott Bauer <scott.bauer@intel.com>,
+	David Fugate <david.fugate@intel.com>,
+	<linux-kernel@vger.kernel.org>,
+	Jon Derrick <jonathan.derrick@intel.com>
+Subject: [PATCH v2 2/4] pci/x86: Move VMD quirks to x86 fixups
+Date: Thu, 17 Aug 2017 12:10:12 -0600
+Message-Id: <20170817181014.1257-3-jonathan.derrick@intel.com>
+In-Reply-To: <20170817181014.1257-1-jonathan.derrick@intel.com>
+References: <20170817181014.1257-1-jonathan.derrick@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: valmiki [mailto:valmikibow@gmail.com]
-> Sent: Saturday, August 12, 2017 8:11 PM
-> 
-> On 8/7/2017 4:01 PM, Jean-Philippe Brucker wrote:
-> > On 05/08/17 06:14, valmiki wrote:
-> > [...]
-> >> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
-> >> documentation we fill vaddr and iova in struct
-> vfio_iommu_type1_dma_map
-> >> and pass them to VFIO. But if we use dynamic allocation in application
-> >> (say malloc), do we need to use dma API to get iova and then call
-> >> VFIO_IOMMU_MAP ioctl ?
-> >> If application needs multiple such dynamic allocations, then it need to
-> >> allocate large chunk and program it via VFIO_IOMMU_MAP ioctl and
-> then
-> >> manage rest allocations requirements from this buffer ?
-> >
-> > Yes, without SVM, the application allocates large buffers, allocates IOVAs
-> > itself, and maps them with VFIO_IOMMU_MAP. Userspace doesn't rely
-> on the
-> > DMA API at all, it manages IOVAs as it wants. Sizes passed to
-> > VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page
-> granularity
-> > (that is at least 4kB), and both iova and vaddr have to be aligned on that
-> > granularity as well. So malloc isn't really suitable in this case, you'll
-> > need mmap. The application can then implement a small allocator to
-> manage
-> > the DMA pool created with VFIO_IOMMU_MAP.
-> 
-> Thanks Jean, I have a confusion allocate IOVA's in userspace means, how
-> can user application decide IOVA address, can user application pick any
-> random IOVA address ?
-> 
+VMD currently only exists for Intel x86 products
 
-yes, any address. In this mode the whole IOVA address space is owned
-by application, which just needs to use VFIO_IOMMU_MAP to setup
-IOVA->PA mapping in IOMMU (As Jean pointed out, input paramters
-are iova and vaddr. VFIO will figure out pa corresponding to vaddr).
+Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+---
+ arch/x86/pci/fixup.c | 18 ++++++++++++++++++
+ drivers/pci/quirks.c | 17 -----------------
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-Thanks
-Kevin
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 11e4074..ca4b02e5 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -618,3 +618,21 @@ static void quirk_apple_mbp_poweroff(struct pci_dev *pdev)
+ 		dev_info(dev, "can't work around MacBook Pro poweroff issue\n");
+ }
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x8c10, quirk_apple_mbp_poweroff);
++
++/*
++ * VMD-enabled root ports will change the source ID for all messages
++ * to the VMD device. Rather than doing device matching with the source
++ * ID, the AER driver should traverse the child device tree, reading
++ * AER registers to find the faulting device.
++ */
++static void quirk_no_aersid(struct pci_dev *pdev)
++{
++	/* VMD Domain */
++	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
++		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
++
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f1c9852..073baba 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4671,23 +4671,6 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
+ }
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
+ 
+-/*
+- * VMD-enabled root ports will change the source ID for all messages
+- * to the VMD device. Rather than doing device matching with the source
+- * ID, the AER driver should traverse the child device tree, reading
+- * AER registers to find the faulting device.
+- */
+-static void quirk_no_aersid(struct pci_dev *pdev)
+-{
+-	/* VMD Domain */
+-	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
+-		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
+-}
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+-DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+-
+ /* FLR may cause some 82579 devices to hang. */
+ static void quirk_intel_no_flr(struct pci_dev *dev)
+ {
+-- 
+2.9.4
