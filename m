@@ -1,110 +1,146 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0060.outbound.protection.outlook.com ([104.47.37.60]:22134
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751234AbdH1LK2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Aug 2017 07:10:28 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv5 7/9] PCI: designware: add accessors for write permission of DBI read-only registers
-Date: Mon, 28 Aug 2017 18:52:59 +0800
-Message-ID: <20170828105301.8511-8-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33591 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753849AbdHQWFw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 18:05:52 -0400
+Received: by mail-pg0-f66.google.com with SMTP id u185so11818084pgb.0
+        for <linux-pci@vger.kernel.org>; Thu, 17 Aug 2017 15:05:51 -0700 (PDT)
+Subject: Re: [PATCH kernel] PCI: Disable IOV before pcibios_sriov_disable()
+To: linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: kvm@vger.kernel.org, Yongji Xie <elohimes@gmail.com>,
+        Eric Auger <eric.auger@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        shan.gavin@gmail.com,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <20170811081933.17474-1-aik@ozlabs.ru>
+From: Alexey Kardashevskiy <aik@ozlabs.ru>
+Message-ID: <2163ef83-3633-a8cf-3416-0e37a6c500db@ozlabs.ru>
+Date: Fri, 18 Aug 2017 08:05:42 +1000
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170811081933.17474-1-aik@ozlabs.ru>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On 11/08/17 18:19, Alexey Kardashevskiy wrote:
+> From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> 
+> The PowerNV platform is the only user of pcibios_sriov_disable().
+> The IOV BAR could be shifted by pci_iov_update_resource(). The
+> warning message in the function is printed if the IOV capability
+> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
+> 
+> This is the backtrace of what is happening:
+>    pci_disable_sriov
+>    sriov_disable
+>    pnv_pci_sriov_disable
+>    pnv_pci_vf_resource_shift
+>    pci_update_resource
+>    pci_iov_update_resource
+> 
+> This fixes the issue by disabling IOV capability before calling
+> pcibios_sriov_disable(). With it, the disabling path matches
+> the enabling path: pcibios_sriov_enable() is called before the
+> IOV capability is enabled.
+> 
+> Cc: shan.gavin@gmail.com
+> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Cc: Paul Mackerras <paulus@samba.org>
+> Reported-by: Carol L Soto <clsoto@us.ibm.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Tested-by: Carol L Soto <clsoto@us.ibm.com>
+> Signed-off-by: Alexey Kardashevskiy <aik@ozlabs.ru>
+> ---
+> 
+> This is repost. Since Gavin left the team, I am trying to push it out.
+> The previos converstion is here: https://patchwork.ozlabs.org/patch/732653/
+> 
+> Two questions were raised then. I'll try to comment on this below.
 
-The read-only DBI registers can be written over when set the "Write
-to RO Registers Using DBI" (DBI_RO_WR_EN) field of the register
-MISC_CONTROL_1_OFF. And change to use the accessors instead accessing
-the register MISC_CONTROL_1_OFF directly.
+Bjorn, ping? Thanks.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Joao Pinto <jpinto@synopsys.com>
-Acked-by: Roy Zang <tie-fei.zang@freescale.com>
----
-V5:
- - Squashed patch v4 6/9 and 7/9 together
+> 
+>> 1) "res" is already in the resource tree, so we shouldn't be changing
+>>   its start address, because that may make the tree inconsistent,
+>>   e.g., the resource may no longer be completely contained in its
+>>   parent, it may conflict with a sibling, etc.
+> 
+> We should not, yes. But...
+> 
+> At the boot time IOV BAR gets as much MMIO space as it can possibly use.
+> (Embarassingly I cannot trace where this is coming from, 8GB is selected
+> via pci_assign_unassigned_root_bus_resources() path somehow).
+> For example, it is 256*32MB=8GB where 256 is maximum PEs number and 32MB
+> is a PF/VF BAR size. Whatever shifting we do afterwards, the boudaries of
+> that 8GB area do not change and we test it in pnv_pci_vf_resource_shift():
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/powerpc/platforms/powernv/pci-ioda.c#n987
+> 
+>> 2) If we update "res->start", shouldn't we update "res->end"
+>>   correspondingly?
+> 
+> We have to update the PF's IOV BAR address as we allocate PEs dynamically
+> and we do not know in advance where our VF numbers start in that
+> 8GB window. So we change IOV BASR start. Changing the end may make it
+> look more like there is a free area to use but in reality it won't be
+> usable as well as the area we "release" by shifting the start address.
+> 
+> We could probably move that M64 MMIO window by the same delta in
+> opposite direction so the IOV BAR start address would remain the same
+> but its VF#0 would be mapped to let's say PF#5. I am just afraid there
+> is an alignment requirement for these M64 window start address; and this
+> would be even more tricky to manage.
+> 
+> We could also create reserved areas for the amount of space "release" by
+> moving the start address, not sure how though.
+> 
+> So how do we proceed with this particular patch now? Thanks.
+> ---
+>  drivers/pci/iov.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 120485d6f352..ac41c8be9200 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	while (i--)
+>  		pci_iov_remove_virtfn(dev, i, 0);
+>  
+> -	pcibios_sriov_disable(dev);
+>  err_pcibios:
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+> @@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	ssleep(1);
+>  	pci_cfg_access_unlock(dev);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	if (iov->link != dev->devfn)
+>  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>  
+> @@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
+>  	for (i = 0; i < iov->num_VFs; i++)
+>  		pci_iov_remove_virtfn(dev, i, 0);
+>  
+> -	pcibios_sriov_disable(dev);
+> -
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>  	ssleep(1);
+>  	pci_cfg_access_unlock(dev);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	if (iov->link != dev->devfn)
+>  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>  
+> 
 
- drivers/pci/dwc/pci-layerscape.c  |  5 ++---
- drivers/pci/dwc/pcie-designware.h | 25 +++++++++++++++++++++++++
- 2 files changed, 27 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 8b5083aedf16..65f5d543fe89 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -33,7 +33,6 @@
- 
- /* PEX Internal Configuration Registers */
- #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
--#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
- 
- #define PCIE_IATU_NUM		6
- 
-@@ -145,10 +144,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
- 	 */
- 	ls_pcie_disable_outbound_atus(pcie);
- 
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	dw_pcie_dbi_ro_wr_en(pci);
- 	ls_pcie_fix_class(pcie);
- 	ls_pcie_clear_multifunction(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	ls_pcie_drop_msg_tlp(pcie);
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 7366c8167404..0c5f874345f6 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -76,6 +76,9 @@
- #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
- #define PCIE_ATU_UPPER_TARGET		0x91C
- 
-+#define PCIE_MISC_CONTROL_1_OFF		0x8BC
-+#define PCIE_DBI_RO_WR_EN		(0x1 << 0)
-+
- /*
-  * iATU Unroll-specific register definitions
-  * From 4.80 core version the address translation will be made by unroll
-@@ -279,6 +282,28 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
- 	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
- }
- 
-+static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
-+{
-+	u32 reg;
-+	u32 val;
-+
-+	reg = PCIE_MISC_CONTROL_1_OFF;
-+	val = dw_pcie_readl_dbi(pci, reg);
-+	val |= PCIE_DBI_RO_WR_EN;
-+	dw_pcie_writel_dbi(pci, reg, val);
-+}
-+
-+static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
-+{
-+	u32 reg;
-+	u32 val;
-+
-+	reg = PCIE_MISC_CONTROL_1_OFF;
-+	val = dw_pcie_readl_dbi(pci, reg);
-+	val &= ~PCIE_DBI_RO_WR_EN;
-+	dw_pcie_writel_dbi(pci, reg, val);
-+}
-+
- #ifdef CONFIG_PCIE_DW_HOST
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
 -- 
-2.14.1
+Alexey
