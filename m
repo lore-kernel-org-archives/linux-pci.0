@@ -1,189 +1,317 @@
-Return-Path: <SRS0=VCL4=73=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=VCL4=73=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
- <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
- <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
- <86efs3wesi.fsf@arm.com>
- <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
- <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
- <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
- <e381170c-e462-01cd-12db-30773005602b@free.fr> <871so09j6g.fsf@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <90f38928-6f5c-c225-d150-d8daf7d4652c@free.fr>
-Date: Fri, 25 Aug 2017 10:56:25 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ns.mm-sol.com ([37.157.136.199]:55302 "EHLO extserv.mm-sol.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751572AbdHQLyP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 17 Aug 2017 07:54:15 -0400
+Subject: Re: [PATCH v8 3/3] PCI: dwc: qcom: Add support for IPQ8074 PCIe
+ controller
+To: Varadarajan Narayanan <varada@codeaurora.org>, bhelgaas@google.com,
+        robh+dt@kernel.org, mark.rutland@arm.com, kishon@ti.com,
+        sboyd@codeaurora.org, vivek.gautam@codeaurora.org,
+        fengguang.wu@intel.com, weiyongjun1@huawei.com,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Cc: smuthayy <smuthayy@codeaurora.org>
+References: <1502968858-28090-1-git-send-email-varada@codeaurora.org>
+ <1502968858-28090-4-git-send-email-varada@codeaurora.org>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Message-ID: <9a3e4ab0-8253-6df3-a2da-c0219eb5e927@mm-sol.com>
+Date: Thu, 17 Aug 2017 14:54:12 +0300
 MIME-Version: 1.0
-In-Reply-To: <871so09j6g.fsf@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1502968858-28090-4-git-send-email-varada@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 25/08/2017 09:54, Marc Zyngier wrote:
-> On Thu, Aug 24 2017 at 10:53:16 pm BST, Mason <slash.tmp@free.fr> wrote:
->> On 24/08/2017 20:35, Ard Biesheuvel wrote:
->>> On 24 August 2017 at 18:51, Marc Gonzalez wrote:
->>>> On 24/08/2017 19:04, Bjorn Helgaas wrote:
->>>>> On Tue, Aug 22, 2017 Marc Zyngier wrote:
->>>>>> Marc Gonzalez wrote:
->>>>>>> On 22/08/2017 18:29, Marc Zyngier wrote:
->>>>>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
->>>>>>>>
->>>>>>>>>  #define SMP8759_MUX              0x48
->>>>>>>>>  #define SMP8759_TEST_OUT 0x74
->>>>>>>>> +#define SMP8759_STATUS           0x80
->>>>>>>>> +#define SMP8759_ENABLE           0xa0
->>>>>>>>> +#define SMP8759_DOORBELL 0xa002e07c
->>>>>>>>
->>>>>>>> Why is this hardcoded and not coming from the device-tree, just like any
->>>>>>>> other address property?
->>>>>>>
->>>>>>> Since this bus address is software-configurable, I didn't think
->>>>>>> it belonged in the DT. Also, I didn't see anything similar in
->>>>>>> other binding docs, especially
->>>>>>>
->>>>>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
->>>>>>
->>>>>> If that's software configurable, how on Earth did you pick the address?
->>>>>> How do you ensure that it doesn't conflict with DMA? How is it
->>>>>> configured into the RC?
->>>>>
->>>>> But we *do* need to resolve this.  This does seem like an address that
->>>>> shouldn't be hard-coded into the driver.  Since this driver is
->>>>> programming the address into an MSI message, but not into the receiver
->>>>> of that message, there's a coordination issue between this driver and
->>>>> whatever other software does that receiver configuration.
->>>>
->>>> OK. I'll move the doorbell address to the DT for v11.
->>>>
->>>> What property should be used for this address?
->>>>
->>>> sigma,doorbell ?
->>>>
->>>> Or maybe I can put it in reg, since I have a 1:1 mapping
->>>> between bus and cpu addresses?
->>>>
->>>> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
->>>> returns nothing.
->>>
->>> You haven't answered the question yet: you stated that the doorbell
->>> address is software configurable, yet your code does not seem to
->>> configure it. It only returns the doorbell address so that it gets
->>> communicated to the downstream devices.
->>>
->>> So how does the RC know which address is special, so it can trigger on
->>> inbound writes hitting that address and assert the SPI ?
->>
->> The CPU address of the MSI doorbell address is 0x2e07c
->> i.e. within the reg space of the PCIe controller block.
+Varada,
+
+On 08/17/2017 02:20 PM, Varadarajan Narayanan wrote:
+> Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+> Gen 1/2, one lane, two PCIe root complex with support for MSI and
+> legacy interrupts, and it conforms to PCI Express Base 2.1
+> specification.
 > 
-> Which you describe in DT already, right? So why aren't you using an
-> offset in this region as your MSI doorbell (potentially applying an
-> offset, see below)?
-
-Yes, the controller is described in DT:
-
-	pcie@2e000 {
-		compatible = "sigma,smp8759-pcie";
-		reg = <0x50000000 0x400000>, <0x2e000 0x100>;
-
-IIUC, you're saying I don't need the doorbell address
-explicitly in the DT, because I can compute:
-
-0x2e000 (from the DT) + 0x7c (offset within the block)
-
-OK, that sounds right.
-
-Then there is the matter of the region offset,
-i.e. 0xa0000000 in my current code.
-
-It might also be worth keeping in mind that there is
-a second revision of the PCIe controller that handles
-the doorbell differently. In rev2, I just pick an
-arbitrary address within the window, program that
-bus address into the controller, and the controller
-knows to forward that single address to the right
-place. See "[RFC PATCH v0.2] PCI: Add support for
-tango PCIe host bridge" for an example of this.
-
-Typically, I pick the first address of the window,
-BAR0.base, since I assume no device will ever need
-to read/write the first word of RAM.
-
-
->> As I discussed back in March, the RC implements an odd
->> bus-to-system mapping.
->>
->> RC BAR0 defines a window in PCI address space (max 1GB).
->> Accesses outside this window are silently ignored.
->> The window is divided into 8 "regions" and there are 8
->> registers defining the offset into CPU space.
->>
->> In pseudo code, assuming pci_address is within the
->> window defined by BAR0:
->>
->> cpu_address map_bus_to_system(pci_address)
->> {
->>     temp = pci_address - BAR0.base
->>     region = temp / region_size
->>     offset = temp % region_size
->>     cpu_address = region_reg[region] + offset
->>     return cpu_address
->> }
->>
->> The current setup is:
->>
->> DRAM at 0x80000000-0xa0000000
->> BAR0.base = 0x80000000
->> REGION[0] = 0x80000000
->> REGION[1] = 0x88000000
->> REGION[2] = 0x90000000
->> REGION[3] = 0x98000000
->> REGION[4] = 0x0
->>
->> (This map means 1:1 identity for DRAM addresses.)
->>
->> Thus when a device writes to 0xa002e07c (region 4)
->> the write is forwarded to 0x2e07c.
+> The core init is the similar to the existing SoC, however the
+> clocks and reset lines differ.
 > 
-> But how do you find out about the 0xa0000000 offset? You must make sure
-> that the provided address is outside of RAM, should you end-up on a
-> system more than 1GB of RAM.
+> Signed-off-by: smuthayy <smuthayy@codeaurora.org>
+> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
+> ---
+>  drivers/pci/dwc/pcie-qcom.c | 208 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 208 insertions(+)
 
-You're right, I've swept this issue under the rug so far.
+This patch will need re-basing too.
 
-The boards typically come with either
-- two 512MB DIMMs
-- two 1GB DIMMs
-(there may be other setups I'm not aware of, e.g. with
-a single memory module).
+With both comments below addressed:
 
-In the DT for my dev board, I describe *all* of the RAM.
+Acked-by: Stanimir Varbanov <svarbanov@mm-sol.com>
 
-	memory@80000000 {
-		device_type = "memory";
-		reg = <0x80000000 0x80000000>; /* 2 GB */
-	};
+> 
+> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> index c4cd039..1cb03dd 100644
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -37,6 +37,20 @@
+>  #include "pcie-designware.h"
+>  
+>  #define PCIE20_PARF_SYS_CTRL			0x00
+> +#define MST_WAKEUP_EN				BIT(13)
+> +#define SLV_WAKEUP_EN				BIT(12)
+> +#define MSTR_ACLK_CGC_DIS			BIT(10)
+> +#define SLV_ACLK_CGC_DIS			BIT(9)
+> +#define CORE_CLK_CGC_DIS			BIT(6)
+> +#define AUX_PWR_DET				BIT(4)
+> +#define L23_CLK_RMV_DIS				BIT(2)
+> +#define L1_CLK_RMV_DIS				BIT(1)
+> +
+> +#define PCIE20_COMMAND_STATUS			0x04
+> +#define CMD_BME_VAL				0x4
+> +#define PCIE20_DEVICE_CONTROL2_STATUS2		0x98
+> +#define PCIE_CAP_CPL_TIMEOUT_DISABLE		0x10
+> +
+>  #define PCIE20_PARF_PHY_CTRL			0x40
+>  #define PCIE20_PARF_PHY_REFCLK			0x4C
+>  #define PCIE20_PARF_DBI_BASE_ADDR		0x168
+> @@ -58,9 +72,21 @@
+>  #define CFG_BRIDGE_SB_INIT			BIT(0)
+>  
+>  #define PCIE20_CAP				0x70
+> +#define PCIE20_CAP_LINK_CAPABILITIES		(PCIE20_CAP + 0xc)
+> +#define PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT	(BIT(10) | BIT(11))
+> +#define PCIE20_CAP_LINK_1			(PCIE20_CAP + 0x14)
+> +#define PCIE_CAP_LINK1_VAL			0x2fd7f
+> +
+> +#define PCIE20_PARF_Q2A_FLUSH			0x1ac
+> +
+> +#define PCIE20_MISC_CONTROL_1_REG		0x8bc
+> +#define DBI_RO_WR_EN				1
+>  
+>  #define PERST_DELAY_US				1000
+>  
+> +#define PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE	0x358
+> +#define SLV_ADDR_SPACE_SZ                       0x10000000
 
-But actually, Linux is only given to manage a fraction
-of this memory, as some of it is for other processors
-and DSPs, and a large part is for video decoder buffers.
+Please use tabs instead of spaces.
 
-In the end, Linux manages, typically
-128MB, 256MB, 512MB, 2x128MB, or 2x256MB
-(there may be other setups I'm not aware of)
-And the actual config is passed to Linux through
-a mem= command-line directive.
+> +
+>  struct qcom_pcie_resources_2_1_0 {
+>  	struct clk *iface_clk;
+>  	struct clk *core_clk;
+> @@ -110,10 +136,20 @@ struct qcom_pcie_resources_2_4_0 {
+>  	struct reset_control *phy_ahb_reset;
+>  };
+>  
+> +struct qcom_pcie_resources_2_3_3 {
+> +	struct clk *iface;
+> +	struct clk *axi_m_clk;
+> +	struct clk *axi_s_clk;
+> +	struct clk *ahb_clk;
+> +	struct clk *aux_clk;
+> +	struct reset_control *rst[7];
+> +};
+> +
+>  union qcom_pcie_resources {
+>  	struct qcom_pcie_resources_1_0_0 v1_0_0;
+>  	struct qcom_pcie_resources_2_1_0 v2_1_0;
+>  	struct qcom_pcie_resources_2_3_2 v2_3_2;
+> +	struct qcom_pcie_resources_2_3_3 v2_3_3;
+>  	struct qcom_pcie_resources_2_4_0 v2_4_0;
+>  };
+>  
+> @@ -884,6 +920,169 @@ static int qcom_pcie_init_2_4_0(struct qcom_pcie *pcie)
+>  	return ret;
+>  }
+>  
+> +static int qcom_pcie_get_resources_2_3_3(struct qcom_pcie *pcie)
+> +{
+> +	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+> +	struct dw_pcie *pci = pcie->pci;
+> +	struct device *dev = pci->dev;
+> +	int i;
+> +	const char *rst_names[] = { "axi_m", "axi_s", "pipe",
+> +				    "axi_m_sticky", "sticky",
+> +				    "ahb", "sleep", };
+> +
+> +	res->iface = devm_clk_get(dev, "iface");
+> +	if (IS_ERR(res->iface))
+> +		return PTR_ERR(res->iface);
+> +
+> +	res->axi_m_clk = devm_clk_get(dev, "axi_m");
+> +	if (IS_ERR(res->axi_m_clk))
+> +		return PTR_ERR(res->axi_m_clk);
+> +
+> +	res->axi_s_clk = devm_clk_get(dev, "axi_s");
+> +	if (IS_ERR(res->axi_s_clk))
+> +		return PTR_ERR(res->axi_s_clk);
+> +
+> +	res->ahb_clk = devm_clk_get(dev, "ahb");
+> +	if (IS_ERR(res->ahb_clk))
+> +		return PTR_ERR(res->ahb_clk);
+> +
+> +	res->aux_clk = devm_clk_get(dev, "aux");
+> +	if (IS_ERR(res->aux_clk))
+> +		return PTR_ERR(res->aux_clk);
+> +
+> +	for (i = 0; i < ARRAY_SIZE(rst_names); i++) {
+> +		res->rst[i] = devm_reset_control_get(dev, rst_names[i]);
+> +		if (IS_ERR(res->rst[i]))
+> +			return PTR_ERR(res->rst[i]);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void qcom_pcie_deinit_2_3_3(struct qcom_pcie *pcie)
+> +{
+> +	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+> +
+> +	clk_disable_unprepare(res->iface);
+> +	clk_disable_unprepare(res->axi_m_clk);
+> +	clk_disable_unprepare(res->axi_s_clk);
+> +	clk_disable_unprepare(res->ahb_clk);
+> +	clk_disable_unprepare(res->aux_clk);
+> +}
+> +
+> +static int qcom_pcie_init_2_3_3(struct qcom_pcie *pcie)
+> +{
+> +	struct qcom_pcie_resources_2_3_3 *res = &pcie->res.v2_3_3;
+> +	struct dw_pcie *pci = pcie->pci;
+> +	struct device *dev = pci->dev;
+> +	int i, ret;
+> +	u32 val;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
+> +		ret = reset_control_assert(res->rst[i]);
+> +		if (ret) {
+> +			dev_err(pcie->pci->dev,
+> +				"%s: reset assert failed for %d\n",
+> +				__func__, i);
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	usleep_range(2000, 2500);
+> +
+> +	for (i = 0; i < ARRAY_SIZE(res->rst); i++) {
+> +		ret = reset_control_deassert(res->rst[i]);
+> +		if (ret) {
+> +			dev_err(pcie->pci->dev,
+> +				"%s: reset deassert failed for %d\n",
+> +				__func__, i);
+> +			return ret;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Don't have a way to see if the reset has completed.
+> +	 * Wait for some time.
+> +	 */
+> +	usleep_range(2000, 2500);
+> +
+> +	ret = clk_prepare_enable(res->iface);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable core clock\n");
+> +		goto err_clk_iface;
+> +	}
+> +
+> +	ret = clk_prepare_enable(res->axi_m_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable core clock\n");
+> +		goto err_clk_axi_m;
+> +	}
+> +
+> +	ret = clk_prepare_enable(res->axi_s_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable axi slave clock\n");
+> +		goto err_clk_axi_s;
+> +	}
+> +
+> +	ret = clk_prepare_enable(res->ahb_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable ahb clock\n");
+> +		goto err_clk_ahb;
+> +	}
+> +
+> +	ret = clk_prepare_enable(res->aux_clk);
+> +	if (ret) {
+> +		dev_err(dev, "cannot prepare/enable aux clock\n");
+> +		goto err_clk_aux;
+> +	}
+> +
+> +	writel(SLV_ADDR_SPACE_SZ,
+> +		pcie->parf + PCIE20_v3_PARF_SLV_ADDR_SPACE_SIZE);
+> +
+> +	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
+> +	val &= ~BIT(0);
+> +	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
+> +
+> +	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
+> +
+> +	writel(MST_WAKEUP_EN | SLV_WAKEUP_EN | MSTR_ACLK_CGC_DIS
+> +		| SLV_ACLK_CGC_DIS | CORE_CLK_CGC_DIS |
+> +		AUX_PWR_DET | L23_CLK_RMV_DIS | L1_CLK_RMV_DIS,
+> +		pcie->parf + PCIE20_PARF_SYS_CTRL);
+> +	writel(0, pcie->parf + PCIE20_PARF_Q2A_FLUSH);
+> +
+> +	writel(CMD_BME_VAL, pci->dbi_base + PCIE20_COMMAND_STATUS);
+> +	writel(DBI_RO_WR_EN, pci->dbi_base + PCIE20_MISC_CONTROL_1_REG);
+> +	writel(PCIE_CAP_LINK1_VAL, pci->dbi_base + PCIE20_CAP_LINK_1);
+> +
+> +	val = readl(pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
+> +	val &= ~PCIE20_CAP_ACTIVE_STATE_LINK_PM_SUPPORT;
+> +	writel(val, pci->dbi_base + PCIE20_CAP_LINK_CAPABILITIES);
+> +
+> +	writel(PCIE_CAP_CPL_TIMEOUT_DISABLE, pci->dbi_base +
+> +		PCIE20_DEVICE_CONTROL2_STATUS2);
+> +
+> +	return 0;
+> +
+> +err_clk_aux:
+> +	clk_disable_unprepare(res->ahb_clk);
+> +err_clk_ahb:
+> +	clk_disable_unprepare(res->axi_s_clk);
+> +err_clk_axi_s:
+> +	clk_disable_unprepare(res->axi_m_clk);
+> +err_clk_axi_m:
+> +	clk_disable_unprepare(res->iface);
+> +err_clk_iface:
+> +	/*
+> +	 * Not checking for failure, will anyway return
+> +	 * the original failure in 'ret'.
+> +	 */
+> +	for (i = 0; i < ARRAY_SIZE(res->rst); i++)
+> +		reset_control_assert(res->rst[i]);
+> +
+> +	return ret;
+> +}
+> +
+>  static int qcom_pcie_link_up(struct dw_pcie *pci)
+>  {
+>  	u16 val = readw(pci->dbi_base + PCIE20_CAP + PCI_EXP_LNKSTA);
+> @@ -985,6 +1184,14 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
+>  	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+>  };
+>  
+> +/* Qcom IP rev.: 2.3.3	Synopsys IP rev.: 4.30a */
+> +static const struct qcom_pcie_ops ops_2_3_3 = {
+> +	.get_resources = qcom_pcie_get_resources_2_3_3,
+> +	.init = qcom_pcie_init_2_3_3,
+> +	.deinit = qcom_pcie_deinit_2_3_3,
+> +	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+> +};
+> +
+>  static const struct dw_pcie_ops dw_pcie_ops = {
+>  	.link_up = qcom_pcie_link_up,
+>  };
+> @@ -1080,6 +1287,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+>  	{ .compatible = "qcom,pcie-apq8084", .data = &ops_1_0_0 },
+>  	{ .compatible = "qcom,pcie-msm8996", .data = &ops_2_3_2 },
+>  	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_2_4_0 },
+> +	{ .compatible = "qcom,pcie-ipq8074", .data = &ops_2_3_3 },
 
-It is not clear to me, as I discussed with Ard, how the
-Linux driver is supposed to make this all work.
+Sorry forgot to mention that in the previous review, please exchange
+ops_2_4_0 and ops_2_3_3 to keep the list sorted.
 
-Maybe I can have some platform code that walks the
-different RAM areas available to Linux, and sets up
-the appropriate physical-to-dma mappings?
-
-Regards.
+-- 
+regards,
+Stan
