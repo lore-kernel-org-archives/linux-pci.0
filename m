@@ -1,500 +1,229 @@
-Return-Path: <SRS0=Wx1y=7G=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=Wx1y=7G=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1501835976.24341.21.camel@mtksdaap41>
-Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
- support
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-	<matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-	<ryder.lee@mediatek.com>, <hongkun.cao@mediatek.com>,
-	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Date: Fri, 4 Aug 2017 16:39:36 +0800
-In-Reply-To: <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
-	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
-	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:36772 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751055AbdHRW4v (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 18:56:51 -0400
+Received: by mail-wm0-f44.google.com with SMTP id t201so9746422wmt.1
+        for <linux-pci@vger.kernel.org>; Fri, 18 Aug 2017 15:56:51 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org
+Cc: leif.lindholm@linaro.org, graeme.gregory@linaro.org,
+        mw@semihalf.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC PATCH] pci: designware: add driver for DWC controller in ECAM shift mode
+Date: Fri, 18 Aug 2017 23:56:38 +0100
+Message-Id: <20170818225638.31563-1-ard.biesheuvel@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi, Bjorn,
-	Thanks very much for your reviews.
-The mis-spells will be fixed in next version.
+Some implementations of the Synopsys Designware PCIe controller implement
+a so-called ECAM shift mode, which allows a static memory window to be
+configured that covers the configuration space of the entire bus range.
 
+If the firmware performs all the low level configuration that is required
+to expose this controller in a fully ECAM compatible manner, we can
+simply describe it as "pci-host-ecam-generic" and be done with it.
+However, it appears that in some cases (one of which is the Armada 80x0),
+the IP is synthesized with an ATU window size that does not allow the
+first bus to be mapped in a way that prevents the device on the
+downstream port from appearing more than once.
 
-On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
+So implement a driver that relies on the firmware to perform all low
+level initialization, and drives the controller in ECAM mode, but
+overrides the config space accessors to take the above quirk into
+account.
 
+Note that, unlike most drivers for this IP, this driver does not expose
+a fake bridge device at B/D/F 00:00.0. There is no point in doing so,
+given that this is not a true bridge, and does not require any windows
+to be configured in order for the downstream device to operate correctly.
+Omitting it also prevents the PCI resource allocation routines from
+handing out BAR space to it unnecessarily.
 
-......
-> > +}
-> > +
-> > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
-> > +						struct pci_bus *bus, int devfn)
-> > +{
-> > +	struct pci_dev *dev;
-> > +	struct pci_bus *pbus;
-> > +	struct mtk_pcie_port *port, *tmp;
-> > +
-> > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
-> > +			return port;
-> > +		} else if (bus->number != 0) {
-> > +			pbus = bus;
-> > +			do {
-> > +				dev = pbus->self;
-> > +				if (port->index == PCI_SLOT(dev->devfn))
-> > +					return port;
-> > +				pbus = dev->bus;
-> > +			} while (dev->bus->number != 0);
-> > +		}
-> > +	}
-> > +
-> > +	return NULL;
-> 
-> You should be able to use sysdata to avoid searching the list.
-> See drivers/pci/host/pci-aardvark.c, for example.
-> 
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
 
-I could put the mtk_pcie * in sysdata, but still need to searching the
-list to get the mtk_pcie_port *, how about:
+Posted as RFC for discussion. We have systems booting with UEFI firmware
+that don't require yet another variation of the driver with all its
+low-level initialization code, given that the firmware takes care of that
+already for its own needs. However, it seems we cannot drive these
+controllers in a fully ECAM compliant mode either, and so all we need
+is ECAM with a quirk for the config space accessors.
 
-	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-		if (port->index == PCI_SLOT(devfn))
-			return port;
-	}
+Kernel log capture after the patch, of a SoC with two of these puppies,
+one with a Realtek 8169 and one with a Renesas uPD720200.
 
-> > +}
-> > +
-> > +static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-> > +				int where, int size, u32 *val)
-> > +{
-> > +	struct mtk_pcie_port *port;
-> > +	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-> > +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
-> 
-> Sysdata should make this very simple; see advk_pcie_rd_conf().
+If having a patch such as this one is considered acceptable, I will
+create a DT binding to go with it as well.
 
-thanks.
+ drivers/pci/dwc/Kconfig                | 11 +++
+ drivers/pci/dwc/Makefile               |  1 +
+ drivers/pci/dwc/pcie-designware-ecam.c | 88 ++++++++++++++++++++
+ 3 files changed, 100 insertions(+)
 
-> 
-> > +	u32 bn = bus->number;
-> > +	int ret;
-> > +
-> > +	port = mtk_pcie_find_port(pcie, bus, devfn);
-> > +	if (!port) {
-> > +		*val = ~0;
-> > +		return PCIBIOS_DEVICE_NOT_FOUND;
-> > +	}
-> > +
-> > +	ret = mtk_pcie_hw_rd_cfg(port, bn, devfn, where, size, val);
-> > +	if (ret)
-> > +		*val = ~0;
-> > +
-> > +	return ret;
-> > +}
-> > +
-> > +static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
-> > +				 int where, int size, u32 val)
-> > +{
-> > +	u32 bn = bus->number;
-> > +	struct pci_host_bridge *host = pci_find_host_bridge(bus);
-> > +	struct mtk_pcie *pcie = pci_host_bridge_priv(host);
-> > +	struct mtk_pcie_port *port;
-> > +
-> > +	port = mtk_pcie_find_port(pcie, bus, devfn);
-> > +	if (!port)
-> > +		return PCIBIOS_DEVICE_NOT_FOUND;
-> > +
-> > +	return mtk_pcie_hw_wr_cfg(port, bn, devfn, where, size, val);
-> > +}
-> > +
-> > +static struct pci_ops mtk_pcie_ops_v2 = {
-> > +	.read  = mtk_pcie_config_read,
-> > +	.write = mtk_pcie_config_write,
-> > +};
-> > +
-> > +static int mtk_pcie_startup_ports_v2(struct mtk_pcie_port *port)
-> > +{
-> > +	struct mtk_pcie *pcie = port->pcie;
-> > +	struct resource *mem = &pcie->mem;
-> > +	u32 val;
-> > +	size_t size;
-> > +	int err;
-> > +
-> > +	/* mt7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-> > +	if (pcie->base) {
-> > +		val = readl(pcie->base + PCIE_SYS_CFG_V2);
-> > +		val |= PCIE_CSR_LTSSM_EN(port->index) |
-> > +		       PCIE_CSR_ASPM_L1_EN(port->index);
-> > +		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-> > +	}
-> > +
-> > +	/* Assert all reset signals */
-> > +	writel(0, port->base + PCIE_RST_CTRL);
-> > +
-> > +	/*
-> > +	 * Enable rc internal reset.
-> > +	 * The reset will work when the link is from link up to link down.
-> 
-> ?  That sentence doesn't parse for me.
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index d275aadc47ee..f2afa2c519c1 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -169,4 +169,15 @@ config PCIE_KIRIN
+ 	  Say Y here if you want PCIe controller support
+ 	  on HiSilicon Kirin series SoCs.
+ 
++config PCIE_DW_HOST_ECAM
++	bool "Synopsys DesignWare PCIe controller in ECAM mode"
++	depends on OF
++	select PCI_HOST_COMMON
++	select IRQ_DOMAIN
++	help
++	  Add support for Synopsys DesignWare PCIe controllers configured
++	  by the firmware into ECAM shift mode. In some cases, these are
++	  fully ECAM compliant, in which case the pci-host-generic driver
++	  may be used instead.
++
+ endmenu
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index c61be9738cce..7d5a23e5b767 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -1,5 +1,6 @@
+ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
++obj-$(CONFIG_PCIE_DW_HOST_ECAM) += pcie-designware-ecam.o
+ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+ ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
+diff --git a/drivers/pci/dwc/pcie-designware-ecam.c b/drivers/pci/dwc/pcie-designware-ecam.c
+new file mode 100644
+index 000000000000..3ab3f88b2592
+--- /dev/null
++++ b/drivers/pci/dwc/pcie-designware-ecam.c
+@@ -0,0 +1,88 @@
++/*
++ * Driver for mostly ECAM compatible Synopsys dw PCIe controllers
++ * configured by the firmware into RC mode
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ *
++ * Copyright (C) 2014 ARM Limited
++ * Copyright (C) 2017 Linaro Limited
++ *
++ * Authors: Will Deacon <will.deacon@arm.com>
++ *          Ard Biesheuvel <ard.biesheuvel@linaro.org>
++ */
++
++#include <linux/kernel.h>
++#include <linux/init.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/pci-ecam.h>
++#include <linux/platform_device.h>
++
++static int pci_dw_ecam_config_read(struct pci_bus *bus, u32 devfn, int where,
++				   int size, u32 *val)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++
++	/*
++	 * The Synopsys dw PCIe controller in RC mode will not filter type 0
++	 * config TLPs sent to devices 1 and up on its downstream port,
++	 * resulting in devices appearing multiple times on bus 0 unless we
++	 * filter them here.
++	 */
++	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0) {
++		*val = 0xffffffff;
++		return PCIBIOS_DEVICE_NOT_FOUND;
++	}
++
++	return pci_generic_config_read(bus, devfn, where, size, val);
++}
++
++static int pci_dw_ecam_config_write(struct pci_bus *bus, u32 devfn, int where,
++				    int size, u32 val)
++{
++	struct pci_config_window *cfg = bus->sysdata;
++
++	if (bus->number == cfg->busr.start && PCI_SLOT(devfn) > 0)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	return pci_generic_config_write(bus, devfn, where, size, val);
++}
++
++static struct pci_ecam_ops pci_dw_ecam_bus_ops = {
++	.bus_shift	= 20,
++	.pci_ops	= {
++		.map_bus	= pci_ecam_map_bus,
++		.read		= pci_dw_ecam_config_read,
++		.write		= pci_dw_ecam_config_write,
++	}
++};
++
++static const struct of_device_id pci_dw_ecam_of_match[] = {
++	{ .compatible = "snps,dw-pcie-ecam",
++	  .data = &pci_dw_ecam_bus_ops },
++
++	{ },
++};
++
++static int pci_dw_ecam_probe(struct platform_device *pdev)
++{
++	const struct of_device_id *of_id;
++	struct pci_ecam_ops *ops;
++
++	of_id = of_match_node(pci_dw_ecam_of_match, pdev->dev.of_node);
++	ops = (struct pci_ecam_ops *)of_id->data;
++
++	return pci_host_common_probe(pdev, ops);
++}
++
++static struct platform_driver pci_dw_ecam_driver = {
++	.driver = {
++		.name = "pci-synopsys-dw-ecam",
++		.of_match_table = pci_dw_ecam_of_match,
++		.suppress_bind_attrs = true,
++	},
++	.probe = pci_dw_ecam_probe,
++};
++builtin_platform_driver(pci_dw_ecam_driver);
+-- 
+2.11.0
 
-What about:
+Note that this is not the final configuration. Most notably, there is no
+32-bit addressable MMIO space yet.
 
-	/*
-	 * Enable PCIe link down reset, if link status changed from link up to
-	 * link down, this will reset MAC control registers and configuration
-	 * space.
-	 */
-
-> 
-> > +	 */
-> > +	writel(PCI_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-> > +
-> > +	/* De-assert phy, pe, pipe, mac and configuration reset	*/
-> > +	val = readl(port->base + PCIE_RST_CTRL);
-> > +	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-> > +	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-> > +	writel(val, port->base + PCIE_RST_CTRL);
-> > +
-> > +	/* PCIe v2.0 need at least 100ms delay to train from Gen1 to Gen2 */
-> > +	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
-> > +				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-> > +				 100 * USEC_PER_MSEC);
-> > +	if (err)
-> > +		return -ETIMEDOUT;
-> > +
-> > +	/* Set INTx mask */
-> > +	val = readl(port->base + PCIE_INT_MASK);
-> > +	val &= ~INTX_MASK;
-> > +	writel(val, port->base + PCIE_INT_MASK);
-> > +
-> > +	/* Set AHB to PCIe translation windows */
-> > +	size = mem->end - mem->start;
-> > +	val = AHB2PCIE_BASEL(mem->start) | AHB2PCIE_SIZE(fls(size));
-> > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-> > +
-> > +	val = AHB2PCIE_BASEH(mem->start);
-> > +	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-> > +
-> > +	/* Set PCIe to axi translation memory space.*/
-> 
-> s/axi/AXI/
-> 
-> > +	val = fls(0xffffffff) | WIN_ENABLE;
-> > +	writel(val, port->base + PCIE_AXI_WINDOW0);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-> > +			     irq_hw_number_t hwirq)
-> > +{
-> > +	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-> > +	irq_set_chip_data(irq, domain->host_data);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static const struct irq_domain_ops intx_domain_ops = {
-> > +	.map = mtk_pcie_intx_map,
-> > +};
-> > +
-> > +static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
-> > +				    struct device_node *node)
-> > +{
-> > +	struct device *dev = port->pcie->dev;
-> > +	struct device_node *pcie_intc_node;
-> > +
-> > +	/* Setup INTx */
-> > +	pcie_intc_node = of_get_next_child(node, NULL);
-> > +	if (!pcie_intc_node) {
-> > +		dev_err(dev, "No PCIe Intc node found\n");
-> > +		return PTR_ERR(pcie_intc_node);
-> > +	}
-> > +
-> > +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-> > +						 &intx_domain_ops, port);
-> 
-> I think there's an issue here with a 4-element IRQ domain and the
-> hwirq numbers 1-4 from the of_irq_parse_and_map_pci() path, so INTD
-> may not work correctly.
-> 
-> See
-> http://lkml.kernel.org/r/20170801212931.GA26498@bhelgaas-glaptop.roam.corp.google.com
-> and related discussion.
-> 
-
-Sorry, I did not get this,
-I do some test with an intel E350T4 PCIe NICs, it's a x1 lane
-multi-function device.
-What I got from the log is below:
-->of_irq_parse_and_map_pci
-	->of_irq_parse_pci
-		->irq_create_of_mapping
-			->irq_create_fwspec_mapping
-				->irq_domain_translate
-				which will go through
-				d->ops->translate #the hwirq really start from 0
-
-And I tested every NIC port of the Intel E350T4 with tftp transfer data,
-seems all are OK with this code.
-
-What I got from the proc is as below:
-cat /proc/interrupts
-           CPU0       CPU1       CPU2       
-  1:          0          0          0     GICv2  25 Level     vgic
-  3:       5042        224        206     GICv2  30 Level     arch_timer
-  4:          0          0          0     GICv2  27 Level     kvm guest
-timer
-  6:        201          0          0  MT_SYSIRQ  91 Level     ttyS0
-  7:         57          0          0  MT_SYSIRQ 115 Level     mtk-pcie
-  8:          0          0          0  MT_SYSIRQ 117 Level     mtk-pcie
-  9:          9          0          0     dummy   0 Edge      eth0
- 10:         40          0          0     dummy   1 Edge      eth1
- 11:          5          0          0     dummy   2 Edge      eth2
- 12:          3          0          0     dummy   3 Edge      eth3
-IPI0:       314        507       1164       Rescheduling interrupts
-
-or did I missed something?
-
-
-> > +	if (!port->irq_domain) {
-> > +		dev_err(dev, "Failed to get INTx IRQ domain\n");
-> > +		return PTR_ERR(port->irq_domain);
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
-> > +{
-> > +	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
-> > +	struct device *dev = port->pcie->dev;
-> > +	unsigned long status;
-> > +	u32 virq;
-> > +	u32 bit = INTX_SHIFT;
-> > +
-> > +	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
-> > +		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
-> > +			/* Clear the INTx */
-> > +			writel(1 << bit, port->base + PCIE_INT_STATUS);
-> > +			virq = irq_find_mapping(port->irq_domain,
-> > +						bit - INTX_SHIFT);
-> > +			if (virq)
-> > +				generic_handle_irq(virq);
-> > +			else
-> > +				dev_err(dev, "unexpected IRQ, INT%d\n",
-> > +					bit - INTX_SHIFT);
-> 
-> PCI INTx are conventionally INTA, INTB, INTC, INTD (not INT1, INT2,
-> etc).
-> 
-> > +		}
-> > +	}
-> > +
-> > +	return IRQ_HANDLED;
-> > +}
-> > +
-> > +static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
-> > +			      struct device_node *node)
-> > +{
-> > +	struct mtk_pcie *pcie = port->pcie;
-> > +	struct device *dev = pcie->dev;
-> > +	struct platform_device *pdev = to_platform_device(dev);
-> > +	int err, irq;
-> > +
-> > +	irq = platform_get_irq(pdev, port->index);
-> > +	err = devm_request_irq(dev, irq, mtk_pcie_intr_handler,
-> > +			       IRQF_SHARED, "mtk-pcie", port);
-> > +	if (err) {
-> > +		dev_err(dev, "unable to request irq %d\n", irq);
-> 
-> s/irq/IRQ/
-> 
-> > +		return err;
-> > +	}
-> > +
-> > +	err = mtk_pcie_init_irq_domain(port, node);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to init pcie lagecy irq domain\n");
-> 
-> s/lagecy/legacy/
-> s/irq/IRQ/
-> s/pcie/PCIe/
-> 
-> > +		return -ENODEV;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
-> >  				      unsigned int devfn, int where)
-> >  {
-> > @@ -249,13 +625,49 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
-> >  
-> >  	err = clk_prepare_enable(port->sys_ck);
-> >  	if (err) {
-> > -		dev_err(dev, "failed to enable port%d clock\n", port->index);
-> > +		dev_err(dev, "failed to enable sys_ck%d\n", port->index);
-> >  		goto err_sys_clk;
-> >  	}
-> >  
-> > +	err = clk_prepare_enable(port->ahb_ck);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to enable ahb_ck%d\n", port->index);
-> > +		goto err_ahb_clk;
-> > +	}
-> > +
-> > +	err = clk_prepare_enable(port->aux_ck);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to enable aux_ck%d\n", port->index);
-> > +		goto err_aux_clk;
-> > +	}
-> > +
-> > +	err = clk_prepare_enable(port->axi_ck);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to enable axi_ck%d\n", port->index);
-> > +		goto err_axi_clk;
-> > +	}
-> > +
-> > +	err = clk_prepare_enable(port->obff_ck);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to enable obff_ck%d\n", port->index);
-> > +		goto err_obff_clk;
-> > +	}
-> > +
-> > +	err = clk_prepare_enable(port->pipe_ck);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to enable pipe_ck%d\n", port->index);
-> > +		goto err_pipe_clk;
-> > +	}
-> > +
-> >  	reset_control_assert(port->reset);
-> >  	reset_control_deassert(port->reset);
-> >  
-> > +	err = phy_init(port->phy);
-> > +	if (err) {
-> > +		dev_err(dev, "failed to initialize port%d phy\n", port->index);
-> > +		goto err_phy_init;
-> > +	}
-> > +
-> >  	err = phy_power_on(port->phy);
-> >  	if (err) {
-> >  		dev_err(dev, "failed to power on port%d phy\n", port->index);
-> > @@ -269,6 +681,18 @@ static void mtk_pcie_enable_ports(struct mtk_pcie_port *port)
-> >  
-> >  	phy_power_off(port->phy);
-> >  err_phy_on:
-> > +	phy_exit(port->phy);
-> > +err_phy_init:
-> > +	clk_disable_unprepare(port->pipe_ck);
-> > +err_pipe_clk:
-> > +	clk_disable_unprepare(port->obff_ck);
-> > +err_obff_clk:
-> > +	clk_disable_unprepare(port->axi_ck);
-> > +err_axi_clk:
-> > +	clk_disable_unprepare(port->aux_ck);
-> > +err_aux_clk:
-> > +	clk_disable_unprepare(port->ahb_ck);
-> > +err_ahb_clk:
-> >  	clk_disable_unprepare(port->sys_ck);
-> >  err_sys_clk:
-> >  	mtk_pcie_port_free(port);
-> > @@ -306,10 +730,56 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
-> >  	snprintf(name, sizeof(name), "sys_ck%d", index);
-> >  	port->sys_ck = devm_clk_get(dev, name);
-> >  	if (IS_ERR(port->sys_ck)) {
-> > -		dev_err(dev, "failed to get port%d clock\n", index);
-> > +		dev_err(dev, "failed to get sys_ck%d\n", index);
-> >  		return PTR_ERR(port->sys_ck);
-> >  	}
-> >  
-> > +	/* sys_ck might be divided into the following parts in some chips */
-> > +	snprintf(name, sizeof(name), "ahb_ck%d", index);
-> > +	port->ahb_ck = devm_clk_get(dev, name);
-> > +	if (IS_ERR(port->ahb_ck)) {
-> > +		if (PTR_ERR(port->ahb_ck) == -EPROBE_DEFER)
-> > +			return -EPROBE_DEFER;
-> > +
-> > +		port->ahb_ck = NULL;
-> > +	}
-> > +
-> > +	snprintf(name, sizeof(name), "axi_ck%d", index);
-> > +	port->axi_ck = devm_clk_get(dev, name);
-> > +	if (IS_ERR(port->axi_ck)) {
-> > +		if (PTR_ERR(port->axi_ck) == -EPROBE_DEFER)
-> > +			return -EPROBE_DEFER;
-> > +
-> > +		port->axi_ck = NULL;
-> > +	}
-> > +
-> > +	snprintf(name, sizeof(name), "aux_ck%d", index);
-> > +	port->aux_ck = devm_clk_get(dev, name);
-> > +	if (IS_ERR(port->aux_ck)) {
-> > +		if (PTR_ERR(port->aux_ck) == -EPROBE_DEFER)
-> > +			return -EPROBE_DEFER;
-> > +
-> > +		port->aux_ck = NULL;
-> > +	}
-> > +
-> > +	snprintf(name, sizeof(name), "obff_ck%d", index);
-> > +	port->obff_ck = devm_clk_get(dev, name);
-> > +	if (IS_ERR(port->obff_ck)) {
-> > +		if (PTR_ERR(port->obff_ck) == -EPROBE_DEFER)
-> > +			return -EPROBE_DEFER;
-> > +
-> > +		port->obff_ck = NULL;
-> > +	}
-> > +
-> > +	snprintf(name, sizeof(name), "pipe_ck%d", index);
-> > +	port->pipe_ck = devm_clk_get(dev, name);
-> > +	if (IS_ERR(port->pipe_ck)) {
-> > +		if (PTR_ERR(port->pipe_ck) == -EPROBE_DEFER)
-> > +			return -EPROBE_DEFER;
-> > +
-> > +		port->pipe_ck = NULL;
-> > +	}
-> > +
-> >  	snprintf(name, sizeof(name), "pcie-rst%d", index);
-> >  	port->reset = devm_reset_control_get_optional(dev, name);
-> >  	if (PTR_ERR(port->reset) == -EPROBE_DEFER)
-> > @@ -324,6 +794,12 @@ static int mtk_pcie_parse_ports(struct mtk_pcie *pcie,
-> >  	port->index = index;
-> >  	port->pcie = pcie;
-> >  
-> > +	if (pcie->soc->setup_irq) {
-> > +		err = pcie->soc->setup_irq(port, node);
-> > +		if (err)
-> > +			return err;
-> > +	}
-> > +
-> >  	INIT_LIST_HEAD(&port->list);
-> >  	list_add_tail(&port->list, &pcie->ports);
-> >  
-> > @@ -553,9 +1029,17 @@ static struct mtk_pcie_soc mtk_pcie_soc_v1 = {
-> >  	.startup = mtk_pcie_startup_ports,
-> >  };
-> >  
-> > +static struct mtk_pcie_soc mtk_pcie_soc_v2 = {
-> > +	.ops = &mtk_pcie_ops_v2,
-> > +	.startup = mtk_pcie_startup_ports_v2,
-> > +	.setup_irq = mtk_pcie_setup_irq,
-> > +};
-> > +
-> >  static const struct of_device_id mtk_pcie_ids[] = {
-> >  	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
-> >  	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
-> > +	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_v2 },
-> > +	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_v2 },
-> >  	{},
-> >  };
-> >  
-> > -- 
-> > 2.6.4
-> > 
+OF: PCI: host bridge /pcie@3f00000000 ranges:
+OF: PCI:    IO 0x3f01000000..0x3f0100ffff -> 0x00000000
+OF: PCI:   MEM 0x3f40000000..0x3f7fffffff -> 0x3f40000000
+pci-synopsys-dw-ecam 3f00000000.pcie: ECAM at [mem 0x3f00000000-0x3f03ffffff] for [bus 00-3f]
+pci-synopsys-dw-ecam 3f00000000.pcie: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [bus 00-3f]
+pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+pci_bus 0000:00: root bus resource [mem 0x3f40000000-0x3f7fffffff]
+pci 0000:00:00.0: [10ec:8168] type 00 class 0x020000
+pci 0000:00:00.0: reg 0x10: [io  0x0000-0x00ff]
+pci 0000:00:00.0: reg 0x18: [mem 0x3f40004000-0x3f40004fff 64bit]
+pci 0000:00:00.0: reg 0x20: [mem 0x3f40000000-0x3f40003fff 64bit pref]
+pci 0000:00:00.0: supports D1 D2
+pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot D3cold
+pci 0000:00:00.0: BAR 4: assigned [mem 0x3f40000000-0x3f40003fff 64bit pref]
+pci 0000:00:00.0: BAR 2: assigned [mem 0x3f40004000-0x3f40004fff 64bit]
+pci 0000:00:00.0: BAR 0: assigned [io  0x1000-0x10ff]
+OF: PCI: host bridge /pcie@3f80000000 ranges:
+OF: PCI:    IO 0x3f81000000..0x3f8100ffff -> 0x00010000
+OF: PCI:   MEM 0x3fc0000000..0x3fffffffff -> 0x3fc0000000
+pci-synopsys-dw-ecam 3f80000000.pcie: ECAM at [mem 0x3f80000000-0x3f83ffffff] for [bus 00-3f]
+pci-synopsys-dw-ecam 3f80000000.pcie: PCI host bridge to bus 0001:00
+pci_bus 0001:00: root bus resource [bus 00-3f]
+pci_bus 0001:00: root bus resource [io  0x10000-0x1ffff]
+pci_bus 0001:00: root bus resource [mem 0x3fc0000000-0x3fffffffff]
+pci 0001:00:00.0: [1033:0194] type 00 class 0x0c0330
+pci 0001:00:00.0: reg 0x10: [mem 0x3fc0000000-0x3fc0001fff 64bit]
+pci 0001:00:00.0: PME# supported from D0 D3hot
+pci 0001:00:00.0: BAR 0: assigned [mem 0x3fc0000000-0x3fc0001fff 64bit]
+pci 0001:00:00.0: enabling device (0000 -> 0002)
