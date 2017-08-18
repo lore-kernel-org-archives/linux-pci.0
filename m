@@ -1,55 +1,69 @@
-Return-Path: <SRS0=Kuf8=7X=lst.de=hch@kernel.org>
-Return-Path: <SRS0=Kuf8=7X=lst.de=hch@kernel.org>
-Date: Mon, 21 Aug 2017 20:39:05 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: don't try to apply MSI(-X) affinity for
-	single vectors
-Message-ID: <20170821183905.GB23205@lst.de>
-References: <20170726201741.4842-1-hch@lst.de> <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 18 Aug 2017 11:28:52 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: jeffy <jeffy.chen@rock-chips.com>
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20170818182850.GG6008@atomide.com>
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
+ <20170817120431.12398-2-jeffy.chen@rock-chips.com>
+ <20170818170107.GA119461@google.com>
+ <59972817.4030907@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <59972817.4030907@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, Brian Norris <briannorris@chromium.org>,
+ dianders@chromium.org, linux-kernel@vger.kernel.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 02, 2017 at 01:24:58PM -0500, Bjorn Helgaas wrote:
-> On Wed, Jul 26, 2017 at 10:17:41PM +0200, Christoph Hellwig wrote:
-> > We'll always get NULL back in that case, so skip the call and the
-> > resulting warning.
+* jeffy <jeffy.chen@rock-chips.com> [170818 11:05]:
+> On 08/19/2017 01:01 AM, Brian Norris wrote:
+> > BTW, in another context, Tony suggested we might need to fix up the IRQ flags
+> > like this:
+> > 
+> > int dev_pm_set_dedicated_wake_irq(struct device *dev, int irq)
+> > {
+> > ...
+> >          err = request_threaded_irq(irq, NULL, handle_threaded_wake_irq,
+> > -                                  IRQF_ONESHOT, dev_name(dev), wirq);
+> > +                                  IRQF_ONESHOT | irq_get_trigger_type(irq), dev_name(dev), wirq);
+> > 
+> > But IIUC, that's not actually necessary, because __setup_irq()
+> > automatically configures the trigger type if the driver didn't request
+> > one explicitly.
 > 
-> 1. I'm not sure PCI_IRQ_AFFINITY was the right name.  IIUC, a
-> MSI/MSI-X vector is always basically bound to CPU,
-
-This will depend on your architecture.
-
-> so we always have
-> affinity.  The only difference with PCI_IRQ_AFFINITY is that instead
-> of binding them all to the same CPU, we spread them around.  Maybe
-> PCI_IRQ_SPREAD would be more suggestive.  But whatever, it is what it
-> is, and I'll expand the changelog something like this:
-
-Yes, that might be a better name.  We don't have that many callers
-yet, so we could probably still change it.
-
+> actually this would not work...irq_get_trigger_type would return zero due to
+> a bug which we have a patch for it already:
 > 
->   Calling pci_alloc_irq_vectors() with PCI_IRQ_AFFINITY indicates
->   that we should spread the MSI vectors around the available CPUs.
->   But if we're only allocating one vector, there's nothing to spread
->   around.
+> 9908207 New          [tip:irq/urgent] genirq: Restore trigger settings in
+> irq_modify_status()
 
-Ok.
+Thanks for that information. So it seems we can leave out the
+irq_get_trigger_type() here then? Might be worth checking
+that it really does get populated though :)
 
-> 2. The patch makes sense in that if we're only allocating a single
-> vector, there's nothing to spread around and there's no need to
-> allocate a cpumask.  But I haven't figured out why we get a warning.
-> I assume it's because we're getting NULL back when we call
-> irq_create_affinity_masks() with nvecs==1, but that only happens if
-> affv==0 or the zalloc fails, and I don't see why either would be the
-> case.
+> BTW, using dev_name for the name of this wake irq seems not very
+> convenient...maybe add a ":wake" suffix?
 
-It happens for the !CONFIG_SMP case.  It also happens for the case where
-we pre_vectors or post_vectors reduces the affinity vector count to 1
-inside irq_create_affinity_masks, so maybe this patch isn't the best and
-the warning should either move into irq_create_affinity_masks or just
-remove it entirely.
+Good idea, will take a look.
+
+Regards,
+
+Tony
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
