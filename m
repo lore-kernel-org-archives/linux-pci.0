@@ -1,78 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v7 5/8] PCI: xilinx-nwl: Translate INTx range to hwirqs 0-3
-Date: Tue, 15 Aug 2017 12:02:20 -0700
-Message-ID: <20170815190223.18807-6-paul.burton@imgtec.com>
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=idZX=7U=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=idZX=7U=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH v2 4/4] iommu: Prevent VMD child devices from being
+ remapping targets
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Jon Derrick <jonathan.derrick@intel.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+ David Woodhouse <dwmw2@infradead.org>, Keith Busch <keith.busch@intel.com>,
+ Scott Bauer <scott.bauer@intel.com>, David Fugate <david.fugate@intel.com>,
+ linux-kernel@vger.kernel.org
+References: <20170817181014.1257-1-jonathan.derrick@intel.com>
+ <20170817181014.1257-5-jonathan.derrick@intel.com>
+ <20170818160433.GN28977@bhelgaas-glaptop.roam.corp.google.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <632c5063-97aa-98b8-7951-65d4aed692a7@arm.com>
+Date: Fri, 18 Aug 2017 17:35:31 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: =?UTF-8?q?S=C3=B6ren=20Brinkmann?= <soren.brinkmann@xilinx.com>,
- Michal Simek <michal.simek@xilinx.com>, Paul Burton <paul.burton@imgtec.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170818160433.GN28977@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhlIGRldmljZXRyZWUgYmluZGluZyBkb2N1bWVudGF0aW9uIGZvciB0aGUgWGlsaW54IE5XTCBQ
-Q0llIHJvb3QgcG9ydApicmlkZ2Ugc2hvd3MgYW4gZXhhbXBsZSB3aGljaCB1c2VzIGFuIGludGVy
-cnVwdC1tYXAgcHJvcGVydHkgdG8gbWFwIFBDSQpJTlR4IGludGVycnVwdHMgdG8gaGFyZHdhcmUg
-SVJRIG51bWJlcnMgMS00LiBUaGUgZHJpdmVyIGNyZWF0ZXMgYW4gSVJRCmRvbWFpbiB3aXRoIHNp
-emUgNCwgd2hpY2ggdGhlcmVmb3JlIGNvdmVycyB0aGUgaHdpcnEgcmFuZ2UgMC0zLgoKVGhpcyBt
-ZWFucyB0aGF0IGlmIHdlIGF0dGVtcHQgdG8gbWFrZSB1c2Ugb2YgdGhlIElOVEQgaW50ZXJydXB0
-IHRoZW4Kd2UncmUgbGlrZWx5IHRvIGhpdCBhIFdBUk4oKSBpbiBpcnFfZG9tYWluX2Fzc29jaWF0
-ZSgpIGJlY2F1c2UgSU5URCwgb3IKaHdpcnc9NCwgaXMgb3V0c2lkZSBvZiB0aGUgcmFuZ2UgY292
-ZXJlZCBieSB0aGUgSVJRIGRvbWFpbi4KaXJxX2RvbWFpbl9hc3NvY2lhdGUoKSB3aWxsIHRoZW4g
-cmV0dXJuIC1FSU5WQUwgYW5kIHdlJ2xsIGJlIHVuYWJsZSB0bwptYWtlIHVzZSBvZiBJTlRELgoK
-Rml4IHRoaXMgYnkgbWFraW5nIHVzZSBvZiB0aGUgcGNpX2lycWRfaW50eF94bGF0ZSgpIGhlbHBl
-ciBmdW5jdGlvbiB0bwp0cmFuc2xhdGUgdGhlIDEtNCByYW5nZSB1c2VkIGluIHRoZSBEVCB0byBh
-IDAtMyByYW5nZSB1c2VkIHdpdGhpbiB0aGUKZHJpdmVyLCBhbmQgc3RvcCBhZGRpbmcgMSB0byBk
-ZWNvZGVkIGh3aXJxIG51bWJlcnMuCgpXaGlsc3QgY2xlYW5pbmcgdXAgSU5UeCBoYW5kbGluZyB3
-ZSBtYWtlIHVzZSBvZiB0aGUgbmV3IFBDSV9OVU1fSU5UWAptYWNybyAmIGRyb3AgdGhlIGN1c3Rv
-bSBJTlRYIGRlZmluaXRpb25zLgoKU2lnbmVkLW9mZi1ieTogUGF1bCBCdXJ0b24gPHBhdWwuYnVy
-dG9uQGltZ3RlYy5jb20+CkNjOiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29nbGUuY29tPgpD
-YzogTWljaGFsIFNpbWVrIDxtaWNoYWwuc2ltZWtAeGlsaW54LmNvbT4KQ2M6ICJTw7ZyZW4gQnJp
-bmttYW5uIiA8c29yZW4uYnJpbmttYW5uQHhpbGlueC5jb20+CkNjOiBsaW51eC1hcm0ta2VybmVs
-QGxpc3RzLmluZnJhZGVhZC5vcmcKQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmcKCi0tLQpJ
-IGhhdmUgb25seSBidWlsZCB0ZXN0ZWQgdGhpcy4gVGhlIHByb2JsZW0gaXMgaWRlbnRpY2FsIHRv
-IHRoYXQgaW4gdGhlCnBjaWUteGlsaW54IGRyaXZlciwgd2hpY2ggaXMgZml4ZWQgc2ltaWxhcmx5
-IGluIGFuIGVhcmxpZXIgcGF0Y2guCgpDaGFuZ2VzIGluIHY3OiBOb25lCkNoYW5nZXMgaW4gdjY6
-IE5vbmUKQ2hhbmdlcyBpbiB2NTogTm9uZQpDaGFuZ2VzIGluIHY0OiBOb25lCkNoYW5nZXMgaW4g
-djM6IE5vbmUKQ2hhbmdlcyBpbiB2MjogTm9uZQoKIGRyaXZlcnMvcGNpL2hvc3QvcGNpZS14aWxp
-bngtbndsLmMgfCA5ICsrKystLS0tLQogMSBmaWxlIGNoYW5nZWQsIDQgaW5zZXJ0aW9ucygrKSwg
-NSBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9ob3N0L3BjaWUteGlsaW54
-LW53bC5jIGIvZHJpdmVycy9wY2kvaG9zdC9wY2llLXhpbGlueC1ud2wuYwppbmRleCBlZWM2NDFh
-MzRmYzUuLjU3Mzg0N2Y0YjliYyAxMDA2NDQKLS0tIGEvZHJpdmVycy9wY2kvaG9zdC9wY2llLXhp
-bGlueC1ud2wuYworKysgYi9kcml2ZXJzL3BjaS9ob3N0L3BjaWUteGlsaW54LW53bC5jCkBAIC0x
-MzMsNyArMTMzLDYgQEAKICNkZWZpbmUgQ0ZHX0RNQV9SRUdfQkFSCQkJR0VOTUFTSygyLCAwKQog
-CiAjZGVmaW5lIElOVF9QQ0lfTVNJX05SCQkJKDIgKiAzMikKLSNkZWZpbmUgSU5UWF9OVU0JCQk0
-CiAKIC8qIFJlYWRpbiB0aGUgUFNfTElOS1VQICovCiAjZGVmaW5lIFBTX0xJTktVUF9PRkZTRVQJ
-CTB4MDAwMDAyMzgKQEAgLTMzNCw5ICszMzMsOCBAQCBzdGF0aWMgdm9pZCBud2xfcGNpZV9sZWdf
-aGFuZGxlcihzdHJ1Y3QgaXJxX2Rlc2MgKmRlc2MpCiAKIAl3aGlsZSAoKHN0YXR1cyA9IG53bF9i
-cmlkZ2VfcmVhZGwocGNpZSwgTVNHRl9MRUdfU1RBVFVTKSAmCiAJCQkJTVNHRl9MRUdfU1JfTUFT
-S0FMTCkgIT0gMCkgewotCQlmb3JfZWFjaF9zZXRfYml0KGJpdCwgJnN0YXR1cywgSU5UWF9OVU0p
-IHsKLQkJCXZpcnEgPSBpcnFfZmluZF9tYXBwaW5nKHBjaWUtPmxlZ2FjeV9pcnFfZG9tYWluLAot
-CQkJCQkJYml0ICsgMSk7CisJCWZvcl9lYWNoX3NldF9iaXQoYml0LCAmc3RhdHVzLCBQQ0lfTlVN
-X0lOVFgpIHsKKwkJCXZpcnEgPSBpcnFfZmluZF9tYXBwaW5nKHBjaWUtPmxlZ2FjeV9pcnFfZG9t
-YWluLCBiaXQpOwogCQkJaWYgKHZpcnEpCiAJCQkJZ2VuZXJpY19oYW5kbGVfaXJxKHZpcnEpOwog
-CQl9CkBAIC00MzYsNiArNDM0LDcgQEAgc3RhdGljIGludCBud2xfbGVnYWN5X21hcChzdHJ1Y3Qg
-aXJxX2RvbWFpbiAqZG9tYWluLCB1bnNpZ25lZCBpbnQgaXJxLAogCiBzdGF0aWMgY29uc3Qgc3Ry
-dWN0IGlycV9kb21haW5fb3BzIGxlZ2FjeV9kb21haW5fb3BzID0gewogCS5tYXAgPSBud2xfbGVn
-YWN5X21hcCwKKwkueGxhdGUgPSBwY2lfaXJxZF9pbnR4X3hsYXRlLAogfTsKIAogI2lmZGVmIENP
-TkZJR19QQ0lfTVNJCkBAIC01NTksNyArNTU4LDcgQEAgc3RhdGljIGludCBud2xfcGNpZV9pbml0
-X2lycV9kb21haW4oc3RydWN0IG53bF9wY2llICpwY2llKQogCX0KIAogCXBjaWUtPmxlZ2FjeV9p
-cnFfZG9tYWluID0gaXJxX2RvbWFpbl9hZGRfbGluZWFyKGxlZ2FjeV9pbnRjX25vZGUsCi0JCQkJ
-CQkJSU5UWF9OVU0sCisJCQkJCQkJUENJX05VTV9JTlRYLAogCQkJCQkJCSZsZWdhY3lfZG9tYWlu
-X29wcywKIAkJCQkJCQlwY2llKTsKIAotLSAKMi4xNC4xCgoKX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QK
-bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRl
-YWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+On 18/08/17 17:04, Bjorn Helgaas wrote:
+> [+cc Robin]
+> 
+> This series looks fine to me as far as PCI is concerned, and I'd be
+> happy to take it via my tree given an ack from David for this IOMMU
+> piece.  Alternatively, you can add my
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> to the other patches if you want to take it via another tree.
+> 
+> Robin raised a question about basically this same patch the first time
+> around.  Not sure whether there's still an objection there.
+
+Oh, I don't actually mind the patch as-is - implementing proper IOMMU
+group support for VMD almost certainly should be the longer-term goal,
+but for all I know that may be non-trivial so in the meantime a quick
+and simple way to make things safe is good, however heavy-handed.
+
+Robin.
+
+> On Thu, Aug 17, 2017 at 12:10:14PM -0600, Jon Derrick wrote:
+>> VMD child devices must use the VMD endpoint's ID as the requester.
+>> Because of this, there needs to be a way to link the parent VMD
+>> endpoint's iommu group and associated mappings to the VMD child devices
+>> such that attaching and detaching child devices modify the endpoint's
+>> mappings, while preventing early detaching on a singular device removal
+>> or unbinding.
+>>
+>> The reassignment of individual VMD child devices devices to VMs is
+>> outside the scope of VMD, but may be implemented in the future. For now
+>> it is best to prevent any such attempts.
+>>
+>> This patch prevents VMD child devices from returning an IOMMU, which
+>> prevents it from exposing an iommu_group sysfs directories and allowing
+>> subsequent binding by userspace-access drivers such as VFIO.
+>>
+>> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
+>> ---
+>>  drivers/iommu/intel-iommu.c | 5 +++++
+>>  1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
+>> index 687f18f..94353a6e 100644
+>> --- a/drivers/iommu/intel-iommu.c
+>> +++ b/drivers/iommu/intel-iommu.c
+>> @@ -901,6 +901,11 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
+>>  		struct pci_dev *pf_pdev;
+>>  
+>>  		pdev = to_pci_dev(dev);
+>> +
+>> +		/* VMD child devices currently cannot be handled individually */
+>> +		if (is_vmd(pdev->bus))
+>> +			return NULL;
+>> +
+>>  		/* VFs aren't listed in scope tables; we need to look up
+>>  		 * the PF instead to find the IOMMU. */
+>>  		pf_pdev = pci_physfn(pdev);
+>> -- 
+>> 2.9.4
+>>
