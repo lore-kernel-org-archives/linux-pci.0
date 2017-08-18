@@ -1,297 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v3 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-To: Khuong Dinh <kdinh@apm.com>, lorenzo.pieralisi@arm.com,
- msalter@redhat.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- jcm@redhat.com
-References: <1502496173-6017-1-git-send-email-kdinh@apm.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <141326ed-178b-d4dd-d45d-9c2ea57ca8b7@arm.com>
-Date: Mon, 14 Aug 2017 09:21:49 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:19565 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751075AbdHRO63 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:58:29 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Subject: [PATCH 00/18] PCI: endpoint: Make pci-epf-test more flexible
+Date: Fri, 18 Aug 2017 20:27:52 +0530
+Message-ID: <20170818145810.17649-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1502496173-6017-1-git-send-email-kdinh@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, patches@apm.com, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/08/17 01:02, Khuong Dinh wrote:
-> This patch makes pci-xgene-msi driver ACPI-aware and provides
-> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
-> 
-> Signed-off-by: Khuong Dinh <kdinh@apm.com>
->         [Take over from Duc Dang]
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+Hi Bjorn,
 
-Given that the patch has changed very substantially, this Ack is no
-longer valid.
+I've collected all the patches for PCI Endpoint in this series. This
+series contains PCI endpoint fixes and making pci-epf-test more
+flexible in terms of mapping PCI_ENDPOINT_TEST regs to any BARs,
+work with linkup notification etc.
 
-> ---
-> v3:
->  - Input X-Gene MSI base address for irq_domain_alloc_fwnode
->  - Add a hook to enforce X-Gene MSI be probed prior acpi_bus_scan happens
-> v2:
->  - Verify with BIOS version 3.06.25 and 3.07.09
-> v1:
->  - Initial version
-> ---
->  drivers/acpi/Makefile            |    2 +-
->  drivers/acpi/acpi_msi.c          |   74 ++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/internal.h          |    1 +
->  drivers/acpi/scan.c              |    1 +
->  drivers/pci/host/pci-xgene-msi.c |   36 +++++++++++++++++--
->  5 files changed, 110 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/acpi/acpi_msi.c
-> 
-> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> index b1aacfc..c15f5cd 100644
-> --- a/drivers/acpi/Makefile
-> +++ b/drivers/acpi/Makefile
-> @@ -40,7 +40,7 @@ acpi-y				+= ec.o
->  acpi-$(CONFIG_ACPI_DOCK)	+= dock.o
->  acpi-y				+= pci_root.o pci_link.o pci_irq.o
->  obj-$(CONFIG_ACPI_MCFG)		+= pci_mcfg.o
-> -acpi-y				+= acpi_lpss.o acpi_apd.o
-> +acpi-y				+= acpi_lpss.o acpi_apd.o acpi_msi.o
->  acpi-y				+= acpi_platform.o
->  acpi-y				+= acpi_pnp.o
->  acpi-$(CONFIG_ARM_AMBA)	+= acpi_amba.o
-> diff --git a/drivers/acpi/acpi_msi.c b/drivers/acpi/acpi_msi.c
-> new file mode 100644
-> index 0000000..c2f8d26
-> --- /dev/null
-> +++ b/drivers/acpi/acpi_msi.c
-> @@ -0,0 +1,74 @@
-> +/*
-> + * Enforce MSI driver loaded by PCIe controller driver
-> + *
-> + * Copyright (c) 2017, MACOM Technology Solutions Corporation
-> + * Author: Khuong Dinh <kdinh@apm.com>
-> + *
-> + * This program is free software; you can redistribute  it and/or modify it
-> + * under  the terms of  the GNU General  Public License as published by the
-> + * Free Software Foundation;  either version 2 of the  License, or (at your
-> + * option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + */
-> +
-> +#include <linux/acpi.h>
-> +#include "internal.h"
-> +
-> +static acpi_status acpi_create_msi_device(acpi_handle handle, u32 Level,
-> +					void *context, void **retval)
-> +{
-> +	struct acpi_device *device = NULL;
-> +	int type = ACPI_BUS_TYPE_DEVICE;
-> +	unsigned long long sta;
-> +	acpi_status status;
-> +	int ret = 0;
-> +
-> +	acpi_bus_get_device(handle, &device);
-> +	status = acpi_bus_get_status_handle(handle, &sta);
-> +	if (ACPI_FAILURE(status))
-> +		sta = 0;
-> +
-> +	device = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
-> +	if (!device)
-> +		return -ENOMEM;
-> +
-> +	acpi_init_device_object(device, handle, type, sta);
-> +	ret = acpi_device_add(device, NULL);
-> +	if (ret)
-> +		return ret;
+I've been having most of these patches in my local tree created while
+adding support for endpoint in TI's K2G platform. I've also included fix
+from others who are trying to use the PCI Endpoint Framework in their
+own platforms.
 
-Hello, memory leak.
+It also contains minor changes in pci/dwc/ like resetting BARs in the
+EP controller and providing a page size to pci_epc_mem. I can send this
+part separately based on some of your branch if you'd prefer that.
 
-> +	device->parent = kzalloc(sizeof(struct acpi_device), GFP_KERNEL);
-> +	INIT_LIST_HEAD(&device->parent->physical_node_list);
-> +
-> +	acpi_device_add_finalize(device);
-> +
-> +	ret = device_attach(&device->dev);
-> +	if (ret < 0)
-> +		return ret;
+This also contains patches for host side pci_endpoint_test driver
+in drivers/misc.
 
-And another one.
+I've pushed the series to pci-endpoint tree, the details of which are
+given below.
 
-> +
-> +	acpi_create_platform_device(device, NULL);
-> +	acpi_device_set_enumerated(device);
-> +
-> +	return ret;
-> +}
-> +
-> +static const struct acpi_device_id acpi_msi_device_ids[] = {
-> +	{"APMC0D0E", 0},
+Thanks
+Kishon
 
-Isn't this an APM-specific thing? Is that supposed to be populated by
-all MSI controller drivers? If so, this would better be served by a
-separate linker section.
+The following changes since commit 5771a8c08880cdca3bfb4a3fc6d309d6bba20877:
 
-> +	{ }
-> +};
-> +
-> +int __init acpi_msi_init(void)
-> +{
-> +	acpi_status status;
-> +	int ret = 0;
-> +
-> +	status = acpi_get_devices(acpi_msi_device_ids[0].id,
-> +			acpi_create_msi_device, NULL, NULL);
-> +	if (ACPI_FAILURE(status))
-> +		ret = -ENODEV;
-> +
-> +	return ret;
-> +}
+  Linux v4.13-rc1 (2017-07-15 15:22:10 -0700)
 
-Overall, this part should be a separate patch, and you should start by
-explaining what it does exactly. Because so far, all I can see is that
-it pre-populates random ACPI device structures, and that definitely seem
-fishy to me.
+are available in the git repository at:
 
-> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-> index 58dd7ab..3da50d3 100644
-> --- a/drivers/acpi/internal.h
-> +++ b/drivers/acpi/internal.h
-> @@ -80,6 +80,7 @@ int acpi_scan_add_handler_with_hotplug(struct acpi_scan_handler *handler,
->  void acpi_lpss_init(void);
->  
->  void acpi_apd_init(void);
-> +int acpi_msi_init(void);
->  
->  acpi_status acpi_hotplug_schedule(struct acpi_device *adev, u32 src);
->  bool acpi_queue_hotplug_work(struct work_struct *work);
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 3389729..8ec4d39 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -2029,6 +2029,7 @@ int __init acpi_scan_init(void)
->  	acpi_status status;
->  	struct acpi_table_stao *stao_ptr;
->  
-> +	acpi_msi_init();
->  	acpi_pci_root_init();
->  	acpi_pci_link_init();
->  	acpi_processor_init();
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index f1b633b..b1768a1 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -24,6 +24,7 @@
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/of_pci.h>
-> +#include <linux/acpi.h>
->  
->  #define MSI_IR0			0x000000
->  #define MSI_INT0		0x800000
-> @@ -39,7 +40,7 @@ struct xgene_msi_group {
->  };
->  
->  struct xgene_msi {
-> -	struct device_node	*node;
-> +	struct fwnode_handle	*fwnode;
->  	struct irq_domain	*inner_domain;
->  	struct irq_domain	*msi_domain;
->  	u64			msi_addr;
-> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
->  	.free   = xgene_irq_domain_free,
->  };
->  
-> +#ifdef CONFIG_ACPI
-> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-> +{
-> +	return xgene_msi_ctrl.fwnode;
-> +}
-> +#endif
-> +
->  static int xgene_allocate_domains(struct xgene_msi *msi)
->  {
->  	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  	if (!msi->inner_domain)
->  		return -ENOMEM;
->  
-> -	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-> +	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
->  						    &xgene_msi_domain_info,
->  						    msi->inner_domain);
->  
-> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  		return -ENOMEM;
->  	}
->  
-> +#ifdef CONFIG_ACPI
-> +	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
-> +#endif
->  	return 0;
->  }
->  
-> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
->  	{},
->  };
->  
-> +#ifdef CONFIG_ACPI
-> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
-> +	{"APMC0D0E", 0},
-> +	{ },
-> +};
-> +#endif
-> +
->  static int xgene_msi_probe(struct platform_device *pdev)
->  {
->  	struct resource *res;
-> @@ -469,7 +487,18 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  		goto error;
->  	}
->  	xgene_msi->msi_addr = res->start;
-> -	xgene_msi->node = pdev->dev.of_node;
-> +
-> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +	if (!xgene_msi->fwnode) {
-> +		xgene_msi->fwnode =
-> +			irq_domain_alloc_fwnode((void *)xgene_msi->msi_addr);
-> +		if (!xgene_msi->fwnode) {
-> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
-> +			rc = ENOMEM;
-> +			goto error;
-> +		}
-> +	}
-> +
->  	xgene_msi->num_cpus = num_possible_cpus();
->  
->  	rc = xgene_msi_init_allocator(xgene_msi);
-> @@ -540,6 +569,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  	.driver = {
->  		.name = "xgene-msi",
->  		.of_match_table = xgene_msi_match_table,
-> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
->  	},
->  	.probe = xgene_msi_probe,
->  	.remove = xgene_msi_remove,
-> 
+  git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git tags/pci-ep-for-4.14
 
-Thanks,
+for you to fetch changes up to 31802acb56e040bf5f269b2bad159583fc804d68:
 
-	M.
+  tools: PCI: Add a missing option help line (2017-08-18 19:23:36 +0530)
+
+----------------------------------------------------------------
+PCI: endpoint: for 4.14
+
+PCI endpoint core:
+ *) Add support for page size to be configurable (for managing address
+    region within the controller)
+ *) Add an API to get matching "pci_epf_device_id"
+ *) Use of_dma_configure() to set initial dma mask of pci_epf device
+ *) Do not abort if endpoint function drivers have not populated
+    ->remove() callback
+
+pci-epf-test function driver:
+ *) Add support to poll early for host commands
+ *) Add support to use _any_ BAR's to map PCI_ENDPOINT_TEST regs
+
+pci_endpoint_test PCI driver:
+ *) Add support for PCI_ENDPOINT_TEST regs to be mapped to any BAR
+ *) Add support to provide aligned buffer addresses
+ *) Enable/Disable MSI using module param
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+
+----------------------------------------------------------------
+Kishon Vijay Abraham I (16):
+      PCI: endpoint: pci-epc-core: Use of_dma_configure() to set initial dma mask
+      PCI: endpoint: pci-epf-core: Add an API to get matching "pci_epf_device_id"
+      PCI: endpoint: pci-epf-core: Make ->remove() callback optional
+      PCI: endpoint: pci-epc-mem: Add support for configurable page size
+      PCI: endpoint: functions/pci-epf-test: Add "volatile" to pci_epf_test_reg
+      PCI: endpoint: functions/pci-epf-test: Do not reset *command* inadvertently
+      PCI: endpoint: functions/pci-epf-test: Add support to use _any_ BAR's to map PCI_ENDPOINT_TEST regs
+      PCI: endpoint: functions/pci-epf-test: Add support to poll early for host commands
+      PCI: dwc: designware: Provide page_size to pci_epc_mem
+      PCI: dwc: dra7xx: Reset all BARs during initialization
+      PCI: dwc: designware-ep: Do not disable BARs during initialization
+      misc: pci_endpoint_test: Add support for PCI_ENDPOINT_TEST regs to be mapped to any BAR
+      misc: pci_endpoint_test: Add support to provide aligned buffer addresses
+      misc: pci_endpoint_test: Add support to not enable MSI interrupts
+      misc: pci_endpoint_test: Avoid using hard coded BAR sizes
+      misc: pci_endpoint_test: Enable/Disable MSI using module param
+
+Shawn Lin (1):
+      PCI: endpoint: functions/pci-epf-test: Remove the ->remove() callback
+
+Stan Drozd (1):
+      tools: PCI: Add a missing option help line
+
+ drivers/misc/pci_endpoint_test.c              | 132 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----------------------
+ drivers/pci/dwc/pci-dra7xx.c                  |  13 +++++++++++++
+ drivers/pci/dwc/pcie-designware-ep.c          |   7 ++-----
+ drivers/pci/dwc/pcie-designware.h             |   1 +
+ drivers/pci/endpoint/functions/pci-epf-test.c |  99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------------------------------------
+ drivers/pci/endpoint/pci-epc-core.c           |  11 +++++++++--
+ drivers/pci/endpoint/pci-epc-mem.c            |  59 ++++++++++++++++++++++++++++++++++++++++++++++++++---------
+ drivers/pci/endpoint/pci-epf-core.c           |  21 +++++++++++++++++++--
+ include/linux/pci-epc.h                       |   8 +++++++-
+ include/linux/pci-epf.h                       |   2 ++
+ tools/pci/pcitest.c                           |   1 +
+ 11 files changed, 276 insertions(+), 78 deletions(-)
 -- 
-Jazz is not dead. It just smells funny...
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
