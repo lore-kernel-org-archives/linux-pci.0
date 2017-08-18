@@ -1,205 +1,542 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v11 0/4] PCI: Use CRS Software Visibility to wait for device
- to become ready
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Date: Fri, 18 Aug 2017 16:31:56 -0500
-Message-ID: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:35959 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750709AbdHRHio (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 03:38:44 -0400
+Received: by mail-wr0-f193.google.com with SMTP id f8so3697260wrf.3
+        for <linux-pci@vger.kernel.org>; Fri, 18 Aug 2017 00:38:43 -0700 (PDT)
+Date: Fri, 18 Aug 2017 09:38:35 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Daniel Axtens <dja@axtens.net>
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-arm-kernel@lists.infradead.org, gabriele.paoloni@huawei.com,
+        will.deacon@arm.com, dri-devel@lists.freedesktop.org,
+        z.liuxinliang@hisilicon.com, bhelgaas@google.com,
+        alex.williamson@redhat.com, catalin.marinas@arm.com,
+        zourongrong@gmail.com, daniel.vetter@intel.com
+Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA
+ arbiter
+Message-ID: <20170818072328.jtvtusdyuzchdm7g@phenom.ffwll.local>
+References: <20170817113028.16853-1-dja@axtens.net>
+ <20170817113028.16853-2-dja@axtens.net>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
- linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170817113028.16853-2-dja@axtens.net>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is another rev of Sinan's series to fix an FLR issue seen with an
-Intel 750 NVMe drive.  It seems that the 750 requires more time than we
-currently allow after the FLR to become ready for use.
+On Thu, Aug 17, 2017 at 09:30:28PM +1000, Daniel Axtens wrote:
+> A system without PCI legacy resources (e.g. ARM64) may find that no
+> default/boot VGA device has been marked, because the VGA arbiter
+> checks for legacy resource decoding before marking a card as default.
+> 
+> Split the small bit of code that does default VGA handling out from
+> the arbiter. Add a Kconfig option to allow the kernel to be built
+> with just the default handling, or the arbiter and default handling.
+> 
+> Add handling for devices that should be marked as default but aren't
+> handled by the vga arbiter by adding a late initcall and a class
+> enable hook. If there is no default from vgaarb then the first card
+> that is enabled, has a driver bound, and can decode memory or I/O
+> will be marked as default.
+> 
+> Signed-off-by: Daniel Axtens <dja@axtens.net>
 
-The biggest remaining issue is that I *think* this does not fix the issue
-on systems where CRS Software Visibility is not supported or disabled.
+Looks reasonable, but I have no clue at all about this. Can you pls get
+some proper review from pci/platform folks (ppc would be good to)? I can
+apply to drm-misc once that's done.
 
-Differences from v10:
-  - Move 0x0001 test inside pci_bus_wait_crs()
-  - Fix pre-existing "valid response before timeout" bug
-  - Add message if a device becomes ready after we printed "waiting"
-  - Reorder messages so we print "giving up after X" instead of
-    "not ready after X; giving up after X"
+Just documentation comments below.
 
----
+Thanks, Daniel
+> 
+> ---
+> 
+> v2: Tested on:
+>  - x86_64 laptop
+>  - arm64 D05 board with hibmc card
+>  - qemu powerpc with tcg and bochs std-vga
+> 
+> I know this adds another config option and that's a bit sad, but
+> we can't include it unconditionally as it depends on PCI.
+> Suggestions welcome.
+> ---
+>  arch/ia64/pci/fixup.c            |   2 +-
+>  arch/powerpc/kernel/pci-common.c |   2 +-
+>  arch/x86/pci/fixup.c             |   2 +-
+>  arch/x86/video/fbdev.c           |   2 +-
+>  drivers/gpu/vga/Kconfig          |  12 +++
+>  drivers/gpu/vga/Makefile         |   1 +
+>  drivers/gpu/vga/vga_default.c    | 159 +++++++++++++++++++++++++++++++++++++++
+>  drivers/gpu/vga/vga_switcheroo.c |   2 +-
+>  drivers/gpu/vga/vgaarb.c         |  41 +---------
+>  drivers/pci/pci-sysfs.c          |   2 +-
+>  include/linux/vga_default.h      |  44 +++++++++++
+>  include/linux/vgaarb.h           |  14 ----
+>  12 files changed, 225 insertions(+), 58 deletions(-)
+>  create mode 100644 drivers/gpu/vga/vga_default.c
+>  create mode 100644 include/linux/vga_default.h
+> 
+> diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+> index 41caa99add51..b35d1cf4501a 100644
+> --- a/arch/ia64/pci/fixup.c
+> +++ b/arch/ia64/pci/fixup.c
+> @@ -5,7 +5,7 @@
+>  
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <linux/screen_info.h>
+>  
+>  #include <asm/machvec.h>
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 341a7469cab8..4fd890a51d18 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -31,7 +31,7 @@
+>  #include <linux/irq.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/slab.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  
+>  #include <asm/processor.h>
+>  #include <asm/io.h>
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 11e407489db0..b1254bc09a45 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -5,7 +5,7 @@
+>  #include <linux/delay.h>
+>  #include <linux/dmi.h>
+>  #include <linux/pci.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <asm/hpet.h>
+>  #include <asm/pci_x86.h>
+>  
+> diff --git a/arch/x86/video/fbdev.c b/arch/x86/video/fbdev.c
+> index 9fd24846d094..62cfa74ea86e 100644
+> --- a/arch/x86/video/fbdev.c
+> +++ b/arch/x86/video/fbdev.c
+> @@ -9,7 +9,7 @@
+>  #include <linux/fb.h>
+>  #include <linux/pci.h>
+>  #include <linux/module.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  
+>  int fb_is_primary_device(struct fb_info *info)
+>  {
+> diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
+> index 29437eabe095..81d4105aecf6 100644
+> --- a/drivers/gpu/vga/Kconfig
+> +++ b/drivers/gpu/vga/Kconfig
+> @@ -1,3 +1,14 @@
+> +config VGA_DEFAULT
+> +	bool "VGA Default Device Support" if EXPERT
+> +	default y
+> +	depends on PCI
+> +	help
+> +	  Some programs find it helpful to know what VGA device is the default.
+> +	  On platforms like x86 this means the device used by the BIOS to show
+> +	  early boot messages. On other platforms this may be an arbitrary PCI
+> +	  graphics card. Select this to have a default device recorded within
+> +	  the kernel and exposed to userspace through sysfs.
+> +
+>  config VGA_ARB
+>  	bool "VGA Arbitration" if EXPERT
+>  	default y
+> @@ -22,6 +33,7 @@ config VGA_SWITCHEROO
+>  	depends on X86
+>  	depends on ACPI
+>  	select VGA_ARB
+> +	select VGA_DEFAULT
+>  	help
+>  	  Many laptops released in 2008/9/10 have two GPUs with a multiplexer
+>  	  to switch between them. This adds support for dynamic switching when
+> diff --git a/drivers/gpu/vga/Makefile b/drivers/gpu/vga/Makefile
+> index 14ca30b75d0a..1e30f90d40fb 100644
+> --- a/drivers/gpu/vga/Makefile
+> +++ b/drivers/gpu/vga/Makefile
+> @@ -1,2 +1,3 @@
+>  obj-$(CONFIG_VGA_ARB)  += vgaarb.o
+> +obj-$(CONFIG_VGA_DEFAULT) += vga_default.o
+>  obj-$(CONFIG_VGA_SWITCHEROO) += vga_switcheroo.o
+> diff --git a/drivers/gpu/vga/vga_default.c b/drivers/gpu/vga/vga_default.c
+> new file mode 100644
+> index 000000000000..f6fcb0eb1507
+> --- /dev/null
+> +++ b/drivers/gpu/vga/vga_default.c
+> @@ -0,0 +1,159 @@
+> +/*
+> + * vga_default.c: What is the default/boot PCI VGA device?
+> + *
+> + * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> + * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+> + * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+> + * (C) Copyright 2017 Canonical Ltd. (Author: Daniel Axtens <dja@axtens.net>)
+> + *
+> + * (License from vgaarb.c)
+> + * Permission is hereby granted, free of charge, to any person obtaining a
+> + * copy of this software and associated documentation files (the "Software"),
+> + * to deal in the Software without restriction, including without limitation
+> + * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+> + * and/or sell copies of the Software, and to permit persons to whom the
+> + * Software is furnished to do so, subject to the following conditions:
+> + *
+> + * The above copyright notice and this permission notice (including the next
+> + * paragraph) shall be included in all copies or substantial portions of the
+> + * Software.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> + * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> + * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+> + * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> + * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+> + * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+> + * DEALINGS
+> + * IN THE SOFTWARE.
+> + */
+> +
+> +/*
 
-Bjorn Helgaas (1):
-      PCI: Don't ignore valid response before CRS timeout
+Please make this into a DOC: introduction section.
 
-Sinan Kaya (3):
-      PCI: Factor out pci_bus_wait_crs()
-      PCI: Handle CRS ("device not ready") returned by device after FLR
-      PCI: Warn periodically while waiting for device to become ready
+> + * What device should a graphics system draw to? In order of priority:
+> + *
+> + *  1) Any devices configured specifically by the user (think
+> + *     xorg.conf).
+> + *
+> + *  2) If the platform has a concept of a boot device for early boot
+> + *     messages (think BIOS displays on x86), that device.
+> + *
+> + *  3) If the platform does not have the concept of a boot device,
+> + *     then we still want to pick something. For now, pick the first
+> + *     PCI VGA device with a driver bound and with memory or I/O
+> + *     control on.
+> + */
+> +
+> +#include <linux/module.h>
+> +#include <linux/kernel.h>
+> +#include <linux/pci.h>
+> +#include <linux/init.h>
+> +
+> +#include <linux/vga_default.h>
+> +
+> +static struct pci_dev *vga_default;
+> +/*
+> + * only go active after the late initcall so as not to interfere with
+> + * the arbiter
+> + */
+> +static bool vga_default_active = false;
+> +
+> +/**
+> + * vga_default_device - return the default VGA device
 
+All the nice kerneldoc, but not pulled into Documentation/gpu. Can you pls
+fix that and make sure the resulting docs look pretty and have all the
+links still working?
 
- drivers/pci/pci.c   |   19 ++++++++++++++--
- drivers/pci/pci.h   |    1 +
- drivers/pci/probe.c |   61 +++++++++++++++++++++++++++++++++------------------
- 3 files changed, 57 insertions(+), 24 deletions(-)
+> + *
+> + * This can be defined by the platform. The default implementation
+> + * is rather dumb and will probably only work properly on single
+> + * vga card setups and/or x86 platforms.
+> + *
+> + * If your VGA default device is not PCI, you'll have to return
+> + * NULL here. In this case, I assume it will not conflict with
+> + * any PCI card. If this is not true, I'll have to define two archs
+> + * hooks for enabling/disabling the VGA default device if that is
+> + * possible. This may be a problem with real _ISA_ VGA cards, in
+> + * addition to a PCI one. I don't know at this point how to deal
+> + * with that card. Can theirs IOs be disabled at all ? If not, then
+> + * I suppose it's a matter of having the proper arch hook telling
+> + * us about it, so we basically never allow anybody to succeed a
+> + * vga_get()...
 
+I'd like reviewers to convert this lore into a solid statement of fact :-)
 
-Incremental diff from Sinan's v10 posting:
+> + */
+> +
+> +struct pci_dev *vga_default_device(void)
+> +{
+> +	return vga_default;
+> +}
+> +EXPORT_SYMBOL_GPL(vga_default_device);
+> +
+> +void vga_set_default_device(struct pci_dev *pdev)
+> +{
+> +	if (vga_default == pdev)
+> +		return;
+> +
+> +	pci_dev_put(vga_default);
+> +	vga_default = pci_dev_get(pdev);
+> +}
+> +
+> +static bool vga_default_try_device(struct pci_dev *pdev)
+> +{
+> +	u16 cmd;
+> +
+> +	/* Only deal with VGA class devices */
+> +	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+> +		return false;
+> +
+> +	/* Only deal with devices with drivers bound */
+> +	if (!pdev->driver)
+> +		return false;
+> +
+> +	/* Require I/O or memory control */
+> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +	if (!(cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
+> +		return false;
+> +
+> +	dev_info(&pdev->dev, "vga_default: setting as default device\n");
+> +	vga_set_default_device(pdev);
+> +	return true;
+> +}
+> +
+> +static int __init vga_default_init(void)
+> +{
+> +	struct pci_dev *pdev;
+> +
+> +	vga_default_active = true;
+> +
+> +	if (vga_default_device())
+> +		return 0;
+> +
+> +	pdev = NULL;
+> +	while ((pdev =
+> +		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> +			       PCI_ANY_ID, pdev)) != NULL) {
+> +		if (vga_default_try_device(pdev))
+> +			return 0;
+> +	}
+> +
+> +	return 0;
+> +}
+> +late_initcall(vga_default_init);
+> +
+> +/*
+> + * A driver could be loaded much later than late_initcall, for example
+> + * if it's in a module.
+> + *
+> + * We want to pick that up. However, we want to make sure this does
+> + * not interfere with the arbiter - it should only activate if the
+> + * arbiter has already had a chance to operate. To ensure this, we set
+> + * vga_default_active in the late_initcall: as the vga arbiter is a
+> + * subsys initcall, it is guaranteed to fire first.
+> + */
+> +static void vga_default_enable_hook(struct pci_dev *pdev)
+> +{
+> +       if (!vga_default_active)
+> +	       return;
+> +
+> +       if (vga_default_device())
+> +               return;
+> +
+> +       vga_default_try_device(pdev);
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
+> +			       PCI_CLASS_DISPLAY_VGA, 8,
+> +			       vga_default_enable_hook)
+> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
+> index 3cd153c6d271..6612ec7981b6 100644
+> --- a/drivers/gpu/vga/vga_switcheroo.c
+> +++ b/drivers/gpu/vga/vga_switcheroo.c
+> @@ -41,7 +41,7 @@
+>  #include <linux/pm_runtime.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/uaccess.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <linux/vga_switcheroo.h>
+>  
+>  /**
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index 76875f6299b8..74683286f5f8 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -51,6 +51,7 @@
+>  
+>  #include <linux/uaccess.h>
+>  
+> +#include <linux/vga_default.h>
+>  #include <linux/vgaarb.h>
+>  
+>  static void vga_arbiter_notify_clients(void);
+> @@ -119,9 +120,6 @@ static int vga_str_to_iostate(char *buf, int str_size, int *io_state)
+>  	return 1;
+>  }
+>  
+> -/* this is only used a cookie - it should not be dereferenced */
+> -static struct pci_dev *vga_default;
+> -
+>  static void vga_arb_device_card_gone(struct pci_dev *pdev);
+>  
+>  /* Find somebody in our list */
+> @@ -135,39 +133,6 @@ static struct vga_device *vgadev_find(struct pci_dev *pdev)
+>  	return NULL;
+>  }
+>  
+> -/**
+> - * vga_default_device - return the default VGA device, for vgacon
+> - *
+> - * This can be defined by the platform. The default implementation
+> - * is rather dumb and will probably only work properly on single
+> - * vga card setups and/or x86 platforms.
+> - *
+> - * If your VGA default device is not PCI, you'll have to return
+> - * NULL here. In this case, I assume it will not conflict with
+> - * any PCI card. If this is not true, I'll have to define two archs
+> - * hooks for enabling/disabling the VGA default device if that is
+> - * possible. This may be a problem with real _ISA_ VGA cards, in
+> - * addition to a PCI one. I don't know at this point how to deal
+> - * with that card. Can theirs IOs be disabled at all ? If not, then
+> - * I suppose it's a matter of having the proper arch hook telling
+> - * us about it, so we basically never allow anybody to succeed a
+> - * vga_get()...
+> - */
+> -struct pci_dev *vga_default_device(void)
+> -{
+> -	return vga_default;
+> -}
+> -EXPORT_SYMBOL_GPL(vga_default_device);
+> -
+> -void vga_set_default_device(struct pci_dev *pdev)
+> -{
+> -	if (vga_default == pdev)
+> -		return;
+> -
+> -	pci_dev_put(vga_default);
+> -	vga_default = pci_dev_get(pdev);
+> -}
+> -
+>  static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
+>  {
+>  	if (vgadev->irq_set_state)
+> @@ -667,7 +632,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>  	/* Deal with VGA default device. Use first enabled one
+>  	 * by default if arch doesn't have it's own hook
+>  	 */
+> -	if (vga_default == NULL &&
+> +	if (vga_default_device() == NULL &&
+>  	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
+>  		vgaarb_info(&pdev->dev, "setting as boot VGA device\n");
+>  		vga_set_default_device(pdev);
+> @@ -704,7 +669,7 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+>  		goto bail;
+>  	}
+>  
+> -	if (vga_default == pdev)
+> +	if (vga_default_device() == pdev)
+>  		vga_set_default_device(NULL);
+>  
+>  	if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 2f3780b50723..c174b427ea2b 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -27,7 +27,7 @@
+>  #include <linux/security.h>
+>  #include <linux/pci-aspm.h>
+>  #include <linux/slab.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/of.h>
+>  #include "pci.h"
+> diff --git a/include/linux/vga_default.h b/include/linux/vga_default.h
+> new file mode 100644
+> index 000000000000..78df6a2a194c
+> --- /dev/null
+> +++ b/include/linux/vga_default.h
+> @@ -0,0 +1,44 @@
+> +/*
+> + * vga_default.h: What is the default/boot PCI VGA device?
+> + *
+> + * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> + * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+> + * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+> + * (C) Copyright 2017 Canonical Ltd. (Author: Daniel Axtens <dja@axtens.net>)
+> + *
+> + * (License from vgaarb.h)
+> + * Permission is hereby granted, free of charge, to any person obtaining a
+> + * copy of this software and associated documentation files (the "Software"),
+> + * to deal in the Software without restriction, including without limitation
+> + * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+> + * and/or sell copies of the Software, and to permit persons to whom the
+> + * Software is furnished to do so, subject to the following conditions:
+> + *
+> + * The above copyright notice and this permission notice (including the next
+> + * paragraph) shall be included in all copies or substantial portions of the
+> + * Software.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> + * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> + * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+> + * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> + * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+> + * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+> + * DEALINGS
+> + * IN THE SOFTWARE.
+> + */
+> +
+> +#ifndef LINUX_VGA_DEFAULT_H
+> +#define LINUX_VGA_DEFAULT_H
+> +
+> +struct pci_dev;
+> +
+> +#ifdef CONFIG_VGA_DEFAULT
+> +extern struct pci_dev *vga_default_device(void);
+> +extern void vga_set_default_device(struct pci_dev *pdev);
+> +#else
+> +static inline struct pci_dev *vga_default_device(void) { return NULL; };
+> +static inline void vga_set_default_device(struct pci_dev *pdev) { };
+> +#endif
+> +
+> +#endif
+> diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+> index ee162e3e879b..953e1955efbe 100644
+> --- a/include/linux/vgaarb.h
+> +++ b/include/linux/vgaarb.h
+> @@ -42,12 +42,6 @@
+>  #define VGA_RSRC_NORMAL_IO     0x04
+>  #define VGA_RSRC_NORMAL_MEM    0x08
+>  
+> -/* Passing that instead of a pci_dev to use the system "default"
+> - * device, that is the one used by vgacon. Archs will probably
+> - * have to provide their own vga_default_device();
+> - */
+> -#define VGA_DEFAULT_DEVICE     (NULL)
+> -
+>  struct pci_dev;
+>  
+>  /* For use by clients */
+> @@ -122,14 +116,6 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
+>  #endif
+>  
+>  
+> -#ifdef CONFIG_VGA_ARB
+> -extern struct pci_dev *vga_default_device(void);
+> -extern void vga_set_default_device(struct pci_dev *pdev);
+> -#else
+> -static inline struct pci_dev *vga_default_device(void) { return NULL; };
+> -static inline void vga_set_default_device(struct pci_dev *pdev) { };
+> -#endif
+> -
+>  /*
+>   * Architectures should define this if they have several
+>   * independent PCI domains that can afford concurrent VGA
+> -- 
+> 2.11.0
+> 
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index c853551bc8d1..34c0aa1f37aa 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3824,22 +3824,18 @@ static void pci_flr_wait(struct pci_dev *dev)
- 	bool ret;
- 
- 	/*
--	 * Don't touch the HW before waiting 100ms. HW has to finish
--	 * within 100ms according to PCI Express Base Specification
--	 * Revision 3.1 Section 6.6.2: Function-Level Reset (FLR).
-+	 * Per PCIe r3.1, sec 6.6.2, the device should finish FLR within
-+	 * 100ms, but even after that, it may respond to config requests
-+	 * with CRS status if it requires more time.
- 	 */
- 	msleep(100);
- 
--	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID,
--				      &id))
-+	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID, &id))
- 		return;
- 
--	/* See if we can find a device via CRS first. */
--	if ((id & 0xffff) == 0x0001) {
--		ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
--		if (ret)
--			return;
--	}
-+	ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
-+	if (ret)
-+		return;
- 
- 	do {
- 		msleep(100);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 1bbe85190183..b0857052c04a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -235,8 +235,7 @@ enum pci_bar_type {
- 	pci_bar_mem64,		/* A 64-bit memory BAR */
- };
- 
--bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l,
--		      int crs_timeout);
-+bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l, int timeout);
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
- 				int crs_timeout);
- int pci_setup_device(struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 2f4cf7d0e25e..99799cc1de22 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1824,42 +1824,50 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
- }
- EXPORT_SYMBOL(pci_alloc_dev);
- 
--bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l, int crs_timeout)
-+bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 *l, int timeout)
- {
- 	int delay = 1;
- 
-+	if ((*l & 0xffff) != 0x0001)
-+		return true;	/* not a CRS completion */
-+
-+	if (!timeout)
-+		return false;	/* CRS, but caller doesn't want to wait */
-+
- 	/*
--	 * Configuration Request Retry Status.  Some root ports return the
--	 * actual device ID instead of the synthetic ID (0xFFFF) required
--	 * by the PCIe spec.  Ignore the device ID and only check for
--	 * (vendor id == 1).
-+	 * We got the reserved Vendor ID that indicates a completion with
-+	 * Configuration Request Retry Status (CRS).  Retry until we get a
-+	 * valid Vendor ID or we time out.
- 	 */
--	do {
-+	while ((*l & 0xffff) == 0x0001) {
- 		msleep(delay);
- 		delay *= 2;
--		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-+
-+		if (delay > timeout) {
-+			pr_warn("pci %04x:%02x:%02x.%d: not ready after %dms; giving up\n",
-+				pci_domain_nr(bus), bus->number,
-+				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
- 			return false;
-+		}
- 
- 		if (delay >= 1000)
--			pr_info("pci %04x:%02x:%02x.%d: not responding since %dms still polling\n",
-+			pr_info("pci %04x:%02x:%02x.%d: not ready after %dms; waiting\n",
- 				pci_domain_nr(bus), bus->number,
--				PCI_SLOT(devfn), PCI_FUNC(devfn), delay);
-+				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
- 
--		/* Card hasn't responded in 60 seconds?  Must be stuck. */
--		if (delay > crs_timeout) {
--			pr_warn("pci %04x:%02x:%02x.%d: not responding %dms timeout reached\n",
--			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
--			       PCI_FUNC(devfn), crs_timeout);
-+		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
- 			return false;
--		}
--	} while ((*l & 0xffff) == 0x0001);
-+	}
- 
-+	if (delay >= 1000)
-+		pr_info("pci %04x:%02x:%02x.%d: ready after %dms\n",
-+			pci_domain_nr(bus), bus->number,
-+			PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
- 	return true;
- }
--EXPORT_SYMBOL(pci_bus_wait_crs);
- 
- bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
--				int crs_timeout)
-+				int timeout)
- {
- 	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
- 		return false;
-@@ -1869,20 +1877,7 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 	    *l == 0x0000ffff || *l == 0xffff0000)
- 		return false;
- 
--	/*
--	 * Configuration Request Retry Status.  Some root ports return the
--	 * actual device ID instead of the synthetic ID (0xFFFF) required
--	 * by the PCIe spec.  Ignore the device ID and only check for
--	 * (vendor id == 1).
--	 */
--	if ((*l & 0xffff) == 0x0001) {
--		if (!crs_timeout)
--			return false;
--
--		return pci_bus_wait_crs(bus, devfn, l, crs_timeout);
--	}
--
--	return true;
-+	return pci_bus_wait_crs(bus, devfn, l, timeout);
- }
- EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
- 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
