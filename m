@@ -1,109 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0086.outbound.protection.outlook.com ([104.47.41.86]:55207
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751213AbdHCIkb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 04:40:31 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv2 4/6] PCI: layerscape: refactor the host_init function
-Date: Thu, 3 Aug 2017 16:23:38 +0800
-Message-ID: <1501748620-42866-5-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=h81V=7U=redhat.com=dledford@kernel.org>
+Return-Path: <SRS0=h81V=7U=redhat.com=dledford@kernel.org>
+Message-ID: <1503071066.2598.15.camel@redhat.com>
+Subject: Re: PCI/IB: add support for pci driver attribute groups
+From: Doug Ledford <dledford@redhat.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Greg KH <gregkh@linuxfoundation.org>
+Cc: Faisal Latif <faisal.latif@intel.com>, Sean Hefty
+ <sean.hefty@intel.com>,  Hal Rosenstock <hal.rosenstock@gmail.com>, Bjorn
+ Helgaas <bhelgaas@google.com>, linux-rdma@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Fri, 18 Aug 2017 11:44:26 -0400
+In-Reply-To: <20170801214046.GB26498@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170719130106.GE17776@kroah.com>
+	 <20170801214046.GB26498@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Tue, 2017-08-01 at 16:40 -0500, Bjorn Helgaas wrote:
+> On Wed, Jul 19, 2017 at 03:01:06PM +0200, Greg KH wrote:
+> > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > 
+> > Some drivers (specifically the nes IB driver), want to create a lot
+> > of
+> > sysfs driver attributes.  Instead of open-coding the creation and
+> > removal of these files (and getting it wrong btw), it's a better
+> > idea to
+> > let the driver core handle all of this logic for us.
+> > 
+> > So add a new field to the pci driver structure, **groups, that
+> > allows
+> > pci drivers to specify an attribute group list it wishes to have
+> > created
+> > when it is registered with the driver core.
+> > 
+> > Big bonus is now the driver doesn't race with userspace when the
+> > sysfs
+> > files are created vs. when the kobject is announced, so any
+> > script/tool
+> > that actually wanted to use these files will not have to poll
+> > waiting
+> > for them to show up.
+> > 
+> > Cc: Faisal Latif <faisal.latif@intel.com>
+> > Cc: Doug Ledford <dledford@redhat.com>
+> > Cc: Sean Hefty <sean.hefty@intel.com>
+> > Cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> 
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> If you want me to take this let me know; otherwise I'll assume Doug
+> will
+> merge it.
 
-Make the ls1021a's host_init reuse layerscape platform's common
-host_init function.
+I've picked it up for for-next.  Thanks.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
-V2:
- - Removed the disable outbound windows code and the remove duplicate class code
-   fixup code from this patch.
-
- drivers/pci/dwc/pci-layerscape.c | 54 ++++++++++++++++++++--------------------
- 1 file changed, 27 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 09056a6..3533a8c 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -107,33 +107,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
- 	return 1;
- }
- 
--static void ls1021_pcie_host_init(struct pcie_port *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct ls_pcie *pcie = to_ls_pcie(pci);
--	struct device *dev = pci->dev;
--	u32 index[2];
--
--	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
--						     "fsl,pcie-scfg");
--	if (IS_ERR(pcie->scfg)) {
--		dev_err(dev, "No syscfg phandle specified\n");
--		pcie->scfg = NULL;
--		return;
--	}
--
--	if (of_property_read_u32_array(dev->of_node,
--				       "fsl,pcie-scfg", index, 2)) {
--		pcie->scfg = NULL;
--		return;
--	}
--	pcie->index = index[1];
--
--	dw_pcie_setup_rc(pp);
--
--	ls_pcie_drop_msg_tlp(pcie);
--}
--
- static int ls_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct ls_pcie *pcie = to_ls_pcie(pci);
-@@ -160,6 +133,33 @@ static void ls_pcie_host_init(struct pcie_port *pp)
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	ls_pcie_drop_msg_tlp(pcie);
-+
-+	dw_pcie_setup_rc(pp);
-+}
-+
-+static void ls1021_pcie_host_init(struct pcie_port *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct ls_pcie *pcie = to_ls_pcie(pci);
-+	struct device *dev = pci->dev;
-+	u32 index[2];
-+
-+	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
-+						     "fsl,pcie-scfg");
-+	if (IS_ERR(pcie->scfg)) {
-+		dev_err(dev, "No syscfg phandle specified\n");
-+		pcie->scfg = NULL;
-+		return;
-+	}
-+
-+	if (of_property_read_u32_array(dev->of_node,
-+				       "fsl,pcie-scfg", index, 2)) {
-+		pcie->scfg = NULL;
-+		return;
-+	}
-+	pcie->index = index[1];
-+
-+	ls_pcie_host_init(pp);
- }
- 
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
 -- 
-2.1.0.27.g96db324
+Doug Ledford <dledford@redhat.com>
+    GPG KeyID: B826A3330E572FDD
+    Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
