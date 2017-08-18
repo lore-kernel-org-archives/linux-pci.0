@@ -1,58 +1,58 @@
-Return-Path: <SRS0=l3MC=7F=cogentembedded.com=sergei.shtylyov@kernel.org>
-Return-Path: <SRS0=l3MC=7F=cogentembedded.com=sergei.shtylyov@kernel.org>
-Subject: Re: [PATCH] pci: ftpci100: fix of_irq_get() error check
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Linus Walleij <linus.walleij@linaro.org>
-References: <20170715214406.657273405@cogentembedded.com>
- <20170802213639.GI20308@bhelgaas-glaptop.roam.corp.google.com>
- <19109fc3-6afb-b710-4493-77227b7533ef@cogentembedded.com>
- <20170803161556.GS20308@bhelgaas-glaptop.roam.corp.google.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <95aac11a-c0c9-8024-8479-fcd7a37bdb6b@cogentembedded.com>
-Date: Thu, 3 Aug 2017 19:23:42 +0300
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Subject: [PATCH 17/18] misc: pci_endpoint_test: Enable/Disable MSI using module param
+Date: Fri, 18 Aug 2017 20:28:09 +0530
+Message-ID: <20170818145810.17649-18-kishon@ti.com>
+In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
+References: <20170818145810.17649-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170803161556.GS20308@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/03/2017 07:15 PM, Bjorn Helgaas wrote:
+In certain platforms like TI's DRA7 SoCs, use of legacy PCI
+interrupt is exclusive with use of MSI (Section 24.9.4.6.2.1
+Legacy PCI Interrupts in
+http://www.ti.com/lit/ug/spruhz6i/spruhz6i.pdf).
 
->>>> of_irq_get() may return a negative error number as well as 0 on failure,
->>>> while the driver only checks for 0, blithely continuing with the call to
->>>> irq_set_chained_handler_and_data() -- that function expects *unsigned int*
->>>> so should probably do nothing when a large IRQ number resulting from a
->>>> conversion of a negative error number is passed to it. The driver then
->>>> probes successfully while being only partly functional...
->>>>
->>>> Check for 'irq <= 0' instead and propagate the negative error number to
->>>> the probe method --  that will allow the deferred probing as well...
->>>>
->>>> Fixes: d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
->>>> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
->>>
->>> Applied with Linus' reviewed-by to pci/host-faraday for v4.14, thanks!
->>
->>     Thanks! But why only to 4.14?
-> 
-> Standard practice.  We're currently in the v4.13 cycle, and the merge
-> window is closed, so the only changes we add for v4.13 are (1) fixes
-> for something we merged during the v4.13 merge window, or (2) critical
-> fixes that can't wait for v4.14.
+However pci_endpoint_test driver enables MSI by default in probe.
+In order for pci_endpoint_test to be able to test legacy interrupt,
+MSI should be disabled. Add a module param 'no_msi' to disable MSI
+(only when legacy interrupt has to be tested).
 
-    OK, I thought the original Linus' commit was a bit more recent, like 4.13...
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/misc/pci_endpoint_test.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-> If we want something backported to stable kernels, we can add a tag
-> for that.  That might apply in this case?  Your patch is a fix for
-> d3c68e0a7e34 ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host
-> Bridge driver"), which appeared in v4.12,
-
-    If not in 4.11...
-
-> so we might want to tag it for any v4.12 or v4.13 stable kernels.
-
-    I think the -stable people look at the Fixes: tag now...
-
-> Bjorn
-
-MBR, Sergei
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 1f37ad39b169..1f64d943794d 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -72,6 +72,11 @@ static DEFINE_IDA(pci_endpoint_test_ida);
+ 
+ #define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
+ 					    miscdev)
++
++bool no_msi;
++module_param(no_msi, bool, 0444);
++MODULE_PARM_DESC(no_msi, "Disable MSI interrupt in pci_endpoint_test");
++
+ enum pci_barno {
+ 	BAR_0,
+ 	BAR_1,
+@@ -451,7 +456,6 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	int err;
+ 	int irq = 0;
+ 	int id;
+-	bool no_msi = false;
+ 	char name[20];
+ 	enum pci_barno bar;
+ 	void __iomem *base;
+-- 
+2.11.0
