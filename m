@@ -1,70 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41032 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754527AbdHZLzO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 26 Aug 2017 07:55:14 -0400
-Date: Sat, 26 Aug 2017 06:55:08 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>
-Cc: Honghui Zhang <honghui.zhang@mediatek.com>,
-        kbuild test robot <fengguang.wu@intel.com>,
-        kbuild-all@01.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, youlin.pei@mediatek.com,
-        xinping.qian@mediatek.com
-Subject: Re: [pci:pci/host-mediatek 11/11]
- drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
-Message-ID: <20170826115508.GE8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <201708232205.SymULNVt%fengguang.wu@intel.com>
- <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
- <1503544447.19072.7.camel@mhfsdcap03>
- <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
- <1503622427.19072.11.camel@mhfsdcap03>
- <1503708987.2081.5.camel@mtkswgap22>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 18 Aug 2017 08:12:51 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: Jan Glauber <jan.glauber@caviumnetworks.com>
+Subject: Re: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
+Message-ID: <20170818081251.2bbffe56@w520.home>
+In-Reply-To: <20170818134231.GA3464@hc>
+References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+ <1502957663-5527-4-git-send-email-jglauber@cavium.com>
+ <20170817070017.1e9c9456@w520.home> <20170818134231.GA3464@hc>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503708987.2081.5.camel@mtkswgap22>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 26, 2017 at 08:56:27AM +0800, Ryder Lee wrote:
-> Hi,
-> 
-> On Fri, 2017-08-25 at 08:53 +0800, Honghui Zhang wrote:
-> > On Thu, 2017-08-24 at 08:44 -0500, Bjorn Helgaas wrote:
-> > > On Thu, Aug 24, 2017 at 11:14:07AM +0800, mtk11102 wrote:
-> > > > On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
-> > > > > On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
-> 
-> ....
-> > > > I pull the your host-mediatek branch and seems the build error is still
-> > > > there.
-> > > > Should I send a new patch base on your pci/host-mediatek to fix the
-> > > > build warnings, or should I wait for your push for build error and then
-> > > > send the patch?
-> > > 
-> > > Sorry, I must have forgotten to push it.  Should be there now:
-> > > 9f3ec1e47377 ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-> > > 
-> > > Hopefully that has everything we need (I included your fix above).
-> > > 
-> > 
-> > Thanks very much for your help.
-> > 
-> > > Bjorn
-> > 
-> > 
-> 
-> I just noticed that 9f3ec1e47377 could not be built pass.
-> 
-> In function 'mtk_pcie_enable_msi':
->  error: 'return' with a value, in function returning void [-Werror]
->   return 0;
-> 
-> In function 'mtk_pcie_init_irq_domain': error: unused variable
-> 'err' [-Werror=unused-variable]
->   int err;
+On Fri, 18 Aug 2017 15:42:31 +0200
+Jan Glauber <jan.glauber@caviumnetworks.com> wrote:
 
-Fixed in 0eb463c096c4 ("PCI: mediatek: Add MSI support for MT2712 and
-MT7622").
+> On Thu, Aug 17, 2017 at 07:00:17AM -0600, Alex Williamson wrote:
+> > On Thu, 17 Aug 2017 10:14:23 +0200
+> > Jan Glauber <jglauber@cavium.com> wrote:
+> >   
+> > > If a PCI device supports neither function-level reset, nor slot
+> > > or bus reset then refuse to probe it. A line is printed to inform
+> > > the user.  
+> > 
+> > But that's not what this does, this requires that the device is on a
+> > reset-able bus.  This is a massive regression.  With this we could no
+> > longer assign devices on the root complex or any device which doesn't
+> > return from bus reset and currently makes use of the NO_BUS_RESET flag
+> > and works happily otherwise.  Full NAK.  Thanks,  
+> 
+> Looks like I missed the slot reset check. So how about this:
+> 
+> if (pci_probe_reset_slot(pdev->slot) && pci_probe_reset_bus(pdev->bus)) {
+> 	dev_warn(...);
+> 	return -ENODEV;
+> }
+> 
+> Or am I still missing something here?
 
-I wonder why I didn't get a kbuild test report for this?
+We don't require that a device is on a reset-able bus/slot, so any
+attempt to impose that requirement means that there are devices that
+might work perfectly fine that are now excluded from assignment.  The
+entire premise is unacceptable.  Thanks,
+
+Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
