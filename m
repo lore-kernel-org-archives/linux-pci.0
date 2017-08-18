@@ -1,65 +1,143 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr20062.outbound.protection.outlook.com ([40.107.2.62]:55104
-        "EHLO EUR02-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752667AbdHICwV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 22:52:21 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-CC: "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>
-Subject: RE: [PATCHv2 3/6] PCI: layerscape: use accessors to enable/disable
- DBI RO registers' write permission
-Date: Wed, 9 Aug 2017 02:52:18 +0000
-Message-ID: <AM5PR0402MB27714A7A3DDCF0B917E6601D848B0@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-4-git-send-email-Zhiqiang.Hou@nxp.com>
- <a7c1e517-4488-c979-fc13-e45fc78809be@synopsys.com>
-In-Reply-To: <a7c1e517-4488-c979-fc13-e45fc78809be@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:55572 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750729AbdHRJLB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 05:11:01 -0400
+Date: Fri, 18 Aug 2017 14:40:51 +0530
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v9 0/3] Add support for IPQ8074 PCIe phy and controller
+Message-ID: <20170818091050.GA8756@codeaurora.org>
+References: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGFjayENCg0KPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKb2FvIFBpbnRvIFttYWlsdG86Sm9hby5QaW50b0BzeW5v
-cHN5cy5jb21dDQo+IFNlbnQ6IDIwMTflubQ45pyIOOaXpSAyMDo0Ng0KPiBUbzogWi5xLiBIb3Ug
-PHpoaXFpYW5nLmhvdUBueHAuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhl
-bGdhYXNAZ29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lub3Bz
-eXMuY29tDQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkg
-SHUgPG1pbmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPg0K
-PiBTdWJqZWN0OiBSZTogW1BBVENIdjIgMy82XSBQQ0k6IGxheWVyc2NhcGU6IHVzZSBhY2Nlc3Nv
-cnMgdG8gZW5hYmxlL2Rpc2FibGUNCj4gREJJIFJPIHJlZ2lzdGVycycgd3JpdGUgcGVybWlzc2lv
-bg0KPiANCj4gw4BzIDk6MjMgQU0gZGUgOC8zLzIwMTcsIFpoaXFpYW5nIEhvdSBlc2NyZXZldToN
-Cj4gPiBGcm9tOiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBueHAuY29tPg0KPiA+DQo+ID4g
-VXNlIHRoZSBhY2Nlc3NvcnMgaW5zdGVhZCBhY2Nlc3NpbmcgdGhlIERCSSByZWFkLW9ubHkgd3Jp
-dGUgZW5hYmxlDQo+ID4gcmVnaXN0ZXIgZGlyZWN0bHkuIEFuZCB0aGUgU1RSRk1SMSBpcyBub3Qg
-cmVhZC1vbmx5IHJlZ2lzdGVyLCBzbyBtb3ZlDQo+ID4gaXQgb3V0IGZyb20gdGhlIHdyaXRlLWVu
-YWJsZSBicmFja2V0Lg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFpYW5nIDxaaGlx
-aWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiAtLS0NCj4gPiBWMjoNCj4gPiAgLSBOZXcgcGF0Y2ggc3Bs
-aXQgZnJvbSBwYXRjaCB2MSAzLzMuDQo+ID4NCj4gPiAgZHJpdmVycy9wY2kvZHdjL3BjaS1sYXll
-cnNjYXBlLmMgfCA2ICsrKy0tLQ0KPiA+ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCsp
-LCAzIGRlbGV0aW9ucygtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9w
-Y2ktbGF5ZXJzY2FwZS5jDQo+ID4gYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVyc2NhcGUuYw0K
-PiA+IGluZGV4IGZkODYxMjguLjA5MDU2YTYgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kv
-ZHdjL3BjaS1sYXllcnNjYXBlLmMNCj4gPiArKysgYi9kcml2ZXJzL3BjaS9kd2MvcGNpLWxheWVy
-c2NhcGUuYw0KPiA+IEBAIC0zMyw3ICszMyw2IEBADQo+ID4NCj4gPiAgLyogUEVYIEludGVybmFs
-IENvbmZpZ3VyYXRpb24gUmVnaXN0ZXJzICovDQo+ID4gICNkZWZpbmUgUENJRV9TVFJGTVIxCQkw
-eDcxYyAvKiBTeW1ib2wgVGltZXIgJiBGaWx0ZXIgTWFzaw0KPiBSZWdpc3RlcjEgKi8NCj4gPiAt
-I2RlZmluZSBQQ0lFX0RCSV9ST19XUl9FTgkweDhiYyAvKiBEQkkgUmVhZC1Pbmx5IFdyaXRlIEVu
-YWJsZQ0KPiBSZWdpc3RlciAqLw0KPiA+DQo+ID4gIHN0cnVjdCBsc19wY2llX2RydmRhdGEgew0K
-PiA+ICAJdTMyIGx1dF9vZmZzZXQ7DQo+ID4gQEAgLTE1NSwxMSArMTU0LDEyIEBAIHN0YXRpYyB2
-b2lkIGxzX3BjaWVfaG9zdF9pbml0KHN0cnVjdCBwY2llX3BvcnQgKnBwKQ0KPiA+ICAJc3RydWN0
-IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3BjaWVfZnJvbV9wcChwcCk7DQo+ID4gIAlzdHJ1Y3QgbHNf
-cGNpZSAqcGNpZSA9IHRvX2xzX3BjaWUocGNpKTsNCj4gPg0KPiA+IC0JaW93cml0ZTMyKDEsIHBj
-aS0+ZGJpX2Jhc2UgKyBQQ0lFX0RCSV9ST19XUl9FTik7DQo+ID4gKwlkd19wY2llX2RiaV9yb193
-cl9lbihwY2kpOw0KPiA+ICAJbHNfcGNpZV9maXhfY2xhc3MocGNpZSk7DQo+ID4gIAlsc19wY2ll
-X2NsZWFyX211bHRpZnVuY3Rpb24ocGNpZSk7DQo+ID4gKwlkd19wY2llX2RiaV9yb193cl9kaXMo
-cGNpKTsNCj4gPiArDQo+ID4gIAlsc19wY2llX2Ryb3BfbXNnX3RscChwY2llKTsNCj4gPiAtCWlv
-d3JpdGUzMigwLCBwY2ktPmRiaV9iYXNlICsgUENJRV9EQklfUk9fV1JfRU4pOw0KPiA+ICB9DQo+
-ID4NCj4gPiAgc3RhdGljIGludCBsc19wY2llX21zaV9ob3N0X2luaXQoc3RydWN0IHBjaWVfcG9y
-dCAqcHAsDQo+ID4NCj4gDQo+IEFja2VkLUJ5OiBKb2FvIFBpbnRvIDxqcGludG9Ac3lub3BzeXMu
-Y29tPg0KDQotIFpoaXFpYW5nDQo=
+On Fri, Aug 18, 2017 at 12:59:50PM +0530, Varadarajan Narayanan wrote:
+> v9:
+>   Incorporate Stanimir's feedback for
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+Forgot to mention that the patches were rebased against
+Bjorn's pci.git/next.
+
+Thanks
+Varada
+
+>   Add Stanimir's Ack for
+> 	PCI: dwc: qcom: Use block IP version for operations
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+>
+>   Add Rob's Ack for
+> 	dt-bindings: pci: qcom: Add support for IPQ8074
+>
+> v8:
+>   Incorporate Stanimir's feedback for
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+>
+> v7:
+>   Skip PHY patches as they are already included by Kishon
+>
+>   Incorporate Stanimir's feedback for the below patches
+> 	PCI: dwc: qcom: Use block IP version for operations
+> 	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+>
+> v6:
+>   Added 'Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>' and fixed
+>   white space issues as mentioned by Vivek.
+> 	phy: qcom-qmp: Fix phy pipe clock name
+> 	dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+>
+> v5:
+>   dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+>         Renamed phy_phy clock as common clock
+>
+>   phy: qcom-qmp: Fix phy pipe clock name
+>         Moved the DT get into the registering function
+>
+>   phy: qcom-qmp: Add support for IPQ8074
+>         Place the IPQ8074 related structs similar to existing SoC.
+>         Renamed phy_phy clock as common clock
+> v4:
+>   phy: qcom-qmp: Fix phy pipe clock name
+> 	Based on Vivek's comments, return failure only for
+> 	PCI/USB type of phys.
+> 	Removed Ack.
+>
+>   phy: qcom-qmp: Handle unavailable registers
+> 	Removed this patch.
+> 	Incorrectly used a block of code that is not applicable
+> 	to IPQ8074, hence had to avoid an "unavailable" register.
+> 	Since that is addressed using 'has_phy_com_ctrl' this
+> 	patch is not needed.
+>
+>   phy: qcom-qmp: Add support for IPQ8074
+> 	Set 'has_phy_com_ctrl' to false
+> 	Remove ipq8074_pciephy_regs_layout
+>
+> v3:
+>   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 	Incoporate Stan's feedback:-
+> 	 - Add SoC Wrapper and Synopsys Core IP versions
+>
+> v2:
+>   dt-bindings: phy: qmp: Add output-clock-names
+> 	Added Rob H's Ack
+>
+>   dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+> 	Removed example
+> 	Added IPQ8074 specific details
+>
+>   phy: qcom-qmp: Fix phy pipe clock name
+> 	Added Vivek's Ack
+>
+>   phy: qcom-qmp: Handle unavailable registers
+> 	No changes
+>
+>   phy: qcom-qmp: Add support for IPQ8074
+> 	No changes
+>
+>   PCI: dwc: qcom: Use block IP version for operations
+> 	Added new patch to use block IP version instead of v1, v2...
+>
+>   dt-bindings: pci: qcom: Add support for IPQ8074
+> 	Removed example
+> 	Added IPQ8074 specific details
+>
+>   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+> 	Incorporated Bjorn's feedback:-
+> 	 - Removed reset names, helper function to assert/deassert, helper
+> 	   function to R/M/W register.
+> 	 - Renamed sys_noc clock as iface clock
+> 	 - Added deinit if phy power on fails
+>
+> v1:
+> Add definitions required to enable QMP phy support for IPQ8074.
+>
+> Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+> Gen 1/2, one lane, two PCIe root complex with support for MSI and
+> legacy interrupts, and it conforms to PCI Express Base 2.1
+> specification.
+>
+> Varadarajan Narayanan (3):
+>   PCI: dwc: qcom: Use block IP version for operations
+>   dt-bindings: pci: qcom: Add support for IPQ8074
+>   PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+>
+>  .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
+>  drivers/pci/dwc/pcie-qcom.c                        | 346 +++++++++++++++++----
+>  2 files changed, 302 insertions(+), 67 deletions(-)
+>
+> --
+> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+>
+
+--
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
