@@ -1,157 +1,129 @@
-Return-Path: <SRS0=NMYr=73=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=NMYr=73=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1503622427.19072.11.camel@mhfsdcap03>
-Subject: Re: [pci:pci/host-mediatek 11/11]
- drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: kbuild test robot <fengguang.wu@intel.com>, <kbuild-all@01.org>,
-	<linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, ryder.lee
-	<ryder.lee@mediatek.com>, <youlin.pei@mediatek.com>,
-	<xinping.qian@mediatek.com>
-Date: Fri, 25 Aug 2017 08:53:47 +0800
-In-Reply-To: <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <201708232205.SymULNVt%fengguang.wu@intel.com>
-	 <20170823225211.GI8498@bhelgaas-glaptop.roam.corp.google.com>
-	 <1503544447.19072.7.camel@mhfsdcap03>
-	 <20170824134451.GA31858@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-MIME-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36784 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750807AbdHRHaG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 03:30:06 -0400
+From: Varadarajan Narayanan <varada@codeaurora.org>
+To: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
+        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
+        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
+        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Cc: Varadarajan Narayanan <varada@codeaurora.org>
+Subject: [PATCH v9 0/3] Add support for IPQ8074 PCIe phy and controller
+Date: Fri, 18 Aug 2017 12:59:50 +0530
+Message-Id: <1503041393-19593-1-git-send-email-varada@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-08-24 at 08:44 -0500, Bjorn Helgaas wrote:
-> On Thu, Aug 24, 2017 at 11:14:07AM +0800, mtk11102 wrote:
-> > On Wed, 2017-08-23 at 17:52 -0500, Bjorn Helgaas wrote:
-> > > On Wed, Aug 23, 2017 at 10:53:07PM +0800, kbuild test robot wrote:
-> > > > tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-mediatek
-> > > > head:   8e8ed61600e99258ff59bf36b85b671eed25a462
-> > > > commit: 8e8ed61600e99258ff59bf36b85b671eed25a462 [11/11] PCI: mediatek: Add MSI support for MT2712 and MT7622
-> > > > config: arm-allmodconfig (attached as .config)
-> > > > compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> > > > reproduce:
-> > > >         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-> > > >         chmod +x ~/bin/make.cross
-> > > >         git checkout 8e8ed61600e99258ff59bf36b85b671eed25a462
-> > > >         # save the attached .config to linux build tree
-> > > >         make.cross ARCH=arm 
-> > > 
-> > > The "node" and "dev" undeclared errors are my fault, and I fixed them.  But
-> > > I don't think I introduced the casting warnings.  These warnings are on a
-> > > 32-bit build.
-> > > 
-> > > I pushed the update to fix the node/dev errors.  Please take a look at the
-> > > remaining casting warnings.
-> > > 
-> > > > All error/warnings (new ones prefixed by >>):
-> > > > 
-> > > >    In file included from include/linux/clk.h:16:0,
-> > > >                     from drivers/pci/host/pcie-mediatek.c:18:
-> > > >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_msi_setup_irq':
-> > > > >> drivers/pci/host/pcie-mediatek.c:488:33: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-> > > >      msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> > > >                                     ^
-> > > >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
-> > > >     #define lower_32_bits(n) ((u32)(n))
-> > > >                                     ^
-> > > >    drivers/pci/host/pcie-mediatek.c: In function 'mtk_pcie_enable_msi':
-> > > > >> drivers/pci/host/pcie-mediatek.c:541:43: error: 'node' undeclared (first use in this function)
-> > > >      port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
-> > > >                                               ^~~~
-> > > >    drivers/pci/host/pcie-mediatek.c:541:43: note: each undeclared identifier is reported only once for each function it appears in
-> > > > >> drivers/pci/host/pcie-mediatek.c:545:11: error: 'dev' undeclared (first use in this function)
-> > > >       dev_err(dev, "failed to create MSI IRQ domain\n");
-> > > >               ^~~
-> > > >    In file included from include/linux/clk.h:16:0,
-> > > >                     from drivers/pci/host/pcie-mediatek.c:18:
-> > > >    drivers/pci/host/pcie-mediatek.c:549:22: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
-> > > >      val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> > > >                          ^
-> > > >    include/linux/kernel.h:178:33: note: in definition of macro 'lower_32_bits'
-> > > >     #define lower_32_bits(n) ((u32)(n))
-> > > >                                     ^
-> > > > 
-> > 
-> > hi, Bjorn,
-> > I fixed the build warning at arm by the following diff:
-> > diff --git a/drivers/pci/host/pcie-mediatek.c
-> > b/drivers/pci/host/pcie-mediatek.c
-> > index 707e669..b8d6ed8 100644
-> > --- a/drivers/pci/host/pcie-mediatek.c
-> > +++ b/drivers/pci/host/pcie-mediatek.c
-> > @@ -459,6 +459,7 @@ static int mtk_pcie_msi_setup_irq(struct
-> > msi_controller *chip,
-> >         struct msi_msg msg;
-> >         int hwirq;
-> >         u32 irq;
-> > +       phys_addr_t msg_addr;
-> > 
-> >         port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
-> >         if (!port)
-> > @@ -475,9 +476,10 @@ static int mtk_pcie_msi_setup_irq(struct
-> > msi_controller *chip,
-> > 
-> >         irq_set_msi_desc(irq, desc);
-> > 
-> > +       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> >         /* MT2712/MT7622 only support 32 bit MSI address */
-> >         msg.address_hi = 0;
-> > -       msg.address_lo = lower_32_bits((u64)(port->base +
-> > PCIE_MSI_VECTOR));
-> > +       msg.address_lo = lower_32_bits(msg_addr);
-> >         msg.data = hwirq;
-> > 
-> >         pci_write_msi_msg(irq, &msg);
-> > @@ -531,8 +533,10 @@ static const struct irq_domain_ops msi_domain_ops =
-> > {
-> >  static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
-> >  {
-> >         u32 val;
-> > +       phys_addr_t msg_addr;
-> > 
-> > -       val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
-> > +       msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
-> > +       val = lower_32_bits(msg_addr);
-> >         writel(val, port->base + PCIE_IMSI_ADDR);
-> > 
-> >         val = readl(port->base + PCIE_INT_MASK);
-> 
-> I don't think this is quite right: virt_to_phys() converts a CPU
-> virtual address to a CPU physical address, but the msg_addr is a PCI
-> bus address.  In many cases, PCI bus addresses are identical to CPU
-> physical addresses, but not always.
-> 
-> But I see other drivers doing the same thing:
-> 
->   dw_pcie_msi_init()
->   dw_msi_setup_msg()
->   advk_msi_irq_compose_msi_msg()
->   advk_pcie_init_msi_irq_domain()
->   rcar_pcie_enable_msi()
->   xilinx_pcie_msi_setup_irq()
->   xilinx_pcie_enable_msi()
-> 
-> and I don't know the right way to fix this.  MSI is basically a
-> special case of DMA.  For most DMA, we allocate a buffer and use
-> something like dma_map_single() to map it via an IOMMU (if present)
-> and return the corresponding bus address.  For MSIs, the target isn't
-> usually a memory buffer, and I don't know that dma_map_single() would
-> do the right thing.
-> 
-> But I guess we should use your fix for now since I don't have a better
-> idea.
-> 
-> > I pull the your host-mediatek branch and seems the build error is still
-> > there.
-> > Should I send a new patch base on your pci/host-mediatek to fix the
-> > build warnings, or should I wait for your push for build error and then
-> > send the patch?
-> 
-> Sorry, I must have forgotten to push it.  Should be there now:
-> 9f3ec1e47377 ("PCI: mediatek: Add MSI support for MT2712 and MT7622")
-> 
-> Hopefully that has everything we need (I included your fix above).
-> 
+v9:
+  Incorporate Stanimir's feedback for
+	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
 
-Thanks very much for your help.
+  Add Stanimir's Ack for
+	PCI: dwc: qcom: Use block IP version for operations
+	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
 
-> Bjorn
+  Add Rob's Ack for
+	dt-bindings: pci: qcom: Add support for IPQ8074
+
+v8:
+  Incorporate Stanimir's feedback for
+	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+v7:
+  Skip PHY patches as they are already included by Kishon
+
+  Incorporate Stanimir's feedback for the below patches
+	PCI: dwc: qcom: Use block IP version for operations
+	PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+v6:
+  Added 'Reviewed-by: Vivek Gautam <vivek.gautam@codeaurora.org>' and fixed
+  white space issues as mentioned by Vivek.
+	phy: qcom-qmp: Fix phy pipe clock name
+	dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+
+v5:
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+        Renamed phy_phy clock as common clock
+
+  phy: qcom-qmp: Fix phy pipe clock name
+        Moved the DT get into the registering function
+
+  phy: qcom-qmp: Add support for IPQ8074
+        Place the IPQ8074 related structs similar to existing SoC.
+        Renamed phy_phy clock as common clock
+v4:
+  phy: qcom-qmp: Fix phy pipe clock name
+	Based on Vivek's comments, return failure only for
+	PCI/USB type of phys.
+	Removed Ack.
+
+  phy: qcom-qmp: Handle unavailable registers
+	Removed this patch.
+	Incorrectly used a block of code that is not applicable
+	to IPQ8074, hence had to avoid an "unavailable" register.
+	Since that is addressed using 'has_phy_com_ctrl' this
+	patch is not needed.
+
+  phy: qcom-qmp: Add support for IPQ8074
+	Set 'has_phy_com_ctrl' to false
+	Remove ipq8074_pciephy_regs_layout
+
+v3:
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incoporate Stan's feedback:-
+	 - Add SoC Wrapper and Synopsys Core IP versions
+
+v2:
+  dt-bindings: phy: qmp: Add output-clock-names
+	Added Rob H's Ack
+
+  dt-bindings: phy: qmp: Add support for QMP phy in IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  phy: qcom-qmp: Fix phy pipe clock name
+	Added Vivek's Ack
+
+  phy: qcom-qmp: Handle unavailable registers
+	No changes
+
+  phy: qcom-qmp: Add support for IPQ8074
+	No changes
+
+  PCI: dwc: qcom: Use block IP version for operations
+	Added new patch to use block IP version instead of v1, v2...
+
+  dt-bindings: pci: qcom: Add support for IPQ8074
+	Removed example
+	Added IPQ8074 specific details
+
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+	Incorporated Bjorn's feedback:-
+	 - Removed reset names, helper function to assert/deassert, helper
+	   function to R/M/W register.
+	 - Renamed sys_noc clock as iface clock
+	 - Added deinit if phy power on fails
+
+v1:
+Add definitions required to enable QMP phy support for IPQ8074.
+
+Add support for the IPQ8074 PCIe controller.  IPQ8074 supports
+Gen 1/2, one lane, two PCIe root complex with support for MSI and
+legacy interrupts, and it conforms to PCI Express Base 2.1
+specification.
+
+Varadarajan Narayanan (3):
+  PCI: dwc: qcom: Use block IP version for operations
+  dt-bindings: pci: qcom: Add support for IPQ8074
+  PCI: dwc: qcom: Add support for IPQ8074 PCIe controller
+
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  23 ++
+ drivers/pci/dwc/pcie-qcom.c                        | 346 +++++++++++++++++----
+ 2 files changed, 302 insertions(+), 67 deletions(-)
+
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
