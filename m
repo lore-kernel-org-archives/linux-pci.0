@@ -1,141 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:59589 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752356AbdHIDSR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2017 23:18:17 -0400
-Cc: Keith Busch <keith.busch@intel.com>, shawn.lin@rock-chips.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [RFC] what should we report for the failure of pcie_set_mps?
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1729fb86-b9be-0ba6-4b65-33bb5a3527f9@rock-chips.com>
- <20170808063818.GA9938@localhost.localdomain>
- <f0b0bd5a-16b8-33ff-0e97-dc19a1aa5bf7@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <d23adbda-164c-95ec-9cac-acd8b84298d3@rock-chips.com>
-Date: Wed, 9 Aug 2017 11:18:05 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
+To: Alex Williamson <alex.williamson@redhat.com>,
+ Jan Glauber <jan.glauber@caviumnetworks.com>
+References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+ <1502957663-5527-4-git-send-email-jglauber@cavium.com>
+ <20170817070017.1e9c9456@w520.home> <20170818134231.GA3464@hc>
+ <20170818081251.2bbffe56@w520.home>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <d7492153-ec84-eb87-13ac-eb3fc9116114@caviumnetworks.com>
+Date: Fri, 18 Aug 2017 08:57:09 -0700
 MIME-Version: 1.0
-In-Reply-To: <f0b0bd5a-16b8-33ff-0e97-dc19a1aa5bf7@rock-chips.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170818081251.2bbffe56@w520.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
+ Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-On 2017/8/8 17:45, Shawn Lin wrote:
-> Hi Keith,
+On 08/18/2017 07:12 AM, Alex Williamson wrote:
+> On Fri, 18 Aug 2017 15:42:31 +0200
+> Jan Glauber <jan.glauber@caviumnetworks.com> wrote:
 > 
-> On 2017/8/8 14:38, Keith Busch wrote:
->> On Mon, Aug 07, 2017 at 04:53:25PM +0800, Shawn Lin wrote:
->>> Hi Bjorn,
+>> On Thu, Aug 17, 2017 at 07:00:17AM -0600, Alex Williamson wrote:
+>>> On Thu, 17 Aug 2017 10:14:23 +0200
+>>> Jan Glauber <jglauber@cavium.com> wrote:
+>>>    
+>>>> If a PCI device supports neither function-level reset, nor slot
+>>>> or bus reset then refuse to probe it. A line is printed to inform
+>>>> the user.
 >>>
->>> I notice the log below showing the add-in NVMe failed to set MPS to 256.
->>> My RC could support up to 256 but the Intel 600P series NVMe could only
->>> support up to 128. So I am confusing now it's normal to fallback to the
->>> minimal MPS negotiaged but why it deserve a warning and what should I
->>> report a bug for?
+>>> But that's not what this does, this requires that the device is on a
+>>> reset-able bus.  This is a massive regression.  With this we could no
+>>> longer assign devices on the root complex or any device which doesn't
+>>> return from bus reset and currently makes use of the NO_BUS_RESET flag
+>>> and works happily otherwise.  Full NAK.  Thanks,
 >>
-> 
-> Thanks a lot for your comment.
-> 
->> The "report a bug message" is the text from commit 5895af79158a when it
->> was an indication the BIOS had done something wrong. If you booted with
-> 
-> My platfrom enumerates PCIe topology in kernel, so that implies kernel
-> or more probably the RC driver does something wrong?
-> 
-> 
->> the 600P inserted (the timestamp appears that you did), then it sounds
->> like the platform initialized the port incorrectly for the device's
->> capabilities. This mismatched MPS can sometimes mean you won't be able
-> 
-> I still don't understand this.
-> 
-> Per the code, pci_configure_mps, it just tries to match the new add-in
-> devices' MPS to match the existing PCIe topology, right?
-> 
-> (1)if the existing PCIe topology use 256 MPS but the new add-in device
-> could only support 128, so it deserve a warning.
-> (2)if the existing PCIe topology use 128 MPS but the new add-in device
-> could support up to 256, so the new add-in device should fallback to
-> 128, and it's ok.
-> 
-> So mine is nearly the same as case(1) that my RC claims to support 256
-> and the only one add-in device claims to support only up to 128.
-> 
-> If my understanding above is correct, why can't the existing
-> PCIe topology fallback to 128 so that the newly add-in device could
-> work fine?
-> 
-> 
-
-well, I understand what happened.
-
-For my system, pcie_bus_config is PCIE_BUS_DEFAULT. So even if the RC
-driver calls pcie_bus_configure_settings after finishing scaning the
-root bridge from top 2 down, pcie_bus_configure_set won't take effect to
-do anything. So this leave the mismatch MPS still there as we could see
-the RC use 256 and the EP use 128 from the lspci dump of DevCtl
-register.
-
-So I have to say, IIUC, we always need to set pcie_bus_config to
-PCIE_BUS_PEER2PEER or PCIE_BUS_TUNE_OFF if my RC could support larger
-than 128 MPS.
-
-I don't think is reasonable if I don't miss something.
-
-Hi Bjorn,
-
-Any suggestion?
-
->> to write to the device, even though reads may work fine.
+>> Looks like I missed the slot reset check. So how about this:
 >>
->> So, if you are obseriving a problem with the kernel's default pci
->> settings, I think the 'report a bug' is suggesting you report it to your
->> platform maker rather than the kernel, and the kernel is providing a
->> way to work around this.
+>> if (pci_probe_reset_slot(pdev->slot) && pci_probe_reset_bus(pdev->bus)) {
+>> 	dev_warn(...);
+>> 	return -ENODEV;
+>> }
 >>
->>> [    0.694942] pci 0000:01:00.0: can't set Max Payload Size to 256; if
->>> necessary, use "pci=pcie_bus_safe" and report a bug
->>> [    0.706267] pci 0000:00:00.0: BAR 14: assigned [mem
->>> 0xfa000000-0xfa0fffff]
->>> [    0.706966] pci 0000:01:00.0: BAR 0: assigned [mem 
->>> 0xfa000000-0xfa003fff
->>> 64bit]
->>> [    0.707736] pci 0000:00:00.0: PCI bridge to [bus 01]
->>> [    0.708238] pci 0000:00:00.0:   bridge window [mem 
->>> 0xfa000000-0xfa0fffff]
->>> [    0.709232] pcieport 0000:00:00.0: enabling device (0000 -> 0002)
->>> [    0.710674] pcieport 0000:00:00.0: Signaling PME with IRQ 215
->>> [    0.711654] pcieport 0000:00:00.0: AER enabled with IRQ 215
->>>
->>>
->>> lspci -vvv
->>>
->>> 00:00.0 Class 0604: Device 1d87:0100
->>>     ...
->>>          Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
->>>          Capabilities: [c0] Express (v2) Root Port (Slot+), MSI 00
->>>                  DevCap: MaxPayload 256 bytes, PhantFunc 0
->>>                          ExtTag- RBE+
->>>                  DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+
->>>         Unsupported+
->>>                          RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
->>>                          MaxPayload 256 bytes, MaxReadReq 512 bytes
->>>
->>> 01:00.0 Class 0108: Device 8086:f1a5 (rev 03) (prog-if 02)
->>>     ...
->>>     Capabilities: [70] Express (v2) Endpoint, MSI 00
->>>                  DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s
->>>             unlimited, L1 unlimited
->>>             ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
->>>             SlotPowerLimit 0.000W
->>>                  DevCtl: Report errors: Correctable+ Non-Fatal+ Fatal+
->>>             Unsupported+ RlxdOrd+ ExtTag- PhantFunc- AuxPwr-
->>>             NoSnoop- FLReset-
->>>             MaxPayload 128 bytes, MaxReadReq 512 bytes
->>>
->>
->>
->>
+>> Or am I still missing something here?
 > 
-> 
-> 
+> We don't require that a device is on a reset-able bus/slot, so any
+> attempt to impose that requirement means that there are devices that
+> might work perfectly fine that are now excluded from assignment.  The
+> entire premise is unacceptable.  Thanks,
+
+
+You previously rejected the idea to silently ignore bus reset requests 
+on buses that do not support it.
+
+So this leaves us with two options:
+
+1) Do nothing, and crash the kernel on systems with bad combinations of 
+PCIe target devices and cn88xx when vfio_pci is used.
+
+2) Do something else.
+
+We are trying to figure out what that something else should be.  The 
+general concept we are working on is that if vfio_pci wants to reset a 
+device, *and* bus reset is the only option available, *and* cn88xx, then 
+make vfio_pci fail.
+
+What is your opinion of doing that (assuming it is properly implemented)?
+
+Thanks,
+David Daney
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
