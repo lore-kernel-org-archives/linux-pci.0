@@ -1,61 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 18 Aug 2017 16:14:52 -0700 (PDT)
-Message-Id: <20170818.161452.1186139926380057795.davem@davemloft.net>
-To: thierry.reding@gmail.com
-Subject: Re: [PATCH] PCI: Allow PCI express root ports to find themselves
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170817110614.11454-1-thierry.reding@gmail.com>
-References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
- <20170817110614.11454-1-thierry.reding@gmail.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, gabriele.paoloni@huawei.com, asit.k.mallick@intel.com,
- catalin.marinas@arm.com, will.deacon@arm.com, linuxarm@huawei.com,
- alexander.duyck@gmail.com, ashok.raj@intel.com, eric.dumazet@gmail.com,
- mpe@ellerman.id.au, jeffrey.t.kirsher@intel.com, dingtianhong@huawei.com,
- ganeshgr@chelsio.com, Bob.Shaw@amd.com, leedom@chelsio.com,
- patrick.j.cramer@intel.com, bhelgaas@google.com, werner@chelsio.com,
- linux-arm-kernel@lists.infradead.org, amira@mellanox.com,
- linux-pci@vger.kernel.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org, David.Laight@aculab.com,
- Suravee.Suthikulpanit@amd.com, robin.murphy@arm.com, l.stach@pengutronix.de
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Subject: [PATCH 06/18] PCI: endpoint: functions/pci-epf-test: Do not reset *command* inadvertently
+Date: Fri, 18 Aug 2017 20:27:58 +0530
+Message-ID: <20170818145810.17649-7-kishon@ti.com>
+In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
+References: <20170818145810.17649-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Thierry Reding <thierry.reding@gmail.com>
-Date: Thu, 17 Aug 2017 13:06:14 +0200
+pci_epf_test_cmd_handler() is the delayed work function which reads
+*command* (set by the host) and performs various actions requested
+by the host periodically. If the value in *command* is '0', it
+goes to the reset_handler where it resets *command* to '0' and queues
+pci_epf_test_cmd_handler().
+However if the host writes a value to the *command* just after the
+pci-epf-test driver checks *command* for '0' and before the control goes
+to reset_handler, the *command* will be reset to '0' and the pci-epf-test
+driver won't be able to perform the actions requested by the host.
+Fix it here by not resetting the *command* in the reset_handler.
 
-> From: Thierry Reding <treding@nvidia.com>
-> 
-> If the pci_find_pcie_root_port() function is called on a root port
-> itself, return the root port rather than NULL.
-> 
-> This effectively reverts commit 0e405232871d6 ("PCI: fix oops when
-> try to find Root Port for a PCI device") which added an extra check
-> that would now be redundant.
-> 
-> Fixes: a99b646afa8a ("PCI: Disable PCIe Relaxed Ordering if unsupported")
-> Fixes: c56d4450eb68 ("PCI: Turn off Request Attributes to avoid Chelsio T5 Completion erratum")
-> Signed-off-by: Thierry Reding <treding@nvidia.com>
-> ---
-> This applies on top of and was tested on next-20170817.
-> 
-> Michael, it'd be great if you could test this one again to clarify
-> whether or not the fix that's already in Linus' tree is still needed, or
-> whether it's indeed obsoleted by this patch.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Sekhar Nori <nsekhar@ti.com>
+---
+ drivers/pci/endpoint/functions/pci-epf-test.c | 20 +++++++++++---------
+ 1 file changed, 11 insertions(+), 9 deletions(-)
 
-Applied, thanks everyone.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index 5cbc05a0762d..1a27d7950f2c 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -263,22 +263,26 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	int ret;
+ 	u8 irq;
+ 	u8 msi_count;
++	u32 command;
+ 	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
+ 						     cmd_handler.work);
+ 	struct pci_epf *epf = epf_test->epf;
+ 	struct pci_epc *epc = epf->epc;
+ 	volatile struct pci_epf_test_reg *reg = epf_test->reg[0];
+ 
+-	if (!reg->command)
++	command = reg->command;
++	if (!command)
+ 		goto reset_handler;
+ 
+-	if (reg->command & COMMAND_RAISE_LEGACY_IRQ) {
++	reg->command = 0;
++
++	if (command & COMMAND_RAISE_LEGACY_IRQ) {
+ 		reg->status = STATUS_IRQ_RAISED;
+ 		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
+ 		goto reset_handler;
+ 	}
+ 
+-	if (reg->command & COMMAND_WRITE) {
++	if (command & COMMAND_WRITE) {
+ 		ret = pci_epf_test_write(epf_test);
+ 		if (ret)
+ 			reg->status |= STATUS_WRITE_FAIL;
+@@ -288,7 +292,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 		goto reset_handler;
+ 	}
+ 
+-	if (reg->command & COMMAND_READ) {
++	if (command & COMMAND_READ) {
+ 		ret = pci_epf_test_read(epf_test);
+ 		if (!ret)
+ 			reg->status |= STATUS_READ_SUCCESS;
+@@ -298,7 +302,7 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 		goto reset_handler;
+ 	}
+ 
+-	if (reg->command & COMMAND_COPY) {
++	if (command & COMMAND_COPY) {
+ 		ret = pci_epf_test_copy(epf_test);
+ 		if (!ret)
+ 			reg->status |= STATUS_COPY_SUCCESS;
+@@ -308,9 +312,9 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 		goto reset_handler;
+ 	}
+ 
+-	if (reg->command & COMMAND_RAISE_MSI_IRQ) {
++	if (command & COMMAND_RAISE_MSI_IRQ) {
+ 		msi_count = pci_epc_get_msi(epc);
+-		irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++		irq = (command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
+ 		if (irq > msi_count || msi_count <= 0)
+ 			goto reset_handler;
+ 		reg->status = STATUS_IRQ_RAISED;
+@@ -319,8 +323,6 @@ static void pci_epf_test_cmd_handler(struct work_struct *work)
+ 	}
+ 
+ reset_handler:
+-	reg->command = 0;
+-
+ 	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
+ 			   msecs_to_jiffies(1));
+ }
+-- 
+2.11.0
