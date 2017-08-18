@@ -1,66 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50856 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751791AbdHCXEq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 19:04:46 -0400
-Date: Thu, 3 Aug 2017 18:04:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Varadarajan Narayanan <varada@codeaurora.org>
-Cc: bhelgaas@google.com, robh+dt@kernel.org, mark.rutland@arm.com,
-        svarbanov@mm-sol.com, kishon@ti.com, sboyd@codeaurora.org,
-        vivek.gautam@codeaurora.org, fengguang.wu@intel.com,
-        weiyongjun1@huawei.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v6 1/7] dt-bindings: phy: qmp: Add output-clock-names
-Message-ID: <20170803230444.GQ20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501482857-14100-1-git-send-email-varada@codeaurora.org>
- <1501482857-14100-2-git-send-email-varada@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Subject: [PATCH v3 2/4] PCI: rockchip: Add support for pcie wake irq
+Date: Fri, 18 Aug 2017 16:28:39 +0800
+Message-Id: <20170818082841.22335-3-jeffy.chen@rock-chips.com>
+In-Reply-To: <20170818082841.22335-1-jeffy.chen@rock-chips.com>
+References: <20170818082841.22335-1-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
+ dianders@chromium.org, linux-rockchip@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501482857-14100-2-git-send-email-varada@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jul 31, 2017 at 12:04:11PM +0530, Varadarajan Narayanan wrote:
-> The phy outputs a clock that will act as the parent for
-> the phy's pipe clock. Add the name of this clock to the
+Add support for PCIE_WAKE pin in rockchip pcie driver.
 
-s/phy/PHY/
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-> lane's DT node.
-> 
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Varadarajan Narayanan <varada@codeaurora.org>
-> ---
->  Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> index e11c563..5d7a51f 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/qcom-qmp-phy.txt
-> @@ -60,6 +60,8 @@ Required properties for child node:
->  	   one for each entry in clock-names.
->   - clock-names: Must contain following for pcie and usb qmp phys:
->  		 "pipe<lane-number>" for pipe clock specific to each lane.
-> + - clock-output-names: Name of the phy clock that will be the parent for
-> +		       the above pipe clock.
+Changes in v3:
+Fix error handling
 
-s/phy/PHY/ (this file is a hodge-podge so I guess this isn't making it much
-worse)
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq
+        -- Suggested by Brian Norris <briannorris@chromium.com>
 
->  
->   - resets: a list of phandles and reset controller specifier pairs,
->  	   one for each entry in reset-names.
-> @@ -96,6 +98,7 @@ Example:
->  
->  			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>;
->  			clock-names = "pipe0";
-> +			clock-output-names = "pcie_0_pipe_clk_src";
->  			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
->  			reset-names = "lane0";
->  		};
-> -- 
-> QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-> 
+ drivers/pci/host/pcie-rockchip.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index e9867bcff1ff..d52318458060 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -36,6 +36,7 @@
+ #include <linux/pci_ids.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_wakeirq.h>
+ #include <linux/reset.h>
+ #include <linux/regmap.h>
+ 
+@@ -858,7 +859,6 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
+ 
+-
+ /**
+  * rockchip_pcie_parse_dt - Parse Device Tree
+  * @rockchip: PCIe port information
+@@ -1023,6 +1023,14 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		return err;
+ 	}
+ 
++	device_init_wakeup(dev, true);
++	irq = platform_get_irq_byname(pdev, "wake");
++	if (irq >= 0) {
++		err = dev_pm_set_dedicated_wake_irq(dev, irq);
++		if (err)
++			dev_err(dev, "failed to setup PCIe wake IRQ\n");
++	}
++
+ 	rockchip->vpcie3v3 = devm_regulator_get_optional(dev, "vpcie3v3");
+ 	if (IS_ERR(rockchip->vpcie3v3)) {
+ 		if (PTR_ERR(rockchip->vpcie3v3) == -EPROBE_DEFER)
+@@ -1390,12 +1398,13 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = rockchip_pcie_parse_dt(rockchip);
+ 	if (err)
+-		return err;
++		/* It's safe to disable wake even not enabled */
++		goto err_disable_wake;
+ 
+ 	err = clk_prepare_enable(rockchip->aclk_pcie);
+ 	if (err) {
+ 		dev_err(dev, "unable to enable aclk_pcie clock\n");
+-		return err;
++		goto err_disable_wake;
+ 	}
+ 
+ 	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
+@@ -1529,6 +1538,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+ err_disable_aclk_pcie:
+ 	clk_disable_unprepare(rockchip->aclk_pcie);
++err_disable_wake:
++	dev_pm_clear_wake_irq(dev);
++	device_init_wakeup(dev, false);
+ 	return err;
+ }
+ 
+@@ -1557,6 +1569,9 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+ 	if (!IS_ERR(rockchip->vpcie0v9))
+ 		regulator_disable(rockchip->vpcie0v9);
+ 
++	dev_pm_clear_wake_irq(dev);
++	device_init_wakeup(dev, false);
++
+ 	return 0;
+ }
+ 
+-- 
+2.11.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
