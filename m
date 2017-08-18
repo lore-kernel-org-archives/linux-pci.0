@@ -1,58 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: [PATCH 0/3] Tango PCIe host bridge MSI support + required API
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <f10055cc-4430-ff30-f892-3d3d6f24354c@sigmadesigns.com>
-Date: Tue, 29 Aug 2017 16:19:26 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:45263 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753482AbdHRBeK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 21:34:10 -0400
+Cc: shawn.lin@rock-chips.com
+Subject: Re: [PATCH v7 0/8] PCI: INTx interrupt fixes & cleanup
+To: Paul Burton <paul.burton@imgtec.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+References: <20170815190223.18807-1-paul.burton@imgtec.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <b8cf4747-0c18-de3e-4a21-930126a2a180@rock-chips.com>
+Date: Fri, 18 Aug 2017 09:34:04 +0800
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, Marc,
+Hi Paul,
 
-This patch-set includes
-	[PATCH v11] PCI: tango: Add MSI controller support
-with the doorbell address parsed from DT instead of hard-coded
-in the driver.
+On 2017/8/16 3:02, Paul Burton wrote:
+> This series fixes our handling of the PCI INTD interrupts in both Xilinx
+> PCIe controller drivers, and cleans up a wasted IRQ domain entry in the
+> Altera PCIe controller driver. It also adds a common PCI_INTX_NUM
+> definition which all relevant drivers under drivers/pci/host/ are
+> adjusted to make use of.
+> 
+> - Patch 1 moves enum pci_interrupt_pin to somewhere we can use it from
+>    PCI host code.
+> 
+> - Patch 2 introduces a helper function to translate 1-4 INTx ranges into
+>    the 0-3 range, by using it as a struct irq_domain's xlate callback.
+> 
+> - Patches 3 adjusts the Altera driver to avoid wasting an IRQ domain
+>    entry.
+> 
+> - Patches 4 & 5 fix the INTD interrupt for Xilinx PCIe drivers.
+> 
+> - Patches 6-8 make use of PCI_NUM_INTX to replace custom definitions or
+>    magic numbers in drivers.
+> 
+> The series versioning is continuing on from that of my "PCI: xilinx:
+> Fixes, optimisation & MIPS support" series which some of the earlier
+> patches were originally a part of, in order to prevent individual
+> patches from jumping backwards in versioning.
+> 
+> Applies atop v4.13-rc5.
+> 
+> Paul Burton (8):
+>    PCI: Move enum pci_interrupt_pin to linux/pci.h
+>    PCI: Introduce pci_irqd_intx_xlate()
+>    PCI: altera: Use size=4 IRQ domain for legacy INTx
+>    PCI: xilinx: Translate INTx range to hwirqs 0-3
+>    PCI: xilinx-nwl: Translate INTx range to hwirqs 0-3
+>    PCI: aardvark: Use PCI_NUM_INTX
+>    PCI: ftpci100: Use PCI_NUM_INTX
+>    PCI: rockchip: Use PCI_NUM_INTX
+> 
 
-A wrapper to parse dma-ranges was added to drivers/of/address.c
+Nice work!
 
-A few drivers were converted to use the new wrapper.
+For pcie-rockchip,
 
-Marc Gonzalez (3):
-  of/pci: Add dma-ranges parsing support
-  PCI: Use of_pci_dma_range_parser_init API
-  PCI: tango: Add MSI controller support
+Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
+Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
 
- drivers/of/address.c             |  19 +++-
- drivers/pci/host/pci-ftpci100.c  |  20 +---
- drivers/pci/host/pci-rcar-gen2.c |  20 +---
- drivers/pci/host/pci-xgene.c     |  20 +---
- drivers/pci/host/pcie-iproc.c    |  20 +---
- drivers/pci/host/pcie-rcar.c     |  20 +---
- drivers/pci/host/pcie-tango.c    | 205 ++++++++++++++++++++++++++++++++++++++-
- include/linux/of_address.h       |  10 +-
- 8 files changed, 232 insertions(+), 102 deletions(-)
+and for the whole series,
 
--- 
-2.11.0
+Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>   drivers/pci/host/pci-aardvark.c    |  5 ++--
+>   drivers/pci/host/pci-ftpci100.c    |  2 +-
+>   drivers/pci/host/pcie-altera.c     |  9 +++----
+>   drivers/pci/host/pcie-rockchip.c   |  2 +-
+>   drivers/pci/host/pcie-xilinx-nwl.c |  9 +++----
+>   drivers/pci/host/pcie-xilinx.c     |  7 ++---
+>   include/linux/pci-epf.h            |  9 +------
+>   include/linux/pci.h                | 54 ++++++++++++++++++++++++++++++++++++++
+>   8 files changed, 71 insertions(+), 26 deletions(-)
+> 
