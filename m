@@ -1,47 +1,86 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:35167 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751140AbdHEG50 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 02:57:26 -0400
-Date: Sat, 5 Aug 2017 08:57:54 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Daniel Axtens <dja@axtens.net>
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-arm-kernel@lists.infradead.org, benh@kernel.crashing.org,
-        z.liuxinliang@hisilicon.com, zourongrong@gmail.com,
-        catalin.marinas@arm.com, will.deacon@arm.com,
-        gabriele.paoloni@huawei.com, bhelgaas@google.com, airlied@linux.ie,
-        daniel.vetter@intel.com, alex.williamson@redhat.com,
-        dri-devel@lists.freedesktop.org
-Subject: Re: [PATCH 2/3] Split VGA default device handler out of VGA arbiter
-Message-ID: <20170805065754.GA8509@wunner.de>
-References: <20170804102033.27731-1-dja@axtens.net>
- <20170804102033.27731-3-dja@axtens.net>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:10179 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751849AbdHRO7L (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:59:11 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Subject: [PATCH 15/18] misc: pci_endpoint_test: Add support to not enable MSI interrupts
+Date: Fri, 18 Aug 2017 20:28:07 +0530
+Message-ID: <20170818145810.17649-16-kishon@ti.com>
+In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
+References: <20170818145810.17649-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170804102033.27731-3-dja@axtens.net>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 08:20:32PM +1000, Daniel Axtens wrote:
-> A system without PCI legacy resources (e.g. ARM64, powerpc) may
-> find that no default/boot VGA device has been marked, because the
-> VGA arbiter checks for legacy resource decoding before marking a
-> card as default.
+Some platforms like TI's K2G have a restriction that the host side
+buffer address should be aligned to either 1MB/2MB/4MB or 8MB
+addresses depending on how it is configured in the endpoint
+(Ref: 11.14.4.9.1 Outbound Address Translation in K2G TRM SPRUHY8F
+January 2016 – Revised May 2017). This restriction also applies to
+the MSI addresses provided by the RC. However it's not possible
+for the RC to know about this restriction and it may not provide
+1MB/2MB/4MB or 8MB aligned address. So MSI interrupts should be
+disabled even if the K2G EP has MSI capabiltiy register. Add
+support to not enable MSI interrupts in pci_endpoint_test driver
+so that it can be used to test K2G EP.
 
-Would it be feasible to just sprinkle some "if (IS_ENABLED(CONFIG_X86))"
-over the portions of vgaarb.c that deal with legacy resources?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/misc/pci_endpoint_test.c | 13 +++++++++----
+ 1 file changed, 9 insertions(+), 4 deletions(-)
 
-I'm missing some context as to the negative consequences you're
-experiencing on other arches (the cover letter merely refers to
-"quirks in ppc and concerns in arm land" and is missing links to
-archived versions of v1 and v2), but clearly legacy resources are
-x86-specific so any code dealing with them seems superfluous on
-other arches and should be marked as such.
-
-Please cc dri-devel when proposing changes to vgaarb.c (see
-MAINTAINERS).
-
-Thanks,
-
-Lukas
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 5f6bd23ab657..5cbb25cf276c 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -97,6 +97,7 @@ struct pci_endpoint_test {
+ struct pci_endpoint_test_data {
+ 	enum pci_barno test_reg_bar;
+ 	size_t alignment;
++	bool no_msi;
+ };
+ 
+ static int bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
+@@ -449,8 +450,9 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ {
+ 	int i;
+ 	int err;
+-	int irq;
++	int irq = 0;
+ 	int id;
++	bool no_msi = false;
+ 	char name[20];
+ 	enum pci_barno bar;
+ 	void __iomem *base;
+@@ -475,6 +477,7 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 	if (data) {
+ 		test_reg_bar = data->test_reg_bar;
+ 		test->alignment = data->alignment;
++		no_msi = data->no_msi;
+ 	}
+ 
+ 	init_completion(&test->irq_raised);
+@@ -494,9 +497,11 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 
+ 	pci_set_master(pdev);
+ 
+-	irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+-	if (irq < 0)
+-		dev_err(dev, "failed to get MSI interrupts\n");
++	if (!no_msi) {
++		irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
++		if (irq < 0)
++			dev_err(dev, "failed to get MSI interrupts\n");
++	}
+ 
+ 	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
+ 			       IRQF_SHARED, DRV_MODULE_NAME, test);
+-- 
+2.11.0
