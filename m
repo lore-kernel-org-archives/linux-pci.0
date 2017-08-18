@@ -1,649 +1,226 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v4 6/7] PCI: mediatek: Add controller support for mt2712 and mt7622
-Date: Thu, 10 Aug 2017 14:34:59 +0800
-Message-ID: <6e0a6eb42473afd81657a3b6d57e70edd0fcfd85.1502336769.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
-References: <cover.1502336769.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:25743 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751888AbdHRO7I (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:59:08 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
+        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
+Subject: [PATCH 14/18] misc: pci_endpoint_test: Add support to provide aligned buffer addresses
+Date: Fri, 18 Aug 2017 20:28:06 +0530
+Message-ID: <20170818145810.17649-15-kishon@ti.com>
+In-Reply-To: <20170818145810.17649-1-kishon@ti.com>
+References: <20170818145810.17649-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+Some platforms like TI's K2G have a restriction that the host side
+buffer address should be aligned to either 1MB/2MB/4MB or 8MB
+(Ref: 11.14.4.9.1 Outbound Address Translation in K2G TRM SPRUHY8F
+January 2016 – Revised May 2017) addresses depending on how it is
+configured in the endpoint. Add support to provide such aligned address
+here so that pci_endpoint_test driver can be used to test K2G EP.
 
-MT2712 and MT7622 using a new IP block of Gen2 controller which has two
-root ports and shares the same probing flow with MT2701/MT7623.
-
-Both MT2712 and MT7622 have the same per-port control registers, but
-there are slight differences between them:
-MT7622 has more clocks than MT2712.
-MT7622 has shared control registers which are used to enable ltssm and
-aspm while MT2712 does not.
-
-This patch adds host controller support for MT2712/MT7622.
-
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/host/Kconfig         |   5 +-
- drivers/pci/host/pcie-mediatek.c | 462 ++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 460 insertions(+), 7 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 91 +++++++++++++++++++++++++++++++++-------
+ 1 file changed, 76 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 89d61c2..5b1ae9f 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -182,14 +182,13 @@ config PCIE_ROCKCHIP
- 
- config PCIE_MEDIATEK
- 	bool "MediaTek PCIe controller"
--	depends on ARM && (ARCH_MEDIATEK || COMPILE_TEST)
-+	depends on (ARM || ARM64) && (ARCH_MEDIATEK || COMPILE_TEST)
- 	depends on OF
- 	depends on PCI
- 	select PCIEPORTBUS
- 	help
- 	  Say Y here if you want to enable PCIe controller support on
--	  MT7623 series SoCs.  There is one single root complex with 3 root
--	  ports available.  Each port supports Gen2 lane x1.
-+	  MediaTek SoCs.
- 
- config PCIE_TANGO_SMP8759
- 	bool "Tango SMP8759 PCIe controller (DANGEROUS)"
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index c649ab4..c96cd8f 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -3,6 +3,7 @@
-  *
-  * Copyright (c) 2017 MediaTek Inc.
-  * Author: Ryder Lee <ryder.lee@mediatek.com>
-+ *	   Honghui Zhang <honghui.zhang@mediatek.com>
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -17,6 +18,8 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/iopoll.h>
-+#include <linux/irq.h>
-+#include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/of_address.h>
- #include <linux/of_pci.h>
-@@ -64,16 +67,75 @@
- #define PCIE_FC_CREDIT_MASK	(GENMASK(31, 31) | GENMASK(28, 16))
- #define PCIE_FC_CREDIT_VAL(x)	((x) << 16)
- 
-+/* PCIe V2 share registers */
-+#define PCIE_SYS_CFG_V2		0x0
-+#define PCIE_CSR_LTSSM_EN(x)	BIT(0 + (x) * 8)
-+#define PCIE_CSR_ASPM_L1_EN(x)	BIT(1 + (x) * 8)
-+
-+/* PCIe V2 per-port registers */
-+#define PCIE_INT_MASK		0x420
-+#define INTX_MASK		GENMASK(19, 16)
-+#define INTX_SHIFT		16
-+#define INTX_NUM		4
-+#define PCIE_INT_STATUS		0x424
-+
-+#define PCIE_AHB_TRANS_BASE0_L	0x438
-+#define PCIE_AHB_TRANS_BASE0_H	0x43c
-+#define AHB2PCIE_SIZE(x)	((x) & GENMASK(4, 0))
-+#define PCIE_AXI_WINDOW0	0x448
-+#define WIN_ENABLE		BIT(7)
-+
-+/* PCIe V2 configuration transaction header */
-+#define PCIE_CFG_HEADER0	0x460
-+#define PCIE_CFG_HEADER1	0x464
-+#define PCIE_CFG_HEADER2	0x468
-+#define PCIE_CFG_WDATA		0x470
-+#define PCIE_APP_TLP_REQ	0x488
-+#define PCIE_CFG_RDATA		0x48c
-+#define APP_CFG_REQ		BIT(0)
-+#define APP_CPL_STATUS		GENMASK(7, 5)
-+
-+#define CFG_WRRD_TYPE_0		4
-+#define CFG_WR_FMT		2
-+#define CFG_RD_FMT		0
-+
-+#define CFG_DW0_LENGTH(length)	((length) & GENMASK(9, 0))
-+#define CFG_DW0_TYPE(type)	(((type) << 24) & GENMASK(28, 24))
-+#define CFG_DW0_FMT(fmt)	(((fmt) << 29) & GENMASK(31, 29))
-+#define CFG_DW2_REGN(regn)	((regn) & GENMASK(11, 2))
-+#define CFG_DW2_FUN(fun)	(((fun) << 16) & GENMASK(18, 16))
-+#define CFG_DW2_DEV(dev)	(((dev) << 19) & GENMASK(23, 19))
-+#define CFG_DW2_BUS(bus)	(((bus) << 24) & GENMASK(31, 24))
-+#define CFG_HEADER_DW0(type, fmt) \
-+	(CFG_DW0_LENGTH(1) | CFG_DW0_TYPE(type) | CFG_DW0_FMT(fmt))
-+#define CFG_HEADER_DW1(where, size) \
-+	(GENMASK(((size) - 1), 0) << ((where) & 0x3))
-+#define CFG_HEADER_DW2(regn, fun, dev, bus) \
-+	(CFG_DW2_REGN(regn) | CFG_DW2_FUN(fun) | \
-+	CFG_DW2_DEV(dev) | CFG_DW2_BUS(bus))
-+
-+#define PCIE_RST_CTRL		0x510
-+#define PCIE_PHY_RSTB		BIT(0)
-+#define PCIE_PIPE_SRSTB		BIT(1)
-+#define PCIE_MAC_SRSTB		BIT(2)
-+#define PCIE_CRSTB		BIT(3)
-+#define PCIE_PERSTB		BIT(8)
-+#define PCIE_LINKDOWN_RST_EN	GENMASK(15, 13)
-+#define PCIE_LINK_STATUS_V2	0x804
-+#define PCIE_PORT_LINKUP_V2	BIT(10)
-+
- struct mtk_pcie_port;
- 
- /**
-  * struct mtk_pcie_soc - differentiate between host generations
-  * @ops: pointer to configuration access functions
-  * @startup: pointer to controller setting functions
-+ * @setup_irq: pointer to initialize IRQ functions
-  */
- struct mtk_pcie_soc {
- 	struct pci_ops *ops;
- 	int (*startup)(struct mtk_pcie_port *port);
-+	int (*setup_irq)(struct mtk_pcie_port *port, struct device_node *node);
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 5fc0f6c6a9e5..5f6bd23ab657 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -91,10 +91,12 @@ struct pci_endpoint_test {
+ 	struct mutex	mutex;
+ 	struct miscdevice miscdev;
+ 	enum pci_barno test_reg_bar;
++	size_t alignment;
  };
  
- /**
-@@ -82,10 +144,18 @@ struct mtk_pcie_soc {
-  * @list: port list
-  * @pcie: pointer to PCIe host info
-  * @reset: pointer to port reset control
-- * @sys_ck: pointer to bus clock
-- * @phy: pointer to phy control block
-+ * @sys_ck: pointer to transaction/data link layer clock
-+ * @ahb_ck: pointer to AHB slave interface operating clock for CSR access
-+ *          and RC initiated MMIO access
-+ * @axi_ck: pointer to application layer MMIO channel operating clock
-+ * @aux_ck: pointer to pe2_mac_bridge and pe2_mac_core operating clock
-+ *          when pcie_mac_ck/pcie_pipe_ck is turned off
-+ * @obff_ck: pointer to OBFF functional block operating clock
-+ * @pipe_ck: pointer to LTSSM and PHY/MAC layer operating clock
-+ * @phy: pointer to PHY control block
-  * @lane: lane count
-  * @slot: port slot
-+ * @irq_domain: legacy INTx IRQ domain
-  */
- struct mtk_pcie_port {
- 	void __iomem *base;
-@@ -93,9 +163,15 @@ struct mtk_pcie_port {
- 	struct mtk_pcie *pcie;
- 	struct reset_control *reset;
- 	struct clk *sys_ck;
-+	struct clk *ahb_ck;
-+	struct clk *axi_ck;
-+	struct clk *aux_ck;
-+	struct clk *obff_ck;
-+	struct clk *pipe_ck;
- 	struct phy *phy;
- 	u32 lane;
- 	u32 slot;
-+	struct irq_domain *irq_domain;
+ struct pci_endpoint_test_data {
+ 	enum pci_barno test_reg_bar;
++	size_t alignment;
  };
  
- /**
-@@ -156,6 +232,12 @@ static void mtk_pcie_put_resources(struct mtk_pcie *pcie)
+ static int bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 };
+@@ -210,16 +212,32 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	dma_addr_t dst_phys_addr;
+ 	struct pci_dev *pdev = test->pdev;
+ 	struct device *dev = &pdev->dev;
++	void *orig_src_addr;
++	dma_addr_t orig_src_phys_addr;
++	void *orig_dst_addr;
++	dma_addr_t orig_dst_phys_addr;
++	size_t offset;
++	size_t alignment = test->alignment;
+ 	u32 src_crc32;
+ 	u32 dst_crc32;
  
- 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
- 		phy_power_off(port->phy);
-+		phy_exit(port->phy);
-+		clk_disable_unprepare(port->pipe_ck);
-+		clk_disable_unprepare(port->obff_ck);
-+		clk_disable_unprepare(port->axi_ck);
-+		clk_disable_unprepare(port->aux_ck);
-+		clk_disable_unprepare(port->ahb_ck);
- 		clk_disable_unprepare(port->sys_ck);
- 		mtk_pcie_port_free(port);
+-	src_addr = dma_alloc_coherent(dev, size, &src_phys_addr, GFP_KERNEL);
+-	if (!src_addr) {
++	orig_src_addr = dma_alloc_coherent(dev, size + alignment,
++					   &orig_src_phys_addr, GFP_KERNEL);
++	if (!orig_src_addr) {
+ 		dev_err(dev, "failed to allocate source buffer\n");
+ 		ret = false;
+ 		goto err;
  	}
-@@ -163,6 +245,269 @@ static void mtk_pcie_put_resources(struct mtk_pcie *pcie)
- 	mtk_pcie_subsys_powerdown(pcie);
+ 
++	if (alignment && !IS_ALIGNED(orig_src_phys_addr, alignment)) {
++		src_phys_addr = PTR_ALIGN(orig_src_phys_addr, alignment);
++		offset = src_phys_addr - orig_src_phys_addr;
++		src_addr = orig_src_addr + offset;
++	} else {
++		src_phys_addr = orig_src_phys_addr;
++		src_addr = orig_src_addr;
++	}
++
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
+ 				 lower_32_bits(src_phys_addr));
+ 
+@@ -229,11 +247,21 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	get_random_bytes(src_addr, size);
+ 	src_crc32 = crc32_le(~0, src_addr, size);
+ 
+-	dst_addr = dma_alloc_coherent(dev, size, &dst_phys_addr, GFP_KERNEL);
+-	if (!dst_addr) {
++	orig_dst_addr = dma_alloc_coherent(dev, size + alignment,
++					   &orig_dst_phys_addr, GFP_KERNEL);
++	if (!orig_dst_addr) {
+ 		dev_err(dev, "failed to allocate destination address\n");
+ 		ret = false;
+-		goto err_src_addr;
++		goto err_orig_src_addr;
++	}
++
++	if (alignment && !IS_ALIGNED(orig_dst_phys_addr, alignment)) {
++		dst_phys_addr = PTR_ALIGN(orig_dst_phys_addr, alignment);
++		offset = dst_phys_addr - orig_dst_phys_addr;
++		dst_addr = orig_dst_addr + offset;
++	} else {
++		dst_phys_addr = orig_dst_phys_addr;
++		dst_addr = orig_dst_addr;
+ 	}
+ 
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
+@@ -253,10 +281,12 @@ static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
+ 	if (dst_crc32 == src_crc32)
+ 		ret = true;
+ 
+-	dma_free_coherent(dev, size, dst_addr, dst_phys_addr);
++	dma_free_coherent(dev, size + alignment, orig_dst_addr,
++			  orig_dst_phys_addr);
+ 
+-err_src_addr:
+-	dma_free_coherent(dev, size, src_addr, src_phys_addr);
++err_orig_src_addr:
++	dma_free_coherent(dev, size + alignment, orig_src_addr,
++			  orig_src_phys_addr);
+ 
+ err:
+ 	return ret;
+@@ -270,15 +300,29 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	dma_addr_t phys_addr;
+ 	struct pci_dev *pdev = test->pdev;
+ 	struct device *dev = &pdev->dev;
++	void *orig_addr;
++	dma_addr_t orig_phys_addr;
++	size_t offset;
++	size_t alignment = test->alignment;
+ 	u32 crc32;
+ 
+-	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
+-	if (!addr) {
++	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
++				       GFP_KERNEL);
++	if (!orig_addr) {
+ 		dev_err(dev, "failed to allocate address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+ 
++	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
++		phys_addr =  PTR_ALIGN(orig_phys_addr, alignment);
++		offset = phys_addr - orig_phys_addr;
++		addr = orig_addr + offset;
++	} else {
++		phys_addr = orig_phys_addr;
++		addr = orig_addr;
++	}
++
+ 	get_random_bytes(addr, size);
+ 
+ 	crc32 = crc32_le(~0, addr, size);
+@@ -301,7 +345,7 @@ static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
+ 	if (reg & STATUS_READ_SUCCESS)
+ 		ret = true;
+ 
+-	dma_free_coherent(dev, size, addr, phys_addr);
++	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
+ 
+ err:
+ 	return ret;
+@@ -314,15 +358,29 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	dma_addr_t phys_addr;
+ 	struct pci_dev *pdev = test->pdev;
+ 	struct device *dev = &pdev->dev;
++	void *orig_addr;
++	dma_addr_t orig_phys_addr;
++	size_t offset;
++	size_t alignment = test->alignment;
+ 	u32 crc32;
+ 
+-	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
+-	if (!addr) {
++	orig_addr = dma_alloc_coherent(dev, size + alignment, &orig_phys_addr,
++				       GFP_KERNEL);
++	if (!orig_addr) {
+ 		dev_err(dev, "failed to allocate destination address\n");
+ 		ret = false;
+ 		goto err;
+ 	}
+ 
++	if (alignment && !IS_ALIGNED(orig_phys_addr, alignment)) {
++		phys_addr = PTR_ALIGN(orig_phys_addr, alignment);
++		offset = phys_addr - orig_phys_addr;
++		addr = orig_addr + offset;
++	} else {
++		phys_addr = orig_phys_addr;
++		addr = orig_addr;
++	}
++
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
+ 				 lower_32_bits(phys_addr));
+ 	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
+@@ -339,7 +397,7 @@ static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
+ 	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
+ 		ret = true;
+ 
+-	dma_free_coherent(dev, size, addr, phys_addr);
++	dma_free_coherent(dev, size + alignment, orig_addr, orig_phys_addr);
+ err:
+ 	return ret;
  }
+@@ -410,11 +468,14 @@ static int pci_endpoint_test_probe(struct pci_dev *pdev,
+ 		return -ENOMEM;
  
-+static int mtk_pcie_check_cfg_cpld(struct mtk_pcie_port *port)
-+{
-+	u32 val;
-+	int err;
-+
-+	err = readl_poll_timeout_atomic(port->base + PCIE_APP_TLP_REQ, val,
-+					!(val & APP_CFG_REQ), 10,
-+					100 * USEC_PER_MSEC);
-+	if (err)
-+		return PCIBIOS_SET_FAILED;
-+
-+	if (readl(port->base + PCIE_APP_TLP_REQ) & APP_CPL_STATUS)
-+		return PCIBIOS_SET_FAILED;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int mtk_pcie_hw_rd_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
-+			      int where, int size, u32 *val)
-+{
-+	u32 tmp;
-+
-+	/* Write PCIe configuration transaction header for Cfgrd */
-+	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_RD_FMT),
-+	       port->base + PCIE_CFG_HEADER0);
-+	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
-+	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-+	       port->base + PCIE_CFG_HEADER2);
-+
-+	/* Trigger h/w to transmit Cfgrd TLP */
-+	tmp = readl(port->base + PCIE_APP_TLP_REQ);
-+	tmp |= APP_CFG_REQ;
-+	writel(tmp, port->base + PCIE_APP_TLP_REQ);
-+
-+	/* Check completion status */
-+	if (mtk_pcie_check_cfg_cpld(port))
-+		return PCIBIOS_SET_FAILED;
-+
-+	/* Read cpld payload of Cfgrd */
-+	*val = readl(port->base + PCIE_CFG_RDATA);
-+
-+	if (size == 1)
-+		*val = (*val >> (8 * (where & 3))) & 0xff;
-+	else if (size == 2)
-+		*val = (*val >> (8 * (where & 3))) & 0xffff;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int mtk_pcie_hw_wr_cfg(struct mtk_pcie_port *port, u32 bus, u32 devfn,
-+			      int where, int size, u32 val)
-+{
-+	/* Write PCIe configuration transaction header for Cfgwr */
-+	writel(CFG_HEADER_DW0(CFG_WRRD_TYPE_0, CFG_WR_FMT),
-+	       port->base + PCIE_CFG_HEADER0);
-+	writel(CFG_HEADER_DW1(where, size), port->base + PCIE_CFG_HEADER1);
-+	writel(CFG_HEADER_DW2(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-+	       port->base + PCIE_CFG_HEADER2);
-+
-+	/* Write Cfgwr data */
-+	val = val << 8 * (where & 3);
-+	writel(val, port->base + PCIE_CFG_WDATA);
-+
-+	/* Trigger h/w to transmit Cfgwr TLP */
-+	val = readl(port->base + PCIE_APP_TLP_REQ);
-+	val |= APP_CFG_REQ;
-+	writel(val, port->base + PCIE_APP_TLP_REQ);
-+
-+	/* Check completion status */
-+	return mtk_pcie_check_cfg_cpld(port);
-+}
-+
-+static struct mtk_pcie_port *mtk_pcie_find_port(struct pci_bus *bus,
-+						unsigned int devfn)
-+{
-+	struct mtk_pcie *pcie = bus->sysdata;
-+	struct mtk_pcie_port *port;
-+
-+	list_for_each_entry(port, &pcie->ports, list)
-+		if (port->slot == PCI_SLOT(devfn))
-+			return port;
-+
-+	return NULL;
-+}
-+
-+static int mtk_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
-+				int where, int size, u32 *val)
-+{
-+	struct mtk_pcie_port *port;
-+	u32 bn = bus->number;
-+	int ret;
-+
-+	port = mtk_pcie_find_port(bus, devfn);
-+	if (!port) {
-+		*val = ~0;
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+	}
-+
-+	ret = mtk_pcie_hw_rd_cfg(port, bn, devfn, where, size, val);
-+	if (ret)
-+		*val = ~0;
-+
-+	return ret;
-+}
-+
-+static int mtk_pcie_config_write(struct pci_bus *bus, unsigned int devfn,
-+				 int where, int size, u32 val)
-+{
-+	struct mtk_pcie_port *port;
-+	u32 bn = bus->number;
-+
-+	port = mtk_pcie_find_port(bus, devfn);
-+	if (!port)
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	return mtk_pcie_hw_wr_cfg(port, bn, devfn, where, size, val);
-+}
-+
-+static struct pci_ops mtk_pcie_ops_v2 = {
-+	.read  = mtk_pcie_config_read,
-+	.write = mtk_pcie_config_write,
-+};
-+
-+static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
-+{
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct resource *mem = &pcie->mem;
-+	u32 val;
-+	size_t size;
-+	int err;
-+
-+	/* mt7622 platforms need to enable LTSSM and ASPM from PCIe subsys */
-+	if (pcie->base) {
-+		val = readl(pcie->base + PCIE_SYS_CFG_V2);
-+		val |= PCIE_CSR_LTSSM_EN(port->slot) |
-+		       PCIE_CSR_ASPM_L1_EN(port->slot);
-+		writel(val, pcie->base + PCIE_SYS_CFG_V2);
-+	}
-+
-+	/* Assert all reset signals */
-+	writel(0, port->base + PCIE_RST_CTRL);
-+
-+	/*
-+	 * Enable PCIe link down reset, if link status changed from link up to
-+	 * link down, this will reset MAC control registers and configuration
-+	 * space.
-+	 */
-+	writel(PCIE_LINKDOWN_RST_EN, port->base + PCIE_RST_CTRL);
-+
-+	/* De-assert PHY, PE, PIPE, MAC and configuration reset	*/
-+	val = readl(port->base + PCIE_RST_CTRL);
-+	val |= PCIE_PHY_RSTB | PCIE_PERSTB | PCIE_PIPE_SRSTB |
-+	       PCIE_MAC_SRSTB | PCIE_CRSTB;
-+	writel(val, port->base + PCIE_RST_CTRL);
-+
-+	/* 100ms timeout value should be enough for Gen1/2 training */
-+	err = readl_poll_timeout(port->base + PCIE_LINK_STATUS_V2, val,
-+				 !!(val & PCIE_PORT_LINKUP_V2), 20,
-+				 100 * USEC_PER_MSEC);
-+	if (err)
-+		return -ETIMEDOUT;
-+
-+	/* Set INTx mask */
-+	val = readl(port->base + PCIE_INT_MASK);
-+	val &= ~INTX_MASK;
-+	writel(val, port->base + PCIE_INT_MASK);
-+
-+	/* Set AHB to PCIe translation windows */
-+	size = mem->end - mem->start;
-+	val = lower_32_bits(mem->start) | AHB2PCIE_SIZE(fls(size));
-+	writel(val, port->base + PCIE_AHB_TRANS_BASE0_L);
-+
-+	val = upper_32_bits(mem->start);
-+	writel(val, port->base + PCIE_AHB_TRANS_BASE0_H);
-+
-+	/* Set PCIe to AXI translation memory space.*/
-+	val = fls(0xffffffff) | WIN_ENABLE;
-+	writel(val, port->base + PCIE_AXI_WINDOW0);
-+
-+	return 0;
-+}
-+
-+static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
-+			     irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops intx_domain_ops = {
-+	.map = mtk_pcie_intx_map,
-+};
-+
-+static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
-+				    struct device_node *node)
-+{
-+	struct device *dev = port->pcie->dev;
-+	struct device_node *pcie_intc_node;
-+
-+	/* Setup INTx */
-+	pcie_intc_node = of_get_next_child(node, NULL);
-+	if (!pcie_intc_node) {
-+		dev_err(dev, "No PCIe Intc node found\n");
-+		return PTR_ERR(pcie_intc_node);
-+	}
-+
-+	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-+						 &intx_domain_ops, port);
-+	if (!port->irq_domain) {
-+		dev_err(dev, "Failed to get INTx IRQ domain\n");
-+		return PTR_ERR(port->irq_domain);
-+	}
-+
-+	return 0;
-+}
-+
-+static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
-+{
-+	struct mtk_pcie_port *port = (struct mtk_pcie_port *)data;
-+	unsigned long status;
-+	u32 virq;
-+	u32 bit = INTX_SHIFT;
-+
-+	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
-+		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
-+			/* Clear the INTx */
-+			writel(1 << bit, port->base + PCIE_INT_STATUS);
-+			virq = irq_find_mapping(port->irq_domain,
-+						bit - INTX_SHIFT);
-+			generic_handle_irq(virq);
-+		}
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int mtk_pcie_setup_irq(struct mtk_pcie_port *port,
-+			      struct device_node *node)
-+{
-+	struct mtk_pcie *pcie = port->pcie;
-+	struct device *dev = pcie->dev;
-+	struct platform_device *pdev = to_platform_device(dev);
-+	int err, irq;
-+
-+	irq = platform_get_irq(pdev, port->slot);
-+	err = devm_request_irq(dev, irq, mtk_pcie_intr_handler,
-+			       IRQF_SHARED, "mtk-pcie", port);
-+	if (err) {
-+		dev_err(dev, "unable to request IRQ %d\n", irq);
-+		return err;
-+	}
-+
-+	err = mtk_pcie_init_irq_domain(port, node);
-+	if (err) {
-+		dev_err(dev, "failed to init PCIe legacy IRQ domain\n");
-+		return -ENODEV;
-+	}
-+
-+	return 0;
-+}
-+
- static void __iomem *mtk_pcie_map_bus(struct pci_bus *bus,
- 				      unsigned int devfn, int where)
- {
-@@ -249,13 +594,49 @@ static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
+ 	test->test_reg_bar = 0;
++	test->alignment = 0;
+ 	test->pdev = pdev;
  
- 	err = clk_prepare_enable(port->sys_ck);
- 	if (err) {
--		dev_err(dev, "failed to enable port%d clock\n", port->slot);
-+		dev_err(dev, "failed to enable sys_ck%d clock\n", port->slot);
- 		goto err_sys_clk;
- 	}
+ 	data = (struct pci_endpoint_test_data *)ent->driver_data;
+-	if (data)
++	if (data) {
+ 		test_reg_bar = data->test_reg_bar;
++		test->alignment = data->alignment;
++	}
  
-+	err = clk_prepare_enable(port->ahb_ck);
-+	if (err) {
-+		dev_err(dev, "failed to enable ahb_ck%d\n", port->slot);
-+		goto err_ahb_clk;
-+	}
-+
-+	err = clk_prepare_enable(port->aux_ck);
-+	if (err) {
-+		dev_err(dev, "failed to enable aux_ck%d\n", port->slot);
-+		goto err_aux_clk;
-+	}
-+
-+	err = clk_prepare_enable(port->axi_ck);
-+	if (err) {
-+		dev_err(dev, "failed to enable axi_ck%d\n", port->slot);
-+		goto err_axi_clk;
-+	}
-+
-+	err = clk_prepare_enable(port->obff_ck);
-+	if (err) {
-+		dev_err(dev, "failed to enable obff_ck%d\n", port->slot);
-+		goto err_obff_clk;
-+	}
-+
-+	err = clk_prepare_enable(port->pipe_ck);
-+	if (err) {
-+		dev_err(dev, "failed to enable pipe_ck%d\n", port->slot);
-+		goto err_pipe_clk;
-+	}
-+
- 	reset_control_assert(port->reset);
- 	reset_control_deassert(port->reset);
- 
-+	err = phy_init(port->phy);
-+	if (err) {
-+		dev_err(dev, "failed to initialize port%d phy\n", port->slot);
-+		goto err_phy_init;
-+	}
-+
- 	err = phy_power_on(port->phy);
- 	if (err) {
- 		dev_err(dev, "failed to power on port%d phy\n", port->slot);
-@@ -269,6 +650,18 @@ static void mtk_pcie_enable_port(struct mtk_pcie_port *port)
- 
- 	phy_power_off(port->phy);
- err_phy_on:
-+	phy_exit(port->phy);
-+err_phy_init:
-+	clk_disable_unprepare(port->pipe_ck);
-+err_pipe_clk:
-+	clk_disable_unprepare(port->obff_ck);
-+err_obff_clk:
-+	clk_disable_unprepare(port->axi_ck);
-+err_axi_clk:
-+	clk_disable_unprepare(port->aux_ck);
-+err_aux_clk:
-+	clk_disable_unprepare(port->ahb_ck);
-+err_ahb_clk:
- 	clk_disable_unprepare(port->sys_ck);
- err_sys_clk:
- 	mtk_pcie_port_free(port);
-@@ -306,10 +699,56 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
- 	snprintf(name, sizeof(name), "sys_ck%d", slot);
- 	port->sys_ck = devm_clk_get(dev, name);
- 	if (IS_ERR(port->sys_ck)) {
--		dev_err(dev, "failed to get port%d clock\n", slot);
-+		dev_err(dev, "failed to get sys_ck%d clock\n", slot);
- 		return PTR_ERR(port->sys_ck);
- 	}
- 
-+	/* sys_ck might be divided into the following parts in some chips */
-+	snprintf(name, sizeof(name), "ahb_ck%d", slot);
-+	port->ahb_ck = devm_clk_get(dev, name);
-+	if (IS_ERR(port->ahb_ck)) {
-+		if (PTR_ERR(port->ahb_ck) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+
-+		port->ahb_ck = NULL;
-+	}
-+
-+	snprintf(name, sizeof(name), "axi_ck%d", slot);
-+	port->axi_ck = devm_clk_get(dev, name);
-+	if (IS_ERR(port->axi_ck)) {
-+		if (PTR_ERR(port->axi_ck) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+
-+		port->axi_ck = NULL;
-+	}
-+
-+	snprintf(name, sizeof(name), "aux_ck%d", slot);
-+	port->aux_ck = devm_clk_get(dev, name);
-+	if (IS_ERR(port->aux_ck)) {
-+		if (PTR_ERR(port->aux_ck) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+
-+		port->aux_ck = NULL;
-+	}
-+
-+	snprintf(name, sizeof(name), "obff_ck%d", slot);
-+	port->obff_ck = devm_clk_get(dev, name);
-+	if (IS_ERR(port->obff_ck)) {
-+		if (PTR_ERR(port->obff_ck) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+
-+		port->obff_ck = NULL;
-+	}
-+
-+	snprintf(name, sizeof(name), "pipe_ck%d", slot);
-+	port->pipe_ck = devm_clk_get(dev, name);
-+	if (IS_ERR(port->pipe_ck)) {
-+		if (PTR_ERR(port->pipe_ck) == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+
-+		port->pipe_ck = NULL;
-+	}
-+
- 	snprintf(name, sizeof(name), "pcie-rst%d", slot);
- 	port->reset = devm_reset_control_get_optional_exclusive(dev, name);
- 	if (PTR_ERR(port->reset) == -EPROBE_DEFER)
-@@ -324,6 +763,12 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
- 	port->slot = slot;
- 	port->pcie = pcie;
- 
-+	if (pcie->soc->setup_irq) {
-+		err = pcie->soc->setup_irq(port, node);
-+		if (err)
-+			return err;
-+	}
-+
- 	INIT_LIST_HEAD(&port->list);
- 	list_add_tail(&port->list, &pcie->ports);
- 
-@@ -493,6 +938,7 @@ static int mtk_pcie_register_host(struct pci_host_bridge *host)
- 	host->ops = pcie->soc->ops;
- 	host->map_irq = of_irq_parse_and_map_pci;
- 	host->swizzle_irq = pci_common_swizzle;
-+	host->sysdata = pcie;
- 
- 	err = pci_scan_root_bus_bridge(host);
- 	if (err < 0)
-@@ -553,9 +999,17 @@ static const struct mtk_pcie_soc mtk_pcie_soc_v1 = {
- 	.startup = mtk_pcie_startup_port,
- };
- 
-+static const struct mtk_pcie_soc mtk_pcie_soc_v2 = {
-+	.ops = &mtk_pcie_ops_v2,
-+	.startup = mtk_pcie_startup_port_v2,
-+	.setup_irq = mtk_pcie_setup_irq,
-+};
-+
- static const struct of_device_id mtk_pcie_ids[] = {
- 	{ .compatible = "mediatek,mt2701-pcie", .data = &mtk_pcie_soc_v1 },
- 	{ .compatible = "mediatek,mt7623-pcie", .data = &mtk_pcie_soc_v1 },
-+	{ .compatible = "mediatek,mt2712-pcie", .data = &mtk_pcie_soc_v2 },
-+	{ .compatible = "mediatek,mt7622-pcie", .data = &mtk_pcie_soc_v2 },
- 	{},
- };
- 
+ 	init_completion(&test->irq_raised);
+ 	mutex_init(&test->mutex);
 -- 
-2.6.4
+2.11.0
