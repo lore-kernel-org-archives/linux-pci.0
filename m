@@ -1,56 +1,49 @@
-Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: <linux-pci@vger.kernel.org>,
-	<iommu@lists.linux-foundation.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Keith Busch <keith.busch@intel.com>,
-	Scott Bauer <scott.bauer@intel.com>,
-	David Fugate <david.fugate@intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 3/3] iommu: prevent VMD child devices from being remapping targets
-Date: Mon,  7 Aug 2017 13:57:13 -0600
-Message-Id: <20170807195713.10963-3-jonathan.derrick@intel.com>
-In-Reply-To: <20170807195713.10963-1-jonathan.derrick@intel.com>
-References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 18 Aug 2017 10:07:17 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20170818170716.GB119461@google.com>
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
+ <20170817120431.12398-2-jeffy.chen@rock-chips.com>
+ <20170818170107.GA119461@google.com>
+MIME-Version: 1.0
+In-Reply-To: <20170818170107.GA119461@google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Heiko Stuebner <heiko@sntech.de>, Tony Lindgren <tony@atomide.com>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com,
+ linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VMD child devices must use the VMD endpoint's ID as the DMA source.
-Because of this, there needs to be a way to link the parent VMD
-endpoint's DMAR domain to the VMD child devices' DMAR domain such that
-attaching and detaching child devices modify the endpoint's DMAR mapping
-and prevents early detaching.
+On Fri, Aug 18, 2017 at 10:01:07AM -0700, Brian Norris wrote:
+> + Tony
+> 
+> On Thu, Aug 17, 2017 at 08:04:29PM +0800, Jeffy Chen wrote:
+> > Add support for PCIE_WAKE pin in rockchip pcie driver.
+> > 
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> > ---
+> > 
+> > Changes in v2:
+> > Use dev_pm_set_dedicated_wake_irq
+> >         -- Suggested by Brian Norris <briannorris@chromium.com>
 
-This is outside the scope of VMD, so disable binding child devices to
-prevent unforeseen issues. This functionality may be implemented in the
-future.
+Oops, I forgot you sent a v3. Same questions/comments apply there
+though.
 
-This patch prevents VMD child devices from returning an IOMMU, which
-prevents it from exposing iommu_group sysfs directories and subsequent
-binding by userspace-access drivers such as VFIO.
-
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- drivers/iommu/intel-iommu.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-index 687f18f..651a6cd 100644
---- a/drivers/iommu/intel-iommu.c
-+++ b/drivers/iommu/intel-iommu.c
-@@ -905,6 +905,11 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
- 		 * the PF instead to find the IOMMU. */
- 		pf_pdev = pci_physfn(pdev);
- 		dev = &pf_pdev->dev;
-+
-+		/* VMD child devices currently cannot be handled individually */
-+		if (pci_bus_is_vmd(pdev->bus))
-+			return NULL;
-+
- 		segment = pci_domain_nr(pdev->bus);
- 	} else if (has_acpi_companion(dev))
- 		dev = &ACPI_COMPANION(dev)->dev;
--- 
-2.9.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
