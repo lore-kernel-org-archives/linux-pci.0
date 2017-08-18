@@ -1,62 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:35640 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751968AbdHAS2P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 1 Aug 2017 14:28:15 -0400
-Received: by mail-qt0-f173.google.com with SMTP id p3so14111005qtg.2
-        for <linux-pci@vger.kernel.org>; Tue, 01 Aug 2017 11:28:15 -0700 (PDT)
-Date: Tue, 1 Aug 2017 14:28:12 -0400
-From: Jon Mason <jdmason@kudzu.us>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>,
-        Allen Hubbe <Allen.Hubbe@emc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: Re: [PATCH v3 06/16] ntb: ensure ntb_mw_get_align() is only called
- when the link is up
-Message-ID: <20170801182812.GG4186@kudzu.us>
-References: <20170725205753.4735-1-logang@deltatee.com>
- <20170725205753.4735-7-logang@deltatee.com>
- <20170801181452.GE4186@kudzu.us>
- <c4235dc9-90d0-1e68-7c73-c2a5bec83712@deltatee.com>
+Return-Path: <SRS0=FFZG=7U=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=FFZG=7U=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: <helgaas@kernel.org>
+CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
+        <liudongdong3@huawei.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+Subject: [PATCH v2] PCIe AER: report uncorrectable errors only to the functions that logged the errors
+Date: Fri, 18 Aug 2017 12:02:21 +0100
+Message-ID: <1503054141-80272-1-git-send-email-gabriele.paoloni@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c4235dc9-90d0-1e68-7c73-c2a5bec83712@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 01, 2017 at 12:17:47PM -0600, Logan Gunthorpe wrote:
-> Hey,
-> 
-> On 01/08/17 12:14 PM, Jon Mason wrote:
-> > This also looks like a bug fix.  However, given that it is a little more
-> > invasive and no one reporting any problems with it, I'm less apt to
-> > pull it into the bug-fixes branch without anyone compilaining of a
-> > bug (lest I break something in -stable).
-> 
-> Yes, 6 and 7 change a semantic of that function. I wouldn't call them
-> bug fixes. But you can't pull 7 without pulling 6, as 7 would break
-> everything unless the change in 6 occurs.
+Currently if an uncorrectable error is reported by an EP the AER
+driver walks over all the devices connected to the upstream port
+bus and in turns call the report_error_detected() callback.
+If any of the devices connected to the bus does not implement
+dev->driver->err_handler->error_detected() do_recovery() will fail
+leaving all the bus hierarchy devices unrecovered.
 
-Okay, then I'll hold off on 7 then.  It wasn't clear to me, based on
-the patch descriptions, that this was fallout from the previous patch.
-Thanks for clearing this up for me.
+However for non fatal errors the PCIe link should not be considered
+compromised, therefore it makes sense to report the error only to
+all the functions that logged an error.
+This patch implements this new behaviour for non fatal errors.
 
-Thanks,
-Jon
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+Changes from v1:
+   - now errors are reported only to the fucntions that logged the error
+     instead of all the functions in the same device.
+   - the patch subject has changed to match the new implementation
+---
+ drivers/pci/pcie/aer/aerdrv_core.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-> 
-> Thanks,
-> 
-> Logan
-> 
-> -- 
-> You received this message because you are subscribed to the Google Groups "linux-ntb" group.
-> To unsubscribe from this group and stop receiving emails from it, send an email to linux-ntb+unsubscribe@googlegroups.com.
-> To post to this group, send email to linux-ntb@googlegroups.com.
-> To view this discussion on the web visit https://groups.google.com/d/msgid/linux-ntb/c4235dc9-90d0-1e68-7c73-c2a5bec83712%40deltatee.com.
-> For more options, visit https://groups.google.com/d/optout.
+diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
+index b1303b3..057465ad 100644
+--- a/drivers/pci/pcie/aer/aerdrv_core.c
++++ b/drivers/pci/pcie/aer/aerdrv_core.c
+@@ -390,7 +390,14 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
+ 		 * If the error is reported by an end point, we think this
+ 		 * error is related to the upstream link of the end point.
+ 		 */
+-		pci_walk_bus(dev->bus, cb, &result_data);
++		if (state == pci_channel_io_normal)
++			/*
++			 * the error is non fatal so the bus is ok, just invoke
++			 * the callback for the function that logged the error.
++			 */
++			cb(dev, &result_data);
++		else
++			pci_walk_bus(dev->bus, cb, &result_data);
+ 	}
+ 
+ 	return result_data.result;
+-- 
+2.7.4
