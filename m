@@ -1,13 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 28 Aug 2017 16:53:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v8 0/3] PCI: iproc: SOC specific fixes
-Message-ID: <20170828215309.GM8154@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+Date: Fri, 18 Aug 2017 11:14:16 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Brian Norris <briannorris@chromium.org>
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+Message-ID: <20170818181416.GF6008@atomide.com>
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com>
+ <20170817120431.12398-2-jeffy.chen@rock-chips.com>
+ <20170818170107.GA119461@google.com>
 MIME-Version: 1.0
-In-Reply-To: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <20170818170107.GA119461@google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,154 +17,110 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
- bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Andy Gospodarek <gospo@broadcom.com>,
+Cc: Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+ shawn.lin@rock-chips.com, Jeffy Chen <jeffy.chen@rock-chips.com>,
+ linux-kernel@vger.kernel.org, dianders@chromium.org,
+ linux-rockchip@lists.infradead.org, bhelgaas@google.com,
  linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24, 2017 at 10:34:23AM +0530, Oza Pawandeep wrote:
-> PCI: iproc: Retry request when CRS returned from EP Above patch adds
-> support for CRS in PCI RC driver, otherwise if not handled at lower
-> level, the user space PMD (poll mode drivers) can timeout.
+* Brian Norris <briannorris@chromium.org> [170818 10:01]:
+> + Tony
 > 
-> PCI: iproc: add device shutdown for PCI RC This fixes the issue where
-> certian PCI endpoints are not getting detected on Stingray SOC after
-> reboot.
+> On Thu, Aug 17, 2017 at 08:04:29PM +0800, Jeffy Chen wrote:
+> > Add support for PCIE_WAKE pin in rockchip pcie driver.
+> > 
+> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+> > ---
+> > 
+> > Changes in v2:
+> > Use dev_pm_set_dedicated_wake_irq
+> >         -- Suggested by Brian Norris <briannorris@chromium.com>
+> > 
+> >  drivers/pci/host/pcie-rockchip.c | 13 ++++++++++++-
+> >  1 file changed, 12 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> > index 7bb9870f6d8c..c2b973c738fe 100644
+> > --- a/drivers/pci/host/pcie-rockchip.c
+> > +++ b/drivers/pci/host/pcie-rockchip.c
+> > @@ -36,6 +36,7 @@
+> >  #include <linux/pci_ids.h>
+> >  #include <linux/phy/phy.h>
+> >  #include <linux/platform_device.h>
+> > +#include <linux/pm_wakeirq.h>
+> >  #include <linux/reset.h>
+> >  #include <linux/regmap.h>
+> >  
+> > @@ -853,7 +854,6 @@ static void rockchip_pcie_legacy_int_handler(struct irq_desc *desc)
+> >  	chained_irq_exit(chip, desc);
+> >  }
+> >  
+> > -
+> >  /**
+> >   * rockchip_pcie_parse_dt - Parse Device Tree
+> >   * @rockchip: PCIe port information
+> > @@ -1018,6 +1018,14 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+> >  		return err;
+> >  	}
+> >  
+> > +	device_init_wakeup(dev, true);
+> > +	irq = platform_get_irq_byname(pdev, "wake");
+> > +	if (irq >= 0) {
+> > +		err = dev_pm_set_dedicated_wake_irq(dev, irq);
 > 
-> Changes Since v7:
-> Factor out the ep config access code.
+> Did you test that this works out correctly as a level-triggered
+> interrupt? IIUC, the dummy handler won't mask the interrupt, so it might
+> keep firing. See:
 > 
-> Changes Since v6:
-> Rebased patches on top of Lorenzo's patches.
-> Bjorn's comments addressed.
-> now the confg retry returns 0xffffffff as data.
-> Added reference to PCIe spec and iproc Controller spec in Changelog.
+> static irqreturn_t handle_threaded_wake_irq(int irq, void *_wirq)
+> {
+>         struct wake_irq *wirq = _wirq;
+>         int res;
 > 
-> Changes Since v5:
-> Ray's comments addressed.
+>         /* Maybe abort suspend? */
+>         if (irqd_is_wakeup_set(irq_get_irq_data(irq))) {
+>                 pm_wakeup_event(wirq->dev, 0);
+>         
+>                 return IRQ_HANDLED; <--- We can return here, with the trigger still asserted
+>         }
+> ...
 > 
-> Changes Since v4:
-> Bjorn's comments addressed.
-> 
-> Changes Since v3:
-> [re-send]
-> 
-> Changes Since v2:
-> Fix compilation errors for pcie-iproc-platform.ko which was caught
-> by kbuild.
-> 
-> Oza Pawandeep (3):
->   PCI: iproc: factor-out ep configuration access
->   PCI: iproc: Retry request when CRS returned from EP
->   PCI: iproc: add device shutdown for PCI RC
-> 
->  drivers/pci/host/pcie-iproc-platform.c |   8 ++
->  drivers/pci/host/pcie-iproc.c          | 143 ++++++++++++++++++++++++++-------
->  drivers/pci/host/pcie-iproc.h          |   1 +
->  3 files changed, 124 insertions(+), 28 deletions(-)
+> This could cause some kind of an IRQ storm, including a lockup or
+> significant slowdown, I think.
 
-I applied these to pci/host-iproc for v4.14.  Man, this is ugly.
+Hmm yeah that should be checked. The test cases I have are all
+edge interrupts where there is no status whatsoever after the
+wake-up event except which irq fired.
 
-I reworked the changelog to try to make it more readable.  I also tried to
-disable the PCI_EXP_RTCAP_CRSVIS bit, which advertises CRS SV support.  And
-I removed what looked like a duplicate pci_generic_config_read32() call.
-And I added a warning about the fact that we corrupt reads of config
-registers that happen to contain 0xffff0001.
+To me it seems that the wakeirq consumer driver should be able
+to clear the level wakeirq in it's runtime_resume, or even better,
+maybe all it takes is just let the consumer driver's irq handler
+clear the level wakeirq when it runs after runtime_resume.
 
-I'm pretty sure I broke something, so please take a look.
+> BTW, in another context, Tony suggested we might need to fix up the IRQ flags
+> like this:
+> 
+> int dev_pm_set_dedicated_wake_irq(struct device *dev, int irq)
+> {
+> ...
+>         err = request_threaded_irq(irq, NULL, handle_threaded_wake_irq,
+> -                                  IRQF_ONESHOT, dev_name(dev), wirq);
+> +                                  IRQF_ONESHOT | irq_get_trigger_type(irq), dev_name(dev), wirq);
+> 
+> But IIUC, that's not actually necessary, because __setup_irq()
+> automatically configures the trigger type if the driver didn't request
+> one explicitly.
 
-Incremental diff from your v8 to what's on pci/host-iproc:
+OK so we should make sure that the triggering is parsed
+properly when passed in from device tree.
 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index cbdabe8a073e..8bd5e544b1c1 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -69,7 +69,7 @@
- #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
- 
- #define CFG_RETRY_STATUS             0xffff0001
--#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
-+#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milliseconds */
- 
- /* derive the enum index of the outbound/inbound mapping registers */
- #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
-@@ -482,17 +482,21 @@ static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
- 	unsigned int data;
- 
- 	/*
--	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software
--	 * Visibility only affects config read of the Vendor ID.
--	 * For config write or any other config read the Root must
--	 * automatically re-issue configuration request again as a
--	 * new request.
-+	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software Visibility only
-+	 * affects config reads of the Vendor ID.  For config writes or any
-+	 * other config reads, the Root may automatically reissue the
-+	 * configuration request again as a new request.
- 	 *
--	 * For config reads, this hardware returns CFG_RETRY_STATUS data when
--	 * it receives a CRS completion for a config read, regardless of the
--	 * address of the read or the CRS Software Visibility Enable bit. As a
-+	 * For config reads, this hardware returns CFG_RETRY_STATUS data
-+	 * when it receives a CRS completion, regardless of the address of
-+	 * the read or the CRS Software Visibility Enable bit.  As a
- 	 * partial workaround for this, we retry in software any read that
- 	 * returns CFG_RETRY_STATUS.
-+	 *
-+	 * Note that a non-Vendor ID config register may have a value of
-+	 * CFG_RETRY_STATUS.  If we read that, we can't distinguish it from
-+	 * a CRS completion, so we will incorrectly retry the read and
-+	 * eventually return the wrong data (0xffffffff).
- 	 */
- 	data = readl(cfg_data_p);
- 	while (data == CFG_RETRY_STATUS && timeout--) {
-@@ -515,10 +519,19 @@ static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
- 	unsigned int busno = bus->number;
- 	void __iomem *cfg_data_p;
- 	unsigned int data;
-+	int ret;
- 
--	/* root complex access. */
--	if (busno == 0)
--		return pci_generic_config_read32(bus, devfn, where, size, val);
-+	/* root complex access */
-+	if (busno == 0) {
-+		ret = pci_generic_config_read32(bus, devfn, where, size, val);
-+		if (ret != PCIBIOS_SUCCESSFUL)
-+			return ret;
-+
-+		/* Don't advertise CRS SV support */
-+		if ((where & ~0x3) == PCI_EXP_CAP + PCI_EXP_RTCAP)
-+			*val &= ~(PCI_EXP_RTCAP_CRSVIS << 16);
-+		return PCIBIOS_SUCCESSFUL;
-+	}
- 
- 	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
- 
-@@ -635,7 +648,6 @@ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
- 		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
- 	else
- 		ret = pci_generic_config_read32(bus, devfn, where, size, val);
--	ret = pci_generic_config_read32(bus, devfn, where, size, val);
- 	iproc_pcie_apb_err_disable(bus, false);
- 
- 	return ret;
-@@ -1309,6 +1321,8 @@ static int iproc_pcie_rev_init(struct iproc_pcie *pcie)
- 		pcie->ib.nr_regions = ARRAY_SIZE(paxb_v2_ib_map);
- 		pcie->ib_map = paxb_v2_ib_map;
- 		pcie->need_msi_steer = true;
-+		dev_warn(dev, "reads of config registers that contain %#x return incorrect data\n",
-+			 CFG_RETRY_STATUS);
- 		break;
- 	case IPROC_PCIE_PAXC:
- 		regs = iproc_pcie_reg_paxc;
+Regards,
+
+Tony
 
 _______________________________________________
 linux-arm-kernel mailing list
