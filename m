@@ -1,79 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50764 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751699AbdHBRcx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 13:32:53 -0400
-Date: Wed, 2 Aug 2017 12:32:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pciehp: Enable hot plug capable detection
-Message-ID: <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Subject: [PATCH v3 0/4] PCI: rockchip: Move PCIE_WAKE handling into rockchip
+ pcie driver
+Date: Fri, 18 Aug 2017 16:28:37 +0800
+Message-Id: <20170818082841.22335-1-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
+ Will Deacon <will.deacon@arm.com>, dianders@chromium.org,
+ Rob Herring <robh+dt@kernel.org>, linux-rockchip@lists.infradead.org,
+ Matthias Kaehlcke <mka@chromium.org>,
+ Klaus Goger <klaus.goger@theobroma-systems.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-arm-kernel@lists.infradead.org, Caesar Wang <wxt@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith,
 
-On Wed, Aug 02, 2017 at 01:15:07AM -0400, Keith Busch wrote:
-> The PCIe specification ties presence detect change enabling to the hot plug
-> capable bit in Slot Capabilities. This capability is not mutally exclusive
-> with attention buttons, so enabing detection should not be tied it.
+Currently we are handling pcie wake in mrvl wifi driver. But Brian
+suggests to move it into rockchip pcie driver.
 
-Can you clarify this a little?
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
 
-  - Please include the spec section you're referring to.
 
-  - I'm not sure what "This capability is not ..." refers to.  There
-    is not a "presence detect change enabling" capability.  I agree
-    that the "Hot-Plug Capable" bit is independent of the "Attention
-    Button Present" bit.
+Changes in v3:
+Fix error handling
 
-  - Slot Control (PCIe r3.1, sec 7.8.10) says PDCE *is permitted* to
-    be read-only zero if PCI_EXP_SLTCAP_HPC is zero.  It doesn't say
-    PDCE is *required* to be read-only in that case.
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq
+        -- Suggested by Brian Norris <briannorris@chromium.com>
 
-My initial reaction is that it probably makes sense per the spec to
-enable PDCE unconditionally, but I would want to do some archaeology
-to figure out why it wasn't that way from the beginning.  There's
-probably some reason for it being the way it is, so we have to take
-that into account.  Maybe it works around some flaky presence detect
-hardware or something.
+Jeffy Chen (4):
+  PCI: rockchip: Fix error handlings
+  PCI: rockchip: Add support for pcie wake irq
+  dt-bindings: PCI: rockchip: Add support for pcie wake irq
+  arm64: dts: rockchip: Handle pcie wake in pcie driver for Gru
 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp.h     | 1 +
->  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
->  2 files changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> index 06109d4..610e295 100644
-> --- a/drivers/pci/hotplug/pciehp.h
-> +++ b/drivers/pci/hotplug/pciehp.h
-> @@ -120,6 +120,7 @@ struct controller {
->  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
->  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
->  #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
-> +#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
->  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
->  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
->  #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
-> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> index 026830a..43a86ed 100644
-> --- a/drivers/pci/hotplug/pciehp_hpc.c
-> +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> @@ -691,7 +691,7 @@ void pcie_enable_notification(struct controller *ctrl)
->  	cmd = PCI_EXP_SLTCTL_DLLSCE;
->  	if (ATTN_BUTTN(ctrl))
->  		cmd |= PCI_EXP_SLTCTL_ABPE;
-> -	else
-> +	if (HP_CAP(ctrl))
->  		cmd |= PCI_EXP_SLTCTL_PDCE;
->  	if (!pciehp_poll_mode)
->  		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
-> -- 
-> 2.5.5
-> 
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |  20 ++--
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi       |  15 ++-
+ drivers/pci/host/pcie-rockchip.c                   | 122 +++++++++++++--------
+ 3 files changed, 96 insertions(+), 61 deletions(-)
+
+-- 
+2.11.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
