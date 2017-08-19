@@ -1,76 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.132]:45707 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753263AbdHWHEm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:04:42 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v5 10/10] PCI: rockchip: umap io space if failing to probe
-Date: Wed, 23 Aug 2017 15:03:39 +0800
-Message-Id: <1503471819-74224-1-git-send-email-shawn.lin@rock-chips.com>
-In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 05/15] mei: make device_type const
+Date: Sat, 19 Aug 2017 13:52:16 +0530
+Message-Id: <1503130946-2854-6-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
+Make this const as it is only stored in the type field of a device
+structure, which is const.
+Done using Coccinelle.
 
-Fix the missing to call pci_unmap_iospace if failing
-to finish the probe.
-
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
+ drivers/misc/mei/bus.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Changes in v5: None
-Changes in v4: None
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/host/pcie-rockchip.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index e752d3e..70d878b 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -1610,12 +1610,12 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+diff --git a/drivers/misc/mei/bus.c b/drivers/misc/mei/bus.c
+index 40c7908..1ac10cb 100644
+--- a/drivers/misc/mei/bus.c
++++ b/drivers/misc/mei/bus.c
+@@ -845,7 +845,7 @@ static void mei_cl_bus_dev_release(struct device *dev)
+ 	kfree(cldev);
+ }
  
- 	err = rockchip_pcie_cfg_atu(rockchip);
- 	if (err)
--		goto err_free_res;
-+		goto err_unmap_iospace;
+-static struct device_type mei_cl_device_type = {
++static const struct device_type mei_cl_device_type = {
+ 	.release	= mei_cl_bus_dev_release,
+ };
  
- 	rockchip->msg_region = devm_ioremap(dev, rockchip->msg_bus_addr, SZ_1M);
- 	if (!rockchip->msg_region) {
- 		err = -ENOMEM;
--		goto err_free_res;
-+		goto err_unmap_iospace;
- 	}
- 
- 	list_splice_init(&res, &bridge->windows);
-@@ -1628,7 +1628,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 
- 	err = pci_scan_root_bus_bridge(bridge);
- 	if (err < 0)
--		goto err_free_res;
-+		goto err_unmap_iospace;
- 
- 	bus = bridge->bus;
- 
-@@ -1642,6 +1642,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	pci_bus_add_devices(bus);
- 	return 0;
- 
-+err_unmap_iospace:
-+	pci_unmap_iospace(rockchip->io);
- err_free_res:
- 	pci_free_resource_list(&res);
- err_remove_irq_domain:
 -- 
 1.9.1
