@@ -1,177 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Tony Lindgren <tony@atomide.com>
-Subject: [PATCH] ARM: dts: DRA7: Add pcie1 dt node for EP mode
-Date: Tue, 8 Aug 2017 11:10:24 +0530
-Message-ID: <20170808054024.18507-1-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, kishon@ti.com, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 00/15] drivers: make device_type const
+Date: Sat, 19 Aug 2017 13:52:11 +0530
+Message-Id: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pcie1 dt node in order for the controller to operate in
-endpoint mode. However since none of the dra7 based boards have
-slots configured to operate in endpoint mode, keep EP mode
-disabled.
+Make device_type const. Done using Coccinelle.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- arch/arm/boot/dts/am571x-idk.dts                |  9 +++++++++
- arch/arm/boot/dts/am572x-idk.dts                |  7 ++++++-
- arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi |  7 ++++++-
- arch/arm/boot/dts/dra7-evm.dts                  |  4 ++++
- arch/arm/boot/dts/dra7.dtsi                     | 23 ++++++++++++++++++++++-
- arch/arm/boot/dts/dra72-evm-common.dtsi         |  4 ++++
- 6 files changed, 51 insertions(+), 3 deletions(-)
+Bhumika Goyal (15):
+  EDAC: make device_type const
+  drm: make device_type const
+  [media] i2c: make device_type const
+  [media] rc: make device_type const
+  mei: make device_type const
+  mtd:  make device_type const
+  mux: make device_type const
+  PCI: make device_type const
+  phy: tegra: make device_type const
+  platform/x86: wmi: make device_type const
+  remoteproc: make device_type const
+  s390/zcrypt: make device_type const
+  scsi: make device_type const
+  staging: greybus: make device_type const
+  usb: make device_type const
 
-diff --git a/arch/arm/boot/dts/am571x-idk.dts b/arch/arm/boot/dts/am571x-idk.dts
-index adc70fb091a2..0c0bb4e93f25 100644
---- a/arch/arm/boot/dts/am571x-idk.dts
-+++ b/arch/arm/boot/dts/am571x-idk.dts
-@@ -96,3 +96,12 @@
- 		status = "okay";
- 	};
- };
-+
-+&pcie1_rc {
-+	status = "okay";
-+	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
-+};
-+
-+&pcie1_ep {
-+	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
-+};
-diff --git a/arch/arm/boot/dts/am572x-idk.dts b/arch/arm/boot/dts/am572x-idk.dts
-index 940fcbe5380b..5ff75004afcf 100644
---- a/arch/arm/boot/dts/am572x-idk.dts
-+++ b/arch/arm/boot/dts/am572x-idk.dts
-@@ -88,7 +88,12 @@
- 	load-gpios = <&gpio3 19 GPIO_ACTIVE_LOW>;
- };
- 
--&pcie1 {
-+&pcie1_rc {
-+	status = "okay";
-+	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
-+};
-+
-+&pcie1_ep {
- 	gpios = <&gpio3 23 GPIO_ACTIVE_HIGH>;
- };
- 
-diff --git a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
-index fdfe5b16b806..d433a50cd18a 100644
---- a/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
-+++ b/arch/arm/boot/dts/am57xx-beagle-x15-common.dtsi
-@@ -570,7 +570,12 @@
- 	};
- };
- 
--&pcie1 {
-+&pcie1_rc {
-+	status = "ok";
-+	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
-+};
-+
-+&pcie1_ep {
- 	gpios = <&gpio2 8 GPIO_ACTIVE_LOW>;
- };
- 
-diff --git a/arch/arm/boot/dts/dra7-evm.dts b/arch/arm/boot/dts/dra7-evm.dts
-index f47fc4daf062..57bd75909d96 100644
---- a/arch/arm/boot/dts/dra7-evm.dts
-+++ b/arch/arm/boot/dts/dra7-evm.dts
-@@ -720,3 +720,7 @@
- 		status = "okay";
- 	};
- };
-+
-+&pcie1_rc {
-+	status = "okay";
-+};
-diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
-index 0f0f6f58bd18..e6f2c6a15dc1 100644
---- a/arch/arm/boot/dts/dra7.dtsi
-+++ b/arch/arm/boot/dts/dra7.dtsi
-@@ -196,6 +196,7 @@
- 				scm_conf1: scm_conf@1c04 {
- 					compatible = "syscon";
- 					reg = <0x1c04 0x0020>;
-+					#syscon-cells = <2>;
- 				};
- 
- 				scm_conf_pcie: scm_conf@1c24 {
-@@ -287,7 +288,11 @@
- 			#address-cells = <1>;
- 			ranges = <0x51000000 0x51000000 0x3000
- 				  0x0	     0x20000000 0x10000000>;
--			pcie1: pcie@51000000 {
-+			/**
-+			 * To enable PCI endpoint mode, disable the pcie1_rc
-+			 * node and enable pcie1_ep mode.
-+			 */
-+			pcie1_rc: pcie@51000000 {
- 				compatible = "ti,dra7-pcie";
- 				reg = <0x51000000 0x2000>, <0x51002000 0x14c>, <0x1000 0x2000>;
- 				reg-names = "rc_dbics", "ti_conf", "config";
-@@ -309,12 +314,28 @@
- 						<0 0 0 2 &pcie1_intc 2>,
- 						<0 0 0 3 &pcie1_intc 3>,
- 						<0 0 0 4 &pcie1_intc 4>;
-+				status = "disabled";
- 				pcie1_intc: interrupt-controller {
- 					interrupt-controller;
- 					#address-cells = <0>;
- 					#interrupt-cells = <1>;
- 				};
- 			};
-+
-+			pcie1_ep: pcie_ep@51000000 {
-+				compatible = "ti,dra7-pcie-ep";
-+				reg = <0x51000000 0x28>, <0x51002000 0x14c>, <0x51001000 0x28>, <0x1000 0x10000000>;
-+				reg-names = "ep_dbics", "ti_conf", "ep_dbics2", "addr_space";
-+				interrupts = <0 232 0x4>;
-+				num-lanes = <1>;
-+				num-ib-windows = <4>;
-+				num-ob-windows = <16>;
-+				ti,hwmods = "pcie1";
-+				phys = <&pcie1_phy>;
-+				phy-names = "pcie-phy0";
-+				ti,syscon-unaligned-access = <&scm_conf1 0x14 2>;
-+				status = "disabled";
-+			};
- 		};
- 
- 		axi@1 {
-diff --git a/arch/arm/boot/dts/dra72-evm-common.dtsi b/arch/arm/boot/dts/dra72-evm-common.dtsi
-index 85780549bc26..2e619748d948 100644
---- a/arch/arm/boot/dts/dra72-evm-common.dtsi
-+++ b/arch/arm/boot/dts/dra72-evm-common.dtsi
-@@ -564,3 +564,7 @@
- 		status = "okay";
- 	};
- };
-+
-+&pcie1_rc {
-+	status = "okay";
-+};
+ drivers/edac/edac_mc_sysfs.c           | 8 ++++----
+ drivers/edac/i7core_edac.c             | 4 ++--
+ drivers/gpu/drm/drm_sysfs.c            | 2 +-
+ drivers/gpu/drm/ttm/ttm_module.c       | 2 +-
+ drivers/media/i2c/soc_camera/mt9t031.c | 2 +-
+ drivers/media/rc/rc-main.c             | 2 +-
+ drivers/misc/mei/bus.c                 | 2 +-
+ drivers/mtd/mtdcore.c                  | 2 +-
+ drivers/mux/mux-core.c                 | 2 +-
+ drivers/pci/endpoint/pci-epf-core.c    | 4 ++--
+ drivers/phy/tegra/xusb.c               | 4 ++--
+ drivers/platform/x86/wmi.c             | 6 +++---
+ drivers/remoteproc/remoteproc_core.c   | 2 +-
+ drivers/s390/crypto/ap_card.c          | 2 +-
+ drivers/s390/crypto/ap_queue.c         | 2 +-
+ drivers/scsi/fcoe/fcoe_sysfs.c         | 4 ++--
+ drivers/scsi/scsi_transport_iscsi.c    | 4 ++--
+ drivers/staging/greybus/gbphy.c        | 2 +-
+ drivers/usb/common/ulpi.c              | 2 +-
+ 19 files changed, 29 insertions(+), 29 deletions(-)
+
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
