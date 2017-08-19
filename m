@@ -1,71 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from usa-sjc-mx-foss1.foss.arm.com ([217.140.101.70]:45700 "EHLO
-        foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750857AbdHQIVc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 17 Aug 2017 04:21:32 -0400
-Subject: Re: PCIe oops for NULL pointer dereference during next-20170807 and
- next-20170815
-To: Joerg Roedel <joro@8bytes.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Robin Murphy <robin.murphy@arm.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        iommu@lists.linux-foundation.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <c6ae57b6-1175-4ba4-b66d-d2f5393d06fc@rock-chips.com>
- <2ac52f40-c34f-6c31-b8db-868c40a977a3@rock-chips.com>
- <20170817075825.GR30515@8bytes.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <94b7e141-362d-02f3-1403-af7a1dfc8c4e@arm.com>
-Date: Thu, 17 Aug 2017 09:21:29 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 19 Aug 2017 16:15:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+Subject: Re: [PATCH 1/4] PCI:xilinx-nwl: Enable Root DMA
+Message-ID: <20170819211548.GU28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
+ <1502190739-13474-2-git-send-email-vjonnal@xilinx.com>
 MIME-Version: 1.0
-In-Reply-To: <20170817075825.GR30515@8bytes.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1502190739-13474-2-git-send-email-vjonnal@xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, dmaengine@vger.kernel.org,
+ paul.gortmaker@windriver.com, bharat.kumar.gogada@xilinx.com,
+ linux-pci@vger.kernel.org, michal.simek@xilinx.com,
+ linux-kernel@vger.kernel.org, vjonnal@xilinx.com,
+ linux-arm-kernel@lists.infradead.org, bhelgaas@google.com,
+ dan.j.williams@intel.com, vinod.koul@intel.com, soren.brinkmann@xilinx.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/08/17 08:58, Joerg Roedel wrote:
-> On Thu, Aug 17, 2017 at 03:02:31PM +0800, Shawn Lin wrote:
->> So should we revert this commit or maybe we could add some checking
->> into gic-v2m and gic-v3-its to see if the dev is iommu-capable? If not,
->> we should create another routine to map MSI msg.
+On Tue, Aug 08, 2017 at 04:42:16PM +0530, Ravi Shankar Jonnalagadda wrote:
+
+Please update the subject line to match previous changes to this file,
+e.g. (note spacing),
+
+  PCI: xilinx-nwl: Enable Root DMA
+
+> Enabling Root DMA interrupts
+
+s/Enabling/Enable/  (also in code comments)
+
+> Adding Root DMA translations to bridge for Register Access
+
+s/Adding/Add/
+
+> Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+
+This should have an ack from Michal, but as far as I'm concerned:
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Since the bulk of this series is in drivers/dma, I assume Dan or Vinod
+will take care of it.
+
+> ---
+>  drivers/pci/host/pcie-xilinx-nwl.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
 > 
-> Yes, fixing this in gic code is the right approach. I usually don't
-> revert patches to hide problems somewhere else.
-Here's what it would look like:
+> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+> index eec641a..5766582 100644
+> --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> @@ -39,6 +39,11 @@
+>  #define E_ECAM_CONTROL			0x00000228
+>  #define E_ECAM_BASE_LO			0x00000230
+>  #define E_ECAM_BASE_HI			0x00000234
+> +#define E_DREG_CTRL			0x00000288
+> +#define E_DREG_BASE_LO			0x00000290
+> +
+> +#define DREG_DMA_EN			BIT(0)
+> +#define DREG_DMA_BASE_LO		0xFD0F0000
+>  
+>  /* Ingress - address translations */
+>  #define I_MSII_CAPABILITIES		0x00000300
+> @@ -57,6 +62,10 @@
+>  #define MSGF_MSI_STATUS_HI		0x00000444
+>  #define MSGF_MSI_MASK_LO		0x00000448
+>  #define MSGF_MSI_MASK_HI		0x0000044C
+> +/* Root DMA Interrupt register */
+> +#define MSGF_DMA_MASK			0x00000464
+> +
+> +#define MSGF_INTR_EN			BIT(0)
+>  
+>  /* Msg filter mask bits */
+>  #define CFG_ENABLE_PM_MSG_FWD		BIT(1)
+> @@ -766,6 +775,12 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+>  	nwl_bridge_writel(pcie, nwl_bridge_readl(pcie, MSGF_LEG_STATUS) &
+>  			  MSGF_LEG_SR_MASKALL, MSGF_LEG_STATUS);
+>  
+> +	/* Enabling DREG translations */
+> +	nwl_bridge_writel(pcie, DREG_DMA_EN, E_DREG_CTRL);
+> +	nwl_bridge_writel(pcie, DREG_DMA_BASE_LO, E_DREG_BASE_LO);
+> +	/* Enabling Root DMA interrupts */
+> +	nwl_bridge_writel(pcie, MSGF_INTR_EN, MSGF_DMA_MASK);
+> +
+>  	/* Enable all legacy interrupts */
+>  	nwl_bridge_writel(pcie, MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
+>  
+> -- 
+> 2.1.1
+> 
 
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index b47097a3e4b4..5e81ad62c801 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -1125,6 +1125,8 @@ static void its_irq_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
- {
- 	struct its_device *its_dev = irq_data_get_irq_chip_data(d);
- 	struct its_node *its;
-+	struct iommu_group *group;
-+	struct device *dev;
- 	u64 addr;
- 
- 	its = its_dev->its;
-@@ -1134,7 +1136,12 @@ static void its_irq_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
- 	msg->address_hi		= upper_32_bits(addr);
- 	msg->data		= its_get_event_id(d);
- 
--	iommu_dma_map_msi_msg(d->irq, msg);
-+	dev = msi_desc_to_dev(irq_get_msi_desc(d->irq));
-+	group = iommu_group_get(dev);
-+	if (group) {
-+		iommu_dma_map_msi_msg(d->irq, msg);
-+		iommu_group_put(group);
-+	}
- }
- 
- static int its_irq_set_irqchip_state(struct irq_data *d,
-
-I'm not convinced  that playing with the group refcount in an irqchip
-is the right approach...
-
-Thanks,
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
