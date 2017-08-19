@@ -1,117 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx210.ext.ti.com ([198.47.19.17]:19565 "EHLO
-        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751075AbdHRO63 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 18 Aug 2017 10:58:29 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>, <gregkh@linuxfoundation.org>,
-        <kishon@ti.com>, <nsekhar@ti.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>
-Subject: [PATCH 00/18] PCI: endpoint: Make pci-epf-test more flexible
-Date: Fri, 18 Aug 2017 20:27:52 +0530
-Message-ID: <20170818145810.17649-1-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34373 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751003AbdHSIXd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 04:23:33 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 02/15] drm: make device_type const
+Date: Sat, 19 Aug 2017 13:52:13 +0530
+Message-Id: <1503130946-2854-3-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Make these const as they are only stored in the type field of a device
+structure, which is const.
+Done using Coccinelle.
+---
+ drivers/gpu/drm/drm_sysfs.c      | 2 +-
+ drivers/gpu/drm/ttm/ttm_module.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-I've collected all the patches for PCI Endpoint in this series. This
-series contains PCI endpoint fixes and making pci-epf-test more
-flexible in terms of mapping PCI_ENDPOINT_TEST regs to any BARs,
-work with linkup notification etc.
-
-I've been having most of these patches in my local tree created while
-adding support for endpoint in TI's K2G platform. I've also included fix
-from others who are trying to use the PCI Endpoint Framework in their
-own platforms.
-
-It also contains minor changes in pci/dwc/ like resetting BARs in the
-EP controller and providing a page size to pci_epc_mem. I can send this
-part separately based on some of your branch if you'd prefer that.
-
-This also contains patches for host side pci_endpoint_test driver
-in drivers/misc.
-
-I've pushed the series to pci-endpoint tree, the details of which are
-given below.
-
-Thanks
-Kishon
-
-The following changes since commit 5771a8c08880cdca3bfb4a3fc6d309d6bba20877:
-
-  Linux v4.13-rc1 (2017-07-15 15:22:10 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git tags/pci-ep-for-4.14
-
-for you to fetch changes up to 31802acb56e040bf5f269b2bad159583fc804d68:
-
-  tools: PCI: Add a missing option help line (2017-08-18 19:23:36 +0530)
-
-----------------------------------------------------------------
-PCI: endpoint: for 4.14
-
-PCI endpoint core:
- *) Add support for page size to be configurable (for managing address
-    region within the controller)
- *) Add an API to get matching "pci_epf_device_id"
- *) Use of_dma_configure() to set initial dma mask of pci_epf device
- *) Do not abort if endpoint function drivers have not populated
-    ->remove() callback
-
-pci-epf-test function driver:
- *) Add support to poll early for host commands
- *) Add support to use _any_ BAR's to map PCI_ENDPOINT_TEST regs
-
-pci_endpoint_test PCI driver:
- *) Add support for PCI_ENDPOINT_TEST regs to be mapped to any BAR
- *) Add support to provide aligned buffer addresses
- *) Enable/Disable MSI using module param
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-----------------------------------------------------------------
-Kishon Vijay Abraham I (16):
-      PCI: endpoint: pci-epc-core: Use of_dma_configure() to set initial dma mask
-      PCI: endpoint: pci-epf-core: Add an API to get matching "pci_epf_device_id"
-      PCI: endpoint: pci-epf-core: Make ->remove() callback optional
-      PCI: endpoint: pci-epc-mem: Add support for configurable page size
-      PCI: endpoint: functions/pci-epf-test: Add "volatile" to pci_epf_test_reg
-      PCI: endpoint: functions/pci-epf-test: Do not reset *command* inadvertently
-      PCI: endpoint: functions/pci-epf-test: Add support to use _any_ BAR's to map PCI_ENDPOINT_TEST regs
-      PCI: endpoint: functions/pci-epf-test: Add support to poll early for host commands
-      PCI: dwc: designware: Provide page_size to pci_epc_mem
-      PCI: dwc: dra7xx: Reset all BARs during initialization
-      PCI: dwc: designware-ep: Do not disable BARs during initialization
-      misc: pci_endpoint_test: Add support for PCI_ENDPOINT_TEST regs to be mapped to any BAR
-      misc: pci_endpoint_test: Add support to provide aligned buffer addresses
-      misc: pci_endpoint_test: Add support to not enable MSI interrupts
-      misc: pci_endpoint_test: Avoid using hard coded BAR sizes
-      misc: pci_endpoint_test: Enable/Disable MSI using module param
-
-Shawn Lin (1):
-      PCI: endpoint: functions/pci-epf-test: Remove the ->remove() callback
-
-Stan Drozd (1):
-      tools: PCI: Add a missing option help line
-
- drivers/misc/pci_endpoint_test.c              | 132 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----------------------
- drivers/pci/dwc/pci-dra7xx.c                  |  13 +++++++++++++
- drivers/pci/dwc/pcie-designware-ep.c          |   7 ++-----
- drivers/pci/dwc/pcie-designware.h             |   1 +
- drivers/pci/endpoint/functions/pci-epf-test.c |  99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++------------------------------------
- drivers/pci/endpoint/pci-epc-core.c           |  11 +++++++++--
- drivers/pci/endpoint/pci-epc-mem.c            |  59 ++++++++++++++++++++++++++++++++++++++++++++++++++---------
- drivers/pci/endpoint/pci-epf-core.c           |  21 +++++++++++++++++++--
- include/linux/pci-epc.h                       |   8 +++++++-
- include/linux/pci-epf.h                       |   2 ++
- tools/pci/pcitest.c                           |   1 +
- 11 files changed, 276 insertions(+), 78 deletions(-)
+diff --git a/drivers/gpu/drm/drm_sysfs.c b/drivers/gpu/drm/drm_sysfs.c
+index 1c5b5ce..84e4ebe 100644
+--- a/drivers/gpu/drm/drm_sysfs.c
++++ b/drivers/gpu/drm/drm_sysfs.c
+@@ -39,7 +39,7 @@
+  * drm_connector_unregister().
+  */
+ 
+-static struct device_type drm_sysfs_device_minor = {
++static const struct device_type drm_sysfs_device_minor = {
+ 	.name = "drm_minor"
+ };
+ 
+diff --git a/drivers/gpu/drm/ttm/ttm_module.c b/drivers/gpu/drm/ttm/ttm_module.c
+index 66fc639..e6604e0 100644
+--- a/drivers/gpu/drm/ttm/ttm_module.c
++++ b/drivers/gpu/drm/ttm/ttm_module.c
+@@ -37,7 +37,7 @@
+ static DECLARE_WAIT_QUEUE_HEAD(exit_q);
+ static atomic_t device_released;
+ 
+-static struct device_type ttm_drm_class_type = {
++static const struct device_type ttm_drm_class_type = {
+ 	.name = "ttm",
+ 	/**
+ 	 * Add pm ops here.
 -- 
-2.11.0
+1.9.1
