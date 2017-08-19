@@ -1,69 +1,62 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42528 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751146AbdH0RlB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Aug 2017 13:41:01 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        alex.williamson@redhat.com
-Cc: linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V13 1/4] PCI: Don't ignore valid response before CRS timeout
-Date: Sun, 27 Aug 2017 13:40:48 -0400
-Message-Id: <1503855651-17409-1-git-send-email-okaya@codeaurora.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33946 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751742AbdHSI1s (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 04:27:48 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 15/15] usb: make device_type const
+Date: Sat, 19 Aug 2017 13:52:26 +0530
+Message-Id: <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+Make this const as it is only stored in the type field of a device
+structure, which is const.
+Done using Coccinelle.
 
-While waiting for a device to become ready (i.e., to return a non-CRS
-completion to a read of its Vendor ID), if we got a valid response to the
-very last read before timing out, we printed a warning and gave up on the
-device even though it was actually ready.
-
-For a typical 60s timeout, we wait about 65s (it's not exact because of the
-exponential backoff), but we treated devices that became ready between 33s
-and 65s as though they failed.
-
-Move the Device ID read later so we check whether the device is ready
-immediately, before checking for a timeout.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-[okaya: reorder reads so that we check device presence after sleep]
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/pci/probe.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/usb/common/ulpi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index c31310d..2849e0e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1847,17 +1847,18 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
- 		if (!crs_timeout)
- 			return false;
+diff --git a/drivers/usb/common/ulpi.c b/drivers/usb/common/ulpi.c
+index 930e8f3..4aa5195 100644
+--- a/drivers/usb/common/ulpi.c
++++ b/drivers/usb/common/ulpi.c
+@@ -135,7 +135,7 @@ static void ulpi_dev_release(struct device *dev)
+ 	kfree(to_ulpi_dev(dev));
+ }
  
--		msleep(delay);
--		delay *= 2;
--		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
--			return false;
--		/* Card hasn't responded in 60 seconds?  Must be stuck. */
- 		if (delay > crs_timeout) {
- 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
- 			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
- 			       PCI_FUNC(devfn));
- 			return false;
- 		}
-+
-+		msleep(delay);
-+		delay *= 2;
-+
-+		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
-+			return false;
- 	}
- 
- 	return true;
+-static struct device_type ulpi_dev_type = {
++static const struct device_type ulpi_dev_type = {
+ 	.name = "ulpi_device",
+ 	.groups = ulpi_dev_attr_groups,
+ 	.release = ulpi_dev_release,
 -- 
 1.9.1
