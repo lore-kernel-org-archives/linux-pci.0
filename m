@@ -1,60 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34125 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751706AbdH3OZM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 30 Aug 2017 10:25:12 -0400
-From: Jan Glauber <jglauber@cavium.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-kernel@vger.kernel.org, david.daney@cavium.com,
-        Jon Masters <jcm@redhat.com>,
-        Robert Richter <robert.richter@cavium.com>,
-        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org,
-        Jan Glauber <jglauber@cavium.com>
-Subject: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root ports
-Date: Wed, 30 Aug 2017 16:24:54 +0200
-Message-Id: <20170830142454.10971-4-jglauber@cavium.com>
-In-Reply-To: <20170830142454.10971-1-jglauber@cavium.com>
-References: <20170830142454.10971-1-jglauber@cavium.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 06/15] mtd:  make device_type const
+Date: Sat, 19 Aug 2017 13:52:17 +0530
+Message-Id: <1503130946-2854-7-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Root ports of cn8xxx do not function after a slot reset when used with
-some e1000e and LSI HBA devices. Add a quirk to prevent slot reset on
-these root ports.
+Make this const as it is only stored in the type field of a device
+structure, which is const.
+Done using Coccinelle.
 
-Signed-off-by: Jan Glauber <jglauber@cavium.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/pci/quirks.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/mtd/mtdcore.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85191b8..6679971 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -845,6 +845,22 @@ static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
- #endif
+diff --git a/drivers/mtd/mtdcore.c b/drivers/mtd/mtdcore.c
+index f872a99..e7ea842 100644
+--- a/drivers/mtd/mtdcore.c
++++ b/drivers/mtd/mtdcore.c
+@@ -340,7 +340,7 @@ static ssize_t mtd_bbtblocks_show(struct device *dev,
+ };
+ ATTRIBUTE_GROUPS(mtd);
  
-+/*
-+ * Root port on some Cavium CN8xxx chips do not successfully complete
-+ * a bus reset when used with certain types of child devices. Config
-+ * space access to the child may quit responding. Flag all devices under
-+ * the secondary bus as non-resettable.
-+ */
-+static void quirk_CN8xxx_secondary_bus(struct pci_dev *dev)
-+{
-+	struct pci_dev *pdev;
-+
-+	dev_warn(&dev->dev, "Cavium CN8xxx quirk detected; reset for devices on secondary bus disabled\n");
-+	list_for_each_entry(pdev, &dev->subordinate->devices, bus_list)
-+		pdev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_CN8xxx_secondary_bus);
-+
- /*
-  * Some settings of MMRBC can lead to data corruption so block changes.
-  * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
+-static struct device_type mtd_devtype = {
++static const struct device_type mtd_devtype = {
+ 	.name		= "mtd",
+ 	.groups		= mtd_groups,
+ 	.release	= mtd_release,
 -- 
-2.9.0.rc0.21.g7777322
+1.9.1
