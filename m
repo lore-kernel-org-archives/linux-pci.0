@@ -1,70 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0040.outbound.protection.outlook.com ([104.47.32.40]:5760
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752147AbdHHLND (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 8 Aug 2017 07:13:03 -0400
-From: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
-To: <bhelgaas@google.com>, <michal.simek@xilinx.com>,
-        <soren.brinkmann@xilinx.com>, <lorenzo.pieralisi@arm.com>,
-        <bharat.kumar.gogada@xilinx.com>, <vjonnal@xilinx.com>,
-        <paul.gortmaker@windriver.com>, <linux-pci@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <dan.j.williams@intel.com>,
-        <vinod.koul@intel.com>, <dmaengine@vger.kernel.org>
-Subject: [PATCH 2/4] PCI:xilinx-nwl: Correcting Styling checks
-Date: Tue, 8 Aug 2017 16:42:17 +0530
-Message-ID: <1502190739-13474-3-git-send-email-vjonnal@xilinx.com>
-In-Reply-To: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
-References: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
+        tomas.winkler@intel.com, dwmw2@infradead.org,
+        computersforpeace@gmail.com, boris.brezillon@free-electrons.com,
+        marek.vasut@gmail.com, richard@nod.at, cyrille.pitchen@wedev4u.fr,
+        peda@axentia.se, kishon@ti.com, bhelgaas@google.com,
+        thierry.reding@gmail.com, jonathanh@nvidia.com,
+        dvhart@infradead.org, andy@infradead.org, ohad@wizery.com,
+        bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH 03/15] [media] i2c: make device_type const
+Date: Sat, 19 Aug 2017 13:52:14 +0530
+Message-Id: <1503130946-2854-4-git-send-email-bhumirks@gmail.com>
+In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Correcting Style checks thrown by checkpatch scripts
+Make this const as it is only stored in the type field of a device
+structure, which is const.
+Done using Coccinelle.
 
-Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/pci/host/pcie-xilinx-nwl.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/media/i2c/soc_camera/mt9t031.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 5766582..3c62e3d 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -506,15 +506,15 @@ static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 
- 	for (i = 0; i < nr_irqs; i++) {
- 		irq_domain_set_info(domain, virq + i, bit + i, &nwl_irq_chip,
--				domain->host_data, handle_simple_irq,
--				NULL, NULL);
-+				    domain->host_data, handle_simple_irq,
-+				    NULL, NULL);
- 	}
- 	mutex_unlock(&msi->lock);
- 	return 0;
- }
- 
- static void nwl_irq_domain_free(struct irq_domain *domain, unsigned int virq,
--					unsigned int nr_irqs)
-+				unsigned int nr_irqs)
- {
- 	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
- 	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
-@@ -767,7 +767,6 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
- 	/* Enable all misc interrupts */
- 	nwl_bridge_writel(pcie, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
- 
--
- 	/* Disable all legacy interrupts */
- 	nwl_bridge_writel(pcie, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
- 
-@@ -932,4 +931,5 @@ static struct platform_driver nwl_pcie_driver = {
- 	},
- 	.probe = nwl_pcie_probe,
+diff --git a/drivers/media/i2c/soc_camera/mt9t031.c b/drivers/media/i2c/soc_camera/mt9t031.c
+index 714fb35..4802d30 100644
+--- a/drivers/media/i2c/soc_camera/mt9t031.c
++++ b/drivers/media/i2c/soc_camera/mt9t031.c
+@@ -592,7 +592,7 @@ static int mt9t031_runtime_resume(struct device *dev)
+ 	.runtime_resume		= mt9t031_runtime_resume,
  };
-+
- builtin_platform_driver(nwl_pcie_driver);
+ 
+-static struct device_type mt9t031_dev_type = {
++static const struct device_type mt9t031_dev_type = {
+ 	.name	= "MT9T031",
+ 	.pm	= &mt9t031_dev_pm_ops,
+ };
 -- 
-2.1.1
+1.9.1
