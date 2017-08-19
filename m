@@ -1,126 +1,90 @@
-Return-Path: <SRS0=sEN8=73=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=sEN8=73=arm.com=marc.zyngier@kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-To: Mason <slash.tmp@free.fr>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>,  Bjorn Helgaas <helgaas@kernel.org>,  linux-pci <linux-pci@vger.kernel.org>,  Linux ARM <linux-arm-kernel@lists.infradead.org>,  Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,  Marc Gonzalez <Marc_Gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-In-Reply-To: <e381170c-e462-01cd-12db-30773005602b@free.fr> (Mason's message
-	of "Thu, 24 Aug 2017 22:53:16 +0200")
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
-	<8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com>
-	<4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
-	<86efs3wesi.fsf@arm.com>
-	<20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
-	<e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
-	<CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
-	<e381170c-e462-01cd-12db-30773005602b@free.fr>
-Date: Fri, 25 Aug 2017 08:54:15 +0100
-Message-ID: <871so09j6g.fsf@arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 19 Aug 2017 16:18:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ravi Shankar Jonnalagadda <venkata.ravi.jonnalagadda@xilinx.com>
+Subject: Re: [PATCH 2/4] PCI:xilinx-nwl: Correcting Styling checks
+Message-ID: <20170819211803.GV28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <1502190739-13474-1-git-send-email-vjonnal@xilinx.com>
+ <1502190739-13474-3-git-send-email-vjonnal@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1502190739-13474-3-git-send-email-vjonnal@xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, dmaengine@vger.kernel.org,
+ paul.gortmaker@windriver.com, bharat.kumar.gogada@xilinx.com,
+ linux-pci@vger.kernel.org, michal.simek@xilinx.com,
+ linux-kernel@vger.kernel.org, vjonnal@xilinx.com,
+ linux-arm-kernel@lists.infradead.org, bhelgaas@google.com,
+ dan.j.williams@intel.com, vinod.koul@intel.com, soren.brinkmann@xilinx.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 24 2017 at 10:53:16 pm BST, Mason <slash.tmp@free.fr> wrote:
-> On 24/08/2017 20:35, Ard Biesheuvel wrote:
->> On 24 August 2017 at 18:51, Marc Gonzalez wrote:
->>> On 24/08/2017 19:04, Bjorn Helgaas wrote:
->>>> On Tue, Aug 22, 2017 Marc Zyngier wrote:
->>>>> Marc Gonzalez wrote:
->>>>>> On 22/08/2017 18:29, Marc Zyngier wrote:
->>>>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
->>>>>>>
->>>>>>>>  #define SMP8759_MUX              0x48
->>>>>>>>  #define SMP8759_TEST_OUT 0x74
->>>>>>>> +#define SMP8759_STATUS           0x80
->>>>>>>> +#define SMP8759_ENABLE           0xa0
->>>>>>>> +#define SMP8759_DOORBELL 0xa002e07c
->>>>>>>
->>>>>>> Why is this hardcoded and not coming from the device-tree, just like any
->>>>>>> other address property?
->>>>>>
->>>>>> Since this bus address is software-configurable, I didn't think
->>>>>> it belonged in the DT. Also, I didn't see anything similar in
->>>>>> other binding docs, especially
->>>>>>
->>>>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
->>>>>
->>>>> If that's software configurable, how on Earth did you pick the address?
->>>>> How do you ensure that it doesn't conflict with DMA? How is it
->>>>> configured into the RC?
->>>>
->>>> But we *do* need to resolve this.  This does seem like an address that
->>>> shouldn't be hard-coded into the driver.  Since this driver is
->>>> programming the address into an MSI message, but not into the receiver
->>>> of that message, there's a coordination issue between this driver and
->>>> whatever other software does that receiver configuration.
->>>
->>> OK. I'll move the doorbell address to the DT for v11.
->>>
->>> What property should be used for this address?
->>>
->>> sigma,doorbell ?
->>>
->>> Or maybe I can put it in reg, since I have a 1:1 mapping
->>> between bus and cpu addresses?
->>>
->>> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
->>> returns nothing.
->> 
->> You haven't answered the question yet: you stated that the doorbell
->> address is software configurable, yet your code does not seem to
->> configure it. It only returns the doorbell address so that it gets
->> communicated to the downstream devices.
->> 
->> So how does the RC know which address is special, so it can trigger on
->> inbound writes hitting that address and assert the SPI ?
->
-> The CPU address of the MSI doorbell address is 0x2e07c
-> i.e. within the reg space of the PCIe controller block.
+On Tue, Aug 08, 2017 at 04:42:17PM +0530, Ravi Shankar Jonnalagadda wrote:
 
-Which you describe in DT already, right? So why aren't you using an
-offset in this region as your MSI ddorbell (potentially applying an
-offset, see below)?
+s/PCI:xilinx-nwl: Correcting Styling checks/PCI: xilinx-nwl: Clean up whitespace/
 
->
-> As I discussed back in March, the RC implements an odd
-> bus-to-system mapping.
->
-> RC BAR0 defines a window in PCI address space (max 1GB).
-> Accesses outside this window are silently ignored.
-> The window is divided into 8 "regions" and there are 8
-> registers defining the offset into CPU space.
->
-> In pseudo code, assuming pci_address is within the
-> window defined by BAR0:
->
-> cpu_address map_bus_to_system(pci_address)
-> {
->     temp = pci_address - BAR0.base
->     region = temp / region_size
->     offset = temp % region_size
->     cpu_address = region_reg[region] + offset
->     return cpu_address
-> }
->
-> The current setup is:
->
-> DRAM at 0x80000000-0xa0000000
-> BAR0.base = 0x80000000
-> REGION[0] = 0x80000000
-> REGION[1] = 0x88000000
-> REGION[2] = 0x90000000
-> REGION[3] = 0x98000000
-> REGION[4] = 0x0
->
-> (This map means 1:1 identity for DRAM addresses.)
->
-> Thus when a device writes to 0xa002e07c (region 4)
-> the write is forwarded to 0x2e07c.
+> Correcting Style checks thrown by checkpatch scripts
 
-But how do you find out about the 0xa0000000 offset? You must make sure
-that the provided address is outside of RAM, should you end-up on a
-system more than 1GB of RAM.
+s/Correcting Style checks thrown/Correct whitespace errors reported/
 
-	M.
--- 
-Jazz is not dead, it just smell funny.
+> Signed-off-by: Ravi Shankar Jonnalagadda <vjonnal@xilinx.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/pci/host/pcie-xilinx-nwl.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+> index 5766582..3c62e3d 100644
+> --- a/drivers/pci/host/pcie-xilinx-nwl.c
+> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
+> @@ -506,15 +506,15 @@ static int nwl_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
+>  
+>  	for (i = 0; i < nr_irqs; i++) {
+>  		irq_domain_set_info(domain, virq + i, bit + i, &nwl_irq_chip,
+> -				domain->host_data, handle_simple_irq,
+> -				NULL, NULL);
+> +				    domain->host_data, handle_simple_irq,
+> +				    NULL, NULL);
+>  	}
+>  	mutex_unlock(&msi->lock);
+>  	return 0;
+>  }
+>  
+>  static void nwl_irq_domain_free(struct irq_domain *domain, unsigned int virq,
+> -					unsigned int nr_irqs)
+> +				unsigned int nr_irqs)
+>  {
+>  	struct irq_data *data = irq_domain_get_irq_data(domain, virq);
+>  	struct nwl_pcie *pcie = irq_data_get_irq_chip_data(data);
+> @@ -767,7 +767,6 @@ static int nwl_pcie_bridge_init(struct nwl_pcie *pcie)
+>  	/* Enable all misc interrupts */
+>  	nwl_bridge_writel(pcie, MSGF_MISC_SR_MASKALL, MSGF_MISC_MASK);
+>  
+> -
+>  	/* Disable all legacy interrupts */
+>  	nwl_bridge_writel(pcie, (u32)~MSGF_LEG_SR_MASKALL, MSGF_LEG_MASK);
+>  
+> @@ -932,4 +931,5 @@ static struct platform_driver nwl_pcie_driver = {
+>  	},
+>  	.probe = nwl_pcie_probe,
+>  };
+> +
+>  builtin_platform_driver(nwl_pcie_driver);
+> -- 
+> 2.1.1
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
