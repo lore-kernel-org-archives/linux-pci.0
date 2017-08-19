@@ -1,133 +1,255 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 4 Aug 2017 08:18:09 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Honghui Zhang <honghui.zhang@mediatek.com>
-Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
- support
-Message-ID: <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
- <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
- <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
- <1501835976.24341.21.camel@mtksdaap41>
+Return-Path: <SRS0=b4qK=7V=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=b4qK=7V=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
+Subject: [PATCH V5 1/2] PCI/DPC: Add eDPC support
+Date: Sat, 19 Aug 2017 17:07:20 +0800
+Message-ID: <1503133641-114550-2-git-send-email-liudongdong3@huawei.com>
+In-Reply-To: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
+References: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1501835976.24341.21.camel@mtksdaap41>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, xinping.qian@mediatek.com,
- linux-kernel@vger.kernel.org, robh+dt@kernel.org, yt.shen@mediatek.com,
- matthias.bgg@gmail.com, robh@kerenl.org, linux-mediatek@lists.infradead.org,
- yong.wu@mediatek.com, bhelgaas@google.com, yingjoe.chen@mediatek.com,
- eddie.huang@mediatek.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
-> On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
-> 
-> 
-> ......
-> > > +}
-> > > +
-> > > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
-> > > +						struct pci_bus *bus, int devfn)
-> > > +{
-> > > +	struct pci_dev *dev;
-> > > +	struct pci_bus *pbus;
-> > > +	struct mtk_pcie_port *port, *tmp;
-> > > +
-> > > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
-> > > +			return port;
-> > > +		} else if (bus->number != 0) {
-> > > +			pbus = bus;
-> > > +			do {
-> > > +				dev = pbus->self;
-> > > +				if (port->index == PCI_SLOT(dev->devfn))
-> > > +					return port;
-> > > +				pbus = dev->bus;
-> > > +			} while (dev->bus->number != 0);
-> > > +		}
-> > > +	}
-> > > +
-> > > +	return NULL;
-> > 
-> > You should be able to use sysdata to avoid searching the list.
-> > See drivers/pci/host/pci-aardvark.c, for example.
-> > 
-> 
-> I could put the mtk_pcie * in sysdata, but still need to searching the
-> list to get the mtk_pcie_port *, how about:
-> 
-> 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> 		if (port->index == PCI_SLOT(devfn))
-> 			return port;
-> 	}
+This code is to add eDPC support. Get and print the RP PIO error
+information when the trigger condition is RP PIO error.
 
-No.  Other drivers don't need to search the list.  Please take a look
-at them and see how they solve this problem.  I don't think your
-hardware is fundamentally different in a way that means you need to
-search when the others don't.
+For more information on eDPC, please see PCI Express Base Specification
+Revision 3.1, section 6.2.10.3, or view the PCI-SIG eDPC ECN here:
+https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
 
-> > > +	 * Enable rc internal reset.
-> > > +	 * The reset will work when the link is from link up to link down.
-> > 
-> > ?  That sentence doesn't parse for me.
-> 
-> What about:
-> 
-> 	/*
-> 	 * Enable PCIe link down reset, if link status changed from link up to
-> 	 * link down, this will reset MAC control registers and configuration
-> 	 * space.
-> 	 */
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+---
+ drivers/pci/pcie/pcie-dpc.c   | 162 ++++++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/pci_regs.h |  10 +++
+ 2 files changed, 172 insertions(+)
 
-That at least parses as a sentence.
-
-> > > +	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-> > > +						 &intx_domain_ops, port);
-> > 
-> > I think there's an issue here with a 4-element IRQ domain and the
-> > hwirq numbers 1-4 from the of_irq_parse_and_map_pci() path, so INTD
-> > may not work correctly.
-> > 
-> > See
-> > http://lkml.kernel.org/r/20170801212931.GA26498@bhelgaas-glaptop.roam.corp.google.com
-> > and related discussion.
-> 
-> Sorry, I did not get this,
-> I do some test with an intel E350T4 PCIe NICs, it's a x1 lane
-> multi-function device.
-> What I got from the log is below:
-> ->of_irq_parse_and_map_pci
-> 	->of_irq_parse_pci
-> 		->irq_create_of_mapping
-> 			->irq_create_fwspec_mapping
-> 				->irq_domain_translate
-> 				which will go through
-> 				d->ops->translate #the hwirq really start from 0
-> 
-> And I tested every NIC port of the Intel E350T4 with tftp transfer data,
-> seems all are OK with this code.
-
-OK.  I don't know what d->ops->translate is involved here, but if it
-works, I guess this is OK for now.  We're trying to clean this up and
-make it consistent across all the drivers.  Many of them allocate a
-5-element IRQ domain, some make a 4-element domain, and on some of
-them INTD doesn't work.  It's a mess.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index c39f32e..8428d74 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -16,11 +16,55 @@
+ #include <linux/pcieport_if.h>
+ #include "../pci.h"
+ 
++struct rp_pio_header_log_regs {
++	u32 dw0;
++	u32 dw1;
++	u32 dw2;
++	u32 dw3;
++};
++
++struct dpc_rp_pio_regs {
++	u32 status;
++	u32 mask;
++	u32 severity;
++	u32 syserror;
++	u32 exception;
++
++	struct rp_pio_header_log_regs header_log;
++	u32 impspec_log;
++	u32 tlp_prefix_log[4];
++	u32 log_size;
++	u16 first_error;
++};
++
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+ 	int			cap_pos;
+ 	bool			rp;
++	u32			rp_pio_status;
++};
++
++static const char * const rp_pio_error_string[] = {
++	"Configuration Request received UR Completion",	 /* Bit Position 0  */
++	"Configuration Request received CA Completion",	 /* Bit Position 1  */
++	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	"I/O Request received UR Completion",		 /* Bit Position 8  */
++	"I/O Request received CA Completion",		 /* Bit Position 9  */
++	"I/O Request Completion Timeout",		 /* Bit Position 10 */
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	NULL,
++	"Memory Request received UR Completion",	 /* Bit Position 16 */
++	"Memory Request received CA Completion",	 /* Bit Position 17 */
++	"Memory Request Completion Timeout",		 /* Bit Position 18 */
+ };
+ 
+ static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
+@@ -79,10 +123,124 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	dpc_wait_link_inactive(pdev);
+ 	if (dpc->rp && dpc_wait_rp_inactive(dpc))
+ 		return;
++	if (dpc->rp && dpc->rp_pio_status) {
++		pci_write_config_dword(pdev,
++				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++				      dpc->rp_pio_status);
++		dpc->rp_pio_status = 0;
++	}
++
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+ }
+ 
++static void dpc_rp_pio_print_tlp_header(struct device *dev,
++					struct rp_pio_header_log_regs *t)
++{
++	dev_err(dev, "TLP Header: %#010x %#010x %#010x %#010x\n",
++		t->dw0, t->dw1, t->dw2, t->dw3);
++}
++
++static void dpc_rp_pio_print_error(struct dpc_dev *dpc,
++				   struct dpc_rp_pio_regs *rp_pio)
++{
++	struct device *dev = &dpc->dev->device;
++	int i;
++	u32 status;
++
++	dev_err(dev, "rp_pio_status: %#010x, rp_pio_mask: %#010x\n",
++		rp_pio->status, rp_pio->mask);
++
++	dev_err(dev, "RP PIO severity=%#010x, syserror=%#010x, exception=%#010x\n",
++		rp_pio->severity, rp_pio->syserror, rp_pio->exception);
++
++	status = (rp_pio->status & ~rp_pio->mask);
++
++	for (i = 0; i < ARRAY_SIZE(rp_pio_error_string); i++) {
++		if (!(status & (1 << i)))
++			continue;
++
++		dev_err(dev, "[%2d] %s%s\n", i, rp_pio_error_string[i],
++			rp_pio->first_error == i ? " (First)" : "");
++	}
++
++	dpc_rp_pio_print_tlp_header(dev, &rp_pio->header_log);
++	if (rp_pio->log_size == 4)
++		return;
++	dev_err(dev, "RP PIO ImpSpec Log %#010x\n", rp_pio->impspec_log);
++
++	for (i = 0; i < rp_pio->log_size - 5; i++)
++		dev_err(dev, "TLP Prefix Header: dw%d, %#010x\n", i,
++			rp_pio->tlp_prefix_log[i]);
++}
++
++static void dpc_rp_pio_get_info(struct dpc_dev *dpc,
++				struct dpc_rp_pio_regs *rp_pio)
++{
++	struct pci_dev *pdev = dpc->dev->port;
++	struct device *dev = &dpc->dev->device;
++	int i;
++	u16 cap;
++	u16 status;
++
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
++			      &rp_pio->status);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_MASK,
++			      &rp_pio->mask);
++
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SEVERITY,
++			      &rp_pio->severity);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_SYSERROR,
++			      &rp_pio->syserror);
++	pci_read_config_dword(pdev, dpc->cap_pos + PCI_EXP_DPC_RP_PIO_EXCEPTION,
++			      &rp_pio->exception);
++
++	/* Get First Error Pointer */
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	rp_pio->first_error = (status & 0x1f00) >> 8;
++
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
++	rp_pio->log_size = (cap & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8;
++	if (rp_pio->log_size < 4 || rp_pio->log_size > 9) {
++		dev_err(dev, "RP PIO log size %u is invalid\n",
++			rp_pio->log_size);
++		return;
++	}
++
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG,
++			      &rp_pio->header_log.dw0);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 4,
++			      &rp_pio->header_log.dw1);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 8,
++			      &rp_pio->header_log.dw2);
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_HEADER_LOG + 12,
++			      &rp_pio->header_log.dw3);
++	if (rp_pio->log_size == 4)
++		return;
++
++	pci_read_config_dword(pdev,
++			      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG,
++			      &rp_pio->impspec_log);
++	for (i = 0; i < rp_pio->log_size - 5; i++)
++		pci_read_config_dword(pdev,
++			dpc->cap_pos + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG,
++			&rp_pio->tlp_prefix_log[i]);
++}
++
++static void dpc_process_rp_pio_error(struct dpc_dev *dpc)
++{
++	struct dpc_rp_pio_regs rp_pio_regs;
++
++	dpc_rp_pio_get_info(dpc, &rp_pio_regs);
++	dpc_rp_pio_print_error(dpc, &rp_pio_regs);
++
++	dpc->rp_pio_status = rp_pio_regs.status;
++}
++
+ static irqreturn_t dpc_irq(int irq, void *context)
+ {
+ 	struct dpc_dev *dpc = (struct dpc_dev *)context;
+@@ -109,6 +267,10 @@ static irqreturn_t dpc_irq(int irq, void *context)
+ 			 (ext_reason == 0) ? "RP PIO error" :
+ 			 (ext_reason == 1) ? "software trigger" :
+ 					     "reserved error");
++		/* show RP PIO error detail information */
++		if (reason == 3 && ext_reason == 0)
++			dpc_process_rp_pio_error(dpc);
++
+ 		schedule_work(&dpc->work);
+ 	}
+ 	return IRQ_HANDLED;
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index c22d3eb..1ce9627 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -967,6 +967,7 @@
+ #define  PCI_EXP_DPC_CAP_RP_EXT		0x20	/* Root Port Extensions for DPC */
+ #define  PCI_EXP_DPC_CAP_POISONED_TLP	0x40	/* Poisoned TLP Egress Blocking Supported */
+ #define  PCI_EXP_DPC_CAP_SW_TRIGGER	0x80	/* Software Triggering Supported */
++#define  PCI_EXP_DPC_RP_PIO_LOG_SIZE	0xF00	/* RP PIO log size */
+ #define  PCI_EXP_DPC_CAP_DL_ACTIVE	0x1000	/* ERR_COR signal on DL_Active supported */
+ 
+ #define PCI_EXP_DPC_CTL			6	/* DPC control */
+@@ -980,6 +981,15 @@
+ 
+ #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
+ 
++#define PCI_EXP_DPC_RP_PIO_STATUS	 0x0C	/* RP PIO Status */
++#define PCI_EXP_DPC_RP_PIO_MASK		 0x10	/* RP PIO MASK */
++#define PCI_EXP_DPC_RP_PIO_SEVERITY	 0x14	/* RP PIO Severity */
++#define PCI_EXP_DPC_RP_PIO_SYSERROR	 0x18	/* RP PIO SysError */
++#define PCI_EXP_DPC_RP_PIO_EXCEPTION	 0x1C	/* RP PIO Exception */
++#define PCI_EXP_DPC_RP_PIO_HEADER_LOG	 0x20	/* RP PIO Header Log */
++#define PCI_EXP_DPC_RP_PIO_IMPSPEC_LOG	 0x30	/* RP PIO ImpSpec Log */
++#define PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG 0x34	/* RP PIO TLP Prefix Log */
++
+ /* Precision Time Measurement */
+ #define PCI_PTM_CAP			0x04	    /* PTM Capability */
+ #define  PCI_PTM_CAP_REQ		0x00000001  /* Requester capable */
+-- 
+1.9.1
