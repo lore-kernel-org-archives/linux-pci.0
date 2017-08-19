@@ -1,32 +1,46 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 15 Aug 2017 17:53:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Harunobu Kurokawa <harunobu.kurokawa.dn@renesas.com>
-Cc: horms@verge.net.au, bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] PCI: rcar-pcie: Fix memory leak
-Message-ID: <20170815225324.GT32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170804033255.27171-1-harunobu.kurokawa.dn@renesas.com>
+Return-Path: <SRS0=b4qK=7V=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=b4qK=7V=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
+Subject: [PATCH V5 0/2] PCI/DPC: Add eDPC support
+Date: Sat, 19 Aug 2017 17:07:19 +0800
+Message-ID: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170804033255.27171-1-harunobu.kurokawa.dn@renesas.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 12:32:53PM +0900, Harunobu Kurokawa wrote:
-> When no PCIe card is inserted, there is a memory leak as
-> pci_free_resource_list is not called before returning.
-> 
-> v2:
->  separate the patch to two files.
-> 
-> Harunobu Kurokawa (1):
->   PCI: rcar-pcie: Fix memory leak when no PCIe card is inserted
-> 
-> Lorenzo Pieralisi (1):
->   PCI: rcar: Fix error exit path
-> 
->  drivers/pci/host/pcie-rcar.c | 12 ++++++------
->  1 file changed, 6 insertions(+), 6 deletions(-)
+This patchset is to add eDPC support and use a local
+"struct device *dev" for brevity and consistency in DPC driver.
 
-Applied with Simon's ack to pci/host-rcar for v4.14, thanks!
+v4->v5:
+- Fix some compile warnings.
+
+v3->v4:
+- Use pcie_device's device to keep consistency.
+- Adjust patch sequence.
+ 
+v2->v3: 
+- Add a separate patch to use a local "struct device *dev" 
+  for brevity and consistency in  DPC driver.
+- Fix comments on PATCH V2.
+- Rebase on v4.13-rc5.
+
+v1->v2: 
+- Use a stack local variable instead of the allocated memory for
+  collecting RP PIO information.
+- Fix the condition of RP PIO error.
+- Rebase on v4.13-rc1.
+
+Dongdong Liu (2):
+  PCI/DPC: Add eDPC support
+  PCI/DPC: Add local struct device
+
+ drivers/pci/pcie/pcie-dpc.c   | 187 +++++++++++++++++++++++++++++++++++++++---
+ include/uapi/linux/pci_regs.h |  10 +++
+ 2 files changed, 187 insertions(+), 10 deletions(-)
+
+-- 
+1.9.1
