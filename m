@@ -1,138 +1,50 @@
-Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=jsZr=7R=huawei.com=dingtianhong@kernel.org>
-From: Ding Tianhong <dingtianhong@huawei.com>
-To: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <linux-arm-kernel@lists.infradead.org>, <netdev@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>
-CC: Ding Tianhong <dingtianhong@huawei.com>
-Subject: [PATCH v11 2/5] PCI: Disable Relaxed Ordering for some Intel processors
-Date: Tue, 15 Aug 2017 11:23:24 +0800
-Message-ID: <1502767407-6812-3-git-send-email-dingtianhong@huawei.com>
-In-Reply-To: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
-References: <1502767407-6812-1-git-send-email-dingtianhong@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33496 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752241AbdHTAGw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 19 Aug 2017 20:06:52 -0400
+Received: by mail-qt0-f196.google.com with SMTP id 57so2414585qtu.0
+        for <linux-pci@vger.kernel.org>; Sat, 19 Aug 2017 17:06:52 -0700 (PDT)
+From: Fabio Estevam <festevam@gmail.com>
+To: bhelgaas@google.com
+Cc: heiko@sntech.de, linux-pci@vger.kernel.org,
+        Fabio Estevam <festevam@gmail.com>
+Subject: [PATCH] PCI: rockchip: Use gpiod_set_value_cansleep() to allow reset via expanders
+Date: Sat, 19 Aug 2017 21:07:14 -0300
+Message-Id: <1503187634-3823-1-git-send-email-festevam@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the Intel spec section 3.9.1 said:
+The reset GPIO can be connected to a I2C or SPI IO expander, which may
+sleep, so it is safer to use the gpiod_set_value_cansleep() variant
+instead.
 
-    3.9.1 Optimizing PCIe Performance for Accesses Toward Coherent Memory
-          and Toward MMIO Regions (P2P)
-
-    In order to maximize performance for PCIe devices in the processors
-    listed in Table 3-6 below, the soft- ware should determine whether the
-    accesses are toward coherent memory (system memory) or toward MMIO
-    regions (P2P access to other devices). If the access is toward MMIO
-    region, then software can command HW to set the RO bit in the TLP
-    header, as this would allow hardware to achieve maximum throughput for
-    these types of accesses. For accesses toward coherent memory, software
-    can command HW to clear the RO bit in the TLP header (no RO), as this
-    would allow hardware to achieve maximum throughput for these types of
-    accesses.
-
-    Table 3-6. Intel Processor CPU RP Device IDs for Processors Optimizing
-               PCIe Performance
-
-    Processor                            CPU RP Device IDs
-
-    Intel Xeon processors based on       6F01H-6F0EH
-    Broadwell microarchitecture
-
-    Intel Xeon processors based on       2F01H-2F0EH
-    Haswell microarchitecture
-
-It means some Intel processors has performance issue when use the Relaxed
-Ordering Attribute, so disable Relaxed Ordering for these root port.
-
-Signed-off-by: Casey Leedom <leedom@chelsio.com>
-Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
-Acked-by: Alexander Duyck <alexander.h.duyck@intel.com>
-Acked-by: Ashok Raj <ashok.raj@intel.com>
+Signed-off-by: Fabio Estevam <festevam@gmail.com>
 ---
- drivers/pci/quirks.c | 62 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
+ drivers/pci/host/pcie-rockchip.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 61b59bf..1272f7e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4027,6 +4027,68 @@ static void quirk_relaxedordering_disable(struct pci_dev *dev)
- }
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 2eccd53..124b280 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -537,7 +537,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	int err, i;
+ 	u32 status;
  
- /*
-+ * Intel Xeon processors based on Broadwell/Haswell microarchitecture Root
-+ * Complex has a Flow Control Credit issue which can cause performance
-+ * problems with Upstream Transaction Layer Packets with Relaxed Ordering set.
-+ */
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f01, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f03, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f04, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f05, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f06, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f07, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f08, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f09, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0a, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0b, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0c, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0d, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x6f0e, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f01, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f02, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f03, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f04, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f05, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f06, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f07, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f08, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f09, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0a, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0b, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0c, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0d, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, 0x2f0e, PCI_CLASS_NOT_DEFINED, 8,
-+			      quirk_relaxedordering_disable);
-+
-+/*
-  * Per PCIe r3.0, sec 2.2.9, "Completion headers must supply the same
-  * values for the Attribute as were supplied in the header of the
-  * corresponding Request, except as explicitly allowed when IDO is used."
+-	gpiod_set_value(rockchip->ep_gpio, 0);
++	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
+ 
+ 	err = reset_control_assert(rockchip->aclk_rst);
+ 	if (err) {
+@@ -682,7 +682,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+ 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+ 			    PCIE_CLIENT_CONFIG);
+ 
+-	gpiod_set_value(rockchip->ep_gpio, 1);
++	gpiod_set_value_cansleep(rockchip->ep_gpio, 1);
+ 
+ 	/* 500ms timeout value should be enough for Gen1/2 training */
+ 	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
 -- 
-1.8.3.1
+2.7.4
