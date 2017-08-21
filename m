@@ -1,106 +1,538 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:38587 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751211AbdH2BcQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Aug 2017 21:32:16 -0400
-From: "Tian, Kevin" <kevin.tian@intel.com>
-To: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        valmiki <valmikibow@gmail.com>,
-        Jean-Philippe Brucker <jean-philippe.brucker@arm.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-CC: "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Lan, Tianyu" <tianyu.lan@intel.com>,
-        "Pan, Jacob jun" <jacob.jun.pan@intel.com>
-Subject: RE: Support SVM without PASID
-Date: Tue, 29 Aug 2017 01:32:11 +0000
-Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190D956F6@SHSMSX101.ccr.corp.intel.com>
-References: <a30962a6-2240-9263-96cc-10da1b179fcc@gmail.com>
- <20170708140257.2de02d63@w520.home>
- <73619426-6fcc-21ce-cfd4-8c66bde63f9a@gmail.com>
- <eb132dfa-6708-5898-c2ce-ce7ab08809b1@arm.com>
- <ee41f5d9-e7fb-8f7c-4b85-87cdb951ec70@gmail.com>
- <ca0d9f94-f5e2-aaaf-2c64-0cd6ecc62754@arm.com>
- <41333a03-bf91-1152-4779-6579845609f6@gmail.com>
- <564ba70b-db95-7fe0-86bb-bb4eefcd87ec@arm.com>
- <32b6402d-40fb-d40c-32f3-1ed6b9a3185a@gmail.com>
- <c142fb8e-3618-152a-fbe3-521e6c8ff9bf@arm.com>
- <dd3a7852-cd9a-3797-9421-dff97f6d7213@gmail.com>
- <9b8611ca-3e39-90ec-e18e-7455115b38b3@arm.com>
- <e5be8314-dd3c-703a-3d46-cd180d404627@gmail.com>
- <AADFC41AFE54684AB9EE6CBC0274A5D190D71673@SHSMSX101.ccr.corp.intel.com>
- <BLUPR0201MB15051529B1A13F03B4CE7342A59E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-In-Reply-To: <BLUPR0201MB15051529B1A13F03B4CE7342A59E0@BLUPR0201MB1505.namprd02.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 21 Aug 2017 11:53:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Daniel Axtens <dja@axtens.net>
+Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
+Message-ID: <20170821105300.GB23287@e107981-lin.cambridge.arm.com>
+References: <20170817113028.16853-1-dja@axtens.net>
+ <20170817113028.16853-2-dja@axtens.net>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170817113028.16853-2-dja@axtens.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, gabriele.paoloni@huawei.com, airlied@linux.ie,
+ linux-pci@vger.kernel.org, will.deacon@arm.com,
+ dri-devel@lists.freedesktop.org, z.liuxinliang@hisilicon.com,
+ bhelgaas@google.com, alex.williamson@redhat.com, lukas@wunner.de,
+ benh@kernel.crashing.org, zourongrong@gmail.com, daniel.vetter@intel.com,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> From: Bharat Kumar Gogada [mailto:bharatku@xilinx.com]
-> Sent: Monday, August 28, 2017 9:10 PM
+On Thu, Aug 17, 2017 at 09:30:28PM +1000, Daniel Axtens wrote:
+> A system without PCI legacy resources (e.g. ARM64) may find that no
+> default/boot VGA device has been marked, because the VGA arbiter
+> checks for legacy resource decoding before marking a card as default.
+
+I do not understand this paragraph, in particular:
+
+- "A system without PCI legacy resources (e.g. ARM64)". What does this
+  mean ? I take this as "ARM64 does not support IO space"; if a PCI host
+  bridge supports IO space, there is nothing from an architectural
+  point of view that prevents an MMIO based IO space implementation to
+  work on ARM64. It is PCI bridge specific, not arch specific.
+- "the VGA arbiter checks for legacy resources". Do you mean it checks
+  if a VGA class device enabled IO/MEM address spaces (and if the
+  bridges upstream forwards those address spaces), correct ?
+
+The assumption relying on ARM64 not supporting IO space (if that's what
+you mean by "a system without PCI legacy resources") is not correct.
+
+Thanks,
+Lorenzo
+
+> Split the small bit of code that does default VGA handling out from
+> the arbiter. Add a Kconfig option to allow the kernel to be built
+> with just the default handling, or the arbiter and default handling.
 > 
-> > Subject: RE: Support SVM without PASID
-> >
-> > > From: valmiki [mailto:valmikibow@gmail.com]
-> > > Sent: Saturday, August 12, 2017 8:11 PM
-> > >
-> > > On 8/7/2017 4:01 PM, Jean-Philippe Brucker wrote:
-> > > > On 05/08/17 06:14, valmiki wrote:
-> > > > [...]
-> > > >> Hi Jean, Thanks a lot, now i understood the flow. From vfio kernel
-> > > >> documentation we fill vaddr and iova in struct
-> > > vfio_iommu_type1_dma_map
-> > > >> and pass them to VFIO. But if we use dynamic allocation in
-> > > >> application (say malloc), do we need to use dma API to get iova and
-> > > >> then call VFIO_IOMMU_MAP ioctl ?
-> > > >> If application needs multiple such dynamic allocations, then it
-> > > >> need to allocate large chunk and program it via VFIO_IOMMU_MAP
-> > > >> ioctl and
-> > > then
-> > > >> manage rest allocations requirements from this buffer ?
-> > > >
-> > > > Yes, without SVM, the application allocates large buffers, allocates
-> > > > IOVAs itself, and maps them with VFIO_IOMMU_MAP. Userspace
-> doesn't
-> > > > rely
-> > > on the
-> > > > DMA API at all, it manages IOVAs as it wants. Sizes passed to
-> > > > VFIO_IOMMU_MAP have to be multiples of the MMU or IOMMU page
-> > > granularity
-> > > > (that is at least 4kB), and both iova and vaddr have to be aligned
-> > > > on that granularity as well. So malloc isn't really suitable in this
-> > > > case, you'll need mmap. The application can then implement a small
-> > > > allocator to
-> > > manage
-> > > > the DMA pool created with VFIO_IOMMU_MAP.
-> > >
-> > > Thanks Jean, I have a confusion allocate IOVA's in userspace means,
-> > > how can user application decide IOVA address, can user application
-> > > pick any random IOVA address ?
-> > >
-> >
-> > yes, any address. In this mode the whole IOVA address space is owned by
-> > application, which just needs to use VFIO_IOMMU_MAP to setup
-> > IOVA->PA mapping in IOMMU (As Jean pointed out, input paramters
-> > are iova and vaddr. VFIO will figure out pa corresponding to vaddr).
-> >
-> Hi Kevin, I have a doubt in this case, what if someone assigns mmap
-> returned virtual address as iova address, then
-> EP will assume it is generating request on IOVA but in reality we are using
-> application allocated virtual address, then
-> it looks like we are working with application virtual address directly without
-> PASID. Is this valid ?
+> Add handling for devices that should be marked as default but aren't
+> handled by the vga arbiter by adding a late initcall and a class
+> enable hook. If there is no default from vgaarb then the first card
+> that is enabled, has a driver bound, and can decode memory or I/O
+> will be marked as default.
+> 
+> Signed-off-by: Daniel Axtens <dja@axtens.net>
+> 
+> ---
+> 
+> v2: Tested on:
+>  - x86_64 laptop
+>  - arm64 D05 board with hibmc card
+>  - qemu powerpc with tcg and bochs std-vga
+> 
+> I know this adds another config option and that's a bit sad, but
+> we can't include it unconditionally as it depends on PCI.
+> Suggestions welcome.
+> ---
+>  arch/ia64/pci/fixup.c            |   2 +-
+>  arch/powerpc/kernel/pci-common.c |   2 +-
+>  arch/x86/pci/fixup.c             |   2 +-
+>  arch/x86/video/fbdev.c           |   2 +-
+>  drivers/gpu/vga/Kconfig          |  12 +++
+>  drivers/gpu/vga/Makefile         |   1 +
+>  drivers/gpu/vga/vga_default.c    | 159 +++++++++++++++++++++++++++++++++++++++
+>  drivers/gpu/vga/vga_switcheroo.c |   2 +-
+>  drivers/gpu/vga/vgaarb.c         |  41 +---------
+>  drivers/pci/pci-sysfs.c          |   2 +-
+>  include/linux/vga_default.h      |  44 +++++++++++
+>  include/linux/vgaarb.h           |  14 ----
+>  12 files changed, 225 insertions(+), 58 deletions(-)
+>  create mode 100644 drivers/gpu/vga/vga_default.c
+>  create mode 100644 include/linux/vga_default.h
+> 
+> diff --git a/arch/ia64/pci/fixup.c b/arch/ia64/pci/fixup.c
+> index 41caa99add51..b35d1cf4501a 100644
+> --- a/arch/ia64/pci/fixup.c
+> +++ b/arch/ia64/pci/fixup.c
+> @@ -5,7 +5,7 @@
+>  
+>  #include <linux/pci.h>
+>  #include <linux/init.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <linux/screen_info.h>
+>  
+>  #include <asm/machvec.h>
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index 341a7469cab8..4fd890a51d18 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -31,7 +31,7 @@
+>  #include <linux/irq.h>
+>  #include <linux/vmalloc.h>
+>  #include <linux/slab.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  
+>  #include <asm/processor.h>
+>  #include <asm/io.h>
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 11e407489db0..b1254bc09a45 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -5,7 +5,7 @@
+>  #include <linux/delay.h>
+>  #include <linux/dmi.h>
+>  #include <linux/pci.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <asm/hpet.h>
+>  #include <asm/pci_x86.h>
+>  
+> diff --git a/arch/x86/video/fbdev.c b/arch/x86/video/fbdev.c
+> index 9fd24846d094..62cfa74ea86e 100644
+> --- a/arch/x86/video/fbdev.c
+> +++ b/arch/x86/video/fbdev.c
+> @@ -9,7 +9,7 @@
+>  #include <linux/fb.h>
+>  #include <linux/pci.h>
+>  #include <linux/module.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  
+>  int fb_is_primary_device(struct fb_info *info)
+>  {
+> diff --git a/drivers/gpu/vga/Kconfig b/drivers/gpu/vga/Kconfig
+> index 29437eabe095..81d4105aecf6 100644
+> --- a/drivers/gpu/vga/Kconfig
+> +++ b/drivers/gpu/vga/Kconfig
+> @@ -1,3 +1,14 @@
+> +config VGA_DEFAULT
+> +	bool "VGA Default Device Support" if EXPERT
+> +	default y
+> +	depends on PCI
+> +	help
+> +	  Some programs find it helpful to know what VGA device is the default.
+> +	  On platforms like x86 this means the device used by the BIOS to show
+> +	  early boot messages. On other platforms this may be an arbitrary PCI
+> +	  graphics card. Select this to have a default device recorded within
+> +	  the kernel and exposed to userspace through sysfs.
+> +
+>  config VGA_ARB
+>  	bool "VGA Arbitration" if EXPERT
+>  	default y
+> @@ -22,6 +33,7 @@ config VGA_SWITCHEROO
+>  	depends on X86
+>  	depends on ACPI
+>  	select VGA_ARB
+> +	select VGA_DEFAULT
+>  	help
+>  	  Many laptops released in 2008/9/10 have two GPUs with a multiplexer
+>  	  to switch between them. This adds support for dynamic switching when
+> diff --git a/drivers/gpu/vga/Makefile b/drivers/gpu/vga/Makefile
+> index 14ca30b75d0a..1e30f90d40fb 100644
+> --- a/drivers/gpu/vga/Makefile
+> +++ b/drivers/gpu/vga/Makefile
+> @@ -1,2 +1,3 @@
+>  obj-$(CONFIG_VGA_ARB)  += vgaarb.o
+> +obj-$(CONFIG_VGA_DEFAULT) += vga_default.o
+>  obj-$(CONFIG_VGA_SWITCHEROO) += vga_switcheroo.o
+> diff --git a/drivers/gpu/vga/vga_default.c b/drivers/gpu/vga/vga_default.c
+> new file mode 100644
+> index 000000000000..f6fcb0eb1507
+> --- /dev/null
+> +++ b/drivers/gpu/vga/vga_default.c
+> @@ -0,0 +1,159 @@
+> +/*
+> + * vga_default.c: What is the default/boot PCI VGA device?
+> + *
+> + * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> + * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+> + * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+> + * (C) Copyright 2017 Canonical Ltd. (Author: Daniel Axtens <dja@axtens.net>)
+> + *
+> + * (License from vgaarb.c)
+> + * Permission is hereby granted, free of charge, to any person obtaining a
+> + * copy of this software and associated documentation files (the "Software"),
+> + * to deal in the Software without restriction, including without limitation
+> + * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+> + * and/or sell copies of the Software, and to permit persons to whom the
+> + * Software is furnished to do so, subject to the following conditions:
+> + *
+> + * The above copyright notice and this permission notice (including the next
+> + * paragraph) shall be included in all copies or substantial portions of the
+> + * Software.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> + * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> + * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+> + * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> + * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+> + * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+> + * DEALINGS
+> + * IN THE SOFTWARE.
+> + */
+> +
+> +/*
+> + * What device should a graphics system draw to? In order of priority:
+> + *
+> + *  1) Any devices configured specifically by the user (think
+> + *     xorg.conf).
+> + *
+> + *  2) If the platform has a concept of a boot device for early boot
+> + *     messages (think BIOS displays on x86), that device.
+> + *
+> + *  3) If the platform does not have the concept of a boot device,
+> + *     then we still want to pick something. For now, pick the first
+> + *     PCI VGA device with a driver bound and with memory or I/O
+> + *     control on.
+> + */
+> +
+> +#include <linux/module.h>
+> +#include <linux/kernel.h>
+> +#include <linux/pci.h>
+> +#include <linux/init.h>
+> +
+> +#include <linux/vga_default.h>
+> +
+> +static struct pci_dev *vga_default;
+> +/*
+> + * only go active after the late initcall so as not to interfere with
+> + * the arbiter
+> + */
+> +static bool vga_default_active = false;
+> +
+> +/**
+> + * vga_default_device - return the default VGA device
+> + *
+> + * This can be defined by the platform. The default implementation
+> + * is rather dumb and will probably only work properly on single
+> + * vga card setups and/or x86 platforms.
+> + *
+> + * If your VGA default device is not PCI, you'll have to return
+> + * NULL here. In this case, I assume it will not conflict with
+> + * any PCI card. If this is not true, I'll have to define two archs
+> + * hooks for enabling/disabling the VGA default device if that is
+> + * possible. This may be a problem with real _ISA_ VGA cards, in
+> + * addition to a PCI one. I don't know at this point how to deal
+> + * with that card. Can theirs IOs be disabled at all ? If not, then
+> + * I suppose it's a matter of having the proper arch hook telling
+> + * us about it, so we basically never allow anybody to succeed a
+> + * vga_get()...
+> + */
+> +
+> +struct pci_dev *vga_default_device(void)
+> +{
+> +	return vga_default;
+> +}
+> +EXPORT_SYMBOL_GPL(vga_default_device);
+> +
+> +void vga_set_default_device(struct pci_dev *pdev)
+> +{
+> +	if (vga_default == pdev)
+> +		return;
+> +
+> +	pci_dev_put(vga_default);
+> +	vga_default = pci_dev_get(pdev);
+> +}
+> +
+> +static bool vga_default_try_device(struct pci_dev *pdev)
+> +{
+> +	u16 cmd;
+> +
+> +	/* Only deal with VGA class devices */
+> +	if ((pdev->class >> 8) != PCI_CLASS_DISPLAY_VGA)
+> +		return false;
+> +
+> +	/* Only deal with devices with drivers bound */
+> +	if (!pdev->driver)
+> +		return false;
+> +
+> +	/* Require I/O or memory control */
+> +	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
+> +	if (!(cmd & (PCI_COMMAND_IO | PCI_COMMAND_MEMORY)))
+> +		return false;
+> +
+> +	dev_info(&pdev->dev, "vga_default: setting as default device\n");
+> +	vga_set_default_device(pdev);
+> +	return true;
+> +}
+> +
+> +static int __init vga_default_init(void)
+> +{
+> +	struct pci_dev *pdev;
+> +
+> +	vga_default_active = true;
+> +
+> +	if (vga_default_device())
+> +		return 0;
+> +
+> +	pdev = NULL;
+> +	while ((pdev =
+> +		pci_get_subsys(PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+> +			       PCI_ANY_ID, pdev)) != NULL) {
+> +		if (vga_default_try_device(pdev))
+> +			return 0;
+> +	}
+> +
+> +	return 0;
+> +}
+> +late_initcall(vga_default_init);
+> +
+> +/*
+> + * A driver could be loaded much later than late_initcall, for example
+> + * if it's in a module.
+> + *
+> + * We want to pick that up. However, we want to make sure this does
+> + * not interfere with the arbiter - it should only activate if the
+> + * arbiter has already had a chance to operate. To ensure this, we set
+> + * vga_default_active in the late_initcall: as the vga arbiter is a
+> + * subsys initcall, it is guaranteed to fire first.
+> + */
+> +static void vga_default_enable_hook(struct pci_dev *pdev)
+> +{
+> +       if (!vga_default_active)
+> +	       return;
+> +
+> +       if (vga_default_device())
+> +               return;
+> +
+> +       vga_default_try_device(pdev);
+> +}
+> +DECLARE_PCI_FIXUP_CLASS_ENABLE(PCI_ANY_ID, PCI_ANY_ID,
+> +			       PCI_CLASS_DISPLAY_VGA, 8,
+> +			       vga_default_enable_hook)
+> diff --git a/drivers/gpu/vga/vga_switcheroo.c b/drivers/gpu/vga/vga_switcheroo.c
+> index 3cd153c6d271..6612ec7981b6 100644
+> --- a/drivers/gpu/vga/vga_switcheroo.c
+> +++ b/drivers/gpu/vga/vga_switcheroo.c
+> @@ -41,7 +41,7 @@
+>  #include <linux/pm_runtime.h>
+>  #include <linux/seq_file.h>
+>  #include <linux/uaccess.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <linux/vga_switcheroo.h>
+>  
+>  /**
+> diff --git a/drivers/gpu/vga/vgaarb.c b/drivers/gpu/vga/vgaarb.c
+> index 76875f6299b8..74683286f5f8 100644
+> --- a/drivers/gpu/vga/vgaarb.c
+> +++ b/drivers/gpu/vga/vgaarb.c
+> @@ -51,6 +51,7 @@
+>  
+>  #include <linux/uaccess.h>
+>  
+> +#include <linux/vga_default.h>
+>  #include <linux/vgaarb.h>
+>  
+>  static void vga_arbiter_notify_clients(void);
+> @@ -119,9 +120,6 @@ static int vga_str_to_iostate(char *buf, int str_size, int *io_state)
+>  	return 1;
+>  }
+>  
+> -/* this is only used a cookie - it should not be dereferenced */
+> -static struct pci_dev *vga_default;
+> -
+>  static void vga_arb_device_card_gone(struct pci_dev *pdev);
+>  
+>  /* Find somebody in our list */
+> @@ -135,39 +133,6 @@ static struct vga_device *vgadev_find(struct pci_dev *pdev)
+>  	return NULL;
+>  }
+>  
+> -/**
+> - * vga_default_device - return the default VGA device, for vgacon
+> - *
+> - * This can be defined by the platform. The default implementation
+> - * is rather dumb and will probably only work properly on single
+> - * vga card setups and/or x86 platforms.
+> - *
+> - * If your VGA default device is not PCI, you'll have to return
+> - * NULL here. In this case, I assume it will not conflict with
+> - * any PCI card. If this is not true, I'll have to define two archs
+> - * hooks for enabling/disabling the VGA default device if that is
+> - * possible. This may be a problem with real _ISA_ VGA cards, in
+> - * addition to a PCI one. I don't know at this point how to deal
+> - * with that card. Can theirs IOs be disabled at all ? If not, then
+> - * I suppose it's a matter of having the proper arch hook telling
+> - * us about it, so we basically never allow anybody to succeed a
+> - * vga_get()...
+> - */
+> -struct pci_dev *vga_default_device(void)
+> -{
+> -	return vga_default;
+> -}
+> -EXPORT_SYMBOL_GPL(vga_default_device);
+> -
+> -void vga_set_default_device(struct pci_dev *pdev)
+> -{
+> -	if (vga_default == pdev)
+> -		return;
+> -
+> -	pci_dev_put(vga_default);
+> -	vga_default = pci_dev_get(pdev);
+> -}
+> -
+>  static inline void vga_irq_set_state(struct vga_device *vgadev, bool state)
+>  {
+>  	if (vgadev->irq_set_state)
+> @@ -667,7 +632,7 @@ static bool vga_arbiter_add_pci_device(struct pci_dev *pdev)
+>  	/* Deal with VGA default device. Use first enabled one
+>  	 * by default if arch doesn't have it's own hook
+>  	 */
+> -	if (vga_default == NULL &&
+> +	if (vga_default_device() == NULL &&
+>  	    ((vgadev->owns & VGA_RSRC_LEGACY_MASK) == VGA_RSRC_LEGACY_MASK)) {
+>  		vgaarb_info(&pdev->dev, "setting as boot VGA device\n");
+>  		vga_set_default_device(pdev);
+> @@ -704,7 +669,7 @@ static bool vga_arbiter_del_pci_device(struct pci_dev *pdev)
+>  		goto bail;
+>  	}
+>  
+> -	if (vga_default == pdev)
+> +	if (vga_default_device() == pdev)
+>  		vga_set_default_device(NULL);
+>  
+>  	if (vgadev->decodes & (VGA_RSRC_LEGACY_IO | VGA_RSRC_LEGACY_MEM))
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 2f3780b50723..c174b427ea2b 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -27,7 +27,7 @@
+>  #include <linux/security.h>
+>  #include <linux/pci-aspm.h>
+>  #include <linux/slab.h>
+> -#include <linux/vgaarb.h>
+> +#include <linux/vga_default.h>
+>  #include <linux/pm_runtime.h>
+>  #include <linux/of.h>
+>  #include "pci.h"
+> diff --git a/include/linux/vga_default.h b/include/linux/vga_default.h
+> new file mode 100644
+> index 000000000000..78df6a2a194c
+> --- /dev/null
+> +++ b/include/linux/vga_default.h
+> @@ -0,0 +1,44 @@
+> +/*
+> + * vga_default.h: What is the default/boot PCI VGA device?
+> + *
+> + * (C) Copyright 2005 Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> + * (C) Copyright 2007 Paulo R. Zanoni <przanoni@gmail.com>
+> + * (C) Copyright 2007, 2009 Tiago Vignatti <vignatti@freedesktop.org>
+> + * (C) Copyright 2017 Canonical Ltd. (Author: Daniel Axtens <dja@axtens.net>)
+> + *
+> + * (License from vgaarb.h)
+> + * Permission is hereby granted, free of charge, to any person obtaining a
+> + * copy of this software and associated documentation files (the "Software"),
+> + * to deal in the Software without restriction, including without limitation
+> + * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+> + * and/or sell copies of the Software, and to permit persons to whom the
+> + * Software is furnished to do so, subject to the following conditions:
+> + *
+> + * The above copyright notice and this permission notice (including the next
+> + * paragraph) shall be included in all copies or substantial portions of the
+> + * Software.
+> + *
+> + * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> + * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> + * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+> + * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> + * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+> + * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+> + * DEALINGS
+> + * IN THE SOFTWARE.
+> + */
+> +
+> +#ifndef LINUX_VGA_DEFAULT_H
+> +#define LINUX_VGA_DEFAULT_H
+> +
+> +struct pci_dev;
+> +
+> +#ifdef CONFIG_VGA_DEFAULT
+> +extern struct pci_dev *vga_default_device(void);
+> +extern void vga_set_default_device(struct pci_dev *pdev);
+> +#else
+> +static inline struct pci_dev *vga_default_device(void) { return NULL; };
+> +static inline void vga_set_default_device(struct pci_dev *pdev) { };
+> +#endif
+> +
+> +#endif
+> diff --git a/include/linux/vgaarb.h b/include/linux/vgaarb.h
+> index ee162e3e879b..953e1955efbe 100644
+> --- a/include/linux/vgaarb.h
+> +++ b/include/linux/vgaarb.h
+> @@ -42,12 +42,6 @@
+>  #define VGA_RSRC_NORMAL_IO     0x04
+>  #define VGA_RSRC_NORMAL_MEM    0x08
+>  
+> -/* Passing that instead of a pci_dev to use the system "default"
+> - * device, that is the one used by vgacon. Archs will probably
+> - * have to provide their own vga_default_device();
+> - */
+> -#define VGA_DEFAULT_DEVICE     (NULL)
+> -
+>  struct pci_dev;
+>  
+>  /* For use by clients */
+> @@ -122,14 +116,6 @@ extern void vga_put(struct pci_dev *pdev, unsigned int rsrc);
+>  #endif
+>  
+>  
+> -#ifdef CONFIG_VGA_ARB
+> -extern struct pci_dev *vga_default_device(void);
+> -extern void vga_set_default_device(struct pci_dev *pdev);
+> -#else
+> -static inline struct pci_dev *vga_default_device(void) { return NULL; };
+> -static inline void vga_set_default_device(struct pci_dev *pdev) { };
+> -#endif
+> -
+>  /*
+>   * Architectures should define this if they have several
+>   * independent PCI domains that can afford concurrent VGA
+> -- 
+> 2.11.0
 > 
 
-IOMMU doesn't care what an address in the DMA transaction from
-a device is. It cares only whether the DMA transaction has PASID
-tagged or not, and then pursue different structure to walk corresponding 
-I/O page table to get a translated address. Each I/O page table hosts
-a standalone virtual address space. An application can implement a
-new allocator to manage the address space (iova != vaddr), or simply
-reuse malloc-ed virtual address (iova == vaddr), which is not what
-hardware really cares about.
-
-Thanks
-Kevin
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
