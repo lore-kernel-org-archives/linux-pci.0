@@ -1,88 +1,158 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
-To: Alex Williamson <alex.williamson@redhat.com>,
- Jan Glauber <jan.glauber@caviumnetworks.com>
-References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
- <1502957663-5527-4-git-send-email-jglauber@cavium.com>
- <20170817070017.1e9c9456@w520.home> <20170818134231.GA3464@hc>
- <20170818081251.2bbffe56@w520.home>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <d7492153-ec84-eb87-13ac-eb3fc9116114@caviumnetworks.com>
-Date: Fri, 18 Aug 2017 08:57:09 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170818081251.2bbffe56@w520.home>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Robert Richter <robert.richter@cavium.com>,
- Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=GmMG=7X=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=GmMG=7X=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v7 2/2] PCI: iproc: add device shutdown for PCI RC
+Date: Mon, 21 Aug 2017 21:28:44 +0530
+Message-Id: <1503331124-25029-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
+References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/18/2017 07:12 AM, Alex Williamson wrote:
-> On Fri, 18 Aug 2017 15:42:31 +0200
-> Jan Glauber <jan.glauber@caviumnetworks.com> wrote:
-> 
->> On Thu, Aug 17, 2017 at 07:00:17AM -0600, Alex Williamson wrote:
->>> On Thu, 17 Aug 2017 10:14:23 +0200
->>> Jan Glauber <jglauber@cavium.com> wrote:
->>>    
->>>> If a PCI device supports neither function-level reset, nor slot
->>>> or bus reset then refuse to probe it. A line is printed to inform
->>>> the user.
->>>
->>> But that's not what this does, this requires that the device is on a
->>> reset-able bus.  This is a massive regression.  With this we could no
->>> longer assign devices on the root complex or any device which doesn't
->>> return from bus reset and currently makes use of the NO_BUS_RESET flag
->>> and works happily otherwise.  Full NAK.  Thanks,
->>
->> Looks like I missed the slot reset check. So how about this:
->>
->> if (pci_probe_reset_slot(pdev->slot) && pci_probe_reset_bus(pdev->bus)) {
->> 	dev_warn(...);
->> 	return -ENODEV;
->> }
->>
->> Or am I still missing something here?
-> 
-> We don't require that a device is on a reset-able bus/slot, so any
-> attempt to impose that requirement means that there are devices that
-> might work perfectly fine that are now excluded from assignment.  The
-> entire premise is unacceptable.  Thanks,
+PERST must be asserted around ~500ms before the reboot is applied.
 
+During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
+LCPLL clock and PERST both goes off simultaneously.
+This will cause certain Endpoints Intel NVMe not get detected, upon
+next boot sequence.
 
-You previously rejected the idea to silently ignore bus reset requests 
-on buses that do not support it.
+This is specifically happening with Intel P3700 400GB series.
+Endpoint is expecting the clock for some amount of time after PERST is
+asserted, which is not happening in Stingray (iproc based SOC).
+This causes NVMe to behave in undefined way.
 
-So this leaves us with two options:
+On the contrary, Intel x86 boards will have ref clock running, so we
+do not see this behavior there.
 
-1) Do nothing, and crash the kernel on systems with bad combinations of 
-PCIe target devices and cn88xx when vfio_pci is used.
+Besides, PCI spec does not stipulate about such timings.
+In-fact it does not tell us, whether PCIe device should consider
+refclk to be available or not to be.
 
-2) Do something else.
+It is completely up to vendor to design their EP the way they want
+with respect to ref clock availability.
 
-We are trying to figure out what that something else should be.  The 
-general concept we are working on is that if vfio_pci wants to reset a 
-device, *and* bus reset is the only option available, *and* cn88xx, then 
-make vfio_pci fail.
+500ms is just based on the observation and taken as safe margin.
+This patch adds platform shutdown where it should be
+called in device_shutdown while reboot command is issued.
+So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
+followed by RC shutdown, which issues safe PERST assertion.
 
-What is your opinion of doing that (assuming it is properly implemented)?
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+Reviewed-by: Scott Branden <scott.branden@broadcom.com>
 
-Thanks,
-David Daney
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
+index 2253119..a5073a9 100644
+--- a/drivers/pci/host/pcie-iproc-platform.c
++++ b/drivers/pci/host/pcie-iproc-platform.c
+@@ -134,6 +134,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	return iproc_pcie_remove(pcie);
+ }
+ 
++static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
++{
++	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
++
++	iproc_pcie_shutdown(pcie);
++}
++
+ static struct platform_driver iproc_pcie_pltfm_driver = {
+ 	.driver = {
+ 		.name = "iproc-pcie",
+@@ -141,6 +148,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
+ 	},
+ 	.probe = iproc_pcie_pltfm_probe,
+ 	.remove = iproc_pcie_pltfm_remove,
++	.shutdown = iproc_pcie_pltfm_shutdown,
+ };
+ module_platform_driver(iproc_pcie_pltfm_driver);
+ 
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index a3edae4..7c1b809 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -659,7 +659,7 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
+ 	.write = iproc_pcie_config_write32,
+ };
+ 
+-static void iproc_pcie_reset(struct iproc_pcie *pcie)
++static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
+ {
+ 	u32 val;
+ 
+@@ -671,19 +671,26 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
+ 	if (pcie->ep_is_internal)
+ 		return;
+ 
+-	/*
+-	 * Select perst_b signal as reset source. Put the device into reset,
+-	 * and then bring it out of reset
+-	 */
+-	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
+-	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
+-		~RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	udelay(250);
+-
+-	val |= RC_PCIE_RST_OUTPUT;
+-	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
+-	msleep(100);
++	if (assert) {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
++			~RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		udelay(250);
++	} else {
++		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
++		val |= RC_PCIE_RST_OUTPUT;
++		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
++		msleep(100);
++	}
++}
++
++int iproc_pcie_shutdown(struct iproc_pcie *pcie)
++{
++	iproc_pcie_perst_ctrl(pcie, true);
++	msleep(500);
++
++	return 0;
+ }
+ 
+ static int iproc_pcie_check_link(struct iproc_pcie *pcie)
+@@ -1365,7 +1372,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
+ 		goto err_exit_phy;
+ 	}
+ 
+-	iproc_pcie_reset(pcie);
++	iproc_pcie_perst_ctrl(pcie, true);
++	iproc_pcie_perst_ctrl(pcie, false);
+ 
+ 	if (pcie->need_ob_cfg) {
+ 		ret = iproc_pcie_map_ranges(pcie, res);
+diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
+index 0bbe2ea..a6b55ce 100644
+--- a/drivers/pci/host/pcie-iproc.h
++++ b/drivers/pci/host/pcie-iproc.h
+@@ -110,6 +110,7 @@ struct iproc_pcie {
+ 
+ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
+ int iproc_pcie_remove(struct iproc_pcie *pcie);
++int iproc_pcie_shutdown(struct iproc_pcie *pcie);
+ 
+ #ifdef CONFIG_PCIE_IPROC_MSI
+ int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+-- 
+1.9.1
