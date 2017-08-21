@@ -1,53 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0082.outbound.protection.outlook.com ([104.47.37.82]:60064
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750912AbdHPFOE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 01:14:04 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
-        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv3 3/9] PCI: layerscape: add class code and multifunction fixups for ls1021a
-Date: Wed, 16 Aug 2017 12:56:53 +0800
-Message-ID: <1502859419-33696-4-git-send-email-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 21 Aug 2017 14:18:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
+Message-ID: <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
+ linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Mon, Aug 21, 2017 at 09:53:56AM -0400, Sinan Kaya wrote:
+> On 8/18/2017 5:32 PM, Bjorn Helgaas wrote:
+> > +	if ((*l & 0xffff) != 0x0001)
+> > +		return true;	/* not a CRS completion */
+> >  
+> 
+> This version certainly looks cleaner. However, it breaks pci_flr_wait().
+> 
+> If some root port doesn't support CRS and returns 0xFFFFFFFF, pci_bus_wait_crs()
+> function returns true. pci_flr_wait() prematurely bails out from here.
+> 
+> 
+> pci_flr_wait()
+> {
+> 
+> +	ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
+> +	if (ret)
+> +		return;
+> 
+> }
+> 
+> We can change the return code to false above but then we break pci_bus_read_dev_vendor_id()
+> function. 
+> 
+> That's why, I was interested in creating a pci_bus_crs_visibility_supported() helper
+> function that would check for the magic 0x0001 value and return true. Otherwise, false. 
+> 
+> pci_bus_read_dev_vendor_id() would do this
+> 
+> pci_bus_read_dev_vendor_id()
+> {
+> 	...
+> 	if (pci_bus_crs_visibility_supported())
+> 		return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
+> 
+> 	return true
+> }
+> 
+> Similar pattern for pci_flr_wait().
 
-The current code depends on these 2 fixups implemented in bootloader,
-this patch is to resolve the dependence.
+I think that makes sense.  We'd want to check for CRS SV being
+enabled, e.g., maybe read PCI_EXP_RTCTL_CRSSVE back in
+pci_enable_crs() and cache it somewhere.  Maybe a crs_sv_enabled bit
+in the root port's pci_dev, and check it with something like what
+pcie_root_rcb_set() does?
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
----
-V3:
- - New patch
-
- drivers/pci/dwc/pci-layerscape.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index c169400..3aa3421 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -134,6 +134,11 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
-+	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+	ls_pcie_fix_class(pcie);
-+	ls_pcie_clear_multifunction(pcie);
-+	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
-+
- 	ls_pcie_drop_msg_tlp(pcie);
- 
- 	return 0;
--- 
-2.1.0.27.g96db324
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
