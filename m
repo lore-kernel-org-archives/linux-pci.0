@@ -1,59 +1,75 @@
-Return-Path: <SRS0=6tVE=7Y=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=6tVE=7Y=broadcom.com=oza.oza@kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	<helgaas@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Oza Pawandeep <oza.oza@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v3 2/3] dt-bindings: PCI: Add PCIe hotplug property
-Date: Tue, 22 Aug 2017 13:40:55 +0530
-Message-Id: <1503389456-27373-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1503389456-27373-1-git-send-email-oza.oza@broadcom.com>
-References: <1503389456-27373-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+Date: Mon, 21 Aug 2017 09:53:56 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
+ linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Host drivers have the requirement of implementing PCI hotplug
-based on the how their SOC supports PCI hotplug.
+On 8/18/2017 5:32 PM, Bjorn Helgaas wrote:
+> +	if ((*l & 0xffff) != 0x0001)
+> +		return true;	/* not a CRS completion */
+>  
 
-Couple of properties have been added. the one to enable
-the hotplug feature itself, and the other caters to
-the PCI hotplug implementation with the use of gpios.
+This version certainly looks cleaner. However, it breaks pci_flr_wait().
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+If some root port doesn't support CRS and returns 0xFFFFFFFF, pci_bus_wait_crs()
+function returns true. pci_flr_wait() prematurely bails out from here.
 
-diff --git a/Documentation/devicetree/bindings/pci/pci.txt b/Documentation/devicetree/bindings/pci/pci.txt
-index 50f9e2c..0bf25a1 100644
---- a/Documentation/devicetree/bindings/pci/pci.txt
-+++ b/Documentation/devicetree/bindings/pci/pci.txt
-@@ -24,3 +24,18 @@ driver implementation may support the following properties:
-    unsupported link speed, for instance, trying to do training for
-    unsupported link speed, etc.  Must be '4' for gen4, '3' for gen3, '2'
-    for gen2, and '1' for gen1. Any other values are invalid.
-+
-+- slot-pluggable:
-+   PCI hotplug feature is supported.
-+   PCI hotplug implementation is SOC/Board specific, and also it depends on
-+   how add-in card is designed (e.g. how many present pins are implemented).
-+   If the slot-pluggable property is present, the following propertey could
-+   become effective.
-+   - prsnt-gpios:
-+      Array of gpios, could be present if hotplug is supported.
-+      This property defines gpio based hotplug implementation.
-+      Example:
-+      If x8 card is connected, then it might be possible that all the
-+      3 present pins could go low, or at least one pin goes low.
-+      If x4 card is connected, then it might be possible that 2 present
-+      pins go low, or at least one pin goes low.
+
+pci_flr_wait()
+{
+
++	ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
++	if (ret)
++		return;
+
+}
+
+We can change the return code to false above but then we break pci_bus_read_dev_vendor_id()
+function. 
+
+That's why, I was interested in creating a pci_bus_crs_visibility_supported() helper
+function that would check for the magic 0x0001 value and return true. Otherwise, false. 
+
+pci_bus_read_dev_vendor_id() would do this
+
+pci_bus_read_dev_vendor_id()
+{
+	...
+	if (pci_bus_crs_visibility_supported())
+		return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
+
+	return true
+}
+
+Similar pattern for pci_flr_wait().
+
+
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
