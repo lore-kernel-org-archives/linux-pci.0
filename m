@@ -1,98 +1,83 @@
-Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170823180029.GD8498@bhelgaas-glaptop.roam.corp.google.com>
-References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
- <1503331124-25029-2-git-send-email-oza.oza@broadcom.com> <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
- <20170823135140.GA8498@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPf5c2=zO81-7TEidOHbB8K0L3T2_wV4+9Gem5DB6rHWFw@mail.gmail.com>
- <eb01a01b-ee8a-1c51-69ba-838bfe94b6f6@codeaurora.org> <CAMSpPPenUvGVwTf9ZKJoK08fm6L-0c=anPUaRRZdkHBzhGO-dA@mail.gmail.com>
- <20170823180029.GD8498@bhelgaas-glaptop.roam.corp.google.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Thu, 24 Aug 2017 10:10:30 +0530
-Message-ID: <CAMSpPPfVUHHD_f8WOTwh3o54R0U4JvruTZwgrBZL2=WHDVhgKA@mail.gmail.com>
-Subject: Re: [PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from EP
+Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
-	Timur Tabi <timur@codeaurora.org>, Alex Williamson <alex.williamson@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Timur Tabi <timur@codeaurora.org>, linux-kernel@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+ <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+ <eca38319-9e78-1a9c-b275-43944fd0a63d@codeaurora.org>
+ <20170821202338.GD28977@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <967910e7-e64d-2fa4-10b8-ca0400d7ed2f@codeaurora.org>
+Date: Mon, 21 Aug 2017 16:32:26 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170821202338.GD28977@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 23, 2017 at 11:30 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Aug 23, 2017 at 09:32:06PM +0530, Oza Oza wrote:
->> On Wed, Aug 23, 2017 at 9:22 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> > Hi Oza,
->> >
->> >> In working Enumuration case I get following:
->> >> [    9.125976] pci 0000:00:00.0: bridge configuration invalid ([bus
->> >> 00-00]), re-configuring
->> >> [    9.134267] where=0x0 val=0xffff0001
->> >> [    9.146946] where=0x0 val=0xffff0001
->> >> [    9.158943] where=0x0 val=0xffff0001
->> >> [    9.170945] where=0x0 val=0xffff0001
->> >> [    9.186945] where=0x0 val=0xffff0001
->> >> [    9.210944] where=0x0 val=0xffff0001
->> >> [    9.250943] where=0x0 val=0xffff0001
->> >> [    9.322942] where=0x0 val=0xffff0001
->> >> [    9.458943] where=0x0 val=0xffff0001
->> >> [    9.726942] where=0x0 val=0x9538086    >> actual vendor and device id.
->> >>
->> >> so I think I have to retry in RC driver, so the old code still holds good.
->> >> except that I have to do factoring out
->> > You need to return 0xFFFF0001 for vendor ID register and return 0xFFFFFFFF for
->> > other registers like COMMAND register during the CRS period.
->
-> The proposal we're trying to implement is to handle this controller as
-> an RP that does not support CRS SV.  Such an RP would never return
-> 0xffff0001 for the vendor/device ID.  If it never got a successful
-> completion, it would return 0xffffffff.
->
-> So I think you do have to either retry (as in your v7 patch) or add a
-> delay before we start enumeration.
->
-> It looks like we waited somewhere between 320ms and 590ms before this
-> device became ready.
->
-> The PCI specs do require a delay after a reset (PCIe r3.1, sec 6.6.1)
-> before software sends a config request.  I don't think there's
-> anywhere in the PCI core where we delay before we first enumerate
-> devices under a host bridge.  I'm not sure we'd *want* such a delay in
-> the PCI core, because on many systems the BIOS has already initialized
-> the PCI controller, and an additional delay would be unnecessary and
-> would only slow down boot.
->
-> But it might make sense to add a delay in the PCI controller driver --
-> it knows when the reset occurs and probably knows more about the
-> firmware environment.  I haven't tried to analyze all of sec 6.6.1,
-> but this section:
->
->   Unless Readiness Notifications mechanisms are used (see Section
->   6.23), the Root Complex and/or system software must allow at least
->   1.0 s after a Conventional Reset of a device, before it may
->   determine that a device which fails to return a Successful
->   Completion status for a valid Configuration Request is a broken
->   device. This period is independent of how quickly Link training
->   completes.
->
->   Note: This delay is analogous to the Trhfa parameter specified for
->   PCI/PCI-X, and is intended to allow an adequate amount of time for
->   devices which require self initialization.
->
-> makes it sound like a 1sec delay might be needed.  That sounds like an
-> awful lot, but this device did take close to that amount of time.
->
-> I don't care which way you go.  You've already implemented the delay
-> in the v7 patch, and that's fine with me.
->
+On 8/21/2017 4:23 PM, Bjorn Helgaas wrote:
+> On Mon, Aug 21, 2017 at 03:37:06PM -0400, Sinan Kaya wrote:
+>> On 8/21/2017 3:18 PM, Bjorn Helgaas wrote:
+>> ...
+>> if (pci_bus_crs_pending(id))
+>> 	return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
+>>
+>>> I think that makes sense.  We'd want to check for CRS SV being
+>>> enabled, e.g., maybe read PCI_EXP_RTCTL_CRSSVE back in
+>>> pci_enable_crs() and cache it somewhere.  Maybe a crs_sv_enabled bit
+>>> in the root port's pci_dev, and check it with something like what
+>>> pcie_root_rcb_set() does?
+>>>
+>>
+>> You can observe CRS under the following conditions
+>>
+>> 1. root port <-> endpoint 
+>> 2. bridge <-> endpoint 
+>> 3. root port<->bridge
+>>
+>> I was relying on the fact that we are reading 0x001 as an indication that
+>> this device detected CRS. Maybe, this is too indirect.
+>>
+>> If we also want to capture the capability, I think the right thing is to
+>> check the parent capability.
+>>
+>> bool pci_bus_crs_vis_supported(struct pci_dev *bridge)
+>> {
+>> 	if (device type(bridge) == root port)
+>> 		return read(root_crs_register_reg);
+>>
+>> 	if (device type(bridge) == switch)
+>> 		return read(switch_crs_register);
+> 
+> I don't understand this part.  AFAIK, CRS SV is only a feature of root
+> ports.  The capability and enable bits are in the Root Capabilities
+> and Root Control registers.
+> 
 
-Thanks for your inputs Bjorn.
-I will have v8 patch which will have;
-factored out separate patch + retry implementation of v7 patch.
+No question about it.
 
-> Bjorn
+> It's certainly true that a device below a switch can respond with a
+> CRS completion, but the switch is not the requester, and my
+> understanding is that it would not take any action on the completion
+> other than passing it upstream.
+> 
+
+I saw some bridge references in the spec for CRS. I was going to do
+some research for it. You answered my question. I was curious how this
+would impact the behavior.
+
+"Bridge Configuration Retry Enable – When Set, this bit enables PCI Express
+to PCI/PCI-X bridges to return Configuration Request Retry Status (CRS) in
+response to Configuration Requests that target devices below the bridge. 
+Refer to the PCI Express to PCI/PCI-X Bridge Specification, Revision 1.0 for
+further details."
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
