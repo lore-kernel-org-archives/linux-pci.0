@@ -1,44 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0050.outbound.protection.outlook.com ([104.47.36.50]:55910
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751317AbdHaRw4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 31 Aug 2017 13:52:56 -0400
-From: Fabio Estevam <fabio.estevam@nxp.com>
-To: <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, Fabio Estevam <fabio.estevam@nxp.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH 10/10] PCI: xilinx-nwl: Fix platform_get_irq() error handling
-Date: Thu, 31 Aug 2017 14:52:10 -0300
-Message-ID: <1504201930-3617-10-git-send-email-fabio.estevam@nxp.com>
-In-Reply-To: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
-References: <1504201930-3617-1-git-send-email-fabio.estevam@nxp.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 21 Aug 2017 16:09:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
+Message-ID: <20170821210932.GE28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+ <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+ <eca38319-9e78-1a9c-b275-43944fd0a63d@codeaurora.org>
+ <20170821202338.GD28977@bhelgaas-glaptop.roam.corp.google.com>
+ <967910e7-e64d-2fa4-10b8-ca0400d7ed2f@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <967910e7-e64d-2fa4-10b8-ca0400d7ed2f@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Timur Tabi <timur@codeaurora.org>,
+ linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When platform_get_irq() fails we should propagate the real error
-value instead of always returning -EINVAL.
-
-Cc: Michal Simek <michal.simek@xilinx.com>
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 573847f..65dea98 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -812,7 +812,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
- 	pcie->irq_intx = platform_get_irq_byname(pdev, "intx");
- 	if (pcie->irq_intx < 0) {
- 		dev_err(dev, "failed to get intx IRQ %d\n", pcie->irq_intx);
--		return -EINVAL;
-+		return pcie->irq_intx;
- 	}
- 
- 	irq_set_chained_handler_and_data(pcie->irq_intx,
--- 
-2.7.4
+T24gTW9uLCBBdWcgMjEsIDIwMTcgYXQgMDQ6MzI6MjZQTSAtMDQwMCwgU2luYW4gS2F5YSB3cm90
+ZToKPiBPbiA4LzIxLzIwMTcgNDoyMyBQTSwgQmpvcm4gSGVsZ2FhcyB3cm90ZToKPiA+IE9uIE1v
+biwgQXVnIDIxLCAyMDE3IGF0IDAzOjM3OjA2UE0gLTA0MDAsIFNpbmFuIEtheWEgd3JvdGU6Cj4g
+Pj4gT24gOC8yMS8yMDE3IDM6MTggUE0sIEJqb3JuIEhlbGdhYXMgd3JvdGU6Cj4gPj4gLi4uCj4g
+Pj4gaWYgKHBjaV9idXNfY3JzX3BlbmRpbmcoaWQpKQo+ID4+IAlyZXR1cm4gcGNpX2J1c193YWl0
+X2NycyhkZXYtPmJ1cywgZGV2LT5kZXZmbiwgJmlkLCA2MDAwMCk7Cj4gPj4KPiA+Pj4gSSB0aGlu
+ayB0aGF0IG1ha2VzIHNlbnNlLiAgV2UnZCB3YW50IHRvIGNoZWNrIGZvciBDUlMgU1YgYmVpbmcK
+PiA+Pj4gZW5hYmxlZCwgZS5nLiwgbWF5YmUgcmVhZCBQQ0lfRVhQX1JUQ1RMX0NSU1NWRSBiYWNr
+IGluCj4gPj4+IHBjaV9lbmFibGVfY3JzKCkgYW5kIGNhY2hlIGl0IHNvbWV3aGVyZS4gIE1heWJl
+IGEgY3JzX3N2X2VuYWJsZWQgYml0Cj4gPj4+IGluIHRoZSByb290IHBvcnQncyBwY2lfZGV2LCBh
+bmQgY2hlY2sgaXQgd2l0aCBzb21ldGhpbmcgbGlrZSB3aGF0Cj4gPj4+IHBjaWVfcm9vdF9yY2Jf
+c2V0KCkgZG9lcz8KPiA+Pj4KPiA+Pgo+ID4+IFlvdSBjYW4gb2JzZXJ2ZSBDUlMgdW5kZXIgdGhl
+IGZvbGxvd2luZyBjb25kaXRpb25zCj4gPj4KPiA+PiAxLiByb290IHBvcnQgPC0+IGVuZHBvaW50
+IAo+ID4+IDIuIGJyaWRnZSA8LT4gZW5kcG9pbnQgCj4gPj4gMy4gcm9vdCBwb3J0PC0+YnJpZGdl
+Cj4gPj4KPiA+PiBJIHdhcyByZWx5aW5nIG9uIHRoZSBmYWN0IHRoYXQgd2UgYXJlIHJlYWRpbmcg
+MHgwMDEgYXMgYW4gaW5kaWNhdGlvbiB0aGF0Cj4gPj4gdGhpcyBkZXZpY2UgZGV0ZWN0ZWQgQ1JT
+LiBNYXliZSwgdGhpcyBpcyB0b28gaW5kaXJlY3QuCj4gPj4KPiA+PiBJZiB3ZSBhbHNvIHdhbnQg
+dG8gY2FwdHVyZSB0aGUgY2FwYWJpbGl0eSwgSSB0aGluayB0aGUgcmlnaHQgdGhpbmcgaXMgdG8K
+PiA+PiBjaGVjayB0aGUgcGFyZW50IGNhcGFiaWxpdHkuCj4gPj4KPiA+PiBib29sIHBjaV9idXNf
+Y3JzX3Zpc19zdXBwb3J0ZWQoc3RydWN0IHBjaV9kZXYgKmJyaWRnZSkKPiA+PiB7Cj4gPj4gCWlm
+IChkZXZpY2UgdHlwZShicmlkZ2UpID09IHJvb3QgcG9ydCkKPiA+PiAJCXJldHVybiByZWFkKHJv
+b3RfY3JzX3JlZ2lzdGVyX3JlZyk7Cj4gPj4KPiA+PiAJaWYgKGRldmljZSB0eXBlKGJyaWRnZSkg
+PT0gc3dpdGNoKQo+ID4+IAkJcmV0dXJuIHJlYWQoc3dpdGNoX2Nyc19yZWdpc3Rlcik7Cj4gPiAK
+PiA+IEkgZG9uJ3QgdW5kZXJzdGFuZCB0aGlzIHBhcnQuICBBRkFJSywgQ1JTIFNWIGlzIG9ubHkg
+YSBmZWF0dXJlIG9mIHJvb3QKPiA+IHBvcnRzLiAgVGhlIGNhcGFiaWxpdHkgYW5kIGVuYWJsZSBi
+aXRzIGFyZSBpbiB0aGUgUm9vdCBDYXBhYmlsaXRpZXMKPiA+IGFuZCBSb290IENvbnRyb2wgcmVn
+aXN0ZXJzLgo+ID4gCj4gCj4gTm8gcXVlc3Rpb24gYWJvdXQgaXQuCj4gCj4gPiBJdCdzIGNlcnRh
+aW5seSB0cnVlIHRoYXQgYSBkZXZpY2UgYmVsb3cgYSBzd2l0Y2ggY2FuIHJlc3BvbmQgd2l0aCBh
+Cj4gPiBDUlMgY29tcGxldGlvbiwgYnV0IHRoZSBzd2l0Y2ggaXMgbm90IHRoZSByZXF1ZXN0ZXIs
+IGFuZCBteQo+ID4gdW5kZXJzdGFuZGluZyBpcyB0aGF0IGl0IHdvdWxkIG5vdCB0YWtlIGFueSBh
+Y3Rpb24gb24gdGhlIGNvbXBsZXRpb24KPiA+IG90aGVyIHRoYW4gcGFzc2luZyBpdCB1cHN0cmVh
+bS4KPiA+IAo+IAo+IEkgc2F3IHNvbWUgYnJpZGdlIHJlZmVyZW5jZXMgaW4gdGhlIHNwZWMgZm9y
+IENSUy4gSSB3YXMgZ29pbmcgdG8gZG8KPiBzb21lIHJlc2VhcmNoIGZvciBpdC4gWW91IGFuc3dl
+cmVkIG15IHF1ZXN0aW9uLiBJIHdhcyBjdXJpb3VzIGhvdyB0aGlzCj4gd291bGQgaW1wYWN0IHRo
+ZSBiZWhhdmlvci4KPiAKPiAiQnJpZGdlIENvbmZpZ3VyYXRpb24gUmV0cnkgRW5hYmxlIOKAkyBX
+aGVuIFNldCwgdGhpcyBiaXQgZW5hYmxlcyBQQ0kgRXhwcmVzcwo+IHRvIFBDSS9QQ0ktWCBicmlk
+Z2VzIHRvIHJldHVybiBDb25maWd1cmF0aW9uIFJlcXVlc3QgUmV0cnkgU3RhdHVzIChDUlMpIGlu
+Cj4gcmVzcG9uc2UgdG8gQ29uZmlndXJhdGlvbiBSZXF1ZXN0cyB0aGF0IHRhcmdldCBkZXZpY2Vz
+IGJlbG93IHRoZSBicmlkZ2UuIAo+IFJlZmVyIHRvIHRoZSBQQ0kgRXhwcmVzcyB0byBQQ0kvUENJ
+LVggQnJpZGdlIFNwZWNpZmljYXRpb24sIFJldmlzaW9uIDEuMCBmb3IKPiBmdXJ0aGVyIGRldGFp
+bHMuIgoKKFRoZSBhYm92ZSBpcyBmcm9tIFBDSWUgcjMuMSwgc2VjIDcuOC40LCBEZXZpY2UgQ29u
+dHJvbCBSZWdpc3RlciwgYW5kCmFsc28gZGlzY3Vzc2VkIGluIHNlYyA0LjMgb2YgdGhlIFBDSWUt
+dG8tUENJL1BDSS1YIGJyaWRnZSBzcGVjLikKCkluIGFueSBldmVudCwgdGhlIEJyaWRnZSBDb25m
+aWd1cmF0aW9uIFJldHJ5IEVuYWJsZSBvbmx5IGRldGVybWluZXMKd2hldGhlciB0aGUgYnJpZGdl
+IGV2ZXIgcmV0dXJucyBhIENSUyBjb21wbGV0aW9uLiAgVGhlIGJyaWRnZSBpdHNlbGYKbmV2ZXIg
+Y29udmVydHMgYSBDUlMgY29tcGxldGlvbiBpbnRvIHRoZSAweDAwMDEgdmVuZG9yIElELiAgCgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0t
+a2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcK
+aHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2Vy
+bmVsCg==
