@@ -1,89 +1,85 @@
-Return-Path: <SRS0=FO4X=7L=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=FO4X=7L=intel.com=ashok.raj@kernel.org>
-Date: Wed, 9 Aug 2017 08:58:43 -0700
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ding Tianhong <dingtianhong@huawei.com>, leedom@chelsio.com,
-	bhelgaas@google.com, werner@chelsio.com, ganeshgr@chelsio.com,
-	asit.k.mallick@intel.com, patrick.j.cramer@intel.com,
-	Suravee.Suthikulpanit@amd.com, Bob.Shaw@amd.com,
-	l.stach@pengutronix.de, amira@mellanox.com,
-	gabriele.paoloni@huawei.com, David.Laight@aculab.com,
-	jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com,
-	will.deacon@arm.com, mark.rutland@arm.com, robin.murphy@arm.com,
-	davem@davemloft.net, alexander.duyck@gmail.com,
-	linux-arm-kernel@lists.infradead.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linuxarm@huawei.com, ashok.raj@intel.com
-Subject: Re: [PATCH v9 1/4] PCI: Add new PCIe Fabric End Node flag,
- PCI_DEV_FLAGS_NO_RELAXED_ORDERING
-Message-ID: <20170809155841.GA8675@otc-nc-03>
-References: <1501917313-9812-1-git-send-email-dingtianhong@huawei.com>
- <1501917313-9812-2-git-send-email-dingtianhong@huawei.com>
- <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41390 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754354AbdHUUXc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 21 Aug 2017 16:23:32 -0400
+Subject: Re: [PATCH] PCI: Fix and amend express capability sizes
+To: Alex Williamson <alex.williamson@redhat.com>,
+        linux-pci@vger.kernel.org
+References: <20170810165403.2968.49940.stgit@gimli.home>
+Cc: bhelgaas@google.com, linux-kernel@vger.kernel.org
+From: Auger Eric <eric.auger@redhat.com>
+Message-ID: <0e06c6a2-8c48-f82d-aa7f-685143e28153@redhat.com>
+Date: Mon, 21 Aug 2017 22:23:28 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170808232200.GO16580@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170810165403.2968.49940.stgit@gimli.home>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+Hi Alex,
 
-On Tue, Aug 08, 2017 at 06:22:00PM -0500, Bjorn Helgaas wrote:
-> On Sat, Aug 05, 2017 at 03:15:10PM +0800, Ding Tianhong wrote:
-> > From: Casey Leedom <leedom@chelsio.com>
-> > 
-> > Root complexes don't obey PCIe 3.0 ordering rules, hence could lead to
-> > data-corruption.
+On 10/08/2017 18:54, Alex Williamson wrote:
+> PCI_CAP_EXP_ENDPOINT_SIZEOF_V1 defines the size of the PCIe express
+> capability structure for v1 devices with link, but we also have a need
+> in the vfio code for sizing the capability for devices without link,
+> such as root complex endpoints.  Create a separate define for this
+> ending the structure before the link fields.
 > 
-> This needs to include a link to the Intel spec
-> (https://software.intel.com/sites/default/files/managed/9e/bc/64-ia-32-architectures-optimization-manual.pdf,
-> sec 3.9.1).
+> Additionally, this reveals that PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 is
+> currently incorrect, ending the capability length before the v2 link
+> fields.  Rename this to specify an RC endpoint (no link) capability
+> length and move PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 to include the link
+> fields as we have for the v1 version.
 > 
-> It should also include a pointer to the AMD erratum, if available, or
-> at least some reference to how we know it doesn't obey the rules.
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+> ---
+>  include/uapi/linux/pci_regs.h |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> Ashok, thanks for chiming in.  Now that you have, I have a few more
-> questions for you:
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index c22d3ebaca20..7439821214d1 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -513,6 +513,7 @@
+>  #define  PCI_EXP_DEVSTA_URD	0x0008	/* Unsupported Request Detected */
+>  #define  PCI_EXP_DEVSTA_AUXPD	0x0010	/* AUX Power Detected */
+>  #define  PCI_EXP_DEVSTA_TRPND	0x0020	/* Transactions Pending */
+> +#define PCI_CAP_EXP_RC_ENDPOINT_SIZEOF_V1	12	/* v1 endpoints without link end here */
+nit: this should have been PCI_EXP_CAP_* from the very beginning but I
+guess you don't new defines to be named differently from other *SIZEOF*?
+>  #define PCI_EXP_LNKCAP		12	/* Link Capabilities */
+>  #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
+>  #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
+> @@ -556,7 +557,7 @@
+>  #define  PCI_EXP_LNKSTA_DLLLA	0x2000	/* Data Link Layer Link Active */
+>  #define  PCI_EXP_LNKSTA_LBMS	0x4000	/* Link Bandwidth Management Status */
+>  #define  PCI_EXP_LNKSTA_LABS	0x8000	/* Link Autonomous Bandwidth Status */
+> -#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V1	20	/* v1 endpoints end here */
+> +#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V1	20	/* v1 endpoints with link end here */
+>  #define PCI_EXP_SLTCAP		20	/* Slot Capabilities */
+>  #define  PCI_EXP_SLTCAP_ABP	0x00000001 /* Attention Button Present */
+>  #define  PCI_EXP_SLTCAP_PCP	0x00000002 /* Power Controller Present */
+> @@ -639,7 +640,7 @@
+>  #define  PCI_EXP_DEVCTL2_OBFF_MSGB_EN	0x4000	/* Enable OBFF Message type B */
+>  #define  PCI_EXP_DEVCTL2_OBFF_WAKE_EN	0x6000	/* OBFF using WAKE# signaling */
+>  #define PCI_EXP_DEVSTA2		42	/* Device Status 2 */
+> -#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
+> +#define PCI_CAP_EXP_RC ENDPOINT_SIZEOF_V2	44	/* v2 endpoints without link end here */
+>  #define PCI_EXP_LNKCAP2		44	/* Link Capabilities 2 */
+>  #define  PCI_EXP_LNKCAP2_SLS_2_5GB	0x00000002 /* Supported Speed 2.5GT/s */
+>  #define  PCI_EXP_LNKCAP2_SLS_5_0GB	0x00000004 /* Supported Speed 5.0GT/s */
+> @@ -647,6 +648,7 @@
+>  #define  PCI_EXP_LNKCAP2_CROSSLINK	0x00000100 /* Crosslink supported */
+>  #define PCI_EXP_LNKCTL2		48	/* Link Control 2 */
+>  #define PCI_EXP_LNKSTA2		50	/* Link Status 2 */
+> +#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	52	/* v2 endpoints with link end here */
+Looks good to me.
+
+Reviewed-by: Eric Auger <eric.auger@redhat.com>
+
+Eric
+>  #define PCI_EXP_SLTCAP2		52	/* Slot Capabilities 2 */
+>  #define PCI_EXP_SLTCTL2		56	/* Slot Control 2 */
+>  #define PCI_EXP_SLTSTA2		58	/* Slot Status 2 */
 > 
->   - Is the above doc the one you mentioned as being now public?
-
-Yes. 
->   
->   - Is this considered a hardware erratum?
-
-I would think so. I have tried to pursue the publication in that direction
-but it morphed into the optimization guide instead. Once it got into some
-open doc i stopped pushing.. but will continue to get this into erratum. i do
-agree that's the right place holder for this.
-
->   
->   - If so, is there a pointer to that as well?
->   
->   - If this is not considered an erratum, can you provide any guidance
->     about how an OS should determine when it should use RO?
-
-The optimization guide states that it only applies to transactions targetting
-system memory. For peer-2-peer RO is allowed and has perf upside.
-
-As Casey pointed out in an earlier thread, we choose the heavy hammer approach
-because there are some that can lead to data-corruption as opposed to perf
-degradation. 
-
-This looks ugly, but maybe we can have 2 flags. one that indicates its a strict
-no-no, and one that says no to system memory only. That way driver can
-determine when the device would turn the hint on in the TLP.
-
->     
-> Relying on a list of device IDs in an optimization manual is OK for an
-> erratum, but if it's *not* an erratum, it seems like a hole in the
-
-Good point.. for this specific case its really an erratum, but for some
-reason they made the decision to use this doc vs. the generic errata
-data-sheet that would have been the preferred way to document.
-
-> specs because as far as I know there's no generic way for the OS to
-> discover whether to use RO.
-> 
-
-Cheers,
-Ashok
