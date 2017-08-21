@@ -1,160 +1,88 @@
-Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
-Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	<helgaas@kernel.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ray Jui <rjui@broadcom.com>,
-	Scott Branden <sbranden@broadcom.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com,
-	Oza Pawandeep <oza.oza@broadcom.com>,
-	Andy Gospodarek <gospo@broadcom.com>,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: [PATCH v8 3/3] PCI: iproc: add device shutdown for PCI RC
-Date: Thu, 24 Aug 2017 10:34:26 +0530
-Message-Id: <1503551066-23212-4-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
-References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Timur Tabi <timur@codeaurora.org>, linux-kernel@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+ <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <eca38319-9e78-1a9c-b275-43944fd0a63d@codeaurora.org>
+Date: Mon, 21 Aug 2017 15:37:06 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-PERST must be asserted around ~500ms before the reboot is applied.
+On 8/21/2017 3:18 PM, Bjorn Helgaas wrote:
+>> pci_bus_read_dev_vendor_id()
+>> {
+>> 	...
+>> 	if (pci_bus_crs_visibility_supported())
+>> 		return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
+>>
+>> 	return true
+>> }
+>>
+>> Similar pattern for pci_flr_wait().
 
-During soft reset (e.g., "reboot" from Linux) on some iproc based SOCs
-LCPLL clock and PERST both goes off simultaneously.
-This will cause certain Endpoints Intel NVMe not get detected, upon
-next boot sequence.
+Sorry for the poor choice of function name. 
 
-This is specifically happening with Intel P3700 400GB series.
-Endpoint is expecting the clock for some amount of time after PERST is
-asserted, which is not happening in Stingray (iproc based SOC).
-This causes NVMe to behave in undefined way.
+I was thinking of something like this.
 
-On the contrary, Intel x86 boards will have ref clock running, so we
-do not see this behavior there.
+bool pci_bus_crs_pending(u32 l)
+{
+	return (l & 0xFFFF) == 0x0001
+}
 
-Besides, PCI spec does not stipulate about such timings.
-In-fact it does not tell us, whether PCIe device should consider
-refclk to be available or not to be.
+if (pci_bus_crs_pending(id))
+	return pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
 
-It is completely up to vendor to design their EP the way they want
-with respect to ref clock availability.
+> I think that makes sense.  We'd want to check for CRS SV being
+> enabled, e.g., maybe read PCI_EXP_RTCTL_CRSSVE back in
+> pci_enable_crs() and cache it somewhere.  Maybe a crs_sv_enabled bit
+> in the root port's pci_dev, and check it with something like what
+> pcie_root_rcb_set() does?
+> 
 
-500ms is just based on the observation and taken as safe margin.
-This patch adds platform shutdown where it should be
-called in device_shutdown while reboot command is issued.
-So in sequence first Endpoint Shutdown (e.g. nvme_shutdown)
-followed by RC shutdown, which issues safe PERST assertion.
+You can observe CRS under the following conditions
 
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+1. root port <-> endpoint 
+2. bridge <-> endpoint 
+3. root port<->bridge
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index 2253119..a5073a9 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -134,6 +134,13 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	return iproc_pcie_remove(pcie);
- }
- 
-+static void iproc_pcie_pltfm_shutdown(struct platform_device *pdev)
-+{
-+	struct iproc_pcie *pcie = platform_get_drvdata(pdev);
-+
-+	iproc_pcie_shutdown(pcie);
-+}
-+
- static struct platform_driver iproc_pcie_pltfm_driver = {
- 	.driver = {
- 		.name = "iproc-pcie",
-@@ -141,6 +148,7 @@ static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
- 	},
- 	.probe = iproc_pcie_pltfm_probe,
- 	.remove = iproc_pcie_pltfm_remove,
-+	.shutdown = iproc_pcie_pltfm_shutdown,
- };
- module_platform_driver(iproc_pcie_pltfm_driver);
- 
-diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
-index 37f4adf..cbdabe8 100644
---- a/drivers/pci/host/pcie-iproc.c
-+++ b/drivers/pci/host/pcie-iproc.c
-@@ -659,7 +659,7 @@ static int iproc_pcie_config_write32(struct pci_bus *bus, unsigned int devfn,
- 	.write = iproc_pcie_config_write32,
- };
- 
--static void iproc_pcie_reset(struct iproc_pcie *pcie)
-+static void iproc_pcie_perst_ctrl(struct iproc_pcie *pcie, bool assert)
- {
- 	u32 val;
- 
-@@ -671,19 +671,26 @@ static void iproc_pcie_reset(struct iproc_pcie *pcie)
- 	if (pcie->ep_is_internal)
- 		return;
- 
--	/*
--	 * Select perst_b signal as reset source. Put the device into reset,
--	 * and then bring it out of reset
--	 */
--	val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
--	val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
--		~RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	udelay(250);
--
--	val |= RC_PCIE_RST_OUTPUT;
--	iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
--	msleep(100);
-+	if (assert) {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val &= ~EP_PERST_SOURCE_SELECT & ~EP_MODE_SURVIVE_PERST &
-+			~RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		udelay(250);
-+	} else {
-+		val = iproc_pcie_read_reg(pcie, IPROC_PCIE_CLK_CTRL);
-+		val |= RC_PCIE_RST_OUTPUT;
-+		iproc_pcie_write_reg(pcie, IPROC_PCIE_CLK_CTRL, val);
-+		msleep(100);
-+	}
-+}
-+
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie)
-+{
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	msleep(500);
-+
-+	return 0;
- }
- 
- static int iproc_pcie_check_link(struct iproc_pcie *pcie)
-@@ -1365,7 +1372,8 @@ int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res)
- 		goto err_exit_phy;
- 	}
- 
--	iproc_pcie_reset(pcie);
-+	iproc_pcie_perst_ctrl(pcie, true);
-+	iproc_pcie_perst_ctrl(pcie, false);
- 
- 	if (pcie->need_ob_cfg) {
- 		ret = iproc_pcie_map_ranges(pcie, res);
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 0bbe2ea..a6b55ce 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -110,6 +110,7 @@ struct iproc_pcie {
- 
- int iproc_pcie_setup(struct iproc_pcie *pcie, struct list_head *res);
- int iproc_pcie_remove(struct iproc_pcie *pcie);
-+int iproc_pcie_shutdown(struct iproc_pcie *pcie);
- 
- #ifdef CONFIG_PCIE_IPROC_MSI
- int iproc_msi_init(struct iproc_pcie *pcie, struct device_node *node);
+I was relying on the fact that we are reading 0x001 as an indication that
+this device detected CRS. Maybe, this is too indirect.
+
+If we also want to capture the capability, I think the right thing is to
+check the parent capability.
+
+bool pci_bus_crs_vis_supported(struct pci_dev *bridge)
+{
+	if (device type(bridge) == root port)
+		return read(root_crs_register_reg);
+
+	if (device type(bridge) == switch)
+		return read(switch_crs_register);
+
+	return false;
+}
+
+bool pci_bus_crs_pending(struct pci_dev *dev, u32 l)
+{
+	if !pci_bus_crs_vis_supported(dev->parent)
+		return false;
+
+	return (l & 0xFFFF) == 0x0001;
+}
+
+I'll prototype this. Let me know if you have concerns.
+
 -- 
-1.9.1
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
