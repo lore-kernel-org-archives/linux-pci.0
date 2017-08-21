@@ -1,85 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0049.outbound.protection.outlook.com ([104.47.1.49]:12800
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751105AbdHUDVz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 20 Aug 2017 23:21:55 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Joao Pinto <Joao.Pinto@synopsys.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
-CC: "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Subject: RE: [PATCHv3 6/9] PCI: designware: add accessors for write permission
- of DBI read-only registers
-Date: Mon, 21 Aug 2017 03:21:52 +0000
-Message-ID: <AM5PR0402MB2771AA0E2C85C5575FAD846384870@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
- <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
- <VI1PR0402MB278292DAC81D4A49964FEC1B84830@VI1PR0402MB2782.eurprd04.prod.outlook.com>
- <f8c8589e-ebc2-c618-e1cb-2c134c756a77@synopsys.com>
-In-Reply-To: <f8c8589e-ebc2-c618-e1cb-2c134c756a77@synopsys.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=fMXc=7X=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=fMXc=7X=davemloft.net=davem@kernel.org>
+Date: Mon, 21 Aug 2017 11:27:47 -0700 (PDT)
+Message-Id: <20170821.112747.1532639515902173100.davem@davemloft.net>
+To: helgaas@kernel.org
+Cc: mroos@linux.ee, sparclinux@vger.kernel.org, linux-pci@vger.kernel.org,
+ qla2xxx-upstream@qlogic.com, linux-kernel@vger.kernel.org, hch@lst.de
+Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
+ vectors
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.20.1708152321150.11510@math.ut.ee>
+	<alpine.LRH.2.20.1708162136220.16834@math.ut.ee>
+	<20170816190241.GD28977@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGZlZWRiYWNrIQ0KDQo+IC0tLS0tT3Jp
-Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvYW8gUGludG8gW21haWx0bzpKb2FvLlBpbnRv
-QHN5bm9wc3lzLmNvbV0NCj4gU2VudDogMjAxN+W5tDjmnIgxOOaXpSAxOTo1MQ0KPiBUbzogWi5x
-LiBIb3UgPHpoaXFpYW5nLmhvdUBueHAuY29tPjsgU3RhbmltaXIgVmFyYmFub3YNCj4gPHN2YXJi
-YW5vdkBtbS1zb2wuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhlbGdhYXNA
-Z29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lub3BzeXMuY29t
-DQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkgSHUgPG1p
-bmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPjsgbmlrbGFz
-LmNhc3NlbEBheGlzLmNvbTsNCj4gamVzcGVyLm5pbHNzb25AYXhpcy5jb20NCj4gU3ViamVjdDog
-UmU6IFtQQVRDSHYzIDYvOV0gUENJOiBkZXNpZ253YXJlOiBhZGQgYWNjZXNzb3JzIGZvciB3cml0
-ZQ0KPiBwZXJtaXNzaW9uIG9mIERCSSByZWFkLW9ubHkgcmVnaXN0ZXJzDQo+IA0KPiBIaSBaaGlx
-aWFuZyBhbmQgU3RhbmltaXIsDQo+IA0KPiDDgHMgNDowMyBBTSBkZSA4LzE3LzIwMTcsIFoucS4g
-SG91IGVzY3JldmV1Og0KPiA+IEhpIFN0YW5pbWlyLA0KPiA+DQo+ID4gVGhhbmtzIGZvciB5b3Vy
-IGZlZWRiYWNrIQ0KPiA+DQo+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZy
-b206IFN0YW5pbWlyIFZhcmJhbm92IFttYWlsdG86c3ZhcmJhbm92QG1tLXNvbC5jb21dDQo+ID4+
-IFNlbnQ6IDIwMTflubQ45pyIMTbml6UgMTk6MzQNCj4gPj4gVG86IFoucS4gSG91IDx6aGlxaWFu
-Zy5ob3VAbnhwLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4+IGJoZWxnYWFz
-QGdvb2dsZS5jb207IGppbmdvb2hhbjFAZ21haWwuY29tOw0KPiBKb2FvLlBpbnRvQHN5bm9wc3lz
-LmNvbQ0KPiA+PiBDYzogTS5oLiBMaWFuIDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5na2Fp
-IEh1DQo+ID4+IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZyA8cm95LnphbmdAbnhwLmNv
-bT47DQo+ID4+IG5pa2xhcy5jYXNzZWxAYXhpcy5jb207IGplc3Blci5uaWxzc29uQGF4aXMuY29t
-DQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0h2MyA2LzldIFBDSTogZGVzaWdud2FyZTogYWRkIGFj
-Y2Vzc29ycyBmb3Igd3JpdGUNCj4gPj4gcGVybWlzc2lvbiBvZiBEQkkgcmVhZC1vbmx5IHJlZ2lz
-dGVycw0KPiA+Pg0KPiA+PiBIaSwNCj4gPj4NCj4gPj4gT24gMDgvMTYvMjAxNyAwNzo1NiBBTSwg
-WmhpcWlhbmcgSG91IHdyb3RlOg0KPiA+Pj4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5I
-b3VAbnhwLmNvbT4NCj4gPj4+DQo+ID4+PiBUaGUgcmVhZC1vbmx5IERCSSByZWdpc3RlcnMgY2Fu
-IGJlIHdyaXR0ZW4gb3ZlciB0aGUgREJJIHdoZW4gc2V0IHRoZQ0KPiA+Pj4gIldyaXRlIHRvIFJP
-IFJlZ2lzdGVycyBVc2luZyBEQkkiIChEQklfUk9fV1JfRU4pIGZpZWxkIG9mIHRoZQ0KPiA+Pj4g
-TUlTQ19DT05UUk9MXzFfT0ZGIHJlZ2lzdGVyLg0KPiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6
-IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4+PiAtLS0NCj4gPj4+IFYz
-Og0KPiA+Pj4gIC0gTm8gY2hhbmdlDQo+ID4+Pg0KPiA+Pj4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ll
-LWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPj4+ICAxIGZp
-bGUgY2hhbmdlZCwgMjUgaW5zZXJ0aW9ucygrKQ0KPiA+Pj4NCj4gPj4+IGRpZmYgLS1naXQgYS9k
-cml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPj4+IGIvZHJpdmVycy9wY2kvZHdj
-L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4+PiBpbmRleCA3MzY2YzgxLi4wYzVmODc0IDEwMDY0NA0K
-PiA+Pj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4+PiArKysg
-Yi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPj4+IEBAIC03Niw2ICs3Niw5
-IEBADQo+ID4+PiAgI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwgMTYp
-DQo+ID4+PiAgI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9UQVJHRVQJCTB4OTFDDQo+ID4+Pg0KPiA+
-Pj4gKyNkZWZpbmUgUENJRV9NSVNDX0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4+PiArI2RlZmlu
-ZSBQQ0lFX0RCSV9ST19XUl9FTgkJKDB4MSA8PCAwKQ0KPiA+Pg0KPiA+PiBEb2VzIHRob3NlIHJl
-Z2lzdGVycyBleGlzdCBmb3IgZHdjIHZlcnNpb24gNC4wMWE/DQo+ID4NCj4gPiBKb2FvLCBjYW4g
-eW91IGhlbHAgdG8gY2hlY2sgdGhpcz8NCj4gPiBJIHJlZmVycmVkIHRvIERlc2lnbldhcmUgY29y
-ZXMgUENJIEV4cHJlc3MgY29udHJvbGxlciBkYXRhYm9vayB2ZXJzaW9uDQo+IDQuMjFhLg0KPiA+
-IFRoZSBGcmVlc2NhbGUgTGF5ZXJzY2FwZSBpbXBsZW1lbnQgZG9lcyBub3QgZXhwb3J0IHRoZSB2
-ZXJzaW9uIG9mDQo+IGRlc2lnbndhcmUgUENJZSBjb250cm9sbGVyLCBJIGRvbid0IGtub3cgd2hp
-Y2ggdmVyc2lvbnMgaGF2ZSB0aG9zZSByZWdpc3RlcnMsDQo+IGlmIGl0IGRvZXMgbm90IHdvcmsg
-b24gcWNvbSBwbGF0Zm9ybSwgSSB3aWxsIHJlbW92ZSB0aGUgcWNvbSByZWxhdGVkIGNoYW5nZXMu
-DQo+IA0KPiBJIGNhbiBxdWVyeSB0aGUgUiZELCBidXQgSSB0aGluayBpdCB3b24ndCBiZSB2ZXJ5
-IHVzZWZ1bCBzaW5jZSB0aGUgcWNvbScgU29DIGRvDQo+IG5vdCBpbXBsZW1lbnQgdGhlIHJlZ2lz
-dGVycyAoaWYgdGhleSBhY3R1YWxseSBleGlzdCkuIEkgdGhpbmsgdGhlIGJlc3Qgd2F5IGlzIG5v
-dCB0bw0KPiB1c2UgdGhpcyBpbiBxY29tJyBTb0MgKG1heWJlIG90aGVycyBzaG91bGQgbWFrZSBz
-dXJlIHRoZWlyIFNvQ3MgY29udGFpbiB0aGVzZQ0KPiByZWdpc3RlcnMpLg0KDQpHb3QgaXQsIHdp
-bGwgZHJvcCB0aGUgY2hhbmdlcyBvZiBxY29tIHBjaWUuDQoNClRoYW5rcywNClpoaXFpYW5nDQo=
+From: Bjorn Helgaas <helgaas@kernel.org>
+Date: Wed, 16 Aug 2017 14:02:41 -0500
+
+> On Wed, Aug 16, 2017 at 09:39:08PM +0300, Meelis Roos wrote:
+>> > > > I noticed that in 4.13.0-rc4 there is a new error in dmesg on my sparc64 
+>> > > > t5120 server: can't allocate MSI-X affinity masks.
+>> > > > 
+>> > > > [   30.274284] qla2xxx [0000:00:00.0]-0005: : QLogic Fibre Channel HBA Driver: 10.00.00.00-k.
+>> > > > [   30.274648] qla2xxx [0000:10:00.0]-001d: : Found an ISP2432 irq 21 iobase 0x000000c100d00000.
+>> > > > [   30.275447] qla2xxx 0000:10:00.0: can't allocate MSI-X affinity masks for 2 vectors
+>> > > > [   30.816882] scsi host1: qla2xxx
+>> > > > [   30.877294] qla2xxx: probe of 0000:10:00.0 failed with error -22
+>> > > > [   30.877578] qla2xxx [0000:10:00.1]-001d: : Found an ISP2432 irq 22 iobase 0x000000c100d04000.
+>> > > > [   30.878387] qla2xxx 0000:10:00.1: can't allocate MSI-X affinity masks for 2 vectors
+>> > > > [   31.367083] scsi host1: qla2xxx
+>> > > > [   31.427500] qla2xxx: probe of 0000:10:00.1 failed with error -22
+>> > > > 
+>> > > > I do not know if the driver works since nothing is attached to the FC 
+>> > > > HBA at the moment, but from the error messages it looks like the driver 
+>> > > > fails to load.
+>> > > > 
+>> > > > I booted 4.12 and 4.11 - the red error is not there but the failure 
+>> > > > seems to be the same error -22:
+>> > 
+>> > 4.10.0 works, 4.11.0 errors out with EINVAL and 4.13-rc4 errorr sout 
+>> > with more verbose MSI messages. So something between 4.10 and 4.11 has 
+>> > broken it.
+>> 
+>> I can not reproduice the older kernels that misbehave. I checked out 
+>> earlier kernels and recompiled them (old config lost, nothing changed 
+>> AFAIK), everything works up to 4.12 inclusive.
+>> 
+>> > Also, 4.13-rc4 is broken on another sun4v here (T1000). So it seems to 
+>> > be sun4v interrupt related.
+>> 
+>> This still holds - 4.13-rc4 has MSI trouble on at least 2 of my sun4v 
+>> machines.
+> 
+> IIUC, that means v4.12 works and v4.13-rc4 does not, so this is a
+> regression we introduced this cycle.
+> 
+> If nobody steps up with a theory, bisecting might be the easiest path
+> forward.
+
+I suspect the test added by:
+
+commit 6f9a22bc5775d231ab8fbe2c2f3c88e45e3e7c28
+Author: Michael Hernandez <michael.hernandez@cavium.com>
+Date:   Thu May 18 10:47:47 2017 -0700
+
+    PCI/MSI: Ignore affinity if pre/post vector count is more than min_vecs
+
+is triggering.
+
+The rest of the failure cases are memory allocation failures which should
+not be happening here.
+
+There have only been 5 commits to kernel/irq/affinity.c since v4.10
+
+I suppose we have been getting away with something that has silently
+been allowed in the past, or something like that.
+
+Meelis can you run with the following debuggingspatch?
+
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+index d69bd77252a7..d16c6326000a 100644
+--- a/kernel/irq/affinity.c
++++ b/kernel/irq/affinity.c
+@@ -110,6 +110,9 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+ 	struct cpumask *masks;
+ 	cpumask_var_t nmsk, *node_to_present_cpumask;
+ 
++	pr_info("irq_create_affinity_masks: nvecs[%d] affd->pre_vectors[%d] "
++		"affd->post_vectors[%d]\n",
++		nvecs, affd->pre_vectors, affd->post_vectors);
+ 	/*
+ 	 * If there aren't any vectors left after applying the pre/post
+ 	 * vectors don't bother with assigning affinity.
