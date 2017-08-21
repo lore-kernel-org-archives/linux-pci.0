@@ -1,51 +1,26 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42056 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750725AbdHBVnG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:43:06 -0400
-Date: Wed, 2 Aug 2017 16:43:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, thomas.petazzoni@free-electrons.com,
-        jason@lakedaemon.net, linux-pci@vger.kernel.org,
-        Fabio Estevam <fabio.estevam@nxp.com>
-Subject: Re: [PATCH] PCI: mvebu: Remove unneeded gpiod NULL check
-Message-ID: <20170802214302.GK20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1500239773-15632-1-git-send-email-festevam@gmail.com>
+Return-Path: <SRS0=k55j=7X=intel.com=keith.busch@kernel.org>
+Return-Path: <SRS0=k55j=7X=intel.com=keith.busch@kernel.org>
+Date: Mon, 21 Aug 2017 10:40:55 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
+	gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+	linuxarm@huawei.com
+Subject: Re: [PATCH V5 2/2] PCI/DPC: Add local struct device
+Message-ID: <20170821144055.GE21397@localhost.localdomain>
+References: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
+ <1503133641-114550-3-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500239773-15632-1-git-send-email-festevam@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1503133641-114550-3-git-send-email-liudongdong3@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 16, 2017 at 06:16:13PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
+On Sat, Aug 19, 2017 at 05:07:21PM +0800, Dongdong Liu wrote:
+> Use a local "struct device *dev" for brevity and consistency in DPC driver.
+> No functional change intended.
 > 
-> The gpiod API checks for NULL descriptors, so there is no need to
-> duplicate the check in the driver.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
 
-Applied with Thomas' ack to pci/host-mvebu for v4.14, thanks!
+Looks good to me.
 
-> ---
->  drivers/pci/host/pci-mvebu.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index f353a6e..fa227d8 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -1186,8 +1186,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
->   */
->  static void mvebu_pcie_powerdown(struct mvebu_pcie_port *port)
->  {
-> -	if (port->reset_gpio)
-> -		gpiod_set_value_cansleep(port->reset_gpio, 1);
-> +	gpiod_set_value_cansleep(port->reset_gpio, 1);
->  
->  	clk_disable_unprepare(port->clk);
->  }
-> -- 
-> 2.7.4
-> 
+Reviewed-by: Keith Busch <keith.busch@intel.com>
