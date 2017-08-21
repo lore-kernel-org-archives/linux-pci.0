@@ -1,75 +1,108 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:48806 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752724AbdHKRRw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Aug 2017 13:17:52 -0400
-Date: Fri, 11 Aug 2017 12:17:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Derrick <jonathan.derrick@intel.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-        David Woodhouse <dwmw2@infradead.org>,
-        Keith Busch <keith.busch@intel.com>,
-        Scott Bauer <scott.bauer@intel.com>,
-        David Fugate <david.fugate@intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] iommu: prevent VMD child devices from being
- remapping targets
-Message-ID: <20170811171750.GC17039@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170807195713.10963-1-jonathan.derrick@intel.com>
- <20170807195713.10963-3-jonathan.derrick@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH 3/3] dt-bindings: designware: add binding for Designware PCIe
+ in ECAM mode
+Date: Mon, 21 Aug 2017 20:29:07 +0100
+Message-Id: <20170821192907.8695-4-ard.biesheuvel@linaro.org>
+In-Reply-To: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
+References: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Graeme Gregory <graeme.gregory@linaro.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Leif Lindholm <leif.lindholm@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170807195713.10963-3-jonathan.derrick@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 07, 2017 at 01:57:13PM -0600, Jon Derrick wrote:
-> VMD child devices must use the VMD endpoint's ID as the DMA source.
-> Because of this, there needs to be a way to link the parent VMD
-> endpoint's DMAR domain to the VMD child devices' DMAR domain such that
-> attaching and detaching child devices modify the endpoint's DMAR mapping
-> and prevents early detaching.
-> 
-> This is outside the scope of VMD, so disable binding child devices to
-> prevent unforeseen issues. This functionality may be implemented in the
-> future.
-> 
-> This patch prevents VMD child devices from returning an IOMMU, which
-> prevents it from exposing iommu_group sysfs directories and subsequent
-> binding by userspace-access drivers such as VFIO.
-> 
-> Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-> ---
->  drivers/iommu/intel-iommu.c | 5 +++++
->  1 file changed, 5 insertions(+)
-> 
-> diff --git a/drivers/iommu/intel-iommu.c b/drivers/iommu/intel-iommu.c
-> index 687f18f..651a6cd 100644
-> --- a/drivers/iommu/intel-iommu.c
-> +++ b/drivers/iommu/intel-iommu.c
-> @@ -905,6 +905,11 @@ static struct intel_iommu *device_to_iommu(struct device *dev, u8 *bus, u8 *devf
->  		 * the PF instead to find the IOMMU. */
->  		pf_pdev = pci_physfn(pdev);
->  		dev = &pf_pdev->dev;
-> +
-> +		/* VMD child devices currently cannot be handled individually */
-> +		if (pci_bus_is_vmd(pdev->bus))
+Describe the binding for firmware-configured instances of the Synopsys
+Designware PCIe controller in RC mode.
 
-Aah, this is the bigger reason why you want a general "is VMD" thing.
-But this is still basically x86-specific code (I do see the ia64 in
-Kconfig, so I guess maybe ia64 as well).
+Cc: Rob Herring <robh@kernel.org>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
+ Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt | 56 ++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-But pci_bus_is_vmd() doesn't feel like a generally useful concept.  I
-see why you need things like this quirk, but it's not clear what
-useful things other code could do with pci_bus_is_vmd() because we
-don't have a generic concept of how VMD buses are different than other
-PCI buses.
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+new file mode 100644
+index 000000000000..b8127b19c220
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+@@ -0,0 +1,56 @@
++* Synopsys Designware PCIe root complex in ECAM mode
++
++In some cases, firmware may already have configured the Synopsys Designware
++PCIe controller in RC mode with static ATU window mappings that cover all
++config, MMIO and I/O spaces in a [mostly] ECAM compatible fashion.
++In this case, there is no need for the OS to perform any low level setup
++of clocks or device registers, nor is there any reason for the driver to
++reconfigure ATU windows for config and/or IO space accesses at runtime.
++
++Such hardware configurations should be described as "pci-host-ecam-generic"
++if they are truly ECAM compatible. Configurations that require no low-level
++setup by the OS nor any ATU window reconfiguration at runtime, but do
++require special handling for type 0 config TLPs may instead be described as
++"snps,dw-pcie-ecam".
++
++Required properties:
++- compatible: should contain "snps,dw-pcie-ecam".
++
++Please refer to the binding document of "pci-host-ecam-generic" in the
++file host-generic-pci.txt for a description of the remaining required
++and optional properties.
++
++
++* MSI support for Synopsys Designware PCIe root complex in ECAM mode
++
++Platforms that elect to perform all configuration of the RC in firmware
++and use the "pci-host-ecam-generic" or "snps,dw-pcie-ecam" binding to
++describe it to the OS may include a separate description of the embedded
++MSI controller in case no MSI support is available in the core interrupt
++controller.
++
++Required properties:
++- compatible:      should contain "snps,dw-pcie-msi".
++- reg:             a single region describing the device registers.
++- interrupts:      interrupt specifier for the interrupt that is asserted when
++                   an MSI is received by the RC.
++- msi-controller:  empty property identifying this device as an MSI controller.
++
++Example for an implementation that routes all legacy INTx interrupts via SPI
++#188 and all MSI interrupts via SPI #190:
++
++  pcie@20000000 {
++    compatible = "snps,dw-pcie-ecam";
++    device_type = "pci";
++    msi-parent = <&msi0>;
++    interrupt-map-mask = <0x0 0x0 0x0 0x0>;
++    interrupt-map = <0x0 0x0 0x0 0x0 &gic GIC_SPI 188 IRQ_TYPE_LEVEL_HIGH>;
++    ...
++  };
++
++  msi0: msi@10000000 {
++    compatible = "snps,dw-pcie-msi";
++    reg = <0x0 0x10000000 0x0 0x10000>;
++    interrupts = <GIC_SPI 190 IRQ_TYPE_LEVEL_HIGH>;
++    msi-controller;
++  };
+-- 
+2.11.0
 
-> +			return NULL;
-> +
->  		segment = pci_domain_nr(pdev->bus);
->  	} else if (has_acpi_companion(dev))
->  		dev = &ACPI_COMPANION(dev)->dev;
-> -- 
-> 2.9.4
-> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
