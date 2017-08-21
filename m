@@ -1,215 +1,206 @@
-Return-Path: <SRS0=1zbT=7S=broadcom.com=srinath.mannam@kernel.org>
-Return-Path: <SRS0=1zbT=7S=broadcom.com=srinath.mannam@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com> <20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com>
-From: Srinath Mannam <srinath.mannam@broadcom.com>
-Date: Wed, 16 Aug 2017 22:33:12 +0530
-Message-ID: <CABe79T4ip3m4U_i4k-8hBcONONLXyy83v-BeWk7Rq24CD9Z-9w@mail.gmail.com>
-Subject: Re: [RFC PATCH v3] pci: Concurrency issue during pci enable bridge
+Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=rPrl=7X=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V10 2/3] PCI: handle CRS returned by device after FLR
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ alex.williamson@redhat.com, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-kernel@vger.kernel.org
+References: <1502470596-4112-1-git-send-email-okaya@codeaurora.org>
+ <1502470596-4112-2-git-send-email-okaya@codeaurora.org>
+ <20170818210134.GO28977@bhelgaas-glaptop.roam.corp.google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <4da26c10-3426-e752-4a59-25bb59cde8cd@codeaurora.org>
+Date: Mon, 21 Aug 2017 09:44:09 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170818210134.GO28977@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
 Hi Bjorn,
 
-Thank you for the feedback.
+On 8/18/2017 5:01 PM, Bjorn Helgaas wrote:
+> On Fri, Aug 11, 2017 at 12:56:35PM -0400, Sinan Kaya wrote:
+>> Sporadic reset issues have been observed with Intel 750 NVMe drive while
+>> assigning the physical function to the guest machine. The sequence of
+>> events observed is as follows:
+>>
+>> - perform a Function Level Reset (FLR)
+>> - sleep up to 1000ms total
+>> - read ~0 from PCI_COMMAND
+>> - warn that the device didn't return from FLR
+>> - touch the device before it's ready
+>> - drop register read and writes performing register settings restore
+>> - incomplete reset operation and partial register restoration
+>> - second time device probe fails in the guest machine as HW is left in
+>> limbo.
+> 
+> Pardon me while I think out loud for a while.  It's taking me a while
+> to untangle my confusion about how CRS works.
+> 
 
-My comments are in lined.
+no problem,
 
-On Wed, Aug 16, 2017 at 7:13 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Aug 04, 2017 at 08:27:28PM +0530, Srinath Mannam wrote:
->> Concurrency issue is observed during pci enable bridge called
->> for multiple pci devices initialization in SMP system.
+> Prior to this patch, you saw the "Failed to return from FLR" warning.
+> That means we did this:
+> 
+>      0ms  assert FLR
+>    100ms  read PCI_COMMAND, get ~0 (i == 0)
+>    200ms  read PCI_COMMAND, get ~0 (i == 1)
+>    ...
+>   1000ms  read PCI_COMMAND, get ~0 (i == 9)
+> 
+> If we did not get completions for those config reads, the root port
+> would complete the read as a failed transaction and probably
+> synthesize ~0 data.  
+
+That's correct. This root port returns ~0 when destination is unreachable.
+
+> But if that were the case, this patch would make
+> no difference: it reads PCI_VENDOR_ID instead of PCI_COMMAND the first
+> time around, that would also be a failed transaction, and we wouldn't
+> interpret it as a CRS status, so the sequence would be exactly the
+> above except the first read would be of PCI_VENDOR_ID, not
+> PCI_COMMAND.
+> 
+> Since this patch *does* make a difference, CRS Software Visibility
+> must be supported and enabled, and we must have gotten completions
+> with CRS status for the PCI_COMMAND reads.  
+
+That's right, CRS visibility is supported and enabled. Root port returns
+0xFFFF0001 when vendor ID is read as per the spec.
+
+> Per the completion
+> handling rules in sec 2.3.2, the root complex should transparently
+> retry the read (since we're not reading PCI_VENDOR_ID, CRS Software
+> Visibility doesn't apply, so this is invisible to software).  But the
+> root complex *is* allowed to limit the number of retries and if the
+> limit is reached, complete the request as a failed transaction.
+
+This version of the root port doesn't support retry mechanism. This is a
+TO-DO for the hardware team. This root port returns ~0 for all accesses
+other than vendor id. This means we waited 1 seconds and the device
+was not accessible. Command register was not reachable at the end of
+1 seconds.
+
+> 
+> That must be what happened before this patch.  If that's the case, we
+> should see an error logged from the failed transaction.  We should be
+> able to verify this if we collected "lspci -vv" output for the system
+> before and after the FLR.
+> 
+
+See above.
+
+> If CRS SV is not present (or not enabled), the PCI_VENDOR_ID read will
+> still get a CRS completion, but the root port will retry it instead of
+> returning the 0x0001 ID.  When we hit the retry limit, the root port
+> will synthesize ~0 data to complete the read.
+
+This is what is missing from the HW. I'm trying to get this corrected
+to be complete.
+
+> 
+> That means we won't call pci_bus_wait_crs() at all, and we'll fall
+> back to the original PCI_COMMAND reads.  That path will only wait
+> 1000ms, just like the original code before this patch.  So I *think*
+> that if you disable CRS SV on this system (or if you put the device in
+> a system that doesn't support CRS SV), you'll probably see the same
+> "failed to return from FLR" warning.
+> 
+> You could easily test this by using setpci to turn off
+> PCI_EXP_RTCTL_CRSSVE in the root port leading to the NVMe device
+> before the FLR.
+> 
+> I think the implication is that we need to generalize
+> pci_bus_wait_crs() to be more of a "wait for device ready" interface
+> that can use CRS SV (if supported and enabled) or something like the
+> PCI_COMMAND loop (if no CRS SV).  It should use the same timeout
+> either way, since CRS SV is a property of the root port, not of the
+> device we're waiting for.
+
+I saw your comment about timeout. I was trying not to change the behavior
+for systems that do not support CRS visibility. we can certainly increase
+the timeout if you think it is better.
+
+I saw your V11, I'll review them in a minute.
+
+> 
+> It's "interesting" that the PCI core error handling code doesn't look
+> at the Master Abort bit at all, even though it's pretty fundamental to
+> conventional PCI error reporting.  I suspect Master Abort gets set
+> whenever a root port synthesizes ~0 data, but (with the exception of
+> some arch code) we never look at it and never clear it.
+> 
+>> An endpoint is allowed to issue Configuration Request Retry Status (CRS)
+>> following a FLR request to indicate that it is not ready to accept new
+>> requests. CRS is defined in PCIe r3.1, sec 2.3.1. Request Handling Rules
+>> and CRS usage in FLR context is mentioned in PCIe r3.1, sec 6.6.2.
+>> Function-Level Reset.
 >>
->> Setup details:
->>  - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
->>  - Two EPs are connected to PCIe RC through bridge as shown
->>    in the below figure.
+>> A CRS indication will only be given if the address to be read is vendor ID
+>> register. pci_bus_read_dev_vendor_id() knows how to deal with CRS returned
+>> 0xFFFF0001 value and will continue polling until a value other than
+>> 0xFFFF0001 is returned within a given timeout.
 >>
->>                    [RC]
->>                     |
->>                  [BRIDGE]
->>                     |
->>                -----------
->>               |           |
->>              [EP]        [EP]
+>> Try to discover device presence via CRS first. If device is not found, fall
+>> through to old behavior.
 >>
->> Issue description:
->> After PCIe enumeration completed EP driver probe function called
->> for both the devices from two CPUS simultaneously.
->> From EP probe function, pci_enable_device_mem called for both the EPs.
->> This function called pci_enable_bridge enable for all the bridges
->> recursively in the path of EP to RC.
->>
->> Inside pci_enable_bridge function, at two places concurrency issue is
->> observed.
->>
->> Place 1:
->>   CPU 0:
->>     1. Done Atomic increment dev->enable_cnt
->>        in pci_enable_device_flags
->>     2. Inside pci_enable_resources
->>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
->>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
->>        pci_write_config_word(dev, PCI_COMMAND, cmd)
->>   CPU 1:
->>     1. Check pci_is_enabled in function pci_enable_bridge
->>        and it is true
->>     2. Check (!dev->is_busmaster) also true
->>     3. Gone into pci_set_master
->>     4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
->>     5. Ready to set PCI_COMMAND_MASTER (0x4) in
->>        pci_write_config_word(dev, PCI_COMMAND, cmd)
->>
->> By the time of last point for both the CPUs are read value 0 and
->> ready to write 2 and 4.
->> After last point final value in PCI_COMMAND register is 4 instead of 6.
->>
->> Place 2:
->>   CPU 0:
->>     1. Done Atomic increment dev->enable_cnt in
->>        pci_enable_device_flags
->>
->> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 >> ---
->>  drivers/pci/pci.c | 8 ++++++--
->>  1 file changed, 6 insertions(+), 2 deletions(-)
+>>  drivers/pci/pci.c | 23 +++++++++++++++++++++--
+>>  1 file changed, 21 insertions(+), 2 deletions(-)
 >>
 >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index af0cc34..12721df 100644
+>> index af0cc34..c853551 100644
 >> --- a/drivers/pci/pci.c
 >> +++ b/drivers/pci/pci.c
->> @@ -52,6 +52,7 @@ static void pci_pme_list_scan(struct work_struct *work);
->>  static LIST_HEAD(pci_pme_list);
->>  static DEFINE_MUTEX(pci_pme_list_mutex);
->>  static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
->> +static DEFINE_MUTEX(pci_bridge_mutex);
+>> @@ -3821,17 +3821,36 @@ static void pci_flr_wait(struct pci_dev *dev)
+>>  {
+>>  	int i = 0;
+>>  	u32 id;
+>> +	bool ret;
+>> +
+>> +	/*
+>> +	 * Don't touch the HW before waiting 100ms. HW has to finish
+>> +	 * within 100ms according to PCI Express Base Specification
+>> +	 * Revision 3.1 Section 6.6.2: Function-Level Reset (FLR).
+>> +	 */
+>> +	msleep(100);
+>> +
+>> +	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID,
+>> +				      &id))
+>> +		return;
+>> +
+>> +	/* See if we can find a device via CRS first. */
+>> +	if ((id & 0xffff) == 0x0001) {
+>> +		ret = pci_bus_wait_crs(dev->bus, dev->devfn, &id, 60000);
+>> +		if (ret)
+>> +			return;
+>> +	}
+>>  
+>>  	do {
+>>  		msleep(100);
+>>  		pci_read_config_dword(dev, PCI_COMMAND, &id);
+>> -	} while (i++ < 10 && id == ~0);
+>> +	} while (i++ < 9 && id == ~0);
+>>  
+>>  	if (id == ~0)
+>>  		dev_warn(&dev->dev, "Failed to return from FLR\n");
+>>  	else if (i > 1)
+>>  		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+>> -			 (i - 1) * 100);
+>> +			 i * 100);
+>>  }
+>>  
+>>  /**
+>> -- 
+>> 1.9.1
 >>
->>  struct pci_pme_device {
->>       struct list_head list;
->> @@ -1348,10 +1349,11 @@ static void pci_enable_bridge(struct pci_dev *dev)
->>       if (bridge)
->>               pci_enable_bridge(bridge);
->>
->> +     mutex_lock(&pci_bridge_mutex);
->>       if (pci_is_enabled(dev)) {
->>               if (!dev->is_busmaster)
->>                       pci_set_master(dev);
->> -             return;
->> +             goto end;
->>       }
->>
->>       retval = pci_enable_device(dev);
->> @@ -1359,6 +1361,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
->>               dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
->>                       retval);
->>       pci_set_master(dev);
->> +end:
->> +     mutex_unlock(&pci_bridge_mutex);
->
-> I think this will deadlock because we're holding pci_bridge_mutex
-> while we call pci_enable_device(), which may recursively call
-> pci_enable_bridge(), which would try to acquire pci_bridge_mutex
-> again.  My original suggestion of a mutex in the host bridge would
-> have the same problem.
+> 
 
-This extra check "if (bridge && !pci_is_enabled(bridge))" will resolve
-the deadlock in the present patch.
->
-> We talked about using device_lock() earlier.  You found some problems
-> with that, and I'd like to understand them better.  You said:
->
->> But the pci_enable_bridge is called in the context of the driver
->> probe function, we will have nexted lock problem.
->
-> The driver core does hold device_lock() while calling the driver probe
-> function, in this path:
->
->   device_initial_probe
->     __device_attach
->       device_lock(dev)                # <-- lock
->       __device_attach_driver
->         ...
->           pci_device_probe
->             ...
->               ->probe                 # driver probe function
->       device_unlock(dev)              # <-- unlock
->
-> I didn't see your patch using device_lock(), but what I had in mind
-> was something like the patch below, where pci_enable_bridge() acquires
-> the device_lock() of the bridge.
->
-> For the sake of argument, assume a hierarchy:
->
->   bridge A -> bridge B -> endpoint C
->
-> Here's what I think will happen:
->
->   device_lock(C)                         # driver core
->     ...
->       ->probe(C)                         # driver probe function
->         pci_enable_device_flags(C)
->           pci_enable_bridge(B)           # enable C's upstream bridge
->             device_lock(B)
->             pci_enable_bridge(A)         # enable B's upstream bridge
->               device_lock(A)             # A has no upstream bridge
->               pci_enable_device(A)
->                 do_pci_enable_device(A)  # update A PCI_COMMAND
->               pci_set_master(A)          # update A PCI_COMMAND
->               device_unlock(A)
->             pci_enable_device(B)         # update B PCI_COMMAND
->             pci_set_master(B)            # update B PCI_COMMAND
->             device_unlock(B)
->           do_pci_enable_device(C)        # update C PCI_COMMAND
->   device_unlock(C)
->
-> I don't see a nested lock problem here.  What am I missing?
->From the probe call device_lock will taken to that endpoint and also
-for the bus. In this order
 
-pci register driver(C)              #(driver_register())
-device_lock(B);                       # lock for parent (__driver_attach())
-device_lock(C)                       # lock for endpoint (__driver_attach())
-driver probe(C)
-pci_enable_bridge()
-device_lock(B);  # here we see the deadlock.because of parent device lock
-
->
-> Bjorn
->
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e8e40dea2842..38154ba628a9 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1344,6 +1344,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
->         struct pci_dev *bridge;
->         int retval;
->
-> +       device_lock(&dev->dev);
->         bridge = pci_upstream_bridge(dev);
->         if (bridge)
->                 pci_enable_bridge(bridge);
-> @@ -1351,7 +1352,7 @@ static void pci_enable_bridge(struct pci_dev *dev)
->         if (pci_is_enabled(dev)) {
->                 if (!dev->is_busmaster)
->                         pci_set_master(dev);
-> -               return;
-> +               goto out;
->         }
->
->         retval = pci_enable_device(dev);
-> @@ -1359,6 +1360,9 @@ static void pci_enable_bridge(struct pci_dev *dev)
->                 dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
->                         retval);
->         pci_set_master(dev);
-> +
-> +out:
-> +       device_unlock(&dev->dev);
->  }
->
->  static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
