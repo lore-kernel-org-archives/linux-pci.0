@@ -1,86 +1,55 @@
-Return-Path: <SRS0=j+1X=73=rock-chips.com=jeffy.chen@kernel.org>
-Return-Path: <SRS0=j+1X=73=rock-chips.com=jeffy.chen@kernel.org>
-Message-ID: <599F77E7.4040604@rock-chips.com>
-Date: Fri, 25 Aug 2017 09:05:43 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <SRS0=Kuf8=7X=lst.de=hch@kernel.org>
+Return-Path: <SRS0=Kuf8=7X=lst.de=hch@kernel.org>
+Date: Mon, 21 Aug 2017 20:39:05 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: don't try to apply MSI(-X) affinity for
+	single vectors
+Message-ID: <20170821183905.GB23205@lst.de>
+References: <20170726201741.4842-1-hch@lst.de> <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-rockchip@lists.infradead.org,
- Brian Norris <briannorris@chromium.org>,
- Tejun Heo <tj@kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>,
- Michael Turquette <mturquette@baylibre.com>,
- Stephen Boyd <sboyd@codeaurora.org>, linux-clk@vger.kernel.org
-Subject: Re: [PATCH v5 04/10] PCI: rockchip: fix system hang up if activating
- CONFIG_DEBUG_SHIRQ
-References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com> <1503471758-73904-1-git-send-email-shawn.lin@rock-chips.com> <20170824202111.GS31858@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170824202111.GS31858@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170802182458.GC20308@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Wed, Aug 02, 2017 at 01:24:58PM -0500, Bjorn Helgaas wrote:
+> On Wed, Jul 26, 2017 at 10:17:41PM +0200, Christoph Hellwig wrote:
+> > We'll always get NULL back in that case, so skip the call and the
+> > resulting warning.
+> 
+> 1. I'm not sure PCI_IRQ_AFFINITY was the right name.  IIUC, a
+> MSI/MSI-X vector is always basically bound to CPU,
 
-On 08/25/2017 04:21 AM, Bjorn Helgaas wrote:
->> >In order to fix this, we remove all the clock-disabling from
->> >the error handle path and driver's remove function. And replying
->> >on the devm_add_action_or_reset to fire the clock-disabling at
->> >the appropriate time. Also split out rockchip_pcie_setup_irq
->> >and move requesting irq after enabling clks to avoid this kind
-> Thanks for splitting out the refactoring stuff.  That really makes
-> this patch much simpler.
->
-> IIUC, this really has nothing to do with CONFIG_DEBUG_SHIRQ.  It may
-> be true that you've only*seen*  the problem with CONFIG_DEBUG_SHIRQ
-> enabled, but all that config option does is take a situation that
-> could happen at any time (another device sharing the IRQ generating an
-> interrupt), and force it to happen.  So it's just a way to expose an
-> existing driver problem.
-yes, and i'm wondering would it make more sense to somehow ignore those 
-irqs(triggered by other devices, and we don't really need to care since 
-we already unregistered) than trying to hold all needed resources(clks & 
-power domains & some other resources maybe) for that?
+This will depend on your architecture.
 
-maybe we can just make sure the irq handler unregistered when we stop 
-caring about the irqs? or maybe add a flag to tell the irq handler to 
-stop processing them?
+> so we always have
+> affinity.  The only difference with PCI_IRQ_AFFINITY is that instead
+> of binding them all to the same CPU, we spread them around.  Maybe
+> PCI_IRQ_SPREAD would be more suggestive.  But whatever, it is what it
+> is, and I'll expand the changelog something like this:
 
->
-> The real problem is apparently that rockchip_pcie_subsys_irq_handler()
-> relies on some clock being enabled, but we're leaving it registered at
-> a time when the clock has already been disabled.
->
-> You fixed that by using devm_add_action_or_reset() to tell devm to
-> disable the clocks*after*  releasing the IRQ.
->
-> That sort of makes sense, but devm_add_action_or_reset() is a little
-> obscure, and this feels like a hole in the devm framework.  Seems like
-> it would be nice if there were some sort of devm wrapper for
-> clk_prepare_enable() so this would happen automatically.
->
-> This pattern:
->
->    clk = devm_clk_get(...);
->    if (IS_ERR(clk)) {
->      dev_warn("no clock for ...");
->      return PTR_ERR(clk);
->    }
->
->    ret = clk_prepare_enable(clk);
->    if (ret) {
->      dev_warn("failed to enable ...");
->      return err;
->    }
->
-> is quite common ("git grep -A10 devm_clk_get | grep clk_prepare_enable
->   | wc -l" finds over 400 occurrences).  Should there be something to
-> simplify this a little?
->
-> I also wonder about other PCI host drivers that use both
-> clk_prepare_enable() and devm_request_irq().  Maybe Rockchip is
-> "special" in that it seems the driver must turn on a clock before it
-> can even talk to the host controller, whereas maybe other drivers can
-> always talk to the host controller, but need to turn on clocks
-> downstream from the controller.  I didn't audit them, but I'm
-> concerned that some of them might have this same problem.
->
+Yes, that might be a better name.  We don't have that many callers
+yet, so we could probably still change it.
+
+> 
+>   Calling pci_alloc_irq_vectors() with PCI_IRQ_AFFINITY indicates
+>   that we should spread the MSI vectors around the available CPUs.
+>   But if we're only allocating one vector, there's nothing to spread
+>   around.
+
+Ok.
+
+> 2. The patch makes sense in that if we're only allocating a single
+> vector, there's nothing to spread around and there's no need to
+> allocate a cpumask.  But I haven't figured out why we get a warning.
+> I assume it's because we're getting NULL back when we call
+> irq_create_affinity_masks() with nvecs==1, but that only happens if
+> affv==0 or the zalloc fails, and I don't see why either would be the
+> case.
+
+It happens for the !CONFIG_SMP case.  It also happens for the case where
+we pre_vectors or post_vectors reduces the affinity vector count to 1
+inside irq_create_affinity_masks, so maybe this patch isn't the best and
+the warning should either move into irq_create_affinity_masks or just
+remove it entirely.
