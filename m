@@ -1,91 +1,85 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 24 Aug 2017 11:46:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH 0/3] pci: add support for firmware initialized designware
- RCs
-Message-ID: <20170824164633.GI31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve1eur01on0049.outbound.protection.outlook.com ([104.47.1.49]:12800
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751105AbdHUDVz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 20 Aug 2017 23:21:55 -0400
+From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "jingoohan1@gmail.com" <jingoohan1@gmail.com>
+CC: "M.h. Lian" <minghuan.lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
+        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
+        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
+Subject: RE: [PATCHv3 6/9] PCI: designware: add accessors for write permission
+ of DBI read-only registers
+Date: Mon, 21 Aug 2017 03:21:52 +0000
+Message-ID: <AM5PR0402MB2771AA0E2C85C5575FAD846384870@AM5PR0402MB2771.eurprd04.prod.outlook.com>
+References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
+ <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
+ <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
+ <VI1PR0402MB278292DAC81D4A49964FEC1B84830@VI1PR0402MB2782.eurprd04.prod.outlook.com>
+ <f8c8589e-ebc2-c618-e1cb-2c134c756a77@synopsys.com>
+In-Reply-To: <f8c8589e-ebc2-c618-e1cb-2c134c756a77@synopsys.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
- Graeme Gregory <graeme.gregory@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- Leif Lindholm <leif.lindholm@linaro.org>, Jingoo Han <jingoohan1@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 21, 2017 at 08:29:04PM +0100, Ard Biesheuvel wrote:
-> UEFI based systems incorporating a Synopsys Designware PCIe controller
-> in RC mode will typically configure it before entering the OS. If this
-> configuration is fully static and ECAM compliant, there is no need to
-> expose particulars of the device to the OS, and we can simply describe
-> it as "pci-host-ecam-generic".
-
-I *love* the idea of moving more of this to firmware.  I spend an
-incredible amount of time looking at all these native drivers, and
-*zero* time looking at the ACPI driver (pci_root.c).  And it's not
-like all this code in the native drivers is adding features or
-performance.  It's just extra work for no benefit.
-
-I'm assuming there'll be a v2 soon for the kbuild warnings.
-
-> However, the Synopsys IP may be synthesized in a way where a quirk is
-> needed for config space accesses to the first bus. It makes little sense
-> to instantiate yet another pcie-designware driver that contains all the
-> low level setup code, but it is also not justified to add quirks handling
-> to the generic ECAM driver.
-> 
-> So instead, create a variant of the generic ECAM driver that filters config
-> space accesses directed at device #1 and up on the first bus.
-> 
-> Also, add a binding and driver to support the MSI functionality available
-> in some versions of this IP. This allows the MSI routing to be described
-> at the DT level rather than hardcoding it in the driver.
-> 
-> Cc: Leif Lindholm <leif.lindholm@linaro.org>
-> Cc: Graeme Gregory <graeme.gregory@linaro.org>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> 
-> Ard Biesheuvel (3):
->   pci: designware: add driver for DWC controller in ECAM shift mode
->   pci: designware: add separate driver for the MSI part of the RC
->   dt-bindings: designware: add binding for Designware PCIe in ECAM mode
-> 
->  Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt |  56 +++++
->  drivers/pci/dwc/Kconfig                                        |  11 +
->  drivers/pci/dwc/Makefile                                       |   4 +-
->  drivers/pci/dwc/pcie-designware-ecam.c                         |  75 ++++++
->  drivers/pci/dwc/pcie-designware-msi.c                          | 255 ++++++++++++++++++++
->  5 files changed, 400 insertions(+), 1 deletion(-)
->  create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
->  create mode 100644 drivers/pci/dwc/pcie-designware-ecam.c
->  create mode 100644 drivers/pci/dwc/pcie-designware-msi.c
-> 
-> -- 
-> 2.11.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SGkgSm9hbywNCg0KVGhhbmtzIGEgbG90IGZvciB5b3VyIGZlZWRiYWNrIQ0KDQo+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEpvYW8gUGludG8gW21haWx0bzpKb2FvLlBpbnRv
+QHN5bm9wc3lzLmNvbV0NCj4gU2VudDogMjAxN+W5tDjmnIgxOOaXpSAxOTo1MQ0KPiBUbzogWi5x
+LiBIb3UgPHpoaXFpYW5nLmhvdUBueHAuY29tPjsgU3RhbmltaXIgVmFyYmFub3YNCj4gPHN2YXJi
+YW5vdkBtbS1zb2wuY29tPjsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsNCj4gYmhlbGdhYXNA
+Z29vZ2xlLmNvbTsgamluZ29vaGFuMUBnbWFpbC5jb207IEpvYW8uUGludG9Ac3lub3BzeXMuY29t
+DQo+IENjOiBNLmguIExpYW4gPG1pbmdodWFuLmxpYW5AbnhwLmNvbT47IE1pbmdrYWkgSHUgPG1p
+bmdrYWkuaHVAbnhwLmNvbT47DQo+IFJveSBaYW5nIDxyb3kuemFuZ0BueHAuY29tPjsgbmlrbGFz
+LmNhc3NlbEBheGlzLmNvbTsNCj4gamVzcGVyLm5pbHNzb25AYXhpcy5jb20NCj4gU3ViamVjdDog
+UmU6IFtQQVRDSHYzIDYvOV0gUENJOiBkZXNpZ253YXJlOiBhZGQgYWNjZXNzb3JzIGZvciB3cml0
+ZQ0KPiBwZXJtaXNzaW9uIG9mIERCSSByZWFkLW9ubHkgcmVnaXN0ZXJzDQo+IA0KPiBIaSBaaGlx
+aWFuZyBhbmQgU3RhbmltaXIsDQo+IA0KPiDDgHMgNDowMyBBTSBkZSA4LzE3LzIwMTcsIFoucS4g
+SG91IGVzY3JldmV1Og0KPiA+IEhpIFN0YW5pbWlyLA0KPiA+DQo+ID4gVGhhbmtzIGZvciB5b3Vy
+IGZlZWRiYWNrIQ0KPiA+DQo+ID4+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+IEZy
+b206IFN0YW5pbWlyIFZhcmJhbm92IFttYWlsdG86c3ZhcmJhbm92QG1tLXNvbC5jb21dDQo+ID4+
+IFNlbnQ6IDIwMTflubQ45pyIMTbml6UgMTk6MzQNCj4gPj4gVG86IFoucS4gSG91IDx6aGlxaWFu
+Zy5ob3VAbnhwLmNvbT47IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4+IGJoZWxnYWFz
+QGdvb2dsZS5jb207IGppbmdvb2hhbjFAZ21haWwuY29tOw0KPiBKb2FvLlBpbnRvQHN5bm9wc3lz
+LmNvbQ0KPiA+PiBDYzogTS5oLiBMaWFuIDxtaW5naHVhbi5saWFuQG54cC5jb20+OyBNaW5na2Fp
+IEh1DQo+ID4+IDxtaW5na2FpLmh1QG54cC5jb20+OyBSb3kgWmFuZyA8cm95LnphbmdAbnhwLmNv
+bT47DQo+ID4+IG5pa2xhcy5jYXNzZWxAYXhpcy5jb207IGplc3Blci5uaWxzc29uQGF4aXMuY29t
+DQo+ID4+IFN1YmplY3Q6IFJlOiBbUEFUQ0h2MyA2LzldIFBDSTogZGVzaWdud2FyZTogYWRkIGFj
+Y2Vzc29ycyBmb3Igd3JpdGUNCj4gPj4gcGVybWlzc2lvbiBvZiBEQkkgcmVhZC1vbmx5IHJlZ2lz
+dGVycw0KPiA+Pg0KPiA+PiBIaSwNCj4gPj4NCj4gPj4gT24gMDgvMTYvMjAxNyAwNzo1NiBBTSwg
+WmhpcWlhbmcgSG91IHdyb3RlOg0KPiA+Pj4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5I
+b3VAbnhwLmNvbT4NCj4gPj4+DQo+ID4+PiBUaGUgcmVhZC1vbmx5IERCSSByZWdpc3RlcnMgY2Fu
+IGJlIHdyaXR0ZW4gb3ZlciB0aGUgREJJIHdoZW4gc2V0IHRoZQ0KPiA+Pj4gIldyaXRlIHRvIFJP
+IFJlZ2lzdGVycyBVc2luZyBEQkkiIChEQklfUk9fV1JfRU4pIGZpZWxkIG9mIHRoZQ0KPiA+Pj4g
+TUlTQ19DT05UUk9MXzFfT0ZGIHJlZ2lzdGVyLg0KPiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6
+IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4+PiAtLS0NCj4gPj4+IFYz
+Og0KPiA+Pj4gIC0gTm8gY2hhbmdlDQo+ID4+Pg0KPiA+Pj4gIGRyaXZlcnMvcGNpL2R3Yy9wY2ll
+LWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPj4+ICAxIGZp
+bGUgY2hhbmdlZCwgMjUgaW5zZXJ0aW9ucygrKQ0KPiA+Pj4NCj4gPj4+IGRpZmYgLS1naXQgYS9k
+cml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPj4+IGIvZHJpdmVycy9wY2kvZHdj
+L3BjaWUtZGVzaWdud2FyZS5oDQo+ID4+PiBpbmRleCA3MzY2YzgxLi4wYzVmODc0IDEwMDY0NA0K
+PiA+Pj4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4+PiArKysg
+Yi9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPj4+IEBAIC03Niw2ICs3Niw5
+IEBADQo+ID4+PiAgI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwgMTYp
+DQo+ID4+PiAgI2RlZmluZSBQQ0lFX0FUVV9VUFBFUl9UQVJHRVQJCTB4OTFDDQo+ID4+Pg0KPiA+
+Pj4gKyNkZWZpbmUgUENJRV9NSVNDX0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4+PiArI2RlZmlu
+ZSBQQ0lFX0RCSV9ST19XUl9FTgkJKDB4MSA8PCAwKQ0KPiA+Pg0KPiA+PiBEb2VzIHRob3NlIHJl
+Z2lzdGVycyBleGlzdCBmb3IgZHdjIHZlcnNpb24gNC4wMWE/DQo+ID4NCj4gPiBKb2FvLCBjYW4g
+eW91IGhlbHAgdG8gY2hlY2sgdGhpcz8NCj4gPiBJIHJlZmVycmVkIHRvIERlc2lnbldhcmUgY29y
+ZXMgUENJIEV4cHJlc3MgY29udHJvbGxlciBkYXRhYm9vayB2ZXJzaW9uDQo+IDQuMjFhLg0KPiA+
+IFRoZSBGcmVlc2NhbGUgTGF5ZXJzY2FwZSBpbXBsZW1lbnQgZG9lcyBub3QgZXhwb3J0IHRoZSB2
+ZXJzaW9uIG9mDQo+IGRlc2lnbndhcmUgUENJZSBjb250cm9sbGVyLCBJIGRvbid0IGtub3cgd2hp
+Y2ggdmVyc2lvbnMgaGF2ZSB0aG9zZSByZWdpc3RlcnMsDQo+IGlmIGl0IGRvZXMgbm90IHdvcmsg
+b24gcWNvbSBwbGF0Zm9ybSwgSSB3aWxsIHJlbW92ZSB0aGUgcWNvbSByZWxhdGVkIGNoYW5nZXMu
+DQo+IA0KPiBJIGNhbiBxdWVyeSB0aGUgUiZELCBidXQgSSB0aGluayBpdCB3b24ndCBiZSB2ZXJ5
+IHVzZWZ1bCBzaW5jZSB0aGUgcWNvbScgU29DIGRvDQo+IG5vdCBpbXBsZW1lbnQgdGhlIHJlZ2lz
+dGVycyAoaWYgdGhleSBhY3R1YWxseSBleGlzdCkuIEkgdGhpbmsgdGhlIGJlc3Qgd2F5IGlzIG5v
+dCB0bw0KPiB1c2UgdGhpcyBpbiBxY29tJyBTb0MgKG1heWJlIG90aGVycyBzaG91bGQgbWFrZSBz
+dXJlIHRoZWlyIFNvQ3MgY29udGFpbiB0aGVzZQ0KPiByZWdpc3RlcnMpLg0KDQpHb3QgaXQsIHdp
+bGwgZHJvcCB0aGUgY2hhbmdlcyBvZiBxY29tIHBjaWUuDQoNClRoYW5rcywNClpoaXFpYW5nDQo=
