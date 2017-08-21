@@ -1,16 +1,10 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 25 Aug 2017 11:20:00 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
- wake irq
-Message-ID: <20170825181959.GA64040@google.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
- <20170822031934.8675-4-jeffy.chen@rock-chips.com>
- <20170825181439.d3hlwrcbmcss3sx6@rob-hp-laptop>
-MIME-Version: 1.0
-In-Reply-To: <20170825181439.d3hlwrcbmcss3sx6@rob-hp-laptop>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH 0/3] pci: add support for firmware initialized designware RCs
+Date: Mon, 21 Aug 2017 20:29:04 +0100
+Message-Id: <20170821192907.8695-1-ard.biesheuvel@linaro.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,67 +12,62 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, Jeffy Chen <jeffy.chen@rock-chips.com>,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, bhelgaas@google.com,
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+ Graeme Gregory <graeme.gregory@linaro.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Leif Lindholm <leif.lindholm@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
  linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 25, 2017 at 01:14:39PM -0500, Rob Herring wrote:
-> On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
-> > Add an optional interrupt for PCIE_WAKE pin.
-> > 
-> > Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> > ---
-> > 
-> > Changes in v4: None
-> > Changes in v3: None
-> > Changes in v2: None
-> > 
-> >  .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
-> >  1 file changed, 12 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> > index 5678be82530d..9f6504129e80 100644
-> > --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> > +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> > @@ -20,10 +20,13 @@ Required properties:
-> >  - msi-map: Maps a Requester ID to an MSI controller and associated
-> >  	msi-specifier data. See ./pci-msi.txt
-> >  - interrupts: Three interrupt entries must be specified.
-> > -- interrupt-names: Must include the following names
-> > -	- "sys"
-> > -	- "legacy"
-> > -	- "client"
-> > +- interrupt-names: Include the following names
-> > +	Required:
-> > +		- "sys"
-> > +		- "legacy"
-> > +		- "client"
-> > +	Optional:
-> > +		- "wake"
-> 
-> Use the wakeup source binding:
-> Documentation/devicetree/bindings/power/wakeup-source.txt
+UEFI based systems incorporating a Synopsys Designware PCIe controller
+in RC mode will typically configure it before entering the OS. If this
+configuration is fully static and ECAM compliant, there is no need to
+expose particulars of the device to the OS, and we can simply describe
+it as "pci-host-ecam-generic".
 
-And I suppose this means we'd fall under this paragraph?
+However, the Synopsys IP may be synthesized in a way where a quirk is
+needed for config space accesses to the first bus. It makes little sense
+to instantiate yet another pcie-designware driver that contains all the
+low level setup code, but it is also not justified to add quirks handling
+to the generic ECAM driver.
 
-    "However if the devices have dedicated interrupt as the wakeup source
-    then they need to specify/identify the same using device specific
-    interrupt name. In such cases only that interrupt can be used as wakeup
-    interrupt."
+So instead, create a variant of the generic ECAM driver that filters config
+space accesses directed at device #1 and up on the first bus.
 
-We don't expect *any* interrupt to qualify as PCI WAKE#; so we should
-still also document the interrupt name ("wake"?) in
-Documentation/devicetree/bindings/pci/pci.txt as Bjorn suggested, in
-addition to using the 'wakeup-source' property documented there.
+Also, add a binding and driver to support the MSI functionality available
+in some versions of this IP. This allows the MSI routing to be described
+at the DT level rather than hardcoding it in the driver.
 
-Brian
+Cc: Leif Lindholm <leif.lindholm@linaro.org>
+Cc: Graeme Gregory <graeme.gregory@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+
+Ard Biesheuvel (3):
+  pci: designware: add driver for DWC controller in ECAM shift mode
+  pci: designware: add separate driver for the MSI part of the RC
+  dt-bindings: designware: add binding for Designware PCIe in ECAM mode
+
+ Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt |  56 +++++
+ drivers/pci/dwc/Kconfig                                        |  11 +
+ drivers/pci/dwc/Makefile                                       |   4 +-
+ drivers/pci/dwc/pcie-designware-ecam.c                         |  75 ++++++
+ drivers/pci/dwc/pcie-designware-msi.c                          | 255 ++++++++++++++++++++
+ 5 files changed, 400 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/designware-pcie-ecam.txt
+ create mode 100644 drivers/pci/dwc/pcie-designware-ecam.c
+ create mode 100644 drivers/pci/dwc/pcie-designware-msi.c
+
+-- 
+2.11.0
+
 
 _______________________________________________
 linux-arm-kernel mailing list
