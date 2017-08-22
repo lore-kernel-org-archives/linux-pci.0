@@ -1,77 +1,87 @@
-Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH net] PCI: fix the return value for the
- pci_find_pcie_root_port()
-To: Thierry Reding <thierry.reding@gmail.com>
-References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
- <20170817105156.GA18789@ulmo>
-CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <eric.dumazet@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <ea83e7a8-39a4-5b94-1148-5bf4ae4ed214@huawei.com>
-Date: Thu, 17 Aug 2017 20:40:16 +0800
+Return-Path: <SRS0=SdD7=7Y=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=SdD7=7Y=free.fr=slash.tmp@kernel.org>
+To: linux-pci <linux-pci@vger.kernel.org>,
+ linux-usb <linux-usb@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
+ <stern@rowland.harvard.edu>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, Mathias Nyman <mathias.nyman@intel.com>
+From: Mason <slash.tmp@free.fr>
+Subject: Possible regression between 4.9 and 4.13
+Message-ID: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+Date: Tue, 22 Aug 2017 19:34:11 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170817105156.GA18789@ulmo>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
+Hello,
+
+The driver for my system's PCIe host bridge landed recently
+(in 4.13) but it was developed on 4.9
+
+I tested the PCIe host bridge by plugging a 4-port USB3 adapter
+into the PCIe slot (system at rest) and plugging an USB3 Flash
+drive into the USB3 adapter (at run-time).
+
+On 4.9, the setup works (almost perfectly, see below).
+On 4.13, once I unplug the Flash drive, the controller port
+remains unresponsive.
 
 
-On 2017/8/17 18:51, Thierry Reding wrote:
-> On Thu, Aug 17, 2017 at 10:25:30AM +0800, Ding Tianhong wrote:
->> The pci_find_pcie_root_port() would return NULL if the given
->> dev is already a Root Port, it looks like unfriendly to the
->> PCIe Root Port device, Thierry and Bjorn suggest to let this
->> function return the given dev under this circumstances.
->>
->> Fixes: 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI device")
->> Suggested-by: Thierry Reding <thierry.reding@gmail.com>
->> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
->> Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
->> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
->> ---
->>  drivers/pci/pci.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 7e2022f..352bb53 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -514,7 +514,7 @@ struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
->>   */
->>  struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
->>  {
->> -	struct pci_dev *bridge, *highest_pcie_bridge = NULL;
->> +	struct pci_dev *bridge, *highest_pcie_bridge = dev;
->>  
->>  	bridge = pci_upstream_bridge(dev);
->>  	while (bridge && pci_is_pcie(bridge)) {
-> 
-> I think this should actually be this change on top of a revert of commit
-> 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI
-> device"). After the above change, the previous fix will have a redundant
-> check because highest_pcie_bridge will never be NULL.
-> 
-> Let me send out that version to clarify what I mean.
-> 
+On 4.9, I said *almost* perfectly, because the pcieport driver
+does report a few non-fatal errors when I unplug:
 
-Hi Thierry:
+[  193.838504] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+[  193.878081] usb-storage 2-2:1.0: USB Mass Storage device detected
+[  193.884547] scsi host0: usb-storage 2-2:1.0
+[  194.907936] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+[  194.920296] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+[  194.928666] sd 0:0:0:0: [sda] Write Protect is off
+[  194.933755] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[  194.946074]  sda: sda1
+[  194.953608] sd 0:0:0:0: [sda] Attached SCSI removable disk
 
-The patch ("PCI: fix oops when try to find Root Port for a PCI device")
-has been merge to the linus mainline tree before you found this deficiencies....
+[  208.930260] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+[  208.938342] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+[  208.950163] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+[  208.958577] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+[  208.965432] pcieport 0000:00:00.0: AER: Device recovery failed
+[  209.663733] xhci_hcd 0000:01:00.0: Cannot set link state.
+[  209.669194] usb usb2-port2: cannot disable (err = -32)
+[  209.674376] usb 2-2: USB disconnect, device number 2
+[  209.680481] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+[  209.688689] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+[  209.700555] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+[  209.708978] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+[  209.715845] pcieport 0000:00:00.0: AER: Device recovery failed
+[  209.721722] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+[  209.729785] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+[  209.741602] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+[  209.750027] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+[  209.756866] pcieport 0000:00:00.0: AER: Device recovery failed
 
-Regards
-Tianhong
+After that, I can still plug the drive into the same port.
 
-> Thierry
-> 
+But on 4.13, I get
+
+[   27.330378] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+[   27.369383] usb-storage 2-2:1.0: USB Mass Storage device detected
+[   27.375840] scsi host0: usb-storage 2-2:1.0
+[   28.403035] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+[   28.413326] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+[   28.423653] sd 0:0:0:0: [sda] Write Protect is off
+[   28.429139] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[   28.441529]  sda: sda1
+[   28.449431] sd 0:0:0:0: [sda] Attached SCSI removable disk
+
+[   90.592134] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+[   90.599857] xhci_hcd 0000:01:00.0: HC died; cleaning up
+[   90.605336] usb 2-2: USB disconnect, device number 2
+[   90.630414] udevd[955]: inotify_add_watch(6, /dev/sda, 10) failed: No such file or directory
+
+Trying to replug into the same port = nothing happens
+(Linux did say "assume dead")
+
+Any idea what could have changed between 4.9 and 4.13 ?
+
+Regards.
