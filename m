@@ -1,162 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53346 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:41114 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752101AbdHDNh4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 4 Aug 2017 09:37:56 -0400
-Date: Fri, 4 Aug 2017 08:37:53 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Oza Oza <oza.oza@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        linux-kernel@vger.kernel.org,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-Subject: Re: [PATCH v5 1/2] PCI: iproc: Retry request when CRS returned from
- EP
-Message-ID: <20170804133753.GD16580@bhelgaas-glaptop.roam.corp.google.com>
-References: <1499310582-21193-1-git-send-email-oza.oza@broadcom.com>
- <1499310582-21193-2-git-send-email-oza.oza@broadcom.com>
- <20170802210455.GF20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPcfUFmjg471qmzqQmayNYzfq8Wo7yfHeiEKrj7hkWF=zg@mail.gmail.com>
- <20170803185713.GV20308@bhelgaas-glaptop.roam.corp.google.com>
- <CAMSpPPcbnVefeVVh3HJd1M+8co+4VMj8HU2zmXMv4K5VGcdjVg@mail.gmail.com>
+        id S1751094AbdHVQ7Q (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 12:59:16 -0400
+To: linux-ntb@googlegroups.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc: Jon Mason <jdmason@kudzu.us>, Dave Jiang <dave.jiang@intel.com>,
+        Allen Hubbe <Allen.Hubbe@emc.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Serge Semin <fancer.lancer@gmail.com>
+References: <20170803181954.4154-1-logang@deltatee.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <58ab6a33-4de5-8fd8-65c2-079f6f6301c4@deltatee.com>
+Date: Tue, 22 Aug 2017 10:59:04 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CAMSpPPcbnVefeVVh3HJd1M+8co+4VMj8HU2zmXMv4K5VGcdjVg@mail.gmail.com>
+In-Reply-To: <20170803181954.4154-1-logang@deltatee.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: [PATCH v4 00/15] Switchtec NTB Support
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Aug 04, 2017 at 11:29:29AM +0530, Oza Oza wrote:
-> On Fri, Aug 4, 2017 at 12:27 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Thu, Aug 03, 2017 at 01:50:29PM +0530, Oza Oza wrote:
-> >> On Thu, Aug 3, 2017 at 2:34 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> >> > On Thu, Jul 06, 2017 at 08:39:41AM +0530, Oza Pawandeep wrote:
+Hi,
 
-> >> this is documented in our PCIe core hw manual.
-> >> >>
-> >> 4.7.3.3. Retry Status On Configuration Cycle
-> >> Endpoints are allowed to generate retry status on configuration
-> >> cycles.  In this case, the RC needs to re-issue the request.  The IP
-> >> does not handle this because the number of configuration cycles needed
-> >> will probably be less
-> >> than the total number of non-posted operations needed.   When a retry status
-> >> is received on the User RX interface for a configuration request that
-> >> was sent on the User TX interface, it will be indicated with a
-> >> completion with the CMPL_STATUS field set to 2=CRS, and the user will
-> >> have to find the address and data values and send a new transaction on
-> >> the User TX interface.
-> >> When the internal configuration space returns a retry status during a
-> >> configuration cycle (user_cscfg = 1) on the Command/Status interface,
-> >> the pcie_cscrs will assert with the pcie_csack signal to indicate the
-> >> CRS status.
-> >> When the CRS Software Visibility Enable register in the Root Control
-> >> register is enabled, the IP will return the data value to 0x0001 for
-> >> the Vendor ID value and 0xffff  (all 1’s) for the rest of the data in
-> >> the request for reads of offset 0 that return with CRS status.  This
-> >> is true for both the User RX Interface and for the Command/Status
-> >> interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
-> >> field of the completion on the User RX Interface will not be 2=CRS and
-> >> the pcie_cscrs signal will not assert on the Command/Status interface.
-> >> >>
-> >> Broadcom does not sell PCIe core IP, so above information is not
-> >> publicly available in terms of hardware erratum or any similar note.
-> >>
-> >>
-> >> >
-> >> >> As a result of the fact, PCIe RC driver (sw) should take care of CRS.
-> >> >> This patch fixes the problem, and attempts to read config space again in
-> >> >> case of PCIe code forwarding the CRS back to CPU.
-> >> >> It implements iproc_pcie_config_read which gets called for Stingray,
-> >> >> Otherwise it falls back to PCI generic APIs.
-...
+Just wanted to give this a poke as I haven't received any feedback in a 
+couple weeks on v4. What are people's thoughts on this? Is it suitable 
+to make it into the next merge window?
 
-> >> >> +static int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
-> >> >> +{
-> >> >> +     int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
-> >> >> +     unsigned int ret;
-> >> >> +
-> >> >> +     /*
-> >> >> +      * As per PCI spec, CRS Software Visibility only
-> >> >> +      * affects config read of the Vendor ID.
-> >> >> +      * For config write or any other config read the Root must
-> >> >> +      * automatically re-issue configuration request again as a
-> >> >> +      * new request. Iproc based PCIe RC (hw) does not retry
-> >> >> +      * request on its own, so handle it here.
-> >> >> +      */
-> >> >> +     do {
-> >> >> +             ret = readl(cfg_data_p);
-> >> >> +             if (ret == CFG_RETRY_STATUS)
-> >> >> +                     udelay(1);
-> >> >> +             else
-> >> >> +                     return PCIBIOS_SUCCESSFUL;
-> >> >> +     } while (timeout--);
-> >> >
-> >> > Shouldn't this check *where* in config space we're reading?
-> >> >
-> >> No, we do not require, because with SPDK it was reading BAR space
-> >> which points to MSI-x table.
-> >> what I mean is, it could be anywhere.
-> >
-> > The documentation above says the IP returns data of 0x0001 for *reads
-> > of offset 0*.  Your current code reissues the read if *any* read
-> > anywhere returns data that happens to match CFG_RETRY_STATUS.  That
-> > may be a perfectly valid register value for some device's config
-> > space.  In that case, you do not want to reissue the read and you do
-> > not want to timeout.
+Thanks,
+
+Logan
+
+
+On 03/08/17 12:19 PM, Logan Gunthorpe wrote:
+> Changes since v3:
 > 
-> ok, so the documentation is about PCIe core IP,
-> It is not about the host bridge. (PCI to AXI bridge)
+> - Rebased onto the Jon's ntb branch that contains one of the patches
+>    that was in v3
+> - Various spelling and commit log mistakes noticed by Bjorn
+> - Renamed switchtec_ntb to ntb_hw_switchtec per Dave's suggestion
+> - Fixed a number of code nits pointed out by Jon
 > 
-> PCIe core forwards 0x0001 return code to host bridge, and converts it
-> into 0xffff0001.
-> which is hard wired.
-> we have another HW layer on top of PCIe core which implements lots of
-> logic. (host bridge)
+> --
 > 
-> I agree with you that, it could be valid data, but our ASIC conveyed
-> that they have chosen the code
-> such that this data is unlikely to be valid.
-
-Hehe.  I think it's more likely that they chose this value because
-it's mentioned in the spec for CRS.  I doubt it has anything to do
-with it being "unlikely".  Or maybe it really is just a coincidence :)
-
-In any event, your documentation says this data is only fabricated for
-reads at offset 0.  So why do you check for it for *all* reads?
-
-> however I have found one case where this data is valid.
-> which is; BAR exposing 64-bit IO memory, which seems legacy and is rare as well.
+> Changes since v2:
 > 
-> however in our next chip revision, ASIC will give us separate CRS
-> register in our host-bridge.
-> We will be retrying on that register instead of this code. but that
-> will be the minor code change.
-
-It would be a lot better if your next chip revision handled CRS in
-hardware.  It's not clear this can be done correctly in software and
-even if it can, you're always going to be the exception, which means
-it's likely to continue to be a source of bugs.
-
-> > The PCIe spec says that if CRS software visibility is enabled and we
-> > get a CRS completion for a config read of the Vendor ID at offset 0,
-> > the read should not be retried, and the read should return 0x0001.
-> > For example, pci_bus_read_dev_vendor_id() should see that 0x0001
-> > value.
-> >
-> > That's not what this code does.  If the readl() returns
-> > CFG_RETRY_STATUS, you do the delay and reissue the read.  You never
-> > return 0x0001 to the caller of pci_bus_read_config_word().
-> >
+> - Reordered the ntb_test link patch per Allen
+> - Removed an extra call to switchtec_ntb_init_mw
+> - Fixed a typo in the switchtec.txt documentation.
 > 
-> As far as I understand, PCI config access APIs do not check for RETRY.
-> Also caller of them such as __pci_read_base, do not check for retry.
-
-Of course not.  PCIe r3.1, sec 2.3.2, says the CRS status is only
-visible to software if (1) CRS software visibility is enabled and
-(2) we're reading the Vendor ID.  In all other cases, the Root
-Complex must reissue the request, which is invisible to software.
-
-Bjorn
+> --
+> 
+> Changes since v1:
+> 
+> - Rebased onto latest ntb-next branch (with v4.13-rc1)
+> - Reworked ntb_mw_count() function so that it can be called all the
+>    time (per discussion with Allen)
+> - Various spelling and formatting cleanups from Bjorn
+> - Added request_module() call such that the NTB module is automatically
+>    loaded when appropriate hardware exists.
+> 
+> --
+> 
+> Changes since the rfc:
+> 
+> - Rebased on ntb-next
+> - Switched ntb_part_op to use sleep instead of delay
+> - Dropped a number of useless dbg __func__ prints
+> - Went back to the dynamic instead of the static class
+> - Swapped the notifier block for a simple callback
+> - Modified the new ntb api so that a couple functions with pidx
+>    now must be called after link up. Per our discussion on the list.
+> 
+> --
+> 
+> This patchset implements Non-Transparent Bridge (NTB) support for the
+> Microsemi Switchtec series of switches. We're looking for some
+> review from the community at this point but hope to get it upstreamed
+> for v4.14.
+> 
+> Switchtec NTB support is configured over the same function and bar
+> as the management endpoint. Thus, the new driver hooks into the
+> management driver which we had merged in v4.12. We use the class
+> interface API to register an NTB device for every switchtec device
+> which supports NTB (not all do).
+> 
+> The Switchtec hardware supports doorbells, memory windows and messages.
+> Seeing there is no native scratchpad support, 128 spads are emulated
+> through the use of a pre-setup memory window. The switch has 64
+> doorbells which are shared between the two partitions and a
+> configurable set of memory windows. While the hardware supports more
+> than 2 partitions, this driver only supports the first two seeing
+> the current NTB API only supports two hosts.
+> 
+> The driver has been tested with ntb_netdev and fully passes the
+> ntb_test script.
+> 
+> This patchset is based off of ntb-next and can be found in this
+> git repo:
+> 
+> https://github.com/sbates130272/linux-p2pmem.git switchtec_ntb_v4
+> 
+> Logan Gunthorpe (15):
+>    NTB: switchtec: Move structure definitions into a common header
+>    NTB: switchtec: Export class symbol for use in upper layer driver
+>    NTB: switchtec: Add NTB hardware register definitions
+>    NTB: switchtec: Add link event notifier callback
+>    NTB: Ensure ntb_mw_get_align() is only called when the link is up
+>    NTB: Add check and comment for link up to mw_count() and
+>      mw_get_align()
+>    NTB: switchtec_ntb: Introduce initial NTB driver
+>    NTB: switchtec_ntb: Initialize hardware for memory windows
+>    NTB: switchtec_ntb: Initialize hardware for doorbells and messages
+>    NTB: switchtec_ntb: Add skeleton NTB driver
+>    NTB: switchtec_ntb: Add link management
+>    NTB: switchtec_ntb: Implement doorbell registers
+>    NTB: switchtec_ntb: Implement scratchpad registers
+>    NTB: switchtec_ntb: Add memory window support
+>    NTB: switchtec_ntb: Update switchtec documentation with notes for NTB
+> 
+>   Documentation/switchtec.txt            |   12 +
+>   MAINTAINERS                            |    2 +
+>   drivers/ntb/hw/Kconfig                 |    1 +
+>   drivers/ntb/hw/Makefile                |    1 +
+>   drivers/ntb/hw/mscc/Kconfig            |    9 +
+>   drivers/ntb/hw/mscc/Makefile           |    1 +
+>   drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1216 ++++++++++++++++++++++++++++++++
+>   drivers/ntb/ntb_transport.c            |   20 +-
+>   drivers/ntb/test/ntb_perf.c            |   18 +-
+>   drivers/ntb/test/ntb_tool.c            |    6 +-
+>   drivers/pci/switch/switchtec.c         |  316 ++-------
+>   include/linux/ntb.h                    |   11 +-
+>   include/linux/switchtec.h              |  373 ++++++++++
+>   13 files changed, 1703 insertions(+), 283 deletions(-)
+>   create mode 100644 drivers/ntb/hw/mscc/Kconfig
+>   create mode 100644 drivers/ntb/hw/mscc/Makefile
+>   create mode 100644 drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+>   create mode 100644 include/linux/switchtec.h
+> 
+> --
+> 2.11.0
+> 
