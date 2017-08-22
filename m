@@ -1,77 +1,74 @@
-Return-Path: <SRS0=f3i4=7Q=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=f3i4=7Q=intel.com=keith.busch@kernel.org>
-Date: Mon, 14 Aug 2017 14:15:47 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Scott Bauer <scott.bauer@intel.com>, bhelgaas@google.com,
-	linux-pci@vger.kernel.org, jonathan.derrick@intel.com
-Subject: Re: [PATCH] PCI: vmd: Free up IRQs on suspend path
-Message-ID: <20170814181547.GF7233@localhost.localdomain>
-References: <20170811205432.29612-1-scott.bauer@intel.com>
- <20170814180652.GA32525@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170814180652.GA32525@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.141]:49865 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932143AbdHVDUV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2017 23:20:21 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org, bhelgaas@google.com
+Cc: shawn.lin@rock-chips.com, briannorris@chromium.org,
+        dianders@chromium.org, Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Heiko Stuebner <heiko@sntech.de>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie wake irq
+Date: Tue, 22 Aug 2017 11:19:33 +0800
+Message-Id: <20170822031934.8675-4-jeffy.chen@rock-chips.com>
+In-Reply-To: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Aug 14, 2017 at 01:06:52PM -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 11, 2017 at 02:54:32PM -0600, Scott Bauer wrote:
-> > This patch frees up the IRQs we request on the suspend path,
-> > and reallocates them on the resume path.
-> > 
-> > Fixes:
-> > [  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
-> > [  559.966824] Error taking CPU111 down: -34
-> > [  559.966825] Non-boot CPUs are not disabled
-> > [  559.966826] Enabling non-boot CPUs ...
-> > 
-> > Signed-off-by: Scott Bauer <scott.bauer@intel.com>
-> 
-> Keith acked the previous version (which contained the enable/disable),
-> but since this is different, I'll wait for his ack again.
+Add an optional interrupt for PCIE_WAKE pin.
 
-Thanks for checking. This is actually the patch that was intended for
-submission.
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-Acked-by: Keith Busch <keith.busch@intel.com>
- 
-> > ---
-> >  drivers/pci/host/vmd.c | 15 +++++++++++++++
-> >  1 file changed, 15 insertions(+)
-> > 
-> > diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> > index 7e967a8784b2..4fe1756af010 100644
-> > --- a/drivers/pci/host/vmd.c
-> > +++ b/drivers/pci/host/vmd.c
-> > @@ -763,6 +763,11 @@ static void vmd_remove(struct pci_dev *dev)
-> >  static int vmd_suspend(struct device *dev)
-> >  {
-> >  	struct pci_dev *pdev = to_pci_dev(dev);
-> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-> > +	int i;
-> > +
-> > +	for (i = 0; i < vmd->msix_count; i++)
-> > +                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
-> >  
-> >  	pci_save_state(pdev);
-> >  	return 0;
-> > @@ -771,6 +776,16 @@ static int vmd_suspend(struct device *dev)
-> >  static int vmd_resume(struct device *dev)
-> >  {
-> >  	struct pci_dev *pdev = to_pci_dev(dev);
-> > +	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-> > +	int err, i;
-> > +
-> > +	for (i = 0; i < vmd->msix_count; i++) {
-> > +		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-> > +				       vmd_irq, IRQF_NO_THREAD,
-> > +				       "vmd", &vmd->irqs[i]);
-> > +		if (err)
-> > +			return err;
-> > +	}
-> >  
-> >  	pci_restore_state(pdev);
-> >  	return 0;
-> > -- 
-> > 2.11.0
-> > 
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+index 5678be82530d..9f6504129e80 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
+@@ -20,10 +20,13 @@ Required properties:
+ - msi-map: Maps a Requester ID to an MSI controller and associated
+ 	msi-specifier data. See ./pci-msi.txt
+ - interrupts: Three interrupt entries must be specified.
+-- interrupt-names: Must include the following names
+-	- "sys"
+-	- "legacy"
+-	- "client"
++- interrupt-names: Include the following names
++	Required:
++		- "sys"
++		- "legacy"
++		- "client"
++	Optional:
++		- "wake"
+ - resets: Must contain seven entries for each entry in reset-names.
+ 	   See ../reset/reset.txt for details.
+ - reset-names: Must include the following names
+@@ -87,10 +90,11 @@ pcie0: pcie@f8000000 {
+ 	clock-names = "aclk", "aclk-perf",
+ 		      "hclk", "pm";
+ 	bus-range = <0x0 0x1>;
+-	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
+-		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
+-		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
+-	interrupt-names = "sys", "legacy", "client";
++	interrupts-extended = <&gic GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
++			      <&gic GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
++			      <&gic GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>,
++			      <&gpio0 8 IRQ_TYPE_LEVEL_LOW>;
++	interrupt-names = "sys", "legacy", "client", "wake";
+ 	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
+ 	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
+ 	assigned-clock-rates = <100000000>;
+-- 
+2.11.0
