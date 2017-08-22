@@ -1,63 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:45158 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdHFAGC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 20:06:02 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v6 6/6] PCI: xilinx: Allow build on MIPS platforms
-Date: Sat, 5 Aug 2017 17:03:51 -0700
-Message-ID: <20170806000351.17952-7-paul.burton@imgtec.com>
-In-Reply-To: <20170806000351.17952-1-paul.burton@imgtec.com>
-References: <20170806000351.17952-1-paul.burton@imgtec.com>
+Received: from phd-imap.ethz.ch ([129.132.80.51]:48494 "EHLO phd-imap.ethz.ch"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932510AbdHVOQ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 10:16:59 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 22 Aug 2017 16:10:29 +0200
+From: =?UTF-8?Q?G=C3=BCrkan_Myczko?= <gurkan@phys.ethz.ch>
+To: linux-pci@vger.kernel.org
+Cc: mroos@linux.ee
+Subject: pci layer problem
+Message-ID: <0c50a5ba7ceadc93555c6c6dedb22829@phys.ethz.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Allow the xilinx-pcie driver to be built on MIPS platforms which make
-use of generic PCI drivers rather than legacy MIPS-specific interfaces.
-This is used on the MIPS Boston development board.
+hello
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bharat Kumar Gogada <bharatku@xilinx.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>
-Cc: linux-pci@vger.kernel.org
+i've been told on #debian-sparc to report this (SUN UltraSparc, SPARC64, 
+Debian):
 
----
+some dmesg output:
+[ 2683.006327] e1000: Intel(R) PRO/1000 Network Driver - version 
+7.3.21-k8-NAPI
+[ 2683.006792] e1000: Copyright (c) 1999-2006 Intel Corporation.
+[ 2683.007379] e1000 0000:02:02.0: can't ioremap BAR 0: [mem size 
+0x00020000]
+[ 2683.007772] e1000: probe of 0000:02:02.0 failed with error -5
 
-Changes in v6: None
-Changes in v5: None
+root@sun:/# lspci
+00:01.0 PCI bridge: Oracle/SUN Simba Advanced PCI Bridge (rev 13)
+00:01.1 PCI bridge: Oracle/SUN Simba Advanced PCI Bridge (rev 13)
+01:01.0 Bridge: Oracle/SUN EBUS (rev 01)
+01:01.1 Ethernet controller: Oracle/SUN Happy Meal 10/100 Ethernet [hme] 
+(rev 01)
+01:02.0 VGA compatible controller: Advanced Micro Devices, Inc. 
+[AMD/ATI] 3D Rage Pro PCI (rev 5c)
+01:03.0 IDE interface: Silicon Image, Inc. PCI0646 (rev 03)
+02:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c875 (rev 
+26)
+02:02.0 Ethernet controller: Intel Corporation 82541PI Gigabit Ethernet 
+Controller (rev 05)
 
-Changes in v4:
-- Depend on PCI_DRIVERS_GENERIC, which the driver won't work on MIPS without.
+root@sun:/# lspci -n
+00:01.0 0604: 108e:5000 (rev 13)
+00:01.1 0604: 108e:5000 (rev 13)
+01:01.0 0680: 108e:1000 (rev 01)
+01:01.1 0200: 108e:1001 (rev 01)
+01:02.0 0300: 1002:4750 (rev 5c)
+01:03.0 0101: 1095:0646 (rev 03)
+02:01.0 0100: 1000:000f (rev 26)
+02:02.0 0200: 8086:107c (rev 05)
 
-Changes in v3:
-- Split out from Boston patchset.
+root@sun:/# uname -a
+Linux sun 4.9.0-2-sparc64 #1 Debian 4.9.16-1 (2017-03-22) sparc64 
+GNU/Linux
 
-Changes in v2: None
-
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 89d61c2cbfaa..eb8c30828011 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -71,7 +71,7 @@ config PCI_HOST_GENERIC
- 
- config PCIE_XILINX
- 	bool "Xilinx AXI PCIe host bridge support"
--	depends on ARCH_ZYNQ || MICROBLAZE
-+	depends on ARCH_ZYNQ || MICROBLAZE || (MIPS && PCI_DRIVERS_GENERIC)
- 	help
- 	  Say 'Y' here if you want kernel to support the Xilinx AXI PCIe
- 	  Host Bridge driver.
--- 
-2.13.4
+thanks &yours,
