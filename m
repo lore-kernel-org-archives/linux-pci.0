@@ -1,58 +1,37 @@
-Return-Path: <SRS0=od7V=73=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=od7V=73=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V5 0/2] PCI/DPC: Add eDPC support
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
- <20170824163207.GF31858@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <keith.busch@intel.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <c34b0dfe-55ac-ca72-7a8c-2b485b18f969@huawei.com>
-Date: Fri, 25 Aug 2017 10:24:50 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170824163207.GF31858@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Return-Path: <SRS0=YMQt=7Y=davemloft.net=davem@kernel.org>
+Return-Path: <SRS0=YMQt=7Y=davemloft.net=davem@kernel.org>
+Date: Tue, 22 Aug 2017 09:52:09 -0700 (PDT)
+Message-Id: <20170822.095209.1371730017153863860.davem@davemloft.net>
+To: hch@lst.de
+Cc: mroos@linux.ee, helgaas@kernel.org, sparclinux@vger.kernel.org,
+ linux-pci@vger.kernel.org, qla2xxx-upstream@qlogic.com,
+ linux-kernel@vger.kernel.org
+Subject: Re: 4.13.0-rc4 sparc64: can't allocate MSI-X affinity masks for 2
+ vectors
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20170822163916.GA31671@lst.de>
+References: <20170822063505.GA6721@lst.de>
+	<20170822.093139.473720171751670244.davem@davemloft.net>
+	<20170822163916.GA31671@lst.de>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Christoph Hellwig <hch@lst.de>
+Date: Tue, 22 Aug 2017 18:39:16 +0200
 
+> On Tue, Aug 22, 2017 at 09:31:39AM -0700, David Miller wrote:
+>> > I fear my commit message (but not the code) might be wrong.
+>> > irq_create_affinity_masks can return NULL any time we don't have any
+>> > affinity masks.  I've already had a discussion about this elsewhere
+>> > with Bjorn, and I suspect we need to kill the warning or move it
+>> > to irq_create_affinity_masks only for genuine failure cases.
+>> 
+>> This is a rather large machine with 64 or more cpus and several NUMA
+>> nodes.  Why wouldn't there be any affinity masks available?
+> 
+> The drivers only asked for two MSI-X vectors, and marked bost of them
+> as pre-vectors that should not be spread.  So there is no actual
+> vector left that we want to actually spread.
 
-e( 2017/8/25 0:32, Bjorn Helgaas ei:
-> On Sat, Aug 19, 2017 at 05:07:19PM +0800, Dongdong Liu wrote:
->> This patchset is to add eDPC support and use a local
->> "struct device *dev" for brevity and consistency in DPC driver.
->>
->> v4->v5:
->> - Fix some compile warnings.
->>
->> v3->v4:
->> - Use pcie_device's device to keep consistency.
->> - Adjust patch sequence.
->>
->> v2->v3:
->> - Add a separate patch to use a local "struct device *dev"
->>   for brevity and consistency in  DPC driver.
->> - Fix comments on PATCH V2.
->> - Rebase on v4.13-rc5.
->>
->> v1->v2:
->> - Use a stack local variable instead of the allocated memory for
->>   collecting RP PIO information.
->> - Fix the condition of RP PIO error.
->> - Rebase on v4.13-rc1.
->>
->> Dongdong Liu (2):
->>   PCI/DPC: Add eDPC support
->>   PCI/DPC: Add local struct device
->>
->>  drivers/pci/pcie/pcie-dpc.c   | 187 +++++++++++++++++++++++++++++++++++++++---
->>  include/uapi/linux/pci_regs.h |  10 +++
->>  2 files changed, 187 insertions(+), 10 deletions(-)
->
-> Applied with Keith's reviewed-by to pci/dpc for v4.14, thanks!
-
-Thanks Bjorn and Keith.
-
->
-> .
->
+Ok, now it makes more sense, and yes the warning should be removed.
