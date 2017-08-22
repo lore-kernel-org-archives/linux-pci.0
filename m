@@ -1,79 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Wed, 30 Aug 2017 17:16:01 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: "Baicar, Tyler" <tbaicar@codeaurora.org>,
-        Tony Luck <tony.luck@intel.com>, rjw@rjwysocki.net,
-        lenb@kernel.org, will.deacon@arm.com, james.morse@arm.com,
-        prarit@redhat.com, punit.agrawal@arm.com, shiju.jose@huawei.com,
-        andriy.shevchenko@linux.intel.com, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] acpi: apei: call into AER handling regardless of severity
-Message-ID: <20170830151601.ro5qt5272e2msevp@pd.tnic>
-References: <1503940314-29526-1-git-send-email-tbaicar@codeaurora.org>
- <20170829082055.u3qpwtgyzxjxfvup@pd.tnic>
- <9abb2e99-44be-3315-47d9-2689b6c76d79@codeaurora.org>
- <20170829221932.ojkvr4y6s76hcpkj@pd.tnic>
- <0fb1fe1b-207a-93fe-4ac6-b886451e488e@codeaurora.org>
- <20170830101617.3m266q7xuew6ctxl@pd.tnic>
- <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:54242 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752613AbdHVTJn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 15:09:43 -0400
+Date: Tue, 22 Aug 2017 14:09:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/2 v2] PCI: v3: Update the device tree bindings
+Message-ID: <20170822190940.GD6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170809141455.22220-1-linus.walleij@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <b630fa5e-c24b-06f4-47da-bed53161e0b7@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170809141455.22220-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 30, 2017 at 10:05:44AM -0400, Sinan Kaya wrote:
-> Link reset is not the only recovery mechanism. In the case of nonfatal
-> errors, it is assumed that the endpoint CSR is still reachable.
-> Error is propagated the PCIe endpoint driver. Endpoint driver does a
-> re-initialization, we are back in business.
-
-I'm assuming that's broadcast_error_message()'s job.
-
-> That's not true. The GHES code is changing the severity here before posting
-> to the AER driver in ghes_do_proc().
+On Wed, Aug 09, 2017 at 04:14:54PM +0200, Linus Walleij wrote:
+> The bindings for the V3 Semiconductor PCI bridge are a tad bit outdated
+> and predates the more formal format we have adopted for the bindings.
+> Update them a bit so it is easier to read, and add the Integrator AP-
+> specific compatible so we can detect that we are running on that specific
+> platform.
 > 
-> 	if (gdata->flags & CPER_SEC_RESET)
-> 		aer_severity = AER_FATAL;
-
-You're missing the point that we would walk into that if branch *only* for
-
-                        if (sev == GHES_SEV_RECOVERABLE &&
-                            sec_sev == GHES_SEV_RECOVERABLE
-
-severities. So if you have an AER_FATAL error but ghes severities are
-not GHES_SEV_RECOVERABLE, nothing happens.
-
-> No, AER ISR is not set up if firmware first is enabled.
-
-So then this is a major suckage. We do AER recovery on FF systems only
-for GHES_SEV_RECOVERABLE severity.
-
-> The behavior should match non firmware-first case ideally.
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+> ChangeLog v1->v2:
+> - Added Rob's ACK.
 > 
-> 1. Print all correctable errors.
-> 2. Go to do_recovery for all uncorrectable errors including fatal and
-> non-fatal. 
+> Bjorn: please merge this when you feel confident with it.
+> ---
+>  .../devicetree/bindings/pci/v3-v360epc-pci.txt        | 19 ++++++++++---------
+>  1 file changed, 10 insertions(+), 9 deletions(-)
 > 
-> This is also what AER driver does in the absence of firmware first via
-> handle_error_source().
+> diff --git a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+> index 30b364e504ba..bcc5fe2a74cb 100644
+> --- a/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/v3-v360epc-pci.txt
+> @@ -2,14 +2,15 @@ V3 Semiconductor V360 EPC PCI bridge
+>  
+>  This bridge is found in the ARM Integrator/AP (Application Platform)
+>  
+> -Integrator-specific notes:
+> -
+> -- syscon: should contain a link to the syscon device node (since
+> -  on the Integrator, some registers in the syscon are required to
+> -  operate the V3).
+> -
+> -V360 EPC specific notes:
+> -
+> -- reg: should contain the base address of the V3 adapter.
+> +Required properties:
+> +- compatible: should be one of:
+> +  "v3,v360epc-pci"
+> +  "arm,integrator-ap-pci", "v3,v360epc-pci"
+> +- reg: should contain the base address of the V3 host bridge.
 
-Yes, that makes sense.
+Does this need some sort of comment about how the non-pref and pref mem
+windows need to be 256Mb and adjacent?  I think the driver makes some
+unverified assumptions about them.
 
-Which would mean that we'd call aer_recover_queue() regardless of GHES
-severity but we'd do recovery only if GHES_SEV_RECOVERABLE is set
-or CPER_SEC_RESET. I.e., we can communicate all that by setting the
-correct AER severity before calling aer_recover_queue(). And then call
-do_recovery() based on AER severity.
-
-Hmmm?
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+>  - interrupts: should contain a reference to the V3 error interrupt
+>    as routed on the system.
+> +
+> +Integrator-specific required properties:
+> +- syscon: should contain a link to the syscon device node, since
+> +  on the Integrator, some registers in the syscon are required to
+> +  operate the V3 host bridge.
+> -- 
+> 2.9.4
+> 
