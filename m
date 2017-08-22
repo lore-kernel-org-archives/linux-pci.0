@@ -1,47 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 17 Aug 2017 15:58:08 -0500
-From: Rob Herring <robh@kernel.org>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v2 2/3] Documentation/devicetree: Add PCIe hotplug property
-Message-ID: <20170817205808.arndlcvhw3ydjh4v@rob-hp-laptop>
-References: <1502776547-30542-1-git-send-email-oza.oza@broadcom.com>
- <1502776547-30542-3-git-send-email-oza.oza@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:37384 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752560AbdHVVFD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 17:05:03 -0400
+Date: Tue, 22 Aug 2017 16:05:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        eric.auger@redhat.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: Fix and amend express capability sizes
+Message-ID: <20170822210501.GI6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170810165403.2968.49940.stgit@gimli.home>
 MIME-Version: 1.0
-In-Reply-To: <1502776547-30542-3-git-send-email-oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Scott Branden <sbranden@broadcom.com>, Oza Pawandeep <oza.pawandeep@gmail.com>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- linux-kernel@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Andy Gospodarek <gospo@broadcom.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170810165403.2968.49940.stgit@gimli.home>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 15, 2017 at 11:25:46AM +0530, Oza Pawandeep wrote:
-> Host drivers have the requirement of implementing PCI hotplug
-> based on the how their SOC supports PCI hotplug.
+On Thu, Aug 10, 2017 at 10:54:31AM -0600, Alex Williamson wrote:
+> PCI_CAP_EXP_ENDPOINT_SIZEOF_V1 defines the size of the PCIe express
+> capability structure for v1 devices with link, but we also have a need
+> in the vfio code for sizing the capability for devices without link,
+> such as root complex endpoints.  Create a separate define for this
+> ending the structure before the link fields.
 > 
-> Couple of properties have been added. the one to enable
-> the hotplug feature itself, and the other caters to
-> the PCI hotplug implementation with the use of gpios.
+> Additionally, this reveals that PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 is
+> currently incorrect, ending the capability length before the v2 link
+> fields.  Rename this to specify an RC endpoint (no link) capability
+> length and move PCI_CAP_EXP_ENDPOINT_SIZEOF_V2 to include the link
+> fields as we have for the v1 version.
 > 
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
 
-Acked-by: Rob Herring <robh@kernel.org>
+Applied with Eric's reviewed-by to pci/misc for v4.14, thanks!
 
-"dt-bindings: PCI: ..." preferred for the subject if you respin.
+I think there was an underscore missing here:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -#define PCI_CAP_EXP_ENDPOINT_SIZEOF_V2	44	/* v2 endpoints end here */
+> +#define PCI_CAP_EXP_RC ENDPOINT_SIZEOF_V2	44	/* v2 endpoints without link end here */
