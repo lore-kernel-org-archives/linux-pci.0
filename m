@@ -1,6 +1,8 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+Date: Tue, 22 Aug 2017 15:55:17 +0300
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
         daniel.vetter@intel.com, jani.nikula@linux.intel.com,
         seanpaul@chromium.org, airlied@linux.ie, g.liakhovetski@gmx.de,
         tomas.winkler@intel.com, dwmw2@infradead.org,
@@ -14,45 +16,52 @@ To: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
         jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
         lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
         elder@kernel.org, gregkh@linuxfoundation.org,
-        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
-        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org,
+        linux-edac@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dri-devel@lists.freedesktop.org, linux-media@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-pci@vger.kernel.org,
+        linux-tegra@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
         fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
         open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
         devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
-Cc: Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH 04/15] [media] rc: make device_type const
-Date: Sat, 19 Aug 2017 13:52:15 +0530
-Message-Id: <1503130946-2854-5-git-send-email-bhumirks@gmail.com>
-In-Reply-To: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+Subject: Re: [PATCH 15/15] usb: make device_type const
+Message-ID: <20170822125517.GA27604@kuha.fi.intel.com>
 References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1503130946-2854-16-git-send-email-bhumirks@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Make this const as it is only stored in the type field of a device
-structure, which is const.
-Done using Coccinelle.
+On Sat, Aug 19, 2017 at 01:52:26PM +0530, Bhumika Goyal wrote:
+> Make this const as it is only stored in the type field of a device
+> structure, which is const.
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
----
- drivers/media/rc/rc-main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Acked-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 
-diff --git a/drivers/media/rc/rc-main.c b/drivers/media/rc/rc-main.c
-index a9eba00..ea3da3e 100644
---- a/drivers/media/rc/rc-main.c
-+++ b/drivers/media/rc/rc-main.c
-@@ -1532,7 +1532,7 @@ static RC_FILTER_ATTR(wakeup_filter_mask, S_IRUGO|S_IWUSR,
- 	.attrs	= rc_dev_wakeup_filter_attrs,
- };
- 
--static struct device_type rc_dev_type = {
-+static const struct device_type rc_dev_type = {
- 	.release	= rc_dev_release,
- 	.uevent		= rc_dev_uevent,
- };
+> ---
+>  drivers/usb/common/ulpi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/usb/common/ulpi.c b/drivers/usb/common/ulpi.c
+> index 930e8f3..4aa5195 100644
+> --- a/drivers/usb/common/ulpi.c
+> +++ b/drivers/usb/common/ulpi.c
+> @@ -135,7 +135,7 @@ static void ulpi_dev_release(struct device *dev)
+>  	kfree(to_ulpi_dev(dev));
+>  }
+>  
+> -static struct device_type ulpi_dev_type = {
+> +static const struct device_type ulpi_dev_type = {
+>  	.name = "ulpi_device",
+>  	.groups = ulpi_dev_attr_groups,
+>  	.release = ulpi_dev_release,
+
+Thanks,
+
 -- 
-1.9.1
+heikki
