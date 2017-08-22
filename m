@@ -1,47 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 15 Aug 2017 17:58:26 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.99]:34882 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752644AbdHVUhw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 16:37:52 -0400
+Date: Tue, 22 Aug 2017 15:37:50 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-Subject: Re: [PATCHv2 0/2] PCI: add ls2088a and ls1088a support
-Message-ID: <20170815225826.GU32525@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501828894-25598-1-git-send-email-Zhiqiang.Hou@nxp.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-omap@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc: dra7xx: fix error return code in
+ dra7xx_pcie_probe()
+Message-ID: <20170822203750.GF6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170809161603.GA31297@embeddedgus>
 MIME-Version: 1.0
-In-Reply-To: <1501828894-25598-1-git-send-email-Zhiqiang.Hou@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Roy Zang <tie-fei.zang@freescale.com>,
- minghuan.lian@nxp.com, robh+dt@kernel.org, bhelgaas@google.com,
- Mingkai Hu <mingkai.hu@freescale.com>, shawnguo@kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170809161603.GA31297@embeddedgus>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mingkai, Roy]
-
-On Fri, Aug 04, 2017 at 02:41:32PM +0800, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+On Wed, Aug 09, 2017 at 11:16:03AM -0500, Gustavo A. R. Silva wrote:
+> platform_get_irq() returns an error code, but the pci-dra7xx driver
+> ignores it and always returns -EINVAL. This is not correct and,
+> prevents -EPROBE_DEFER from being propagated properly.
 > 
-> Hou Zhiqiang (2):
->   PCI: layerscape: Add support for ls2088a
->   PCI: layerscape: Add support for ls1088a
+> Print and propagate the return value of platform_get_irq on failure.
 > 
->  Documentation/devicetree/bindings/pci/layerscape-pci.txt |  2 ++
->  drivers/pci/dwc/pci-layerscape.c                         | 10 ++++++++++
->  2 files changed, 12 insertions(+)
+> This issue was detected with the help of Coccinelle.
+> 
+> Signed-off-by: Gustavo A. R. Silva <gustavo@embeddedor.com>
 
-I'll wait to apply this until we get the other series (with the class
-code fixes and the layerscape host_init functions) merged.  We also
-need an ack from Minghuan, Mingkai, or Roy.
+Applied with Kishon's ack to pci/host-dra7xx for v4.14, thanks!
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index f2fc5f4..f58e1b4 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -616,8 +616,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  
+>  	irq = platform_get_irq(pdev, 0);
+>  	if (irq < 0) {
+> -		dev_err(dev, "missing IRQ resource\n");
+> -		return -EINVAL;
+> +		dev_err(dev, "missing IRQ resource: %d\n", irq);
+> +		return irq;
+>  	}
+>  
+>  	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+> -- 
+> 2.5.0
+> 
