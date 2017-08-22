@@ -1,55 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52166 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.99]:35872 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751820AbdHGR7O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 7 Aug 2017 13:59:14 -0400
-Date: Mon, 7 Aug 2017 19:01:08 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, kvm@vger.kernel.org,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>
-Cc: will.deacon@arm.com, marc.zyngier@arm.com,
-        jean-philippe.brucker@arm.com, bhelgaas@google.com,
-        joro@8bytes.org, alex.williamson@redhat.com, yinghai@kernel.org,
-        keith.busch@intel.com, benh@kernel.crashing.org,
-        jacob.jun.pan@linux.intel.com, yi.l.liu@intel.com,
-        alexander.deucher@amd.com, kevin.tian@intel.com,
-        ashok.raj@intel.com, okaya@codeaurora.org, myron.stowe@redhat.com,
-        leonro@mellanox.com, ddutile@redhat.com,
-        gabriele.paoloni@huawei.com
-Subject: [CFP] VFIO/IOMMU/PCI microconference at LPC 2017
-Message-ID: <20170807180108.GA28224@red-moon>
+        id S1751069AbdHVUvg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 16:51:36 -0400
+Date: Tue, 22 Aug 2017 15:51:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Faiz Abbas <faiz_abbas@ti.com>
+Cc: jingoohan1@gmail.com, Joao.Pinto@synopsys.com, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] pci: dwc: Clear MSI interrupt status after it is handled
+Message-ID: <20170822205134.GH6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1502364295-3786-1-git-send-email-faiz_abbas@ti.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Thu, Aug 10, 2017 at 04:54:55PM +0530, Faiz Abbas wrote:
+> If the interrupt status is cleared before it is handled, it is possible
+> that another interrupt will trigger while servicing the previous one.
+> This is causing timeouts in some wireless lan cards which use pcie.
+> Therefore, clear MSI interrupt status after it gets serviced instead
+> of before calling generic_handler.
+> 
+> Signed-off-by: Faiz Abbas <faiz_abbas@ti.com>
 
-following the official LPC17 VFIO/IOMMU/PCI uconf acceptance notification:
+Applied with Joao's ack to pci/host-designware for v4.14, thanks!
 
-https://www.linuxplumbersconf.org/2017/vfioiommupci-microconference-accepted-into-linux-plumbers-conference/
-
-I am sending out a call for sessions proposals open to all developers
-interested/involved in Linux kernel VFIO/IOMMU/PCI development.
-
-The LPC17 uconf wiki provides a list of topics that we put forward for
-the microconference submission:
-
-http://wiki.linuxplumbersconf.org/2017:vfio_iommu_pci
-
-The wiki is there to provide a list of topics that we considered key
-but it should not be considered final, actually it is a starting point
-to define a possible schedule structure.
-
-Session proposals for the LPC17 VFIO/IOMMU/PCI microconference are warmly
-encouraged and can be submitted here:
-
-https://linuxplumbersconf.org/2017/ocw/events/LPC2017/tracks/636
-
-Anyone involved in VFIO/IOMMU/PCI kernel development, if you wish to add
-sessions and attend the microconference consider yourself welcome, for any
-questions just reply to this thread or drop me a line.
-
-Looking forward to meeting you all in Los Angeles !
-
-Lorenzo
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 28ed32b..78b2584 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -71,9 +71,9 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  		while ((pos = find_next_bit((unsigned long *) &val, 32,
+>  					    pos)) != 32) {
+>  			irq = irq_find_mapping(pp->irq_domain, i * 32 + pos);
+> +			generic_handle_irq(irq);
+>  			dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12,
+>  					    4, 1 << pos);
+> -			generic_handle_irq(irq);
+>  			pos++;
+>  		}
+>  	}
+> -- 
+> 2.7.4
+> 
