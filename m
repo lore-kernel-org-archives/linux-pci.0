@@ -1,69 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:1242 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753158AbdHKS0f (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Aug 2017 14:26:35 -0400
-From: Scott Bauer <scott.bauer@intel.com>
-To: linux-pci@vger.kernel.org
-Cc: keith.busch@intel.com, jonathan.derrick@intel.com,
-        david.fugate@intel.com, bhelgaas@google.com,
-        Scott Bauer <scott.bauer@intel.com>
-Subject: [RESEND] PCI: vmd: Free up IRQs on suspend path
-Date: Fri, 11 Aug 2017 12:09:49 -0600
-Message-Id: <20170811180949.26923-1-scott.bauer@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org,
+	bhelgaas@google.com
+Subject: [PATCH v4 0/4] PCI: rockchip: Move PCIE_WAKE handling into rockchip
+ pcie driver
+Date: Tue, 22 Aug 2017 11:19:30 +0800
+Message-Id: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Jeffy Chen <jeffy.chen@rock-chips.com>, Heiko Stuebner <heiko@sntech.de>,
+ linux-pci@vger.kernel.org, shawn.lin@rock-chips.com, briannorris@chromium.org,
+ Will Deacon <will.deacon@arm.com>, dianders@chromium.org,
+ Rob Herring <robh+dt@kernel.org>, linux-rockchip@lists.infradead.org,
+ Matthias Kaehlcke <mka@chromium.org>,
+ Klaus Goger <klaus.goger@theobroma-systems.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ linux-arm-kernel@lists.infradead.org, Caesar Wang <wxt@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch frees up the IRQs we request on the suspend path,
-and reallocates them on the resume path.
 
-Fixes:
-[  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
-[  559.966824] Error taking CPU111 down: -34
-[  559.966825] Non-boot CPUs are not disabled
-[  559.966826] Enabling non-boot CPUs ...
+Currently we are handling pcie wake in mrvl wifi driver. But Brian
+suggests to move it into rockchip pcie driver.
 
-Signed-off-by: Scott Bauer <scott.bauer@intel.com>
----
- drivers/pci/host/vmd.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Tested on my chromebook bob(with cros 4.4 kernel and mrvl wifi).
 
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 7e967a8784b2..ac643a3d0bf3 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -763,15 +763,32 @@ static void vmd_remove(struct pci_dev *dev)
- static int vmd_suspend(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-+	int i;
-+
-+	for (i = 0; i < vmd->msix_count; i++)
-+                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
- 
- 	pci_save_state(pdev);
-+	pci_disable_device(pdev);
- 	return 0;
- }
- 
- static int vmd_resume(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-+	int err, i;
-+
-+	for (i = 0; i < vmd->msix_count; i++) {
-+		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-+				       vmd_irq, IRQF_NO_THREAD,
-+				       "vmd", &vmd->irqs[i]);
-+		if (err)
-+			return err;
-+	}
- 
-+	pcim_enable_device(pdev);
- 	pci_restore_state(pdev);
- 	return 0;
- }
+
+Changes in v4:
+Rebase on newest for-next branch, also fix error handling by:
+1e7f570a1b86 PCI: rockchip: Idle inactive PHY(s)
+
+Changes in v3:
+Fix error handling
+
+Changes in v2:
+Use dev_pm_set_dedicated_wake_irq
+        -- Suggested by Brian Norris <briannorris@chromium.com>
+
+Jeffy Chen (4):
+  PCI: rockchip: Fix error handlings
+  PCI: rockchip: Add support for pcie wake irq
+  dt-bindings: PCI: rockchip: Add support for pcie wake irq
+  arm64: dts: rockchip: Handle pcie wake in pcie driver for Gru
+
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |  20 ++-
+ arch/arm64/boot/dts/rockchip/rk3399-gru.dtsi       |  15 +-
+ drivers/pci/host/pcie-rockchip.c                   | 179 ++++++++++++---------
+ 3 files changed, 126 insertions(+), 88 deletions(-)
+
 -- 
 2.11.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
