@@ -1,70 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.141]:55642 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754190AbdHVCbz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 21 Aug 2017 22:31:55 -0400
-Message-ID: <599B975C.20807@rock-chips.com>
-Date: Tue, 22 Aug 2017 10:30:52 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Received: from mail.kernel.org ([198.145.29.99]:40698 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751061AbdHVQX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 22 Aug 2017 12:23:59 -0400
+Date: Tue, 22 Aug 2017 11:23:56 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?iso-8859-1?Q?G=FCrkan?= Myczko <gurkan@phys.ethz.ch>
+Cc: linux-pci@vger.kernel.org, mroos@linux.ee
+Subject: Re: pci layer problem
+Message-ID: <20170822162356.GA6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <0c50a5ba7ceadc93555c6c6dedb22829@phys.ethz.ch>
 MIME-Version: 1.0
-To: Heiko Stuebner <heiko@sntech.de>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Douglas Anderson <dianders@chromium.org>,
-        Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v2] PCI: rockchip: fix system hang up if activating CONFIG_DEBUG_SHIRQ
-References: <1502363923-19946-1-git-send-email-shawn.lin@rock-chips.com> <3312094.6zR5NuJAgK@phil>
-In-Reply-To: <3312094.6zR5NuJAgK@phil>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <0c50a5ba7ceadc93555c6c6dedb22829@phys.ethz.ch>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Heiko,
+On Tue, Aug 22, 2017 at 04:10:29PM +0200, Gürkan Myczko wrote:
+> hello
+> 
+> i've been told on #debian-sparc to report this (SUN UltraSparc,
+> SPARC64, Debian):
+> 
+> some dmesg output:
+> [ 2683.006327] e1000: Intel(R) PRO/1000 Network Driver - version
+> 7.3.21-k8-NAPI
+> [ 2683.006792] e1000: Copyright (c) 1999-2006 Intel Corporation.
+> [ 2683.007379] e1000 0000:02:02.0: can't ioremap BAR 0: [mem size
+> 0x00020000]
+> [ 2683.007772] e1000: probe of 0000:02:02.0 failed with error -5
 
-On 08/10/2017 08:22 PM, Heiko Stuebner wrote:
->>
->> >+	devm_add_action_or_reset(dev,
->> >+				 rockchip_pcie_disable_clocks, rockchip);
->> >+
-> err = devm_add_action_or_reset(...)
-> if (err) {
-> ...
-> }
->
-> devm_add_action_or_reset can fail. When it fails, it will call the
-> action already, so your error handling does not need to disable
-> clocks on its own.
->
->
-> Also, as a more general comment, right now you do devm_request_irq
-> from rockchip_pcie_parse_dt, which gets called_before_  clocks are
-> enabled.
->
-> This will likely bite you at some point as well, as the irq can fire at
-> any point after it got requested ... including before you enable the
-> clocks.
->
-> So the order should probably be
->
-> - enable clocks
-> - register devm_action to shutdown clocks
-> - parse_dt including requesting the irq.
->
->
-> Heiko
+Hi Gürkan,
 
-it turns out this irq handler not only depends on clks, but also pm 
-domain :(
+Sorry you tripped over a problem.  Can you please collect the complete
+dmesg log?
 
-so handling it with devm_* functions would be a little 
-complicated(https://lkml.org/lkml/2017/8/15/146).
-
-would it make sense to use request_irq/free_irq directly?
-
-or maybe add a flag(for example probed), and check it in the irq handler 
-before read registers? then we would just need to make sure the priv 
-struct be freed later than the irq.
-
->
->
+Bjorn
