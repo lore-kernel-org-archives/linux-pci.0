@@ -1,57 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:42483 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752010AbdHHMpk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 8 Aug 2017 08:45:40 -0400
-Subject: Re: [PATCHv2 2/6] PCI: designware: enable write permission before
- updating class code
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>, <linux-pci@vger.kernel.org>,
-        <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>
-References: <1501748620-42866-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1501748620-42866-3-git-send-email-Zhiqiang.Hou@nxp.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <20d204aa-027f-6d90-7eeb-b9c86d62df62@synopsys.com>
-Date: Tue, 8 Aug 2017 13:45:34 +0100
+Return-Path: <SRS0=+xF7=7Z=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=+xF7=7Z=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH v11 2/4] PCI: Factor out pci_bus_wait_crs()
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Timur Tabi <timur@codeaurora.org>, linux-kernel@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>, linux-arm-msm@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+References: <20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170818213210.15145.15340.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <9cb3006d-31d0-e57a-fd3e-c32914e8ba42@codeaurora.org>
+ <20170821191806.GC28977@bhelgaas-glaptop.roam.corp.google.com>
+ <eca38319-9e78-1a9c-b275-43944fd0a63d@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <b9cbd3d8-dec5-65db-efec-b84f1e96985d@codeaurora.org>
+Date: Wed, 23 Aug 2017 00:40:45 -0400
 MIME-Version: 1.0
-In-Reply-To: <1501748620-42866-3-git-send-email-Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <eca38319-9e78-1a9c-b275-43944fd0a63d@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 9:23 AM de 8/3/2017, Zhiqiang Hou escreveu:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> The existing fix doesn't actually work because the Class register is
-> read-only, so it must enable the write permission before write the
-> correct value to this register.
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
-> V2:
->  - None
-> 
->  drivers/pci/dwc/pcie-designware-host.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index d29c020..6e10cda 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -634,8 +634,12 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
->  
->  	dw_pcie_wr_own_conf(pp, PCI_BASE_ADDRESS_0, 4, 0);
->  
-> +	/* Enable write permission for the DBI read-only register */
-> +	dw_pcie_dbi_ro_wr_en(pci);
->  	/* program correct class for RC */
->  	dw_pcie_wr_own_conf(pp, PCI_CLASS_DEVICE, 2, PCI_CLASS_BRIDGE_PCI);
-> +	/* Better disable write permission right after the update */
-> +	dw_pcie_dbi_ro_wr_dis(pci);
->  
->  	dw_pcie_rd_own_conf(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, 4, &val);
->  	val |= PORT_LOGIC_SPEED_CHANGE;
-> 
+On 8/21/2017 3:37 PM, Sinan Kaya wrote:
+> bool pci_bus_crs_pending(struct pci_dev *dev, u32 l)
+> {
+> 	if !pci_bus_crs_vis_supported(dev->parent)
+> 		return false;
 
-Acked-By: Joao Pinto <jpinto@synopsys.com>
+Apparently, I can't do this. By the time, we come to here from vendor id read
+function, the topology has not been set up yet. 
+
+I'm getting an exception:
+
+[    6.067392] [<ffff00000846c878>] pci_bus_crs_visibility_pending+0x4/0x7c
+[    6.074085] [<ffff00000846cccc>] pci_scan_single_device+0x40/0xb4
+[    6.080170] [<ffff00000846cd90>] pci_scan_slot+0x50/0xe8
+[    6.085474] [<ffff00000846dc14>] pci_scan_child_bus+0x30/0x108
+[    6.091300] [<ffff0000084bab94>] acpi_pci_root_create+0x184/0x1f0
+[    6.097388] [<ffff000008091dc8>] pci_acpi_scan_root+0x188/0x1d4
+[    6.103298] [<ffff0000084ba7a8>] acpi_pci_root_add+0x38c/0x44c
+[    6.109125] [<ffff0000084b4d94>] acpi_bus_attach+0xe0/0x1ac
+[    6.114689] [<ffff0000084b4e08>] acpi_bus_attach+0x154/0x1ac
+[    6.120340] [<ffff0000084b4e08>] acpi_bus_attach+0x154/0x1ac
+[    6.125991] [<ffff0000084b6608>] acpi_bus_scan+0x60/0x70
+[    6.131297] [<ffff0000091c87f8>] acpi_scan_init+0xd8/0x228
+[    6.136774] [<ffff0000091c84e0>] acpi_init+0x2d4/0x328
+[    6.141905] [<ffff0000091a0c88>] do_one_initcall+0x80/0x108
+[    6.147469] [<ffff0000091a0e98>] kernel_init_freeable+0x188/0x228
+[    6.153556] [<ffff000008c9bcbc>] kernel_init+0x10/0xfc
+[    6.158687] [<ffff000008082ec0>] ret_from_fork+0x10/0x50
+
+
+
+> 
+> 	return (l & 0xFFFF) == 0x0001;
+> }
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
