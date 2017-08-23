@@ -1,64 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:22370 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753256AbdHKVLW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 11 Aug 2017 17:11:22 -0400
-From: Scott Bauer <scott.bauer@intel.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, keith.busch@intel.com,
-        jonathan.derrick@intel.com, Scott Bauer <scott.bauer@intel.com>
-Subject: [PATCH] PCI: vmd: Free up IRQs on suspend path
-Date: Fri, 11 Aug 2017 14:54:32 -0600
-Message-Id: <20170811205432.29612-1-scott.bauer@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=rMw/=7Z=bombadil.srs.infradead.org=BATV+08196f5b2bd262a84b8d+5113+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=rMw/=7Z=bombadil.srs.infradead.org=BATV+08196f5b2bd262a84b8d+5113+infradead.org+hch@kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: helgaas@kernel.org
+Cc: davem@davemloft.net,
+	mroos@linux.ee,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI/msi: don't warn on irq_create_affinity_masks NULL return
+Date: Wed, 23 Aug 2017 13:54:59 +0200
+Message-Id: <20170823115459.2058-1-hch@lst.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch frees up the IRQs we request on the suspend path,
-and reallocates them on the resume path.
+irq_create_affinity_masks can easily return NULL when there are not
+enough "free" vectors available to spread, while the memory allocation
+failure for the CPU masks not only is unlikely, but also relatively
+harmless as the system will work just fine except for non-optimally
+spread vectors.  Thus remove the warnings.
 
-Fixes:
-[  559.964386] CPU 111 disable failed: CPU has 9 vectors assigned and there are only 0 available.
-[  559.966824] Error taking CPU111 down: -34
-[  559.966825] Non-boot CPUs are not disabled
-[  559.966826] Enabling non-boot CPUs ...
-
-Signed-off-by: Scott Bauer <scott.bauer@intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/host/vmd.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/pci/msi.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 7e967a8784b2..4fe1756af010 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -763,6 +763,11 @@ static void vmd_remove(struct pci_dev *dev)
- static int vmd_suspend(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-+	int i;
-+
-+	for (i = 0; i < vmd->msix_count; i++)
-+                devm_free_irq(dev, pci_irq_vector(pdev, i), &vmd->irqs[i]);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 253d92409bb3..2225afc1cbbb 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -538,12 +538,9 @@ msi_setup_entry(struct pci_dev *dev, int nvec, const struct irq_affinity *affd)
+ 	struct msi_desc *entry;
+ 	u16 control;
  
- 	pci_save_state(pdev);
- 	return 0;
-@@ -771,6 +776,16 @@ static int vmd_suspend(struct device *dev)
- static int vmd_resume(struct device *dev)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct vmd_dev *vmd = pci_get_drvdata(pdev);
-+	int err, i;
+-	if (affd) {
++	if (affd)
+ 		masks = irq_create_affinity_masks(nvec, affd);
+-		if (!masks)
+-			dev_err(&dev->dev, "can't allocate MSI affinity masks for %d vectors\n",
+-				nvec);
+-	}
 +
-+	for (i = 0; i < vmd->msix_count; i++) {
-+		err = devm_request_irq(dev, pci_irq_vector(pdev, i),
-+				       vmd_irq, IRQF_NO_THREAD,
-+				       "vmd", &vmd->irqs[i]);
-+		if (err)
-+			return err;
-+	}
  
- 	pci_restore_state(pdev);
- 	return 0;
+ 	/* MSI Entry Initialization */
+ 	entry = alloc_msi_entry(&dev->dev, nvec, masks);
+@@ -679,12 +676,8 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+ 	struct msi_desc *entry;
+ 	int ret, i;
+ 
+-	if (affd) {
++	if (affd)
+ 		masks = irq_create_affinity_masks(nvec, affd);
+-		if (!masks)
+-			dev_err(&dev->dev, "can't allocate MSI-X affinity masks for %d vectors\n",
+-				nvec);
+-	}
+ 
+ 	for (i = 0, curmsk = masks; i < nvec; i++) {
+ 		entry = alloc_msi_entry(&dev->dev, 1, curmsk);
 -- 
 2.11.0
