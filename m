@@ -1,87 +1,81 @@
-Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
-Return-Path: <SRS0=ly6G=7T=huawei.com=dingtianhong@kernel.org>
-Subject: Re: [PATCH net] PCI: fix the return value for the
- pci_find_pcie_root_port()
-To: Thierry Reding <thierry.reding@gmail.com>
-References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
- <20170817105156.GA18789@ulmo>
- <ea83e7a8-39a4-5b94-1148-5bf4ae4ed214@huawei.com>
- <20170817133012.GC6854@ulmo>
-CC: <leedom@chelsio.com>, <ashok.raj@intel.com>, <bhelgaas@google.com>,
-        <helgaas@kernel.org>, <werner@chelsio.com>, <ganeshgr@chelsio.com>,
-        <asit.k.mallick@intel.com>, <patrick.j.cramer@intel.com>,
-        <Suravee.Suthikulpanit@amd.com>, <Bob.Shaw@amd.com>,
-        <l.stach@pengutronix.de>, <amira@mellanox.com>,
-        <gabriele.paoloni@huawei.com>, <David.Laight@aculab.com>,
-        <jeffrey.t.kirsher@intel.com>, <catalin.marinas@arm.com>,
-        <will.deacon@arm.com>, <mark.rutland@arm.com>, <robin.murphy@arm.com>,
-        <davem@davemloft.net>, <alexander.duyck@gmail.com>,
-        <eric.dumazet@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <netdev@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>
-From: Ding Tianhong <dingtianhong@huawei.com>
-Message-ID: <7b19e5fe-e6b8-e51d-53a3-0f9ee328a842@huawei.com>
-Date: Thu, 17 Aug 2017 21:38:02 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0075.outbound.protection.outlook.com ([104.47.32.75]:18080
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753057AbdHWG0y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Aug 2017 02:26:54 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv4 5/9] PCI: layerscape: Disable the outbound windows configured by bootloader
+Date: Wed, 23 Aug 2017 14:08:52 +0800
+Message-ID: <20170823060856.9387-6-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <20170817133012.GC6854@ulmo>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
+Disable all the outbound windows to avoid one transaction hitting
+multiple outbound windows, because the function dw_pcie_setup_rc
+will re-configure the outbound windows which maybe confict with
+the bootloader configured.
 
-On 2017/8/17 21:30, Thierry Reding wrote:
-> On Thu, Aug 17, 2017 at 08:40:16PM +0800, Ding Tianhong wrote:
->>
->>
->> On 2017/8/17 18:51, Thierry Reding wrote:
->>> On Thu, Aug 17, 2017 at 10:25:30AM +0800, Ding Tianhong wrote:
->>>> The pci_find_pcie_root_port() would return NULL if the given
->>>> dev is already a Root Port, it looks like unfriendly to the
->>>> PCIe Root Port device, Thierry and Bjorn suggest to let this
->>>> function return the given dev under this circumstances.
->>>>
->>>> Fixes: 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI device")
->>>> Suggested-by: Thierry Reding <thierry.reding@gmail.com>
->>>> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
->>>> Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
->>>> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
->>>> ---
->>>>  drivers/pci/pci.c | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->>>> index 7e2022f..352bb53 100644
->>>> --- a/drivers/pci/pci.c
->>>> +++ b/drivers/pci/pci.c
->>>> @@ -514,7 +514,7 @@ struct resource *pci_find_resource(struct pci_dev *dev, struct resource *res)
->>>>   */
->>>>  struct pci_dev *pci_find_pcie_root_port(struct pci_dev *dev)
->>>>  {
->>>> -	struct pci_dev *bridge, *highest_pcie_bridge = NULL;
->>>> +	struct pci_dev *bridge, *highest_pcie_bridge = dev;
->>>>  
->>>>  	bridge = pci_upstream_bridge(dev);
->>>>  	while (bridge && pci_is_pcie(bridge)) {
->>>
->>> I think this should actually be this change on top of a revert of commit
->>> 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI
->>> device"). After the above change, the previous fix will have a redundant
->>> check because highest_pcie_bridge will never be NULL.
->>>
->>> Let me send out that version to clarify what I mean.
->>>
->>
->> Hi Thierry:
->>
->> The patch ("PCI: fix oops when try to find Root Port for a PCI device")
->> has been merge to the linus mainline tree before you found this deficiencies....
-> 
-> I understand that. I'm just saying that there's no point keeping that
-> change around because it no longer makes sense after we initialize the
-> highest_pcie_bridge variable to dev.
-> 
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V4:
+ - no change
 
-Ok, NO problem.:)
+ drivers/pci/dwc/pci-layerscape.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-> Thierry
-> 
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 57b86a0cd2c8..44a603db217a 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -35,6 +35,8 @@
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+ #define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+ 
++#define PCIE_IATU_NUM		6
++
+ struct ls_pcie_drvdata {
+ 	u32 lut_offset;
+ 	u32 ltssm_shift;
+@@ -91,6 +93,14 @@ static void ls_pcie_drop_msg_tlp(struct ls_pcie *pcie)
+ 	iowrite32(val, pci->dbi_base + PCIE_STRFMR1);
+ }
+ 
++static void ls_pcie_disable_outbound_atus(struct ls_pcie *pcie)
++{
++	int i;
++
++	for (i = 0; i < PCIE_IATU_NUM; i++)
++		dw_pcie_disable_atu(pcie->pci, DW_PCIE_REGION_OUTBOUND, i);
++}
++
+ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	u32 state;
+@@ -128,6 +138,13 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+ 
++	/*
++	 * Disable the outbound windows configured by bootloader to avoid
++	 * one transaction hitting multiple outbound windows and the function
++	 * dw_pcie_setup_rc will re-configure the outbound windows.
++	 */
++	ls_pcie_disable_outbound_atus(pcie);
++
+ 	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-- 
+2.14.1
