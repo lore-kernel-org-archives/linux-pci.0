@@ -1,114 +1,201 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Srinath Mannam <srinath.mannam@broadcom.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Srinath Mannam <srinath.mannam@broadcom.com>
-Subject: [RFC PATCH v3] pci: Concurrency issue during pci enable bridge
-Date: Fri,  4 Aug 2017 20:27:28 +0530
-Message-Id: <1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=5Jbr=7Z=rock-chips.com=shawn.lin@kernel.org>
+Return-Path: <SRS0=5Jbr=7Z=rock-chips.com=shawn.lin@kernel.org>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+ Brian Norris <briannorris@chromium.org>,
+ Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: manipulate phy properly if failing to
+ probe the driver
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1502277263-187898-1-git-send-email-shawn.lin@rock-chips.com>
+ <20170822204750.GG6948@bhelgaas-glaptop.roam.corp.google.com>
+ <4680e7be-0715-132a-3b4c-ae266d459ad2@rock-chips.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <fe405702-9088-ada4-80cd-902ae6ecec1a@rock-chips.com>
+Date: Wed, 23 Aug 2017 09:21:03 +0800
+MIME-Version: 1.0
+In-Reply-To: <4680e7be-0715-132a-3b4c-ae266d459ad2@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Concurrency issue is observed during pci enable bridge called
-for multiple pci devices initialization in SMP system.
 
-Setup details:
- - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
- - Two EPs are connected to PCIe RC through bridge as shown
-   in the below figure.
+On 2017/8/23 9:03, Shawn Lin wrote:
+> Hi Bjorn,
+> 
+> On 2017/8/23 4:47, Bjorn Helgaas wrote:
+>> On Wed, Aug 09, 2017 at 07:14:23PM +0800, Shawn Lin wrote:
+>>> We observed that the clk_pciephy_ref is still enabled when we actually
+>>> fail to probe the driver.
+>>>
+>>> root@linaro-alip:~# cat /sys/kernel/debug/clk/clk_summary | grep pcie
+>>> clk_pciephy_ref              1    1     24000000    0 0
+>>> clk_pcie_pm              0    0     24000000    0 0
+>>>        clk_pcie_core_cru           0    0    125000000    0 0
+>>>        clk_pciephy_ref100m         0    0    100000000    0 0
+>>>         aclk_pcie         0    0    148500000    0 0
+>>>         aclk_perf_pcie    0    0    148500000    0 0
+>>>             pclk_pcie 0    0     37125000    0 0
+>>> clk_pcie_core                     0    0        0    0 0
+>>>
+>>> clk_pciephy_ref is used by phy driver and we need to properly disable
+>>> it for this case. So this patch add error handle for the function of
+>>> rockchip_pcie_init_port to fix this issue.
+>>>
+>>> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+>>
+>> Applied to pci/host-rockchip for v4.14, thanks!
+> 
+> I actually posted a v2 sometime ago, so could you please drop this one?
+> 
+> And there are still some other error handling path should be fixed.
+> So I think that is what Jeffy's patch did:
+> 
+> http://patchwork.ozlabs.org/patch/804239/
+> 
 
-                   [RC]
-                    |
-                 [BRIDGE]
-                    |
-               -----------
-              |           |
-             [EP]        [EP]
+Just talk to Jeffy off-list and we agree that there are many patches
+for pcie-rockchip in flight that conflict each other. So I would like
+to pick up all these patches, including the bug-fixing for shared irq
+and reconstruction, and send out the a bigger series which would make
+you easy to review and avoid rebasing pathes for others.
 
-Issue description:
-After PCIe enumeration completed EP driver probe function called
-for both the devices from two CPUS simultaneously.
->From EP probe function, pci_enable_device_mem called for both the EPs.
-This function called pci_enable_bridge enable for all the bridges
-recursively in the path of EP to RC.
-
-Inside pci_enable_bridge function, at two places concurrency issue is
-observed.
-
-Place 1:
-  CPU 0:
-    1. Done Atomic increment dev->enable_cnt
-       in pci_enable_device_flags
-    2. Inside pci_enable_resources
-    3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
-    4. Ready to set PCI_COMMAND_MEMORY (0x2) in
-       pci_write_config_word(dev, PCI_COMMAND, cmd)
-  CPU 1:
-    1. Check pci_is_enabled in function pci_enable_bridge
-       and it is true
-    2. Check (!dev->is_busmaster) also true
-    3. Gone into pci_set_master
-    4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
-    5. Ready to set PCI_COMMAND_MASTER (0x4) in
-       pci_write_config_word(dev, PCI_COMMAND, cmd)
-
-By the time of last point for both the CPUs are read value 0 and
-ready to write 2 and 4.
-After last point final value in PCI_COMMAND register is 4 instead of 6.
-
-Place 2:
-  CPU 0:
-    1. Done Atomic increment dev->enable_cnt in
-       pci_enable_device_flags
-
-Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
----
- drivers/pci/pci.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc34..12721df 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -52,6 +52,7 @@ static void pci_pme_list_scan(struct work_struct *work);
- static LIST_HEAD(pci_pme_list);
- static DEFINE_MUTEX(pci_pme_list_mutex);
- static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
-+static DEFINE_MUTEX(pci_bridge_mutex);
- 
- struct pci_pme_device {
- 	struct list_head list;
-@@ -1348,10 +1349,11 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	if (bridge)
- 		pci_enable_bridge(bridge);
- 
-+	mutex_lock(&pci_bridge_mutex);
- 	if (pci_is_enabled(dev)) {
- 		if (!dev->is_busmaster)
- 			pci_set_master(dev);
--		return;
-+		goto end;
- 	}
- 
- 	retval = pci_enable_device(dev);
-@@ -1359,6 +1361,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
- 			retval);
- 	pci_set_master(dev);
-+end:
-+	mutex_unlock(&pci_bridge_mutex);
- }
- 
- static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-@@ -1383,7 +1387,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		return 0;		/* already enabled */
- 
- 	bridge = pci_upstream_bridge(dev);
--	if (bridge)
-+	if (bridge && !pci_is_enabled(bridge))
- 		pci_enable_bridge(bridge);
- 
- 	/* only skip sriov related */
--- 
-2.7.4
+> 
+>>
+>>> ---
+>>>
+>>>   drivers/pci/host/pcie-rockchip.c | 38 
+>>> ++++++++++++++++++++++++--------------
+>>>   1 file changed, 24 insertions(+), 14 deletions(-)
+>>>
+>>> diff --git a/drivers/pci/host/pcie-rockchip.c 
+>>> b/drivers/pci/host/pcie-rockchip.c
+>>> index 2eccd53..ce6371b 100644
+>>> --- a/drivers/pci/host/pcie-rockchip.c
+>>> +++ b/drivers/pci/host/pcie-rockchip.c
+>>> @@ -561,32 +561,32 @@ static int rockchip_pcie_init_port(struct 
+>>> rockchip_pcie *rockchip)
+>>>           err = phy_init(rockchip->phys[i]);
+>>>           if (err) {
+>>>               dev_err(dev, "init phy%d err %d\n", i, err);
+>>> -            return err;
+>>> +            goto err_phy_exit;
+>>>           }
+>>>       }
+>>>       err = reset_control_assert(rockchip->core_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "assert core_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       err = reset_control_assert(rockchip->mgmt_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "assert mgmt_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       err = reset_control_assert(rockchip->mgmt_sticky_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "assert mgmt_sticky_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       err = reset_control_assert(rockchip->pipe_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "assert pipe_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       udelay(10);
+>>> @@ -594,19 +594,19 @@ static int rockchip_pcie_init_port(struct 
+>>> rockchip_pcie *rockchip)
+>>>       err = reset_control_deassert(rockchip->pm_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert pm_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       err = reset_control_deassert(rockchip->aclk_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert aclk_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       err = reset_control_deassert(rockchip->pclk_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert pclk_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_exit;
+>>>       }
+>>>       if (rockchip->link_gen == 2)
+>>> @@ -628,7 +628,7 @@ static int rockchip_pcie_init_port(struct 
+>>> rockchip_pcie *rockchip)
+>>>           err = phy_power_on(rockchip->phys[i]);
+>>>           if (err) {
+>>>               dev_err(dev, "power on phy%d err %d\n", i, err);
+>>> -            return err;
+>>> +            goto err_phy_power_off;
+>>>           }
+>>>       }
+>>> @@ -639,25 +639,25 @@ static int rockchip_pcie_init_port(struct 
+>>> rockchip_pcie *rockchip)
+>>>       err = reset_control_deassert(rockchip->mgmt_sticky_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert mgmt_sticky_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_power_off;
+>>>       }
+>>>       err = reset_control_deassert(rockchip->core_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert core_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_power_off;
+>>>       }
+>>>       err = reset_control_deassert(rockchip->mgmt_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert mgmt_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_power_off;
+>>>       }
+>>>       err = reset_control_deassert(rockchip->pipe_rst);
+>>>       if (err) {
+>>>           dev_err(dev, "deassert pipe_rst err %d\n", err);
+>>> -        return err;
+>>> +        goto err_phy_power_off;
+>>>       }
+>>>       /* Fix the transmitted FTS count desired to exit from L0s. */
+>>> @@ -690,7 +690,8 @@ static int rockchip_pcie_init_port(struct 
+>>> rockchip_pcie *rockchip)
+>>>                    500 * USEC_PER_MSEC);
+>>>       if (err) {
+>>>           dev_err(dev, "PCIe link training gen1 timeout!\n");
+>>> -        return -ETIMEDOUT;
+>>> +        err = -ETIMEDOUT;
+>>> +        goto err_phy_power_off;
+>>>       }
+>>>       if (rockchip->link_gen == 2) {
+>>> @@ -751,6 +752,15 @@ static int rockchip_pcie_init_port(struct 
+>>> rockchip_pcie *rockchip)
+>>>       rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCSR);
+>>>       return 0;
+>>> +
+>>> +err_phy_exit:
+>>> +    for (; i >= 0; --i)
+>>> +        phy_exit(rockchip->phys[i]);
+>>> +err_phy_power_off:
+>>> +    for (; i >= 0; --i)
+>>> +        phy_power_off(rockchip->phys[i]);
+>>> +
+>>> +    return err;
+>>>   }
+>>>   static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void 
+>>> *arg)
+>>> -- 
+>>> 1.9.1
+>>>
+>>>
+>>
+>>
+>>
+> 
+> 
+> 
