@@ -1,73 +1,143 @@
-Return-Path: <SRS0=K1PJ=72=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=K1PJ=72=linaro.org=ard.biesheuvel@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
-References: <7b7278f4-7639-62b3-8a35-e6f7f9afa998@sigmadesigns.com>
- <8452c9ca-7131-cf43-d35c-afc4252844f0@arm.com> <4b93964c-49eb-efbf-f6b2-956c67694182@sigmadesigns.com>
- <86efs3wesi.fsf@arm.com> <20170824170445.GO31858@bhelgaas-glaptop.roam.corp.google.com>
- <e2d48341-3ab1-f80a-b044-ff7dcc059ed4@sigmadesigns.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 24 Aug 2017 19:35:20 +0100
-Message-ID: <CAKv+Gu8ksqfBgXUTitDOB8O6Ke5Swkp2Agdt=3F0KJ130uUkBw@mail.gmail.com>
-Subject: Re: [PATCH v10] PCI: tango: Add MSI controller support
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>, Mason <slash.tmp@free.fr>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.135]:35049 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753238AbdHWHDP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:03:15 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 01/10] PCI: rockchip: spilt out rockchip_pcie_setup_irq
+Date: Wed, 23 Aug 2017 15:02:05 +0800
+Message-Id: <1503471725-73765-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 24 August 2017 at 18:51, Marc Gonzalez
-<marc_gonzalez@sigmadesigns.com> wrote:
-> On 24/08/2017 19:04, Bjorn Helgaas wrote:
->> On Tue, Aug 22, 2017 at 09:03:41PM +0100, Marc Zyngier wrote:
->>> Marc Gonzalez wrote:
->>>> On 22/08/2017 18:29, Marc Zyngier wrote:
->>>>> On 22/08/17 15:56, Marc Gonzalez wrote:
->>>>>
->>>>>>  #define SMP8759_MUX              0x48
->>>>>>  #define SMP8759_TEST_OUT 0x74
->>>>>> +#define SMP8759_STATUS           0x80
->>>>>> +#define SMP8759_ENABLE           0xa0
->>>>>> +#define SMP8759_DOORBELL 0xa002e07c
->>>>>
->>>>> Why is this hardcoded and not coming from the device-tree, just like any
->>>>> other address property?
->>>>
->>>> Since this bus address is software-configurable, I didn't think
->>>> it belonged in the DT. Also, I didn't see anything similar in
->>>> other binding docs, especially
->>>>
->>>> Documentation/devicetree/bindings/interrupt-controller/msi.txt
->>>
->>> If that's software configurable, how on Earth did you pick the address?
->>> How do you ensure that it doesn't conflict with DMA? How is it
->>> configured into the RC?
->>
->> But we *do* need to resolve this.  This does seem like an address that
->> shouldn't be hard-coded into the driver.  Since this driver is
->> programming the address into an MSI message, but not into the receiver
->> of that message, there's a coordination issue between this driver and
->> whatever other software does that receiver configuration.
->
-> OK. I'll move the doorbell address to the DT for v11.
->
-> What property should be used for this address?
->
-> sigma,doorbell ?
->
-> Or maybe I can put it in reg, since I have a 1:1 mapping
-> between bus and cpu addresses?
->
-> git grep -i doorbell arch/arm/boot/dts/ arch/arm64/boot/dts/
-> returns nothing.
->
+Spilt out rockchip_pcie_setup_irq in order to prepare for
+the following bug fixing. No functional change intended.
 
-You haven't answered the question yet: you stated that the doorbell
-address is software configurable, yet your code does not seem to
-configure it. It only returns the doorbell address so that it gets
-communicated to the downstream devices.
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-So how does the RC know which address is special, so it can trigger on
-inbound writes hitting that address and assert the SPI ?
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-rockchip.c | 82 +++++++++++++++++++++++-----------------
+ 1 file changed, 47 insertions(+), 35 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 2eccd53..6dc3d83 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -929,6 +929,51 @@ static int rockchip_pcie_get_phys(struct rockchip_pcie *rockchip)
+ 	return 0;
+ }
+ 
++static int rockchip_pcie_setup_irq(struct rockchip_pcie *rockchip)
++{
++	int irq, err;
++	struct device *dev = rockchip->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++
++	irq = platform_get_irq_byname(pdev, "sys");
++	if (irq < 0) {
++		dev_err(dev, "missing sys IRQ resource\n");
++		return -EINVAL;
++	}
++
++	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
++			       IRQF_SHARED, "pcie-sys", rockchip);
++	if (err) {
++		dev_err(dev, "failed to request PCIe subsystem IRQ\n");
++		return err;
++	}
++
++	irq = platform_get_irq_byname(pdev, "legacy");
++	if (irq < 0) {
++		dev_err(dev, "missing legacy IRQ resource\n");
++		return -EINVAL;
++	}
++
++	irq_set_chained_handler_and_data(irq,
++					 rockchip_pcie_legacy_int_handler,
++					 rockchip);
++
++	irq = platform_get_irq_byname(pdev, "client");
++	if (irq < 0) {
++		dev_err(dev, "missing client IRQ resource\n");
++		return -EINVAL;
++	}
++
++	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
++			       IRQF_SHARED, "pcie-client", rockchip);
++	if (err) {
++		dev_err(dev, "failed to request PCIe client IRQ\n");
++		return err;
++	}
++
++	return 0;
++}
++
+ /**
+  * rockchip_pcie_parse_dt - Parse Device Tree
+  * @rockchip: PCIe port information
+@@ -941,7 +986,6 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 	struct platform_device *pdev = to_platform_device(dev);
+ 	struct device_node *node = dev->of_node;
+ 	struct resource *regs;
+-	int irq;
+ 	int err;
+ 
+ 	regs = platform_get_resource_byname(pdev,
+@@ -1055,41 +1099,9 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
+ 		return PTR_ERR(rockchip->clk_pcie_pm);
+ 	}
+ 
+-	irq = platform_get_irq_byname(pdev, "sys");
+-	if (irq < 0) {
+-		dev_err(dev, "missing sys IRQ resource\n");
+-		return -EINVAL;
+-	}
+-
+-	err = devm_request_irq(dev, irq, rockchip_pcie_subsys_irq_handler,
+-			       IRQF_SHARED, "pcie-sys", rockchip);
+-	if (err) {
+-		dev_err(dev, "failed to request PCIe subsystem IRQ\n");
+-		return err;
+-	}
+-
+-	irq = platform_get_irq_byname(pdev, "legacy");
+-	if (irq < 0) {
+-		dev_err(dev, "missing legacy IRQ resource\n");
+-		return -EINVAL;
+-	}
+-
+-	irq_set_chained_handler_and_data(irq,
+-					 rockchip_pcie_legacy_int_handler,
+-					 rockchip);
+-
+-	irq = platform_get_irq_byname(pdev, "client");
+-	if (irq < 0) {
+-		dev_err(dev, "missing client IRQ resource\n");
+-		return -EINVAL;
+-	}
+-
+-	err = devm_request_irq(dev, irq, rockchip_pcie_client_irq_handler,
+-			       IRQF_SHARED, "pcie-client", rockchip);
+-	if (err) {
+-		dev_err(dev, "failed to request PCIe client IRQ\n");
++	err = rockchip_pcie_setup_irq(rockchip);
++	if (err)
+ 		return err;
+-	}
+ 
+ 	rockchip->vpcie12v = devm_regulator_get_optional(dev, "vpcie12v");
+ 	if (IS_ERR(rockchip->vpcie12v)) {
+-- 
+1.9.1
