@@ -1,70 +1,120 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50844 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751357AbdH3OkO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 30 Aug 2017 10:40:14 -0400
-Date: Wed, 30 Aug 2017 08:40:12 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jan Glauber <jglauber@cavium.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, david.daney@cavium.com,
-        Jon Masters <jcm@redhat.com>,
-        Robert Richter <robert.richter@cavium.com>,
-        linux-arm-kernel@lists.infradead.org, kvm@vger.kernel.org
-Subject: Re: [PATCH v3 3/3] PCI: Avoid slot reset for Cavium cn8xxx root
- ports
-Message-ID: <20170830084012.19d91759@w520.home>
-In-Reply-To: <20170830142454.10971-4-jglauber@cavium.com>
-References: <20170830142454.10971-1-jglauber@cavium.com>
-        <20170830142454.10971-4-jglauber@cavium.com>
+Received: from mail-by2nam03on0063.outbound.protection.outlook.com ([104.47.42.63]:61119
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753057AbdHWG0v (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Aug 2017 02:26:51 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv4 4/9] PCI: layerscape: refactor the host_init function
+Date: Wed, 23 Aug 2017 14:08:51 +0800
+Message-ID: <20170823060856.9387-5-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 30 Aug 2017 16:24:54 +0200
-Jan Glauber <jglauber@cavium.com> wrote:
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-> Root ports of cn8xxx do not function after a slot reset when used with
-> some e1000e and LSI HBA devices. Add a quirk to prevent slot reset on
-> these root ports.
-> 
-> Signed-off-by: Jan Glauber <jglauber@cavium.com>
-> ---
->  drivers/pci/quirks.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 85191b8..6679971 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -845,6 +845,22 @@ static void quirk_cavium_sriov_rnm_link(struct pci_dev *dev)
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa018, quirk_cavium_sriov_rnm_link);
->  #endif
->  
-> +/*
-> + * Root port on some Cavium CN8xxx chips do not successfully complete
-> + * a bus reset when used with certain types of child devices. Config
-> + * space access to the child may quit responding. Flag all devices under
-> + * the secondary bus as non-resettable.
-> + */
-> +static void quirk_CN8xxx_secondary_bus(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *pdev;
-> +
-> +	dev_warn(&dev->dev, "Cavium CN8xxx quirk detected; reset for devices on secondary bus disabled\n");
-> +	list_for_each_entry(pdev, &dev->subordinate->devices, bus_list)
-> +		pdev->dev_flags |= PCI_DEV_FLAGS_NO_BUS_RESET;
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_CN8xxx_secondary_bus);
-> +
->  /*
->   * Some settings of MMRBC can lead to data corruption so block changes.
->   * See AMD 8131 HyperTransport PCI-X Tunnel Revision Guide
+Make the ls1021a's host_init reuse layerscape platform's common
+host_init function.
 
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+---
+V4:
+ - no change
 
-This doesn't seem reliable, doesn't the user just need to remove and
-reprobe the slot and the device would re-appear without this flag set?
-Thanks,
+ drivers/pci/dwc/pci-layerscape.c | 65 ++++++++++++++++++----------------------
+ 1 file changed, 29 insertions(+), 36 deletions(-)
 
-Alex
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 3aa34214643c..57b86a0cd2c8 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -108,42 +108,6 @@ static int ls1021_pcie_link_up(struct dw_pcie *pci)
+ 	return 1;
+ }
+ 
+-static int ls1021_pcie_host_init(struct pcie_port *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct ls_pcie *pcie = to_ls_pcie(pci);
+-	struct device *dev = pci->dev;
+-	u32 index[2];
+-	int ret;
+-
+-	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
+-						     "fsl,pcie-scfg");
+-	if (IS_ERR(pcie->scfg)) {
+-		ret = PTR_ERR(pcie->scfg);
+-		dev_err(dev, "No syscfg phandle specified\n");
+-		pcie->scfg = NULL;
+-		return ret;
+-	}
+-
+-	if (of_property_read_u32_array(dev->of_node,
+-				       "fsl,pcie-scfg", index, 2)) {
+-		pcie->scfg = NULL;
+-		return -EINVAL;
+-	}
+-	pcie->index = index[1];
+-
+-	dw_pcie_setup_rc(pp);
+-
+-	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+-	ls_pcie_fix_class(pcie);
+-	ls_pcie_clear_multifunction(pcie);
+-	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
+-
+-	ls_pcie_drop_msg_tlp(pcie);
+-
+-	return 0;
+-}
+-
+ static int ls_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct ls_pcie *pcie = to_ls_pcie(pci);
+@@ -176,6 +140,35 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	return 0;
+ }
+ 
++static int ls1021_pcie_host_init(struct pcie_port *pp)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
++	struct ls_pcie *pcie = to_ls_pcie(pci);
++	struct device *dev = pci->dev;
++	u32 index[2];
++	int ret;
++
++	pcie->scfg = syscon_regmap_lookup_by_phandle(dev->of_node,
++						     "fsl,pcie-scfg");
++	if (IS_ERR(pcie->scfg)) {
++		ret = PTR_ERR(pcie->scfg);
++		dev_err(dev, "No syscfg phandle specified\n");
++		pcie->scfg = NULL;
++		return ret;
++	}
++
++	if (of_property_read_u32_array(dev->of_node,
++				       "fsl,pcie-scfg", index, 2)) {
++		pcie->scfg = NULL;
++		return -EINVAL;
++	}
++	pcie->index = index[1];
++
++	ls_pcie_host_init(pp);
++
++	return 0;
++}
++
+ static int ls_pcie_msi_host_init(struct pcie_port *pp,
+ 				 struct msi_controller *chip)
+ {
+-- 
+2.14.1
