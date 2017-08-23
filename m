@@ -1,42 +1,83 @@
-Return-Path: <SRS0=zSlN=7T=davemloft.net=davem@kernel.org>
-Return-Path: <SRS0=zSlN=7T=davemloft.net=davem@kernel.org>
-Date: Wed, 16 Aug 2017 19:42:35 -0700 (PDT)
-Message-Id: <20170816.194235.391501463422735735.davem@davemloft.net>
-To: dingtianhong@huawei.com
-Cc: leedom@chelsio.com, ashok.raj@intel.com, bhelgaas@google.com,
- helgaas@kernel.org, werner@chelsio.com, ganeshgr@chelsio.com,
- asit.k.mallick@intel.com, patrick.j.cramer@intel.com,
- Suravee.Suthikulpanit@amd.com, Bob.Shaw@amd.com, l.stach@pengutronix.de,
- amira@mellanox.com, gabriele.paoloni@huawei.com, David.Laight@aculab.com,
- jeffrey.t.kirsher@intel.com, catalin.marinas@arm.com, will.deacon@arm.com,
- mark.rutland@arm.com, robin.murphy@arm.com, alexander.duyck@gmail.com,
- eric.dumazet@gmail.com, linux-arm-kernel@lists.infradead.org,
- netdev@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, linuxarm@huawei.com, thierry.reding@gmail.com
-Subject: Re: [PATCH net] PCI: fix the return value for the
- pci_find_pcie_root_port()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
-References: <1502936730-7368-1-git-send-email-dingtianhong@huawei.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH V12 5/5] PCI: Warn periodically while waiting for device to
+ become ready
+Date: Wed, 23 Aug 2017 00:56:11 -0400
+Message-Id: <1503464171-6471-5-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ding Tianhong <dingtianhong@huawei.com>
-Date: Thu, 17 Aug 2017 10:25:30 +0800
+Add a print statement in pci_bus_wait_crs() so that user observes the
+progress of device polling instead of silently waiting for timeout to be
+reached.
 
-> The pci_find_pcie_root_port() would return NULL if the given
-> dev is already a Root Port, it looks like unfriendly to the
-> PCIe Root Port device, Thierry and Bjorn suggest to let this
-> function return the given dev under this circumstances.
-> 
-> Fixes: 0e405232871d6 ("PCI: fix oops when try to find Root Port for a PCI device")
-> Suggested-by: Thierry Reding <thierry.reding@gmail.com>
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Signed-off-by: Thierry Reding <thierry.reding@gmail.com>
-> Signed-off-by: Ding Tianhong <dingtianhong@huawei.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+[bhelgaas: check for timeout first so we don't print "waiting, giving up",
+always print time we've slept (not the actual timeout, print a "ready"
+message if we've printed a "waiting" message]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-Bjorn, please review and ACK so Linus doesn't rip my head off again
-:-)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 93b89dd..4b30df7 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1841,11 +1841,16 @@ bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 l, int timeout)
+ 	 */
+ 	while ((l & 0xffff) == 0x0001) {
+ 		if (delay > timeout) {
+-			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
+-			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
+-			       PCI_FUNC(devfn));
++			pr_warn("pci %04x:%02x:%02x.%d: not ready after %dms; giving up\n",
++				pci_domain_nr(bus), bus->number,
++				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
++
+ 			return false;
+ 		}
++		if (delay >= 1000)
++			pr_info("pci %04x:%02x:%02x.%d: not ready after %dms; waiting\n",
++				pci_domain_nr(bus), bus->number,
++				PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
+ 
+ 		msleep(delay);
+ 		delay *= 2;
+@@ -1854,6 +1859,11 @@ bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 l, int timeout)
+ 			return false;
+ 	}
+ 
++	if (delay >= 1000)
++		pr_info("pci %04x:%02x:%02x.%d: ready after %dms\n",
++			pci_domain_nr(bus), bus->number,
++			PCI_SLOT(devfn), PCI_FUNC(devfn), delay - 1);
++
+ 	return true;
+ }
+ 
+-- 
+1.9.1
 
-Thanks.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
