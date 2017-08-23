@@ -1,122 +1,53 @@
-Return-Path: <SRS0=pWib=7S=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=pWib=7S=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V2] PCI/DPC: Add eDPC support
-To: Keith Busch <keith.busch@intel.com>
-References: <1500716399-85612-1-git-send-email-liudongdong3@huawei.com>
- <20170814180935.GE7233@localhost.localdomain>
-CC: <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <513f0542-9cfd-713d-6cd7-fa257c86bd2b@huawei.com>
-Date: Wed, 16 Aug 2017 10:08:13 +0800
+Return-Path: <SRS0=bs7s=7Z=mediatek.com=ryder.lee@kernel.org>
+Return-Path: <SRS0=bs7s=7Z=mediatek.com=ryder.lee@kernel.org>
+Message-ID: <1503450266.11985.3.camel@mtkswgap22>
+Subject: Re: [PATCH v2 0/3] PCI: mediatek: Add MSI support for MT2712 and
+ MT7622
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <honghui.zhang@mediatek.com>, <bhelgaas@google.com>,
+	<matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
+	<hongkun.cao@mediatek.com>, <youlin.pei@mediatek.com>,
+	<yong.wu@mediatek.com>, <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
+	<xinping.qian@mediatek.com>
+Date: Wed, 23 Aug 2017 09:04:26 +0800
+In-Reply-To: <20170822213602.GK6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <1502715868-17651-1-git-send-email-honghui.zhang@mediatek.com>
+	 <20170822213602.GK6948@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <20170814180935.GE7233@localhost.localdomain>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Keith
+On Tue, 2017-08-22 at 16:36 -0500, Bjorn Helgaas wrote:
+> On Mon, Aug 14, 2017 at 09:04:25PM +0800, honghui.zhang@mediatek.com wrote:
+> > From: Honghui Zhang <honghui.zhang@mediatek.com>
+> > 
+> > MT2712 and MT7622's PCIe host controller support MSI, but only 32bit MSI
+> > address are supportted. It connect to GIC with the same IRQ number of INTx
+> > IRQ, so it shares the same IRQ with INTx IRQ.
+> > 
+> > This patchset add MSI support for MT2712 and MT7622.
+> > Also do some code fixup and cleanups.
+> > 
+> > Change Since V1:
+> >  - Add the first two patches into this patchset.
+> >  - Using -ENODEV instead of PTR_ERR if msi_domain == NULL
+> >  - Change the error logs with consistency of lower-case
+> >  - Using has_msi instead of support_msi to make the parameter name a bit shorter
+> > 
+> > Honghui Zhang (3):
+> >   PCI: mediatek: Fix return value in case of error
+> >   PCI: mediatek: take use of bus->sysdata to get host private data
+> >   PCI: mediatek: add msi support for MT2712 and MT7622
+> > 
+> >  drivers/pci/host/pcie-mediatek.c | 157 +++++++++++++++++++++++++++++++++++++--
+> >  1 file changed, 151 insertions(+), 6 deletions(-)
+> 
+> Just waiting for an ack from Ryder...
 
-Many thanks for your review
+For whole series:
 
-e( 2017/8/15 2:09, Keith Busch ei:
-> On Sat, Jul 22, 2017 at 05:39:59PM +0800, Dongdong Liu wrote:
->> This code is to add eDPC support. Get and print the RP PIO error
->> information when the trigger condition is RP PIO error.
->>
->> For more information on eDPC, view the PCI-SIG eDPC ECN here:
->> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
->>
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> ---
->> v1-->v2: Use a stack local variable instead of the allocated memory for
->> 	 collecting RP PIO information.
->> 	 Fix the condition of RP PIO error.
->> 	 rebase on v4.13-rc1
->> ---
->>  drivers/pci/pcie/pcie-dpc.c   | 160 ++++++++++++++++++++++++++++++++++++++++++
->>  include/uapi/linux/pci_regs.h |  10 +++
->>  2 files changed, 170 insertions(+)
->>
->> diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
->> index c39f32e..724c548 100644
->> --- a/drivers/pci/pcie/pcie-dpc.c
->> +++ b/drivers/pci/pcie/pcie-dpc.c
->> @@ -16,11 +16,55 @@
->>  #include <linux/pcieport_if.h>
->>  #include "../pci.h"
->>
->> +struct rp_pio_header_log_regs {
->> +	u32 dw0;
->> +	u32 dw1;
->> +	u32 dw2;
->> +	u32 dw3;
->> +};
->> +
->> +struct dpc_rp_pio_regs {
->> +	u32 status;
->> +	u32 mask;
->> +	u32 severity;
->> +	u32 syserror;
->> +	u32 exception;
->> +
->> +	struct rp_pio_header_log_regs header_log;
->> +	u32 impspec_log;
->> +	u32 tlp_prefix_log[4];
->> +	u32 log_size;
->> +	u16 first_error;
->> +};
->> +
->>  struct dpc_dev {
->>  	struct pcie_device	*dev;
->>  	struct work_struct	work;
->>  	int			cap_pos;
->>  	bool			rp;
->> +	u32			rp_pio_status;
->> +};
->> +
->> +static const char * const rp_pio_error_string[] = {
->> +	"Configuration Request received UR Completion",	 /* Bit Position 0  */
->> +	"Configuration Request received CA Completion",	 /* Bit Position 1  */
->> +	"Configuration Request Completion Timeout",	 /* Bit Position 2  */
->> +	NULL,
->> +	NULL,
->> +	NULL,
->> +	NULL,
->> +	NULL,
->> +	"I/O Request received UR Completion",		 /* Bit Position 8  */
->> +	"I/O Request received CA Completion",		 /* Bit Position 9  */
->> +	"I/O Request Completion Timeout",		 /* Bit Position 10 */
->> +	NULL,
->> +	NULL,
->> +	NULL,
->> +	NULL,
->> +	NULL,
->> +	"Memory Request received UR Completion",	 /* Bit Position 16 */
->> +	"Memory Request received CA Completion",	 /* Bit Position 17 */
->> +	"Memory Request Completion Timeout",		 /* Bit Position 18 */
->>  };
->>
->>  static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
->> @@ -79,10 +123,121 @@ static void interrupt_event_handler(struct work_struct *work)
->>  	dpc_wait_link_inactive(pdev);
->>  	if (dpc->rp && dpc_wait_rp_inactive(dpc))
->>  		return;
->> +	if (dpc->rp && dpc->rp_pio_status)
->> +		pci_write_config_dword(pdev,
->> +				      dpc->cap_pos + PCI_EXP_DPC_RP_PIO_STATUS,
->> +				      dpc->rp_pio_status);
->
-> After clearing the status, you need to set dpc->rp_pio_status to 0 to
-> prevent non-rp detected errors from logging stale events.
-
-Thanks for pointing that. I will fix it in patch V3.
-
-Thanks
-Dongdong
->
-> Otherwise, this looks fine to me.
->
->
-> .
->
+Acked-by: Ryder Lee <ryder.lee@mediatek.com>
