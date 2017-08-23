@@ -1,169 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:39946 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbdHCUKg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 3 Aug 2017 16:10:36 -0400
-Date: Thu, 3 Aug 2017 15:10:34 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH] pciehp: Enable hot plug capable detection
-Message-ID: <20170803201034.GW20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
- <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
- <20170803035924.GB13257@localhost.localdomain>
+Return-Path: <SRS0=i78b=7Z=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=i78b=7Z=free.fr=slash.tmp@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Mathias Nyman <mathias.nyman@intel.com>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
+ <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+ <87a82qbyv5.fsf@linux.intel.com> <599D3410.9050504@intel.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <2131ff31-09f8-6955-502d-a3fce031c31e@free.fr>
+Date: Wed, 23 Aug 2017 11:18:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170803035924.GB13257@localhost.localdomain>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <599D3410.9050504@intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Yinghai, Rajat]
+On 23/08/2017 09:51, Mathias Nyman wrote:
 
-On Wed, Aug 02, 2017 at 11:59:24PM -0400, Keith Busch wrote:
-> On Wed, Aug 02, 2017 at 12:32:49PM -0500, Bjorn Helgaas wrote:
-> > Hi Keith,
-> > 
-> > On Wed, Aug 02, 2017 at 01:15:07AM -0400, Keith Busch wrote:
-> > > The PCIe specification ties presence detect change enabling to the hot plug
-> > > capable bit in Slot Capabilities. This capability is not mutally exclusive
-> > > with attention buttons, so enabing detection should not be tied it.
-> > 
-> > Can you clarify this a little?
-> > 
-> >   - Please include the spec section you're referring to.
-> > 
-> >   - I'm not sure what "This capability is not ..." refers to.  There
-> >     is not a "presence detect change enabling" capability.  I agree
-> >     that the "Hot-Plug Capable" bit is independent of the "Attention
-> >     Button Present" bit.
-> > 
-> >   - Slot Control (PCIe r3.1, sec 7.8.10) says PDCE *is permitted* to
-> >     be read-only zero if PCI_EXP_SLTCAP_HPC is zero.  It doesn't say
-> >     PDCE is *required* to be read-only in that case.
-> > 
-> > My initial reaction is that it probably makes sense per the spec to
-> > enable PDCE unconditionally, but I would want to do some archaeology
-> > to figure out why it wasn't that way from the beginning.  There's
-> > probably some reason for it being the way it is, so we have to take
-> > that into account.  Maybe it works around some flaky presence detect
-> > hardware or something.
+> On 23.08.2017 09:07, Felipe Balbi wrote:
+>
+>> Mason writes:
+>>
+>>> Any idea what could have changed between 4.9 and 4.13 ?
+>>
+>> Quite a bit:
+>>
+>> $ git rev-list --no-merges  --count v4.13-rc6 ^v4.9 -- drivers/usb/host/xhci drivers/usb/core/
+>> 58
 > 
-> Thanks for the feedback. I can definitely make the commit message better
-> if that's the only concern.
+> very likely cause is the more aggressive detection of pci removed xhci hosts
 > 
-> The part of the specification that suggests PDCE is tied to the hotplug
-> capable bit is the "Slot Control Register" section in 7.8.10 of PCIe
-> Base spec rev4. Specifically:
+> See commit d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
+>      xhci: Rework how we handle unresponsive or hoptlug removed hosts
 > 
->   "If the Hot-Plug Capable bit in the Slot Capabilities register is 0b,
->    this bit is permitted to be read-only with a value of 0b"
+> It checks if a xhci register reads returns 0xffffffff and assumes xhci
+> died in that case.
 > 
-> So this control doesn't do anything if hotplug capable is not set.
-
-I thought that might be the part of the spec you were referring to,
-but that's not how I read it :)  I read sec 7.8.10 as saying:
-
-  - Presence Detect Changed Enable is a read/write bit,
-  - However, if Hot-Plug Capable (a HwInit/read-only bit) is 0,
-    PDCE may be a read-only 0 (OR it may be read/write)
-
-So I think it's slightly misleading to suggest that PDCE is "tied" to
-HPC.  I think the spec allows PDCE to be read/write and to have some
-effect, even if HPC is 0.
-
-I don't know what it would *mean* to have a slot that said "I don't
-support hot-plug operations, but my Presence Detect State might
-change".  We've seen some creative uses of pciehp, so I wouldn't be
-surprised if somebody dreamed up a way to use it.
-
-> The only reference I find on why the code is currently done this way is
-> from this thread:
+> Could you add something like the below to check which what is killing the host?
+> Or a BUG()/WARN() in xhci_hc_died() to get a backtrace of who called it.
 > 
->   https://marc.info/?l=linux-kernel&m=138688828930718&w=2
-> 
-> It seems the current behavior was done this way as a hunch more than
-> anything emperical.
+> diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
+> index 51cd4b8..ade2ad6 100644
+> --- a/drivers/usb/host/xhci-ring.c
+> +++ b/drivers/usb/host/xhci-ring.c
+> @@ -922,7 +922,8 @@ void xhci_hc_died(struct xhci_hcd *xhci)
+>          if (xhci->xhc_state & XHCI_STATE_DYING)
+>                  return;
+>   
+> -       xhci_err(xhci, "xHCI host controller not responding, assume dead\n");
+> +       xhci_err(xhci, "xHC not responding in %pf, assume controller is dead\n",
+> +                __builtin_return_address(0));
+>          xhci->xhc_state |= XHCI_STATE_DYING;
+>   
+>          xhci_cleanup_command_queue(xhci);
 
-Yeah, this is the sort of thing that niggles at me, but I don't know
-how to resolve it other than to just apply your patch and see if
-anything breaks.  There is this hint that presence detect flaps
-sometimes:
+I'll try some coarse bisection to narrow it down.
 
-  http://www.spinics.net/lists/hotplug/msg05812.html
+$ git describe --contains d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
+v4.12-rc1~97^2~39
 
-But there's nothing there we can really act on, unless Yinghai or
-Rajat can dredge up something more concrete.
+I'll check 4.11 first.
 
-> The problem I'm trying to solve, though, is with a real platform
-> that supports hot-add. The reason it is currently broken with Linux
-> is because this platform advertises "Attention Button Present" when
-> in fact no physical button exists on the platform. Since the kernel
-> doesn't enable presence detect change events when attention button
-> present is set, we don't get hot-add events. We've been working around
-> this by using pciehp_poll_mode=1, but we'd prefer to see this working
-> without kernel parameters.
+I wanted to mention that the XHCI setup on 4.9 and 4.13 print
+slightly different things (at the beginning).
 
-I agree, using pciehp_poll_mode stinks, and I like your patch.
+On 4.9
+[    1.240322] xhci_hcd 0000:01:00.0: xHCI Host Controller
+[    1.245617] xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 1
+[    1.258691] xhci_hcd 0000:01:00.0: hcc params 0x014051cf hci version 0x100 quirks 0x00000010
+[    1.268090] hub 1-0:1.0: USB hub found
+[    1.271905] hub 1-0:1.0: 4 ports detected
+[    1.276372] xhci_hcd 0000:01:00.0: xHCI Host Controller
+[    1.281645] xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 2
+[    1.289173] usb usb2: We don't know the algorithms for LPM for this host, disabling LPM.
+[    1.297775] hub 2-0:1.0: USB hub found
+[    1.301577] hub 2-0:1.0: 4 ports detected
+[    1.306194] usbcore: registered new interface driver usb-storage
 
-Can we mention the platform name here, just in case this oddity
-(advertising Attention Button without having a button) is of interest
-in the future?
+On 4.13
+[    1.222471] pcieport 0000:00:00.0: of_irq_parse_pci: failed with rc=-22
+[    1.229156] xhci_hcd 0000:01:00.0: Resetting
+[    2.268836] xhci_hcd 0000:01:00.0: xHCI Host Controller
+[    2.274126] xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 1
+[    2.287222] xhci_hcd 0000:01:00.0: hcc params 0x014051cf hci version 0x100 quirks 0x00000010
+[    2.296653] hub 1-0:1.0: USB hub found
+[    2.300478] hub 1-0:1.0: 4 ports detected
+[    2.304962] xhci_hcd 0000:01:00.0: xHCI Host Controller
+[    2.310246] xhci_hcd 0000:01:00.0: new USB bus registered, assigned bus number 2
+[    2.317776] usb usb2: We don't know the algorithms for LPM for this host, disabling LPM.
+[    2.326419] hub 2-0:1.0: USB hub found
+[    2.330229] hub 2-0:1.0: 4 ports detected
+[    2.334869] usbcore: registered new interface driver usb-storage
 
-I propose the following changelog (and I'll add the platform name if
-you can supply it):
+FWIW, "of_irq_parse_pci: failed with rc=-22"
+seems to come from:
 
-  PCI: pciehp: Always enable Presence Detect notifications for hotplug slots
+[    1.257411] [<c03d80c8>] (of_irq_parse_pci) from [<c03d8270>] (of_irq_parse_and_map_pci+0x10/0x2c)
+[    1.266420] [<c03d8270>] (of_irq_parse_and_map_pci) from [<c03100a8>] (pci_assign_irq+0x78/0xb0)
+[    1.275254] [<c03100a8>] (pci_assign_irq) from [<c030a1c8>] (pci_device_probe+0x18/0x128)
+[    1.283476] [<c030a1c8>] (pci_device_probe) from [<c0357864>] (driver_probe_device+0x244/0x2c8)
 
-  Previously we only enabled notification of Presence Detect change events if
-  the slot did not advertise an Attention Button.
+The error logging was added by f1aa54840657f
+No, that just turned one specific error into a warning.
+Need to dig a bit more.
 
-  But there are platforms that support hotplug and advertise "Attention
-  Button Present" when in fact there is no physical button.  On these
-  platforms, we enabled Attention Button notifications, but never got any.
-  Presence Detect events occurred, but we left Presence Detect notification
-  disabled, so we never noticed them.
-
-  Always enable Presence Detect notifications for hotplug slots, even if they
-  advertise "Attention Button Present", so we can detect hotplug events.
-
-  Signed-off-by: Keith Busch <keith.busch@intel.com>
-  [bhelgaas: changelog]
-  Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> > > Signed-off-by: Keith Busch <keith.busch@intel.com>
-> > > ---
-> > >  drivers/pci/hotplug/pciehp.h     | 1 +
-> > >  drivers/pci/hotplug/pciehp_hpc.c | 2 +-
-> > >  2 files changed, 2 insertions(+), 1 deletion(-)
-> > > 
-> > > diff --git a/drivers/pci/hotplug/pciehp.h b/drivers/pci/hotplug/pciehp.h
-> > > index 06109d4..610e295 100644
-> > > --- a/drivers/pci/hotplug/pciehp.h
-> > > +++ b/drivers/pci/hotplug/pciehp.h
-> > > @@ -120,6 +120,7 @@ struct controller {
-> > >  #define ATTN_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_AIP)
-> > >  #define PWR_LED(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_PIP)
-> > >  #define HP_SUPR_RM(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPS)
-> > > +#define HP_CAP(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_HPC)
-> > >  #define EMI(ctrl)		((ctrl)->slot_cap & PCI_EXP_SLTCAP_EIP)
-> > >  #define NO_CMD_CMPL(ctrl)	((ctrl)->slot_cap & PCI_EXP_SLTCAP_NCCS)
-> > >  #define PSN(ctrl)		(((ctrl)->slot_cap & PCI_EXP_SLTCAP_PSN) >> 19)
-> > > diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-> > > index 026830a..43a86ed 100644
-> > > --- a/drivers/pci/hotplug/pciehp_hpc.c
-> > > +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> > > @@ -691,7 +691,7 @@ void pcie_enable_notification(struct controller *ctrl)
-> > >  	cmd = PCI_EXP_SLTCTL_DLLSCE;
-> > >  	if (ATTN_BUTTN(ctrl))
-> > >  		cmd |= PCI_EXP_SLTCTL_ABPE;
-> > > -	else
-> > > +	if (HP_CAP(ctrl))
-> > >  		cmd |= PCI_EXP_SLTCTL_PDCE;
-> > >  	if (!pciehp_poll_mode)
-> > >  		cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
-> > > -- 
-> > > 2.5.5
-> > > 
+Regards.
