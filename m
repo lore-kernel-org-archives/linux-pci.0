@@ -1,102 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:25470 "EHLO
-        mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751207AbdHFAEc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 5 Aug 2017 20:04:32 -0400
-From: Paul Burton <paul.burton@imgtec.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-CC: Bharat Kumar Gogada <bharatku@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        <linux-mips@linux-mips.org>, Paul Burton <paul.burton@imgtec.com>
-Subject: [PATCH v6 1/6] PCI: Move enum pci_interrupt_pin to a new common header
-Date: Sat, 5 Aug 2017 17:03:46 -0700
-Message-ID: <20170806000351.17952-2-paul.burton@imgtec.com>
-In-Reply-To: <20170806000351.17952-1-paul.burton@imgtec.com>
-References: <20170806000351.17952-1-paul.burton@imgtec.com>
+Return-Path: <SRS0=SLfc=7Z=linux.intel.com=felipe.balbi@kernel.org>
+Return-Path: <SRS0=SLfc=7Z=linux.intel.com=felipe.balbi@kernel.org>
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mathias Nyman <mathias.nyman@intel.com>
+Subject: Re: Possible regression between 4.9 and 4.13
+In-Reply-To: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+Date: Wed, 23 Aug 2017 09:07:58 +0300
+Message-ID: <87a82qbyv5.fsf@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We currently have a definition of enum pci_interrupt_pin in a header
-specific to PCI endpoints - pci-epf.h. In order to allow for use of this
-enum from PCI host code in a future commit, move its definition to a new
-pci-common.h header which we'll include from both host & endpoint code.
 
-Signed-off-by: Paul Burton <paul.burton@imgtec.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+Hi,
 
----
+Mason <slash.tmp@free.fr> writes:
+> Hello,
+>
+> The driver for my system's PCIe host bridge landed recently
+> (in 4.13) but it was developed on 4.9
+>
+> I tested the PCIe host bridge by plugging a 4-port USB3 adapter
+> into the PCIe slot (system at rest) and plugging an USB3 Flash
+> drive into the USB3 adapter (at run-time).
+>
+> On 4.9, the setup works (almost perfectly, see below).
+> On 4.13, once I unplug the Flash drive, the controller port
+> remains unresponsive.
+>
+>
+> On 4.9, I said *almost* perfectly, because the pcieport driver
+> does report a few non-fatal errors when I unplug:
+>
+> [  193.838504] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+> [  193.878081] usb-storage 2-2:1.0: USB Mass Storage device detected
+> [  193.884547] scsi host0: usb-storage 2-2:1.0
+> [  194.907936] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+> [  194.920296] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+> [  194.928666] sd 0:0:0:0: [sda] Write Protect is off
+> [  194.933755] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+> [  194.946074]  sda: sda1
+> [  194.953608] sd 0:0:0:0: [sda] Attached SCSI removable disk
+>
+> [  208.930260] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+> [  208.938342] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+> [  208.950163] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+> [  208.958577] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+> [  208.965432] pcieport 0000:00:00.0: AER: Device recovery failed
+> [  209.663733] xhci_hcd 0000:01:00.0: Cannot set link state.
+> [  209.669194] usb usb2-port2: cannot disable (err = -32)
+> [  209.674376] usb 2-2: USB disconnect, device number 2
+> [  209.680481] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+> [  209.688689] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+> [  209.700555] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+> [  209.708978] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+> [  209.715845] pcieport 0000:00:00.0: AER: Device recovery failed
+> [  209.721722] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+> [  209.729785] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+> [  209.741602] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+> [  209.750027] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+> [  209.756866] pcieport 0000:00:00.0: AER: Device recovery failed
+>
+> After that, I can still plug the drive into the same port.
+>
+> But on 4.13, I get
+>
+> [   27.330378] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+> [   27.369383] usb-storage 2-2:1.0: USB Mass Storage device detected
+> [   27.375840] scsi host0: usb-storage 2-2:1.0
+> [   28.403035] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+> [   28.413326] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+> [   28.423653] sd 0:0:0:0: [sda] Write Protect is off
+> [   28.429139] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+> [   28.441529]  sda: sda1
+> [   28.449431] sd 0:0:0:0: [sda] Attached SCSI removable disk
+>
+> [   90.592134] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+> [   90.599857] xhci_hcd 0000:01:00.0: HC died; cleaning up
+> [   90.605336] usb 2-2: USB disconnect, device number 2
+> [   90.630414] udevd[955]: inotify_add_watch(6, /dev/sda, 10) failed: No such file or directory
+>
+> Trying to replug into the same port = nothing happens
+> (Linux did say "assume dead")
+>
+> Any idea what could have changed between 4.9 and 4.13 ?
+>
 
-Changes in v6:
-- New patch.
+Quite a bit:
 
- include/linux/pci-common.h | 31 +++++++++++++++++++++++++++++++
- include/linux/pci-epf.h    |  9 +--------
- 2 files changed, 32 insertions(+), 8 deletions(-)
- create mode 100644 include/linux/pci-common.h
+$ git rev-list --no-merges  --count v4.13-rc6 ^v4.9 -- drivers/usb/host/xhci drivers/usb/core/
+58
 
-diff --git a/include/linux/pci-common.h b/include/linux/pci-common.h
-new file mode 100644
-index 000000000000..6a69a2c95ac7
---- /dev/null
-+++ b/include/linux/pci-common.h
-@@ -0,0 +1,31 @@
-+/**
-+ * Common PCI definitions
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ */
-+
-+#ifndef __LINUX_PCI_COMMON_H__
-+#define __LINUX_PCI_COMMON_H__
-+
-+/**
-+ * enum pci_interrupt_pin - PCI INTx interrupt values
-+ * @PCI_INTERRUPT_UNKNOWN: Unknown or unassigned interrupt
-+ * @PCI_INTERRUPT_INTA: PCI INTA pin
-+ * @PCI_INTERRUPT_INTB: PCI INTB pin
-+ * @PCI_INTERRUPT_INTC: PCI INTC pin
-+ * @PCI_INTERRUPT_INTD: PCI INTD pin
-+ *
-+ * Corresponds to values for legacy PCI INTx interrupts, as can be found in the
-+ * PCI_INTERRUPT_PIN register.
-+ */
-+enum pci_interrupt_pin {
-+	PCI_INTERRUPT_UNKNOWN,
-+	PCI_INTERRUPT_INTA,
-+	PCI_INTERRUPT_INTB,
-+	PCI_INTERRUPT_INTC,
-+	PCI_INTERRUPT_INTD,
-+};
-+
-+#endif /* __LINUX_PCI_COMMON_H__ */
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 0d529cb90143..77c92fcb2416 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -14,17 +14,10 @@
- 
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
-+#include <linux/pci-common.h>
- 
- struct pci_epf;
- 
--enum pci_interrupt_pin {
--	PCI_INTERRUPT_UNKNOWN,
--	PCI_INTERRUPT_INTA,
--	PCI_INTERRUPT_INTB,
--	PCI_INTERRUPT_INTC,
--	PCI_INTERRUPT_INTD,
--};
--
- enum pci_barno {
- 	BAR_0,
- 	BAR_1,
+Any chance you can bisect to figure out the offending commit?
+
 -- 
-2.13.4
+balbi
