@@ -1,98 +1,142 @@
-Return-Path: <SRS0=SLfc=7Z=linux.intel.com=felipe.balbi@kernel.org>
-Return-Path: <SRS0=SLfc=7Z=linux.intel.com=felipe.balbi@kernel.org>
-From: Felipe Balbi <felipe.balbi@linux.intel.com>
-To: Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>, linux-usb <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mathias Nyman <mathias.nyman@intel.com>
-Subject: Re: Possible regression between 4.9 and 4.13
-In-Reply-To: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
-References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
-Date: Wed, 23 Aug 2017 09:07:58 +0300
-Message-ID: <87a82qbyv5.fsf@linux.intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 23 Aug 2017 08:51:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Oza Oza <oza.oza@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Scott Branden <sbranden@broadcom.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+        Andy Gospodarek <gospo@broadcom.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        linux-kernel@vger.kernel.org,
+        Oza Pawandeep <oza.pawandeep@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Timur Tabi <timur@codeaurora.org>,
+        Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from
+ EP
+Message-ID: <20170823135140.GA8498@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
+ <1503331124-25029-2-git-send-email-oza.oza@broadcom.com>
+ <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Aug 23, 2017 at 03:57:02PM +0530, Oza Oza wrote:
+> On Wed, Aug 23, 2017 at 2:03 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > [+cc Sinan, Timur, Alex]
+> >
+> > Hi Oza,
+> >
+> > On Mon, Aug 21, 2017 at 09:28:43PM +0530, Oza Pawandeep wrote:
+> >> PCIe spec r3.1, sec 2.3.2
+> >> If CRS software visibility is not enabled, the RC must reissue the
+> >> config request as a new request.
+> >>
+> >> - If CRS software visibility is enabled,
+> >> - for a config read of Vendor ID, the RC must return 0x0001 data
+> >> - for all other config reads/writes, the RC must reissue the
+> >>   request
+> >
+> > You mentioned early on that this fixes an issue with NVMe after a
+> > reset.  Is that reset an FLR?  I'm wondering if this overlaps with the
+> > work Sinan is doing:
+> >
+> >   http://lkml.kernel.org/r/20170818212310.15145.21732.stgit@bhelgaas-glaptop.roam.corp.google.com
+> >
+> > With the current code in the tree, pci_flr_wait() probably waits only
+> > 100ms on your system.  It currently reads PCI_COMMAND and probably
+> > sees 0xffff0001 because the NVMe device returns a CRS completion
+> > (which this iproc RC incorrectly turns into 0xffff0001 data), so we
+> > exit the loop after a single msleep(100).
+> >
+> > Sinan is extending pci_flr_wait() to read the Vendor ID and look for
+> > the CRS SV indication.  If this is where you're seeing the NVMe issue,
+> > I bet we can fix this by simply changing iproc_pcie_config_read() to
+> > return the correct data when it sees a CRS completion.  Then the
+> > retry loop in pci_flr_wait() will work as intended.
+> >
+> 
+> The issue with User Space poll mode drivers resulting into CRS.
+> 
+> 
+> root@bcm958742k:~# /usr/share/spdk/examples/nvme/perf -r 'trtype:PCIe
+> traddr:0000:01:00.0' -q 128 -s 4096 -w read -d 2048 -t 30 -c 0x1
+> Starting DPDK 16.11.1 initialization...
+> [ DPDK EAL parameters: perf -c 1 -m 2048 --file-prefix=spdk_pid2202 ]
+> EAL: Detected 8 lcore(s)
+> EAL: Probing VFIO support...
+> EAL: VFIO support initialized
+> EAL: cannot open /proc/self/numa_maps, consider that all memory is in
+> socket_id 0
+> Initializing NVMe Controllers
+> EAL: PCI device 0000:01:00.0 on NUMA socket 0
+> EAL:   probe driver: 8086:953 spdk_nvme
+> EAL:   using IOMMU type 1 (Type 1)
+> [   45.811353] vfio_ecap_init: 0000:01:00.0 hiding ecap 0x19@0x2a0
+> Attaching to NVMe Controller at 0000:01:00.0 [8086:0953]
+> [   46.486601] vfio_bar_restore: 0000:01:00.0 reset recovery - restoring bars
+> nvme_ctrlr.c:1237:nvme_ctrlr_process_init: ***ERROR*** Initialization
+> timed out in state 3
+> nvme_ctrlr.c: 414:nvme_ctrlr_shutdown: ***ERROR*** did not shutdown
+> within 5 seconds
+> EAL: Hotplug doesn't support vfio yet
+> spdk_nvme_probe() failed for transport address '0000:01:00.0'
+> /usr/share/spdk/examples/nvme/perf: errors occured
+> 
+> ok, so this is in the context of
+> [   52.500579] [<ffff000008088498>] dump_backtrace+0x0/0x208
+> [   52.506147] [<ffff0000080886b4>] show_stack+0x14/0x20
+> [   52.511357] [<ffff0000083ace34>] dump_stack+0x8c/0xb0
+> [   52.516567] [<ffff00000840a550>] pci_flr_wait+0x18/0xc8
+> [   52.521955] [<ffff00000840bf9c>] pcie_flr+0x34/0x68
+> [   52.526986] [<ffff00000840e3d0>] __pci_dev_reset+0x100/0x2c0
+> [   52.532823] [<ffff00000840e60c>] pci_try_reset_function+0x64/0x80
+> [   52.539108] [<ffff00000856e4b8>] vfio_pci_ioctl+0x398/0xb78
+> [   52.544857] [<ffff000008568378>] vfio_device_fops_unl_ioctl+0x20/0x30
+> [   52.551501] [<ffff0000081d4e24>] do_vfs_ioctl+0xa4/0x738
+> [   52.556980] [<ffff0000081d5544>] SyS_ioctl+0x8c/0xa0
+> [   52.562100] [<ffff000008082f8c>] __sys_trace_return+0x0/0x4
+> 
+> 
+> So, I have two things to do here.
+> 
+> 1) remove retry funciton and just do following.
+>    data = readl(cfg_data_p);
+>    if (data == CFG_RETRY_STATUS)    /* 0xffff0001 */
+>      data = 0xffffffff;
+> 
+> 2) refactor the code with separate patch.
+> 
+> but for that Sinan's patch is required.
+> then with both the patches I think, things will work out correctly for
+> iproc SOC.
 
-Hi,
+It looks like you are using the pci_flr_wait() path as I suspected.
 
-Mason <slash.tmp@free.fr> writes:
-> Hello,
->
-> The driver for my system's PCIe host bridge landed recently
-> (in 4.13) but it was developed on 4.9
->
-> I tested the PCIe host bridge by plugging a 4-port USB3 adapter
-> into the PCIe slot (system at rest) and plugging an USB3 Flash
-> drive into the USB3 adapter (at run-time).
->
-> On 4.9, the setup works (almost perfectly, see below).
-> On 4.13, once I unplug the Flash drive, the controller port
-> remains unresponsive.
->
->
-> On 4.9, I said *almost* perfectly, because the pcieport driver
-> does report a few non-fatal errors when I unplug:
->
-> [  193.838504] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
-> [  193.878081] usb-storage 2-2:1.0: USB Mass Storage device detected
-> [  193.884547] scsi host0: usb-storage 2-2:1.0
-> [  194.907936] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
-> [  194.920296] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
-> [  194.928666] sd 0:0:0:0: [sda] Write Protect is off
-> [  194.933755] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-> [  194.946074]  sda: sda1
-> [  194.953608] sd 0:0:0:0: [sda] Attached SCSI removable disk
->
-> [  208.930260] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
-> [  208.938342] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
-> [  208.950163] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
-> [  208.958577] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
-> [  208.965432] pcieport 0000:00:00.0: AER: Device recovery failed
-> [  209.663733] xhci_hcd 0000:01:00.0: Cannot set link state.
-> [  209.669194] usb usb2-port2: cannot disable (err = -32)
-> [  209.674376] usb 2-2: USB disconnect, device number 2
-> [  209.680481] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
-> [  209.688689] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
-> [  209.700555] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
-> [  209.708978] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
-> [  209.715845] pcieport 0000:00:00.0: AER: Device recovery failed
-> [  209.721722] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
-> [  209.729785] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
-> [  209.741602] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
-> [  209.750027] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
-> [  209.756866] pcieport 0000:00:00.0: AER: Device recovery failed
->
-> After that, I can still plug the drive into the same port.
->
-> But on 4.13, I get
->
-> [   27.330378] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
-> [   27.369383] usb-storage 2-2:1.0: USB Mass Storage device detected
-> [   27.375840] scsi host0: usb-storage 2-2:1.0
-> [   28.403035] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
-> [   28.413326] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
-> [   28.423653] sd 0:0:0:0: [sda] Write Protect is off
-> [   28.429139] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
-> [   28.441529]  sda: sda1
-> [   28.449431] sd 0:0:0:0: [sda] Attached SCSI removable disk
->
-> [   90.592134] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
-> [   90.599857] xhci_hcd 0000:01:00.0: HC died; cleaning up
-> [   90.605336] usb 2-2: USB disconnect, device number 2
-> [   90.630414] udevd[955]: inotify_add_watch(6, /dev/sda, 10) failed: No such file or directory
->
-> Trying to replug into the same port = nothing happens
-> (Linux did say "assume dead")
->
-> Any idea what could have changed between 4.9 and 4.13 ?
->
+If you do the check as you mentioned in 1), this should work even
+without Sinan's patch.
 
-Quite a bit:
+It's possible you'd have to increase the pci_flr_wait() timeout
+(currently 1sec total).  I think we'll end up doing that as part of
+Sinan's work, so we use the same timeout whether or not the RC
+supports CRS SV.
 
-$ git rev-list --no-merges  --count v4.13-rc6 ^v4.9 -- drivers/usb/host/xhci drivers/usb/core/
-58
+> 
+> Let me know how this sounds and if you agree with above two points, I
+> will be posting final set of patches.
+> 
+> let me know if you want me to change anything in the commit description.
+> in my opinion I should remove config write description which is irrelevant here.
 
-Any chance you can bisect to figure out the offending commit?
-
--- 
-balbi
+I agree.  I don't think you need to say anything special about write,
+since I think an RC is probably allowed to drop (with no retries) a
+config write that receives a CRS completion.  In this case, I expect
+the RC would log an error, so you should see something in PCI_STATUS.
