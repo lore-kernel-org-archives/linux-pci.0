@@ -1,16 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: RE: [PATCH] PCI: layerscape: Add support for ls2088a and ls1088a
-Date: Fri, 4 Aug 2017 03:45:22 +0000
-Message-ID: <AM5PR0402MB27710ADE6D6B36445B1EA79084B60@AM5PR0402MB2771.eurprd04.prod.outlook.com>
-References: <1499333984-17668-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <20170802212942.GA7667@bhelgaas-glaptop.roam.corp.google.com>
- <AM5PR0402MB2771BBF476E6A3DEFADE43F484B10@AM5PR0402MB2771.eurprd04.prod.outlook.com>
- <20170803181915.GU20308@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170803181915.GU20308@bhelgaas-glaptop.roam.corp.google.com>
+Date: Wed, 23 Aug 2017 16:38:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V12 4/5] PCI: Handle CRS ("device not ready") returned by
+ device after FLR
+Message-ID: <20170823213838.GG8498@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+ <1503464171-6471-4-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
+In-Reply-To: <1503464171-6471-4-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,83 +17,114 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- "robh+dt@kernel.org" <robh+dt@kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="utf-8"
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, alex.williamson@redhat.com,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4sDQoNClRoYW5rcyBhIGxvdCBmb3IgeW91ciBjb21tZW50cyENCg0KPiAtLS0tLU9y
-aWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fh
-c0BrZXJuZWwub3JnXQ0KPiBTZW50OiAyMDE35bm0OOaciDTml6UgMjoxOQ0KPiBUbzogWi5xLiBI
-b3UgPHpoaXFpYW5nLmhvdUBueHAuY29tPg0KPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9y
-ZzsgTWluZ2h1YW4gTGlhbg0KPiA8bWluZ2h1YW4uTGlhbkBmcmVlc2NhbGUuY29tPjsgcm9iaCtk
-dEBrZXJuZWwub3JnOw0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBNaW5na2FpIEh1IDxtaW5na2Fp
-Lmh1QGZyZWVzY2FsZS5jb20+OyBSb3kgWmFuZw0KPiA8dGllLWZlaS56YW5nQGZyZWVzY2FsZS5j
-b20+OyBsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUmU6
-IFtQQVRDSF0gUENJOiBsYXllcnNjYXBlOiBBZGQgc3VwcG9ydCBmb3IgbHMyMDg4YSBhbmQgbHMx
-MDg4YQ0KPiANCj4gT24gVGh1LCBBdWcgMDMsIDIwMTcgYXQgMDM6MzU6NDZBTSArMDAwMCwgWi5x
-LiBIb3Ugd3JvdGU6DQo+ID4gSGkgQmpvcm4sDQo+ID4NCj4gPiBUaGFua3MgYSBsb3QgZm9yIHlv
-dXIgY29tbWVudHMhDQo+ID4NCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4g
-PiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVsZ2Fhc0BrZXJuZWwub3JnXQ0KPiA+ID4g
-U2VudDogMjAxN+W5tDjmnIgz5pelIDU6MzANCj4gPiA+IFRvOiBaLnEuIEhvdSA8emhpcWlhbmcu
-aG91QG54cC5jb20+DQo+ID4gPiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgt
-YXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnOw0KPiA+ID4gYmhlbGdhYXNAZ29vZ2xlLmNv
-bTsgcm9iaCtkdEBrZXJuZWwub3JnOyBNaW5naHVhbiBMaWFuDQo+ID4gPiA8bWluZ2h1YW4uTGlh
-bkBmcmVlc2NhbGUuY29tPjsgTWluZ2thaSBIdQ0KPiA+ID4gPG1pbmdrYWkuaHVAZnJlZXNjYWxl
-LmNvbT47IFJveSBaYW5nIDx0aWUtZmVpLnphbmdAZnJlZXNjYWxlLmNvbT4NCj4gPiA+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0hdIFBDSTogbGF5ZXJzY2FwZTogQWRkIHN1cHBvcnQgZm9yIGxzMjA4OGEg
-YW5kDQo+ID4gPiBsczEwODhhDQo+ID4gPg0KPiA+ID4gWytjYyBNaW5naHVhbiwgTWluZ2thaSwg
-Um95XQ0KPiA+ID4NCj4gPiA+IE9uIFRodSwgSnVsIDA2LCAyMDE3IGF0IDA1OjM5OjQ0UE0gKzA4
-MDAsIFpoaXFpYW5nIEhvdSB3cm90ZToNCj4gPiA+ID4gRnJvbTogSG91IFpoaXFpYW5nIDxaaGlx
-aWFuZy5Ib3VAbnhwLmNvbT4NCj4gPiA+ID4NCj4gPiA+ID4gVGhlIGxzMTA4OGEgYW5kIGxzMjA4
-OGEgaGFzIHRoZSBzYW1lIFBDSWUgY29udHJvbGxlciwgc28gdGhlDQo+ID4gPiA+IGxzMTA4OGEg
-d2lsbCByZXVzZSB0aGUgbHMyMDg4YSdzIHBjaWUgY29tcGF0aWJsZS4NCj4gPiA+ID4NCj4gPiA+
-ID4gU2lnbmVkLW9mZi1ieTogSG91IFpoaXFpYW5nIDxaaGlxaWFuZy5Ib3VAbnhwLmNvbT4NCj4g
-PiA+ID4gLS0tDQo+ID4gPiA+ICBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNp
-L2xheWVyc2NhcGUtcGNpLnR4dCB8IDEgKw0KPiA+ID4gPiAgZHJpdmVycy9wY2kvZHdjL3BjaS1s
-YXllcnNjYXBlLmMgICAgICAgICAgICAgICAgICAgICAgICAgfCA5DQo+ID4gPiArKysrKysrKysN
-Cj4gPiA+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMTAgaW5zZXJ0aW9ucygrKQ0KPiA+ID4gPg0KPiA+
-ID4gPiBkaWZmIC0tZ2l0DQo+ID4gPiA+IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRp
-bmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQNCj4gPiA+ID4gYi9Eb2N1bWVudGF0aW9uL2Rldmlj
-ZXRyZWUvYmluZGluZ3MvcGNpL2xheWVyc2NhcGUtcGNpLnR4dA0KPiA+ID4gPiBpbmRleCBlZTFj
-NzJkNS4uY2I3MzVlMSAxMDA2NDQNCj4gPiA+ID4gLS0tIGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0
-cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQNCj4gPiA+ID4gKysrIGIvRG9jdW1l
-bnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BjaS9sYXllcnNjYXBlLXBjaS50eHQNCj4gPiA+
-ID4gQEAgLTE1LDYgKzE1LDcgQEAgUmVxdWlyZWQgcHJvcGVydGllczoNCj4gPiA+ID4gIC0gY29t
-cGF0aWJsZTogc2hvdWxkIGNvbnRhaW4gdGhlIHBsYXRmb3JtIGlkZW50aWZpZXIgc3VjaCBhczoN
-Cj4gPiA+ID4gICAgICAgICAgImZzbCxsczEwMjFhLXBjaWUiLCAic25wcyxkdy1wY2llIg0KPiA+
-ID4gPiAgICAgICAgICAiZnNsLGxzMjA4MGEtcGNpZSIsICJmc2wsbHMyMDg1YS1wY2llIiwgInNu
-cHMsZHctcGNpZSINCj4gPiA+ID4gKyAgICAgICAgImZzbCxsczIwODhhLXBjaWUiLCAiZnNsLGxz
-MTA4OGEtcGNpZSINCj4gPiA+DQo+ID4gPiBZb3UgYWRkICJmc2wsbHMxMDg4YS1wY2llIiBoZXJl
-LCBidXQgbm90IGluIHRoZSBsc19wY2llX29mX21hdGNoW10NCj4gPiA+IHRhYmxlIGluIHRoZSBk
-cml2ZXIsIHNvIEkgZG9uJ3QgdGhpbmsgdGhpcyB3aWxsIGFjdHVhbGx5IG1ha2UgdGhlDQo+ID4g
-PiBkcml2ZXIgY2xhaW0gbHMxMDg4YSBkZXZpY2VzLCB3aWxsIGl0Pw0KPiA+DQo+ID4gSSBtZWFu
-IHRoZSBsczEwODhhIHBjaWUgRFQgbm9kZXMgd2lsbCB1c2UgdGhlICJmc2wsbHMyMDg4YS1wY2ll
-Ig0KPiA+IHRvbywgc28gSSBkaWRuJ3QgYWRkIGFuIGVudHJ5IGZvciBsczEwODhhIHBjaWUgdG8g
-bHNfcGNpZV9vZl9tYXRjaFtdLg0KPiA+IElzIGl0IHJlYXNvbmFibGU/IE9yIGl0J3MgYmV0dGVy
-IHRvIGFkZCAiZnNsLGxzMTA4OGEtcGNpZSIgdG8NCj4gPiBsc19wY2llX29mX21hdGNoW10sIHRo
-ZW4gbHMxMDg4YSBwY2llIERUIG5vZGVzIHVzZSB0aGUgY29tcGF0aWJsZQ0KPiA+IHN0cmluZyAi
-ZnNsLGxzMTA4OGEtcGNpZSI/DQo+IA0KPiBZb3VyIGJpbmRpbmcgc2F5cyAiZnNsLGxzMTA4OGEt
-cGNpZSIgaXMgYSB2YWxpZCB2YWx1ZSBmb3IgImNvbXBhdGlibGUiLiAgQnV0IGlmIGENCj4gRFQg
-YWN0dWFsbHkgKnVzZXMqIHRoYXQsIEkgZG9uJ3QgdGhpbmsgdGhlIGRyaXZlciB3aWxsIGNsYWlt
-IGl0Lg0KPiANCj4gSWYgeW91IHdhbnQgdG8gZGVzY3JpYmUgbHMxMDg4YSBkZXZpY2VzIHdpdGgg
-ImZzbCxsczIwODhhLXBjaWUiLCBJIHRoaW5rIHlvdQ0KPiBjb3VsZCBkbyB0aGF0LCBidXQgdGhl
-biB3aHkgd291bGQgeW91IGV2ZW4gbWVudGlvbiAiZnNsLGxzMTA4OGEtcGNpZSIgaW4gdGhlDQo+
-IGJpbmRpbmc/DQo+IA0KPiBQZXJzb25hbGx5LCBpZiBsczEwODhhIGFuZCBsczIwODhhIGFyZSBk
-aWZmZXJlbnQgaW4gYW55IHdheSwgSSB3b3VsZCB0aGluayB5b3UNCj4gc2hvdWxkIHVzZSBkaWZm
-ZXJlbnQgaWRlbnRpZmllcnMgZm9yIHRoZW0gKGFuZCBhZGQgdGhlbSBib3RoIHRvIHRoZSBiaW5k
-aW5nIGFuZA0KPiB0byB0aGUgZHJpdmVyKS4gIFRoYXQgd2F5IGlmIGEgZnV0dXJlIGZlYXR1cmUg
-ZGVwZW5kcyBvbiB0aGUgZGlmZmVyZW5jZSwgeW91J2xsDQo+IGhhdmUgYSB3YXkgdG8gdGVzdCBm
-b3IgaXQuDQoNCkdvdCBpdCwgd2lsbCBhZGQgYm90aCBvZiB0aGVtIHRvIGRyaXZlciBhbmQgdGhl
-IGJpbmdkaW5nIGRvYy4NClRoYW5rcyBmb3IgdGhlIHN1Z2dlc3Rpb24hDQoNCj4gQnV0IEknbSBu
-b3QgYSBEVCBndXkuICBNYXliZSBSb2IgaGFzIGEgYmV0dGVyIHJlY29tbWVuZGF0aW9uPw0KPiAN
-Cg0KVGhhbmtzLA0KWmhpcWlhbmcNCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJu
-ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFu
-L2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Wed, Aug 23, 2017 at 12:56:10AM -0400, Sinan Kaya wrote:
+> Sporadic reset issues have been observed with Intel 750 NVMe drive while
+> assigning the physical function to the guest machine.  The sequence of
+> events observed is as follows:
+> 
+>   - perform a Function Level Reset (FLR)
+>   - sleep up to 1000ms total
+>   - read ~0 from PCI_COMMAND
+>   - warn that the device didn't return from FLR
+>   - touch the device before it's ready
+>   - device drops config writes when we restore register settings
+>   - incomplete register restore leaves device in inconsistent state
+>   - device probe fails because device is in inconsistent state
+> 
+> After reset, an endpoint may respond to config requests with Configuration
+> Request Retry Status (CRS) to indicate that it is not ready to accept new
+> requests.  See PCIe r3.1, sec 2.3.1 and 6.6.2.
+> 
+> After an FLR, read the Vendor ID and use pci_bus_wait_crs() to wait for a
+> value that indicates the device is ready only if CRS visibility is
+> supported and device is responding with 0x0001.
+> 
+> If pci_bus_wait_crs() fails, i.e., the device has responded with CRS status
+> for at least the timeout interval, fall back to the old behavior of reading
+> the Command register until it is not ~0.
+> 
+> Also increase the timeout value from 1 second to 60 seconds to have
+> consistent behavior for root ports that do and do not support CRS
+> visibility.
+
+So, after all this work, I bet you a nickel that merely increasing the
+timeout from 1 sec to 60 sec (while keeping just the original PCI_COMMAND
+loop) would be sufficient to fix this problem.
+
+Reading PCI_COMMAND will cause CRS completions just like reading
+PCI_VENDOR_ID will.  The only difference is that there's no CRS SV
+handling, and the Root Port will synthesize ~0 data when it stops retrying
+the read.
+
+If we increase the timeout, is there still value in adding the
+pci_bus_wait_crs() stuff?  I'm not sure there is.
+
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pci.c | 20 ++++++++++++++++++--
+>  1 file changed, 18 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index af0cc34..5980ab3 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3819,19 +3819,35 @@ int pci_wait_for_pending_transaction(struct pci_dev *dev)
+>   */
+>  static void pci_flr_wait(struct pci_dev *dev)
+>  {
+> +	int timeout_ms = 60000;
+>  	int i = 0;
+>  	u32 id;
+>  
+> +	/*
+> +	 * Per PCIe r3.1, sec 6.6.2, the device should finish FLR within
+> +	 * 100ms, but even after that, it may respond to config requests
+> +	 * with CRS status if it requires more time.
+> +	 */
+> +	msleep(100);
+> +
+> +	if (pci_bus_read_config_dword(dev->bus, dev->devfn, PCI_VENDOR_ID, &id))
+> +		return;
+> +
+> +	if (pci_bus_crs_visibility_pending(id) &&
+> +		pci_bus_wait_crs(dev->bus, dev->devfn, id, timeout_ms))
+> +		return;
+> +
+> +	timeout_ms -= 100;
+>  	do {
+>  		msleep(100);
+>  		pci_read_config_dword(dev, PCI_COMMAND, &id);
+> -	} while (i++ < 10 && id == ~0);
+> +	} while (i++ < (timeout_ms / 100) && id == ~0);
+>  
+>  	if (id == ~0)
+>  		dev_warn(&dev->dev, "Failed to return from FLR\n");
+>  	else if (i > 1)
+>  		dev_info(&dev->dev, "Required additional %dms to return from FLR\n",
+> -			 (i - 1) * 100);
+> +			 i * 100);
+>  }
+>  
+>  /**
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
