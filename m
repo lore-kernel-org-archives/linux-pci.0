@@ -1,313 +1,379 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:41824 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751060AbdHSCz5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 18 Aug 2017 22:55:57 -0400
-Date: Fri, 18 Aug 2017 21:55:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Srinath Mannam <srinath.mannam@broadcom.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>
-Subject: Re: [RFC PATCH v3] pci: Concurrency issue during pci enable bridge
-Message-ID: <20170819025551.GP28977@bhelgaas-glaptop.roam.corp.google.com>
-References: <1501858648-22228-1-git-send-email-srinath.mannam@broadcom.com>
- <20170816134354.GV32525@bhelgaas-glaptop.roam.corp.google.com>
- <CABe79T4ip3m4U_i4k-8hBcONONLXyy83v-BeWk7Rq24CD9Z-9w@mail.gmail.com>
+Return-Path: <SRS0=Fnf9=7Z=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=Fnf9=7Z=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CABe79T4ip3m4U_i4k-8hBcONONLXyy83v-BeWk7Rq24CD9Z-9w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
+ <1503331124-25029-2-git-send-email-oza.oza@broadcom.com> <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Wed, 23 Aug 2017 15:57:02 +0530
+Message-ID: <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
+Subject: Re: [PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from EP
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
+	Sinan Kaya <okaya@codeaurora.org>, Timur Tabi <timur@codeaurora.org>,
+	Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Aug 16, 2017 at 10:33:12PM +0530, Srinath Mannam wrote:
-> Hi Bjorn,
-> 
-> Thank you for the feedback.
-> 
-> My comments are in lined.
-> 
-> On Wed, Aug 16, 2017 at 7:13 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Fri, Aug 04, 2017 at 08:27:28PM +0530, Srinath Mannam wrote:
-> >> Concurrency issue is observed during pci enable bridge called
-> >> for multiple pci devices initialization in SMP system.
-> >>
-> >> Setup details:
-> >>  - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
-> >>  - Two EPs are connected to PCIe RC through bridge as shown
-> >>    in the below figure.
-> >>
-> >>                    [RC]
-> >>                     |
-> >>                  [BRIDGE]
-> >>                     |
-> >>                -----------
-> >>               |           |
-> >>              [EP]        [EP]
-> >>
-> >> Issue description:
-> >> After PCIe enumeration completed EP driver probe function called
-> >> for both the devices from two CPUS simultaneously.
-> >> From EP probe function, pci_enable_device_mem called for both the EPs.
-> >> This function called pci_enable_bridge enable for all the bridges
-> >> recursively in the path of EP to RC.
-> >>
-> >> Inside pci_enable_bridge function, at two places concurrency issue is
-> >> observed.
-> >>
-> >> Place 1:
-> >>   CPU 0:
-> >>     1. Done Atomic increment dev->enable_cnt
-> >>        in pci_enable_device_flags
-> >>     2. Inside pci_enable_resources
-> >>     3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
-> >>     4. Ready to set PCI_COMMAND_MEMORY (0x2) in
-> >>        pci_write_config_word(dev, PCI_COMMAND, cmd)
-> >>   CPU 1:
-> >>     1. Check pci_is_enabled in function pci_enable_bridge
-> >>        and it is true
-> >>     2. Check (!dev->is_busmaster) also true
-> >>     3. Gone into pci_set_master
-> >>     4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
-> >>     5. Ready to set PCI_COMMAND_MASTER (0x4) in
-> >>        pci_write_config_word(dev, PCI_COMMAND, cmd)
-> >>
-> >> By the time of last point for both the CPUs are read value 0 and
-> >> ready to write 2 and 4.
-> >> After last point final value in PCI_COMMAND register is 4 instead of 6.
-> >>
-> >> Place 2:
-> >>   CPU 0:
-> >>     1. Done Atomic increment dev->enable_cnt in
-> >>        pci_enable_device_flags
-> >>
-> >> Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-> >> ---
-> >>  drivers/pci/pci.c | 8 ++++++--
-> >>  1 file changed, 6 insertions(+), 2 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> >> index af0cc34..12721df 100644
-> >> --- a/drivers/pci/pci.c
-> >> +++ b/drivers/pci/pci.c
-> >> @@ -52,6 +52,7 @@ static void pci_pme_list_scan(struct work_struct *work);
-> >>  static LIST_HEAD(pci_pme_list);
-> >>  static DEFINE_MUTEX(pci_pme_list_mutex);
-> >>  static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
-> >> +static DEFINE_MUTEX(pci_bridge_mutex);
-> >>
-> >>  struct pci_pme_device {
-> >>       struct list_head list;
-> >> @@ -1348,10 +1349,11 @@ static void pci_enable_bridge(struct pci_dev *dev)
-> >>       if (bridge)
-> >>               pci_enable_bridge(bridge);
-> >>
-> >> +     mutex_lock(&pci_bridge_mutex);
-> >>       if (pci_is_enabled(dev)) {
-> >>               if (!dev->is_busmaster)
-> >>                       pci_set_master(dev);
-> >> -             return;
-> >> +             goto end;
-> >>       }
-> >>
-> >>       retval = pci_enable_device(dev);
-> >> @@ -1359,6 +1361,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
-> >>               dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
-> >>                       retval);
-> >>       pci_set_master(dev);
-> >> +end:
-> >> +     mutex_unlock(&pci_bridge_mutex);
-> >
-> > I think this will deadlock because we're holding pci_bridge_mutex
-> > while we call pci_enable_device(), which may recursively call
-> > pci_enable_bridge(), which would try to acquire pci_bridge_mutex
-> > again.  My original suggestion of a mutex in the host bridge would
-> > have the same problem.
-> 
-> This extra check "if (bridge && !pci_is_enabled(bridge))" will resolve
-> the deadlock in the present patch.
+On Wed, Aug 23, 2017 at 2:03 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> [+cc Sinan, Timur, Alex]
+>
+> Hi Oza,
+>
+> On Mon, Aug 21, 2017 at 09:28:43PM +0530, Oza Pawandeep wrote:
+>> PCIe spec r3.1, sec 2.3.2
+>> If CRS software visibility is not enabled, the RC must reissue the
+>> config request as a new request.
+>>
+>> - If CRS software visibility is enabled,
+>> - for a config read of Vendor ID, the RC must return 0x0001 data
+>> - for all other config reads/writes, the RC must reissue the
+>>   request
+>
+> You mentioned early on that this fixes an issue with NVMe after a
+> reset.  Is that reset an FLR?  I'm wondering if this overlaps with the
+> work Sinan is doing:
+>
+>   http://lkml.kernel.org/r/20170818212310.15145.21732.stgit@bhelgaas-glap=
+top.roam.corp.google.com
+>
+> With the current code in the tree, pci_flr_wait() probably waits only
+> 100ms on your system.  It currently reads PCI_COMMAND and probably
+> sees 0xffff0001 because the NVMe device returns a CRS completion
+> (which this iproc RC incorrectly turns into 0xffff0001 data), so we
+> exit the loop after a single msleep(100).
+>
+> Sinan is extending pci_flr_wait() to read the Vendor ID and look for
+> the CRS SV indication.  If this is where you're seeing the NVMe issue,
+> I bet we can fix this by simply changing iproc_pcie_config_read() to
+> return the correct data when it sees a CRS completion.  Then the
+> retry loop in pci_flr_wait() will work as intended.
+>
 
-Oh, I see.  In pci_enable_bridge(X), the recursive call to enable
-upstream bridges happens *before* acquiring pci_bridge_mutex, so when
-we call pci_enable_device(X) while holding the mutex, any upstream
-bridges will have been already enabled.
-
-We recurse all the way to the top of the hierarchy, acquire the mutex,
-enable the bridge, release the mutex, then unwind and repeat for each
-bridge on the way down to the endpoint.
-
-> > We talked about using device_lock() earlier.  You found some problems
-> > with that, and I'd like to understand them better.  You said:
-> >
-> >> But the pci_enable_bridge is called in the context of the driver
-> >> probe function, we will have nexted lock problem.
-> >
-> > The driver core does hold device_lock() while calling the driver probe
-> > function, in this path:
-> >
-> >   device_initial_probe
-> >     __device_attach
-> >       device_lock(dev)                # <-- lock
-> >       __device_attach_driver
-> >         ...
-> >           pci_device_probe
-> >             ...
-> >               ->probe                 # driver probe function
-> >       device_unlock(dev)              # <-- unlock
-> >
-> > I didn't see your patch using device_lock(), but what I had in mind
-> > was something like the patch below, where pci_enable_bridge() acquires
-> > the device_lock() of the bridge.
-> >
-> > For the sake of argument, assume a hierarchy:
-> >
-> >   bridge A -> bridge B -> endpoint C
-> >
-> > Here's what I think will happen:
-> >
-> >   device_lock(C)                         # driver core
-> >     ...
-> >       ->probe(C)                         # driver probe function
-> >         pci_enable_device_flags(C)
-> >           pci_enable_bridge(B)           # enable C's upstream bridge
-> >             device_lock(B)
-> >             pci_enable_bridge(A)         # enable B's upstream bridge
-> >               device_lock(A)             # A has no upstream bridge
-> >               pci_enable_device(A)
-> >                 do_pci_enable_device(A)  # update A PCI_COMMAND
-> >               pci_set_master(A)          # update A PCI_COMMAND
-> >               device_unlock(A)
-> >             pci_enable_device(B)         # update B PCI_COMMAND
-> >             pci_set_master(B)            # update B PCI_COMMAND
-> >             device_unlock(B)
-> >           do_pci_enable_device(C)        # update C PCI_COMMAND
-> >   device_unlock(C)
-> >
-> > I don't see a nested lock problem here.  What am I missing?
-> From the probe call device_lock will taken to that endpoint and also
-> for the bus. In this order
-> 
-> pci register driver(C)              #(driver_register())
-> device_lock(B);                       # lock for parent (__driver_attach())
-> device_lock(C)                       # lock for endpoint (__driver_attach())
-> driver probe(C)
-> pci_enable_bridge()
-> device_lock(B);  # here we see the deadlock.because of parent device lock
-
-Oh, it's the "needed for USB" thing in __driver_attach();
-is that right?
-
-        if (dev->parent)        /* Needed for USB */
-                device_lock(dev->parent);
-        device_lock(dev);
-
-Looks like that came from bf74ad5bc417 ("[PATCH] Hold the device's
-parent's lock during probe and remove"), and it's probably not
-practical to change it, even if it's not strictly needed for PCI.
-
-So I think your patch is correct and I applied it to pci/enumeration
-for v4.14.  Thanks for your patience.
-
-I didn't quite understand the "Place 2" concurrency issue in your
-changelog.  I *think* I understand "Place 1", and I updated the
-changelog with an ordering that I think illustrates the problem and
-added a comment to that effect in the code.
+The issue with User Space poll mode drivers resulting into CRS.
 
 
-commit 40f11adc7cd9281227f0a6a627d966dd0a5f0cd9
-Author: Srinath Mannam <srinath.mannam@broadcom.com>
-Date:   Fri Aug 18 21:50:48 2017 -0500
+root@bcm958742k:~# /usr/share/spdk/examples/nvme/perf -r 'trtype:PCIe
+traddr:0000:01:00.0' -q 128 -s 4096 -w read -d 2048 -t 30 -c 0x1
+Starting DPDK 16.11.1 initialization...
+[ DPDK EAL parameters: perf -c 1 -m 2048 --file-prefix=3Dspdk_pid2202 ]
+EAL: Detected 8 lcore(s)
+EAL: Probing VFIO support...
+EAL: VFIO support initialized
+EAL: cannot open /proc/self/numa_maps, consider that all memory is in
+socket_id 0
+Initializing NVMe Controllers
+EAL: PCI device 0000:01:00.0 on NUMA socket 0
+EAL:   probe driver: 8086:953 spdk_nvme
+EAL:   using IOMMU type 1 (Type 1)
+[   45.811353] vfio_ecap_init: 0000:01:00.0 hiding ecap 0x19@0x2a0
+Attaching to NVMe Controller at 0000:01:00.0 [8086:0953]
+[   46.486601] vfio_bar_restore: 0000:01:00.0 reset recovery - restoring ba=
+rs
+nvme_ctrlr.c:1237:nvme_ctrlr_process_init: ***ERROR*** Initialization
+timed out in state 3
+nvme_ctrlr.c: 414:nvme_ctrlr_shutdown: ***ERROR*** did not shutdown
+within 5 seconds
+EAL: Hotplug doesn't support vfio yet
+spdk_nvme_probe() failed for transport address '0000:01:00.0'
+/usr/share/spdk/examples/nvme/perf: errors occured
 
-    PCI: Avoid race while enabling upstream bridges
-    
-    When we enable a device, we first enable any upstream bridges.  If a bridge
-    has multiple downstream devices and we enable them simultaneously, the race
-    to enable the upstream bridge may cause problems.  Consider this hierarchy:
-    
-      bridge A --+-- device B
-                 +-- device C
-    
-    If drivers for B and C call pci_enable_device() simultaneously, both will
-    attempt to enable A, which involves setting PCI_COMMAND_MASTER via
-    pci_set_master() and PCI_COMMAND_MEMORY via pci_enable_resources().
-    
-    In the following sequence, B's update to set A's PCI_COMMAND_MEMORY is
-    lost, and neither B nor C will work correctly:
-    
-          B                                C
-      pci_set_master(A)
-        cmd = read(A, PCI_COMMAND)
-        cmd |= PCI_COMMAND_MASTER
-                                       pci_set_master(A)
-                                         cmd = read(A, PCI_COMMAND)
-                                         cmd |= PCI_COMMAND_MASTER
-        write(A, PCI_COMMAND, cmd)
-      pci_enable_device(A)
-        pci_enable_resources(A)
-          cmd = read(A, PCI_COMMAND)
-          cmd |= PCI_COMMAND_MEMORY
-          write(A, PCI_COMMAND, cmd)
-                                         write(A, PCI_COMMAND, cmd)
-    
-    Avoid this race by holding a new pci_bridge_mutex while enabling a bridge.
-    This ensures that both PCI_COMMAND_MASTER and PCI_COMMAND_MEMORY will be
-    updated before another thread can start enabling the bridge.
-    
-    Note that although pci_enable_bridge() is recursive, it enables any
-    upstream bridges *before* acquiring the mutex.  When it acquires the mutex
-    and calls pci_set_master() and pci_enable_device(), any upstream bridges
-    have already been enabled so pci_enable_device() will not deadlock by
-    calling pci_enable_bridge() again.
-    
-    Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
-    [bhelgaas: changelog, comment]
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+ok, so this is in the context of
+[   52.500579] [<ffff000008088498>] dump_backtrace+0x0/0x208
+[   52.506147] [<ffff0000080886b4>] show_stack+0x14/0x20
+[   52.511357] [<ffff0000083ace34>] dump_stack+0x8c/0xb0
+[   52.516567] [<ffff00000840a550>] pci_flr_wait+0x18/0xc8
+[   52.521955] [<ffff00000840bf9c>] pcie_flr+0x34/0x68
+[   52.526986] [<ffff00000840e3d0>] __pci_dev_reset+0x100/0x2c0
+[   52.532823] [<ffff00000840e60c>] pci_try_reset_function+0x64/0x80
+[   52.539108] [<ffff00000856e4b8>] vfio_pci_ioctl+0x398/0xb78
+[   52.544857] [<ffff000008568378>] vfio_device_fops_unl_ioctl+0x20/0x30
+[   52.551501] [<ffff0000081d4e24>] do_vfs_ioctl+0xa4/0x738
+[   52.556980] [<ffff0000081d5544>] SyS_ioctl+0x8c/0xa0
+[   52.562100] [<ffff000008082f8c>] __sys_trace_return+0x0/0x4
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index af0cc3456dc1..7cb29a223b73 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -52,6 +52,7 @@ static void pci_pme_list_scan(struct work_struct *work);
- static LIST_HEAD(pci_pme_list);
- static DEFINE_MUTEX(pci_pme_list_mutex);
- static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
-+static DEFINE_MUTEX(pci_bridge_mutex);
- 
- struct pci_pme_device {
- 	struct list_head list;
-@@ -1348,10 +1349,16 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 	if (bridge)
- 		pci_enable_bridge(bridge);
- 
-+	/*
-+	 * Hold pci_bridge_mutex to prevent a race when enabling two
-+	 * devices below the bridge simultaneously.  The race may cause a
-+	 * PCI_COMMAND_MEMORY update to be lost (see changelog).
-+	 */
-+	mutex_lock(&pci_bridge_mutex);
- 	if (pci_is_enabled(dev)) {
- 		if (!dev->is_busmaster)
- 			pci_set_master(dev);
--		return;
-+		goto end;
- 	}
- 
- 	retval = pci_enable_device(dev);
-@@ -1359,6 +1366,8 @@ static void pci_enable_bridge(struct pci_dev *dev)
- 		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
- 			retval);
- 	pci_set_master(dev);
-+end:
-+	mutex_unlock(&pci_bridge_mutex);
- }
- 
- static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
-@@ -1383,7 +1392,7 @@ static int pci_enable_device_flags(struct pci_dev *dev, unsigned long flags)
- 		return 0;		/* already enabled */
- 
- 	bridge = pci_upstream_bridge(dev);
--	if (bridge)
-+	if (bridge && !pci_is_enabled(bridge))
- 		pci_enable_bridge(bridge);
- 
- 	/* only skip sriov related */
+
+So, I have two things to do here.
+
+1) remove retry funciton and just do following.
+   data =3D readl(cfg_data_p);
+   if (data =3D=3D CFG_RETRY_STATUS)    /* 0xffff0001 */
+     data =3D 0xffffffff;
+
+2) refactor the code with separate patch.
+
+but for that Sinan's patch is required.
+then with both the patches I think, things will work out correctly for
+iproc SOC.
+
+Let me know how this sounds and if you agree with above two points, I
+will be posting final set of patches.
+
+let me know if you want me to change anything in the commit description.
+in my opinion I should remove config write description which is irrelevant =
+here.
+
+Regards,
+Oza.
+
+> Sec 2.3.2 says the RC may limit the number of retries, and it doesn't
+> say anything about how many retries the RC should do or what interval
+> should be between them.  So I think it should be legal to say "this RC
+> does zero retries".
+>
+> I think an RC that does zero retries and doesn't support CRS SV would
+> always handle a CRS completion as a "failed transaction" so it would
+> synthesize 0xffffffff data (and, I assume, set an error bit like
+> Received Master Abort).  If we treated this controller as though it
+> doesn't support CRS SV, the workaround in iproc_pcie_config_read()
+> would be simply:
+>
+>   data =3D readl(cfg_data_p);
+>   if (data =3D=3D CFG_RETRY_STATUS)    /* 0xffff0001 */
+>     data =3D 0xffffffff;
+>
+> That would make the loop in pci_flr_wait() that reads PCI_COMMAND work
+> correctly.  It would get 0xffffffff data as long as the device
+> returned CRS completions.
+>
+> It wouldn't make Sinan's new CRS SV code work, but that's OK: that all
+> has to work correctly even on systems that don't support CRS SV.
+>
+> The only problem is that when we read a non-Vendor ID register that
+> happens to really be 0xffff0001, we *should* return 0xffff0001, but we
+> incorrectly return 0xffffffff.  But we already know we just have to
+> live with that issue.
+>
+> One minor refactoring comment below.
+>
+>> iproc PCIe Controller spec:
+>> 4.7.3.3. Retry Status On Configuration Cycle
+>> Endpoints are allowed to generate retry status on configuration
+>> cycles. In this case, the RC needs to re-issue the request. The IP
+>> does not handle this because the number of configuration cycles needed
+>> will probably be less than the total number of non-posted operations
+>> needed.
+>>
+>> When a retry status is received on the User RX interface for a
+>> configuration request that was sent on the User TX interface,
+>> it will be indicated with a completion with the CMPL_STATUS field set
+>> to 2=3DCRS, and the user will have to find the address and data values
+>> and send a new transaction on the User TX interface.
+>> When the internal configuration space returns a retry status during a
+>> configuration cycle (user_cscfg =3D 1) on the Command/Status interface,
+>> the pcie_cscrs will assert with the pcie_csack signal to indicate the
+>> CRS status.
+>> When the CRS Software Visibility Enable register in the Root Control
+>> register is enabled, the IP will return the data value to 0x0001 for
+>> the Vendor ID value and 0xffff  (all 1=E2=80=99s) for the rest of the da=
+ta in
+>> the request for reads of offset 0 that return with CRS status.  This
+>> is true for both the User RX Interface and for the Command/Status
+>> interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
+>> field of the completion on the User RX Interface will not be 2=3DCRS and
+>> the pcie_cscrs signal will not assert on the Command/Status interface.
+>>
+>> Per PCIe r3.1, sec 2.3.2, config requests that receive completions
+>> with Configuration Request Retry Status (CRS) should be reissued by
+>> the hardware except reads of the Vendor ID when CRS Software
+>> Visibility is enabled.
+>>
+>> This hardware never reissues configuration requests when it receives
+>> CRS completions.
+>> Note that, neither PCIe host bridge nor PCIe core re-issues the
+>> request for any configuration offset.
+>> As a result of the fact, PCIe RC driver (sw) should take care of
+>> retrying.
+>>
+>> For config writes, there is no way for this driver to learn about
+>> CRS completions. A write that receives a CRS completion will not be
+>> retried and the data will be discarded. This is a potential data
+>> corruption.
+>>
+>> For config reads, this hardware returns CFG_RETRY_STATUS data when
+>> it receives a CRS completion for a config read, regardless of the
+>> address of the read or the CRS Software Visibility Enable bit.  As a
+>> partial workaround for this, we retry in software any read that
+>> returns CFG_RETRY_STATUS.
+>>
+>> It implements iproc_pcie_config_read which gets called for Stingray.
+>> For other iproc based SOC, it falls back to PCI generic APIs.
+>>
+>> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+>> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+>> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>>
+>> diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc=
+.c
+>> index c574863..a3edae4 100644
+>> --- a/drivers/pci/host/pcie-iproc.c
+>> +++ b/drivers/pci/host/pcie-iproc.c
+>> @@ -68,6 +68,9 @@
+>>  #define APB_ERR_EN_SHIFT             0
+>>  #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+>>
+>> +#define CFG_RETRY_STATUS             0xffff0001
+>> +#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
+>> +
+>>  /* derive the enum index of the outbound/inbound mapping registers */
+>>  #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+>>
+>> @@ -448,6 +451,89 @@ static inline void iproc_pcie_apb_err_disable(struc=
+t pci_bus *bus,
+>>       }
+>>  }
+>>
+>> +static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
+>> +{
+>> +     int timeout =3D CFG_RETRY_STATUS_TIMEOUT_US;
+>> +     unsigned int data;
+>> +
+>> +     /*
+>> +      * As per PCIe spec r3.1, sec 2.3.2, CRS Software
+>> +      * Visibility only affects config read of the Vendor ID.
+>> +      * For config write or any other config read the Root must
+>> +      * automatically re-issue configuration request again as a
+>> +      * new request.
+>> +      *
+>> +      * For config reads, this hardware returns CFG_RETRY_STATUS data w=
+hen
+>> +      * it receives a CRS completion for a config read, regardless of t=
+he
+>> +      * address of the read or the CRS Software Visibility Enable bit. =
+As a
+>> +      * partial workaround for this, we retry in software any read that
+>> +      * returns CFG_RETRY_STATUS.
+>> +      */
+>> +     data =3D readl(cfg_data_p);
+>> +     while (data =3D=3D CFG_RETRY_STATUS && timeout--) {
+>> +             udelay(1);
+>> +             data =3D readl(cfg_data_p);
+>> +     }
+>> +
+>> +     if (data =3D=3D CFG_RETRY_STATUS)
+>> +             data =3D 0xffffffff;
+>> +
+>> +     return data;
+>> +}
+>> +
+>> +static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
+>> +                                            unsigned int busno,
+>> +                                            unsigned int slot,
+>> +                                            unsigned int fn,
+>> +                                            int where)
+>> +{
+>> +     u16 offset;
+>> +     u32 val;
+>> +
+>> +     /* EP device access */
+>> +     val =3D (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+>> +             (slot << CFG_ADDR_DEV_NUM_SHIFT) |
+>> +             (fn << CFG_ADDR_FUNC_NUM_SHIFT) |
+>> +             (where & CFG_ADDR_REG_NUM_MASK) |
+>> +             (1 & CFG_ADDR_CFG_TYPE_MASK);
+>> +
+>> +     iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
+>> +     offset =3D iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
+>> +
+>> +     if (iproc_pcie_reg_is_invalid(offset))
+>> +             return NULL;
+>> +
+>> +     return (pcie->base + offset);
+>> +}
+>> +
+>> +static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int dev=
+fn,
+>> +                                 int where, int size, u32 *val)
+>> +{
+>> +     struct iproc_pcie *pcie =3D iproc_data(bus);
+>> +     unsigned int slot =3D PCI_SLOT(devfn);
+>> +     unsigned int fn =3D PCI_FUNC(devfn);
+>> +     unsigned int busno =3D bus->number;
+>> +     void __iomem *cfg_data_p;
+>> +     u32 data;
+>> +
+>> +     /* root complex access. */
+>> +     if (busno =3D=3D 0)
+>> +             return pci_generic_config_read32(bus, devfn, where, size, =
+val);
+>> +
+>> +     cfg_data_p =3D iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, wh=
+ere);
+>> +
+>> +     if (!cfg_data_p)
+>> +             return PCIBIOS_DEVICE_NOT_FOUND;
+>> +
+>> +     data =3D iproc_pcie_cfg_retry(cfg_data_p);
+>> +
+>> +     *val =3D data;
+>> +     if (size <=3D 2)
+>> +             *val =3D (data >> (8 * (where & 3))) & ((1 << (size * 8)) =
+- 1);
+>> +
+>> +     return PCIBIOS_SUCCESSFUL;
+>> +}
+>> +
+>>  /**
+>>   * Note access to the configuration registers are protected at the high=
+er layer
+>>   * by 'pci_lock' in drivers/pci/access.c
+>> @@ -459,7 +545,6 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct i=
+proc_pcie *pcie,
+>>  {
+>>       unsigned slot =3D PCI_SLOT(devfn);
+>>       unsigned fn =3D PCI_FUNC(devfn);
+>> -     u32 val;
+>>       u16 offset;
+>>
+>>       /* root complex access */
+>> @@ -484,18 +569,7 @@ static void __iomem *iproc_pcie_map_cfg_bus(struct =
+iproc_pcie *pcie,
+>>               if (slot > 0)
+>>                       return NULL;
+>>
+>> -     /* EP device access */
+>> -     val =3D (busno << CFG_ADDR_BUS_NUM_SHIFT) |
+>> -             (slot << CFG_ADDR_DEV_NUM_SHIFT) |
+>> -             (fn << CFG_ADDR_FUNC_NUM_SHIFT) |
+>> -             (where & CFG_ADDR_REG_NUM_MASK) |
+>> -             (1 & CFG_ADDR_CFG_TYPE_MASK);
+>> -     iproc_pcie_write_reg(pcie, IPROC_PCIE_CFG_ADDR, val);
+>> -     offset =3D iproc_pcie_reg_offset(pcie, IPROC_PCIE_CFG_DATA);
+>> -     if (iproc_pcie_reg_is_invalid(offset))
+>> -             return NULL;
+>> -     else
+>> -             return (pcie->base + offset);
+>> +     return iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
+>
+> Thanks for factoring this out.  Can you please split that refactor
+> into a separate patch?  That will make this CRS-handling patch smaller
+> and simpler.
+>
+>>  }
+>>
+>>  static void __iomem *iproc_pcie_bus_map_cfg_bus(struct pci_bus *bus,
+>> @@ -554,8 +628,13 @@ static int iproc_pcie_config_read32(struct pci_bus =
+*bus, unsigned int devfn,
+>>                                   int where, int size, u32 *val)
+>>  {
+>>       int ret;
+>> +     struct iproc_pcie *pcie =3D iproc_data(bus);
+>>
+>>       iproc_pcie_apb_err_disable(bus, true);
+>> +     if (pcie->type =3D=3D IPROC_PCIE_PAXB_V2)
+>> +             ret =3D iproc_pcie_config_read(bus, devfn, where, size, va=
+l);
+>> +     else
+>> +             ret =3D pci_generic_config_read32(bus, devfn, where, size,=
+ val);
+>>       ret =3D pci_generic_config_read32(bus, devfn, where, size, val);
+>>       iproc_pcie_apb_err_disable(bus, false);
+>>
+>> --
+>> 1.9.1
+>>
