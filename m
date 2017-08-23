@@ -1,98 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 24 Aug 2017 11:53:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v4 3/4] dt-bindings: PCI: rockchip: Add support for pcie
- wake irq
-Message-ID: <20170824165353.GL31858@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170822031934.8675-1-jeffy.chen@rock-chips.com>
- <20170822031934.8675-4-jeffy.chen@rock-chips.com>
-MIME-Version: 1.0
-In-Reply-To: <20170822031934.8675-4-jeffy.chen@rock-chips.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- shawn.lin@rock-chips.com, briannorris@chromium.org,
- linux-kernel@vger.kernel.org, dianders@chromium.org,
- linux-rockchip@lists.infradead.org, Rob Herring <robh+dt@kernel.org>,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@codeaurora.org>, linux-kernel@vger.kernel.org
+Subject: [PATCH V12 1/5] PCI: Don't ignore valid response before CRS timeout
+Date: Wed, 23 Aug 2017 00:56:07 -0400
+Message-Id: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Aug 22, 2017 at 11:19:33AM +0800, Jeffy Chen wrote:
-> Add an optional interrupt for PCIE_WAKE pin.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Rob?
+While waiting for a device to become ready (i.e., to return a non-CRS
+completion to a read of its Vendor ID), if we got a valid response to the
+very last read before timing out, we printed a warning and gave up on the
+device even though it was actually ready.
 
-> Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
-> ---
-> 
-> Changes in v4: None
-> Changes in v3: None
-> Changes in v2: None
-> 
->  .../devicetree/bindings/pci/rockchip-pcie.txt        | 20 ++++++++++++--------
->  1 file changed, 12 insertions(+), 8 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> index 5678be82530d..9f6504129e80 100644
-> --- a/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-pcie.txt
-> @@ -20,10 +20,13 @@ Required properties:
->  - msi-map: Maps a Requester ID to an MSI controller and associated
->  	msi-specifier data. See ./pci-msi.txt
->  - interrupts: Three interrupt entries must be specified.
-> -- interrupt-names: Must include the following names
-> -	- "sys"
-> -	- "legacy"
-> -	- "client"
-> +- interrupt-names: Include the following names
-> +	Required:
-> +		- "sys"
-> +		- "legacy"
-> +		- "client"
-> +	Optional:
-> +		- "wake"
+For a typical 60s timeout, we wait about 65s (it's not exact because of the
+exponential backoff), but we treated devices that became ready between 33s
+and 65s as though they failed.
 
-Why is there no other PCI binding that includes "wake" as an
-interrupt-name?  This feels like something that should be fairly
-common across host controllers.  I don't want a Rockport-specific
-DT description if it could be made more general.
+Move the Device ID read later so we check whether the device is ready
+immediately, before checking for a timeout.
 
->  - resets: Must contain seven entries for each entry in reset-names.
->  	   See ../reset/reset.txt for details.
->  - reset-names: Must include the following names
-> @@ -87,10 +90,11 @@ pcie0: pcie@f8000000 {
->  	clock-names = "aclk", "aclk-perf",
->  		      "hclk", "pm";
->  	bus-range = <0x0 0x1>;
-> -	interrupts = <GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
-> -		     <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
-> -		     <GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>;
-> -	interrupt-names = "sys", "legacy", "client";
-> +	interrupts-extended = <&gic GIC_SPI 49 IRQ_TYPE_LEVEL_HIGH 0>,
-> +			      <&gic GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH 0>,
-> +			      <&gic GIC_SPI 51 IRQ_TYPE_LEVEL_HIGH 0>,
-> +			      <&gpio0 8 IRQ_TYPE_LEVEL_LOW>;
-> +	interrupt-names = "sys", "legacy", "client", "wake";
->  	assigned-clocks = <&cru SCLK_PCIEPHY_REF>;
->  	assigned-clock-parents = <&cru SCLK_PCIEPHY_REF100M>;
->  	assigned-clock-rates = <100000000>;
-> -- 
-> 2.11.0
-> 
-> 
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+[okaya: reorder reads so that we check device presence after sleep]
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/probe.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index c31310d..2849e0e 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1847,17 +1847,18 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 		if (!crs_timeout)
+ 			return false;
+ 
+-		msleep(delay);
+-		delay *= 2;
+-		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+-			return false;
+-		/* Card hasn't responded in 60 seconds?  Must be stuck. */
+ 		if (delay > crs_timeout) {
+ 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
+ 			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
+ 			       PCI_FUNC(devfn));
+ 			return false;
+ 		}
++
++		msleep(delay);
++		delay *= 2;
++
++		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
++			return false;
+ 	}
+ 
+ 	return true;
+-- 
+1.9.1
