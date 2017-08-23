@@ -1,60 +1,60 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:11740
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751234AbdH1LKV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 28 Aug 2017 07:10:21 -0400
-From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
-CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Subject: [PATCHv5 5/9] PCI: layerscape: refactor the host_init function
-Date: Mon, 28 Aug 2017 18:52:57 +0800
-Message-ID: <20170828105301.8511-6-Zhiqiang.Hou@nxp.com>
-In-Reply-To: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-References: <20170828105301.8511-1-Zhiqiang.Hou@nxp.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from lucky1.263xmail.com ([211.157.147.134]:50840 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753342AbdHWHEd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:04:33 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 09/10] PCI: rockchip: remove irq domain if failing to probe
+Date: Wed, 23 Aug 2017 15:03:31 +0800
+Message-Id: <1503471811-74167-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
 
-Make the ls1021a specific host_init reuse layerscape platform
-common host_init function.
+Fix the missing to call irq_domain_remove if failing
+to finish the probe.
 
-Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-Acked-by: Roy Zang <tie-fei.zang@freescale.com>
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
-V5:
- - Removed ls1021 host_init moving part from this patch
 
- drivers/pci/dwc/pci-layerscape.c | 11 +----------
- 1 file changed, 1 insertion(+), 10 deletions(-)
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index 160035efa4d9..27234dae4cba 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -164,16 +164,7 @@ static int ls1021_pcie_host_init(struct pcie_port *pp)
- 	}
- 	pcie->index = index[1];
+ drivers/pci/host/pcie-rockchip.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 6dbd3fd..e752d3e 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1572,7 +1572,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	err = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
+ 					       &res, &io_base);
+ 	if (err)
+-		goto err_deinit_port;
++		goto err_remove_irq_domain;
  
--	dw_pcie_setup_rc(pp);
--
--	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--	ls_pcie_fix_class(pcie);
--	ls_pcie_clear_multifunction(pcie);
--	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
--
--	ls_pcie_drop_msg_tlp(pcie);
--
--	return 0;
-+	return ls_pcie_host_init(pp);
- }
+ 	err = devm_request_pci_bus_resources(dev, &res);
+ 	if (err)
+@@ -1644,6 +1644,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
  
- static int ls_pcie_msi_host_init(struct pcie_port *pp,
+ err_free_res:
+ 	pci_free_resource_list(&res);
++err_remove_irq_domain:
++	irq_domain_remove(rockchip->irq_domain);
+ err_deinit_port:
+ 	rockchip_pcie_deinit_phys(rockchip);
+ err_vpcie:
 -- 
-2.14.1
+1.9.1
