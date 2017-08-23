@@ -1,75 +1,125 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <matthias.bgg@gmail.com>,
- <linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
- <eddie.huang@mediatek.com>, <ryder.lee@mediatek.com>
-Subject: [PATCH] PCI: mediatek: take use of PCI_NUM_INTX
-Date: Wed, 30 Aug 2017 09:19:14 +0800
-Message-ID: <1504055954-31545-1-git-send-email-honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, hongkun.cao@mediatek.com, sean.wang@mediatek.com,
- xinping.qian@mediatek.com, honghui.zhang@mediatek.com, yt.shen@mediatek.com,
- yong.wu@mediatek.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53264 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751436AbdHWE4U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 00:56:20 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        alex.williamson@redhat.com
+Cc: linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V12 3/5] PCI: Factor out pci_bus_wait_crs()
+Date: Wed, 23 Aug 2017 00:56:09 -0400
+Message-Id: <1503464171-6471-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Honghui Zhang <honghui.zhang@mediatek.com>
+Configuration Request Retry Status (CRS) was previously hidden inside
+pci_bus_read_dev_vendor_id().  We want to add support for CRS in other
+situations, such as waiting for a device to become ready after a Function
+Level Reset.
 
-Switch from using a custom NUM_INTX macro to the generic PCI_NUM_INTX
-definition for the number of INTx interrupts.
+Move CRS handling into pci_bus_wait_crs() so it can be called from other
+places.
 
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/host/pcie-mediatek.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/pci/pci.h   |  1 +
+ drivers/pci/probe.c | 46 ++++++++++++++++++++++++++++------------------
+ 2 files changed, 29 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-index c567996..5c0ce9b 100644
---- a/drivers/pci/host/pcie-mediatek.c
-+++ b/drivers/pci/host/pcie-mediatek.c
-@@ -77,7 +77,6 @@
- #define PCIE_INT_MASK		0x420
- #define INTX_MASK		GENMASK(19, 16)
- #define INTX_SHIFT		16
--#define INTX_NUM		4
- #define PCIE_INT_STATUS		0x424
- #define MSI_STATUS		BIT(23)
- #define PCIE_IMSI_STATUS	0x42c
-@@ -576,7 +575,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
- 		return -ENODEV;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 7fa583a..56d2515 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -239,6 +239,7 @@ static inline bool pci_bus_crs_visibility_pending(u32 l)
+ {
+ 	return (l & 0xffff) == 0x0001;
+ }
++bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 l, int timeout);
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 2849e0e..93b89dd 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1824,30 +1824,23 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus)
+ }
+ EXPORT_SYMBOL(pci_alloc_dev);
+ 
+-bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+-				int crs_timeout)
++bool pci_bus_wait_crs(struct pci_bus *bus, int devfn, u32 l, int timeout)
+ {
+ 	int delay = 1;
+ 
+-	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
+-		return false;
++	if ((l & 0xffff) != 0x0001)
++		return true;	/* not a CRS completion */
+ 
+-	/* some broken boards return 0 or ~0 if a slot is empty: */
+-	if (*l == 0xffffffff || *l == 0x00000000 ||
+-	    *l == 0x0000ffff || *l == 0xffff0000)
+-		return false;
++	if (!timeout)
++		return false;	/* CRS, but caller doesn't want to wait */
+ 
+ 	/*
+-	 * Configuration Request Retry Status.  Some root ports return the
+-	 * actual device ID instead of the synthetic ID (0xFFFF) required
+-	 * by the PCIe spec.  Ignore the device ID and only check for
+-	 * (vendor id == 1).
++	 * We got the reserved Vendor ID that indicates a completion with
++	 * Configuration Request Retry Status (CRS).  Retry until we get a
++	 * valid Vendor ID or we time out.
+ 	 */
+-	while ((*l & 0xffff) == 0x0001) {
+-		if (!crs_timeout)
+-			return false;
+-
+-		if (delay > crs_timeout) {
++	while ((l & 0xffff) == 0x0001) {
++		if (delay > timeout) {
+ 			printk(KERN_WARNING "pci %04x:%02x:%02x.%d: not responding\n",
+ 			       pci_domain_nr(bus), bus->number, PCI_SLOT(devfn),
+ 			       PCI_FUNC(devfn));
+@@ -1857,12 +1850,29 @@ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
+ 		msleep(delay);
+ 		delay *= 2;
+ 
+-		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
++		if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, &l))
+ 			return false;
  	}
  
--	port->irq_domain = irq_domain_add_linear(pcie_intc_node, INTX_NUM,
-+	port->irq_domain = irq_domain_add_linear(pcie_intc_node, PCI_NUM_INTX,
- 						 &intx_domain_ops, port);
- 	if (!port->irq_domain) {
- 		dev_err(dev, "failed to get INTx IRQ domain\n");
-@@ -594,7 +593,7 @@ static irqreturn_t mtk_pcie_intr_handler(int irq, void *data)
- 	u32 bit = INTX_SHIFT;
+ 	return true;
+ }
++
++bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *l,
++				int timeout)
++{
++	if (pci_bus_read_config_dword(bus, devfn, PCI_VENDOR_ID, l))
++		return false;
++
++	/* some broken boards return 0 or ~0 if a slot is empty: */
++	if (*l == 0xffffffff || *l == 0x00000000 ||
++	    *l == 0x0000ffff || *l == 0xffff0000)
++		return false;
++
++	if (pci_bus_crs_visibility_pending(*l))
++		return pci_bus_wait_crs(bus, devfn, *l, timeout);
++
++	return true;
++}
+ EXPORT_SYMBOL(pci_bus_read_dev_vendor_id);
  
- 	while ((status = readl(port->base + PCIE_INT_STATUS)) & INTX_MASK) {
--		for_each_set_bit_from(bit, &status, INTX_NUM + INTX_SHIFT) {
-+		for_each_set_bit_from(bit, &status, PCI_NUM_INTX + INTX_SHIFT) {
- 			/* Clear the INTx */
- 			writel(1 << bit, port->base + PCIE_INT_STATUS);
- 			virq = irq_find_mapping(port->irq_domain,
+ /*
 -- 
-2.6.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
