@@ -1,97 +1,79 @@
-Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=ZMnZ=7J=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: <linux-pci@vger.kernel.org>,
-	<iommu@lists.linux-foundation.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Keith Busch <keith.busch@intel.com>,
-	Scott Bauer <scott.bauer@intel.com>,
-	David Fugate <david.fugate@intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH 2/3] pci: Generalize is_vmd behavior
-Date: Mon,  7 Aug 2017 13:57:12 -0600
-Message-Id: <20170807195713.10963-2-jonathan.derrick@intel.com>
-In-Reply-To: <20170807195713.10963-1-jonathan.derrick@intel.com>
-References: <20170807195713.10963-1-jonathan.derrick@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from samserver.samelson.uni-hildesheim.de ([147.172.172.66]:16600
+        "EHLO messagesink.samelson.uni-hildesheim.de" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753300AbdHWG21 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 02:28:27 -0400
+From: Sascha El-Sharkawy <elscha@sse.uni-hildesheim.de>
+To: "bhelgaas@google.com" <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Klaus Schmid <schmid@sse.uni-hildesheim.de>
+Date: Wed, 23 Aug 2017 08:22:38 +0200
+Subject: [PATCH] PCI SUBSYSTEM allows inconsistent configuration, current
+ Kernel version
+Message-ID: <171b5343-c8c2-47bb-b29d-ef21bac15637@messagesink.samelson.uni-hildesheim.de>
+Content-Type: multipart/mixed;
+        boundary="_002_171b5343c8c247bbb29def21bac15637messagesinksamelsonunih_"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Generalize is_vmd behavior to remove dependency on domain number
-checking in pci quirks.
+--_002_171b5343c8c247bbb29def21bac15637messagesinksamelsonunih_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
----
- arch/x86/include/asm/pci.h | 8 +++-----
- arch/x86/pci/common.c      | 2 +-
- drivers/pci/quirks.c       | 2 +-
- include/linux/pci.h        | 4 ++++
- 4 files changed, 9 insertions(+), 7 deletions(-)
+Hi,
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 473a729..5c5d54a 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -60,16 +60,14 @@ static inline void *_pci_root_bus_fwnode(struct pci_bus *bus)
- #define pci_root_bus_fwnode	_pci_root_bus_fwnode
- #endif
- 
--static inline bool is_vmd(struct pci_bus *bus)
--{
- #if IS_ENABLED(CONFIG_VMD)
-+static inline bool pci_bus_is_vmd(struct pci_bus *bus)
-+{
- 	struct pci_sysdata *sd = bus->sysdata;
- 
- 	return sd->vmd_domain;
--#else
--	return false;
--#endif
- }
-+#endif
- 
- /* Can be used to override the logic in pci_scan_bus for skipping
-    already-configured bus numbers - to be used for buggy BIOSes
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index dbe2132..18b2277 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -662,7 +662,7 @@ static void set_dma_domain_ops(struct pci_dev *pdev) {}
- 
- static void set_dev_domain_options(struct pci_dev *pdev)
- {
--	if (is_vmd(pdev->bus))
-+	if (pci_bus_is_vmd(pdev->bus))
- 		pdev->hotplug_user_indicators = 1;
- }
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6967c6b..ba47995 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4666,7 +4666,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x443, quirk_intel_qat_vf_cap);
- static void quirk_no_aersid(struct pci_dev *pdev)
- {
- 	/* VMD Domain */
--	if (pdev->bus->sysdata && pci_domain_nr(pdev->bus) >= 0x10000)
-+	if (pci_bus_is_vmd(pdev->bus))
- 		pdev->bus->bus_flags |= PCI_BUS_FLAGS_NO_AERSID;
- }
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 4869e66..0299d8b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1471,6 +1471,10 @@ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
- static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #endif /* CONFIG_PCI_DOMAINS */
- 
-+#if !IS_ENABLED(CONFIG_VMD)
-+static inline bool pci_bus_is_vmd(struct pci_bus *bus) { return false; }
-+#endif
-+
- /*
-  * Generic implementation for PCI domain support. If your
-  * architecture does not need custom management of PCI
--- 
-2.9.4
+
+We detected that the selection of "PCI resource re-allocation detection" (C=
+ONFIG_PCI_REALLOC_ENABLE_AUTO) is ignored in some situations. This can happ=
+en as the related functionality (drivers/pci/setup-bus.c, lines 1702 - 1738=
+) depends on CONFIG_PCI_REALLOC_ENABLE_AUTO and CONFIG_PCI_IOV, while in Kc=
+onfig (drivers/pci/Kconfig, lines 42 - 53) this functionality is only contr=
+olled by CONFIG_PCI_REALLOC_ENABLE_AUTO.
+
+The dependency on CONFIG_PCI_IOV is only mentioned in the comment of CONFIG=
+_PCI_REALLOC_ENABLE_AUTO, but not checked by Kconfig. As CONFIG_PCI_IOV is =
+selected by many other configuration options, we expect the failure to happ=
+en in very few configurations only, which makes it even harder to detect an=
+d fix. However, there exist configurations that will still be faulty.
+The suggested fix ensures that the re-allocation is always working as speci=
+fied through an automated selection of CONFIG_PCI_IOV if CONFIG_PCI_REALLOC=
+_ENABLE_AUTO is selected.
+
+Best regards,
+Sascha
+
+-- -----------------------------------------------------------------------
+Sascha El-Sharkawy, MSc=20
+University of Hildesheim=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0Tel.: +49 (0) 5121 / 883-40336=A0=20
+Institute of Computer Science=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0F=
+ax:  +49 (0) 5121 / 883-40337
+Universitaetsplatz 1   =A0=A0=A0=A0=A0=A0=A0=A0=A0 =A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0 elscha@sse.uni-hildesheim.de
+D-31141 Hildesheim, Germany=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 http:=
+//www.sse.uni-hildesheim.de
+
+
+
+--_002_171b5343c8c247bbb29def21bac15637messagesinksamelsonunih_
+Content-Type: application/x-gzip; name="PCI_REALLOC_ENABLE_AUTO.patch.gz"
+Content-Description: PCI_REALLOC_ENABLE_AUTO.patch.gz
+Content-Disposition: attachment;
+	filename="PCI_REALLOC_ENABLE_AUTO.patch.gz"; size=519;
+	creation-date="Fri, 18 Aug 2017 12:35:27 GMT";
+	modification-date="Fri, 18 Aug 2017 12:18:12 GMT"
+Content-Transfer-Encoding: base64
+
+H4sICATbllkAA1BDSV9SRUFMTE9DX0VOQUJMRV9BVVRPLnBhdGNoAI2SX2vbMBTFn+tPcejTiuOk
++bOGMQpNujDCQjKSdaNPQZauY4EmGUtuGtiH37XTDgfSUb3Ivrr33N89ElSpn6j0vULq3jfpbKZ3
++IMx4jhOeEXoI9OGIHNhd6Q6GEJbT2XQzvoP8VUHIygydPxPrqJI6SxDkux0gOidk0/PRSNtFT1D
+DgdiPM663ZvxRzX+JNG/vr4ZjSJGOa8WMegbind3SEaDTn+IuN4G4MALwvf7+fbLbPrwNWpH1rPJ
+YrG6386Wk+litp08/FhFuEidM7icWZGyDZyGkryrSkn8kQhjnBT18OxCIFl/XXKRooKs8uA4l0Tx
+hWePZGjazFc/OSMnU/AGbMQBj8ipJOgMB1dhL2xAyI/dpOOD4F7k65Q2Q6NwymGJuDFXpARqqFUX
+jywrhYUwe3HwqDyBrbotqSm8dTZK8G+58vSQ75PlHBtcasWUoQssXWCsXHtkJEJVw3sIWJe4oq1V
+WUPev84NXxWFK0OTbLx7BfzMj4rVRGBIX3fAXhvT1hFVcL95QMlMh9bEp1fia38266RuNZ2sPXLx
+RAwV2lIpUW3EsVwhPTReT+erTZcv6n3jz4+Eb2M1Su9C+y8Pmgv+lXMGO6RclYYOPL+YZX32Fy8f
+mb6+AwAA
+
+--_002_171b5343c8c247bbb29def21bac15637messagesinksamelsonunih_--
