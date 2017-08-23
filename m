@@ -1,250 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:35842 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752345AbdHJGfP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 02:35:15 -0400
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v4 7/7] dt-bindings: PCI: add support for mt2712 and mt7622
-Date: Thu, 10 Aug 2017 14:35:00 +0800
-Message-ID: <c07881ccefc370fdd9d7b626b3e625c16240fad2.1502336769.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
-References: <cover.1502336769.git.honghui.zhang@mediatek.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 23 Aug 2017 10:06:45 +0200
+From: Jan Glauber <jan.glauber@caviumnetworks.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH v2 3/3] vfio/pci: Don't probe devices that can't be reset
+Message-ID: <20170823080645.GB3526@hc>
+References: <1502957663-5527-1-git-send-email-jglauber@cavium.com>
+ <1502957663-5527-4-git-send-email-jglauber@cavium.com>
+ <20170817070017.1e9c9456@w520.home> <20170818134231.GA3464@hc>
+ <20170818081251.2bbffe56@w520.home>
+ <d7492153-ec84-eb87-13ac-eb3fc9116114@caviumnetworks.com>
+ <20170818215553.3396d509@ul30vt.home>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170818215553.3396d509@ul30vt.home>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: kvm@vger.kernel.org, david.daney@cavium.com, linux-pci@vger.kernel.org,
+ David Daney <ddaney@caviumnetworks.com>, linux-kernel@vger.kernel.org,
+ Robert Richter <robert.richter@cavium.com>, Jon Masters <jcm@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+On Fri, Aug 18, 2017 at 09:55:53PM -0600, Alex Williamson wrote:
+> On Fri, 18 Aug 2017 08:57:09 -0700
+> David Daney <ddaney@caviumnetworks.com> wrote:
+> 
+> > On 08/18/2017 07:12 AM, Alex Williamson wrote:
 
-Add controller support for mt2712/mt7622 and update related
-properities.
+[...]
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- .../devicetree/bindings/pci/mediatek-pcie.txt      | 168 ++++++++++++++++++++-
- 1 file changed, 161 insertions(+), 7 deletions(-)
+> > You previously rejected the idea to silently ignore bus reset requests 
+> > on buses that do not support it.
+> > 
+> > So this leaves us with two options:
+> > 
+> > 1) Do nothing, and crash the kernel on systems with bad combinations of 
+> > PCIe target devices and cn88xx when vfio_pci is used.
+> > 
+> > 2) Do something else.
+> > 
+> > We are trying to figure out what that something else should be.  The 
+> > general concept we are working on is that if vfio_pci wants to reset a 
+> > device, *and* bus reset is the only option available, *and* cn88xx, then 
+> > make vfio_pci fail.
+> 
+> But that's not what these attempts do, they say if we can't do a bus or
+> slot reset, fail the device probe.  The comment is trying to suggest
+> they do something else, am I misinterpreting the actual code change?
+> There are plenty of devices out there that don't care if bus reset
+> doesn't work, they support FLR or PM reset or device specific reset or
+> just deal without a reset.  We can't suddenly say this new thing is a
+> requirement and sorry if you were happily using device assignment
+> before, but there's a slim chance you're on this platform that falls
+> over if we attempt to do a secondary bus reset.
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index 0fdcb15..2e81742 100644
---- a/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -3,18 +3,31 @@ MediaTek Gen2 PCIe controller
- Required properties:
- - compatible: Should contain one of the following strings:
- 	"mediatek,mt2701-pcie"
-+	"mediatek,mt2712-pcie"
-+	"mediatek,mt7622-pcie"
- 	"mediatek,mt7623-pcie"
- - device_type: Must be "pci"
--- reg: Base addresses and lengths of the PCIe controller.
-+- reg: Base addresses and lengths of the PCIe subsys and root ports.
-+- reg-names: Names of the above areas to use during resource look-up.
- - #address-cells: Address representation for root ports (must be 3)
- - #size-cells: Size representation for root ports (must be 2)
- - clocks: Must contain an entry for each entry in clock-names.
-   See ../clocks/clock-bindings.txt for details.
--- clock-names: Must include the following entries:
--  - free_ck :for reference clock of PCIe subsys
--  - sys_ck0 :for clock of Port0
--  - sys_ck1 :for clock of Port1
--  - sys_ck2 :for clock of Port2
-+- clock-names:
-+  Mandatory entries:
-+   - sys_ckN :transaction layer and data link layer clock
-+  Required entries for MT2701/MT7623:
-+   - free_ck :for reference clock of PCIe subsys
-+  Required entries for MT2712/MT7622:
-+   - ahb_ckN :AHB slave interface operating clock for CSR access and RC
-+	      initiated MMIO access
-+  Required entries for MT7622:
-+   - axi_ckN :application layer MMIO channel operating clock
-+   - aux_ckN :pe2_mac_bridge and pe2_mac_core operating clock when
-+	      pcie_mac_ck/pcie_pipe_ck is turned off
-+   - obff_ckN :OBFF functional block operating clock
-+   - pipe_ckN :LTSSM and PHY/MAC layer operating clock
-+  where N starting from 0 to one less than the number of root ports.
- - phys: List of PHY specifiers (used by generic PHY framework).
- - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-   number of PHYs as specified in *phys* property.
-@@ -33,6 +46,10 @@ Required properties for MT7623/MT2701:
- - reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
-   number of root ports.
- 
-+Required properties for MT2712/MT7622:
-+-interrupts: A list of interrupt outputs of the controller, must have one
-+	     entry for each PCIe port
-+
- In addition, the device tree node must have sub-nodes describing each
- PCIe port interface, having the following mandatory properties:
- 
-@@ -50,7 +67,7 @@ Required properties:
-   property is sufficient.
- - num-lanes: Number of lanes to use for this port.
- 
--Examples:
-+Examples for MT7623:
- 
- 	hifsys: syscon@1a000000 {
- 		compatible = "mediatek,mt7623-hifsys",
-@@ -68,6 +85,7 @@ Examples:
- 		      <0 0x1a142000 0 0x1000>, /* Port0 registers */
- 		      <0 0x1a143000 0 0x1000>, /* Port1 registers */
- 		      <0 0x1a144000 0 0x1000>; /* Port2 registers */
-+		reg-names = "subsys", "port0", "port1", "port2";
- 		#address-cells = <3>;
- 		#size-cells = <2>;
- 		#interrupt-cells = <1>;
-@@ -128,3 +146,139 @@ Examples:
- 			num-lanes = <1>;
- 		};
- 	};
-+
-+Examples for MT2712:
-+	pcie: pcie@11700000 {
-+		compatible = "mediatek,mt2712-pcie";
-+		device_type = "pci";
-+		reg = <0 0x11700000 0 0x1000>,
-+		      <0 0x112ff000 0 0x1000>;
-+		reg-names = "port0", "port1";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&topckgen CLK_TOP_PE2_MAC_P0_SEL>,
-+			 <&topckgen CLK_TOP_PE2_MAC_P1_SEL>,
-+			 <&pericfg CLK_PERI_PCIE0>,
-+			 <&pericfg CLK_PERI_PCIE1>;
-+		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1";
-+		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
-+		phy-names = "pcie-phy0", "pcie-phy1";
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-+
-+		pcie0: pcie@0,0 {
-+			device_type = "pci";
-+			reg = <0x0000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+					<0 0 0 2 &pcie_intc0 1>,
-+					<0 0 0 3 &pcie_intc0 2>,
-+					<0 0 0 4 &pcie_intc0 3>;
-+			pcie_intc0: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+
-+		pcie1: pcie@1,0 {
-+			device_type = "pci";
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+					<0 0 0 2 &pcie_intc1 1>,
-+					<0 0 0 3 &pcie_intc1 2>,
-+					<0 0 0 4 &pcie_intc1 3>;
-+			pcie_intc1: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+	};
-+
-+Examples for MT7622:
-+	pcie: pcie@1a140000 {
-+		compatible = "mediatek,mt7622-pcie";
-+		device_type = "pci";
-+		reg = <0 0x1a140000 0 0x1000>,
-+		      <0 0x1a143000 0 0x1000>,
-+		      <0 0x1a145000 0 0x1000>;
-+		reg-names = "subsys", "port0", "port1";
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		interrupts = <GIC_SPI 228 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 229 IRQ_TYPE_LEVEL_LOW>;
-+		clocks = <&pciesys CLK_PCIE_P0_MAC_EN>,
-+			 <&pciesys CLK_PCIE_P1_MAC_EN>,
-+			 <&pciesys CLK_PCIE_P0_AHB_EN>,
-+			 <&pciesys CLK_PCIE_P1_AHB_EN>,
-+			 <&pciesys CLK_PCIE_P0_AUX_EN>,
-+			 <&pciesys CLK_PCIE_P1_AUX_EN>,
-+			 <&pciesys CLK_PCIE_P0_AXI_EN>,
-+			 <&pciesys CLK_PCIE_P1_AXI_EN>,
-+			 <&pciesys CLK_PCIE_P0_OBFF_EN>,
-+			 <&pciesys CLK_PCIE_P1_OBFF_EN>,
-+			 <&pciesys CLK_PCIE_P0_PIPE_EN>,
-+			 <&pciesys CLK_PCIE_P1_PIPE_EN>;
-+		clock-names = "sys_ck0", "sys_ck1", "ahb_ck0", "ahb_ck1",
-+			      "aux_ck0", "aux_ck1", "axi_ck0", "axi_ck1",
-+			      "obff_ck0", "obff_ck1", "pipe_ck0", "pipe_ck1";
-+		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>;
-+		phy-names = "pcie-phy0", "pcie-phy1";
-+		power-domains = <&scpsys MT7622_POWER_DOMAIN_HIF0>;
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x20000000  0x0 0x20000000  0 0x10000000>;
-+
-+		pcie0: pcie@0,0 {
-+			device_type = "pci";
-+			reg = <0x0000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc0 0>,
-+					<0 0 0 2 &pcie_intc0 1>,
-+					<0 0 0 3 &pcie_intc0 2>,
-+					<0 0 0 4 &pcie_intc0 3>;
-+			pcie_intc0: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+
-+		pcie1: pcie@1,0 {
-+			device_type = "pci";
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			#interrupt-cells = <1>;
-+			ranges;
-+			num-lanes = <1>;
-+			interrupt-map-mask = <0 0 0 7>;
-+			interrupt-map = <0 0 0 1 &pcie_intc1 0>,
-+					<0 0 0 2 &pcie_intc1 1>,
-+					<0 0 0 3 &pcie_intc1 2>,
-+					<0 0 0 4 &pcie_intc1 3>;
-+			pcie_intc1: interrupt-controller {
-+				interrupt-controller;
-+				#address-cells = <0>;
-+				#interrupt-cells = <1>;
-+			};
-+		};
-+	};
--- 
-2.6.4
+Thanks for explaining this, I agree that we should not fail the device
+probe as we only need to prevent the reset from happening.
+So let's just drop this patch.
+
+
+> > What is your opinion of doing that (assuming it is properly implemented)?
+> 
+> It seems like these attempts are trying to completely turn off vfio-pci
+> on cn88xx, do you just want it unsupported on these platforms?  Should
+> we blacklist anything where dev->bus->self is this root port?
+> Otherwise, what's wrong with returning an error if a bus reset fails,
+> because we should *never* silently ignore the request and pretend that
+> it worked, perhaps even dev_warn()'ing that the platform doesn't
+> support bus resets?  Thanks,
+
+The ioctl's that trigger the slot/bus reset are already checking
+if reset is possible. With David's patches pci_probe_reset_bus()
+already fails.
+
+But we also need to make pci_probe_reset_slot() fail on cn88xx to avoid
+the same issue for the slot reset:
+
+[  178.815041] [<fffffc000850b67c>] pci_generic_config_read+0x5c/0xf0
+[  178.821221] [<fffffc0008534f60>] thunder_pem_config_read+0x90/0x228
+[  178.827487] [<fffffc000850b564>] pci_bus_read_config_dword+0x84/0xb8
+[  178.833841] [<fffffc000850d374>] pci_read_config_dword+0x5c/0x70
+[  178.839848] [<fffffc0008513e54>] pci_find_next_ext_capability.part.7+0x44/0xc8
+[  178.847075] [<fffffc0008514b00>] pci_find_ext_capability+0x48/0x58
+[  178.853256] [<fffffc0008520e6c>] pci_restore_vc_state+0x44/0xa0
+[  178.859175] [<fffffc0008514d4c>] pci_restore_state.part.26+0x3c/0x240
+[  178.865614] [<fffffc0008514fe0>] pci_dev_restore+0x58/0x60
+[  178.871098] [<fffffc00085150a0>] pci_slot_restore+0x60/0x78
+[  178.876669] [<fffffc000851599c>] pci_try_reset_slot+0xcc/0x140
+[  178.882512] [<fffffc0000d91b78>] vfio_pci_ioctl+0xb30/0xb88 [vfio_pci]
+[  178.889050] [<fffffc0000ba02b4>] vfio_device_fops_unl_ioctl+0x44/0x70 [vfio]
+[  178.896100] [<fffffc0008267e00>] do_vfs_ioctl+0xb0/0x748
+[  178.901411] [<fffffc000826852c>] SyS_ioctl+0x94/0xa8
+[  178.906375] [<fffffc00080834a0>] __sys_trace_return+0x0/0x4
+[  178.911947] Code: 7100069f 540003c0 71000a9f 54000240 (b9400001) 
+[  178.918108] ---[ end trace 07143dcba854194e ]---
+[  178.922784] Kernel panic - not syncing: Fatal exception
+
+So far I don't see how this can be done in a clean way, there is no quirk
+available for the slot.
+
+--Jan
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
