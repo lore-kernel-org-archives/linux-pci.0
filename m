@@ -1,93 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ns.mm-sol.com ([37.157.136.199]:52971 "EHLO extserv.mm-sol.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751196AbdHPLdf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 07:33:35 -0400
-Subject: Re: [PATCHv3 6/9] PCI: designware: add accessors for write permission
- of DBI read-only registers
-To: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, jingoohan1@gmail.com, Joao.Pinto@synopsys.com
-Cc: minghuan.lian@nxp.com, mingkai.hu@nxp.com, roy.zang@nxp.com,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
-From: Stanimir Varbanov <svarbanov@mm-sol.com>
-Message-ID: <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
-Date: Wed, 16 Aug 2017 14:33:31 +0300
+Received: from mail-dm3nam03on0052.outbound.protection.outlook.com ([104.47.41.52]:33760
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753057AbdHWG1C (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 23 Aug 2017 02:27:02 -0400
+From: Zhiqiang Hou <Zhiqiang.Hou@nxp.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>,
+        <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>
+CC: <minghuan.lian@nxp.com>, <mingkai.hu@nxp.com>, <roy.zang@nxp.com>,
+        <svarbanov@mm-sol.com>, <niklas.cassel@axis.com>,
+        <jesper.nilsson@axis.com>, Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Subject: [PATCHv4 7/9] PCI: layerscape: use accessors to enable/disable DBI RO registers' write permission
+Date: Wed, 23 Aug 2017 14:08:54 +0800
+Message-ID: <20170823060856.9387-8-Zhiqiang.Hou@nxp.com>
+In-Reply-To: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
+References: <20170823060856.9387-1-Zhiqiang.Hou@nxp.com>
 MIME-Version: 1.0
-In-Reply-To: <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
 
-On 08/16/2017 07:56 AM, Zhiqiang Hou wrote:
-> From: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> 
-> The read-only DBI registers can be written over the DBI when set
-> the "Write to RO Registers Using DBI" (DBI_RO_WR_EN) field of the
-> MISC_CONTROL_1_OFF register.
-> 
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> ---
-> V3:
->  - No change
-> 
->  drivers/pci/dwc/pcie-designware.h | 25 +++++++++++++++++++++++++
->  1 file changed, 25 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index 7366c81..0c5f874 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -76,6 +76,9 @@
->  #define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
->  #define PCIE_ATU_UPPER_TARGET		0x91C
->  
-> +#define PCIE_MISC_CONTROL_1_OFF		0x8BC
-> +#define PCIE_DBI_RO_WR_EN		(0x1 << 0)
+Use the accessors instead accessing the DBI read-only write enable
+register directly.
 
-Does those registers exist for dwc version 4.01a?
+Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+Acked-By: Joao Pinto <jpinto@synopsys.com>
+---
+V4:
+ - no change
 
-I managed to test 6/9, 8/9 and 9/9 on qcom platform (apq8064) which has
-4.01a version and it doesn't work, i.e. the PCI_CLASS_BRIDGE_PCI is not
-returned when read PCI_CLASS_DEVICE offset.
+ drivers/pci/dwc/pci-layerscape.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-> +
->  /*
->   * iATU Unroll-specific register definitions
->   * From 4.80 core version the address translation will be made by unroll
-> @@ -279,6 +282,28 @@ static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
->  	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
->  }
->  
-> +static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
-> +{
-> +	u32 reg;
-> +	u32 val;
-> +
-> +	reg = PCIE_MISC_CONTROL_1_OFF;
-> +	val = dw_pcie_readl_dbi(pci, reg);
-> +	val |= PCIE_DBI_RO_WR_EN;
-> +	dw_pcie_writel_dbi(pci, reg, val);
-> +}
-> +
-> +static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
-> +{
-> +	u32 reg;
-> +	u32 val;
-> +
-> +	reg = PCIE_MISC_CONTROL_1_OFF;
-> +	val = dw_pcie_readl_dbi(pci, reg);
-> +	val &= ~PCIE_DBI_RO_WR_EN;
-> +	dw_pcie_writel_dbi(pci, reg, val);
-> +}
-> +
->  #ifdef CONFIG_PCIE_DW_HOST
->  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
->  void dw_pcie_msi_init(struct pcie_port *pp);
-> 
-
-regards,
-Stan
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index 44a603db217a..0c1330fce01d 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -33,7 +33,6 @@
+ 
+ /* PEX Internal Configuration Registers */
+ #define PCIE_STRFMR1		0x71c /* Symbol Timer & Filter Mask Register1 */
+-#define PCIE_DBI_RO_WR_EN	0x8bc /* DBI Read-Only Write Enable Register */
+ 
+ #define PCIE_IATU_NUM		6
+ 
+@@ -145,10 +144,10 @@ static int ls_pcie_host_init(struct pcie_port *pp)
+ 	 */
+ 	ls_pcie_disable_outbound_atus(pcie);
+ 
+-	iowrite32(1, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++	dw_pcie_dbi_ro_wr_en(pci);
+ 	ls_pcie_fix_class(pcie);
+ 	ls_pcie_clear_multifunction(pcie);
+-	iowrite32(0, pci->dbi_base + PCIE_DBI_RO_WR_EN);
++	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	ls_pcie_drop_msg_tlp(pcie);
+ 
+-- 
+2.14.1
