@@ -1,71 +1,173 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 3 Aug 2017 17:17:28 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: honghui.zhang@mediatek.com
-Subject: Re: [PATCH v2 3/5] dt-bindings: PCI: rename and cleanup MediaTek
- binding text
-Message-ID: <20170803221728.GM20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
- <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
-MIME-Version: 1.0
-In-Reply-To: <309532ded49d3452a609116d1c421d820bea74e4.1501122135.git.honghui.zhang@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
- hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
- sean.wang@mediatek.com, yong.wu@mediatek.com, linux-kernel@vger.kernel.org,
- robh+dt@kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
- robh@kerenl.org, linux-mediatek@lists.infradead.org, xinping.qian@mediatek.com,
- bhelgaas@google.com, yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.134]:49977 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753238AbdHWHDW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:03:22 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 02/10] PCI: rockchip: spilt out rockchip_pcie_enable_clocks
+Date: Wed, 23 Aug 2017 15:02:19 +0800
+Message-Id: <1503471739-73811-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jul 27, 2017 at 10:58:37AM +0800, honghui.zhang@mediatek.com wrote:
-> From: Ryder Lee <ryder.lee@mediatek.com>
-> 
-> In order to accommodate other SoC generations, this patch updates filename
-> to make it more generic, regroups specific properties by SoCs, and removes
-> redundant descriptions.
-> 
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 29 +++++++++++-----------
->  1 file changed, 14 insertions(+), 15 deletions(-)
->  rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (91%)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> similarity index 91%
-> rename from Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> rename to Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> index fe80dda..a968f25 100644
-> --- a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-> @@ -1,18 +1,13 @@
-> -MediaTek Gen2 PCIe controller which is available on MT7623 series SoCs
-> -
-> -PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
-> -ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
-> +MediaTek Gen2 PCIe controller
->  
->  Required properties:
-> -- compatible: Should contain "mediatek,mt7623-pcie".
-> +- compatible: Should contain one of the following string:
+Spilt out rockchip_pcie_enable_clocks so that it could be
+reused by rockchip_pcie_resume_noirq and rockchip_pcie_probe.
+No functional change intended.
 
-s/string/strings/
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> +	"mediatek,mt2701-pcie"
-> +	"mediatek,mt7623-pcie"
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ drivers/pci/host/pcie-rockchip.c | 91 ++++++++++++++++++++--------------------
+ 1 file changed, 46 insertions(+), 45 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 6dc3d83..52974cf 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1373,6 +1373,47 @@ static int rockchip_pcie_wait_l2(struct rockchip_pcie *rockchip)
+ 	return 0;
+ }
+ 
++static int rockchip_pcie_enable_clocks(
++				struct rockchip_pcie *rockchip)
++{
++	struct device *dev = rockchip->dev;
++	int err;
++
++	err = clk_prepare_enable(rockchip->aclk_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable aclk_pcie clock\n");
++		return err;
++	}
++
++	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable aclk_perf_pcie clock\n");
++		goto err_aclk_perf_pcie;
++	}
++
++	err = clk_prepare_enable(rockchip->hclk_pcie);
++	if (err) {
++		dev_err(dev, "unable to enable hclk_pcie clock\n");
++		goto err_hclk_pcie;
++	}
++
++	err = clk_prepare_enable(rockchip->clk_pcie_pm);
++	if (err) {
++		dev_err(dev, "unable to enable clk_pcie_pm clock\n");
++		goto err_clk_pcie_pm;
++	}
++
++	return 0;
++
++err_clk_pcie_pm:
++	clk_disable_unprepare(rockchip->hclk_pcie);
++err_hclk_pcie:
++	clk_disable_unprepare(rockchip->aclk_perf_pcie);
++err_aclk_perf_pcie:
++	clk_disable_unprepare(rockchip->aclk_pcie);
++	return err;
++}
++
+ static int __maybe_unused rockchip_pcie_suspend_noirq(struct device *dev)
+ {
+ 	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+@@ -1420,21 +1461,9 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+ 		}
+ 	}
+ 
+-	err = clk_prepare_enable(rockchip->clk_pcie_pm);
+-	if (err)
+-		goto err_pcie_pm;
+-
+-	err = clk_prepare_enable(rockchip->hclk_pcie);
+-	if (err)
+-		goto err_hclk_pcie;
+-
+-	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
+-	if (err)
+-		goto err_aclk_perf_pcie;
+-
+-	err = clk_prepare_enable(rockchip->aclk_pcie);
++	err = rockchip_pcie_enable_clocks(rockchip);
+ 	if (err)
+-		goto err_aclk_pcie;
++		return err;
+ 
+ 	err = rockchip_pcie_init_port(rockchip);
+ 	if (err)
+@@ -1452,13 +1481,9 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+ 
+ err_pcie_resume:
+ 	clk_disable_unprepare(rockchip->aclk_pcie);
+-err_aclk_pcie:
+ 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+-err_aclk_perf_pcie:
+ 	clk_disable_unprepare(rockchip->hclk_pcie);
+-err_hclk_pcie:
+ 	clk_disable_unprepare(rockchip->clk_pcie_pm);
+-err_pcie_pm:
+ 	return err;
+ }
+ 
+@@ -1492,29 +1517,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	if (err)
+ 		return err;
+ 
+-	err = clk_prepare_enable(rockchip->aclk_pcie);
+-	if (err) {
+-		dev_err(dev, "unable to enable aclk_pcie clock\n");
+-		goto err_aclk_pcie;
+-	}
+-
+-	err = clk_prepare_enable(rockchip->aclk_perf_pcie);
+-	if (err) {
+-		dev_err(dev, "unable to enable aclk_perf_pcie clock\n");
+-		goto err_aclk_perf_pcie;
+-	}
+-
+-	err = clk_prepare_enable(rockchip->hclk_pcie);
+-	if (err) {
+-		dev_err(dev, "unable to enable hclk_pcie clock\n");
+-		goto err_hclk_pcie;
+-	}
+-
+-	err = clk_prepare_enable(rockchip->clk_pcie_pm);
+-	if (err) {
+-		dev_err(dev, "unable to enable hclk_pcie clock\n");
+-		goto err_pcie_pm;
+-	}
++	err = rockchip_pcie_enable_clocks(rockchip);
++	if (err)
++		return err;
+ 
+ 	err = rockchip_pcie_set_vpcie(rockchip);
+ 	if (err) {
+@@ -1618,13 +1623,9 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		regulator_disable(rockchip->vpcie0v9);
+ err_set_vpcie:
+ 	clk_disable_unprepare(rockchip->clk_pcie_pm);
+-err_pcie_pm:
+ 	clk_disable_unprepare(rockchip->hclk_pcie);
+-err_hclk_pcie:
+ 	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+-err_aclk_perf_pcie:
+ 	clk_disable_unprepare(rockchip->aclk_pcie);
+-err_aclk_pcie:
+ 	return err;
+ }
+ 
+-- 
+1.9.1
