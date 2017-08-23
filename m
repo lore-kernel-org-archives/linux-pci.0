@@ -1,32 +1,55 @@
-Return-Path: <SRS0=k55j=7X=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=k55j=7X=intel.com=keith.busch@kernel.org>
-Date: Mon, 21 Aug 2017 10:40:00 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Dongdong Liu <liudongdong3@huawei.com>
-Cc: "helgaas@kernel.org" <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"gabriele.paoloni@huawei.com" <gabriele.paoloni@huawei.com>,
-	"charles.chenxin@huawei.com" <charles.chenxin@huawei.com>,
-	"linuxarm@huawei.com" <linuxarm@huawei.com>
-Subject: Re: [PATCH V5 1/2] PCI/DPC: Add eDPC support
-Message-ID: <20170821144000.GD21397@localhost.localdomain>
-References: <1503133641-114550-1-git-send-email-liudongdong3@huawei.com>
- <1503133641-114550-2-git-send-email-liudongdong3@huawei.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.134]:43270 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752822AbdHWBdU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 22 Aug 2017 21:33:20 -0400
+Message-ID: <599CDB37.3070307@rock-chips.com>
+Date: Wed, 23 Aug 2017 09:32:39 +0800
+From: jeffy <jeffy.chen@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1503133641-114550-2-git-send-email-liudongdong3@huawei.com>
+To: Tony Lindgren <tony@atomide.com>
+CC: Brian Norris <briannorris@chromium.org>,
+        linux-kernel@vger.kernel.org, bhelgaas@google.com,
+        shawn.lin@rock-chips.com, dianders@chromium.org,
+        Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [RFC PATCH v2 1/3] PCI: rockchip: Add support for pcie wake irq
+References: <20170817120431.12398-1-jeffy.chen@rock-chips.com> <20170817120431.12398-2-jeffy.chen@rock-chips.com> <20170818170107.GA119461@google.com> <20170818181416.GF6008@atomide.com> <5997486D.4040803@rock-chips.com> <20170822172653.GJ6008@atomide.com>
+In-Reply-To: <20170822172653.GJ6008@atomide.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Aug 19, 2017 at 02:07:20AM -0700, Dongdong Liu wrote:
-> This code is to add eDPC support. Get and print the RP PIO error
-> information when the trigger condition is RP PIO error.
-> 
-> For more information on eDPC, please see PCI Express Base Specification
-> Revision 3.1, section 6.2.10.3, or view the PCI-SIG eDPC ECN here:
-> https://pcisig.com/sites/default/files/specification_documents/ECN_Enhanced_DPC_2012-11-19_final.pdf
-> 
-> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Hi Tony,
 
-This looks good to me.
+On 08/23/2017 01:26 AM, Tony Lindgren wrote:
+> OK, let's fix any wakeriq ordering issues to make it more
+> usable. Sounds like in your case the wakeirq needs to be enabled
+> late and disabled early, while in my test cases I can keep it
+> enabled basically any time.
 
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+yes, in my case it's a level triggered irq, which needs to be disabled 
+when receive it(by irq_pm_check_wakeup(my hack) or inside of the custom 
+irq handler)
+
+
+and for eage irq, maybe we should enable it right after(or before) the 
+driver activate wake function(for example activate WOWLAN or WOLAN), 
+otherwise would it be possible to miss some irqs(triggered before we 
+actually enable the wake irq)?
+
+>
+> If this is for suspend/resume, You could just register the
+> wakeirq on suspend and then remove it on resume. We do have at
+> least network drivers doing device_init_wakeup(dev, true) and
+> device_init_wakeup(dev, false) as needed for WOL, see for example
+> bfin_mac_ethtool_setwol().
+>
+> Regards,
+>
+> Tony
+>
+>
+>
+>
