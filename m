@@ -1,82 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:45263 "EHLO
+Received: from lucky1.263xmail.com ([211.157.147.132]:45707 "EHLO
         lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753482AbdHRBeK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 17 Aug 2017 21:34:10 -0400
-Cc: shawn.lin@rock-chips.com
-Subject: Re: [PATCH v7 0/8] PCI: INTx interrupt fixes & cleanup
-To: Paul Burton <paul.burton@imgtec.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20170815190223.18807-1-paul.burton@imgtec.com>
+        with ESMTP id S1753263AbdHWHEm (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:04:42 -0400
 From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <b8cf4747-0c18-de3e-4a21-930126a2a180@rock-chips.com>
-Date: Fri, 18 Aug 2017 09:34:04 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170815190223.18807-1-paul.burton@imgtec.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 10/10] PCI: rockchip: umap io space if failing to probe
+Date: Wed, 23 Aug 2017 15:03:39 +0800
+Message-Id: <1503471819-74224-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Paul,
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
 
-On 2017/8/16 3:02, Paul Burton wrote:
-> This series fixes our handling of the PCI INTD interrupts in both Xilinx
-> PCIe controller drivers, and cleans up a wasted IRQ domain entry in the
-> Altera PCIe controller driver. It also adds a common PCI_INTX_NUM
-> definition which all relevant drivers under drivers/pci/host/ are
-> adjusted to make use of.
-> 
-> - Patch 1 moves enum pci_interrupt_pin to somewhere we can use it from
->    PCI host code.
-> 
-> - Patch 2 introduces a helper function to translate 1-4 INTx ranges into
->    the 0-3 range, by using it as a struct irq_domain's xlate callback.
-> 
-> - Patches 3 adjusts the Altera driver to avoid wasting an IRQ domain
->    entry.
-> 
-> - Patches 4 & 5 fix the INTD interrupt for Xilinx PCIe drivers.
-> 
-> - Patches 6-8 make use of PCI_NUM_INTX to replace custom definitions or
->    magic numbers in drivers.
-> 
-> The series versioning is continuing on from that of my "PCI: xilinx:
-> Fixes, optimisation & MIPS support" series which some of the earlier
-> patches were originally a part of, in order to prevent individual
-> patches from jumping backwards in versioning.
-> 
-> Applies atop v4.13-rc5.
-> 
-> Paul Burton (8):
->    PCI: Move enum pci_interrupt_pin to linux/pci.h
->    PCI: Introduce pci_irqd_intx_xlate()
->    PCI: altera: Use size=4 IRQ domain for legacy INTx
->    PCI: xilinx: Translate INTx range to hwirqs 0-3
->    PCI: xilinx-nwl: Translate INTx range to hwirqs 0-3
->    PCI: aardvark: Use PCI_NUM_INTX
->    PCI: ftpci100: Use PCI_NUM_INTX
->    PCI: rockchip: Use PCI_NUM_INTX
-> 
+Fix the missing to call pci_unmap_iospace if failing
+to finish the probe.
 
-Nice work!
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-For pcie-rockchip,
+---
 
-Tested-by: Shawn Lin <shawn.lin@rock-chips.com>
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
 
-and for the whole series,
+ drivers/pci/host/pcie-rockchip.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Reviewed-by: Shawn Lin <shawn.lin@rock-chips.com>
-
-
->   drivers/pci/host/pci-aardvark.c    |  5 ++--
->   drivers/pci/host/pci-ftpci100.c    |  2 +-
->   drivers/pci/host/pcie-altera.c     |  9 +++----
->   drivers/pci/host/pcie-rockchip.c   |  2 +-
->   drivers/pci/host/pcie-xilinx-nwl.c |  9 +++----
->   drivers/pci/host/pcie-xilinx.c     |  7 ++---
->   include/linux/pci-epf.h            |  9 +------
->   include/linux/pci.h                | 54 ++++++++++++++++++++++++++++++++++++++
->   8 files changed, 71 insertions(+), 26 deletions(-)
-> 
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index e752d3e..70d878b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1610,12 +1610,12 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = rockchip_pcie_cfg_atu(rockchip);
+ 	if (err)
+-		goto err_free_res;
++		goto err_unmap_iospace;
+ 
+ 	rockchip->msg_region = devm_ioremap(dev, rockchip->msg_bus_addr, SZ_1M);
+ 	if (!rockchip->msg_region) {
+ 		err = -ENOMEM;
+-		goto err_free_res;
++		goto err_unmap_iospace;
+ 	}
+ 
+ 	list_splice_init(&res, &bridge->windows);
+@@ -1628,7 +1628,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = pci_scan_root_bus_bridge(bridge);
+ 	if (err < 0)
+-		goto err_free_res;
++		goto err_unmap_iospace;
+ 
+ 	bus = bridge->bus;
+ 
+@@ -1642,6 +1642,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ 
++err_unmap_iospace:
++	pci_unmap_iospace(rockchip->io);
+ err_free_res:
+ 	pci_free_resource_list(&res);
+ err_remove_irq_domain:
+-- 
+1.9.1
