@@ -1,159 +1,82 @@
-Return-Path: <SRS0=ea3o=7G=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=ea3o=7G=intel.com=keith.busch@kernel.org>
-Date: Thu, 3 Aug 2017 23:46:31 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Rajat Jain <rajatja@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH] pciehp: Enable hot plug capable detection
-Message-ID: <20170804034631.GB478@localhost.localdomain>
-References: <1501650907-10969-1-git-send-email-keith.busch@intel.com>
- <20170802173249.GB20308@bhelgaas-glaptop.roam.corp.google.com>
- <20170803035924.GB13257@localhost.localdomain>
- <20170803201034.GW20308@bhelgaas-glaptop.roam.corp.google.com>
- <CACK8Z6FF_T7yc86_vc=carnp1N9XyNk_tYHrvaVGekTf8hf+jA@mail.gmail.com>
+Return-Path: <SRS0=r//y=7Z=linux.intel.com=mathias.nyman@kernel.org>
+Return-Path: <SRS0=r//y=7Z=linux.intel.com=mathias.nyman@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Mason <slash.tmp@free.fr>, Mathias Nyman <mathias.nyman@intel.com>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+ <87a82qbyv5.fsf@linux.intel.com> <599D3410.9050504@intel.com>
+ <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
+ <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Mathias Nyman <mathias.nyman@linux.intel.com>
+Message-ID: <599D62EA.7050100@linux.intel.com>
+Date: Wed, 23 Aug 2017 14:11:38 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CACK8Z6FF_T7yc86_vc=carnp1N9XyNk_tYHrvaVGekTf8hf+jA@mail.gmail.com>
+In-Reply-To: <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Aug 03, 2017 at 04:00:18PM -0700, Rajat Jain wrote:
-> 
-> I think we should think about what events do we want to actually
-> *trigger* the hot-plug, and is presence detect one of them. In other
-> words, can we assume that the card is ready to be scanned as soon as
-> it is inserted, even on platforms that do advertise an attention
-> button? May be these are remote corner cases and don't make any sense
-> (have a very good imagination ;-):
-> 
-> * Could the device be powered externally, and the operator needs to
-> still turn it on after plugging it in?
-> * Could there be a need for the operator to wait on something after
-> plugging in, before it gives a go ahead to the host to start scanning?
-> (wait until device has loaded some firmware, some device LED blinked
-> or things like that).
-> 
-> AFAICT, the attention button was precisely meant for holding off host
-> scanning until the operator believes the device is ready for it.
-> Today, pciehp would wait for 5 seconds after attention button press
-> before actually starting hotplug, thus giving the operator a chance to
-> press the attention button again to cancel the operation:
-> 
->         case BLINKINGOFF_STATE:
->         case BLINKINGON_STATE:
->                 /*
->                  * Cancel if we are still blinking; this means that we
->                  * press the attention again before the 5 sec. limit
->                  * expires to cancel hot-add or hot-remove
->                  */
-> 
-> Now I don't recall where (I checked PCIe spec and PCI hotplug spec)
-> but I recall reading a documented sequence of steps for hotplug in
-> some sort of spec, which is what pciehp seemed to mimic. So I believe
-> if we enabled presence detect to start hotplug immediately
-> unconditionally, there might be dead code left. Also, I'm wondering
-> are we going to render the attention button useless for hotplug
-> addition scenario (this will change the behavior for platforms that
-> currently use attention button correctly)?
-
-I was thinking a real attention button would suppress presence detect,
-but I'm sure now that's not always the case. I'm starting to think
-the user's process for this particular platform may need to be altered
-(details below).
-
-> >  There's
-> >> > probably some reason for it being the way it is, so we have to take
-> >> > that into account.  Maybe it works around some flaky presence detect
-> >> > hardware or something.
-> 
-> YInghai seemed to have seen some:
-> https://patchwork.ozlabs.org/patch/170489/
-> 
-> >>
-> >> Thanks for the feedback. I can definitely make the commit message better
-> >> if that's the only concern.
-> >>
-> >> The part of the specification that suggests PDCE is tied to the hotplug
-> >> capable bit is the "Slot Control Register" section in 7.8.10 of PCIe
-> >> Base spec rev4. Specifically:
-> >>
-> >>   "If the Hot-Plug Capable bit in the Slot Capabilities register is 0b,
-> >>    this bit is permitted to be read-only with a value of 0b"
-> >>
-> >> So this control doesn't do anything if hotplug capable is not set.
-> >
-> > I thought that might be the part of the spec you were referring to,
-> > but that's not how I read it :)  I read sec 7.8.10 as saying:
-> >
-> >   - Presence Detect Changed Enable is a read/write bit,
-> >   - However, if Hot-Plug Capable (a HwInit/read-only bit) is 0,
-> >     PDCE may be a read-only 0 (OR it may be read/write)
-> >
-> > So I think it's slightly misleading to suggest that PDCE is "tied" to
-> > HPC.  I think the spec allows PDCE to be read/write and to have some
-> > effect, even if HPC is 0.
-> >
-> > I don't know what it would *mean* to have a slot that said "I don't
-> > support hot-plug operations, but my Presence Detect State might
-> > change".  We've seen some creative uses of pciehp, so I wouldn't be
-> > surprised if somebody dreamed up a way to use it.
-> >
-> >> The only reference I find on why the code is currently done this way is
-> >> from this thread:
-> >>
-> >>   https://marc.info/?l=linux-kernel&m=138688828930718&w=2
-> >>
-> >> It seems the current behavior was done this way as a hunch more than
-> >> anything emperical.
-> 
-> Essentially the reason it was done is the assumption that if attention
-> button is present, then it is left on the operator to let us know when
-> to initiate the hot plug.
-> 
-> One question, does your platform advertise surprise removal
-> capability? If so, then I think a better way to enable PDCE is if
-> surprise removal is supported, this was also suggested by Yinghai one
-> time:
+On 23.08.2017 12:31, Mason wrote:
+> On 23/08/2017 09:51, Mathias Nyman wrote:
 >
-> From: https://lkml.org/lkml/2013/12/13/433:
-> > > I suggest that link event handling will be enabled automatically when
-> > > attention button is not there and surprise removal is supported.
-> 
-> May be we can do something like:
-> 
-> if (suprise_removal_supported || !attention_button_present)
->      enable PDCE
+>> very likely cause is the more aggressive detection of pci removed xhci hosts
+>>
+>> See commit d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
+>>       xhci: Rework how we handle unresponsive or hoptlug removed hosts
+>>
+>> It checks if a xhci register reads returns 0xffffffff and assumes xhci
+>> died in that case.
+>>
+>> Could you add something like the below to check which what is killing the host?
+>> Or a BUG()/WARN() in xhci_hc_died() to get a backtrace of who called it.
+>
+> [   46.525247] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+> [   46.565496] usb-storage 2-2:1.0: USB Mass Storage device detected
+> [   46.571934] scsi host0: usb-storage 2-2:1.0
+> [   47.601227] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+> [   47.611340] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+> [   47.621624] sd 0:0:0:0: [sda] Write Protect is off
+> [   47.627131] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+> [   47.639637]  sda: sda1
+> [   47.648091] sd 0:0:0:0: [sda] Attached SCSI removable disk
+> [   58.100306] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+> [   58.108021] CPU: 0 PID: 939 Comm: kworker/0:2 Tainted: G         C      4.13.0-rc6 #11
+> [   58.115976] Hardware name: Sigma Tango DT
+> [   58.120016] Workqueue: usb_hub_wq hub_event
+> [   58.124241] [<c010f288>] (unwind_backtrace) from [<c010af58>] (show_stack+0x10/0x14)
+> [   58.132033] [<c010af58>] (show_stack) from [<c049d714>] (dump_stack+0x84/0x98)
+> [   58.139302] [<c049d714>] (dump_stack) from [<c03b090c>] (xhci_hc_died.part.9+0x50/0x23c)
+> [   58.147438] [<c03b090c>] (xhci_hc_died.part.9) from [<c03b5d80>] (xhci_hub_control+0xf3c/0x175c)
+> [   58.156273] [<c03b5d80>] (xhci_hub_control) from [<c03934a4>] (usb_hcd_submit_urb+0x264/0x814)
+> [   58.164932] [<c03934a4>] (usb_hcd_submit_urb) from [<c0394fa4>] (usb_start_wait_urb+0x4c/0xbc)
+> [   58.173591] [<c0394fa4>] (usb_start_wait_urb) from [<c03950b4>] (usb_control_msg+0xa0/0xcc)
+> [   58.181985] [<c03950b4>] (usb_control_msg) from [<c038bf54>] (usb_clear_port_feature+0x44/0x4c)
+> [   58.190730] [<c038bf54>] (usb_clear_port_feature) from [<c038c320>] (hub_port_reset+0x228/0x51c)
+> [   58.199561] [<c038c320>] (hub_port_reset) from [<c038fd68>] (hub_event+0x87c/0x108c)
+> [   58.207349] [<c038fd68>] (hub_event) from [<c012ecc4>] (process_one_work+0x1d8/0x3f0)
+> [   58.215220] [<c012ecc4>] (process_one_work) from [<c012f8d8>] (worker_thread+0x38/0x554)
+> [   58.223354] [<c012f8d8>] (worker_thread) from [<c01347d0>] (kthread+0x108/0x138)
+> [   58.230789] [<c01347d0>] (kthread) from [<c01076d8>] (ret_from_fork+0x14/0x3c)
+> [   58.238056] xhci_hcd 0000:01:00.0: HC died; cleaning up
+> [   58.243391] usb 2-2: USB disconnect, device number 2
+> --
 
-Surprise removal is not supported. These do have Power Controller Control,
-though, and the user is supposed to power off the slot first like this:
+xhci driver reads 0xffffffff from a mmio mapped xhci portsc register and bails out in:
+xhci-hub.c:
+         temp = readl(port_array[wIndex]);
+                 if (temp == ~(u32)0) {
+                         xhci_hc_died(xhci);
+			retval = -ENODEV;
+	                break;
+		}
 
-  echo 0 > /sys/bus/pci/slot/<slot>/power
+In this case we read the register when hub thread asks to clear port feature.
 
-Then they can manually remove the device safely. They don't always do
-that, though, and it seems surprise yanks happen to work, but I doubt
-that's 100% safe.
+why portsc returns 0xffffffff is a nother quiestion, could the hub thread be running while xhci controller is (in D3)?
+Was xhci runtime suspended?
+There were some pcieport errors in another log you showed, maybe PCI devices are not properly recovered
+and the registers return 0xffffffff?
 
-Their expectation for hot add was that the kernel would handle it without
-the manual power control, and maybe that's not a valid expectation with
-this hardware even though it appears to work with my patch.
-
-After reading all this, I'm starting to reconsider my patch, as well as
-the users' current processes. Maybe they should be using sysfs in lieu
-of physical attention buttons. To make that work, I will request they
-disable pciehp polling and require the user initiate the hot add with
-the slot's sysf. I will check if this is acceptable and have them run
-tests to confirm if that works.
-
-> >> > >   cmd = PCI_EXP_SLTCTL_DLLSCE;
-> >> > >   if (ATTN_BUTTN(ctrl))
-> >> > >           cmd |= PCI_EXP_SLTCTL_ABPE;
-> >> > > - else
-> >> > > + if (HP_CAP(ctrl))
-> 
-> I may be wrong, but I believe that unless PCI_EXP_SLTCAP_HPC is set,
-> the pciehp will never get control of the hotplug port i.e. pcieport
-> will not send it to pciehp? So we do not need HP_CAP.
-
-Thanks for pointing that out. FWIW, you are correct; the check is
-not needed.
+-Mathias
