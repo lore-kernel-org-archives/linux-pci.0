@@ -1,40 +1,52 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36502 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751963AbdHCRKH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 3 Aug 2017 13:10:07 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: bhelgaas@google.com, scott@spiteful.org
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/5] PCI: hotplug: ibmphp: constify pci_device_id.
-Date: Thu,  3 Aug 2017 22:39:13 +0530
-Message-Id: <1501780156-24708-3-git-send-email-arvind.yadav.cs@gmail.com>
-In-Reply-To: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1501780156-24708-1-git-send-email-arvind.yadav.cs@gmail.com>
+Received: from lucky1.263xmail.com ([211.157.147.130]:41453 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753238AbdHWHEA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 23 Aug 2017 03:04:00 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH v5 06/10] PCI: rockchip: fix missing phy manipulation for legacy phy
+Date: Wed, 23 Aug 2017 15:02:57 +0800
+Message-Id: <1503471777-73999-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1503471673-69478-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_device_id are not supposed to change at runtime. All functions
-working with pci_device_id provided by <linux/pci.h> work with
-const pci_device_id. So mark the non-const structs as const.
+For instance, if a EP connect to lane3 and work under lagecy
+phy mode, so struct phy phys[0..2] are all NULL. In this case,
+rockchip->lanes_map & BIT(i) will tell the driver that lane0 is
+already inactive, but what we want actually is to power off
+the phys[0] for legacy phy mode. Fix this by add checking of
+rockchip->legacy_phy for rockchip_pcie_deinit_phys.
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/hotplug/ibmphp_core.c | 2 +-
+
+Changes in v5: None
+Changes in v4: None
+Changes in v3: None
+Changes in v2: None
+
+ drivers/pci/host/pcie-rockchip.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/hotplug/ibmphp_core.c b/drivers/pci/hotplug/ibmphp_core.c
-index 5efd01d..73cf846 100644
---- a/drivers/pci/hotplug/ibmphp_core.c
-+++ b/drivers/pci/hotplug/ibmphp_core.c
-@@ -852,7 +852,7 @@ static int set_bus(struct slot *slot_cur)
- 	u8 speed;
- 	u8 cmd = 0x0;
- 	int retval;
--	static struct pci_device_id ciobx[] = {
-+	static const struct pci_device_id ciobx[] = {
- 		{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS, 0x0101) },
- 		{ },
- 	};
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 9cd51e0..933e3e9 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -759,7 +759,7 @@ static void rockchip_pcie_deinit_phys(struct rockchip_pcie *rockchip)
+ 
+ 	for (i = 0; i < MAX_LANE_NUM; i++) {
+ 		/* inactive lane is already powered off */
+-		if (rockchip->lanes_map & BIT(i))
++		if (rockchip->legacy_phy || rockchip->lanes_map & BIT(i))
+ 			phy_power_off(rockchip->phys[i]);
+ 		phy_exit(rockchip->phys[i]);
+ 	}
 -- 
-2.7.4
+1.9.1
