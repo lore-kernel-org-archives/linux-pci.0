@@ -1,59 +1,103 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:41604 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751641AbdH1BR4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 27 Aug 2017 21:17:56 -0400
-Cc: bhelgaas@google.com, shawn.lin@rock-chips.com, heiko@sntech.de,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH RESEND] PCI: rockchip: Use gpiod_set_value_cansleep() to
- allow reset via expanders
-To: Fabio Estevam <festevam@gmail.com>
-References: <1503879957-30008-1-git-send-email-festevam@gmail.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <02c4f70f-3285-ebf5-c2fe-8aee7c23b133@rock-chips.com>
-Date: Mon, 28 Aug 2017 09:17:55 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 23 Aug 2017 08:57:34 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
+Message-ID: <20170823135734.GB8498@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170817113028.16853-1-dja@axtens.net>
+ <20170817113028.16853-2-dja@axtens.net>
+ <20170821105300.GB23287@e107981-lin.cambridge.arm.com>
+ <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
+ <CAKv+Gu-FCkV9Dv=yn_CNC9orj8Roiabb75jX34w3mMziWVZaeA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1503879957-30008-1-git-send-email-festevam@gmail.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAKv+Gu-FCkV9Dv=yn_CNC9orj8Roiabb75jX34w3mMziWVZaeA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ David Airlie <airlied@linux.ie>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Will Deacon <will.deacon@arm.com>, dri-devel <dri-devel@lists.freedesktop.org>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ "Liuxinliang \(Matthew Liu\)" <z.liuxinliang@hisilicon.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner <lukas@wunner.de>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Zou Rongrong <zourongrong@gmail.com>, daniel.vetter@intel.com,
+ linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Daniel Axtens <dja@axtens.net>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/8/28 8:25, Fabio Estevam wrote:
-> The reset GPIO can be connected to a I2C or SPI IO expander, which may
-> sleep, so it is safer to use the gpiod_set_value_cansleep() variant
-> instead.
+On Wed, Aug 23, 2017 at 02:48:42PM +0100, Ard Biesheuvel wrote:
+> On 22 August 2017 at 23:19, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> > On Mon, Aug 21, 2017 at 11:53:01AM +0100, Lorenzo Pieralisi wrote:
+> >> On Thu, Aug 17, 2017 at 09:30:28PM +1000, Daniel Axtens wrote:
+> >> > A system without PCI legacy resources (e.g. ARM64) may find that no
+> >> > default/boot VGA device has been marked, because the VGA arbiter
+> >> > checks for legacy resource decoding before marking a card as default.
+> >>
+> >> I do not understand this paragraph, in particular:
+> >>
+> >> - "A system without PCI legacy resources (e.g. ARM64)". What does this
+> >>   mean ? I take this as "ARM64 does not support IO space"; if a PCI host
+> >>   bridge supports IO space, there is nothing from an architectural
+> >>   point of view that prevents an MMIO based IO space implementation to
+> >>   work on ARM64. It is PCI bridge specific, not arch specific.
+> >
+> > This reference to ARM64 is the same thing I stumbled over.  Maybe it
+> > could be written along the lines of:
+> >
+> >   The VGA arbiter selects a default VGA device that is enabled and
+> >   reachable via the legacy VGA resources (mem 0xa0000-0xbffff, io
+> >   0x3b0-0x3bb, io 0x3c0-0x3df, etc).
+> >
+> >   If there is no such device, e.g., because there's no enabled VGA
+> >   device, the host bridge doesn't support access to those legacy
+> >   resources, or a PCI-PCI bridge doesn't have VGA Enable set, a
+> >   platform may select an arbitrary device by calling
+> >   vga_set_default_device().
+> >
+> > Then I think this patch changes the previous behavior by allowing the
+> > arbiter to select a device that is enabled and has a driver but may
+> > not be reachable via the legacy VGA resources.
+> >
+> > I don't know what all the consequences of that would be, but it does
+> > muddy the VGA arbiter waters a bit.  AIUI, the main reason for the
+> > arbiter is to allow multiple legacy VGA devices by manipulating bridge
+> > VGA Enable bits so only one receives the legacy resources at a time.
+> >
+> > These devices that do not need the legacy resources don't need that
+> > special treatment because they don't care about the bridge VGA Enable
+> > bits and several can coexist in the system with no need for VGA
+> > arbitration.
+> >
+> > I guess the powerpc fixup_vga() already selects a device that doesn't
+> > need the VGA resources, so we already have that situation.
+> >
 > 
-> Signed-off-by: Fabio Estevam <festevam@gmail.com>
-> ---
-> Changes since v1:
-> - Resending with Shawn Lin added on Cc.
-> 
->   drivers/pci/host/pcie-rockchip.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
+> Perhaps it is unclear that the whole point of tinkering with the VGA
+> arbiter is that X may refuse to use a GFX card if it is not tagged as
+> the default VGA device by the arbiter. I have suggested before that
+> fixing X may be more appropriate in this case, given that ownership of
+> the legacy VGA resources may not correlate at all with being the
+> primary display device on non-x86 architectures.
 
-Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+Yeah, maybe it's time to disconnect the "default display device" idea
+from the VGA arbiter.  I have no idea what (if any) dependencies X has
+on the legacy VGA resources.  I assume X works fine on power, where it
+sounds like those resources are rarely or never available.
 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 2eccd53..124b280 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -537,7 +537,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->   	int err, i;
->   	u32 status;
->   
-> -	gpiod_set_value(rockchip->ep_gpio, 0);
-> +	gpiod_set_value_cansleep(rockchip->ep_gpio, 0);
->   
->   	err = reset_control_assert(rockchip->aclk_rst);
->   	if (err) {
-> @@ -682,7 +682,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->   	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
->   			    PCIE_CLIENT_CONFIG);
->   
-> -	gpiod_set_value(rockchip->ep_gpio, 1);
-> +	gpiod_set_value_cansleep(rockchip->ep_gpio, 1);
->   
->   	/* 500ms timeout value should be enough for Gen1/2 training */
->   	err = readl_poll_timeout(rockchip->apb_base + PCIE_CLIENT_BASIC_STATUS1,
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
