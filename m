@@ -1,85 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0078.outbound.protection.outlook.com ([104.47.1.78]:57220
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751780AbdHQDDi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 16 Aug 2017 23:03:38 -0400
-From: "Z.q. Hou" <zhiqiang.hou@nxp.com>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "Joao.Pinto@synopsys.com" <Joao.Pinto@synopsys.com>
-CC: "M.h. Lian" <minghuan.lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, "Roy Zang" <roy.zang@nxp.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        "jesper.nilsson@axis.com" <jesper.nilsson@axis.com>
-Subject: RE: [PATCHv3 6/9] PCI: designware: add accessors for write permission
- of DBI read-only registers
-Date: Thu, 17 Aug 2017 03:03:33 +0000
-Message-ID: <VI1PR0402MB278292DAC81D4A49964FEC1B84830@VI1PR0402MB2782.eurprd04.prod.outlook.com>
-References: <1502859419-33696-1-git-send-email-Zhiqiang.Hou@nxp.com>
- <1502859419-33696-7-git-send-email-Zhiqiang.Hou@nxp.com>
- <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
-In-Reply-To: <83b0ad83-bb8f-a899-86b3-7be910eb4b51@mm-sol.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=GLNo=7Z=intel.com=mathias.nyman@kernel.org>
+Return-Path: <SRS0=GLNo=7Z=intel.com=mathias.nyman@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Felipe Balbi <felipe.balbi@linux.intel.com>, Mason <slash.tmp@free.fr>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+ <87a82qbyv5.fsf@linux.intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
+ <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+From: Mathias Nyman <mathias.nyman@intel.com>
+Message-ID: <599D3410.9050504@intel.com>
+Date: Wed, 23 Aug 2017 10:51:44 +0300
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <87a82qbyv5.fsf@linux.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgU3RhbmltaXIsDQoNClRoYW5rcyBmb3IgeW91ciBmZWVkYmFjayENCg0KPiAtLS0tLU9yaWdp
-bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBTdGFuaW1pciBWYXJiYW5vdiBbbWFpbHRvOnN2YXJi
-YW5vdkBtbS1zb2wuY29tXQ0KPiBTZW50OiAyMDE35bm0OOaciDE25pelIDE5OjM0DQo+IFRvOiBa
-LnEuIEhvdSA8emhpcWlhbmcuaG91QG54cC5jb20+OyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
-Ow0KPiBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBqaW5nb29oYW4xQGdtYWlsLmNvbTsgSm9hby5QaW50
-b0BzeW5vcHN5cy5jb20NCj4gQ2M6IE0uaC4gTGlhbiA8bWluZ2h1YW4ubGlhbkBueHAuY29tPjsg
-TWluZ2thaSBIdSA8bWluZ2thaS5odUBueHAuY29tPjsNCj4gUm95IFphbmcgPHJveS56YW5nQG54
-cC5jb20+OyBuaWtsYXMuY2Fzc2VsQGF4aXMuY29tOw0KPiBqZXNwZXIubmlsc3NvbkBheGlzLmNv
-bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIdjMgNi85XSBQQ0k6IGRlc2lnbndhcmU6IGFkZCBhY2Nl
-c3NvcnMgZm9yIHdyaXRlDQo+IHBlcm1pc3Npb24gb2YgREJJIHJlYWQtb25seSByZWdpc3RlcnMN
-Cj4gDQo+IEhpLA0KPiANCj4gT24gMDgvMTYvMjAxNyAwNzo1NiBBTSwgWmhpcWlhbmcgSG91IHdy
-b3RlOg0KPiA+IEZyb206IEhvdSBaaGlxaWFuZyA8WmhpcWlhbmcuSG91QG54cC5jb20+DQo+ID4N
-Cj4gPiBUaGUgcmVhZC1vbmx5IERCSSByZWdpc3RlcnMgY2FuIGJlIHdyaXR0ZW4gb3ZlciB0aGUg
-REJJIHdoZW4gc2V0IHRoZQ0KPiA+ICJXcml0ZSB0byBSTyBSZWdpc3RlcnMgVXNpbmcgREJJIiAo
-REJJX1JPX1dSX0VOKSBmaWVsZCBvZiB0aGUNCj4gPiBNSVNDX0NPTlRST0xfMV9PRkYgcmVnaXN0
-ZXIuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBIb3UgWmhpcWlhbmcgPFpoaXFpYW5nLkhvdUBu
-eHAuY29tPg0KPiA+IC0tLQ0KPiA+IFYzOg0KPiA+ICAtIE5vIGNoYW5nZQ0KPiA+DQo+ID4gIGRy
-aXZlcnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUuaCB8IDI1ICsrKysrKysrKysrKysrKysrKysr
-KysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDI1IGluc2VydGlvbnMoKykNCj4gPg0KPiA+IGRp
-ZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9kd2MvcGNpZS1kZXNpZ253YXJlLmgNCj4gPiBiL2RyaXZl
-cnMvcGNpL2R3Yy9wY2llLWRlc2lnbndhcmUuaA0KPiA+IGluZGV4IDczNjZjODEuLjBjNWY4NzQg
-MTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4g
-KysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaWUtZGVzaWdud2FyZS5oDQo+ID4gQEAgLTc2LDYgKzc2
-LDkgQEANCj4gPiAgI2RlZmluZSBQQ0lFX0FUVV9GVU5DKHgpCQkoKCh4KSAmIDB4NykgPDwgMTYp
-DQo+ID4gICNkZWZpbmUgUENJRV9BVFVfVVBQRVJfVEFSR0VUCQkweDkxQw0KPiA+DQo+ID4gKyNk
-ZWZpbmUgUENJRV9NSVNDX0NPTlRST0xfMV9PRkYJCTB4OEJDDQo+ID4gKyNkZWZpbmUgUENJRV9E
-QklfUk9fV1JfRU4JCSgweDEgPDwgMCkNCj4gDQo+IERvZXMgdGhvc2UgcmVnaXN0ZXJzIGV4aXN0
-IGZvciBkd2MgdmVyc2lvbiA0LjAxYT8NCg0KSm9hbywgY2FuIHlvdSBoZWxwIHRvIGNoZWNrIHRo
-aXM/DQpJIHJlZmVycmVkIHRvIERlc2lnbldhcmUgY29yZXMgUENJIEV4cHJlc3MgY29udHJvbGxl
-ciBkYXRhYm9vayB2ZXJzaW9uIDQuMjFhLg0KVGhlIEZyZWVzY2FsZSBMYXllcnNjYXBlIGltcGxl
-bWVudCBkb2VzIG5vdCBleHBvcnQgdGhlIHZlcnNpb24gb2YgZGVzaWdud2FyZSBQQ0llIGNvbnRy
-b2xsZXIsIEkgZG9uJ3Qga25vdyB3aGljaCB2ZXJzaW9ucyBoYXZlIHRob3NlIHJlZ2lzdGVycywg
-aWYgaXQgZG9lcyBub3Qgd29yayBvbiBxY29tIHBsYXRmb3JtLCBJIHdpbGwgcmVtb3ZlIHRoZSBx
-Y29tIHJlbGF0ZWQgY2hhbmdlcy4NCg0KPiANCj4gSSBtYW5hZ2VkIHRvIHRlc3QgNi85LCA4Lzkg
-YW5kIDkvOSBvbiBxY29tIHBsYXRmb3JtIChhcHE4MDY0KSB3aGljaCBoYXMNCj4gNC4wMWEgdmVy
-c2lvbiBhbmQgaXQgZG9lc24ndCB3b3JrLCBpLmUuIHRoZSBQQ0lfQ0xBU1NfQlJJREdFX1BDSSBp
-cyBub3QNCj4gcmV0dXJuZWQgd2hlbiByZWFkIFBDSV9DTEFTU19ERVZJQ0Ugb2Zmc2V0Lg0KPiAN
-Cj4gPiArDQo+ID4gIC8qDQo+ID4gICAqIGlBVFUgVW5yb2xsLXNwZWNpZmljIHJlZ2lzdGVyIGRl
-ZmluaXRpb25zDQo+ID4gICAqIEZyb20gNC44MCBjb3JlIHZlcnNpb24gdGhlIGFkZHJlc3MgdHJh
-bnNsYXRpb24gd2lsbCBiZSBtYWRlIGJ5DQo+ID4gdW5yb2xsIEBAIC0yNzksNiArMjgyLDI4IEBA
-IHN0YXRpYyBpbmxpbmUgdTMyIGR3X3BjaWVfcmVhZGxfZGJpMihzdHJ1Y3QNCj4gZHdfcGNpZSAq
-cGNpLCB1MzIgcmVnKQ0KPiA+ICAJcmV0dXJuIF9fZHdfcGNpZV9yZWFkX2RiaShwY2ksIHBjaS0+
-ZGJpX2Jhc2UyLCByZWcsIDB4NCk7ICB9DQo+ID4NCj4gPiArc3RhdGljIGlubGluZSB2b2lkIGR3
-X3BjaWVfZGJpX3JvX3dyX2VuKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiArCXUzMiByZWc7
-DQo+ID4gKwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19DT05UUk9MXzFf
-T0ZGOw0KPiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0KPiA+ICsJdmFs
-IHw9IFBDSUVfREJJX1JPX1dSX0VOOw0KPiA+ICsJZHdfcGNpZV93cml0ZWxfZGJpKHBjaSwgcmVn
-LCB2YWwpOw0KPiA+ICt9DQo+ID4gKw0KPiA+ICtzdGF0aWMgaW5saW5lIHZvaWQgZHdfcGNpZV9k
-Ymlfcm9fd3JfZGlzKHN0cnVjdCBkd19wY2llICpwY2kpIHsNCj4gPiArCXUzMiByZWc7DQo+ID4g
-Kwl1MzIgdmFsOw0KPiA+ICsNCj4gPiArCXJlZyA9IFBDSUVfTUlTQ19DT05UUk9MXzFfT0ZGOw0K
-PiA+ICsJdmFsID0gZHdfcGNpZV9yZWFkbF9kYmkocGNpLCByZWcpOw0KPiA+ICsJdmFsICY9IH5Q
-Q0lFX0RCSV9ST19XUl9FTjsNCj4gPiArCWR3X3BjaWVfd3JpdGVsX2RiaShwY2ksIHJlZywgdmFs
-KTsNCj4gPiArfQ0KPiA+ICsNCj4gPiAgI2lmZGVmIENPTkZJR19QQ0lFX0RXX0hPU1QNCj4gPiAg
-aXJxcmV0dXJuX3QgZHdfaGFuZGxlX21zaV9pcnEoc3RydWN0IHBjaWVfcG9ydCAqcHApOyAgdm9p
-ZA0KPiA+IGR3X3BjaWVfbXNpX2luaXQoc3RydWN0IHBjaWVfcG9ydCAqcHApOw0KPiA+DQoNClRo
-YW5rcywNClpoaXFpYW5nDQo=
+On 23.08.2017 09:07, Felipe Balbi wrote:
+>
+> Hi,
+>
+> Mason <slash.tmp@free.fr> writes:
+>> Hello,
+>>
+>> The driver for my system's PCIe host bridge landed recently
+>> (in 4.13) but it was developed on 4.9
+>>
+>> I tested the PCIe host bridge by plugging a 4-port USB3 adapter
+>> into the PCIe slot (system at rest) and plugging an USB3 Flash
+>> drive into the USB3 adapter (at run-time).
+>>
+>> On 4.9, the setup works (almost perfectly, see below).
+>> On 4.13, once I unplug the Flash drive, the controller port
+>> remains unresponsive.
+>>
+>>
+>> On 4.9, I said *almost* perfectly, because the pcieport driver
+>> does report a few non-fatal errors when I unplug:
+>>
+>> [  193.838504] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+>> [  193.878081] usb-storage 2-2:1.0: USB Mass Storage device detected
+>> [  193.884547] scsi host0: usb-storage 2-2:1.0
+>> [  194.907936] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+>> [  194.920296] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+>> [  194.928666] sd 0:0:0:0: [sda] Write Protect is off
+>> [  194.933755] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+>> [  194.946074]  sda: sda1
+>> [  194.953608] sd 0:0:0:0: [sda] Attached SCSI removable disk
+>>
+>> [  208.930260] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+>> [  208.938342] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+>> [  208.950163] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+>> [  208.958577] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+>> [  208.965432] pcieport 0000:00:00.0: AER: Device recovery failed
+>> [  209.663733] xhci_hcd 0000:01:00.0: Cannot set link state.
+>> [  209.669194] usb usb2-port2: cannot disable (err = -32)
+>> [  209.674376] usb 2-2: USB disconnect, device number 2
+>> [  209.680481] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+>> [  209.688689] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+>> [  209.700555] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+>> [  209.708978] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+>> [  209.715845] pcieport 0000:00:00.0: AER: Device recovery failed
+>> [  209.721722] pcieport 0000:00:00.0: AER: Uncorrected (Non-Fatal) error received: id=0000
+>> [  209.729785] pcieport 0000:00:00.0: PCIe Bus Error: severity=Uncorrected (Non-Fatal), type=Transaction Layer, id=0000(Requester ID)
+>> [  209.741602] pcieport 0000:00:00.0:   device [1105:0024] error status/mask=00004000/00000000
+>> [  209.750027] pcieport 0000:00:00.0:    [14] Completion Timeout     (First)
+>> [  209.756866] pcieport 0000:00:00.0: AER: Device recovery failed
+>>
+>> After that, I can still plug the drive into the same port.
+>>
+>> But on 4.13, I get
+>>
+>> [   27.330378] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+>> [   27.369383] usb-storage 2-2:1.0: USB Mass Storage device detected
+>> [   27.375840] scsi host0: usb-storage 2-2:1.0
+>> [   28.403035] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+>> [   28.413326] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+>> [   28.423653] sd 0:0:0:0: [sda] Write Protect is off
+>> [   28.429139] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+>> [   28.441529]  sda: sda1
+>> [   28.449431] sd 0:0:0:0: [sda] Attached SCSI removable disk
+>>
+>> [   90.592134] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+>> [   90.599857] xhci_hcd 0000:01:00.0: HC died; cleaning up
+>> [   90.605336] usb 2-2: USB disconnect, device number 2
+>> [   90.630414] udevd[955]: inotify_add_watch(6, /dev/sda, 10) failed: No such file or directory
+>>
+>> Trying to replug into the same port = nothing happens
+>> (Linux did say "assume dead")
+>>
+>> Any idea what could have changed between 4.9 and 4.13 ?
+>>
+>
+> Quite a bit:
+>
+> $ git rev-list --no-merges  --count v4.13-rc6 ^v4.9 -- drivers/usb/host/xhci drivers/usb/core/
+> 58
+>
+
+very likely cause is the more aggressive detection of pci removed xhci hosts
+
+See commit d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
+     xhci: Rework how we handle unresponsive or hoptlug removed hosts
+
+It checks if a xhci register reads returns 0xffffffff and assumes xhci
+died in that case.
+
+Could you add something like the below to check which what is killing the host?
+Or a BUG()/WARN() in xhci_hc_died() to get a backtrace of who called it.
+
+diff --git a/drivers/usb/host/xhci-ring.c b/drivers/usb/host/xhci-ring.c
+index 51cd4b8..ade2ad6 100644
+--- a/drivers/usb/host/xhci-ring.c
++++ b/drivers/usb/host/xhci-ring.c
+@@ -922,7 +922,8 @@ void xhci_hc_died(struct xhci_hcd *xhci)
+         if (xhci->xhc_state & XHCI_STATE_DYING)
+                 return;
+  
+-       xhci_err(xhci, "xHCI host controller not responding, assume dead\n");
++       xhci_err(xhci, "xHC not responding in %pf, assume controller is dead\n",
++                __builtin_return_address(0));
+         xhci->xhc_state |= XHCI_STATE_DYING;
+  
+         xhci_cleanup_command_queue(xhci);
+
+
+Thanks
+Mathias
