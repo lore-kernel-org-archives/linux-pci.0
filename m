@@ -1,41 +1,58 @@
-Return-Path: <SRS0=NXC0=7T=intel.com=jonathan.derrick@kernel.org>
-Return-Path: <SRS0=NXC0=7T=intel.com=jonathan.derrick@kernel.org>
-From: Jon Derrick <jonathan.derrick@intel.com>
-To: <linux-pci@vger.kernel.org>,
-	<iommu@lists.linux-foundation.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Keith Busch <keith.busch@intel.com>,
-	Scott Bauer <scott.bauer@intel.com>,
-	David Fugate <david.fugate@intel.com>,
-	<linux-kernel@vger.kernel.org>,
-	Jon Derrick <jonathan.derrick@intel.com>
-Subject: [PATCH v2 1/4] MAINTAINERS: Add Jonathan Derrick as VMD maintainer
-Date: Thu, 17 Aug 2017 12:10:11 -0600
-Message-Id: <20170817181014.1257-2-jonathan.derrick@intel.com>
-In-Reply-To: <20170817181014.1257-1-jonathan.derrick@intel.com>
-References: <20170817181014.1257-1-jonathan.derrick@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org, alex.williamson@redhat.com
+Subject: [PATCH V12 2/5] PCI: add pci_bus_crs_visibility_pending() function to
+ detect CRS response
+Date: Wed, 23 Aug 2017 00:56:08 -0400
+Message-Id: <1503464171-6471-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+References: <1503464171-6471-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add myself as VMD maintainer
+We need a wrapper function to determine when a particular device is
+returning Configuration Request Retry Status (CRS) response. This will only
+happen if the root port supports CRS visibility.
 
-Signed-off-by: Jon Derrick <jonathan.derrick@intel.com>
-Acked-by: Keith Busch <keith.busch@intel.com>
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pci.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f66488d..3ec39df 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -10090,6 +10090,7 @@ F:	drivers/pci/dwc/*imx6*
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 22e0617..7fa583a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -235,6 +235,10 @@ enum pci_bar_type {
+ 	pci_bar_mem64,		/* A 64-bit memory BAR */
+ };
  
- PCI DRIVER FOR INTEL VOLUME MANAGEMENT DEVICE (VMD)
- M:	Keith Busch <keith.busch@intel.com>
-+M:	Jonathan Derrick <jonathan.derrick@intel.com>
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	drivers/pci/host/vmd.c
++static inline bool pci_bus_crs_visibility_pending(u32 l)
++{
++	return (l & 0xffff) == 0x0001;
++}
+ bool pci_bus_read_dev_vendor_id(struct pci_bus *bus, int devfn, u32 *pl,
+ 				int crs_timeout);
+ int pci_setup_device(struct pci_dev *dev);
 -- 
-2.9.4
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
