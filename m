@@ -1,112 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailgw02.mediatek.com ([210.61.82.184]:28579 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752335AbdHJGfP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 10 Aug 2017 02:35:15 -0400
-From: <honghui.zhang@mediatek.com>
-To: <bhelgaas@google.com>, <robh@kerenl.org>, <robh+dt@kernel.org>,
-        <matthias.bgg@gmail.com>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <yingjoe.chen@mediatek.com>, <eddie.huang@mediatek.com>,
-        <ryder.lee@mediatek.com>
-CC: <honghui.zhang@mediatek.com>, <hongkun.cao@mediatek.com>,
-        <youlin.pei@mediatek.com>, <yong.wu@mediatek.com>,
-        <yt.shen@mediatek.com>, <sean.wang@mediatek.com>,
-        <xinping.qian@mediatek.com>
-Subject: [PATCH v4 5/7] dt-bindings: PCI: rename and cleanup MediaTek binding text
-Date: Thu, 10 Aug 2017 14:34:58 +0800
-Message-ID: <9767937d128a8efe516522292af59944e1a4066a.1502336769.git.honghui.zhang@mediatek.com>
-In-Reply-To: <cover.1502336769.git.honghui.zhang@mediatek.com>
-References: <cover.1502336769.git.honghui.zhang@mediatek.com>
+Return-Path: <SRS0=i78b=7Z=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=i78b=7Z=free.fr=slash.tmp@kernel.org>
+Subject: Re: Possible regression between 4.9 and 4.13
+To: Mathias Nyman <mathias.nyman@intel.com>,
+ Felipe Balbi <felipe.balbi@linux.intel.com>,
+ linux-pci <linux-pci@vger.kernel.org>, linux-usb
+ <linux-usb@vger.kernel.org>, Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Alan Stern
+ <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+References: <4dee5523-2d76-e731-6e81-f3027e88827f@free.fr>
+ <87a82qbyv5.fsf@linux.intel.com> <599D3410.9050504@intel.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
+Date: Wed, 23 Aug 2017 11:31:29 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <599D3410.9050504@intel.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Ryder Lee <ryder.lee@mediatek.com>
+On 23/08/2017 09:51, Mathias Nyman wrote:
 
-In order to accommodate other SoC generations, this patch updates filename
-to make it more generic, regroups specific properties by SoCs, and removes
-redundant descriptions.
+> very likely cause is the more aggressive detection of pci removed xhci hosts
+> 
+> See commit d9f11ba9f107aa335091ab8d7ba5eea714e46e8b
+>      xhci: Rework how we handle unresponsive or hoptlug removed hosts
+> 
+> It checks if a xhci register reads returns 0xffffffff and assumes xhci
+> died in that case.
+> 
+> Could you add something like the below to check which what is killing the host?
+> Or a BUG()/WARN() in xhci_hc_died() to get a backtrace of who called it.
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-Signed-off-by: Honghui Zhang <honghui.zhang@mediatek.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
- ...{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} | 32 +++++++++++-----------
- 1 file changed, 16 insertions(+), 16 deletions(-)
- rename Documentation/devicetree/bindings/pci/{mediatek,mt7623-pcie.txt => mediatek-pcie.txt} (90%)
-
-diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-similarity index 90%
-rename from Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-rename to Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-index fe80dda..0fdcb15 100644
---- a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/mediatek-pcie.txt
-@@ -1,18 +1,13 @@
--MediaTek Gen2 PCIe controller which is available on MT7623 series SoCs
--
--PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
--ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
-+MediaTek Gen2 PCIe controller
- 
- Required properties:
--- compatible: Should contain "mediatek,mt7623-pcie".
-+- compatible: Should contain one of the following strings:
-+	"mediatek,mt2701-pcie"
-+	"mediatek,mt7623-pcie"
- - device_type: Must be "pci"
- - reg: Base addresses and lengths of the PCIe controller.
- - #address-cells: Address representation for root ports (must be 3)
- - #size-cells: Size representation for root ports (must be 2)
--- #interrupt-cells: Size representation for interrupts (must be 1)
--- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
--  Please refer to the standard PCI bus binding document for a more detailed
--  explanation.
- - clocks: Must contain an entry for each entry in clock-names.
-   See ../clocks/clock-bindings.txt for details.
- - clock-names: Must include the following entries:
-@@ -20,12 +15,6 @@ Required properties:
-   - sys_ck0 :for clock of Port0
-   - sys_ck1 :for clock of Port1
-   - sys_ck2 :for clock of Port2
--- resets: Must contain an entry for each entry in reset-names.
--  See ../reset/reset.txt for details.
--- reset-names: Must include the following entries:
--  - pcie-rst0 :port0 reset
--  - pcie-rst1 :port1 reset
--  - pcie-rst2 :port2 reset
- - phys: List of PHY specifiers (used by generic PHY framework).
- - phy-names : Must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
-   number of PHYs as specified in *phys* property.
-@@ -34,6 +23,16 @@ Required properties:
- - bus-range: Range of bus numbers associated with this controller.
- - ranges: Ranges for the PCI memory and I/O regions.
- 
-+Required properties for MT7623/MT2701:
-+- #interrupt-cells: Size representation for interrupts (must be 1)
-+- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+- resets: Must contain an entry for each entry in reset-names.
-+  See ../reset/reset.txt for details.
-+- reset-names: Must be "pcie-rst0", "pcie-rst1", "pcie-rstN".. based on the
-+  number of root ports.
-+
- In addition, the device tree node must have sub-nodes describing each
- PCIe port interface, having the following mandatory properties:
- 
-@@ -85,7 +84,8 @@ Examples:
- 			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
- 			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
- 		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
--		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
-+		phys = <&pcie0_phy PHY_TYPE_PCIE>, <&pcie1_phy PHY_TYPE_PCIE>,
-+		       <&pcie2_phy PHY_TYPE_PCIE>;
- 		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
- 		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
- 		bus-range = <0x00 0xff>;
--- 
-2.6.4
+[   46.525247] usb 2-2: new SuperSpeed USB device number 2 using xhci_hcd
+[   46.565496] usb-storage 2-2:1.0: USB Mass Storage device detected
+[   46.571934] scsi host0: usb-storage 2-2:1.0
+[   47.601227] scsi 0:0:0:0: Direct-Access     Kingston DataTraveler 3.0      PQ: 0 ANSI: 6
+[   47.611340] sd 0:0:0:0: [sda] 15109516 512-byte logical blocks: (7.74 GB/7.20 GiB)
+[   47.621624] sd 0:0:0:0: [sda] Write Protect is off
+[   47.627131] sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+[   47.639637]  sda: sda1
+[   47.648091] sd 0:0:0:0: [sda] Attached SCSI removable disk
+[   58.100306] xhci_hcd 0000:01:00.0: xHCI host controller not responding, assume dead
+[   58.108021] CPU: 0 PID: 939 Comm: kworker/0:2 Tainted: G         C      4.13.0-rc6 #11
+[   58.115976] Hardware name: Sigma Tango DT
+[   58.120016] Workqueue: usb_hub_wq hub_event
+[   58.124241] [<c010f288>] (unwind_backtrace) from [<c010af58>] (show_stack+0x10/0x14)
+[   58.132033] [<c010af58>] (show_stack) from [<c049d714>] (dump_stack+0x84/0x98)
+[   58.139302] [<c049d714>] (dump_stack) from [<c03b090c>] (xhci_hc_died.part.9+0x50/0x23c)
+[   58.147438] [<c03b090c>] (xhci_hc_died.part.9) from [<c03b5d80>] (xhci_hub_control+0xf3c/0x175c)
+[   58.156273] [<c03b5d80>] (xhci_hub_control) from [<c03934a4>] (usb_hcd_submit_urb+0x264/0x814)
+[   58.164932] [<c03934a4>] (usb_hcd_submit_urb) from [<c0394fa4>] (usb_start_wait_urb+0x4c/0xbc)
+[   58.173591] [<c0394fa4>] (usb_start_wait_urb) from [<c03950b4>] (usb_control_msg+0xa0/0xcc)
+[   58.181985] [<c03950b4>] (usb_control_msg) from [<c038bf54>] (usb_clear_port_feature+0x44/0x4c)
+[   58.190730] [<c038bf54>] (usb_clear_port_feature) from [<c038c320>] (hub_port_reset+0x228/0x51c)
+[   58.199561] [<c038c320>] (hub_port_reset) from [<c038fd68>] (hub_event+0x87c/0x108c)
+[   58.207349] [<c038fd68>] (hub_event) from [<c012ecc4>] (process_one_work+0x1d8/0x3f0)
+[   58.215220] [<c012ecc4>] (process_one_work) from [<c012f8d8>] (worker_thread+0x38/0x554)
+[   58.223354] [<c012f8d8>] (worker_thread) from [<c01347d0>] (kthread+0x108/0x138)
+[   58.230789] [<c01347d0>] (kthread) from [<c01076d8>] (ret_from_fork+0x14/0x3c)
+[   58.238056] xhci_hcd 0000:01:00.0: HC died; cleaning up
+[   58.243391] usb 2-2: USB disconnect, device number 2
