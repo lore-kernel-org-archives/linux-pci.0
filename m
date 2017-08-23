@@ -1,119 +1,216 @@
-Return-Path: <SRS0=6JFg=7J=mediatek.com=honghui.zhang@kernel.org>
-Return-Path: <SRS0=6JFg=7J=mediatek.com=honghui.zhang@kernel.org>
-Message-ID: <1502077231.24341.29.camel@mtksdaap41>
-Subject: Re: [PATCH v2 4/5] PCI: mediatek: Add new generation controller
- support
-From: Honghui Zhang <honghui.zhang@mediatek.com>
-To: Ryder Lee <ryder.lee@mediatek.com>
-CC: Bjorn Helgaas <helgaas@kernel.org>, <bhelgaas@google.com>,
-	<robh@kerenl.org>, <robh+dt@kernel.org>, <matthias.bgg@gmail.com>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <yingjoe.chen@mediatek.com>,
-	<eddie.huang@mediatek.com>, <hongkun.cao@mediatek.com>,
-	<youlin.pei@mediatek.com>, <yong.wu@mediatek.com>, <yt.shen@mediatek.com>,
-	<sean.wang@mediatek.com>, <xinping.qian@mediatek.com>
-Date: Mon, 7 Aug 2017 11:40:31 +0800
-In-Reply-To: <1501913813.12086.17.camel@mtkswgap22>
-References: <cover.1501122135.git.honghui.zhang@mediatek.com>
-	 <824c61d13fe2731d812df8a0a878ca1a36399e76.1501122135.git.honghui.zhang@mediatek.com>
-	 <20170803224206.GN20308@bhelgaas-glaptop.roam.corp.google.com>
-	 <1501835976.24341.21.camel@mtksdaap41>
-	 <20170804131808.GA16580@bhelgaas-glaptop.roam.corp.google.com>
-	 <1501908763.8298.11.camel@mtkswgap22>
-	 <1501913813.12086.17.camel@mtkswgap22>
-Content-Type: text/plain; charset="UTF-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 23 Aug 2017 13:58:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: honghui.zhang@mediatek.com
+Subject: Re: [PATCH v2 0/3] PCI: mediatek: Add MSI support for MT2712 and
+ MT7622
+Message-ID: <20170823185830.GE8498@bhelgaas-glaptop.roam.corp.google.com>
+References: <1502715868-17651-1-git-send-email-honghui.zhang@mediatek.com>
 MIME-Version: 1.0
+In-Reply-To: <1502715868-17651-1-git-send-email-honghui.zhang@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: youlin.pei@mediatek.com, devicetree@vger.kernel.org,
+ hongkun.cao@mediatek.com, ryder.lee@mediatek.com, linux-pci@vger.kernel.org,
+ sean.wang@mediatek.com, xinping.qian@mediatek.com,
+ linux-kernel@vger.kernel.org, yt.shen@mediatek.com, matthias.bgg@gmail.com,
+ linux-mediatek@lists.infradead.org, yong.wu@mediatek.com, bhelgaas@google.com,
+ yingjoe.chen@mediatek.com, eddie.huang@mediatek.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2017-08-05 at 14:16 +0800, Ryder Lee wrote:
-> On Sat, 2017-08-05 at 12:52 +0800, Ryder Lee wrote:
-> > Hi Honghui, Bjorn,
-> > 
-> > On Fri, 2017-08-04 at 08:18 -0500, Bjorn Helgaas wrote:
-> > > On Fri, Aug 04, 2017 at 04:39:36PM +0800, Honghui Zhang wrote:
-> > > > On Thu, 2017-08-03 at 17:42 -0500, Bjorn Helgaas wrote:
-> > > > > > +
-> > > > > > +static struct mtk_pcie_port *mtk_pcie_find_port(struct mtk_pcie *pcie,
-> > > > > > +						struct pci_bus *bus, int devfn)
-> > > > > > +{
-> > > > > > +	struct pci_dev *dev;
-> > > > > > +	struct pci_bus *pbus;
-> > > > > > +	struct mtk_pcie_port *port, *tmp;
-> > > > > > +
-> > > > > > +	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > > > > > +		if (bus->number == 0 && port->index == PCI_SLOT(devfn)) {
-> > > > > > +			return port;
-> > > > > > +		} else if (bus->number != 0) {
-> > > > > > +			pbus = bus;
-> > > > > > +			do {
-> > > > > > +				dev = pbus->self;
-> > > > > > +				if (port->index == PCI_SLOT(dev->devfn))
-> > > > > > +					return port;
-> > > > > > +				pbus = dev->bus;
-> > > > > > +			} while (dev->bus->number != 0);
-> > > > > > +		}
-> > > > > > +	}
-> > > > > > +
-> > > > > > +	return NULL;
-> > > > > 
-> > > > > You should be able to use sysdata to avoid searching the list.
-> > > > > See drivers/pci/host/pci-aardvark.c, for example.
-> > > > > 
-> > > > 
-> > > > I could put the mtk_pcie * in sysdata, but still need to searching the
-> > > > list to get the mtk_pcie_port *, how about:
-> > > > 
-> > > > 	list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> > > > 		if (port->index == PCI_SLOT(devfn))
-> > > > 			return port;
-> > > > 	}
-> > > 
-> > > No.  Other drivers don't need to search the list.  Please take a look
-> > > at them and see how they solve this problem.  I don't think your
-> > > hardware is fundamentally different in a way that means you need to
-> > > search when the others don't.
-> > > 
-> > 
-> > I'm not directly involved in this generation, but I guess the main reason why Honghui need to do that is just because this hardware access configuration space via per-port registers, not just for the guard.  
-> > Currently, We had a host bridge with two ports (two subnodes in binding text), thus he tried to tells them apart so that he can get the correct registers.
-> > 
-> > Some platforms don't need to do that since they just have a single port (no more subnodes), the others might have specific/shared registers to access configuration space. (e.g. Tegra, MTK legacy IP block).
-> > Or, he can split them into two independent nodes, but it will break common probing flow by doing so. (I'd prefer to use subnodes.)
-> > 
-> > Ryder
-> > 
+On Mon, Aug 14, 2017 at 09:04:25PM +0800, honghui.zhang@mediatek.com wrote:
+> From: Honghui Zhang <honghui.zhang@mediatek.com>
 > 
-> Sorry for the typesetting in previous mail and noise again,
+> MT2712 and MT7622's PCIe host controller support MSI, but only 32bit MSI
+> address are supportted. It connect to GIC with the same IRQ number of INTx
+> IRQ, so it shares the same IRQ with INTx IRQ.
 > 
-> I've took a look at pci-rcar-gen2.c, this is a similar case I can found
-> for Honghui's case. It gathers two ports reg regions into one, and uses
-> the "slot id" to calculate the cfg base of each port.
+> This patchset add MSI support for MT2712 and MT7622.
+> Also do some code fixup and cleanups.
 > 
-> Perhaps this is a example for those who need to use subnodes and use
-> port registers for cfg operation. Not sure whether it's worthwhile doing
-> that since we need to changes ports/host structures.
+> Change Since V1:
+>  - Add the first two patches into this patchset.
+>  - Using -ENODEV instead of PTR_ERR if msi_domain == NULL
+>  - Change the error logs with consistency of lower-case
+>  - Using has_msi instead of support_msi to make the parameter name a bit shorter
 > 
-> Ryder.
+> Honghui Zhang (3):
+>   PCI: mediatek: Fix return value in case of error
+>   PCI: mediatek: take use of bus->sysdata to get host private data
+>   PCI: mediatek: add msi support for MT2712 and MT7622
 > 
-As Ryder's description, Mediatek's new generation HW blocks has two
-separate ports, they have separate control register base address. We
-must touch the per-port control register to access the EP's
-configuration space. One port's control register is the only way to
-access the EP's configuration space(the EP which is connect under this
-very port).
-Given an EP device, we need to determine which ports it's been
-connected, and get the base address for that port. It's a bit like
-pci-tegra/pci-mvebu.
+>  drivers/pci/host/pcie-mediatek.c | 157 +++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 151 insertions(+), 6 deletions(-)
 
-Seems list is not forbidden, pci-tegra search the list to identify the
-ports[1], mvebu use point array to search the ports[2], they have the
-same functionality through different approach. I may propose another
-patch to make the code like mvebu[2] if you insist, but I'm prefer the
-current list way.
+Since "PCI: mediatek: Add controller support for MT2712 and MT7622" patch
+hasn't appeared upstream yet, I folded the return value fix directly into
+it.
 
-[1]http://elixir.free-electrons.com/linux/v4.13-rc4/source/drivers/pci/host/pci-tegra.c#L456
-[2]http://elixir.free-electrons.com/linux/v4.13-rc4/source/drivers/pci/host/pci-mvebu.c#L780
+I applied the others to pci/host-mediatek.  I modified the third one to
+remove what seemed to be needless differences from the rcar and tegra
+drivers.  The incremental diff is attached.  Please check to make sure I
+didn't break anything.
 
-thanks.
-> 
+
+diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
+index 35ab2321ed16..8891c00bf13c 100644
+--- a/drivers/pci/host/pcie-mediatek.c
++++ b/drivers/pci/host/pcie-mediatek.c
+@@ -134,7 +134,7 @@ struct mtk_pcie_port;
+ 
+ /**
+  * struct mtk_pcie_soc - differentiate between host generations
+- * @has_msi: whether this host support MSI interrupt or not
++ * @has_msi: whether this host supports MSI interrupts or not
+  * @ops: pointer to configuration access functions
+  * @startup: pointer to controller setting functions
+  * @setup_irq: pointer to initialize IRQ functions
+@@ -439,44 +439,51 @@ static int mtk_pcie_startup_port_v2(struct mtk_pcie_port *port)
+ 	return 0;
+ }
+ 
+-static int mtk_pcie_assign_msi(struct mtk_pcie_port *port)
++static int mtk_pcie_msi_alloc(struct mtk_pcie_port *port)
+ {
+-	int pos;
++	int msi;
+ 
+-	pos = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
+-	if (pos < MTK_MSI_IRQS_NUM)
+-		set_bit(pos, port->msi_irq_in_use);
++	msi = find_first_zero_bit(port->msi_irq_in_use, MTK_MSI_IRQS_NUM);
++	if (msi < MTK_MSI_IRQS_NUM)
++		set_bit(msi, port->msi_irq_in_use);
+ 	else
+ 		return -ENOSPC;
+ 
+-	return pos;
++	return msi;
++}
++
++static void mtk_pcie_msi_free(struct mtk_pcie_port *port, unsigned long hwirq)
++{
++	clear_bit(hwirq, port->msi_irq_in_use);
+ }
+ 
+ static int mtk_pcie_msi_setup_irq(struct msi_controller *chip,
+-				  struct pci_dev *pdev,
+-				  struct msi_desc *desc)
++				  struct pci_dev *pdev, struct msi_desc *desc)
+ {
+ 	struct mtk_pcie_port *port;
+ 	struct msi_msg msg;
++	unsigned int irq;
+ 	int hwirq;
+-	u32 irq;
+ 
+ 	port = mtk_pcie_find_port(pdev->bus, pdev->devfn);
+ 	if (!port)
+ 		return -EINVAL;
+ 
+-	chip->dev = &pdev->dev;
+-	hwirq = mtk_pcie_assign_msi(port);
++	hwirq = mtk_pcie_msi_alloc(port);
+ 	if (hwirq < 0)
+ 		return hwirq;
+ 
+ 	irq = irq_create_mapping(port->msi_domain, hwirq);
+-	if (!irq)
++	if (!irq) {
++		mtk_pcie_msi_free(port, hwirq);
+ 		return -EINVAL;
++	}
++
++	chip->dev = &pdev->dev;
+ 
+ 	irq_set_msi_desc(irq, desc);
+ 
+-	/* MT2712/MT7622 only support 32 bit MSI address */
++	/* MT2712/MT7622 only support 32-bit MSI addresses */
+ 	msg.address_hi = 0;
+ 	msg.address_lo = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+ 	msg.data = hwirq;
+@@ -497,10 +504,8 @@ static void mtk_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ 	if (!port)
+ 		return;
+ 
+-	if (!test_bit(hwirq, port->msi_irq_in_use))
+-		dev_err(&pdev->dev, "trying to free unused MSI#%d\n", irq);
+-	else
+-		clear_bit(hwirq, port->msi_irq_in_use);
++	irq_dispose_mapping(irq);
++	mtk_pcie_msi_free(port, hwirq);
+ }
+ 
+ static struct msi_controller mtk_pcie_msi_chip = {
+@@ -529,16 +534,26 @@ static const struct irq_domain_ops msi_domain_ops = {
+ 	.map = mtk_pcie_msi_map,
+ };
+ 
+-static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
++static int mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+ {
+ 	u32 val;
+ 
++	port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
++						 &msi_domain_ops,
++						 &mtk_pcie_msi_chip);
++	if (!port->msi_domain) {
++		dev_err(dev, "failed to create MSI IRQ domain\n");
++		return -ENOMEM;
++	}
++
+ 	val = lower_32_bits((u64)(port->base + PCIE_MSI_VECTOR));
+ 	writel(val, port->base + PCIE_IMSI_ADDR);
+ 
+ 	val = readl(port->base + PCIE_INT_MASK);
+ 	val &= ~MSI_MASK;
+ 	writel(val, port->base + PCIE_INT_MASK);
++
++	return 0;
+ }
+ 
+ static int mtk_pcie_intx_map(struct irq_domain *domain, unsigned int irq,
+@@ -559,6 +574,7 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ {
+ 	struct device *dev = port->pcie->dev;
+ 	struct device_node *pcie_intc_node;
++	int err;
+ 
+ 	/* Setup INTx */
+ 	pcie_intc_node = of_get_next_child(node, NULL);
+@@ -574,16 +590,10 @@ static int mtk_pcie_init_irq_domain(struct mtk_pcie_port *port,
+ 		return -ENODEV;
+ 	}
+ 
+-	/* Setup MSI */
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		port->msi_domain = irq_domain_add_linear(node, MTK_MSI_IRQS_NUM,
+-							 &msi_domain_ops,
+-							 &mtk_pcie_msi_chip);
+-		if (!port->msi_domain) {
+-			dev_err(dev, "failed to get MSI IRQ domain\n");
+-			return -ENODEV;
+-		}
+-		mtk_pcie_enable_msi(port);
++		err = mtk_pcie_enable_msi(port);
++		if (err < 0)
++			return err;
+ 	}
+ 
+ 	return 0;
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
