@@ -1,60 +1,75 @@
-Return-Path: <SRS0=Obka=7M=linux.intel.com=andriy.shevchenko@kernel.org>
-Return-Path: <SRS0=Obka=7M=linux.intel.com=andriy.shevchenko@kernel.org>
-Message-ID: <1502356760.29303.381.camel@linux.intel.com>
-Subject: Re: [PATCH v1] xen/pci: Use acpi_noirq_set() helper
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Return-Path: <SRS0=lBIO=7Z=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <SRS0=lBIO=7Z=linaro.org=ard.biesheuvel@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170817113028.16853-1-dja@axtens.net> <20170817113028.16853-2-dja@axtens.net>
+ <20170821105300.GB23287@e107981-lin.cambridge.arm.com> <20170822221928.GL6948@bhelgaas-glaptop.roam.corp.google.com>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 23 Aug 2017 14:48:42 +0100
+Message-ID: <CAKv+Gu-FCkV9Dv=yn_CNC9orj8Roiabb75jX34w3mMziWVZaeA@mail.gmail.com>
+Subject: Re: [PATCH v2 1/1] Split VGA default device handler out of VGA arbiter
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Thomas
- Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, "H. Peter
- Anvin" <hpa@zytor.com>,  x86@kernel.org, Konrad Rzeszutek Wilk
- <konrad.wilk@oracle.com>, "Rafael J . Wysocki" <rjw@rjwysocki.net>
-Date: Thu, 10 Aug 2017 12:19:20 +0300
-In-Reply-To: <20170802214537.GM20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170717103907.77308-1-andriy.shevchenko@linux.intel.com>
-	 <20170802214537.GM20308@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	David Airlie <airlied@linux.ie>, Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will.deacon@arm.com>, dri-devel <dri-devel@lists.freedesktop.org>,
+	"Liuxinliang (Matthew Liu)" <z.liuxinliang@hisilicon.com>, Zou Rongrong <zourongrong@gmail.com>,
+	Alex Williamson <alex.williamson@redhat.com>, Lukas Wunner <lukas@wunner.de>,
+	linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, daniel.vetter@intel.com,
+	linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Daniel Axtens <dja@axtens.net>
 Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-08-02 at 16:45 -0500, Bjorn Helgaas wrote:
-> On Mon, Jul 17, 2017 at 01:39:07PM +0300, Andy Shevchenko wrote:
-> > No need to keep an #ifdef since we have a helper (in x86 world).
-> > Use it instead.
-> > 
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> 
-> Looks reasonable to me, and I assume some non-PCI tree will take it.
+On 22 August 2017 at 23:19, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Mon, Aug 21, 2017 at 11:53:01AM +0100, Lorenzo Pieralisi wrote:
+>> On Thu, Aug 17, 2017 at 09:30:28PM +1000, Daniel Axtens wrote:
+>> > A system without PCI legacy resources (e.g. ARM64) may find that no
+>> > default/boot VGA device has been marked, because the VGA arbiter
+>> > checks for legacy resource decoding before marking a card as default.
+>>
+>> I do not understand this paragraph, in particular:
+>>
+>> - "A system without PCI legacy resources (e.g. ARM64)". What does this
+>>   mean ? I take this as "ARM64 does not support IO space"; if a PCI host
+>>   bridge supports IO space, there is nothing from an architectural
+>>   point of view that prevents an MMIO based IO space implementation to
+>>   work on ARM64. It is PCI bridge specific, not arch specific.
+>
+> This reference to ARM64 is the same thing I stumbled over.  Maybe it
+> could be written along the lines of:
+>
+>   The VGA arbiter selects a default VGA device that is enabled and
+>   reachable via the legacy VGA resources (mem 0xa0000-0xbffff, io
+>   0x3b0-0x3bb, io 0x3c0-0x3df, etc).
+>
+>   If there is no such device, e.g., because there's no enabled VGA
+>   device, the host bridge doesn't support access to those legacy
+>   resources, or a PCI-PCI bridge doesn't have VGA Enable set, a
+>   platform may select an arbitrary device by calling
+>   vga_set_default_device().
+>
+> Then I think this patch changes the previous behavior by allowing the
+> arbiter to select a device that is enabled and has a driver but may
+> not be reachable via the legacy VGA resources.
+>
+> I don't know what all the consequences of that would be, but it does
+> muddy the VGA arbiter waters a bit.  AIUI, the main reason for the
+> arbiter is to allow multiple legacy VGA devices by manipulating bridge
+> VGA Enable bits so only one receives the legacy resources at a time.
+>
+> These devices that do not need the legacy resources don't need that
+> special treatment because they don't care about the bridge VGA Enable
+> bits and several can coexist in the system with no need for VGA
+> arbitration.
+>
+> I guess the powerpc fixup_vga() already selects a device that doesn't
+> need the VGA resources, so we already have that situation.
+>
 
-It seems either TODO list is long, or everyone from x86 is on vacation
-:-)
-
-Can't you push this through your tree?
-
-> 
-> > ---
-> >  arch/x86/pci/xen.c | 4 +---
-> >  1 file changed, 1 insertion(+), 3 deletions(-)
-> > 
-> > diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> > index c4b3646bd04c..9542a746dc50 100644
-> > --- a/arch/x86/pci/xen.c
-> > +++ b/arch/x86/pci/xen.c
-> > @@ -409,10 +409,8 @@ int __init pci_xen_init(void)
-> >  	pcibios_enable_irq = xen_pcifront_enable_irq;
-> >  	pcibios_disable_irq = NULL;
-> >  
-> > -#ifdef CONFIG_ACPI
-> >  	/* Keep ACPI out of the picture */
-> > -	acpi_noirq = 1;
-> > -#endif
-> > +	acpi_noirq_set();
-> >  
-> >  #ifdef CONFIG_PCI_MSI
-> >  	x86_msi.setup_msi_irqs = xen_setup_msi_irqs;
-> > -- 
-> > 2.11.0
-> > 
-
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+Perhaps it is unclear that the whole point of tinkering with the VGA
+arbiter is that X may refuse to use a GFX card if it is not tagged as
+the default VGA device by the arbiter. I have suggested before that
+fixing X may be more appropriate in this case, given that ownership of
+the legacy VGA resources may not correlate at all with being the
+primary display device on non-x86 architectures.
