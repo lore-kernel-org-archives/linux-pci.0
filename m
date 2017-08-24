@@ -1,150 +1,178 @@
-Return-Path: <SRS0=pWib=7S=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=pWib=7S=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH] PCIe AER: report non fatal errors only to the functions
- of the same device
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1501813106-89672-1-git-send-email-liudongdong3@huawei.com>
- <20170815225007.GS32525@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <025ad3e8-7411-6e97-29ba-6e5cfa7665eb@huawei.com>
-Date: Wed, 16 Aug 2017 16:50:16 +0800
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	<helgaas@kernel.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com,
+	Oza Pawandeep <oza.oza@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Oza Pawandeep <oza.pawandeep@gmail.com>
+Subject: [PATCH v8 2/3] PCI: iproc: retry request when CRS returned from EP
+Date: Thu, 24 Aug 2017 10:34:25 +0530
+Message-Id: <1503551066-23212-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
+References: <1503551066-23212-1-git-send-email-oza.oza@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20170815225007.GS32525@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+PCIe spec r3.1, sec 2.3.2
+If CRS software visibility is not enabled, the RC must reissue the
+config request as a new request.
 
-在 2017/8/16 6:50, Bjorn Helgaas 写道:
-> On Fri, Aug 04, 2017 at 10:18:26AM +0800, Dongdong Liu wrote:
->> From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>
->> Currently if an uncorrectable error is reported by an EP the AER
->> driver walks over all the devices connected to the upstream port
->> bus and in turns call the report_error_detected() callback.
->> If any of the devices connected to the bus does not implement
->> dev->driver->err_handler->error_detected() do_recovery() will fail.
->>
->> However for non fatal errors the PCIe link should not be considered
->> compromised, therefore it makes sense to report the error only to
->> all the functions of a multifunction device.
->> This patch implements this new behaviour for non fatal errors.
->
-> Why do we bother even with other functions in the same multifunction
-> device?  PCIe r3.1, sec 6.2.2.2.2, says non-fatal errors only affect a
-> particular transaction, and "devices not associated with the
-> transaction in error are not impacted."
->
-> A transaction is only associated with one function, so other functions
-> in the same device shouldn't be affected, should they?
+- If CRS software visibility is enabled,
+- for a config read of Vendor ID, the RC must return 0x0001 data
+- for all other config reads/writes, the RC must reissue the
+  request
 
-PCIe r3.1, sec 6.2.4 Error Logging
-PCI Express errors are not Function-specific.
-"Software is responsible for scanning all Functions in a multi-Function device when it detects one of those errors"
+iproc PCIe Controller spec:
+4.7.3.3. Retry Status On Configuration Cycle
+Endpoints are allowed to generate retry status on configuration
+cycles. In this case, the RC needs to re-issue the request. The IP
+does not handle this because the number of configuration cycles needed
+will probably be less than the total number of non-posted operations
+needed.
 
-Thanks,
-Dongdong
->
->> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> ---
->>  drivers/pci/bus.c                  | 38 ++++++++++++++++++++++++++++++++++++++
->>  drivers/pci/pcie/aer/aerdrv_core.c | 13 ++++++++++++-
->>  include/linux/pci.h                |  3 ++-
->>  3 files changed, 52 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
->> index bc56cf1..bc8f8b2 100644
->> --- a/drivers/pci/bus.c
->> +++ b/drivers/pci/bus.c
->> @@ -364,6 +364,44 @@ void pci_bus_add_devices(const struct pci_bus *bus)
->>  }
->>  EXPORT_SYMBOL(pci_bus_add_devices);
->>
->> +/** pci_walk_mf_dev - walk all functions of a multi-function
->> + *  device calling callback.
->> + *  @dev      a function in a multi-function device
->> + *  @cb       callback to be called for each device found
->> + *  @userdata arbitrary pointer to be passed to callback.
->> + *
->> + *  Walk, on a given bus, only the adjacent functions of a
->> + *  multi-function device. Call the provided callback on each
->> + *  device found.
->> + *
->> + *  We check the return of @cb each time. If it returns anything
->> + *  other than 0, we break out.
->> + *
->> + */
->> +void pci_walk_mf_dev(struct pci_dev *dev, int (*cb)(struct pci_dev *, void *),
->> +		  void *userdata)
->> +{
->> +	int retval;
->> +	struct pci_bus *bus;
->> +	struct pci_dev *pdev;
->> +	int ndev;
->> +
->> +	bus = dev->bus;
->> +	ndev = PCI_SLOT(dev->devfn);
->> +
->> +	down_read(&pci_bus_sem);
->> +	/* call cb for all the functions of the mf device */
->> +	list_for_each_entry(pdev, &bus->devices, bus_list) {
->> +		if (PCI_SLOT(pdev->devfn) == ndev) {
->> +			retval = cb(pdev, userdata);
->> +			if (retval)
->> +				break;
->> +		}
->> +	}
->> +	up_read(&pci_bus_sem);
->> +}
->> +EXPORT_SYMBOL_GPL(pci_walk_mf_dev);
->> +
->>  /** pci_walk_bus - walk devices on/under bus, calling callback.
->>   *  @top      bus whose devices should be walked
->>   *  @cb       callback to be called for each device found
->> diff --git a/drivers/pci/pcie/aer/aerdrv_core.c b/drivers/pci/pcie/aer/aerdrv_core.c
->> index b1303b3..67c3dc0 100644
->> --- a/drivers/pci/pcie/aer/aerdrv_core.c
->> +++ b/drivers/pci/pcie/aer/aerdrv_core.c
->> @@ -390,7 +390,18 @@ static pci_ers_result_t broadcast_error_message(struct pci_dev *dev,
->>  		 * If the error is reported by an end point, we think this
->>  		 * error is related to the upstream link of the end point.
->>  		 */
->> -		pci_walk_bus(dev->bus, cb, &result_data);
->> +		if ((state == pci_channel_io_normal) &&
->> +				(!pci_ari_enabled(dev->bus)))
->> +			/*
->> +			 * the error is non fatal so the bus is ok, just walk
->> +			 * through all the functions in a multifunction device.
->> +			 * if ARI is enabled on the bus then there can be only
->> +			 * one device under that bus (so walk all the functions
->> +			 * under the bus).
->> +			 */
->> +			pci_walk_mf_dev(dev, cb, &result_data);
->> +		else
->> +			pci_walk_bus(dev->bus, cb, &result_data);
->>  	}
->>
->>  	return result_data.result;
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index 4869e66..69e77bb 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -1269,7 +1269,8 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
->>  					 struct pci_dev *dev);
->>  int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
->>  		    int pass);
->> -
->> +void pci_walk_mf_dev(struct pci_dev *dev, int (*cb)(struct pci_dev *, void *),
->> +		  void *userdata);
->>  void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
->>  		  void *userdata);
->>  int pci_cfg_space_size(struct pci_dev *dev);
->> --
->> 1.9.1
->>
->
-> .
->
+When a retry status is received on the User RX interface for a
+configuration request that was sent on the User TX interface,
+it will be indicated with a completion with the CMPL_STATUS field set
+to 2=CRS, and the user will have to find the address and data values
+and send a new transaction on the User TX interface.
+When the internal configuration space returns a retry status during a
+configuration cycle (user_cscfg = 1) on the Command/Status interface,
+the pcie_cscrs will assert with the pcie_csack signal to indicate the
+CRS status.
+When the CRS Software Visibility Enable register in the Root Control
+register is enabled, the IP will return the data value to 0x0001 for
+the Vendor ID value and 0xffff  (all 1’s) for the rest of the data in
+the request for reads of offset 0 that return with CRS status.  This
+is true for both the User RX Interface and for the Command/Status
+interface.  When CRS Software Visibility is enabled, the CMPL_STATUS
+field of the completion on the User RX Interface will not be 2=CRS and
+the pcie_cscrs signal will not assert on the Command/Status interface.
+
+Per PCIe r3.1, sec 2.3.2, config requests that receive completions
+with Configuration Request Retry Status (CRS) should be reissued by
+the hardware except reads of the Vendor ID when CRS Software
+Visibility is enabled.
+
+This hardware never reissues configuration requests when it receives
+CRS completions.
+Note that, neither PCIe host bridge nor PCIe core re-issues the
+request for any configuration offset.
+
+For config reads, this hardware returns CFG_RETRY_STATUS data when
+it receives a CRS completion for a config read, regardless of the
+address of the read or the CRS Software Visibility Enable bit.
+
+This patch implements iproc_pcie_config_read which gets called for
+Stingray, if it receives a CRS completion, it retries reading it again.
+In case of timeout, it returns 0xffffffff.
+For other iproc based SOC, it falls back to PCI generic APIs.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+
+diff --git a/drivers/pci/host/pcie-iproc.c b/drivers/pci/host/pcie-iproc.c
+index 61d9be6..37f4adf 100644
+--- a/drivers/pci/host/pcie-iproc.c
++++ b/drivers/pci/host/pcie-iproc.c
+@@ -68,6 +68,9 @@
+ #define APB_ERR_EN_SHIFT             0
+ #define APB_ERR_EN                   BIT(APB_ERR_EN_SHIFT)
+ 
++#define CFG_RETRY_STATUS             0xffff0001
++#define CFG_RETRY_STATUS_TIMEOUT_US  500000 /* 500 milli-seconds. */
++
+ /* derive the enum index of the outbound/inbound mapping registers */
+ #define MAP_REG(base_reg, index)      ((base_reg) + (index) * 2)
+ 
+@@ -473,6 +476,64 @@ static void __iomem *iproc_pcie_map_ep_cfg_reg(struct iproc_pcie *pcie,
+ 	return (pcie->base + offset);
+ }
+ 
++static unsigned int iproc_pcie_cfg_retry(void __iomem *cfg_data_p)
++{
++	int timeout = CFG_RETRY_STATUS_TIMEOUT_US;
++	unsigned int data;
++
++	/*
++	 * As per PCIe spec r3.1, sec 2.3.2, CRS Software
++	 * Visibility only affects config read of the Vendor ID.
++	 * For config write or any other config read the Root must
++	 * automatically re-issue configuration request again as a
++	 * new request.
++	 *
++	 * For config reads, this hardware returns CFG_RETRY_STATUS data when
++	 * it receives a CRS completion for a config read, regardless of the
++	 * address of the read or the CRS Software Visibility Enable bit. As a
++	 * partial workaround for this, we retry in software any read that
++	 * returns CFG_RETRY_STATUS.
++	 */
++	data = readl(cfg_data_p);
++	while (data == CFG_RETRY_STATUS && timeout--) {
++		udelay(1);
++		data = readl(cfg_data_p);
++	}
++
++	if (data == CFG_RETRY_STATUS)
++		data = 0xffffffff;
++
++	return data;
++}
++
++static int iproc_pcie_config_read(struct pci_bus *bus, unsigned int devfn,
++				    int where, int size, u32 *val)
++{
++	struct iproc_pcie *pcie = iproc_data(bus);
++	unsigned int slot = PCI_SLOT(devfn);
++	unsigned int fn = PCI_FUNC(devfn);
++	unsigned int busno = bus->number;
++	void __iomem *cfg_data_p;
++	unsigned int data;
++
++	/* root complex access. */
++	if (busno == 0)
++		return pci_generic_config_read32(bus, devfn, where, size, val);
++
++	cfg_data_p = iproc_pcie_map_ep_cfg_reg(pcie, busno, slot, fn, where);
++
++	if (!cfg_data_p)
++		return PCIBIOS_DEVICE_NOT_FOUND;
++
++	data = iproc_pcie_cfg_retry(cfg_data_p);
++
++	*val = data;
++	if (size <= 2)
++		*val = (data >> (8 * (where & 3))) & ((1 << (size * 8)) - 1);
++
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ /**
+  * Note access to the configuration registers are protected at the higher layer
+  * by 'pci_lock' in drivers/pci/access.c
+@@ -567,8 +628,13 @@ static int iproc_pcie_config_read32(struct pci_bus *bus, unsigned int devfn,
+ 				    int where, int size, u32 *val)
+ {
+ 	int ret;
++	struct iproc_pcie *pcie = iproc_data(bus);
+ 
+ 	iproc_pcie_apb_err_disable(bus, true);
++	if (pcie->type == IPROC_PCIE_PAXB_V2)
++		ret = iproc_pcie_config_read(bus, devfn, where, size, val);
++	else
++		ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	ret = pci_generic_config_read32(bus, devfn, where, size, val);
+ 	iproc_pcie_apb_err_disable(bus, false);
+ 
+-- 
+1.9.1
