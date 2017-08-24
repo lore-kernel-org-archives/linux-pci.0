@@ -1,57 +1,73 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:42098 "EHLO mail.kernel.org"
+Received: from mout.gmx.net ([212.227.17.22]:55744 "EHLO mout.gmx.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751166AbdHBVn4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 2 Aug 2017 17:43:56 -0400
-Date: Wed, 2 Aug 2017 16:43:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: bhelgaas@google.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>
-Subject: Re: [PATCH] PCI: qcom: Use gpiod_set_value_cansleep()
-Message-ID: <20170802214351.GL20308@bhelgaas-glaptop.roam.corp.google.com>
-References: <1500245798-20886-1-git-send-email-festevam@gmail.com>
+        id S1753905AbdHXQgt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 24 Aug 2017 12:36:49 -0400
+Date: Thu, 24 Aug 2017 18:31:19 +0200 (CEST)
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Bhumika Goyal <bhumirks@gmail.com>
+cc: julia.lawall@lip6.fr, bp@alien8.de, mchehab@kernel.org,
+        daniel.vetter@intel.com, jani.nikula@linux.intel.com,
+        seanpaul@chromium.org, airlied@linux.ie, tomas.winkler@intel.com,
+        dwmw2@infradead.org, computersforpeace@gmail.com,
+        boris.brezillon@free-electrons.com, marek.vasut@gmail.com,
+        richard@nod.at, cyrille.pitchen@wedev4u.fr, peda@axentia.se,
+        kishon@ti.com, bhelgaas@google.com, thierry.reding@gmail.com,
+        jonathanh@nvidia.com, dvhart@infradead.org, andy@infradead.org,
+        ohad@wizery.com, bjorn.andersson@linaro.org, freude@de.ibm.com,
+        schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, jth@kernel.org,
+        jejb@linux.vnet.ibm.com, martin.petersen@oracle.com,
+        lduncan@suse.com, cleech@redhat.com, johan@kernel.org,
+        elder@kernel.org, gregkh@linuxfoundation.org,
+        heikki.krogerus@linux.intel.com, linux-edac@vger.kernel.org,
+        linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-media@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org,
+        platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, greybus-dev@lists.linaro.org,
+        devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH 03/15] [media] i2c: make device_type const
+In-Reply-To: <1503130946-2854-4-git-send-email-bhumirks@gmail.com>
+Message-ID: <Pine.LNX.4.64.1708241830240.3709@axis700.grange>
+References: <1503130946-2854-1-git-send-email-bhumirks@gmail.com>
+ <1503130946-2854-4-git-send-email-bhumirks@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1500245798-20886-1-git-send-email-festevam@gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jul 16, 2017 at 07:56:38PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
-> 
-> The reset GPIO can be connected to a I2C or SPI IO expander, which
-> may sleep, so it is safer to use the gpiod_set_value_cansleep()
-> variant instead.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
+On Sat, 19 Aug 2017, Bhumika Goyal wrote:
 
-Any opinion, Stanimir?
+> Make this const as it is only stored in the type field of a device
+> structure, which is const.
+> Done using Coccinelle.
+> 
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+
+Acked-by: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+
+Thanks
+Guennadi
 
 > ---
->  drivers/pci/dwc/pcie-qcom.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/media/i2c/soc_camera/mt9t031.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 68c5f2a..8359de0 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -141,13 +141,13 @@ struct qcom_pcie {
+> diff --git a/drivers/media/i2c/soc_camera/mt9t031.c b/drivers/media/i2c/soc_camera/mt9t031.c
+> index 714fb35..4802d30 100644
+> --- a/drivers/media/i2c/soc_camera/mt9t031.c
+> +++ b/drivers/media/i2c/soc_camera/mt9t031.c
+> @@ -592,7 +592,7 @@ static int mt9t031_runtime_resume(struct device *dev)
+>  	.runtime_resume		= mt9t031_runtime_resume,
+>  };
 >  
->  static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
->  {
-> -	gpiod_set_value(pcie->reset, 1);
-> +	gpiod_set_value_cansleep(pcie->reset, 1);
->  	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
->  }
->  
->  static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
->  {
-> -	gpiod_set_value(pcie->reset, 0);
-> +	gpiod_set_value_cansleep(pcie->reset, 0);
->  	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
->  }
->  
+> -static struct device_type mt9t031_dev_type = {
+> +static const struct device_type mt9t031_dev_type = {
+>  	.name	= "MT9T031",
+>  	.pm	= &mt9t031_dev_pm_ops,
+>  };
 > -- 
-> 2.7.4
+> 1.9.1
 > 
