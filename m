@@ -1,61 +1,98 @@
-Return-Path: <SRS0=Cx9C=AA=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=Cx9C=AA=free.fr=slash.tmp@kernel.org>
-Subject: Re: Possible regression between 4.9 and 4.13
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Lukas Wunner <lukas@wunner.de>
-Cc: Mathias Nyman <mathias.nyman@linux.intel.com>,
- Felipe Balbi <felipe.balbi@linux.intel.com>,
- linux-pci <linux-pci@vger.kernel.org>, linux-usb
- <linux-usb@vger.kernel.org>, Linux ARM
- <linux-arm-kernel@lists.infradead.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Alan Stern <stern@rowland.harvard.edu>
-References: <599D3410.9050504@intel.com>
- <251c41c0-a4fd-8aae-88e0-5d5928ce45cf@free.fr>
- <599D62EA.7050100@linux.intel.com>
- <c31b86b7-2974-858c-baa9-2c2e65688606@free.fr>
- <8ac92197-907a-282b-2165-f50d1b09bd55@free.fr>
- <61d34811-f17c-6faf-252f-c4c81feb9e89@free.fr>
- <59A3D6BF.7010400@linux.intel.com>
- <0b089b17-00fc-5a7c-baa3-e6141029b191@free.fr>
- <59A56C15.2000403@linux.intel.com> <20170829235310.GA20214@wunner.de>
- <20170830060237.GA2782@kroah.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <678490ce-9381-e63e-7a12-33d3eff7f894@free.fr>
-Date: Wed, 30 Aug 2017 10:55:37 +0200
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
+Return-Path: <SRS0=+FHt=72=broadcom.com=oza.oza@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170830060237.GA2782@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170823180029.GD8498@bhelgaas-glaptop.roam.corp.google.com>
+References: <1503331124-25029-1-git-send-email-oza.oza@broadcom.com>
+ <1503331124-25029-2-git-send-email-oza.oza@broadcom.com> <20170822203347.GE6948@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPctfRhf8zkeoGN73N-vm8Adn7SwieAAeRKrjhY7m_RkEw@mail.gmail.com>
+ <20170823135140.GA8498@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMSpPPf5c2=zO81-7TEidOHbB8K0L3T2_wV4+9Gem5DB6rHWFw@mail.gmail.com>
+ <eb01a01b-ee8a-1c51-69ba-838bfe94b6f6@codeaurora.org> <CAMSpPPenUvGVwTf9ZKJoK08fm6L-0c=anPUaRRZdkHBzhGO-dA@mail.gmail.com>
+ <20170823180029.GD8498@bhelgaas-glaptop.roam.corp.google.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Thu, 24 Aug 2017 10:10:30 +0530
+Message-ID: <CAMSpPPfVUHHD_f8WOTwh3o54R0U4JvruTZwgrBZL2=WHDVhgKA@mail.gmail.com>
+Subject: Re: [PATCH v7 1/2] PCI: iproc: Retry request when CRS returned from EP
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
+	Andy Gospodarek <gospo@broadcom.com>, linux-pci <linux-pci@vger.kernel.org>,
+	linux-kernel@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
+	Timur Tabi <timur@codeaurora.org>, Alex Williamson <alex.williamson@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/08/2017 08:02, Greg Kroah-Hartman wrote:
+On Wed, Aug 23, 2017 at 11:30 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Aug 23, 2017 at 09:32:06PM +0530, Oza Oza wrote:
+>> On Wed, Aug 23, 2017 at 9:22 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> > Hi Oza,
+>> >
+>> >> In working Enumuration case I get following:
+>> >> [    9.125976] pci 0000:00:00.0: bridge configuration invalid ([bus
+>> >> 00-00]), re-configuring
+>> >> [    9.134267] where=0x0 val=0xffff0001
+>> >> [    9.146946] where=0x0 val=0xffff0001
+>> >> [    9.158943] where=0x0 val=0xffff0001
+>> >> [    9.170945] where=0x0 val=0xffff0001
+>> >> [    9.186945] where=0x0 val=0xffff0001
+>> >> [    9.210944] where=0x0 val=0xffff0001
+>> >> [    9.250943] where=0x0 val=0xffff0001
+>> >> [    9.322942] where=0x0 val=0xffff0001
+>> >> [    9.458943] where=0x0 val=0xffff0001
+>> >> [    9.726942] where=0x0 val=0x9538086    >> actual vendor and device id.
+>> >>
+>> >> so I think I have to retry in RC driver, so the old code still holds good.
+>> >> except that I have to do factoring out
+>> > You need to return 0xFFFF0001 for vendor ID register and return 0xFFFFFFFF for
+>> > other registers like COMMAND register during the CRS period.
+>
+> The proposal we're trying to implement is to handle this controller as
+> an RP that does not support CRS SV.  Such an RP would never return
+> 0xffff0001 for the vendor/device ID.  If it never got a successful
+> completion, it would return 0xffffffff.
+>
+> So I think you do have to either retry (as in your v7 patch) or add a
+> delay before we start enumeration.
+>
+> It looks like we waited somewhere between 320ms and 590ms before this
+> device became ready.
+>
+> The PCI specs do require a delay after a reset (PCIe r3.1, sec 6.6.1)
+> before software sends a config request.  I don't think there's
+> anywhere in the PCI core where we delay before we first enumerate
+> devices under a host bridge.  I'm not sure we'd *want* such a delay in
+> the PCI core, because on many systems the BIOS has already initialized
+> the PCI controller, and an additional delay would be unnecessary and
+> would only slow down boot.
+>
+> But it might make sense to add a delay in the PCI controller driver --
+> it knows when the reset occurs and probably knows more about the
+> firmware environment.  I haven't tried to analyze all of sec 6.6.1,
+> but this section:
+>
+>   Unless Readiness Notifications mechanisms are used (see Section
+>   6.23), the Root Complex and/or system software must allow at least
+>   1.0 s after a Conventional Reset of a device, before it may
+>   determine that a device which fails to return a Successful
+>   Completion status for a valid Configuration Request is a broken
+>   device. This period is independent of how quickly Link training
+>   completes.
+>
+>   Note: This delay is analogous to the Trhfa parameter specified for
+>   PCI/PCI-X, and is intended to allow an adequate amount of time for
+>   devices which require self initialization.
+>
+> makes it sound like a 1sec delay might be needed.  That sounds like an
+> awful lot, but this device did take close to that amount of time.
+>
+> I don't care which way you go.  You've already implemented the delay
+> in the v7 patch, and that's fine with me.
+>
 
-> To get back to the original issue here, the hardware seems to have died,
-> the driver stops talking to it, and all is good.  The "regression" here
-> is that we now properly can determine that the hardware is crap.
+Thanks for your inputs Bjorn.
+I will have v8 patch which will have;
+factored out separate patch + retry implementation of v7 patch.
 
-Before 4.12, when I unplugged my USB3 Flash drive, Linux would
-detect a few "Uncorrected Non-Fatal errors" via AER, but it was
-still possible to plug the drive back in.
-
-Since 4.12, once I unplug the drive, the whole USB3 card is marked
-as dead (all 4 ports), and I can no longer plug anything in (not even
-the USB2 drive that didn't have any issues, IIRC).
-
-It seems a bit premature to "mark as dead" something that remains
-functional, doesn't it?
-
-Disclaimer, there are many variables in this setup, and I've only
-tested a small fraction of the problem space: only one system,
-only one USB3 board, only one USB3 Flash drive.
-
-> So, how do you think we should proceed, delay a bit longer before saying
-> the device is gone?  How long is "long enough"?  How many bus errors are
-> we allowed to tolerate (hint, the PCI spec says none...)
-> 
-> Maybe someone wants to get to the root problem here, why is the hardware
-> suddenly reporting all 1s?
-
-I'm afraid I won't be able to make any progress on this front,
-unless I can get my hands on a PCIe packet analyzer.
-
-Regards.
+> Bjorn
